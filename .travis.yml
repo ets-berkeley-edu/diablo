@@ -1,0 +1,26 @@
+sudo: required
+language: python
+python: "3.6"
+
+addons:
+  postgresql: "9.6"
+
+install:
+  - npm install
+  - pip3 install tox
+
+jobs:
+  include:
+    - stage: test
+      script:
+        - psql -c 'create database diablo_test;' -U postgres
+        - psql diablo_test -c 'create extension pg_trgm;' -U postgres
+        - psql diablo_test -c 'create role diablo superuser login; alter schema public owner to diablo;' -U postgres
+        - pip3 install -r requirements.txt
+        - tox -e test || travis_terminate 1;
+    - # Python lint
+      script: tox -e lint-py
+    - # Vue.js lint
+      script: tox -e lint-vue
+    - # Vue.js build to verify TypeScript
+      script: tox -e build-vue
