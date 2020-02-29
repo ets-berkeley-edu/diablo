@@ -33,11 +33,29 @@ from flask import abort, current_app as app, flash, redirect, request, url_for
 from flask_login import current_user, login_required, login_user, logout_user
 
 
-@app.route('/cas/login_url', methods=['GET'])
+@app.route('/api/auth/cas_login_url', methods=['GET'])
 def cas_login_url():
     target_url = request.referrer or None
     return tolerant_jsonify({
         'casLoginUrl': _cas_client(target_url).get_login_url(),
+    })
+
+
+@app.route('/api/auth/dev_auth_login', methods=['POST'])
+def dev_auth_login():
+    params = request.get_json() or {}
+    return _dev_auth_login(params.get('uid'), params.get('password'))
+
+
+@app.route('/api/auth/logout')
+@login_required
+def logout():
+    _logout_user()
+    redirect_url = app.config['VUE_LOCALHOST_BASE_URL'] or request.url_root
+    cas_logout_url = _cas_client().get_logout_url(redirect_url=redirect_url)
+    return tolerant_jsonify({
+        'casLogoutUrl': cas_logout_url,
+        **current_user.to_api_json(),
     })
 
 
@@ -79,24 +97,6 @@ def cas_login():
     return redirect(redirect_url)
 
 
-@app.route('/api/auth/dev_auth_login', methods=['POST'])
-def dev_auth_login():
-    params = request.get_json() or {}
-    return _dev_auth_login(params.get('uid'), params.get('password'))
-
-
-@app.route('/api/auth/logout')
-@login_required
-def logout():
-    _logout_user()
-    redirect_url = app.config['VUE_LOCALHOST_BASE_URL'] or request.url_root
-    cas_logout_url = _cas_client().get_logout_url(redirect_url=redirect_url)
-    return tolerant_jsonify({
-        'casLogoutUrl': cas_logout_url,
-        **current_user.to_api_json(),
-    })
-
-
 def _cas_client(target_url=None):
     cas_server = app.config['CAS_SERVER']
     # One (possible) advantage this has over "request.base_url" is that it embeds the configured SERVER_NAME.
@@ -110,18 +110,21 @@ def _dev_auth_login(uid, password):
     if app.config['DEVELOPER_AUTH_ENABLED']:
         logger = app.logger
         if password != app.config['DEVELOPER_AUTH_PASSWORD']:
-            logger.error('Dev-auth: Wrong password')
             return tolerant_jsonify({'message': 'Invalid credentials'}, 401)
         user_id = AuthorizedUser.get_id_per_uid(uid)
         user = user_id and app.login_manager.user_callback(user_id=user_id)
         if user is None:
-            logger.error(f'Dev-auth: User with UID {uid} is not registered in Diablo.')
-            return tolerant_jsonify({'message': f'Sorry, user with UID {uid} is not registered to use Diablo.'}, 403)
+            msg = f'Dev-auth: User with UID {uid} is not registered in Diablo.'
+            logger.error(msg)
+            return tolerant_jsonify({'message': msg}, 403)
         if not user.is_active:
-            logger.error(f'Dev-auth: UID {uid} is registered with Diablo but not active.')
-            return tolerant_jsonify({'message': f'Sorry, user with UID {uid} is not authorized to use Diablo.'}, 403)
-        logger.info(f'Dev-auth used to log in as UID {uid}')
-        login_user(user, force=True, remember=True)
+            msg = f'Dev-auth: UID {uid} is registered with Diablo but not active.'
+            logger.error(msg)
+            return tolerant_jsonify({'message': msg}, 403)
+        if not login_user(user, force=True, remember=True):
+            msg = f'Dev-auth: User with UID {uid} failed in login_user().'
+            logger.error(msg)
+            return tolerant_jsonify({'message': msg}, 403)
         return tolerant_jsonify(current_user.to_api_json())
     else:
         raise ResourceNotFoundError('Unknown path')

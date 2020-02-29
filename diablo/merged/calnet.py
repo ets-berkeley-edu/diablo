@@ -23,15 +23,13 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-import os
-
 from diablo.api.errors import InternalServerError
 from diablo.externals import calnet
 
 
 def get_calnet_user_for_uid(app, uid):
     users = _get_calnet_users(app, 'uid', [uid])
-    return users[0] if users else {
+    return users[uid] if users else {
         'uid': uid,
     }
 
@@ -42,7 +40,7 @@ def get_calnet_users_for_uids(app, uids):
 
 def _get_calnet_users(app, id_type, ids):
     users_by_id = {}
-    if os.environ['DIABLO_ENV'] == 'test':
+    if app.config['DIABLO_ENV'] == 'test':
         for id_ in ids:
             users_by_id[id_] = {id_type: id_}
     else:
@@ -61,7 +59,7 @@ def _get_calnet_users(app, id_type, ids):
                 **{id_type: id_},
             }
             users_by_id[id_] = feed
-        return users_by_id
+    return users_by_id
 
 
 def _calnet_user_api_feed(person):

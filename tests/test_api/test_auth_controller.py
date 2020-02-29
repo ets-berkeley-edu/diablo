@@ -27,7 +27,7 @@ import json
 
 from tests.util import override_config
 
-admin_uid = '2040'
+authorized_uid = '2040'
 unauthorized_uid = '1015674'
 no_calnet_record_for_uid = '13'
 
@@ -45,13 +45,13 @@ class TestDevAuth:
         assert response.status_code == expected_status_code
         return json.loads(response.data)
 
-    def test_disabled(self, app, client):
+    def test_dev_auth_is_off(self, app, client):
         """Blocks access unless enabled."""
         with override_config(app, 'DEVELOPER_AUTH_ENABLED', False):
             self._api_dev_auth_login(
                 client,
                 params={
-                    'uid': admin_uid,
+                    'uid': authorized_uid,
                     'password': app.config['DEVELOPER_AUTH_PASSWORD'],
                 },
                 expected_status_code=404,
@@ -63,13 +63,13 @@ class TestDevAuth:
             self._api_dev_auth_login(
                 client,
                 params={
-                    'uid': admin_uid,
+                    'uid': authorized_uid,
                     'password': 'Born 2 Lose',
                 },
                 expected_status_code=401,
             )
 
-    def test_authorized_user_fail(self, app, client):
+    def test_dev_auth_bad_uid(self, app, client):
         """Fails if the chosen UID does not match an authorized user."""
         with override_config(app, 'DEVELOPER_AUTH_ENABLED', True):
             self._api_dev_auth_login(
@@ -81,7 +81,7 @@ class TestDevAuth:
                 expected_status_code=403,
             )
 
-    def test_unauthorized_user(self, app, client):
+    def test_dev_auth_unauthorized(self, app, client):
         """Fails if the chosen UID does not match an authorized user."""
         with override_config(app, 'DEVELOPER_AUTH_ENABLED', True):
             self._api_dev_auth_login(
@@ -93,17 +93,17 @@ class TestDevAuth:
                 expected_status_code=403,
             )
 
-    def test_known_user_with_correct_password_logs_in(self, app, client):
+    def test_dev_auth_success(self, app, client):
         """There is a happy path."""
         with override_config(app, 'DEVELOPER_AUTH_ENABLED', True):
             api_json = self._api_dev_auth_login(
                 client,
                 params={
-                    'uid': admin_uid,
+                    'uid': authorized_uid,
                     'password': app.config['DEVELOPER_AUTH_PASSWORD'],
                 },
             )
-            assert api_json['uid'] == admin_uid
+            assert api_json['uid'] == authorized_uid
             response = client.get('/api/auth/logout')
             assert response.status_code == 200
             assert response.json['isAnonymous']
@@ -121,30 +121,11 @@ class TestDevAuth:
             )
 
 
-class TestAuthorization:
-
-    @staticmethod
-    def _api_my_profile(client, expected_status_code=200):
-        response = client.get('/api/profile/my')
-        assert response.status_code == expected_status_code
-        return response.json
-
-    def test_unauthorized_is_not_active(self, client, fake_auth):
-        fake_auth.login(unauthorized_uid)
-        api_json = self._api_my_profile(client)
-        assert not api_json['isActive']
-
-    def test_admin_is_active(self, client, fake_auth):
-        fake_auth.login(admin_uid)
-        api_json = self._api_my_profile(client)
-        assert api_json['isActive']
-
-
 class TestCasAuth:
     """CAS login URL generation and redirects."""
 
     def test_cas_login_url(self, client):
         """Returns berkeley.edu URL of CAS login page."""
-        response = client.get('/cas/login_url')
+        response = client.get('/api/auth/cas_login_url')
         assert response.status_code == 200
         assert 'berkeley.edu/cas/login' in response.json.get('casLoginUrl')

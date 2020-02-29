@@ -1,6 +1,6 @@
 # Diablo
 
-UC Berkeley at Course Capture
+Diablo supports UC Berkeley's Course Capture service.
 
 ![Picture of sun setting in the city of Hatra, Iraq](src/assets/iraqi-sunset-from-exorcist-movie.png)
 

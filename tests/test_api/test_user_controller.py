@@ -23,20 +23,30 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-import os
+authorized_uid = '2040'
+unauthorized_uid = '1015674'
 
-# Base directory for the application (one level up from this config file).
-BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
-ALERT_INFREQUENT_ACTIVITY_ENABLED = False
-ALERT_WITHDRAWAL_ENABLED = False
+class TestMyProfile:
 
-AWS_APP_ROLE_ARN = 'arn:aws:iam::123456789012:role/test-role'
+    @staticmethod
+    def _api_my_profile(client, expected_status_code=200):
+        response = client.get('/api/user/my_profile')
+        assert response.status_code == expected_status_code
+        return response.json
 
-INDEX_HTML = f'{BASE_DIR}/tests/static/test-index.html'
+    def test_unauthorized_is_not_active(self, client, fake_auth):
+        fake_auth.login(unauthorized_uid)
+        api_json = self._api_my_profile(client)
+        assert api_json['isActive'] is False
+        assert api_json['isAnonymous'] is True
+        assert api_json['isAuthenticated'] is False
+        assert api_json['uid'] is None
 
-LOGGING_LOCATION = 'STDOUT'
-
-SQLALCHEMY_DATABASE_URI = 'postgres://diablo:diablo@localhost:5432/diablo_test'
-
-TESTING = True
+    def test_admin_is_active(self, client, fake_auth):
+        fake_auth.login(authorized_uid)
+        api_json = self._api_my_profile(client)
+        assert api_json['isActive'] is True
+        assert api_json['isAnonymous'] is False
+        assert api_json['isAuthenticated'] is True
+        assert api_json['uid'] == authorized_uid

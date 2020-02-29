@@ -1,14 +1,27 @@
 <template>
-  <div id="app">
-    <h1>Welcome to Diablo"</h1>
-    <div>
-      <img alt="Sun setting in the city of Hatra, Iraq" src="./src/assets/iraqi-sunset-from-exorcist-movie.png">
-    </div>
-  </div>
+  <v-app>
+    <v-app-bar
+      app
+      color="primary"
+      dark
+    >
+      <div v-if="$currentUser.isAdmin" class="d-flex align-center">
+        Home
+      </div>
+      <v-spacer></v-spacer>
+      <span v-if="$currentUser.isAuthenticated" class="mr-2">
+        {{ $currentUser.name }}
+      </span>
+    </v-app-bar>
+
+    <v-content>
+      <router-view />
+    </v-content>
+  </v-app>
 </template>
 
 <script>
-export default {
-  name: 'App'
-}
+  export default {
+    name: 'App'
+  }
 </script>
