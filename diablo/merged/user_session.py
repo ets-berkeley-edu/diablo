@@ -99,20 +99,8 @@ class UserSession(UserMixin):
 
     @classmethod
     def _get_api_json(cls, user=None):
-        calnet_profile = None
-        is_active = False
-
-        if user:
-            calnet_profile = calnet.get_calnet_user_for_uid(app, user.uid)
-            if not calnet_profile:
-                is_active = False
-            elif user.is_admin:
-                is_active = True
-            elif len(user.department_memberships):
-                for m in user.department_memberships:
-                    is_active = True if m.role else False
-                    if is_active:
-                        break
+        calnet_profile = calnet.get_calnet_user_for_uid(app, user.uid) if user else None
+        is_active = bool(calnet_profile)
         return {
             **(calnet_profile or {}),
             **{

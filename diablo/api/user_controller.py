@@ -28,6 +28,6 @@ from flask import current_app as app
 from flask_login import current_user
 
 
-@app.route('/api/profile/my')
+@app.route('/api/user/my_profile')
 def my_profile():
     return tolerant_jsonify(current_user.to_api_json())
