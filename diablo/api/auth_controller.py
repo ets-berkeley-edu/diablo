@@ -28,6 +28,7 @@ from urllib.parse import urlencode, urljoin, urlparse
 import cas
 from diablo.api.errors import ResourceNotFoundError
 from diablo.lib.http import add_param_to_url, tolerant_jsonify
+from diablo.merged.user_session import UserSession
 from diablo.models.authorized_user import AuthorizedUser
 from flask import abort, current_app as app, flash, redirect, request, url_for
 from flask_login import current_user, login_required, login_user, logout_user
@@ -61,26 +62,24 @@ def logout():
 
 @app.route('/cas/callback', methods=['GET', 'POST'])
 def cas_login():
-    logger = app.logger
     ticket = request.args['ticket']
     target_url = request.args.get('url')
     uid, attributes, proxy_granting_ticket = _cas_client(target_url).verify_ticket(ticket)
-    logger.info(f'Logged into CAS as user {uid}')
+    app.logger.info(f'Logged into CAS as user {uid}')
     user_id = AuthorizedUser.get_id_per_uid(uid)
-    user = user_id and app.login_manager.user_callback(user_id=user_id)
-    support_email = app.config['DIABLO_SUPPORT_EMAIL']
-    if user is None:
-        logger.error(f'UID {uid} is not an authorized user.')
+    user = user_id and UserSession(user_id)
+    if not user.get_id():
+        app.logger.error(f'UID {uid} is not an authorized user.')
         param = ('error', f"""
             Sorry, you are not registered to use Diablo.
-            Please <a href="mailto:{support_email}">email us</a> for assistance.
+            Please <a href="mailto:{app.config['DIABLO_SUPPORT_EMAIL']}">email us</a> for assistance.
         """)
         redirect_url = add_param_to_url('/', param)
     elif not user.is_active:
-        logger.error(f'UID {uid} is in the Diablo db but is not authorized to use the tool.')
+        app.logger.error(f'UID {uid} is in the Diablo db but is not authorized to use the tool.')
         param = ('error', f"""
             Sorry, you are not registered to use Diablo.
-            Please <a href="mailto:{support_email}">email us</a> for assistance.
+            Please <a href="mailto:{app.config['DIABLO_SUPPORT_EMAIL']}">email us</a> for assistance.
         """)
         redirect_url = add_param_to_url('/', param)
     else:
@@ -108,22 +107,21 @@ def _cas_client(target_url=None):
 
 def _dev_auth_login(uid, password):
     if app.config['DEVELOPER_AUTH_ENABLED']:
-        logger = app.logger
         if password != app.config['DEVELOPER_AUTH_PASSWORD']:
             return tolerant_jsonify({'message': 'Invalid credentials'}, 401)
         user_id = AuthorizedUser.get_id_per_uid(uid)
-        user = user_id and app.login_manager.user_callback(user_id=user_id)
-        if user is None:
+        user = user_id and UserSession(user_id)
+        if not user or not user.get_id():
             msg = f'Dev-auth: User with UID {uid} is not registered in Diablo.'
-            logger.error(msg)
+            app.logger.error(msg)
             return tolerant_jsonify({'message': msg}, 403)
         if not user.is_active:
             msg = f'Dev-auth: UID {uid} is registered with Diablo but not active.'
-            logger.error(msg)
+            app.logger.error(msg)
             return tolerant_jsonify({'message': msg}, 403)
         if not login_user(user, force=True, remember=True):
             msg = f'Dev-auth: User with UID {uid} failed in login_user().'
-            logger.error(msg)
+            app.logger.error(msg)
             return tolerant_jsonify({'message': msg}, 403)
         return tolerant_jsonify(current_user.to_api_json())
     else:

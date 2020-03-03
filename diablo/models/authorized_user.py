@@ -46,7 +46,7 @@ class AuthorizedUser(Base):
                 """
 
     @classmethod
-    def find_by_id(cls, db_id, include_deleted=False):
+    def find_by_id(cls, db_id):
         return cls.query.filter_by(id=db_id).first()
 
     @classmethod

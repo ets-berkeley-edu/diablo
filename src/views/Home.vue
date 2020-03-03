@@ -1,15 +1,21 @@
 <template>
-  <hello-world />
+  <div>
+    Current user: {{ $currentUser }}
+  </div>
 </template>
 
-<script lang="ts">
-  import Vue from 'vue'
-  import HelloWorld from '@/components/HelloWorld.vue'
+<script>
+  import axios from 'axios'
 
-  export default Vue.extend({
+  export default {
     name: 'Home',
-    components: {
-      HelloWorld
+    data: () => ({
+      foo: undefined
+    }),
+    created() {
+      axios.get(`${process.env.VUE_APP_API_BASE_URL}/api/user/foo`).then(response => {
+        this.foo = response.data
+      })
     }
-  })
+  }
 </script>

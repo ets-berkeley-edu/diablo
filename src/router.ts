@@ -2,6 +2,10 @@ import _ from 'lodash'
 import auth from './auth'
 import Router from 'vue-router'
 import Vue from 'vue'
+import BaseView from '@/views/BaseView.vue'
+import Login from '@/views/Login.vue'
+import Home from '@/views/Home.vue'
+import NotFound from '@/views/NotFound.vue'
 
 Vue.use(Router)
 
@@ -14,7 +18,7 @@ const router = new Router({
     },
     {
       path: '/login',
-      component: () => import('@/views/Login.vue'),
+      component: Login,
       beforeEnter: (to: any, from: any, next: any) => {
         const currentUser = Vue.prototype.$currentUser
         if (currentUser.isAuthenticated) {
@@ -34,17 +38,18 @@ const router = new Router({
     {
       path: '/',
       beforeEnter: auth.requiresAuthenticated,
+      component: BaseView,
       children: [
         {
           path: '/home',
-          component: () => import('@/views/Home.vue'),
+          component: Home,
           meta: {
             title: 'Home'
           }
         },
         {
           path: '/404',
-          component: () => import('@/views/NotFound.vue'),
+          component: NotFound,
           meta: {
             title: 'Page not found'
           }
