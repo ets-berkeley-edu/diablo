@@ -48,9 +48,6 @@ class UserSession(UserMixin):
     def get_uid(self):
         return self.api_json['uid']
 
-    def get_csid(self):
-        return self.api_json.get('csid')
-
     @property
     def is_active(self):
         return self.api_json['isActive']
@@ -64,31 +61,8 @@ class UserSession(UserMixin):
         return not self.api_json['isAnonymous']
 
     @property
-    def is_drop_in_advisor(self):
-        if self.api_json['dropInAdvisorStatus']:
-            return True
-        else:
-            return False
-
-    @property
-    def departments(self):
-        return self.api_json['departments']
-
-    @property
-    def drop_in_advisor_departments(self):
-        return self.api_json['dropInAdvisorStatus']
-
-    @property
     def is_admin(self):
         return self.api_json['isAdmin']
-
-    @property
-    def in_demo_mode(self):
-        return self.api_json['inDemoMode']
-
-    @property
-    def can_access_canvas_data(self):
-        return self.api_json['canAccessCanvasData']
 
     def to_api_json(self):
         return self.api_json

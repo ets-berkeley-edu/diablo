@@ -12,14 +12,13 @@ export function devAuthLogIn(uid: string, password: string) {
     .then(response => {
       Vue.prototype.$currentUser = response.data
       Vue.prototype.$core.initializeCurrentUser().then(_.noop)
-      Vue.prototype.$core.mountGoogleAnalytics().then(_.noop)
       return Vue.prototype.$currentUser
     }, error => error)
 }
 
 export function getCasLoginURL() {
   return axios
-    .get(`${utils.apiBaseUrl()}/cas/login_url`)
+    .get(`${utils.apiBaseUrl()}/api/auth/cas_login_url`)
     .then(response => response.data, () => null)
 }
 

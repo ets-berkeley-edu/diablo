@@ -29,10 +29,9 @@ import os
 # Base directory for the application (one level up from this config file).
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
-DIABLO_SUPPORT_EMAIL = 'course-capture-help@berkeley.edu'
-
 CAS_SERVER = 'https://auth-test.berkeley.edu/cas/'
-CAS_LOGOUT_URL = 'https://auth-test.berkeley.edu/cas/logout'
+
+DIABLO_SUPPORT_EMAIL = 'course-capture-help@berkeley.edu'
 
 # Some defaults.
 CSRF_ENABLED = True
@@ -44,6 +43,7 @@ DEVELOPER_AUTH_PASSWORD = 'another secret'
 # Directory to search for mock fixtures, if running in "test" or "demo" mode.
 FIXTURES_PATH = None
 
+# Minutes of inactivity before session cookie is destroyed
 INACTIVE_SESSION_LIFETIME = 20
 
 # These "INDEX_HTML" defaults are good in diablo-[dev|qa|prod]. See development.py for local configs.
@@ -58,6 +58,8 @@ LOGGING_FORMAT = '[%(asctime)s] - %(levelname)s: %(message)s [in %(pathname)s:%(
 LOGGING_LOCATION = 'diablo.log'
 LOGGING_LEVEL = logging.DEBUG
 LOGGING_PROPAGATION_LEVEL = logging.INFO
+
+REMEMBER_COOKIE_NAME = 'remember_diablo_token'
 
 # Used to encrypt session cookie.
 SECRET_KEY = 'secret'
