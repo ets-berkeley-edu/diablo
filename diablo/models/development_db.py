@@ -23,8 +23,10 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-from diablo import db, std_commit
-from diablo.models.authorized_user import AuthorizedUser
+import json
+
+from diablo import BASE_DIR, cache, db, std_commit
+from diablo.models.admin_user import AdminUser
 from flask import current_app as app
 from sqlalchemy.sql import text
 
@@ -45,7 +47,16 @@ def clear():
 def load():
     _load_schemas()
     _create_users()
+    _cache_externals()
     return db
+
+
+def _cache_externals():
+    with open(f'{BASE_DIR}/fixtures/salesforce_capture_enabled_rooms.json', 'r') as file:
+        cache.set('salesforce_capture_enabled_rooms', json.loads(file.read()))
+    for uid in ['2040', '8765432']:
+        with open(f'{BASE_DIR}/fixtures/calnet_user_for_uid_{uid}.json', 'r') as file:
+            cache.set(f'calnet_user_for_uid_{uid}', json.loads(file.read()))
 
 
 def _load_schemas():
@@ -57,7 +68,7 @@ def _load_schemas():
 
 def _create_users():
     for test_user in _test_users:
-        db.session.add(AuthorizedUser(uid=test_user['uid']))
+        db.session.add(AdminUser(uid=test_user['uid']))
     std_commit(allow_test_environment=True)
 
 

@@ -1,20 +1,37 @@
 <template>
   <div>
-    Current user: {{ $currentUser }}
+    <h1 v-if="!isLoading">{{ totalRoomCount }} Capture-enabled Rooms</h1>
+    <v-data-table
+      :headers="headers"
+      :items="rooms"
+      :items-per-page="100"
+      :loading="isLoading"
+      class="elevation-1"
+    ></v-data-table>
   </div>
 </template>
 
 <script>
-  import axios from 'axios'
+
+  import {getCaptureEnabledRooms} from "@/api/course-capture"
 
   export default {
     name: 'Home',
     data: () => ({
-      foo: undefined
+      headers: [
+        {text: 'Building', value: 'building'},
+        {text: 'Room', value: 'roomNumber', sortable: false},
+        {text: 'Capabilities', value: 'capabilities'}
+      ],
+      isLoading: true,
+      rooms: undefined,
+      totalRoomCount: undefined
     }),
     created() {
-      axios.get(`${process.env.VUE_APP_API_BASE_URL}/api/user/foo`).then(response => {
-        this.foo = response.data
+      getCaptureEnabledRooms().then(data => {
+        this.rooms = data['rooms']
+        this.totalRoomCount = data['totalRoomCount']
+        this.isLoading = false
       })
     }
   }

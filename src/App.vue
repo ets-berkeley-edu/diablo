@@ -6,7 +6,13 @@
       dark
     >
       <div v-if="$currentUser.isAdmin" class="d-flex align-center">
-        Home
+        <router-link
+          id="home-header"
+          class="header-text"
+          to="/"
+          tabindex="0">
+          <span class="sr-only">Return to </span>Home
+        </router-link>
       </div>
       <v-spacer></v-spacer>
       <v-menu v-if="$currentUser.isAuthenticated" class="mr-2" offset-y>

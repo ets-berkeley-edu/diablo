@@ -26,15 +26,16 @@ ENHANCEMENTS, OR MODIFICATIONS.
 from urllib.parse import urlencode, urljoin, urlparse
 
 import cas
+from diablo import cache
 from diablo.api.errors import ResourceNotFoundError
 from diablo.lib.http import add_param_to_url, tolerant_jsonify
-from diablo.merged.user_session import UserSession
-from diablo.models.authorized_user import AuthorizedUser
+from diablo.models.user import User
 from flask import abort, current_app as app, flash, redirect, request, url_for
 from flask_login import current_user, login_required, login_user, logout_user
 
 
 @app.route('/api/auth/cas_login_url', methods=['GET'])
+@cache.cached()
 def cas_login_url():
     target_url = request.referrer or None
     return tolerant_jsonify({
@@ -66,17 +67,9 @@ def cas_login():
     target_url = request.args.get('url')
     uid, attributes, proxy_granting_ticket = _cas_client(target_url).verify_ticket(ticket)
     app.logger.info(f'Logged into CAS as user {uid}')
-    user_id = AuthorizedUser.get_id_per_uid(uid)
-    user = user_id and UserSession(user_id)
-    if not user.get_id():
-        app.logger.error(f'UID {uid} is not an authorized user.')
-        param = ('error', f"""
-            Sorry, you are not registered to use Diablo.
-            Please <a href="mailto:{app.config['DIABLO_SUPPORT_EMAIL']}">email us</a> for assistance.
-        """)
-        redirect_url = add_param_to_url('/', param)
-    elif not user.is_active:
-        app.logger.error(f'UID {uid} is in the Diablo db but is not authorized to use the tool.')
+    user = User.load_user(uid)
+    if not user.is_active:
+        app.logger.error(f'Sorry, user with UID {uid} is not authorized to use Diablo.')
         param = ('error', f"""
             Sorry, you are not registered to use Diablo.
             Please <a href="mailto:{app.config['DIABLO_SUPPORT_EMAIL']}">email us</a> for assistance.
@@ -109,18 +102,13 @@ def _dev_auth_login(uid, password):
     if app.config['DEVELOPER_AUTH_ENABLED']:
         if password != app.config['DEVELOPER_AUTH_PASSWORD']:
             return tolerant_jsonify({'message': 'Invalid credentials'}, 401)
-        user_id = AuthorizedUser.get_id_per_uid(uid)
-        user = user_id and UserSession(user_id)
-        if not user or not user.get_id():
-            msg = f'Dev-auth: User with UID {uid} is not registered in Diablo.'
-            app.logger.error(msg)
-            return tolerant_jsonify({'message': msg}, 403)
+        user = User(uid)
         if not user.is_active:
-            msg = f'Dev-auth: UID {uid} is registered with Diablo but not active.'
+            msg = f'UID {uid} is not active according to CalNet.'
             app.logger.error(msg)
             return tolerant_jsonify({'message': msg}, 403)
         if not login_user(user, force=True, remember=True):
-            msg = f'Dev-auth: User with UID {uid} failed in login_user().'
+            msg = f'The system failed to log in user with UID {uid}.'
             app.logger.error(msg)
             return tolerant_jsonify({'message': msg}, 403)
         return tolerant_jsonify(current_user.to_api_json())

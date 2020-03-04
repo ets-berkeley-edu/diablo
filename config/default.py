@@ -33,9 +33,16 @@ CAS_SERVER = 'https://auth-test.berkeley.edu/cas/'
 
 DIABLO_SUPPORT_EMAIL = 'course-capture-help@berkeley.edu'
 
-# Some defaults.
-CSRF_ENABLED = True
-CSRF_SESSION_KEY = 'secret'
+CACHE_DEFAULT_TIMEOUT = 86400
+CACHE_DIR = f'{BASE_DIR}/.flask_cache'
+CACHE_THRESHOLD = 300
+CACHE_TYPE = 'filesystem'
+
+CURRENT_TERM = 2202
+
+# Loch o' Data
+DATA_LOCH_RDS_URI = 'postgres://foo:secret@secret-rds-url.com:5432/data_loch'
+DATA_LOCH_SIS_SCHEMA = 'sis_data'
 
 DEVELOPER_AUTH_ENABLED = False
 DEVELOPER_AUTH_PASSWORD = 'another secret'
@@ -60,6 +67,11 @@ LOGGING_LEVEL = logging.DEBUG
 LOGGING_PROPAGATION_LEVEL = logging.INFO
 
 REMEMBER_COOKIE_NAME = 'remember_diablo_token'
+
+SALESFORCE_USERNAME = ''
+SALESFORCE_PASSWORD = ''
+SALESFORCE_DOMAIN = ''
+SALESFORCE_TOKEN = ''
 
 # Used to encrypt session cookie.
 SECRET_KEY = 'secret'

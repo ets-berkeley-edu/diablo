@@ -23,22 +23,31 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-import os
+from diablo import BASE_DIR, cachify
+from flask import current_app as app
+from simple_salesforce import Salesforce
 
-# Base directory for the application (one level up from this config file).
-BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
-ALERT_INFREQUENT_ACTIVITY_ENABLED = False
-ALERT_WITHDRAWAL_ENABLED = False
+@cachify('salesforce_capture_enabled_rooms')
+def get_capture_enabled_rooms():
+    sf = Salesforce(
+        username=app.config['SALESFORCE_USERNAME'],
+        password=app.config['SALESFORCE_PASSWORD'],
+        domain=app.config['SALESFORCE_DOMAIN'],
+        security_token=app.config['SALESFORCE_TOKEN'],
+    )
 
-AWS_APP_ROLE_ARN = 'arn:aws:iam::123456789012:role/test-role'
+    with open(f'{BASE_DIR}/diablo/soql/get_all_rooms.soql', 'r') as file:
+        rooms = []
+        result = sf.query(file.read())
+        for row in result['records']:
+            rooms.append({
+                'building': _translate_salesforce_building(row['Building__c']),
+                'roomNumber': row['Room_Number_Text__c'],
+                'capabilities': row['Recording_Capabilities__c'],
+            })
+        return rooms
 
-DATA_LOCH_RDS_URI = 'postgres://diablo:diablo@localhost:5432/diablo_loch_test'
 
-INDEX_HTML = f'{BASE_DIR}/tests/static/test-index.html'
-
-LOGGING_LOCATION = 'STDOUT'
-
-SQLALCHEMY_DATABASE_URI = 'postgres://diablo:diablo@localhost:5432/diablo_test'
-
-TESTING = True
+def _translate_salesforce_building(building_name):
+    return 'Genetics & Plant Bio' if building_name == 'GPB' else building_name

@@ -23,13 +23,23 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
+from os.path import dirname
+
+from decorator import decorator
+from diablo.lib.util import get_args_dict
 from flask import current_app as app
+from flask_caching import Cache
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import SQLAlchemyError
 
 __version__ = '0.1'
 
+
+cache = Cache()
+
 db = SQLAlchemy()
+
+BASE_DIR = dirname(dirname(__file__))
 
 
 def std_commit(allow_test_environment=False):
@@ -54,3 +64,17 @@ def std_commit(allow_test_environment=False):
     finally:
         if not successful_commit:
             db.session.close()
+
+
+def cachify(key_pattern):
+    @decorator
+    def _cachify(func, *args, **kw):
+        args_dict = get_args_dict(func, *args, **kw)
+        key = key_pattern.format(**args_dict)
+        cached = cache.get(key)
+        if cached is None:
+            cached = func(*args, **kw)
+            cache.set(key, cached)
+        return cached
+
+    return _cachify

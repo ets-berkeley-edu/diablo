@@ -23,8 +23,9 @@ export default {
       $_goToLogin(to, next)
     }
   },
-  requiresAuthenticated: (to: any, from: any, next: any) => {
-    if (Vue.prototype.$currentUser.isAuthenticated) {
+  requiresInstructor: (to: any, from: any, next: any) => {
+    const currentUser = Vue.prototype.$currentUser
+    if (currentUser.isTeaching || currentUser.isAdmin) {
       next()
     } else {
       $_goToLogin(to, next)

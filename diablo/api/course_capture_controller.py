@@ -22,23 +22,15 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
+from diablo.externals.salesforce import get_capture_enabled_rooms
+from diablo.lib.http import tolerant_jsonify
+from flask import current_app as app
 
-import os
 
-# Base directory for the application (one level up from this config file).
-BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-
-ALERT_INFREQUENT_ACTIVITY_ENABLED = False
-ALERT_WITHDRAWAL_ENABLED = False
-
-AWS_APP_ROLE_ARN = 'arn:aws:iam::123456789012:role/test-role'
-
-DATA_LOCH_RDS_URI = 'postgres://diablo:diablo@localhost:5432/diablo_loch_test'
-
-INDEX_HTML = f'{BASE_DIR}/tests/static/test-index.html'
-
-LOGGING_LOCATION = 'STDOUT'
-
-SQLALCHEMY_DATABASE_URI = 'postgres://diablo:diablo@localhost:5432/diablo_test'
-
-TESTING = True
+@app.route('/api/capture/enabled_rooms')
+def get_enabled_rooms():
+    rooms = get_capture_enabled_rooms()
+    return tolerant_jsonify({
+        'rooms': rooms,
+        'totalRoomCount': len(rooms),
+    })
