@@ -36,6 +36,7 @@ def create_app():
     load_configs(app)
     initialize_logger(app)
     cache.init_app(app)
+    cache.clear()
     db.init_app(app)
 
     with app.app_context():

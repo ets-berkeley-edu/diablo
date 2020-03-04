@@ -54,7 +54,7 @@ def load():
 def _cache_externals():
     with open(f'{BASE_DIR}/fixtures/salesforce_capture_enabled_rooms.json', 'r') as file:
         cache.set('salesforce_capture_enabled_rooms', json.loads(file.read()))
-    for uid in ['2040', '8765432']:
+    for uid in ['2040', '1015674', '8765432']:
         with open(f'{BASE_DIR}/fixtures/calnet_user_for_uid_{uid}.json', 'r') as file:
             cache.set(f'calnet_user_for_uid_{uid}', json.loads(file.read()))
 

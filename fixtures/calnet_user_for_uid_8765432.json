@@ -1,11 +1,11 @@
 {
-  "campusEmail": "iggy@berkeley.edu",
-  "departments": "EH1CS",
-  "email": "iggy@berkeley.edu",
-  "firstName": "Iggy",
+  "campusEmail": "blatty@berkeley.edu",
+  "departments": "HENGL",
+  "email": "blatty@berkeley.edu",
+  "firstName": "William",
   "isExpiredPerLdap": false,
-  "lastName": "Pop",
-  "name": "Iggy Pop",
-  "title": "Assoc Prof",
+  "lastName": "Blatty",
+  "name": "William Peter Blatty",
+  "title": "Writer and filmmaker",
   "uid": "8765432"
 }

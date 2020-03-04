@@ -1,38 +1,35 @@
 <template>
   <div>
-    <h1 v-if="!isLoading">{{ totalRoomCount }} Capture-enabled Rooms</h1>
+    <h1>{{ $currentUser.teachingSections.length }} Capture-enabled Rooms</h1>
     <v-data-table
       :headers="headers"
-      :items="rooms"
+      :items="$currentUser.teachingSections"
       :items-per-page="100"
-      :loading="isLoading"
+      :loading="loading"
       class="elevation-1"
     ></v-data-table>
   </div>
 </template>
 
 <script>
-
-  import {getCaptureEnabledRooms} from "@/api/course-capture"
-
   export default {
     name: 'Home',
     data: () => ({
       headers: [
-        {text: 'Building', value: 'building'},
-        {text: 'Room', value: 'roomNumber', sortable: false},
-        {text: 'Capabilities', value: 'capabilities'}
-      ],
-      isLoading: true,
-      rooms: undefined,
-      totalRoomCount: undefined
-    }),
-    created() {
-      getCaptureEnabledRooms().then(data => {
-        this.rooms = data['rooms']
-        this.totalRoomCount = data['totalRoomCount']
-        this.isLoading = false
-      })
-    }
+        {text: 'Section', value: 'sectionId'},
+        {text: 'Title', value: 'courseTitle'},
+        {text: 'Catalog', value: 'courseName'},
+        {text: 'Format', value: 'instructionFormat'},
+        {text: 'Instructor Role', value: 'instructorRoleCode'},
+        {text: 'Eligible for Course Capture', value: 'isEligibleForCourseCapture'},
+        {text: 'meetingDays', value: 'meetingDays'},
+        {text: 'meetingEndDate', value: 'meetingEndDate'},
+        {text: 'meetingEndTime', value: 'meetingEndTime'},
+        {text: 'meetingLocation', value: 'meetingLocation'},
+        {text: 'meetingStartDate', value: 'meetingStartDate'},
+        {text: 'meetingStartTime', value: 'meetingStartTime'},
+        {text: 'sectionNum', value: 'sectionNum'}
+      ]
+    })
   }
 </script>

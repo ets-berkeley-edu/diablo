@@ -41,8 +41,8 @@ def sis_schema():
 def get_sections_per_instructor_uid(instructor_uid, term_id):
     sql = f"""
         SELECT * FROM {sis_schema()}.sis_sections
-        WHERE sis_term_id = ':term_id'
-        AND instructor_uid = :instructor_uid
+        WHERE sis_term_id = ':term_id' AND instructor_uid = :instructor_uid
+        ORDER BY sis_course_title, sis_section_id
     """
     return safe_execute_rds(sql, term_id=term_id, instructor_uid=instructor_uid)
 

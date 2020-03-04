@@ -22,11 +22,13 @@ npm install
 
 ### Create Postgres user and databases
 
+![Picture of the demon Pazuzu, brother of Humbaba and son of the god Hanbi.](src/assets/pazuzu.jpg)
+
 ```
 createuser diablo --no-createdb --no-superuser --no-createrole --pwprompt
-createdb diablo --owner=diablo
-createdb diablo_test --owner=diablo
-createdb diablo_loch_test --owner=diablo
+createdb pazuzu --owner=diablo
+createdb pazuzu_test --owner=diablo
+createdb pazuzu_loch_test --owner=diablo
 
 # Load schema
 export FLASK_APP=run.py

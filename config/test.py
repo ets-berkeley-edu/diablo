@@ -33,12 +33,12 @@ ALERT_WITHDRAWAL_ENABLED = False
 
 AWS_APP_ROLE_ARN = 'arn:aws:iam::123456789012:role/test-role'
 
-DATA_LOCH_RDS_URI = 'postgres://diablo:diablo@localhost:5432/diablo_loch_test'
+DATA_LOCH_RDS_URI = 'postgres://diablo:diablo@localhost:5432/pazuzu_loch_test'
 
 INDEX_HTML = f'{BASE_DIR}/tests/static/test-index.html'
 
 LOGGING_LOCATION = 'STDOUT'
 
-SQLALCHEMY_DATABASE_URI = 'postgres://diablo:diablo@localhost:5432/diablo_test'
+SQLALCHEMY_DATABASE_URI = 'postgres://diablo:diablo@localhost:5432/pazuzu_test'
 
 TESTING = True

@@ -80,7 +80,7 @@ SECRET_KEY = 'secret'
 SQLALCHEMY_COMMIT_ON_TEARDOWN = True
 
 # Override in local configs.
-SQLALCHEMY_DATABASE_URI = 'postgres://diablo:diablo@localhost:5432/diablo'
+SQLALCHEMY_DATABASE_URI = 'postgres://diablo:diablo@localhost:5432/pazuzu'
 
 # Disable an expensive bit of the ORM.
 SQLALCHEMY_TRACK_MODIFICATIONS = False
