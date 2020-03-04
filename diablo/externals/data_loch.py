@@ -23,38 +23,43 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-from diablo import db
-from diablo.models.base import Base
-from sqlalchemy import text
+from datetime import datetime
+
+from flask import current_app as app
+import sqlalchemy
+from sqlalchemy import create_engine
+from sqlalchemy.sql import text
+
+# Lazy init to support testing.
+data_loch_db_rds = None
 
 
-class AuthorizedUser(Base):
-    __tablename__ = 'authorized_users'
+def sis_schema():
+    return app.config['DATA_LOCH_SIS_SCHEMA']
 
-    id = db.Column(db.Integer, nullable=False, primary_key=True)  # noqa: A003
-    is_admin = True
-    uid = db.Column(db.String(255), nullable=False, unique=True)
 
-    def __init__(self, uid):
-        self.uid = uid
+def get_sections_per_instructor_uid(instructor_uid, term_id):
+    sql = f"""
+        SELECT * FROM {sis_schema()}.sis_sections
+        WHERE sis_term_id = ':term_id'
+        AND instructor_uid = :instructor_uid
+    """
+    return safe_execute_rds(sql, term_id=term_id, instructor_uid=instructor_uid)
 
-    def __repr__(self):
-        return f"""<AuthorizedUser
-                    uid={self.uid},
-                    created_at={self.created_at},
-                    updated_at={self.updated_at}>
-                """
 
-    @classmethod
-    def find_by_id(cls, db_id):
-        return cls.query.filter_by(id=db_id).first()
-
-    @classmethod
-    def find_by_uid(cls, uid):
-        return cls.query.filter_by(uid=uid).first()
-
-    @classmethod
-    def get_id_per_uid(cls, uid):
-        query = text('SELECT id FROM authorized_users WHERE uid = :uid')
-        result = db.session.execute(query, {'uid': uid}).first()
-        return result and result['id']
+def safe_execute_rds(sql, **kwargs):
+    global data_loch_db_rds
+    if data_loch_db_rds is None:
+        data_loch_db_rds = create_engine(app.config['DATA_LOCH_RDS_URI'])
+    s = text(sql)
+    try:
+        ts = datetime.now().timestamp()
+        dbresp = data_loch_db_rds.execute(s, **kwargs)
+    except sqlalchemy.exc.SQLAlchemyError as err:
+        app.logger.error(f'SQL {s} threw {err}')
+        return None
+    rows = dbresp.fetchall()
+    query_time = datetime.now().timestamp() - ts
+    row_array = [dict(r) for r in rows]
+    app.logger.debug(f'Query returned {len(row_array)} rows in {query_time} seconds:\n{sql}\n{kwargs}')
+    return row_array

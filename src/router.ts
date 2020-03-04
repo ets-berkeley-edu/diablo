@@ -1,11 +1,12 @@
 import _ from 'lodash'
 import auth from './auth'
-import Router from 'vue-router'
-import Vue from 'vue'
 import BaseView from '@/views/BaseView.vue'
-import Login from '@/views/Login.vue'
 import Home from '@/views/Home.vue'
+import Login from '@/views/Login.vue'
 import NotFound from '@/views/NotFound.vue'
+import Router from 'vue-router'
+import SignUp from '@/views/SignUp.vue'
+import Vue from 'vue'
 
 Vue.use(Router)
 
@@ -37,7 +38,18 @@ const router = new Router({
     },
     {
       path: '/',
-      beforeEnter: auth.requiresAuthenticated,
+      component: BaseView,
+      beforeEnter: auth.requiresInstructor,
+      children: [
+        {
+          path: '/course/:section_id',
+          component: SignUp
+        }
+      ]
+    },
+    {
+      path: '/',
+      beforeEnter: auth.requiresAdmin,
       component: BaseView,
       children: [
         {
@@ -46,7 +58,13 @@ const router = new Router({
           meta: {
             title: 'Home'
           }
-        },
+        }
+      ]
+    },
+    {
+      path: '/',
+      component: BaseView,
+      children: [
         {
           path: '/404',
           component: NotFound,

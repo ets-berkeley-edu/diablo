@@ -34,11 +34,11 @@ SET row_security = off;
 
 --
 
-ALTER TABLE IF EXISTS ONLY public.authorized_users DROP CONSTRAINT IF EXISTS authorized_users_pkey;
-ALTER TABLE IF EXISTS ONLY public.authorized_users DROP CONSTRAINT IF EXISTS authorized_users_uid_key;
-ALTER TABLE IF EXISTS public.authorized_users ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS ONLY public.admin_users DROP CONSTRAINT IF EXISTS admin_users_pkey;
+ALTER TABLE IF EXISTS ONLY public.admin_users DROP CONSTRAINT IF EXISTS admin_users_uid_key;
+ALTER TABLE IF EXISTS public.admin_users ALTER COLUMN id DROP DEFAULT;
 
 --
 
-DROP SEQUENCE IF EXISTS public.authorized_users_id_seq;
-DROP TABLE IF EXISTS public.authorized_users;
+DROP SEQUENCE IF EXISTS public.admin_users_id_seq;
+DROP TABLE IF EXISTS public.admin_users;

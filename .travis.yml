@@ -14,8 +14,11 @@ jobs:
     - stage: test
       script:
         - psql -c 'create database diablo_test;' -U postgres
+        - psql -c 'create database diablo_loch_test;' -U postgres
         - psql diablo_test -c 'create extension pg_trgm;' -U postgres
         - psql diablo_test -c 'create role diablo superuser login; alter schema public owner to diablo;' -U postgres
+        - psql diablo_loch_test -c 'create extension pg_trgm;' -U postgres
+        - psql diablo_loch_test -c 'alter schema public owner to diablo;' -U postgres
         - pip3 install -r requirements.txt
         - tox -e test || travis_terminate 1;
     - # Python lint

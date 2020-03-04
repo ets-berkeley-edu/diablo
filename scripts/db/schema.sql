@@ -37,25 +37,25 @@ SET default_with_oids = false;
 
 --
 
-CREATE TABLE authorized_users (
+CREATE TABLE admin_users (
     id integer NOT NULL,
     uid character varying(255) NOT NULL,
     created_at timestamp with time zone NOT NULL,
     updated_at timestamp with time zone NOT NULL
 );
-ALTER TABLE authorized_users OWNER TO diablo;
-CREATE SEQUENCE authorized_users_id_seq
+ALTER TABLE admin_users OWNER TO diablo;
+CREATE SEQUENCE admin_users_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
     NO MAXVALUE
     CACHE 1;
-ALTER TABLE authorized_users_id_seq OWNER TO diablo;
-ALTER SEQUENCE authorized_users_id_seq OWNED BY authorized_users.id;
-ALTER TABLE ONLY authorized_users ALTER COLUMN id SET DEFAULT nextval('authorized_users_id_seq'::regclass);
-ALTER TABLE ONLY authorized_users
-    ADD CONSTRAINT authorized_users_pkey PRIMARY KEY (id);
-ALTER TABLE ONLY authorized_users
-    ADD CONSTRAINT authorized_users_uid_key UNIQUE (uid);
+ALTER TABLE admin_users_id_seq OWNER TO diablo;
+ALTER SEQUENCE admin_users_id_seq OWNED BY admin_users.id;
+ALTER TABLE ONLY admin_users ALTER COLUMN id SET DEFAULT nextval('admin_users_id_seq'::regclass);
+ALTER TABLE ONLY admin_users
+    ADD CONSTRAINT admin_users_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY admin_users
+    ADD CONSTRAINT admin_users_uid_key UNIQUE (uid);
 
 --

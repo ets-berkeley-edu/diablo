@@ -23,7 +23,7 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-authorized_uid = '2040'
+admin_uid = '2040'
 unauthorized_uid = '1015674'
 
 
@@ -44,9 +44,9 @@ class TestMyProfile:
         assert api_json['uid'] is None
 
     def test_admin_is_active(self, client, fake_auth):
-        fake_auth.login(authorized_uid)
+        fake_auth.login(admin_uid)
         api_json = self._api_my_profile(client)
         assert api_json['isActive'] is True
         assert api_json['isAnonymous'] is False
         assert api_json['isAuthenticated'] is True
-        assert api_json['uid'] == authorized_uid
+        assert api_json['uid'] == admin_uid

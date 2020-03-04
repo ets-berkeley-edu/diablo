@@ -40,11 +40,11 @@ from pprintpp import pprint as pp # noqa
 * Click on "Python Console"
 * Click the bug icon to start a debugging session:
 
->>> from diablo.models.authorized_user import AuthorizedUser
->>> rows = AuthorizedUser.query.all()
+>>> from diablo.models.admin_user import AdminUser
+>>> rows = AdminUser.query.all()
 >>> pp(rows)
 [
-    <AuthorizedUser 2040>, ...
+    <AdminUser 2040>, ...
 
 """
 

@@ -25,7 +25,6 @@ ENHANCEMENTS, OR MODIFICATIONS.
 
 import datetime
 
-from diablo.merged.user_session import UserSession
 from flask import jsonify, make_response, redirect, request, session
 from flask_login import LoginManager
 
@@ -33,7 +32,8 @@ from flask_login import LoginManager
 def register_routes(app):
     """Register app routes."""
     def _user_loader(user_id=None):
-        return UserSession(user_id)
+        from diablo.models.user import User
+        return User(user_id)
 
     login_manager = LoginManager()
     login_manager.init_app(app)
@@ -43,6 +43,7 @@ def register_routes(app):
     # Register API routes.
     import diablo.api.auth_controller
     import diablo.api.config_controller
+    import diablo.api.course_capture_controller
     import diablo.api.status_controller
     import diablo.api.user_controller
 

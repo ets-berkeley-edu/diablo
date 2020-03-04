@@ -23,15 +23,15 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
+from diablo import cachify
 from diablo.api.errors import InternalServerError
 from diablo.externals import calnet
 
 
+@cachify('calnet_user_for_uid_{uid}')
 def get_calnet_user_for_uid(app, uid):
     users = _get_calnet_users(app, 'uid', [uid])
-    return users[uid] if users else {
-        'uid': uid,
-    }
+    return users[uid] if users else None
 
 
 def get_calnet_users_for_uids(app, uids):

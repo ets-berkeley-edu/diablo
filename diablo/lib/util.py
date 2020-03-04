@@ -23,23 +23,14 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-from diablo.models.authorized_user import AuthorizedUser
-import pytest
-
-unknown_uid = 'Ms. X'
-admin_uid = '2040'
-coe_advisor_uid = '1133399'
+import inspect
 
 
-@pytest.mark.usefixtures('db_session')
-class TestAuthorizedUser:
-    """Authorized user."""
+"""Generic utilities."""
 
-    def test_load_unknown_user(self):
-        """Returns None to Flask-Login for unrecognized UID."""
-        assert AuthorizedUser.find_by_uid(unknown_uid) is None
 
-    def test_load_admin_user(self):
-        """Returns authorization record to Flask-Login for recognized UID."""
-        loaded_user = AuthorizedUser.find_by_uid(admin_uid)
-        assert loaded_user.uid == admin_uid
+def get_args_dict(func, *args, **kw):
+    arg_names = inspect.getfullargspec(func)[0]
+    resp = dict(zip(arg_names, args))
+    resp.update(kw)
+    return resp

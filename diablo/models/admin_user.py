@@ -23,22 +23,33 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-import os
+from diablo import db
+from diablo.models.base import Base
+from sqlalchemy import text
 
-# Base directory for the application (one level up from this config file).
-BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
-ALERT_INFREQUENT_ACTIVITY_ENABLED = False
-ALERT_WITHDRAWAL_ENABLED = False
+class AdminUser(Base):
+    __tablename__ = 'admin_users'
 
-AWS_APP_ROLE_ARN = 'arn:aws:iam::123456789012:role/test-role'
+    id = db.Column(db.Integer, nullable=False, primary_key=True)  # noqa: A003
+    uid = db.Column(db.String(255), nullable=False, unique=True)
 
-DATA_LOCH_RDS_URI = 'postgres://diablo:diablo@localhost:5432/diablo_loch_test'
+    def __init__(self, uid):
+        self.uid = uid
 
-INDEX_HTML = f'{BASE_DIR}/tests/static/test-index.html'
+    def __repr__(self):
+        return f"""<AdminUser
+                    uid={self.uid},
+                    created_at={self.created_at},
+                    updated_at={self.updated_at}>
+                """
 
-LOGGING_LOCATION = 'STDOUT'
+    @classmethod
+    def is_admin(cls, uid):
+        return cls.query.filter_by(uid=uid).first() is not None
 
-SQLALCHEMY_DATABASE_URI = 'postgres://diablo:diablo@localhost:5432/diablo_test'
-
-TESTING = True
+    @classmethod
+    def get_id_per_uid(cls, uid):
+        query = text('SELECT id FROM admin_users WHERE uid = :uid')
+        result = db.session.execute(query, {'uid': uid}).first()
+        return result and result['id']

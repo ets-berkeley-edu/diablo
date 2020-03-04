@@ -23,8 +23,7 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-
-from diablo import db
+from diablo import cache, db
 from diablo.configs import load_configs
 from diablo.logger import initialize_logger
 from diablo.routes import register_routes
@@ -36,6 +35,7 @@ def create_app():
     app = Flask(__name__.split('.')[0])
     load_configs(app)
     initialize_logger(app)
+    cache.init_app(app)
     db.init_app(app)
 
     with app.app_context():

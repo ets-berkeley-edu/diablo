@@ -32,4 +32,5 @@ tmp/
 .DS_Store
 *.log
 .cache
+.flask_cache/
 .pytest_cache/

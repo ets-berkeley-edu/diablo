@@ -27,7 +27,8 @@ import json
 
 from tests.util import override_config
 
-authorized_uid = '2040'
+admin_uid = '2040'
+instructor_uid = '8765432'
 unauthorized_uid = '1015674'
 no_calnet_record_for_uid = '13'
 
@@ -51,7 +52,7 @@ class TestDevAuth:
             self._api_dev_auth_login(
                 client,
                 params={
-                    'uid': authorized_uid,
+                    'uid': admin_uid,
                     'password': app.config['DEVELOPER_AUTH_PASSWORD'],
                 },
                 expected_status_code=404,
@@ -63,7 +64,7 @@ class TestDevAuth:
             self._api_dev_auth_login(
                 client,
                 params={
-                    'uid': authorized_uid,
+                    'uid': admin_uid,
                     'password': 'Born 2 Lose',
                 },
                 expected_status_code=401,
@@ -93,17 +94,32 @@ class TestDevAuth:
                 expected_status_code=403,
             )
 
-    def test_dev_auth_success(self, app, client):
-        """There is a happy path."""
+    def test_dev_auth_for_admin_user(self, app, client):
+        """Admin user can log in."""
         with override_config(app, 'DEVELOPER_AUTH_ENABLED', True):
             api_json = self._api_dev_auth_login(
                 client,
                 params={
-                    'uid': authorized_uid,
+                    'uid': admin_uid,
                     'password': app.config['DEVELOPER_AUTH_PASSWORD'],
                 },
             )
-            assert api_json['uid'] == authorized_uid
+            assert api_json['uid'] == admin_uid
+            response = client.get('/api/auth/logout')
+            assert response.status_code == 200
+            assert response.json['isAnonymous']
+
+    def test_dev_auth_for_instructor(self, app, client):
+        """Instructor with one or more sections in current term can log in."""
+        with override_config(app, 'DEVELOPER_AUTH_ENABLED', True):
+            api_json = self._api_dev_auth_login(
+                client,
+                params={
+                    'uid': instructor_uid,
+                    'password': app.config['DEVELOPER_AUTH_PASSWORD'],
+                },
+            )
+            assert api_json['uid'] == instructor_uid
             response = client.get('/api/auth/logout')
             assert response.status_code == 200
             assert response.json['isAnonymous']
