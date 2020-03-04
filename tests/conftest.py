@@ -29,6 +29,7 @@ import os
 
 os.environ['DIABLO_ENV'] = 'test'  # noqa
 
+from diablo import cache
 import diablo.factory
 from moto import mock_sts
 import pytest
@@ -69,7 +70,9 @@ def app(request):
 
     # Pop the context after running tests.
     def teardown():
+        cache.clear()
         ctx.pop()
+
     request.addfinalizer(teardown)
 
     return _app

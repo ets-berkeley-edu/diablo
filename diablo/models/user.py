@@ -84,7 +84,7 @@ class User(UserMixin):
             if is_active:
                 is_admin = AdminUser.is_admin(uid)
                 sections = get_sections_per_instructor_uid(instructor_uid=uid, term_id=app.config['CURRENT_TERM'])
-        is_teaching = len(sections)
+                is_active = is_admin or bool(sections)
         return {
             **(calnet_profile or {}),
             **{
@@ -93,8 +93,8 @@ class User(UserMixin):
                 'isAdmin': is_admin,
                 'isAnonymous': not is_active,
                 'isAuthenticated': is_active,
-                'isTeaching': is_teaching,
-                'teaching': _sections_to_json(sections),
+                'isTeaching': bool(sections),
+                'teachingSections': _sections_to_json(sections),
                 'uid': uid,
             },
         }
@@ -116,7 +116,7 @@ def _sections_to_json(sections):
             'courseTitle': section['sis_course_title'],
             'instructionFormat': section['sis_instruction_format'],
             'instructorRoleCode': section['instructor_role_code'],
-            'isEligibleForCourseCaptured': _normalize(location) in enabled_locations,
+            'isEligibleForCourseCapture': _normalize(location) in enabled_locations,
             'isPrimary': section['is_primary'],
             'meetingDays': section['meeting_days'],
             'meetingEndDate': section['meeting_end_date'],

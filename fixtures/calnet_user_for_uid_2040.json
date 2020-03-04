@@ -1,11 +1,11 @@
 {
-  "campusEmail": "tom@berkeley.edu",
-  "departments": "EH1CS",
-  "email": "tom@berkeley.edu",
-  "firstName": "Tom",
+  "campusEmail": "lankester@berkeley.edu",
+  "departments": "OEMPA",
+  "email": "lankester@berkeley.edu",
+  "firstName": "Lankester",
   "isExpiredPerLdap": false,
-  "lastName": "Verlaine",
-  "name": "Tom Verlaine",
-  "title": "Assoc Prof",
+  "lastName": "Merrin",
+  "name": "Lankester Merrin",
+  "title": "Priest and paleontologist",
   "uid": "2040"
 }

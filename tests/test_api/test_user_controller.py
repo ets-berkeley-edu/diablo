@@ -24,7 +24,8 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 
 admin_uid = '2040'
-unauthorized_uid = '1015674'
+instructor_not_teaching_uid = '1015674'
+instructor_uid = '8765432'
 
 
 class TestMyProfile:
@@ -35,8 +36,8 @@ class TestMyProfile:
         assert response.status_code == expected_status_code
         return response.json
 
-    def test_unauthorized_is_not_active(self, client, fake_auth):
-        fake_auth.login(unauthorized_uid)
+    def test_instructor_not_teaching_uid(self, client, fake_auth):
+        fake_auth.login(instructor_not_teaching_uid)
         api_json = self._api_my_profile(client)
         assert api_json['isActive'] is False
         assert api_json['isAnonymous'] is True
@@ -50,3 +51,23 @@ class TestMyProfile:
         assert api_json['isAnonymous'] is False
         assert api_json['isAuthenticated'] is True
         assert api_json['uid'] == admin_uid
+        assert api_json['isTeaching'] is False
+        assert api_json['teachingSections'] == []
+
+    def test_instructor(self, client, fake_auth):
+        fake_auth.login(instructor_uid)
+        api_json = self._api_my_profile(client)
+        assert api_json['isActive'] is True
+        assert api_json['isAnonymous'] is False
+        assert api_json['isAuthenticated'] is True
+        assert api_json['isTeaching'] is True
+        assert api_json['uid'] == instructor_uid
+
+        sections = api_json['teachingSections']
+        assert sections[0]['courseTitle'] == 'Data Structures'
+        assert sections[0]['sectionId'] == '28165'
+        assert sections[0]['isEligibleForCourseCapture'] is False
+
+        assert sections[1]['courseTitle'] == 'Foundations of Data Science'
+        assert sections[1]['sectionId'] == '28602'
+        assert sections[1]['isEligibleForCourseCapture'] is True

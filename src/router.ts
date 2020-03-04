@@ -1,5 +1,6 @@
 import _ from 'lodash'
 import auth from './auth'
+import Admin from '@/views/Admin.vue'
 import BaseView from '@/views/BaseView.vue'
 import Home from '@/views/Home.vue'
 import Login from '@/views/Login.vue'
@@ -42,7 +43,22 @@ const router = new Router({
       beforeEnter: auth.requiresInstructor,
       children: [
         {
-          path: '/course/:section_id',
+          beforeEnter: (to: any, from: any, next: any) => {
+            const currentUser = Vue.prototype.$currentUser;
+            if (currentUser.isAdmin && !currentUser.isTeaching) {
+              next({ path: '/admin' })
+            } else {
+              next()
+            }
+          },
+          path: '/home',
+          component: Home,
+          meta: {
+            title: 'Home'
+          }
+        },
+        {
+          path: '/course/:termId/:sectionId',
           component: SignUp
         }
       ]
@@ -53,10 +69,10 @@ const router = new Router({
       component: BaseView,
       children: [
         {
-          path: '/home',
-          component: Home,
+          path: '/admin',
+          component: Admin,
           meta: {
-            title: 'Home'
+            title: 'Admin'
           }
         }
       ]
