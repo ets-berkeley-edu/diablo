@@ -43,4 +43,5 @@ INSERT INTO sis_data.sis_sections
 )
 VALUES
 ('4.0', 'PI', '8765432', true, 'TUTH', '2020-05-08 00:00:00 UTC', '10:59', 'Barrows 60', '2020-01-21 00:00:00 UTC', '10:00', 'COMPSCI C8', 'Foundations of Data Science', 'LEC', '28602', '001', '2202'),
+('4.0', 'PI', '234567', true, 'TUTH', '2020-05-08 00:00:00 UTC', '10:59', 'Barrows 60', '2020-01-21 00:00:00 UTC', '10:00', 'COMPSCI C8', 'Foundations of Data Science', 'LEC', '28602', '001', '2202'),
 ('4.0', 'PI', '8765432', true, 'MOWEFR', '2020-05-08 00:00:00 UTC', '15:59', 'Wheeler 150', '2020-01-21 00:00:00 UTC', '15:00', 'COMPSCI 61B', 'Data Structures', 'LEC', '28165', '001', '2202')

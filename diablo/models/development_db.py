@@ -27,6 +27,7 @@ import json
 
 from diablo import BASE_DIR, cache, db, std_commit
 from diablo.models.admin_user import AdminUser
+from diablo.models.sign_up import SignUp
 from flask import current_app as app
 from sqlalchemy.sql import text
 
@@ -47,6 +48,7 @@ def clear():
 def load():
     _load_schemas()
     _create_users()
+    _create_sign_ups()
     _cache_externals()
     return db
 
@@ -69,6 +71,21 @@ def _load_schemas():
 def _create_users():
     for test_user in _test_users:
         db.session.add(AdminUser(uid=test_user['uid']))
+    std_commit(allow_test_environment=True)
+
+
+def _create_sign_ups():
+    db.session.add(
+        SignUp(
+            term_id=app.config['CURRENT_TERM'],
+            section_id=28602,
+            admin_approval_uid=None,
+            instructor_approval_uids=['8765432'],
+            publish_type_='canvas',
+            recording_type_='presentation_audio',
+            requires_multiple_approvals=True,
+        ),
+    )
     std_commit(allow_test_environment=True)
 
 

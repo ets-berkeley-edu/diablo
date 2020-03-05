@@ -23,24 +23,32 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-import os
+from diablo.api.errors import ForbiddenRequestError, ResourceNotFoundError
+from diablo.lib.http import tolerant_jsonify
+from diablo.merged.sis import get_section
+from diablo.models.sign_up import SignUp
+from flask import current_app as app
+from flask_login import current_user, login_required
 
-# Base directory for the application (one level up from this config file).
-BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
-ALERT_INFREQUENT_ACTIVITY_ENABLED = False
-ALERT_WITHDRAWAL_ENABLED = False
+@app.route('/api/sign_up/status/<term_id>/<section_id>')
+@login_required
+def sign_up_status(term_id, section_id):
+    section = get_section(term_id, section_id)
+    if not section:
+        raise ResourceNotFoundError(f'No section for term_id = {term_id} and section_id = {section_id}')
+    if not current_user.is_admin and current_user.get_uid() not in section['instructorUids']:
+        raise ForbiddenRequestError('Sorry, this request is unauthorized.')
 
-AWS_APP_ROLE_ARN = 'arn:aws:iam::123456789012:role/test-role'
-
-CURRENT_TERM = '2202'
-
-DATA_LOCH_RDS_URI = 'postgres://diablo:diablo@localhost:5432/pazuzu_loch_test'
-
-INDEX_HTML = f'{BASE_DIR}/tests/static/test-index.html'
-
-LOGGING_LOCATION = 'STDOUT'
-
-SQLALCHEMY_DATABASE_URI = 'postgres://diablo:diablo@localhost:5432/pazuzu_test'
-
-TESTING = True
+    sign_up = SignUp.get_sign_up(term_id, section_id)
+    if sign_up:
+        status = sign_up.to_api_json()
+        status.pop('sectionId')
+        status.pop('termId')
+    else:
+        status = None
+    return tolerant_jsonify({
+        'termId': term_id,
+        'section': section,
+        'signUpStatus': status,
+    })

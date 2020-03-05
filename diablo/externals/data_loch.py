@@ -38,13 +38,29 @@ def sis_schema():
     return app.config['DATA_LOCH_SIS_SCHEMA']
 
 
-def get_sections_per_instructor_uid(instructor_uid, term_id):
+def get_section_denormalized(term_id, section_id):
     sql = f"""
         SELECT * FROM {sis_schema()}.sis_sections
-        WHERE sis_term_id = ':term_id' AND instructor_uid = :instructor_uid
-        ORDER BY sis_course_title, sis_section_id
+        WHERE sis_term_id = :term_id AND sis_section_id = :section_id
+        ORDER BY sis_course_title, sis_section_id, instructor_uid
     """
-    return safe_execute_rds(sql, term_id=term_id, instructor_uid=instructor_uid)
+    return safe_execute_rds(sql, term_id=term_id, section_id=section_id)
+
+
+def get_sections_denormalized(term_id, instructor_uid):
+    sql = f"""
+        SELECT sis_section_id FROM {sis_schema()}.sis_sections
+        WHERE sis_term_id = :term_id AND instructor_uid = :instructor_uid
+    """
+    section_ids = []
+    for row in safe_execute_rds(sql, term_id=term_id, instructor_uid=instructor_uid):
+        section_ids.append(row['sis_section_id'])
+    sql = f"""
+        SELECT * FROM {sis_schema()}.sis_sections
+        WHERE sis_term_id = :term_id AND sis_section_id = ANY(:section_ids)
+        ORDER BY sis_course_title, sis_section_id, instructor_uid
+    """
+    return safe_execute_rds(sql, term_id=term_id, section_ids=section_ids)
 
 
 def safe_execute_rds(sql, **kwargs):

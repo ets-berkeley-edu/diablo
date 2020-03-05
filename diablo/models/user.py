@@ -22,9 +22,9 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from diablo.externals.data_loch import get_sections_per_instructor_uid
-from diablo.externals.salesforce import get_capture_enabled_rooms
+
 from diablo.merged import calnet
+from diablo.merged.sis import get_sections
 from diablo.models.admin_user import AdminUser
 from flask import current_app as app
 from flask_login import UserMixin
@@ -83,7 +83,10 @@ class User(UserMixin):
             is_active = not calnet_profile.get('isExpiredPerLdap', True)
             if is_active:
                 is_admin = AdminUser.is_admin(uid)
-                sections = get_sections_per_instructor_uid(instructor_uid=uid, term_id=app.config['CURRENT_TERM'])
+                sections = get_sections(
+                    term_id=app.config['CURRENT_TERM'],
+                    instructor_uid=uid,
+                )
                 is_active = is_admin or bool(sections)
         return {
             **(calnet_profile or {}),
@@ -94,38 +97,7 @@ class User(UserMixin):
                 'isAnonymous': not is_active,
                 'isAuthenticated': is_active,
                 'isTeaching': bool(sections),
-                'teachingSections': _sections_to_json(sections),
+                'teachingSections': sections,
                 'uid': uid,
             },
         }
-
-
-def _sections_to_json(sections):
-    api_json = []
-    enabled_rooms = get_capture_enabled_rooms()
-
-    def _normalize(name):
-        return name and ''.join(name.split()).lower()
-
-    enabled_locations = [_normalize(f'{r["building"]} {r["roomNumber"]}') for r in enabled_rooms]
-    for section in sections:
-        location = section['meeting_location']
-        api_json.append({
-            'allowedUnits': section['allowed_units'],
-            'courseName': section['sis_course_name'],
-            'courseTitle': section['sis_course_title'],
-            'instructionFormat': section['sis_instruction_format'],
-            'instructorRoleCode': section['instructor_role_code'],
-            'isEligibleForCourseCapture': _normalize(location) in enabled_locations,
-            'isPrimary': section['is_primary'],
-            'meetingDays': section['meeting_days'],
-            'meetingEndDate': section['meeting_end_date'],
-            'meetingEndTime': section['meeting_end_time'],
-            'meetingLocation': location,
-            'meetingStartDate': section['meeting_start_date'],
-            'meetingStartTime': section['meeting_start_time'],
-            'sectionId': section['sis_section_id'],
-            'sectionNum': section['sis_section_num'],
-            'termId': section['sis_term_id'],
-        })
-    return api_json
