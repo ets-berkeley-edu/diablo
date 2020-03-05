@@ -23,16 +23,20 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-from xena import conftest
+from flask import current_app as app
+from selenium.webdriver.common.by import By
+from xena.pages.page import Page
 
 
-def get_xena_browser():
-    return conftest.XENA_BROWSER
+class GooglePage(Page):
 
+    def load_page(self):
+        app.logger.info('Loading Google')
+        self.driver.get('https://www.google.com')
 
-def get_short_timeout():
-    return conftest.TIMEOUT_SHORT
+    SEARCH_INPUT = (By.NAME, 'q')
 
-
-def get_long_timeout():
-    return conftest.TIMEOUT_LONG
+    def enter_search_string(self, string):
+        app.logger.info(f'Searching for \'{string}\'')
+        self.wait_for_element(GooglePage.SEARCH_INPUT)
+        self.wait_for_element_and_type(GooglePage.SEARCH_INPUT, string)

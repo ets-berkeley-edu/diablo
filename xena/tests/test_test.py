@@ -23,12 +23,30 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-from xena.test_utils.util import get_xena_signature_weapon
+import pytest
+from xena.pages.google_page import GooglePage
+from xena.test_utils.webdriver_manager import WebDriverManager
 
 
-class TestChakram:
-    """Chakram is Xena's signature weapon."""
+@pytest.fixture(scope='class')
+def driver_init(request):
+    driver = WebDriverManager.launch_browser()
+    google_page = GooglePage(driver)
+    request.cls.google_page = google_page
+    yield
+    WebDriverManager.quit_browser(driver)
 
-    def test_xena_signature_weapon(self):
-        """Loads config from xena.py."""
-        assert get_xena_signature_weapon() == 'Chakram'
+
+@pytest.mark.usefixtures('driver_init')
+class TestTests:
+
+    def test_xena(self):
+        self.google_page.load_page()
+        self.google_page.enter_search_string('Xena')
+        self.google_page.hit_enter()
+        self.google_page.wait_for_title('Xena - Google Search')
+
+    def test_gabrielle(self):
+        self.google_page.enter_search_string('Gabrielle')
+        self.google_page.hit_enter()
+        self.google_page.wait_for_title('Gabrielle - Google Search')

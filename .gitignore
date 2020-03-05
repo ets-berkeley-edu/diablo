@@ -33,3 +33,6 @@ tmp/
 *.log
 .cache
 .pytest_cache/
+
+# Xena
+geckodriver.log

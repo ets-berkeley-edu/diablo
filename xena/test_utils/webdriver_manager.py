@@ -23,16 +23,22 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
+from flask import current_app as app
+from selenium import webdriver
 from xena import conftest
 
 
-def get_xena_browser():
-    return conftest.XENA_BROWSER
+class WebDriverManager(object):
 
+    @classmethod
+    def launch_browser(cls):
+        app.logger.warning(f'Launching {conftest.XENA_BROWSER.capitalize()}')
+        if conftest.XENA_BROWSER == 'firefox':
+            return webdriver.Firefox()
+        else:
+            return webdriver.Chrome()
 
-def get_short_timeout():
-    return conftest.TIMEOUT_SHORT
-
-
-def get_long_timeout():
-    return conftest.TIMEOUT_LONG
+    @classmethod
+    def quit_browser(cls, driver):
+        app.logger.warning(f'Quitting {conftest.XENA_BROWSER.capitalize()}')
+        driver.quit()
