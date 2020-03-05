@@ -31,14 +31,14 @@ BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
 CAS_SERVER = 'https://auth-test.berkeley.edu/cas/'
 
-DIABLO_SUPPORT_EMAIL = 'course-capture-help@berkeley.edu'
+DIABLO_SUPPORT_EMAIL = 'coursecapture@berkeley.edu'
 
 CACHE_DEFAULT_TIMEOUT = 86400
 CACHE_DIR = f'{BASE_DIR}/.flask_cache'
 CACHE_THRESHOLD = 300
 CACHE_TYPE = 'filesystem'
 
-CURRENT_TERM = 2202
+CURRENT_TERM = None
 
 # Loch o' Data
 DATA_LOCH_RDS_URI = 'postgres://foo:secret@secret-rds-url.com:5432/data_loch'
