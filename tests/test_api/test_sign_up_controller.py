@@ -101,6 +101,6 @@ class TestSignUpStatus:
             section_id_=28165,
         )
         assert api_json['section']
-        assert api_json['section']['meetingDays'] == 'MWF'
-        assert api_json['section']['meetingStartTime'] == '3:00 PM'
-        assert api_json['section']['meetingEndTime'] == '3:59 PM'
+        assert api_json['section']['meetingDays'] == ['MO', 'WE', 'FR']
+        assert api_json['section']['meetingStartTime'] == '3:00 pm'
+        assert api_json['section']['meetingEndTime'] == '3:59 pm'
