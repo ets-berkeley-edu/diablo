@@ -37,12 +37,12 @@
 </template>
 
 <script>
-  import DomUtils from "@/mixins/DomUtils"
+  import Utils from "@/mixins/Utils"
   import { devAuthLogIn } from '@/api/auth'
 
   export default {
     name: 'Login',
-    mixins: [DomUtils],
+    mixins: [Utils],
     data: () => ({
       devAuthUid: undefined,
       devAuthPassword: undefined

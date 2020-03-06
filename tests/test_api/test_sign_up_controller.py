@@ -75,7 +75,7 @@ class TestSignUpStatus:
             section_id_=section_id,
         )
         assert api_json['section']
-        assert api_json['section']['instructorUids'] == ['234567', '8765432']
+        assert [i['uid'] for i in api_json['section']['instructors']] == ['234567', '8765432']
 
     def test_instructor(self, client, fake_auth):
         fake_auth.login(instructor_uid)
@@ -85,8 +85,22 @@ class TestSignUpStatus:
             section_id_=section_id,
         )
         assert api_json['section']
-        assert api_json['section']['instructorUids'] == ['234567', '8765432']
-        assert api_json['signUpStatus']
-        assert api_json['signUpStatus']['instructorApprovalUids'] == ['8765432']
-        assert api_json['signUpStatus']['publishType'] == 'canvas'
-        assert api_json['signUpStatus']['recordingType'] == 'presentation_audio'
+        assert [i['uid'] for i in api_json['section']['instructors']] == ['234567', '8765432']
+
+        sign_up_status = api_json['signUpStatus']
+        assert sign_up_status
+        assert sign_up_status['instructorApprovalUids'] == ['8765432']
+        assert sign_up_status['publishType'] == 'canvas'
+        assert sign_up_status['recordingType'] == 'presentation_audio'
+
+    def test_date_time_format(self, client, fake_auth):
+        fake_auth.login(instructor_uid)
+        api_json = self._api_sign_up_status(
+            client,
+            term_id_=app.config['CURRENT_TERM'],
+            section_id_=28165,
+        )
+        assert api_json['section']
+        assert api_json['section']['meetingDays'] == 'MWF'
+        assert api_json['section']['meetingStartTime'] == '3:00 PM'
+        assert api_json['section']['meetingEndTime'] == '3:59 PM'

@@ -37,7 +37,8 @@ def sign_up_status(term_id, section_id):
     section = get_section(term_id, section_id)
     if not section:
         raise ResourceNotFoundError(f'No section for term_id = {term_id} and section_id = {section_id}')
-    if not current_user.is_admin and current_user.get_uid() not in section['instructorUids']:
+    instructor_uids = [i['uid'] for i in section['instructors']]
+    if not current_user.is_admin and current_user.get_uid() not in instructor_uids:
         raise ForbiddenRequestError('Sorry, this request is unauthorized.')
 
     sign_up = SignUp.get_sign_up(term_id, section_id)

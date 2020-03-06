@@ -104,7 +104,7 @@ def _dev_auth_login(uid, password):
             return tolerant_jsonify({'message': 'Invalid credentials'}, 401)
         user = User(uid)
         if not user.is_active:
-            msg = f'UID {uid} is not active according to CalNet.'
+            msg = f'UID {uid} is neither a Diablo admin-user nor active in CalNet.'
             app.logger.error(msg)
             return tolerant_jsonify({'message': msg}, 403)
         if not login_user(user, force=True, remember=True):

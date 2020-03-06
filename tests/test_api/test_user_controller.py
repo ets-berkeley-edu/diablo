@@ -70,5 +70,5 @@ class TestMyProfile:
 
         assert sections[1]['courseTitle'] == 'Foundations of Data Science'
         assert sections[1]['sectionId'] == '28602'
-        assert sections[1]['instructorUids'] == ['234567', '8765432']
+        assert [i['uid'] for i in sections[1]['instructors']] == ['234567', '8765432']
         assert sections[1]['isEligibleForCourseCapture'] is True

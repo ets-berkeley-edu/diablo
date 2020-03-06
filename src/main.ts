@@ -1,7 +1,8 @@
+import 'vuetify/dist/vuetify.min.css'
 import _ from 'lodash'
 import App from './App.vue'
 import axios from 'axios'
-import core from './core';
+import core from './core'
 import router from './router'
 import store from './store'
 import Vue from 'vue'
@@ -12,12 +13,12 @@ const apiBaseUrl = process.env.VUE_APP_API_BASE_URL
 axios.interceptors.response.use(response => response, function(error) {
   if (_.get(error, 'response.status') === 401) {
     axios.get(`${apiBaseUrl}/api/user/my_profile`).then(response => {
-      Vue.prototype.$currentUser = response.data;
-      Vue.prototype.$core.initializeCurrentUser().then(router.push({ path: '/login' }).catch(() => null));
-    });
+      Vue.prototype.$currentUser = response.data
+      Vue.prototype.$core.initializeCurrentUser().then(router.push({ path: '/login' }).catch(() => null))
+    })
   }
-  return Promise.reject(error);
-});
+  return Promise.reject(error)
+})
 
 // Allow cookies in Access-Control requests
 axios.defaults.withCredentials = true
@@ -45,7 +46,7 @@ axios.get(`${apiBaseUrl}/api/user/my_profile`).then(response => {
       render: h => h(App),
     }).$mount('#app')
 
-    Vue.prototype.$core = core;
-    Vue.prototype.$core.initializeCurrentUser().then(_.noop);
+    Vue.prototype.$core = core
+    Vue.prototype.$core.initializeCurrentUser().then(_.noop)
   })
 })
