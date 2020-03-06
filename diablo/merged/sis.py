@@ -23,8 +23,12 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
+from datetime import datetime
+
 from diablo.externals.data_loch import get_section_denormalized, get_sections_denormalized
 from diablo.externals.salesforce import get_capture_enabled_rooms
+from diablo.merged.calnet import get_calnet_user_for_uid
+from flask import current_app as app
 
 
 def get_section(term_id, section_id):
@@ -57,12 +61,12 @@ def _normalize_rows(rows):
                 'instructorRoleCode': row['instructor_role_code'],
                 'isEligibleForCourseCapture': _flatten_location(location) in enabled_locations,
                 'isPrimary': row['is_primary'],
-                'meetingDays': row['meeting_days'],
+                'meetingDays': row['meeting_days'][::2] if row['meeting_days'] else None,
                 'meetingEndDate': row['meeting_end_date'],
-                'meetingEndTime': row['meeting_end_time'],
+                'meetingEndTime': _format_time(row['meeting_end_time']),
                 'meetingLocation': location,
                 'meetingStartDate': row['meeting_start_date'],
-                'meetingStartTime': row['meeting_start_time'],
+                'meetingStartTime': _format_time(row['meeting_start_time']),
                 'sectionId': section_id,
                 'sectionNum': row['sis_section_num'],
                 'termId': row['sis_term_id'],
@@ -76,7 +80,11 @@ def _normalize_rows(rows):
         json_.append({
             **sections_per_id[section_id],
             **{
-                'instructorUids': sorted(instructor_uids),
+                'instructors': [get_calnet_user_for_uid(app, uid) for uid in sorted(instructor_uids)],
             },
         })
     return json_
+
+
+def _format_time(military_time):
+    return datetime.strptime(military_time, '%H:%M').strftime('%I:%M %p').lstrip('0') if military_time else None

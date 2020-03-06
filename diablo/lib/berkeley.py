@@ -23,46 +23,15 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-import json
 
-from diablo import __version__ as version
-from diablo.lib.berkeley import term_name_for_sis_id
-from diablo.lib.http import tolerant_jsonify
-from flask import current_app as app
-
-
-@app.route('/api/config')
-def app_config():
-    term_id = app.config['CURRENT_TERM']
-    return tolerant_jsonify({
-        'diabloEnv': app.config['DIABLO_ENV'],
-        'devAuthEnabled': app.config['DEVELOPER_AUTH_ENABLED'],
-        'ebEnvironment': app.config['EB_ENVIRONMENT'] if 'EB_ENVIRONMENT' in app.config else None,
-        'supportEmailAddress': app.config['DIABLO_SUPPORT_EMAIL'],
-        'currentTermId': term_id,
-        'currentTermName': term_name_for_sis_id(term_id),
-        'timezone': app.config['TIMEZONE'],
-    })
-
-
-@app.route('/api/version')
-def app_version():
-    v = {
-        'version': version,
-    }
-    build_stats = load_json('config/build-summary.json')
-    if build_stats:
-        v.update(build_stats)
-    else:
-        v.update({
-            'build': None,
-        })
-    return tolerant_jsonify(v)
-
-
-def load_json(relative_path):
-    try:
-        file = open(app.config['BASE_DIR'] + '/' + relative_path)
-        return json.load(file)
-    except (FileNotFoundError, KeyError, TypeError):
-        return None
+def term_name_for_sis_id(sis_id=None):
+    if sis_id:
+        sis_id = str(sis_id)
+        season_codes = {
+            '0': 'Winter',
+            '2': 'Spring',
+            '5': 'Summer',
+            '8': 'Fall',
+        }
+        year = f'19{sis_id[1:3]}' if sis_id.startswith('1') else f'20{sis_id[1:3]}'
+        return f'{season_codes[sis_id[3:4]]} {year}'

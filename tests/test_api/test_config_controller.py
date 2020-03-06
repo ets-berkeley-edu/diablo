@@ -24,6 +24,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 
 import pytest
+from tests.util import override_config
 
 
 @pytest.fixture()
@@ -31,18 +32,8 @@ def admin_session(fake_auth):
     fake_auth.login('2040')
 
 
-class TestConfigController:
-    """Config API."""
-
-    def test_anonymous(self, client):
-        """Returns a well-formed response to anonymous user."""
-        response = client.get('/api/config')
-        assert response.status_code == 200
-        assert 'diabloEnv' in response.json
-        data = response.json
-        assert data['ebEnvironment'] is None
-        assert '@' in data['supportEmailAddress']
-        assert data['timezone'] == 'America/Los_Angeles'
+class TestVersion:
+    """Config API delivers Diablo version."""
 
     def test_anonymous_version_request(self, client):
         """Returns a well-formed response."""
@@ -50,3 +41,21 @@ class TestConfigController:
         assert response.status_code == 200
         assert 'version' in response.json
         assert 'build' in response.json
+
+
+class TestConfigController:
+    """Config API."""
+
+    def test_anonymous(self, app, client):
+        """Returns a well-formed response to anonymous user."""
+        term_id = '2218'
+        with override_config(app, 'CURRENT_TERM', term_id):
+            response = client.get('/api/config')
+            assert response.status_code == 200
+            assert 'diabloEnv' in response.json
+            data = response.json
+            assert data['ebEnvironment'] is None
+            assert '@' in data['supportEmailAddress']
+            assert data['timezone'] == 'America/Los_Angeles'
+            assert data['currentTermId'] == term_id
+            assert data['currentTermName'] == 'Fall 2021'

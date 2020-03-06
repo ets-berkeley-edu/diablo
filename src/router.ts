@@ -1,10 +1,11 @@
 import _ from 'lodash'
+import Attic from '@/views/Attic.vue'
 import auth from './auth'
-import Admin from '@/views/Admin.vue'
 import BaseView from '@/views/BaseView.vue'
 import Home from '@/views/Home.vue'
 import Login from '@/views/Login.vue'
 import NotFound from '@/views/NotFound.vue'
+import Reports from '@/views/Reports.vue'
 import Router from 'vue-router'
 import SignUp from '@/views/SignUp.vue'
 import Vue from 'vue'
@@ -44,9 +45,9 @@ const router = new Router({
       children: [
         {
           beforeEnter: (to: any, from: any, next: any) => {
-            const currentUser = Vue.prototype.$currentUser;
+            const currentUser = Vue.prototype.$currentUser
             if (currentUser.isAdmin && !currentUser.isTeaching) {
-              next({ path: '/admin' })
+              next({ path: '/reports' })
             } else {
               next()
             }
@@ -55,11 +56,19 @@ const router = new Router({
           component: Home,
           meta: {
             title: 'Home'
-          }
+          },
+          name: 'home'
         },
         {
           path: '/course/:termId/:sectionId',
           component: SignUp
+        },
+        {
+          path: '/attic',
+          component: Attic,
+          meta: {
+            title: 'The Attic'
+          }
         }
       ]
     },
@@ -69,10 +78,10 @@ const router = new Router({
       component: BaseView,
       children: [
         {
-          path: '/admin',
-          component: Admin,
+          path: '/reports',
+          component: Reports,
           meta: {
-            title: 'Admin'
+            title: 'Reports'
           }
         }
       ]

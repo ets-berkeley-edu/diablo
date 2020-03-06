@@ -5,14 +5,15 @@
       color="primary"
       dark
     >
-      <div v-if="$currentUser.isAdmin" class="d-flex align-center">
-        <router-link
-          id="home-header"
-          class="header-text"
-          to="/"
-          tabindex="0">
-          <span class="sr-only">Return to </span>Home
-        </router-link>
+      <div v-if="$route.name !== 'home'">
+        <v-btn
+          color="primary"
+          fab
+          small
+          dark
+          @click="goHome">
+          <v-icon>mdi-home</v-icon>
+        </v-btn>
       </div>
       <v-spacer></v-spacer>
       <v-menu v-if="$currentUser.isAuthenticated" class="mr-2" offset-y>
@@ -26,6 +27,9 @@
           </v-btn>
         </template>
         <v-list>
+          <v-list-item @click="goAttic">
+            <v-list-item-title>The Attic</v-list-item-title>
+          </v-list-item>
           <v-list-item
             :href="`mailto:${$config.supportEmailAddress}`"
             target="_blank"
@@ -45,13 +49,16 @@
 </template>
 
 <script>
+  import router from '@/router'
   import { getCasLogoutUrl } from '@/api/auth'
 
   export default {
     name: 'App',
     methods: {
+      goAttic: () => router.push({ path: '/attic' }),
+      goHome: () => router.push({ path: '/' }),
       logOut() {
-        getCasLogoutUrl().then(data => window.location.href = data.casLogoutUrl);
+        getCasLogoutUrl().then(data => window.location.href = data.casLogoutUrl)
       }
     }
   }
