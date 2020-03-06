@@ -57,9 +57,7 @@
     methods: {
       goAttic: () => router.push({ path: '/attic' }),
       goHome: () => router.push({ path: '/' }),
-      logOut() {
-        getCasLogoutUrl().then(data => window.location.href = data.casLogoutUrl)
-      }
+      logOut: () =>getCasLogoutUrl().then(data => window.location.href = data.casLogoutUrl)
     }
   }
 </script>

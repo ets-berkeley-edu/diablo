@@ -61,7 +61,7 @@ def _normalize_rows(rows):
                 'instructorRoleCode': row['instructor_role_code'],
                 'isEligibleForCourseCapture': _flatten_location(location) in enabled_locations,
                 'isPrimary': row['is_primary'],
-                'meetingDays': row['meeting_days'][::2] if row['meeting_days'] else None,
+                'meetingDays': _format_days(row['meeting_days']),
                 'meetingEndDate': row['meeting_end_date'],
                 'meetingEndTime': _format_time(row['meeting_end_time']),
                 'meetingLocation': location,
@@ -86,5 +86,10 @@ def _normalize_rows(rows):
     return json_
 
 
+def _format_days(days):
+    n = 2
+    return [(days[i:i + n]) for i in range(0, len(days), n)] if days else None
+
+
 def _format_time(military_time):
-    return datetime.strptime(military_time, '%H:%M').strftime('%I:%M %p').lstrip('0') if military_time else None
+    return datetime.strptime(military_time, '%H:%M').strftime('%I:%M %p').lower().lstrip('0') if military_time else None

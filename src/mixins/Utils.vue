@@ -24,7 +24,8 @@
             }
           }, 500)
         })
-      }
+      },
+      setPageTitle: phrase => (document.title = `${phrase ? phrase : 'UC Berkeley'} | Course Capture`)
     }
   }
 </script>

@@ -37,7 +37,7 @@
 </template>
 
 <script>
-  import Utils from "@/mixins/Utils"
+  import Utils from '@/mixins/Utils'
   import { devAuthLogIn } from '@/api/auth'
 
   export default {
