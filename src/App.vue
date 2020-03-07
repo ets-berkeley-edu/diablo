@@ -61,3 +61,7 @@
     }
   }
 </script>
+
+<style>
+@import './assets/styles/diablo-global.css';
+</style>

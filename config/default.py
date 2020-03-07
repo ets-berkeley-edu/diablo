@@ -31,6 +31,8 @@ BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
 CAS_SERVER = 'https://auth-test.berkeley.edu/cas/'
 
+COURSE_CAPTURE_EXPLAINED_URL = 'https://www.ets.berkeley.edu/services-facilities/course-capture'
+COURSE_CAPTURE_POLICIES_URL = 'https://www.ets.berkeley.edu/services-facilities/course-capture/course-capture-instructors-getting-started/policies'
 DIABLO_SUPPORT_EMAIL = 'coursecapture@berkeley.edu'
 
 CACHE_DEFAULT_TIMEOUT = 86400

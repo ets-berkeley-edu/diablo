@@ -50,7 +50,43 @@
             outlined
             tile
           >
-            {{ section }}
+            <v-row>
+              <div>
+                <h3>Course Capture Sign-up</h3>
+                The Course Capture program is the campus service for recording and publishing classroom activity. If you
+                sign up using this form, recordings of every class session will be automatically recorded. (For details,
+                please read
+                <a
+                  id="link-to-course-capture-overview"
+                  :href="$config.courseCaptureExplainedUrl"
+                  target="_blank"
+                  aria-label="Open URL to Course Capture service overview in a new window">Course Capture Services Explained <v-icon>mdi-open-in-new</v-icon></a>.
+              </div>
+            </v-row>
+            <v-row>
+              {{ section }}
+            </v-row>
+            <v-row>
+              <v-col md="auto" class="mr-0 pr-0">
+                <v-checkbox id="agree-to-terms-checkbox" v-model="agreedToTerms" class="mt-0 mr-0 pt-1"></v-checkbox>
+              </v-col>
+              <v-col>
+                <label for="agree-to-terms-checkbox">
+                  I have read the Audio and Video Recording Permission Agreement and I agree to the terms stated within.
+                  (<a
+                    id="link-to-course-capture-policies"
+                    :href="$config.courseCapturePoliciesUrl"
+                    target="_blank"
+                    aria-label="Open URL to Course Capture policies in a new window">
+                    Audio and Video Recording Permission Agreement <v-icon>mdi-open-in-new</v-icon>
+                  </a>)
+                </label>
+              </v-col>
+            </v-row>
+            <v-row class="pr-5">
+              <v-spacer />
+              <v-btn color="success" :disabled="!agreedToTerms">Approve</v-btn>
+            </v-row>
           </v-card>
         </v-col>
       </v-row>
@@ -65,9 +101,9 @@
     name: 'SignUp',
     mixins: [Utils],
     data: () => ({
+      agreedToTerms: false,
       section: undefined,
       pageTitle: undefined
-
     }),
     created() {
       const termId = this.$_.get(this.$route, 'params.termId')

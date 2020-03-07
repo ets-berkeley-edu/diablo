@@ -35,12 +35,14 @@ from flask import current_app as app
 def app_config():
     term_id = app.config['CURRENT_TERM']
     return tolerant_jsonify({
-        'diabloEnv': app.config['DIABLO_ENV'],
-        'devAuthEnabled': app.config['DEVELOPER_AUTH_ENABLED'],
-        'ebEnvironment': app.config['EB_ENVIRONMENT'] if 'EB_ENVIRONMENT' in app.config else None,
-        'supportEmailAddress': app.config['DIABLO_SUPPORT_EMAIL'],
+        'courseCaptureExplainedUrl': app.config['COURSE_CAPTURE_EXPLAINED_URL'],
+        'courseCapturePoliciesUrl': app.config['COURSE_CAPTURE_POLICIES_URL'],
         'currentTermId': term_id,
         'currentTermName': term_name_for_sis_id(term_id),
+        'devAuthEnabled': app.config['DEVELOPER_AUTH_ENABLED'],
+        'diabloEnv': app.config['DIABLO_ENV'],
+        'ebEnvironment': app.config['EB_ENVIRONMENT'] if 'EB_ENVIRONMENT' in app.config else None,
+        'supportEmailAddress': app.config['DIABLO_SUPPORT_EMAIL'],
         'timezone': app.config['TIMEZONE'],
     })
 
