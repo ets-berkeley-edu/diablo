@@ -23,84 +23,177 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
+from diablo.models.sign_up import get_all_recording_types
 from flask import current_app as app
+from sqlalchemy import text
+from tests.test_api.api_test_utils import api_sign_up, api_sign_up_status
 
 admin_uid = '2040'
-instructor_not_teaching_uid = '1015674'
-instructor_uid = '8765432'
-section_id = 28602
+section_1_id = '28602'
+section_1_instructor_uids = ['234567', '8765432']
+section_2_id = '28165'
+section_2_instructor_uids = ['8765432']
+section_3_id = '12601'
+
+
+class TestSignUp:
+
+    def test_not_authenticated(self, client):
+        api_sign_up(
+            client,
+            publish_type='canvas',
+            recording_type='presentation_audio',
+            section_id='28602',
+            expected_status_code=401,
+        )
+
+    def test_invalid_publish_type(self, client, fake_auth):
+        fake_auth.login(admin_uid)
+        api_sign_up(
+            client,
+            publish_type='youtube',
+            recording_type='presentation_audio',
+            section_id='28602',
+            expected_status_code=400,
+        )
+
+    def test_unauthorized(self, client, db, fake_auth):
+        fake_auth.login(section_1_instructor_uids[0])
+        api_sign_up(
+            client,
+            publish_type='canvas',
+            recording_type='presentation_audio',
+            section_id=section_2_id,
+            expected_status_code=403,
+        )
+
+    def test_instructor_already_approved(self, client, fake_auth):
+        fake_auth.login(section_1_instructor_uids[0])
+
+        for expected_status_code in [200, 400]:
+            api_sign_up(
+                client,
+                publish_type='canvas',
+                recording_type='presentation_audio',
+                section_id=section_1_id,
+                expected_status_code=expected_status_code,
+            )
+
+    def test_approval_by_instructors(self, client, db, fake_auth):
+        _delete_sign_ups(db, section_1_id)
+        fake_auth.login(section_1_instructor_uids[0])
+        api_sign_up(
+            client,
+            publish_type='canvas',
+            recording_type='presentation_audio',
+            section_id=section_1_id,
+        )
+        fake_auth.login(section_1_instructor_uids[1])
+        api_sign_up(
+            client,
+            publish_type='kaltura_media_gallery',
+            recording_type='presentation_audio',
+            section_id=section_1_id,
+        )
+        fake_auth.login(admin_uid)
+        api_json = api_sign_up_status(
+            client,
+            term_id=app.config['CURRENT_TERM'],
+            section_id=section_1_id,
+        )
+        assert api_json['section']['room'] == {
+            'location': 'Barrows 60',
+            'capabilities': [
+                {
+                    'text': 'Presentation and Audio',
+                    'value': 'presentation_audio',
+                },
+            ],
+        }
+        instructor_uids = [i['uid'] for i in api_json['section']['instructors']]
+        assert instructor_uids == section_1_instructor_uids
+        assert api_json['signUpStatus']['publishType'] == 'kaltura_media_gallery'
+        assert api_json['signUpStatus']['recordingType'] == 'presentation_audio'
+        assert api_json['signUpStatus']['recordingTypeName'] == 'Presentation and Audio'
 
 
 class TestSignUpStatus:
 
-    @staticmethod
-    def _api_sign_up_status(client, term_id_, section_id_, expected_status_code=200):
-        response = client.get(f'/api/sign_up/status/{term_id_}/{section_id_}')
-        assert response.status_code == expected_status_code
-        return response.json
-
     def test_not_authenticated(self, client):
         term_id = app.config['CURRENT_TERM']
-        self._api_sign_up_status(
+        api_sign_up_status(
             client,
-            term_id_=term_id,
-            section_id_=section_id,
+            term_id=term_id,
+            section_id='28602',
             expected_status_code=401,
         )
 
     def test_not_authorized(self, client, fake_auth):
-        fake_auth.login(instructor_not_teaching_uid)
+        fake_auth.login(section_1_instructor_uids[0])
         term_id = app.config['CURRENT_TERM']
-        self._api_sign_up_status(
+        api_sign_up_status(
             client,
-            term_id_=term_id,
-            section_id_=section_id,
-            expected_status_code=401,
+            term_id=term_id,
+            section_id=section_2_id,
+            expected_status_code=403,
         )
 
     def test_invalid_section_id(self, client, fake_auth):
         fake_auth.login(admin_uid)
-        self._api_sign_up_status(
+        api_sign_up_status(
             client,
-            term_id_=app.config['CURRENT_TERM'],
-            section_id_=9999999999,
+            term_id=app.config['CURRENT_TERM'],
+            section_id=9999999999,
             expected_status_code=404,
         )
 
     def test_admin(self, client, fake_auth):
         fake_auth.login(admin_uid)
-        api_json = self._api_sign_up_status(
+        api_json = api_sign_up_status(
             client,
-            term_id_=app.config['CURRENT_TERM'],
-            section_id_=section_id,
+            term_id=app.config['CURRENT_TERM'],
+            section_id='28602',
         )
         assert api_json['section']
         assert [i['uid'] for i in api_json['section']['instructors']] == ['234567', '8765432']
+        assert api_json['section']['room'] == {
+            'location': 'Barrows 60',
+            'capabilities': [
+                {
+                    'text': 'Presentation and Audio',
+                    'value': 'presentation_audio',
+                },
+            ],
+        }
 
-    def test_instructor(self, client, fake_auth):
-        fake_auth.login(instructor_uid)
-        api_json = self._api_sign_up_status(
+    def test_date_time_format(self, client, db, fake_auth):
+        _delete_sign_ups(db, section_2_id)
+
+        fake_auth.login(section_2_instructor_uids[0])
+        api_json = api_sign_up_status(
             client,
-            term_id_=app.config['CURRENT_TERM'],
-            section_id_=section_id,
-        )
-        assert api_json['section']
-        assert [i['uid'] for i in api_json['section']['instructors']] == ['234567', '8765432']
-
-        sign_up_status = api_json['signUpStatus']
-        assert sign_up_status
-        assert sign_up_status['instructorApprovalUids'] == ['8765432']
-        assert sign_up_status['publishType'] == 'canvas'
-        assert sign_up_status['recordingType'] == 'presentation_audio'
-
-    def test_date_time_format(self, client, fake_auth):
-        fake_auth.login(instructor_uid)
-        api_json = self._api_sign_up_status(
-            client,
-            term_id_=app.config['CURRENT_TERM'],
-            section_id_=28165,
+            term_id=app.config['CURRENT_TERM'],
+            section_id=section_2_id,
         )
         assert api_json['section']
         assert api_json['section']['meetingDays'] == ['MO', 'WE', 'FR']
         assert api_json['section']['meetingStartTime'] == '3:00 pm'
         assert api_json['section']['meetingEndTime'] == '3:59 pm'
+        assert api_json['section']['room'] == {
+            'location': 'Wheeler 150',
+            'capabilities': [],
+        }
+
+    def test_li_ka_shing_capture_options(self, client, fake_auth):
+        fake_auth.login(admin_uid)
+        api_json = api_sign_up_status(
+            client,
+            term_id=app.config['CURRENT_TERM'],
+            section_id=section_3_id,
+        )
+        assert api_json['section']['room']['location'] == 'Li Ka Shing 145'
+        assert len(api_json['section']['room']['capabilities']) == len(get_all_recording_types())
+
+
+def _delete_sign_ups(db, section_id):
+    db.session.execute(text('DELETE FROM sign_ups WHERE section_id = :section_id'), {'section_id': section_id})

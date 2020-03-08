@@ -23,19 +23,36 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-import inspect
-
-from dateutil.tz import tzutc
-
-"""Generic utilities."""
+import json
 
 
-def get_args_dict(func, *args, **kw):
-    arg_names = inspect.getfullargspec(func)[0]
-    resp = dict(zip(arg_names, args))
-    resp.update(kw)
-    return resp
+def api_sign_up(
+        client,
+        publish_type,
+        recording_type,
+        section_id,
+        expected_status_code=200,
+):
+    response = client.post(
+        '/api/sign_up',
+        data=json.dumps({
+            'publishType': publish_type,
+            'recordingType': recording_type,
+            'sectionId': section_id,
+        }),
+        content_type='application/json',
+    )
+    assert response.status_code == expected_status_code, f"""
+        Expected status code: {expected_status_code}
+        Actual status code: {response.status_code}
+    """
+    return response.json
 
 
-def to_isoformat(value):
-    return value and value.astimezone(tzutc()).isoformat()
+def api_sign_up_status(client, term_id, section_id, expected_status_code=200):
+    response = client.get(f'/api/sign_up/status/{term_id}/{section_id}')
+    assert response.status_code == expected_status_code, f"""
+        Expected status code: {expected_status_code}
+        Actual status code: {response.status_code}
+    """
+    return response.json

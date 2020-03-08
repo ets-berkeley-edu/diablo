@@ -23,11 +23,11 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
+import glob
 import json
 
 from diablo import BASE_DIR, cache, db, std_commit
 from diablo.models.admin_user import AdminUser
-from diablo.models.sign_up import SignUp
 from flask import current_app as app
 from sqlalchemy.sql import text
 
@@ -46,9 +46,9 @@ def clear():
 
 
 def load():
+    cache.clear()
     _load_schemas()
     _create_users()
-    _create_sign_ups()
     _cache_externals()
     return db
 
@@ -56,8 +56,9 @@ def load():
 def _cache_externals():
     with open(f'{BASE_DIR}/fixtures/salesforce_capture_enabled_rooms.json', 'r') as file:
         cache.set('salesforce_capture_enabled_rooms', json.loads(file.read()))
-    for uid in ['2040', '1015674', '8765432']:
-        with open(f'{BASE_DIR}/fixtures/calnet_user_for_uid_{uid}.json', 'r') as file:
+    for path in glob.glob(f'{BASE_DIR}/fixtures/calnet_user_for_uid_*.json'):
+        with open(path, 'r') as file:
+            uid = path.split('_')[-1].split('.')[0]
             cache.set(f'calnet_user_for_uid_{uid}', json.loads(file.read()))
 
 
@@ -71,21 +72,6 @@ def _load_schemas():
 def _create_users():
     for test_user in _test_users:
         db.session.add(AdminUser(uid=test_user['uid']))
-    std_commit(allow_test_environment=True)
-
-
-def _create_sign_ups():
-    db.session.add(
-        SignUp(
-            term_id=app.config['CURRENT_TERM'],
-            section_id=28602,
-            admin_approval_uid=None,
-            instructor_approval_uids=['8765432'],
-            publish_type_='canvas',
-            recording_type_='presentation_audio',
-            requires_multiple_approvals=True,
-        ),
-    )
     std_commit(allow_test_environment=True)
 
 

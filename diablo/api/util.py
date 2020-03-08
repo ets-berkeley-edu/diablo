@@ -23,19 +23,18 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-import inspect
+from functools import wraps
 
-from dateutil.tz import tzutc
-
-"""Generic utilities."""
-
-
-def get_args_dict(func, *args, **kw):
-    arg_names = inspect.getfullargspec(func)[0]
-    resp = dict(zip(arg_names, args))
-    resp.update(kw)
-    return resp
+from flask import current_app as app, request
+from flask_login import current_user
 
 
-def to_isoformat(value):
-    return value and value.astimezone(tzutc()).isoformat()
+def admin_required(func):
+    @wraps(func)
+    def _admin_required(*args, **kw):
+        if current_user.is_admin:
+            return func(*args, **kw)
+        else:
+            app.logger.warning(f'Unauthorized request to {request.path}')
+            return app.login_manager.unauthorized()
+    return _admin_required

@@ -22,12 +22,15 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
+
+from diablo.api.util import admin_required
 from diablo.externals.salesforce import get_capture_enabled_rooms
 from diablo.lib.http import tolerant_jsonify
 from flask import current_app as app
 
 
 @app.route('/api/capture/enabled_rooms')
+@admin_required
 def get_enabled_rooms():
     rooms = get_capture_enabled_rooms()
     return tolerant_jsonify({
