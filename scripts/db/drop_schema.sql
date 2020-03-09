@@ -34,28 +34,34 @@ SET row_security = off;
 
 --
 
+ALTER TABLE IF EXISTS ONLY public.approvals DROP CONSTRAINT IF EXISTS approvals_location_fkey;
+
+--
+
 ALTER TABLE IF EXISTS ONLY public.admin_users DROP CONSTRAINT IF EXISTS admin_users_pkey;
 ALTER TABLE IF EXISTS ONLY public.admin_users DROP CONSTRAINT IF EXISTS admin_users_uid_key;
 ALTER TABLE IF EXISTS public.admin_users ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS ONLY public.rooms DROP CONSTRAINT IF EXISTS rooms_pkey;
+ALTER TABLE IF EXISTS ONLY public.approvals DROP CONSTRAINT IF EXISTS approvals_pkey;
 
 --
 
-DROP INDEX IF EXISTS public.sign_ups_term_id_idx;
-DROP INDEX IF EXISTS public.sign_ups_section_id_idx;
-
---
-
-ALTER TABLE IF EXISTS ONLY public.sign_ups DROP CONSTRAINT IF EXISTS sign_ups_pkey;
+DROP INDEX IF EXISTS public.approvals_term_id_idx;
+DROP INDEX IF EXISTS public.approvals_section_id_idx;
+DROP INDEX IF EXISTS public.rooms_location_idx;
 
 --
 
 DROP SEQUENCE IF EXISTS public.admin_users_id_seq;
 DROP TABLE IF EXISTS public.admin_users;
-DROP TABLE IF EXISTS public.sign_ups;
+DROP TABLE IF EXISTS public.approvals;
+DROP TABLE IF EXISTS public.rooms;
 
 --
 
+DROP TYPE IF EXISTS public.approver_types;
 DROP TYPE IF EXISTS public.publish_types;
 DROP TYPE IF EXISTS public.recording_types;
+DROP TYPE IF EXISTS public.user_types;
 
 --

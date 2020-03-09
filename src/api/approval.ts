@@ -1,13 +1,13 @@
 import axios from 'axios'
 import utils from '@/api/api-utils'
 
-export function signUp(
+export function approve(
     publishType: string,
     recordingType: string,
     sectionId: string
 ) {
   return axios
-    .post(`${utils.apiBaseUrl()}/api/sign_up`, {
+    .post(`${utils.apiBaseUrl()}/api/approve`, {
       publishType,
       recordingType,
       sectionId
@@ -15,8 +15,8 @@ export function signUp(
     .then(response => response.data, error => error)
 }
 
-export function getSignUpStatus(termId: number, sectionId: number) {
+export function getApprovals(termId: number, sectionId: number) {
   return axios
-    .get(`${utils.apiBaseUrl()}/api/sign_up/status/${termId}/${sectionId}`)
+    .get(`${utils.apiBaseUrl()}/api/approvals/${termId}/${sectionId}`)
     .then(response => response.data, () => null)
 }

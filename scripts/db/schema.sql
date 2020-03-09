@@ -35,6 +35,29 @@ SET search_path = public, pg_catalog;
 SET default_tablespace = '';
 SET default_with_oids = false;
 
+
+--
+
+CREATE TYPE publish_types AS ENUM (
+    'canvas',
+    'kaltura_media_gallery'
+);
+
+--
+
+CREATE TYPE recording_types AS ENUM (
+    'presentation_audio',
+    'presenter_audio',
+    'presenter_presentation_audio'
+);
+
+--
+
+CREATE TYPE approver_types AS ENUM (
+    'admin',
+    'instructor'
+);
+
 --
 
 CREATE TABLE admin_users (
@@ -60,35 +83,38 @@ ALTER TABLE ONLY admin_users
 
 --
 
-CREATE TYPE publish_types AS ENUM (
-    'canvas',
-    'kaltura_media_gallery'
-);
-
---
-
-CREATE TYPE recording_types AS ENUM (
-    'presentation_audio',
-    'presenter_audio',
-    'presenter_presentation_audio'
-);
-
---
-
-CREATE TABLE sign_ups (
-    term_id INTEGER NOT NULL,
+CREATE TABLE approvals (
+    approved_by_uid VARCHAR(80) NOT NULL,
     section_id INTEGER NOT NULL,
-    admin_approval_uid VARCHAR(80),
-    instructor_approval_uids VARCHAR(80)[],
+    term_id INTEGER NOT NULL,
+    location VARCHAR(255) NOT NULL,
+    approver_type approver_types,
     publish_type publish_types NOT NULL,
-    recordings_scheduled_at timestamp with time zone,
     recording_type recording_types NOT NULL,
     created_at timestamp with time zone NOT NULL,
     updated_at timestamp with time zone NOT NULL
 );
-ALTER TABLE sign_ups OWNER TO diablo;
-ALTER TABLE sign_ups ADD CONSTRAINT sign_ups_pkey PRIMARY KEY (term_id, section_id);
-CREATE INDEX sign_ups_term_id_idx ON sign_ups USING btree (term_id);
-CREATE INDEX sign_ups_section_id_idx ON sign_ups USING btree (section_id);
+ALTER TABLE approvals OWNER TO diablo;
+ALTER TABLE approvals ADD CONSTRAINT approvals_pkey PRIMARY KEY (approved_by_uid, section_id, term_id);
+CREATE INDEX approvals_approved_by_uid_idx ON approvals USING btree (approved_by_uid);
+CREATE INDEX approvals_section_id_idx ON approvals USING btree (section_id);
+CREATE INDEX approvals_term_id_idx ON approvals USING btree (term_id);
+
+--
+
+CREATE TABLE rooms (
+    location VARCHAR(255) NOT NULL,
+    capabilities VARCHAR(255)[] NOT NULL,
+    created_at timestamp with time zone NOT NULL
+);
+ALTER TABLE rooms OWNER TO diablo;
+ALTER TABLE ONLY rooms
+    ADD CONSTRAINT rooms_pkey PRIMARY KEY (location);
+CREATE INDEX rooms_location_idx ON rooms USING btree (location);
+
+--
+
+ALTER TABLE ONLY approvals
+    ADD CONSTRAINT approvals_location_fkey FOREIGN KEY (location) REFERENCES rooms(location);
 
 --
