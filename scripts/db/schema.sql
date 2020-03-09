@@ -81,8 +81,8 @@ CREATE TABLE sign_ups (
     admin_approval_uid VARCHAR(80),
     instructor_approval_uids VARCHAR(80)[],
     publish_type publish_types NOT NULL,
+    recordings_scheduled_at timestamp with time zone,
     recording_type recording_types NOT NULL,
-    requires_multiple_approvals BOOLEAN NOT NULL,
     created_at timestamp with time zone NOT NULL,
     updated_at timestamp with time zone NOT NULL
 );

@@ -13,7 +13,7 @@
 
 <script>
   import Loading from '@/mixins/Loading'
-  import {getCaptureEnabledRooms} from '@/api/course-capture'
+  import {getCaptureEnabledRooms} from '@/api/capture'
 
   export default {
     name: 'Admin',

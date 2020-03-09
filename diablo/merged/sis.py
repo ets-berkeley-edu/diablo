@@ -27,6 +27,7 @@ from datetime import datetime
 
 from diablo.externals.data_loch import get_section_denormalized, get_sections_denormalized
 from diablo.externals.salesforce import get_capture_enabled_rooms
+from diablo.lib.berkeley import get_capture_options
 from diablo.merged.calnet import get_calnet_user_for_uid
 from flask import current_app as app
 
@@ -41,14 +42,9 @@ def get_sections(term_id, instructor_uid):
 
 
 def _normalize_rows(rows):
-    def _flatten_location(name):
-        return name and ''.join(name.split()).lower()
-
     sections_per_id = {}
     instructor_uids_per_section_id = {}
     enabled_rooms = get_capture_enabled_rooms()
-
-    enabled_locations = [_flatten_location(f'{r["building"]} {r["roomNumber"]}') for r in enabled_rooms]
     for row in rows:
         section_id = row['sis_section_id']
         if section_id not in sections_per_id:
@@ -59,12 +55,14 @@ def _normalize_rows(rows):
                 'courseTitle': row['sis_course_title'],
                 'instructionFormat': row['sis_instruction_format'],
                 'instructorRoleCode': row['instructor_role_code'],
-                'isEligibleForCourseCapture': _flatten_location(location) in enabled_locations,
                 'isPrimary': row['is_primary'],
                 'meetingDays': _format_days(row['meeting_days']),
                 'meetingEndDate': row['meeting_end_date'],
                 'meetingEndTime': _format_time(row['meeting_end_time']),
-                'meetingLocation': location,
+                'room': {
+                    'location': location,
+                    'capabilities': get_capture_options(location, enabled_rooms),
+                },
                 'meetingStartDate': row['meeting_start_date'],
                 'meetingStartTime': _format_time(row['meeting_start_time']),
                 'sectionId': section_id,

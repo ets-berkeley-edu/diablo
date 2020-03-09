@@ -23,7 +23,8 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-from diablo import db
+from diablo import db, std_commit
+from diablo.lib.util import to_isoformat
 from diablo.models.base import Base
 from sqlalchemy.dialects.postgresql import ARRAY, ENUM
 
@@ -37,11 +38,22 @@ publish_type = ENUM(
 
 recording_type = ENUM(
     'presentation_audio',
-    'presenter_audio'
+    'presenter_audio',
     'presenter_presentation_audio',
     name='recording_types',
     create_type=False,
 )
+
+PUBLISH_TYPE_NAMES_PER_ID = {
+    'canvas': 'bCourses',
+    'kaltura_media_gallery': 'My Media, in Kaltura',
+}
+
+RECORDING_TYPE_NAMES_PER_ID = {
+    'presentation_audio': 'Presentation and Audio',
+    'presenter_audio': 'Presenter and Audio',
+    'presenter_presentation_audio': 'Presenter, Presentation, and Audio',
+}
 
 
 class SignUp(Base):
@@ -52,8 +64,8 @@ class SignUp(Base):
     admin_approval_uid = db.Column(db.String)
     instructor_approval_uids = db.Column(ARRAY(db.String))
     publish_type = db.Column(publish_type, nullable=False)
+    recordings_scheduled_at = db.Column(db.DateTime)
     recording_type = db.Column(recording_type, nullable=False)
-    requires_multiple_approvals = db.Column(db.Boolean, nullable=False)
 
     def __init__(
             self,
@@ -63,7 +75,6 @@ class SignUp(Base):
             instructor_approval_uids,
             publish_type_,
             recording_type_,
-            requires_multiple_approvals,
     ):
         self.term_id = term_id
         self.section_id = section_id
@@ -71,7 +82,6 @@ class SignUp(Base):
         self.instructor_approval_uids = instructor_approval_uids
         self.publish_type = publish_type_
         self.recording_type = recording_type_
-        self.requires_multiple_approvals = requires_multiple_approvals
 
     def __repr__(self):
         return f"""<SignUp
@@ -81,10 +91,70 @@ class SignUp(Base):
                     instructor_approval_uids={self.instructor_approval_uids},
                     publish_type={self.publish_type},
                     recording_type={self.recording_type},
-                    requires_multiple_approvals={self.requires_multiple_approvals},
+                    recordings_scheduled_at={self.recordings_scheduled_at},
                     created_at={self.created_at},
                     updated_at={self.updated_at}>
                 """
+
+    @classmethod
+    def create(
+            cls,
+            term_id,
+            section_id,
+            admin_approval_uid=None,
+            instructor_approval_uid=None,
+            publish_type_=None,
+            recording_type_=None,
+    ):
+        sign_up = cls(
+            term_id=term_id,
+            section_id=section_id,
+            admin_approval_uid=admin_approval_uid,
+            instructor_approval_uids=[instructor_approval_uid] if instructor_approval_uid else None,
+            publish_type_=publish_type_,
+            recording_type_=recording_type_,
+        )
+        db.session.add(sign_up)
+        std_commit()
+        return sign_up
+
+    @classmethod
+    def add_instructor_approval(
+            cls,
+            term_id,
+            section_id,
+            instructor_uid,
+            publish_type_=None,
+            recording_type_=None,
+    ):
+        sign_up = cls.get_sign_up(term_id, section_id)
+        if not sign_up.instructor_approval_uids:
+            sign_up.instructor_approval_uids = []
+        sign_up.instructor_approval_uids.append(instructor_uid)
+        if publish_type_:
+            sign_up.publish_type = publish_type_
+        if recording_type_:
+            sign_up.recording_type = recording_type_
+        db.session.add(sign_up)
+        std_commit()
+
+    @classmethod
+    def set_admin_approval_uid(
+            cls,
+            term_id,
+            section_id,
+            admin_uid,
+            publish_type_=None,
+            recording_type_=None,
+    ):
+        sign_up = cls.get_sign_up(term_id, section_id)
+        sign_up.admin_approval_uid = admin_uid
+        if publish_type_:
+            sign_up.publish_type = publish_type_
+        if recording_type_:
+            sign_up.recording_type = recording_type_
+        db.session.add(sign_up)
+        std_commit()
 
     @classmethod
     def get_sign_up(cls, term_id, section_id):
@@ -101,6 +171,16 @@ class SignUp(Base):
             'adminApprovalUid': self.admin_approval_uid,
             'instructorApprovalUids': self.instructor_approval_uids,
             'publishType': self.publish_type,
+            'publishTypeName': PUBLISH_TYPE_NAMES_PER_ID[self.publish_type],
             'recordingType': self.recording_type,
-            'requiresMultipleApprovals': self.requires_multiple_approvals,
+            'recordingTypeName': RECORDING_TYPE_NAMES_PER_ID[self.recording_type],
+            'recordingsScheduledAt': to_isoformat(self.recordings_scheduled_at),
         }
+
+
+def get_all_publish_types():
+    return publish_type.enums
+
+
+def get_all_recording_types():
+    return recording_type.enums

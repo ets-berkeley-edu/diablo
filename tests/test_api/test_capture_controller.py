@@ -23,19 +23,31 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-import inspect
-
-from dateutil.tz import tzutc
-
-"""Generic utilities."""
+admin_uid = '2040'
+instructor_uid = '8765432'
 
 
-def get_args_dict(func, *args, **kw):
-    arg_names = inspect.getfullargspec(func)[0]
-    resp = dict(zip(arg_names, args))
-    resp.update(kw)
-    return resp
+class TestCaptureEnabledRooms:
 
+    @staticmethod
+    def _api_capture_enabled_rooms(client, expected_status_code=200):
+        response = client.get('/api/capture/enabled_rooms')
+        assert response.status_code == expected_status_code
+        return response.json
 
-def to_isoformat(value):
-    return value and value.astimezone(tzutc()).isoformat()
+    def test_not_authenticated(self, client):
+        self._api_capture_enabled_rooms(client, expected_status_code=401)
+
+    def test_not_authorized(self, client, fake_auth):
+        fake_auth.login(instructor_uid)
+        self._api_capture_enabled_rooms(client, expected_status_code=401)
+
+    def test_admin(self, client, fake_auth):
+        fake_auth.login(admin_uid)
+        api_json = self._api_capture_enabled_rooms(client)
+        assert api_json['totalRoomCount'] == 3
+        assert len(api_json['rooms']) == 3
+        room = api_json['rooms'][0]
+        assert room['building'] == 'Barrows'
+        assert room['roomNumber'] == '60'
+        assert room['capabilities'] == 'Screencast'

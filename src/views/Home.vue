@@ -10,7 +10,7 @@
       class="elevation-1"
     >
       <template v-slot:top>
-        <div class="d-flex">
+        <div v-if="coursesEligibleOnly.length" class="d-flex">
           <div class="pa-5">
             <label for="show-only-eligible-courses" class="text--darken-2">Show only courses eligible for Course Capture?</label>
           </div>
@@ -24,12 +24,15 @@
             {{ showEligibleCoursesOnly ? 'Yes' : 'No' }}
           </div>
         </div>
+        <div v-if="!coursesEligibleOnly.length" class="pa-5">
+          No courses eligible for Course Capture.
+        </div>
       </template>
       <template v-slot:body="{ items }">
         <tbody>
           <tr v-for="item in items" :key="item.name">
             <td>
-              <div v-if="item.isEligible">
+              <div v-if="$_.size(item.room.capabilities)">
                 <v-btn
                   :id="`sign-up-${item.sectionId}`"
                   :aria-label="`Sign ${item.course} up for Course Capture.`"
@@ -45,7 +48,7 @@
             <td class="text-no-wrap">{{ item.course }}</td>
             <td>{{ item.title }}</td>
             <td>{{ item.instructors }}</td>
-            <td class="text-no-wrap">{{ item.location }}</td>
+            <td class="text-no-wrap">{{ item.room.location }}</td>
             <td class="text-no-wrap">{{ item.days }}</td>
             <td class="text-no-wrap">{{ item.time }}</td>
           </tr>
@@ -70,7 +73,7 @@
         {text: 'Course', value: 'course'},
         {text: 'Title', value: 'title'},
         {text: 'Instructors', value: 'instructors', sortable: false},
-        {text: 'Location', value: 'location'},
+        {text: 'Room', value: 'room'},
         {text: 'Days', value: 'days', sortable: false},
         {text: 'Time', value: 'time', sortable: false}
       ],
@@ -81,19 +84,17 @@
       this.courses = []
       this.coursesEligibleOnly = []
       this.$_.each(this.$currentUser.teachingSections, s => {
-        const isEligible = s.isEligibleForCourseCapture
         let course = {
           course: `${s.courseName}, ${s.instructionFormat} ${s.sectionNum}`,
           days: s.meetingDays ? this.$_.join(s.meetingDays, ', ') : undefined,
           instructors: this.oxfordJoin(this.$_.map(s.instructors, 'name')),
-          isEligible,
-          location: s.meetingLocation,
+          room: s.room,
           sectionId: s.sectionId,
           time: s.meetingStartTime ? `${s.meetingStartTime} - ${s.meetingEndTime}` : undefined,
           title: s.courseTitle
         }
         this.courses.push(course)
-        if (isEligible) {
+        if (s.room.capabilities.length) {
           this.coursesEligibleOnly.push(course)
         }
       })

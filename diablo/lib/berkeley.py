@@ -22,6 +22,32 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
+from diablo.models.sign_up import RECORDING_TYPE_NAMES_PER_ID
+
+
+def get_capture_options(location, enabled_rooms):
+    def _flatten_location(name):
+        return name and ''.join(name.split()).lower()
+
+    room_capabilities = []
+    flattened_location = _flatten_location(location)
+    for enabled_room in enabled_rooms:
+        _flattened_enabled_location = _flatten_location(f'{enabled_room["building"]} {enabled_room["roomNumber"]}')
+        if flattened_location == _flattened_enabled_location:
+            if enabled_room['capabilities'] == 'Screencast + Video':
+                for key, value in RECORDING_TYPE_NAMES_PER_ID.items():
+                    room_capabilities.append({
+                        'text': value,
+                        'value': key,
+                    })
+            else:
+                key = 'presentation_audio'
+                room_capabilities.append({
+                    'text': RECORDING_TYPE_NAMES_PER_ID[key],
+                    'value': key,
+                })
+            break
+    return room_capabilities
 
 
 def term_name_for_sis_id(sis_id=None):
