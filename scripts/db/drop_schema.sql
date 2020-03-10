@@ -41,21 +41,28 @@ ALTER TABLE IF EXISTS ONLY public.approvals DROP CONSTRAINT IF EXISTS approvals_
 ALTER TABLE IF EXISTS ONLY public.admin_users DROP CONSTRAINT IF EXISTS admin_users_pkey;
 ALTER TABLE IF EXISTS ONLY public.admin_users DROP CONSTRAINT IF EXISTS admin_users_uid_key;
 ALTER TABLE IF EXISTS public.admin_users ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE IF EXISTS ONLY public.rooms DROP CONSTRAINT IF EXISTS rooms_pkey;
 ALTER TABLE IF EXISTS ONLY public.approvals DROP CONSTRAINT IF EXISTS approvals_pkey;
+ALTER TABLE IF EXISTS ONLY public.rooms DROP CONSTRAINT IF EXISTS rooms_pkey;
+ALTER TABLE IF EXISTS ONLY public.scheduled DROP CONSTRAINT IF EXISTS scheduled_pkey;
 
 --
 
 DROP INDEX IF EXISTS public.approvals_term_id_idx;
 DROP INDEX IF EXISTS public.approvals_section_id_idx;
 DROP INDEX IF EXISTS public.rooms_location_idx;
+DROP INDEX IF EXISTS public.scheduled_term_id_idx;
+DROP INDEX IF EXISTS public.scheduled_section_id_idx;
 
 --
 
 DROP SEQUENCE IF EXISTS public.admin_users_id_seq;
+
+--
+
 DROP TABLE IF EXISTS public.admin_users;
 DROP TABLE IF EXISTS public.approvals;
 DROP TABLE IF EXISTS public.rooms;
+DROP TABLE IF EXISTS public.scheduled;
 
 --
 

@@ -118,3 +118,15 @@ ALTER TABLE ONLY approvals
     ADD CONSTRAINT approvals_location_fkey FOREIGN KEY (location) REFERENCES rooms(location);
 
 --
+
+CREATE TABLE scheduled (
+    section_id INTEGER NOT NULL,
+    term_id INTEGER NOT NULL,
+    created_at timestamp with time zone NOT NULL
+);
+ALTER TABLE scheduled OWNER TO diablo;
+ALTER TABLE scheduled ADD CONSTRAINT scheduled_pkey PRIMARY KEY (section_id, term_id);
+CREATE INDEX scheduled_section_id_idx ON scheduled USING btree (section_id);
+CREATE INDEX scheduled_term_id_idx ON scheduled USING btree (term_id);
+
+--

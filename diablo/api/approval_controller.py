@@ -24,11 +24,12 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 
 from diablo.api.errors import BadRequestError, ForbiddenRequestError, ResourceNotFoundError
-from diablo.lib.berkeley import term_name_for_sis_id
+from diablo.lib.berkeley import get_instructor_uids, has_necessary_approvals, term_name_for_sis_id
 from diablo.lib.http import tolerant_jsonify
 from diablo.merged.sis import get_section
 from diablo.models.approval import Approval, get_all_publish_types, get_all_recording_types, PUBLISH_TYPE_NAMES_PER_ID
 from diablo.models.room import Room
+from diablo.models.scheduled import Scheduled
 from flask import current_app as app, request
 from flask_login import current_user, login_required
 
@@ -68,7 +69,6 @@ def course_capture_sign_up():
         publish_type_=publish_type,
         recording_type_=recording_type,
     )
-
     return tolerant_jsonify(_all_approvals_to_json(section, term_id))
 
 
@@ -78,16 +78,20 @@ def approvals(term_id, section_id):
     section = get_section(term_id, section_id)
     if not section:
         raise ResourceNotFoundError(f'No section for term_id = {term_id} and section_id = {section_id}')
-    instructor_uids = [i['uid'] for i in section['instructors']]
-    if not current_user.is_admin and current_user.get_uid() not in instructor_uids:
+
+    if not current_user.is_admin and current_user.get_uid() not in get_instructor_uids(section):
         raise ForbiddenRequestError('Sorry, this request is unauthorized.')
     return tolerant_jsonify(_all_approvals_to_json(section, term_id))
 
 
 def _all_approvals_to_json(section, term_id):
+    section_id = section['sectionId']
+    all_approvals = Approval.get_approvals(section_id, term_id)
     return {
         'termId': term_id,
         'section': section,
-        'approvals': [approval.to_api_json() for approval in Approval.get_approvals(section['sectionId'], term_id)],
+        'approvals': [approval.to_api_json() for approval in all_approvals],
+        'hasNecessaryApprovals': has_necessary_approvals(section, all_approvals),
         'publishTypeOptions': [{'text': text, 'value': value} for value, text in PUBLISH_TYPE_NAMES_PER_ID.items()],
+        'scheduled': Scheduled.was_scheduled(section_id=section_id, term_id=term_id),
     }

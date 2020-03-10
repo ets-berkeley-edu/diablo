@@ -51,6 +51,19 @@ def get_capture_options(location, enabled_rooms):
     return room_capabilities
 
 
+def get_instructor_uids(section):
+    return [i['uid'] for i in section['instructors']]
+
+
+def has_necessary_approvals(section, all_approvals):
+    if any(a.approver_type == 'admin' for a in all_approvals):
+        return True
+    else:
+        approval_uids = [a.approved_by_uid for a in all_approvals]
+        necessary_approval_uids = get_instructor_uids(section)
+        return all(uid in approval_uids for uid in necessary_approval_uids)
+
+
 def term_name_for_sis_id(sis_id=None):
     if sis_id:
         sis_id = str(sis_id)
