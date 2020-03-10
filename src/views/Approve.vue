@@ -6,11 +6,6 @@
       </v-row>
       <v-row class="pl-3">
         <h2>{{ section.courseTitle }}</h2>
-        <div>
-          {{ approvals }}
-          <hr />
-          {{ section }}
-        </div>
       </v-row>
       <v-row>
         <v-col lg="3" md="3" sm="3">
