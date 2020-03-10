@@ -59,13 +59,14 @@
               <v-row class="pb-4">
                 <div>
                   <h3>Course Capture Sign-up</h3>
-                  <div v-if="mostRecentApproval" class="font-weight-bold pb-2 pt-2 pink--text">
-                    <span v-if="mostRecentApproval.approvedByUid === $currentUser.uid">
+                  <div v-if="approvedByUids.length" class="font-weight-bold pb-2 pt-2 pink--text">
+                    <span v-if="!hasNecessaryApprovals && mostRecentApproval.approvedByUid === $currentUser.uid">
                       You submitted the preferences below.
                     </span>
-                    <div v-if="mostRecentApproval.approvedByUid !== $currentUser.uid && $_.includes(approvedByUids, $currentUser.uid)">
+                    <div v-if="hasNecessaryApprovals || mostRecentApproval.approvedByUid !== $currentUser.uid">
                       The preferences below were submitted by {{ getInstructorNames(approvedByUids) }}.
                     </div>
+                    <div v-if="!scheduled" class="pt-2">Recordings have been scheduled in Kaltura.</div>
                   </div>
                   <div>
                     The Course Capture program is the campus service for recording and publishing classroom activity. If you
@@ -102,19 +103,24 @@
                   </h4>
                 </v-col>
                 <v-col cols="8">
-                  <div v-if="section.room.capabilities.length === 1">
-                    {{ section.room.capabilities[0].text }}
-                    <input type="hidden" name="recordingType" :value="section.room.capabilities[0].value">
+                  <div v-if="hasNecessaryApprovals" class="pb-5">
+                    {{ mostRecentApproval.recordingTypeName }}
                   </div>
-                  <div v-if="section.room.capabilities.length">
-                    <v-select
-                      id="select-recording-type"
-                      v-model="recordingType"
-                      :full-width="true"
-                      :items="section.room.capabilities"
-                      label="Select..."
-                      solo
-                    ></v-select>
+                  <div v-if="!hasNecessaryApprovals">
+                    <div v-if="section.room.capabilities.length === 1">
+                      {{ section.room.capabilities[0].text }}
+                      <input type="hidden" name="recordingType" :value="section.room.capabilities[0].value">
+                    </div>
+                    <div v-if="section.room.capabilities.length">
+                      <v-select
+                        id="select-recording-type"
+                        v-model="recordingType"
+                        :full-width="true"
+                        :items="section.room.capabilities"
+                        label="Select..."
+                        solo
+                      ></v-select>
+                    </div>
                   </div>
                 </v-col>
               </v-row>
@@ -141,7 +147,11 @@
                   </h4>
                 </v-col>
                 <v-col cols="8">
+                  <div v-if="hasNecessaryApprovals" class="pb-5">
+                    {{ mostRecentApproval.publishTypeName }}
+                  </div>
                   <v-select
+                    v-if="!hasNecessaryApprovals"
                     id="select-publish-type"
                     v-model="publishType"
                     :full-width="true"
@@ -151,7 +161,7 @@
                   ></v-select>
                 </v-col>
               </v-row>
-              <v-row>
+              <v-row v-if="!hasNecessaryApprovals">
                 <v-col md="auto" class="mr-0 pr-0">
                   <v-checkbox id="agree-to-terms-checkbox" v-model="agreedToTerms" class="mt-0 mr-0 pt-1"></v-checkbox>
                 </v-col>
@@ -168,7 +178,7 @@
                   </label>
                 </v-col>
               </v-row>
-              <v-row class="pr-5">
+              <v-row v-if="!hasNecessaryApprovals" class="pr-5">
                 <v-spacer />
                 <v-btn color="success" :disabled="disableSubmit" @click="approveRecording">Approve</v-btn>
               </v-row>
@@ -192,12 +202,14 @@
       agreedToTerms: false,
       approvals: undefined,
       approvedByUids: undefined,
+      hasNecessaryApprovals: undefined,
       instructorUids: undefined,
       mostRecentApproval: undefined,
       pageTitle: undefined,
       publishType: undefined,
       publishTypeOptions: undefined,
       recordingType: undefined,
+      scheduled: undefined,
       section: undefined
     }),
     computed: {
@@ -227,18 +239,20 @@
       render(data) {
         if (data.approvals.length) {
           this.approvals = this.$_.sortBy(data.approvals, ['createdAt'])
-          this.mostRecentApproval = this.$_.last(this.approvals)
           this.approvedByUids = this.$_.map(this.approvals, 'approvedByUid')
-          this.publishType = this.approvals[0].publishType
-          this.recordingType = this.approvals[0].recordingType
+          this.mostRecentApproval = this.$_.last(this.approvals)
+          this.publishType = this.mostRecentApproval.publishType
+          this.recordingType = this.mostRecentApproval.recordingType
         } else {
           this.approvals = []
           this.approvedByUids = []
         }
-        this.section = data.section
-        this.instructorUids = this.$_.map(this.section.instructors, 'uid')
+        this.hasNecessaryApprovals = data.hasNecessaryApprovals
+        this.instructorUids = this.$_.map(data.section.instructors, 'uid')
+        this.pageTitle = `${data.section.courseName } - ${data.section.instructionFormat} ${data.section.sectionNum}`
         this.publishTypeOptions = data.publishTypeOptions
-        this.pageTitle = `${this.section.courseName } - ${this.section.instructionFormat} ${this.section.sectionNum}`
+        this.scheduled = data.scheduled
+        this.section = data.section
         this.setPageTitle(this.pageTitle)
         this.loaded()
       }

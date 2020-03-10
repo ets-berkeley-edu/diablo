@@ -128,6 +128,22 @@ class TestApprove:
         assert approvals_[1]['recordingType'] == 'presentation_audio'
         assert approvals_[1]['recordingTypeName'] == 'Presentation and Audio'
 
+        assert api_json['hasNecessaryApprovals'] is True
+        assert api_json['scheduled'] is False
+
+    def test_approval_by_admin(self, client, db, fake_auth):
+        _delete_approvals(db, section_1_id)
+        fake_auth.login(admin_uid)
+        api_json = api_approve(
+            client,
+            publish_type='canvas',
+            recording_type='presentation_audio',
+            section_id=section_1_id,
+        )
+        std_commit(allow_test_environment=True)
+        assert api_json['hasNecessaryApprovals'] is True
+        assert api_json['scheduled'] is False
+
 
 class TestApprovals:
 
