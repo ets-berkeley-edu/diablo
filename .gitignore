@@ -34,3 +34,6 @@ tmp/
 .cache
 .flask_cache/
 .pytest_cache/
+
+# Xena
+geckodriver.log

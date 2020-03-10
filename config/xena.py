@@ -23,6 +23,7 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
+import logging
 import os
 
 # Base directory for the application (one level up from this config file).
@@ -30,10 +31,8 @@ BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
 INDEX_HTML = f'{BASE_DIR}/tests/static/test-index.html'
 
-LOGGING_LOCATION = 'STDOUT'
+LOGGING_LEVEL = logging.INFO
 
 SQLALCHEMY_DATABASE_URI = 'postgres://diablo:diablo@localhost:5432/diablo_test'
 
 TESTING = True
-
-XENA_SIGNATURE_WEAPON = 'Chakram'

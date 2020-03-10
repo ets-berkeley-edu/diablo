@@ -31,6 +31,11 @@ from diablo.factory import create_app
 
 _app = create_app()
 
+XENA_BROWSER = 'chrome'
+
+TIMEOUT_SHORT = 8
+TIMEOUT_LONG = 30
+
 # Create app context before running tests.
 ctx = _app.app_context()
 ctx.push()
