@@ -1,4 +1,5 @@
 import _ from 'lodash'
+import Approve from '@/views/Approve.vue'
 import Attic from '@/views/Attic.vue'
 import auth from './auth'
 import BaseView from '@/views/BaseView.vue'
@@ -7,7 +8,6 @@ import Login from '@/views/Login.vue'
 import NotFound from '@/views/NotFound.vue'
 import Reports from '@/views/Reports.vue'
 import Router from 'vue-router'
-import SignUp from '@/views/SignUp.vue'
 import Vue from 'vue'
 
 Vue.use(Router)
@@ -60,8 +60,8 @@ const router = new Router({
           name: 'home'
         },
         {
-          path: '/course/:termId/:sectionId',
-          component: SignUp
+          path: '/approve/:termId/:sectionId',
+          component: Approve
         },
         {
           path: '/attic',

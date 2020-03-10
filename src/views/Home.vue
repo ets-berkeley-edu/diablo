@@ -34,13 +34,13 @@
             <td>
               <div v-if="$_.size(item.room.capabilities)">
                 <v-btn
-                  :id="`sign-up-${item.sectionId}`"
-                  :aria-label="`Sign ${item.course} up for Course Capture.`"
+                  :id="`approve-${item.sectionId}`"
+                  :aria-label="`Approve ${item.course} up for Course Capture.`"
                   color="primary"
                   fab
                   small
                   dark
-                  @click="goSignUp(item.sectionId)">
+                  @click="goApprove(item.sectionId)">
                   <v-icon>mdi-video-plus</v-icon>
                 </v-btn>
               </div>
@@ -69,7 +69,7 @@
       courses: undefined,
       coursesEligibleOnly: undefined,
       headers: [
-        {text: '', value: 'signUp'},
+        {text: '', value: 'approve'},
         {text: 'Course', value: 'course'},
         {text: 'Title', value: 'title'},
         {text: 'Instructors', value: 'instructors', sortable: false},
@@ -101,8 +101,8 @@
       this.loading = false
     },
     methods: {
-      goSignUp(sectionId) {
-        router.push({ path: `/course/${this.$config.currentTermId}/${sectionId}` })
+      goApprove(sectionId) {
+        router.push({ path: `/approve/${this.$config.currentTermId}/${sectionId}` })
       }
     }
   }

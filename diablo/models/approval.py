@@ -24,9 +24,8 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 
 from diablo import db, std_commit
-from diablo.lib.util import to_isoformat
 from diablo.models.base import Base
-from sqlalchemy.dialects.postgresql import ARRAY, ENUM
+from sqlalchemy.dialects.postgresql import ENUM
 
 
 publish_type = ENUM(
@@ -44,9 +43,16 @@ recording_type = ENUM(
     create_type=False,
 )
 
+approver_type = ENUM(
+    'admin',
+    'instructor',
+    name='approver_types',
+    create_type=False,
+)
+
 PUBLISH_TYPE_NAMES_PER_ID = {
     'canvas': 'bCourses',
-    'kaltura_media_gallery': 'My Media, in Kaltura',
+    'kaltura_media_gallery': 'My Media (Kaltura)',
 }
 
 RECORDING_TYPE_NAMES_PER_ID = {
@@ -56,42 +62,44 @@ RECORDING_TYPE_NAMES_PER_ID = {
 }
 
 
-class SignUp(Base):
-    __tablename__ = 'sign_ups'
+class Approval(Base):
+    __tablename__ = 'approvals'
 
-    term_id = db.Column(db.Integer, nullable=False, primary_key=True)
+    approved_by_uid = db.Column(db.String, nullable=False, primary_key=True)
     section_id = db.Column(db.Integer, nullable=False, primary_key=True)
-    admin_approval_uid = db.Column(db.String)
-    instructor_approval_uids = db.Column(ARRAY(db.String))
+    term_id = db.Column(db.Integer, nullable=False, primary_key=True)
+    approver_type = db.Column(approver_type, nullable=False)
+    location = db.Column(db.String(255), db.ForeignKey('rooms.location'), nullable=False)
     publish_type = db.Column(publish_type, nullable=False)
-    recordings_scheduled_at = db.Column(db.DateTime)
     recording_type = db.Column(recording_type, nullable=False)
 
     def __init__(
             self,
-            term_id,
+            approved_by_uid,
             section_id,
-            admin_approval_uid,
-            instructor_approval_uids,
+            term_id,
+            approver_type_,
+            location,
             publish_type_,
             recording_type_,
     ):
-        self.term_id = term_id
+        self.approved_by_uid = approved_by_uid
         self.section_id = section_id
-        self.admin_approval_uid = admin_approval_uid
-        self.instructor_approval_uids = instructor_approval_uids
+        self.term_id = term_id
+        self.approver_type = approver_type_
+        self.location = location
         self.publish_type = publish_type_
         self.recording_type = recording_type_
 
     def __repr__(self):
-        return f"""<SignUp
-                    term_id={self.term_id},
+        return f"""<Approval
+                    approved_by_uid={self.approved_by_uid},
                     section_id={self.section_id},
-                    admin_approval_uid={self.admin_approval_uid},
-                    instructor_approval_uids={self.instructor_approval_uids},
+                    term_id={self.term_id},
+                    approver_type={self.approver_type},
                     publish_type={self.publish_type},
                     recording_type={self.recording_type},
-                    recordings_scheduled_at={self.recordings_scheduled_at},
+                    location={self.location},
                     created_at={self.created_at},
                     updated_at={self.updated_at}>
                 """
@@ -99,82 +107,50 @@ class SignUp(Base):
     @classmethod
     def create(
             cls,
+            approved_by_uid,
             term_id,
             section_id,
-            admin_approval_uid=None,
-            instructor_approval_uid=None,
-            publish_type_=None,
-            recording_type_=None,
+            approver_type_,
+            publish_type_,
+            recording_type_,
+            location,
     ):
-        sign_up = cls(
-            term_id=term_id,
+        approval = cls(
+            approved_by_uid=approved_by_uid,
             section_id=section_id,
-            admin_approval_uid=admin_approval_uid,
-            instructor_approval_uids=[instructor_approval_uid] if instructor_approval_uid else None,
+            term_id=term_id,
+            approver_type_=approver_type_,
             publish_type_=publish_type_,
             recording_type_=recording_type_,
+            location=location,
         )
-        db.session.add(sign_up)
+        db.session.add(approval)
         std_commit()
-        return sign_up
+        return approval
 
     @classmethod
-    def add_instructor_approval(
-            cls,
-            term_id,
-            section_id,
-            instructor_uid,
-            publish_type_=None,
-            recording_type_=None,
-    ):
-        sign_up = cls.get_sign_up(term_id, section_id)
-        if not sign_up.instructor_approval_uids:
-            sign_up.instructor_approval_uids = []
-        sign_up.instructor_approval_uids.append(instructor_uid)
-        if publish_type_:
-            sign_up.publish_type = publish_type_
-        if recording_type_:
-            sign_up.recording_type = recording_type_
-        db.session.add(sign_up)
-        std_commit()
+    def get_approval(cls, approved_by_uid, section_id, term_id):
+        return cls.query.filter_by(approved_by_uid=approved_by_uid, section_id=section_id, term_id=term_id).first()
 
     @classmethod
-    def set_admin_approval_uid(
-            cls,
-            term_id,
-            section_id,
-            admin_uid,
-            publish_type_=None,
-            recording_type_=None,
-    ):
-        sign_up = cls.get_sign_up(term_id, section_id)
-        sign_up.admin_approval_uid = admin_uid
-        if publish_type_:
-            sign_up.publish_type = publish_type_
-        if recording_type_:
-            sign_up.recording_type = recording_type_
-        db.session.add(sign_up)
-        std_commit()
+    def get_approvals(cls, section_id, term_id):
+        return cls.query.filter_by(section_id=section_id, term_id=term_id).order_by(cls.created_at).all()
 
     @classmethod
-    def get_sign_up(cls, term_id, section_id):
-        return cls.query.filter_by(term_id=term_id, section_id=section_id).first()
-
-    @classmethod
-    def get_all_sign_ups(cls, term_id):
-        return cls.query.filter_by(term_id=term_id).first()
+    def get_approvals_per_term(cls, term_id):
+        return cls.query.filter_by(term_id=int(term_id)).order_by(cls.section_id, cls.created_at).all()
 
     def to_api_json(self):
         return {
-            'termId': self.term_id,
+            'approvedByUid': self.approved_by_uid,
             'sectionId': self.section_id,
-            'adminApprovalUid': self.admin_approval_uid,
-            'instructorApprovalUids': self.instructor_approval_uids,
+            'termId': self.term_id,
+            'approverType': self.approver_type,
+            'location': self.location,
             'publishType': self.publish_type,
             'publishTypeName': PUBLISH_TYPE_NAMES_PER_ID[self.publish_type],
             'recordingType': self.recording_type,
             'recordingTypeName': RECORDING_TYPE_NAMES_PER_ID[self.recording_type],
-            'recordingsScheduledAt': to_isoformat(self.recordings_scheduled_at),
         }
 
 

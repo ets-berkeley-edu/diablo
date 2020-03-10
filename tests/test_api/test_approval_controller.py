@@ -23,10 +23,11 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-from diablo.models.sign_up import get_all_recording_types
+from diablo import std_commit
+from diablo.models.approval import get_all_recording_types
 from flask import current_app as app
 from sqlalchemy import text
-from tests.test_api.api_test_utils import api_sign_up, api_sign_up_status
+from tests.test_api.api_test_utils import api_approve, api_get_approvals
 
 admin_uid = '2040'
 section_1_id = '28602'
@@ -36,10 +37,10 @@ section_2_instructor_uids = ['8765432']
 section_3_id = '12601'
 
 
-class TestSignUp:
+class TestApprove:
 
     def test_not_authenticated(self, client):
-        api_sign_up(
+        api_approve(
             client,
             publish_type='canvas',
             recording_type='presentation_audio',
@@ -49,7 +50,7 @@ class TestSignUp:
 
     def test_invalid_publish_type(self, client, fake_auth):
         fake_auth.login(admin_uid)
-        api_sign_up(
+        api_approve(
             client,
             publish_type='youtube',
             recording_type='presentation_audio',
@@ -59,7 +60,7 @@ class TestSignUp:
 
     def test_unauthorized(self, client, db, fake_auth):
         fake_auth.login(section_1_instructor_uids[0])
-        api_sign_up(
+        api_approve(
             client,
             publish_type='canvas',
             recording_type='presentation_audio',
@@ -70,8 +71,8 @@ class TestSignUp:
     def test_instructor_already_approved(self, client, fake_auth):
         fake_auth.login(section_1_instructor_uids[0])
 
-        for expected_status_code in [200, 400]:
-            api_sign_up(
+        for expected_status_code in [200, 403]:
+            api_approve(
                 client,
                 publish_type='canvas',
                 recording_type='presentation_audio',
@@ -80,23 +81,27 @@ class TestSignUp:
             )
 
     def test_approval_by_instructors(self, client, db, fake_auth):
-        _delete_sign_ups(db, section_1_id)
+        _delete_approvals(db, section_1_id)
         fake_auth.login(section_1_instructor_uids[0])
-        api_sign_up(
+        api_approve(
             client,
             publish_type='canvas',
             recording_type='presentation_audio',
             section_id=section_1_id,
         )
+        std_commit(allow_test_environment=True)
+
         fake_auth.login(section_1_instructor_uids[1])
-        api_sign_up(
+        api_approve(
             client,
             publish_type='kaltura_media_gallery',
             recording_type='presentation_audio',
             section_id=section_1_id,
         )
+        std_commit(allow_test_environment=True)
+
         fake_auth.login(admin_uid)
-        api_json = api_sign_up_status(
+        api_json = api_get_approvals(
             client,
             term_id=app.config['CURRENT_TERM'],
             section_id=section_1_id,
@@ -112,16 +117,23 @@ class TestSignUp:
         }
         instructor_uids = [i['uid'] for i in api_json['section']['instructors']]
         assert instructor_uids == section_1_instructor_uids
-        assert api_json['signUpStatus']['publishType'] == 'kaltura_media_gallery'
-        assert api_json['signUpStatus']['recordingType'] == 'presentation_audio'
-        assert api_json['signUpStatus']['recordingTypeName'] == 'Presentation and Audio'
+        approvals_ = api_json['approvals']
+        assert len(approvals_) == 2
+
+        assert approvals_[0]['approvedByUid'] == section_1_instructor_uids[0]
+        assert approvals_[0]['publishType'] == 'canvas'
+
+        assert approvals_[1]['approvedByUid'] == section_1_instructor_uids[1]
+        assert approvals_[1]['publishType'] == 'kaltura_media_gallery'
+        assert approvals_[1]['recordingType'] == 'presentation_audio'
+        assert approvals_[1]['recordingTypeName'] == 'Presentation and Audio'
 
 
-class TestSignUpStatus:
+class TestApprovals:
 
     def test_not_authenticated(self, client):
         term_id = app.config['CURRENT_TERM']
-        api_sign_up_status(
+        api_get_approvals(
             client,
             term_id=term_id,
             section_id='28602',
@@ -131,7 +143,7 @@ class TestSignUpStatus:
     def test_not_authorized(self, client, fake_auth):
         fake_auth.login(section_1_instructor_uids[0])
         term_id = app.config['CURRENT_TERM']
-        api_sign_up_status(
+        api_get_approvals(
             client,
             term_id=term_id,
             section_id=section_2_id,
@@ -140,7 +152,7 @@ class TestSignUpStatus:
 
     def test_invalid_section_id(self, client, fake_auth):
         fake_auth.login(admin_uid)
-        api_sign_up_status(
+        api_get_approvals(
             client,
             term_id=app.config['CURRENT_TERM'],
             section_id=9999999999,
@@ -149,7 +161,7 @@ class TestSignUpStatus:
 
     def test_admin(self, client, fake_auth):
         fake_auth.login(admin_uid)
-        api_json = api_sign_up_status(
+        api_json = api_get_approvals(
             client,
             term_id=app.config['CURRENT_TERM'],
             section_id='28602',
@@ -167,10 +179,10 @@ class TestSignUpStatus:
         }
 
     def test_date_time_format(self, client, db, fake_auth):
-        _delete_sign_ups(db, section_2_id)
+        _delete_approvals(db, section_2_id)
 
         fake_auth.login(section_2_instructor_uids[0])
-        api_json = api_sign_up_status(
+        api_json = api_get_approvals(
             client,
             term_id=app.config['CURRENT_TERM'],
             section_id=section_2_id,
@@ -186,7 +198,7 @@ class TestSignUpStatus:
 
     def test_li_ka_shing_capture_options(self, client, fake_auth):
         fake_auth.login(admin_uid)
-        api_json = api_sign_up_status(
+        api_json = api_get_approvals(
             client,
             term_id=app.config['CURRENT_TERM'],
             section_id=section_3_id,
@@ -195,5 +207,5 @@ class TestSignUpStatus:
         assert len(api_json['section']['room']['capabilities']) == len(get_all_recording_types())
 
 
-def _delete_sign_ups(db, section_id):
-    db.session.execute(text('DELETE FROM sign_ups WHERE section_id = :section_id'), {'section_id': section_id})
+def _delete_approvals(db, section_id):
+    db.session.execute(text('DELETE FROM approvals WHERE section_id = :section_id'), {'section_id': section_id})

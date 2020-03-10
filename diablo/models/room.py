@@ -23,36 +23,41 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-import json
+from datetime import datetime
+
+from diablo import db, std_commit
+from sqlalchemy.dialects.postgresql import ARRAY
 
 
-def api_approve(
-        client,
-        publish_type,
-        recording_type,
-        section_id,
-        expected_status_code=200,
-):
-    response = client.post(
-        '/api/approve',
-        data=json.dumps({
-            'publishType': publish_type,
-            'recordingType': recording_type,
-            'sectionId': section_id,
-        }),
-        content_type='application/json',
-    )
-    assert response.status_code == expected_status_code, f"""
-        Expected status code: {expected_status_code}
-        Actual status code: {response.status_code}
-    """
-    return response.json
+class Room(db.Model):
+    __tablename__ = 'rooms'
 
+    location = db.Column(db.String(255), nullable=False, primary_key=True)
+    capabilities = db.Column(ARRAY(db.String(255)), nullable=False)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.now)
 
-def api_get_approvals(client, term_id, section_id, expected_status_code=200):
-    response = client.get(f'/api/approvals/{term_id}/{section_id}')
-    assert response.status_code == expected_status_code, f"""
-        Expected status code: {expected_status_code}
-        Actual status code: {response.status_code}
-    """
-    return response.json
+    def __init__(
+            self,
+            location,
+            capabilities,
+    ):
+        self.location = location
+        self.capabilities = capabilities
+
+    def __repr__(self):
+        return f"""<Room
+                    location={self.location},
+                    capabilities={self.capabilities},
+                    created_at={self.created_at}>
+                """
+
+    @classmethod
+    def create_or_update(cls, location, capabilities):
+        room = cls.query.filter_by(location=location).first()
+        if room:
+            room.capabilities = capabilities
+        else:
+            room = cls(location=location, capabilities=capabilities)
+        db.session.add(room)
+        std_commit()
+        return room
