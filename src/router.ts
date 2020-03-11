@@ -6,7 +6,8 @@ import BaseView from '@/views/BaseView.vue'
 import Home from '@/views/Home.vue'
 import Login from '@/views/Login.vue'
 import NotFound from '@/views/NotFound.vue'
-import Reports from '@/views/Reports.vue'
+import Ouija from '@/views/Ouija.vue'
+import Rooms from '@/views/Rooms.vue'
 import Router from 'vue-router'
 import Vue from 'vue'
 
@@ -47,7 +48,7 @@ const router = new Router({
           beforeEnter: (to: any, from: any, next: any) => {
             const currentUser = Vue.prototype.$currentUser
             if (currentUser.isAdmin && !currentUser.isTeaching) {
-              next({ path: '/reports' })
+              next({ path: '/ouija' })
             } else {
               next()
             }
@@ -78,10 +79,17 @@ const router = new Router({
       component: BaseView,
       children: [
         {
-          path: '/reports',
-          component: Reports,
+          path: '/ouija',
+          component: Ouija,
           meta: {
-            title: 'Reports'
+            title: 'The Ouija Board'
+          }
+        },
+        {
+          path: '/rooms',
+          component: Rooms,
+          meta: {
+            title: 'Rooms'
           }
         }
       ]

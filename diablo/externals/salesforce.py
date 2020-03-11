@@ -30,16 +30,9 @@ from simple_salesforce import Salesforce
 
 @cachify('salesforce_capture_enabled_rooms')
 def get_capture_enabled_rooms():
-    sf = Salesforce(
-        username=app.config['SALESFORCE_USERNAME'],
-        password=app.config['SALESFORCE_PASSWORD'],
-        domain=app.config['SALESFORCE_DOMAIN'],
-        security_token=app.config['SALESFORCE_TOKEN'],
-    )
-
     with open(f'{BASE_DIR}/diablo/soql/get_all_rooms.soql', 'r') as file:
         rooms = []
-        result = sf.query(file.read())
+        result = _get_client().query(file.read())
         for row in result['records']:
             rooms.append({
                 'building': _translate_salesforce_building(row['Building__c']),
@@ -47,6 +40,19 @@ def get_capture_enabled_rooms():
                 'capabilities': row['Recording_Capabilities__c'],
             })
         return rooms
+
+
+def test_salesforce_connection():
+    return bool(_get_client().query('SELECT Id FROM Locations__c WHERE Id = null'))
+
+
+def _get_client():
+    return Salesforce(
+        username=app.config['SALESFORCE_USERNAME'],
+        password=app.config['SALESFORCE_PASSWORD'],
+        domain=app.config['SALESFORCE_DOMAIN'],
+        security_token=app.config['SALESFORCE_TOKEN'],
+    )
 
 
 def _translate_salesforce_building(building_name):

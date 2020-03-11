@@ -24,6 +24,8 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 
 from diablo import db
+from diablo.externals import data_loch
+from diablo.externals.salesforce import test_salesforce_connection
 from diablo.lib.http import tolerant_jsonify
 from flask import current_app as app
 from sqlalchemy.exc import SQLAlchemyError
@@ -39,8 +41,14 @@ def app_status():
             app.logger.exception('Database connection error')
             return False
 
+    def data_loch_status():
+        rows = data_loch.safe_execute_rds('SELECT 1')
+        return rows is not None
+
     resp = {
         'app': True,
+        'data_loch': data_loch_status(),
         'db': db_status(),
+        'salesforce': test_salesforce_connection(),
     }
     return tolerant_jsonify(resp)

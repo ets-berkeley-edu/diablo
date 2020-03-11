@@ -1,16 +1,16 @@
 <template>
   <div>
-    <h1>Your {{ $config.currentTermName }} courses</h1>
+    <h2>Your {{ $config.currentTermName }} courses</h2>
     <v-data-table
       :headers="headers"
       :hide-default-footer="true"
-      :items="showEligibleCoursesOnly ? coursesEligibleOnly : courses"
+      :items="showEligibleCoursesOnly ? courses.eligibleOnly : courses.all"
       :items-per-page="100"
       :loading="loading"
       class="elevation-1"
     >
       <template v-slot:top>
-        <div v-if="coursesEligibleOnly.length" class="d-flex">
+        <div v-if="courses.eligibleOnly.length" class="d-flex">
           <div class="pa-5">
             <label for="show-only-eligible-courses" class="text--darken-2">Show only courses eligible for Course Capture?</label>
           </div>
@@ -24,7 +24,7 @@
             {{ showEligibleCoursesOnly ? 'Yes' : 'No' }}
           </div>
         </div>
-        <div v-if="!coursesEligibleOnly.length" class="pa-5">
+        <div v-if="!courses.eligibleOnly.length" class="pa-5">
           No courses eligible for Course Capture.
         </div>
       </template>
@@ -35,7 +35,7 @@
               <div v-if="$_.size(item.room.capabilities)">
                 <v-btn
                   :id="`approve-${item.sectionId}`"
-                  :aria-label="`Approve ${item.course} up for Course Capture.`"
+                  :aria-label="`Approve ${item.name} up for Course Capture.`"
                   color="primary"
                   fab
                   small
@@ -45,7 +45,7 @@
                 </v-btn>
               </div>
             </td>
-            <td class="text-no-wrap">{{ item.course }}</td>
+            <td class="text-no-wrap">{{ item.name }}</td>
             <td>{{ item.title }}</td>
             <td>{{ item.instructors }}</td>
             <td class="text-no-wrap">{{ item.room.location }}</td>
@@ -67,10 +67,9 @@
     mixins: [Utils],
     data: () => ({
       courses: undefined,
-      coursesEligibleOnly: undefined,
       headers: [
         {text: '', value: 'approve'},
-        {text: 'Course', value: 'course'},
+        {text: 'Course', value: 'name'},
         {text: 'Title', value: 'title'},
         {text: 'Instructors', value: 'instructors', sortable: false},
         {text: 'Room', value: 'room'},
@@ -81,23 +80,7 @@
       showEligibleCoursesOnly: false
     }),
     created() {
-      this.courses = []
-      this.coursesEligibleOnly = []
-      this.$_.each(this.$currentUser.teachingSections, s => {
-        let course = {
-          course: `${s.courseName}, ${s.instructionFormat} ${s.sectionNum}`,
-          days: s.meetingDays ? this.$_.join(s.meetingDays, ', ') : undefined,
-          instructors: this.oxfordJoin(this.$_.map(s.instructors, 'name')),
-          room: s.room,
-          sectionId: s.sectionId,
-          time: s.meetingStartTime ? `${s.meetingStartTime} - ${s.meetingEndTime}` : undefined,
-          title: s.courseTitle
-        }
-        this.courses.push(course)
-        if (s.room.capabilities.length) {
-          this.coursesEligibleOnly.push(course)
-        }
-      })
+      this.courses = this.organizeMySections()
       this.loading = false
     },
     methods: {

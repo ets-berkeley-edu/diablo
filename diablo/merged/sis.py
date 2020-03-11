@@ -25,7 +25,8 @@ ENHANCEMENTS, OR MODIFICATIONS.
 
 from datetime import datetime
 
-from diablo.externals.data_loch import get_section_denormalized, get_sections_denormalized
+from diablo.externals.data_loch import get_section_denormalized, get_sections_denormalized, \
+    get_sections_per_ids_denormalized
 from diablo.externals.salesforce import get_capture_enabled_rooms
 from diablo.lib.berkeley import get_capture_options
 from diablo.merged.calnet import get_calnet_user_for_uid
@@ -39,6 +40,15 @@ def get_section(term_id, section_id):
 
 def get_sections(term_id, instructor_uid):
     return _normalize_rows(get_sections_denormalized(term_id=term_id, instructor_uid=instructor_uid))
+
+
+def get_sections_per_ids(term_id, section_ids):
+    return _normalize_rows(
+        get_sections_per_ids_denormalized(
+            term_id=term_id,
+            section_ids=[str(section_id) for section_id in section_ids],
+        ),
+    )
 
 
 def _normalize_rows(rows):
