@@ -67,7 +67,7 @@ def cas_login():
     target_url = request.args.get('url')
     uid, attributes, proxy_granting_ticket = _cas_client(target_url).verify_ticket(ticket)
     app.logger.info(f'Logged into CAS as user {uid}')
-    user = User.load_user(uid)
+    user = User(uid)
     if not user.is_active:
         app.logger.error(f'Sorry, user with UID {uid} is not authorized to use Diablo.')
         param = ('error', f"""
