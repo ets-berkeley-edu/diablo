@@ -43,8 +43,8 @@ def register_routes(app):
     # Register API routes.
     import diablo.api.auth_controller
     import diablo.api.config_controller
-    import diablo.api.capture_controller
     import diablo.api.approval_controller
+    import diablo.api.salesforce_controller
     import diablo.api.status_controller
     import diablo.api.user_controller
 

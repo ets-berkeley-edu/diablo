@@ -23,17 +23,29 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-from diablo.api.util import admin_required
-from diablo.externals.salesforce import get_capture_enabled_rooms
-from diablo.lib.http import tolerant_jsonify
-from flask import current_app as app
+admin_uid = '2040'
+instructor_uid = '8765432'
 
 
-@app.route('/api/capture/enabled_rooms')
-@admin_required
-def get_enabled_rooms():
-    rooms = get_capture_enabled_rooms()
-    return tolerant_jsonify({
-        'rooms': rooms,
-        'totalRoomCount': len(rooms),
-    })
+class TestCaptureEnabledRooms:
+
+    @staticmethod
+    def _api_capture_enabled_rooms(client, expected_status_code=200):
+        response = client.get('/api/salesforce/enabled_rooms')
+        assert response.status_code == expected_status_code
+        return response.json
+
+    def test_not_authenticated(self, client):
+        self._api_capture_enabled_rooms(client, expected_status_code=401)
+
+    def test_not_authorized(self, client, fake_auth):
+        fake_auth.login(instructor_uid)
+        self._api_capture_enabled_rooms(client, expected_status_code=401)
+
+    def test_admin(self, client, fake_auth):
+        fake_auth.login(admin_uid)
+        api_json = self._api_capture_enabled_rooms(client)
+        assert len(api_json) == 3
+        assert api_json[0]['building'] == 'Barrows'
+        assert api_json[0]['roomNumber'] == '60'
+        assert api_json[0]['capabilities'] == 'Screencast'

@@ -1,0 +1,1 @@
+SELECT Id, Calnet_UID__c FROM Contact

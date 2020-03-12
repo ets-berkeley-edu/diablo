@@ -1,0 +1,36 @@
+{
+  "30563": [
+    {
+      "uid": "8761079",
+      "email": "apeman@berkeley.edu",
+      "first_name": "Ray",
+      "last_name": "Davies",
+      "dept_description": "Classics"
+    }
+  ],
+  "26094": [
+    {
+      "uid": "7831126",
+      "email": "lola@berkeley.edu",
+      "first_name": "Dave",
+      "last_name": "Davies",
+      "dept_description": "Plant & Microbial Biology"
+    },
+    {
+      "uid": "932845",
+      "email": "waterloo-sunset@berkeley.edu",
+      "first_name": "Pete",
+      "last_name": "Quaife",
+      "dept_description": "Plant & Microbial Biology"
+    }
+  ],
+  "30630": [
+    {
+      "uid": "5181673",
+      "email": "well-respected-man@berkeley.edu",
+      "first_name": "Mick",
+      "last_name": "Avory",
+      "dept_description": "Military Affairs Program"
+    }
+  ]
+}

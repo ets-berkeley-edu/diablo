@@ -28,7 +28,7 @@ from diablo.api.errors import InternalServerError
 from diablo.externals import calnet
 
 
-@cachify('calnet_user_for_uid_{uid}')
+@cachify('calnet/user_for_uid_{uid}')
 def get_calnet_user_for_uid(app, uid):
     users = _get_calnet_users(app, 'uid', [uid])
     return users[uid] if users else None

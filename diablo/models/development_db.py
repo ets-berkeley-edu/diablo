@@ -54,12 +54,11 @@ def load():
 
 
 def _cache_externals():
-    with open(f'{BASE_DIR}/fixtures/salesforce_capture_enabled_rooms.json', 'r') as file:
-        cache.set('salesforce_capture_enabled_rooms', json.loads(file.read()))
-    for path in glob.glob(f'{BASE_DIR}/fixtures/calnet_user_for_uid_*.json'):
-        with open(path, 'r') as file:
-            uid = path.split('_')[-1].split('.')[0]
-            cache.set(f'calnet_user_for_uid_{uid}', json.loads(file.read()))
+    for external in ('calnet', 'edo_db', 'salesforce'):
+        for path in glob.glob(f'{BASE_DIR}/fixtures/{external}/*.json'):
+            with open(path, 'r') as file:
+                key = path.split('/')[-1].split('.')[0]
+                cache.set(f'{external}/{key}', json.loads(file.read()))
 
 
 def _load_schemas():
