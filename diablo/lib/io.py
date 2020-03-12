@@ -23,31 +23,15 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-admin_uid = '2040'
-instructor_uid = '8765432'
+import os
+
+from diablo import BASE_DIR
 
 
-class TestCaptureEnabledRooms:
-
-    @staticmethod
-    def _api_capture_enabled_rooms(client, expected_status_code=200):
-        response = client.get('/api/capture/enabled_rooms')
-        assert response.status_code == expected_status_code
-        return response.json
-
-    def test_not_authenticated(self, client):
-        self._api_capture_enabled_rooms(client, expected_status_code=401)
-
-    def test_not_authorized(self, client, fake_auth):
-        fake_auth.login(instructor_uid)
-        self._api_capture_enabled_rooms(client, expected_status_code=401)
-
-    def test_admin(self, client, fake_auth):
-        fake_auth.login(admin_uid)
-        api_json = self._api_capture_enabled_rooms(client)
-        assert api_json['totalRoomCount'] == 3
-        assert len(api_json['rooms']) == 3
-        room = api_json['rooms'][0]
-        assert room['building'] == 'Barrows'
-        assert room['roomNumber'] == '60'
-        assert room['capabilities'] == 'Screencast'
+def read_file(path):
+    absolute_path = path if not path or path.startswith('/') else f'{BASE_DIR}/{path}'
+    if absolute_path and os.path.isfile(absolute_path):
+        with open(absolute_path, 'r') as file:
+            return file.read()
+    else:
+        raise FileNotFoundError(absolute_path)

@@ -1,0 +1,26 @@
+[
+  {
+    "Id": "a0619000005LtDVAA0",
+    "Building__c": "Dwinelle",
+    "Room_Number_Text__c": "155",
+    "Recording_Capabilities__c": "Screencast"
+  },
+  {
+    "Id": "a0619000005LtEdAAK",
+    "Building__c": "Hertz",
+    "Room_Number_Text__c": "320",
+    "Recording_Capabilities__c": "Screencast + VIdeo"
+  },
+  {
+    "Id": "a0619000005LtFgAAK",
+    "Building__c": "Barrows",
+    "Room_Number_Text__c": "106",
+    "Recording_Capabilities__c": "Screencast"
+  },
+  {
+    "Id": "a0619000005LtGPAA0",
+    "Building__c": "GPB",
+    "Room_Number_Text__c": "105",
+    "Recording_Capabilities__c": ""
+  }
+]

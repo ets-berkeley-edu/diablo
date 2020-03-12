@@ -1,7 +1,7 @@
 <template>
   <div v-if="!loading">
     <div class="pl-3">
-      <h2><v-icon class="pb-1" large>mdi-domain</v-icon> {{ totalRoomCount }} Capture-enabled Rooms</h2>
+      <h2><v-icon class="pb-1" large>mdi-domain</v-icon> {{ rooms.length }} Capture-enabled Rooms</h2>
     </div>
     <div class="pt-6">
       <v-data-table
@@ -17,7 +17,7 @@
 
 <script>
   import Loading from '@/mixins/Loading'
-  import {getCaptureEnabledRooms} from '@/api/capture'
+  import {getCaptureEnabledRooms} from '@/api/salesforce'
 
   export default {
     name: 'Rooms',
@@ -28,12 +28,11 @@
         {text: 'Room', value: 'roomNumber', sortable: false},
         {text: 'Capabilities', value: 'capabilities'}
       ],
-      totalRoomCount: undefined
+      rooms: undefined
     }),
     created() {
       getCaptureEnabledRooms().then(data => {
-        this.rooms = data['rooms']
-        this.totalRoomCount = data['totalRoomCount']
+        this.rooms = data
         this.loaded()
       })
     }

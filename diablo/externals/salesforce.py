@@ -23,14 +23,17 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-from diablo import BASE_DIR, cachify
+from diablo import BASE_DIR, cachify, skip_when_pytest
+from diablo.lib.io import read_file
 from flask import current_app as app
 from simple_salesforce import Salesforce
 
+CACHE_TIMEOUT_MINUTES = 30
 
-@cachify('salesforce_capture_enabled_rooms')
+
+@cachify('salesforce/capture_enabled_rooms', timeout=CACHE_TIMEOUT_MINUTES)
 def get_capture_enabled_rooms():
-    with open(f'{BASE_DIR}/diablo/soql/get_all_rooms.soql', 'r') as file:
+    with open(f'{BASE_DIR}/diablo/soql/get_all_enabled_rooms.soql', 'r') as file:
         rooms = []
         result = _get_client().query(file.read())
         for row in result['records']:
@@ -40,6 +43,52 @@ def get_capture_enabled_rooms():
                 'capabilities': row['Recording_Capabilities__c'],
             })
         return rooms
+
+
+@cachify('salesforce/all_courses', timeout=CACHE_TIMEOUT_MINUTES)
+def get_all_courses():
+    salesforce_term_id = app.config['salesforce.parent_term_id']
+    result = _query('get_courses_per_term', {'salesforce_term_id': salesforce_term_id})
+    courses = result['records']
+    app.logging.info(f'Salesforce returned {len(courses)} courses.')
+    return courses
+
+
+@cachify('salesforce/get_all_eligible_courses', timeout=30)
+def get_all_eligible_courses():
+    salesforce_term_id = app.config['salesforce.parent_term_id']
+    result = _query('get_eligible_courses_per_term', {'salesforce_term_id': salesforce_term_id})
+    courses = result['records']
+    app.logging.info(f'Salesforce returned {len(courses)} eligible courses.')
+    return courses
+
+
+@cachify('salesforce/all_contacts', timeout=CACHE_TIMEOUT_MINUTES)
+def get_all_contacts():
+    contacts = _query('get_all_contacts')['records']
+    app.logging.info(f'Salesforce returned {len(contacts)} contacts.')
+    return contacts
+
+
+@cachify('salesforce/all_rooms', timeout=CACHE_TIMEOUT_MINUTES)
+def get_all_rooms():
+    locations = _query('get_all_rooms')['records']
+    app.logging.info(f'Salesforce returned {len(locations)} locations.')
+    return locations
+
+
+@skip_when_pytest()
+def bulk_upsert_courses(batch):
+    for result in _get_client().bulk.Opportunity.upsert(batch, 'Id'):
+        if result['success'] is not True:
+            raise SystemError(f'Failed to upsert course in Salesforce. Salesforce API response: {result}')
+
+
+@skip_when_pytest()
+def bulk_upsert_contacts(batch):
+    for result in _get_client().bulk.Contact.upsert(batch, 'Id'):
+        if result['success'] is not True:
+            raise SystemError(f'Failed to upsert Salesforce contact. Salesforce API response: {result}')
 
 
 def test_salesforce_connection():
@@ -57,3 +106,15 @@ def _get_client():
 
 def _translate_salesforce_building(building_name):
     return 'Genetics & Plant Bio' if building_name == 'GPB' else building_name
+
+
+def _soql(soql_query_name):
+    return read_file(f'diablo/soql/{soql_query_name}.soql')
+
+
+def _query(soql_query_name, args=None):
+    soql = _soql(soql_query_name)
+    if args:
+        for key, value in args.items():
+            soql = soql.replace(f':{key}', value)
+    return _get_client().query(soql)

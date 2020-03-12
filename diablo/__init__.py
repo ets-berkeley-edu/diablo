@@ -66,7 +66,7 @@ def std_commit(allow_test_environment=False):
             db.session.close()
 
 
-def cachify(key_pattern):
+def cachify(key_pattern, timeout=1440):
     @decorator
     def _cachify(func, *args, **kw):
         args_dict = get_args_dict(func, *args, **kw)
@@ -74,7 +74,14 @@ def cachify(key_pattern):
         cached = cache.get(key)
         if cached is None:
             cached = func(*args, **kw)
-            cache.set(key, cached)
+            cache.set(key, cached, timeout)
         return cached
 
     return _cachify
+
+
+def skip_when_pytest():
+    @decorator
+    def _skip_when_pytest(func, *args, **kw):
+        return None if app.config['DIABLO_ENV'] == 'test' else func(*args, **kw)
+    return _skip_when_pytest

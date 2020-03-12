@@ -49,6 +49,12 @@ DATA_LOCH_SIS_SCHEMA = 'sis_data'
 DEVELOPER_AUTH_ENABLED = False
 DEVELOPER_AUTH_PASSWORD = 'another secret'
 
+EDO_DB_HOSTNAME = ''
+EDO_DB_NAME = ''
+EDO_DB_PASSWORD = ''
+EDO_DB_PORT = 0
+EDO_DB_USERNAME = ''
+
 # Directory to search for mock fixtures, if running in "test" or "demo" mode.
 FIXTURES_PATH = None
 
@@ -57,6 +63,8 @@ INACTIVE_SESSION_LIFETIME = 20
 
 # These "INDEX_HTML" defaults are good in diablo-[dev|qa|prod]. See development.py for local configs.
 INDEX_HTML = 'dist/static/index.html'
+
+LAST_DAY_OF_INSTRUCTION = 'YYYY-MM-DD'
 
 LDAP_HOST = 'ldap-test.berkeley.edu'
 LDAP_BIND = 'mybind'
@@ -70,10 +78,12 @@ LOGGING_PROPAGATION_LEVEL = logging.INFO
 
 REMEMBER_COOKIE_NAME = 'remember_diablo_token'
 
-SALESFORCE_USERNAME = ''
-SALESFORCE_PASSWORD = ''
+SALESFORCE_COURSE_CAPTURE_RECORD_TYPE_ID = ''
 SALESFORCE_DOMAIN = ''
+SALESFORCE_PARENT_TERM_ID = ''
+SALESFORCE_PASSWORD = ''
 SALESFORCE_TOKEN = ''
+SALESFORCE_USERNAME = ''
 
 # Used to encrypt session cookie.
 SECRET_KEY = 'secret'

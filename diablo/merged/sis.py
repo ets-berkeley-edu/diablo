@@ -27,6 +27,7 @@ from datetime import datetime
 
 from diablo.externals.data_loch import get_section_denormalized, get_sections_denormalized, \
     get_sections_per_ids_denormalized
+from diablo.externals.edo_db import get_edo_db_courses, get_edo_db_instructors_per_section_id
 from diablo.externals.salesforce import get_capture_enabled_rooms
 from diablo.lib.berkeley import get_capture_options
 from diablo.merged.calnet import get_calnet_user_for_uid
@@ -49,6 +50,26 @@ def get_sections_per_ids(term_id, section_ids):
             section_ids=[str(section_id) for section_id in section_ids],
         ),
     )
+
+
+def get_course_and_instructors(term_id, section_ids=None):
+    courses = []
+    distinct_time_and_place_list = []
+    for course in get_edo_db_courses(term_id, section_ids):
+        # Exclude cross-listings
+        time_and_place = f"{course['days_of_week']} {course['start_time']} {course['end_time']} {course['location']}"
+        if time_and_place not in distinct_time_and_place_list:
+            distinct_time_and_place_list.append(time_and_place)
+            courses.append(course)
+
+    instructors_per_section_id = get_edo_db_instructors_per_section_id(
+        section_ids=[c['section_id'] for c in courses],
+        term_id=term_id,
+    )
+    for c in courses:
+        instructors_ = instructors_per_section_id.get(c['section_id'])
+        c['instructors'] = instructors_ or []
+    return courses
 
 
 def _normalize_rows(rows):
