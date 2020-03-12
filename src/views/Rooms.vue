@@ -1,13 +1,17 @@
 <template>
-  <div>
-    <h1 v-if="!loading">{{ totalRoomCount }} Capture-enabled Rooms</h1>
-    <v-data-table
-      :headers="headers"
-      :items="rooms"
-      :items-per-page="100"
-      :loading="loading"
-      class="elevation-1"
-    ></v-data-table>
+  <div v-if="!loading">
+    <div class="pl-3">
+      <h2><v-icon class="pb-1" large>mdi-domain</v-icon> {{ totalRoomCount }} Capture-enabled Rooms</h2>
+    </div>
+    <div class="pt-6">
+      <v-data-table
+        :headers="headers"
+        :items="rooms"
+        :items-per-page="100"
+        :loading="loading"
+        class="elevation-1"
+      ></v-data-table>
+    </div>
   </div>
 </template>
 
@@ -16,7 +20,7 @@
   import {getCaptureEnabledRooms} from '@/api/capture'
 
   export default {
-    name: 'Admin',
+    name: 'Rooms',
     mixins: [Loading],
     data: () => ({
       headers: [
@@ -24,7 +28,6 @@
         {text: 'Room', value: 'roomNumber', sortable: false},
         {text: 'Capabilities', value: 'capabilities'}
       ],
-      rooms: undefined,
       totalRoomCount: undefined
     }),
     created() {

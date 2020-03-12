@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h1>The Attic</h1>
+    <h2>The Attic</h2>
     {{ $route.name }}
     <div class="mr-3">
       <v-switch

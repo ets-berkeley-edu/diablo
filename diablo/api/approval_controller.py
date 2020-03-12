@@ -24,9 +24,10 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 
 from diablo.api.errors import BadRequestError, ForbiddenRequestError, ResourceNotFoundError
+from diablo.api.util import admin_required
 from diablo.lib.berkeley import get_instructor_uids, has_necessary_approvals, term_name_for_sis_id
 from diablo.lib.http import tolerant_jsonify
-from diablo.merged.sis import get_section
+from diablo.merged.sis import get_section, get_sections_per_ids
 from diablo.models.approval import Approval, get_all_publish_types, get_all_recording_types, PUBLISH_TYPE_NAMES_PER_ID
 from diablo.models.room import Room
 from diablo.models.scheduled import Scheduled
@@ -69,22 +70,28 @@ def course_capture_sign_up():
         publish_type_=publish_type,
         recording_type_=recording_type,
     )
-    return tolerant_jsonify(_all_approvals_to_json(section, term_id))
+    return tolerant_jsonify(_approvals_to_json(section, term_id))
 
 
 @app.route('/api/approvals/<term_id>/<section_id>')
 @login_required
-def approvals(term_id, section_id):
+def get_approvals(term_id, section_id):
     section = get_section(term_id, section_id)
     if not section:
         raise ResourceNotFoundError(f'No section for term_id = {term_id} and section_id = {section_id}')
 
     if not current_user.is_admin and current_user.get_uid() not in get_instructor_uids(section):
         raise ForbiddenRequestError('Sorry, this request is unauthorized.')
-    return tolerant_jsonify(_all_approvals_to_json(section, term_id))
+    return tolerant_jsonify(_approvals_to_json(section, term_id))
 
 
-def _all_approvals_to_json(section, term_id):
+@app.route('/api/approvals/<term_id>')
+@admin_required
+def approvals_per_term(term_id):
+    return tolerant_jsonify(_approvals_per_section(term_id))
+
+
+def _approvals_to_json(section, term_id):
     section_id = section['sectionId']
     all_approvals = Approval.get_approvals(section_id, term_id)
     return {
@@ -95,3 +102,20 @@ def _all_approvals_to_json(section, term_id):
         'publishTypeOptions': [{'text': text, 'value': value} for value, text in PUBLISH_TYPE_NAMES_PER_ID.items()],
         'scheduled': Scheduled.was_scheduled(section_id=section_id, term_id=term_id),
     }
+
+
+def _approvals_per_section(term_id):
+    approvals_per_section_id = {}
+    for approval in Approval.get_approvals_per_term(term_id):
+        section_id = approval.section_id
+        if section_id not in approvals_per_section_id:
+            approvals_per_section_id[section_id] = []
+        approvals_per_section_id[section_id].append(approval.to_api_json())
+
+    api_json = []
+    section_ids = list(approvals_per_section_id.keys())
+    for section in get_sections_per_ids(term_id, section_ids):
+        section_id = section['sectionId']
+        section['approvals'] = approvals_per_section_id[section_id] if section_id in approvals_per_section_id else []
+        api_json.append(section)
+    return api_json

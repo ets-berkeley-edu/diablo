@@ -16,7 +16,7 @@
           <div>
             <div class="d-flex ma-10">
               <div class="pr-5">
-                <h1 class="display-4 fill-height white--text">Sign In</h1>
+                <h2 class="display-4 fill-height white--text">Sign In</h2>
               </div>
               <div class="align-self-end mb-3">
                 <v-icon color="white" large>mdi-open-in-new</v-icon>
@@ -28,10 +28,10 @@
         <div v-if="$config.devAuthEnabled" class="pa-3">
           <v-form @submit.prevent="devAuth">
             <div class="mb-1 ml-2 mt-1">
-              <h3 class="text--disabled">Dev Auth</h3>
+              <h3 class="pb-1 text--disabled">Dev Auth</h3>
             </div>
             <div class="d-flex flex-wrap">
-              <div class="pr-1">
+              <div class="pr-2">
                 <v-text-field
                   id="dev-auth-uid"
                   v-model="devAuthUid"
@@ -39,9 +39,10 @@
                   name="devAuth"
                   prepend-icon="person"
                   :rules="[v => !!v || 'Required']"
+                  size="12"
                   type="text"></v-text-field>
               </div>
-              <div class="p-2">
+              <div class="pr-2">
                 <v-text-field
                   id="dev-auth-password"
                   v-model="devAuthPassword"
@@ -49,7 +50,11 @@
                   name="password"
                   prepend-icon="lock"
                   :rules="[v => !!v || 'Required']"
+                  size="16"
                   type="password"></v-text-field>
+              </div>
+              <div class="align-self-center pb-2">
+                <v-btn color="primary" @click="devAuth">Login</v-btn>
               </div>
             </div>
           </v-form>

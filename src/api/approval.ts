@@ -15,6 +15,12 @@ export function approve(
     .then(response => response.data, error => error)
 }
 
+export function getAllApprovals(termId) {
+  return axios
+    .get(`${utils.apiBaseUrl()}/api/approvals/${termId}`)
+    .then(response => response.data, () => null)
+}
+
 export function getApprovals(termId: number, sectionId: number) {
   return axios
     .get(`${utils.apiBaseUrl()}/api/approvals/${termId}/${sectionId}`)

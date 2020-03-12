@@ -55,6 +55,10 @@ def get_sections_denormalized(term_id, instructor_uid):
     section_ids = []
     for row in safe_execute_rds(sql, term_id=term_id, instructor_uid=instructor_uid):
         section_ids.append(row['sis_section_id'])
+    return get_sections_per_ids_denormalized(term_id, section_ids)
+
+
+def get_sections_per_ids_denormalized(term_id, section_ids):
     sql = f"""
         SELECT * FROM {sis_schema()}.sis_sections
         WHERE sis_term_id = :term_id AND sis_section_id = ANY(:section_ids)

@@ -2,10 +2,10 @@
   <div>
     <v-container v-if="!loading" fluid>
       <v-row class="pl-3">
-        <h1>{{ pageTitle }}</h1>
+        <h2>{{ pageTitle }}</h2>
       </v-row>
       <v-row class="pl-3">
-        <h2>{{ section.courseTitle }}</h2>
+        <h3>{{ section.courseTitle }}</h3>
       </v-row>
       <v-row>
         <v-col lg="3" md="3" sm="3">
@@ -53,7 +53,7 @@
             <v-container fluid>
               <v-row class="pb-4">
                 <div>
-                  <h3>Course Capture Sign-up</h3>
+                  <h4>Course Capture Sign-up</h4>
                   <div v-if="approvedByUids.length" class="font-weight-bold pb-2 pt-2 pink--text">
                     <span v-if="!hasNecessaryApprovals && mostRecentApproval.approvedByUid === $currentUser.uid">
                       You submitted the preferences below.
@@ -79,7 +79,7 @@
               </v-row>
               <v-row align="center">
                 <v-col cols="4" class="mb-5">
-                  <h4>
+                  <h5>
                     <label for="select-recording-type">Recording Type</label>
                     <v-tooltip bottom>
                       <template v-slot:activator="{ on }">
@@ -95,7 +95,7 @@
                         Foo
                       </div>
                     </v-tooltip>
-                  </h4>
+                  </h5>
                 </v-col>
                 <v-col cols="8">
                   <div v-if="hasNecessaryApprovals" class="pb-5">
@@ -106,7 +106,7 @@
                       {{ section.room.capabilities[0].text }}
                       <input type="hidden" name="recordingType" :value="section.room.capabilities[0].value">
                     </div>
-                    <div v-if="section.room.capabilities.length">
+                    <div v-if="section.room.capabilities.length > 1">
                       <v-select
                         id="select-recording-type"
                         v-model="recordingType"
@@ -121,7 +121,7 @@
               </v-row>
               <v-row align="center">
                 <v-col cols="4" class="mb-5">
-                  <h4>
+                  <h5>
                     <label for="select-publish-type">Publish</label>
                     <v-tooltip bottom>
                       <template v-slot:activator="{ on }">
@@ -139,7 +139,7 @@
                         (link to KB article: publishing from my media)
                       </div>
                     </v-tooltip>
-                  </h4>
+                  </h5>
                 </v-col>
                 <v-col cols="8">
                   <div v-if="hasNecessaryApprovals" class="pb-5">
