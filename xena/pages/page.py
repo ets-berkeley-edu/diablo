@@ -23,6 +23,8 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
+import time
+
 from flask import current_app as app
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
@@ -43,23 +45,65 @@ class Page(object):
             return self.driver.find_element_by_id(target)
         elif strategy == 'name':
             return self.driver.find_element_by_name(target)
+        elif strategy == 'class name':
+            return self.driver.find_element_by_class_name(target)
+        elif strategy == 'link text':
+            return self.driver.find_element_by_link_text(target)
+        elif strategy == 'xpath':
+            return self.driver.find_element_by_xpath(target)
 
-    def wait_for_element(self, locator):
-        Wait(self.driver, util.get_short_timeout()).until(ec.presence_of_element_located(locator))
-        Wait(self.driver, util.get_short_timeout()).until(ec.visibility_of_element_located(locator))
+    def elements(self, locator):
+        strategy = locator[0]
+        target = locator[1]
+        if strategy == 'id':
+            return self.driver.find_elements_by_id(target)
+        elif strategy == 'name':
+            return self.driver.find_elements_by_name(target)
+        elif strategy == 'class name':
+            return self.driver.find_elements_by_class_name(target)
+        elif strategy == 'link text':
+            return self.driver.find_elements_by_link_text(target)
+        elif strategy == 'xpath':
+            return self.driver.find_elements_by_xpath(target)
 
-    def click_element(self, locator):
-        self.wait_for_element(locator)
+    def wait_for_element(self, locator, timeout):
+        Wait(self.driver, timeout).until(ec.presence_of_element_located(locator))
+        Wait(self.driver, timeout).until(ec.visibility_of_element_located(locator))
+
+    def click_element(self, locator, addl_pause=0):
+        time.sleep(addl_pause)
+        Wait(self.driver, util.get_short_timeout()).until(ec.element_to_be_clickable(locator))
+        time.sleep(addl_pause)
         self.element(locator).click()
 
-    def wait_for_element_and_click(self, locator):
-        self.wait_for_element(locator)
-        self.click_element(locator)
+    def click_element_js(self, locator, addl_pause=0):
+        time.sleep(addl_pause)
+        self.driver.execute_script('arguments[0].click();', self.element(locator))
 
-    def wait_for_element_and_type(self, locator, string):
-        self.wait_for_element_and_click(locator)
+    def wait_for_page_and_click(self, locator, addl_pause=0):
+        self.wait_for_element(locator, util.get_long_timeout())
+        self.click_element(locator, addl_pause)
+
+    def wait_for_page_and_click_js(self, locator, addl_pause=0):
+        self.wait_for_element(locator, util.get_long_timeout())
+        self.click_element_js(locator, addl_pause)
+
+    def wait_for_element_and_click(self, locator, addl_pause=0):
+        self.wait_for_element(locator, util.get_short_timeout())
+        self.click_element(locator, addl_pause)
+
+    def wait_for_element_and_type(self, locator, string, addl_pause=0):
+        self.wait_for_element_and_click(locator, addl_pause)
         self.element(locator).clear()
         self.element(locator).send_keys(string)
+
+    def wait_for_element_and_type_js(self, locator, string, addl_pause=0):
+        self.wait_for_page_and_click_js(locator, addl_pause)
+        self.element(locator).clear()
+        self.element(locator).send_keys(string)
+
+    def title(self):
+        return self.driver.title
 
     def wait_for_title(self, string):
         app.logger.info(f'Waiting for page title \'{string}\'')

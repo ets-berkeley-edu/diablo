@@ -1,0 +1,140 @@
+{
+  "courses": [
+    {
+      "courseName": "A Course With a Single Instructor and a Single Listing",
+      "courseOfferingId": "Testing",
+      "instructorNum": "1",
+      "instructors": [
+        {
+          "name": "Testing",
+          "role": "Faculty",
+          "uid": "1234567",
+          "email": "testingmw@berkeley.edu"
+        }
+      ],
+      "scheduleDays": "Tuesday, Thursday",
+      "startTime": "12:30pm",
+      "endTime": "01:59pm",
+      "room": {
+        "locationName": "Testing",
+        "building": "Testing",
+        "roomNumber": "Testing",
+        "capabilities": "Screencast"
+      },
+      "ccn": "Testing",
+      "section": "001",
+      "semester": "Spring 2020",
+      "courseTitle": "Testing"
+    },
+    {
+      "courseName": "A Course With Multiple Instructors and a Single Listing",
+      "courseOfferingId": "Testing",
+      "instructorNum": "1",
+      "instructors": [
+        {
+          "name": "Testing",
+          "role": "Faculty",
+          "uid": "1234567",
+          "email": "testingmw@berkeley.edu"
+        },
+        {
+          "name": "Testing",
+          "role": "Faculty",
+          "uid": "1234567",
+          "email": "testingmw@berkeley.edu"
+        }
+      ],
+      "scheduleDays": "Tuesday, Thursday",
+      "startTime": "12:30pm",
+      "endTime": "01:59pm",
+      "room": {
+        "locationName": "Testing",
+        "building": "Testing",
+        "roomNumber": "Testing",
+        "capabilities": "Screencast"
+      },
+      "ccn": "Testing",
+      "section": "001",
+      "semester": "Spring 2020",
+      "courseTitle": "Testing"
+    },
+    {
+      "courseName": "A Course With a Single Instructor and Multiple Listings",
+      "courseOfferingId": "Testing",
+      "instructorNum": "1",
+      "instructors": [
+        {
+          "name": "Testing",
+          "role": "Faculty",
+          "uid": "1234567",
+          "email": "testingmw@berkeley.edu"
+        }
+      ],
+      "scheduleDays": "Tuesday, Thursday",
+      "startTime": "12:30pm",
+      "endTime": "01:59pm",
+      "room": {
+        "locationName": "Testing",
+        "building": "Testing",
+        "roomNumber": "Testing",
+        "capabilities": "Screencast"
+      },
+      "ccn": "Testing",
+      "section": "001",
+      "semester": "Spring 2020",
+      "courseTitle": "Testing"
+    },
+    {
+      "courseName": "A Course With an Instructor and a Proxy and a Single Listing",
+      "courseOfferingId": "Testing",
+      "instructorNum": "1",
+      "instructors": [
+        {
+          "name": "Testing",
+          "role": "Faculty",
+          "uid": "1234567",
+          "email": "testingmw@berkeley.edu"
+        }
+      ],
+      "scheduleDays": "Tuesday, Thursday",
+      "startTime": "12:30pm",
+      "endTime": "01:59pm",
+      "room": {
+        "locationName": "Testing",
+        "building": "Testing",
+        "roomNumber": "Testing",
+        "capabilities": "Screencast"
+      },
+      "ccn": "Testing",
+      "section": "001",
+      "semester": "Spring 2020",
+      "courseTitle": "Testing"
+    },
+    {
+      "courseName": "A Course With an Instructor and Multiple Listings, Undergrad and Grad",
+      "courseOfferingId": "Testing",
+      "instructorNum": "1",
+      "instructors": [
+        {
+          "name": "Testing",
+          "role": "Faculty",
+          "uid": "1234567",
+          "email": "testingmw@berkeley.edu"
+        }
+      ],
+      "scheduleDays": "Tuesday, Thursday",
+      "startTime": "12:30pm",
+      "endTime": "01:59pm",
+      "room": {
+        "locationName": "Testing",
+        "building": "Testing",
+        "roomNumber": "Testing",
+        "capabilities": "Screencast"
+      },
+      "ccn": "Testing",
+      "section": "001",
+      "semester": "Spring 2020",
+      "courseTitle": "Testing"
+    }
+  ]
+}

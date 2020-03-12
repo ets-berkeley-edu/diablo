@@ -23,16 +23,24 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-from xena import conftest
+import json
+
+from config import xena
 
 
 def get_xena_browser():
-    return conftest.XENA_BROWSER
+    return xena.XENA_BROWSER
 
 
 def get_short_timeout():
-    return conftest.TIMEOUT_SHORT
+    return xena.TIMEOUT_SHORT
 
 
 def get_long_timeout():
-    return conftest.TIMEOUT_LONG
+    return xena.TIMEOUT_LONG
+
+
+def parse_cdm_test_data():
+    with open(xena.TEST_DATA_CDM) as f:
+        parsed = json.load(f)
+        return parsed['courses']

@@ -25,20 +25,20 @@ ENHANCEMENTS, OR MODIFICATIONS.
 
 from flask import current_app as app
 from selenium import webdriver
-from xena import conftest
+from xena.test_utils import util
 
 
 class WebDriverManager(object):
 
     @classmethod
     def launch_browser(cls):
-        app.logger.warning(f'Launching {conftest.XENA_BROWSER.capitalize()}')
-        if conftest.XENA_BROWSER == 'firefox':
+        app.logger.warning(f'Launching {util.get_xena_browser().capitalize()}')
+        if util.get_xena_browser() == 'firefox':
             return webdriver.Firefox()
         else:
             return webdriver.Chrome()
 
     @classmethod
     def quit_browser(cls, driver):
-        app.logger.warning(f'Quitting {conftest.XENA_BROWSER.capitalize()}')
+        app.logger.warning(f'Quitting {util.get_xena_browser().capitalize()}')
         driver.quit()

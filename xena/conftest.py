@@ -25,17 +25,30 @@ ENHANCEMENTS, OR MODIFICATIONS.
 
 import os
 
+from diablo.factory import create_app
+import pytest
+from xena.pages.salesforce_page import SalesforcePage
+from xena.test_utils.webdriver_manager import WebDriverManager
+
 os.environ['DIABLO_ENV'] = 'xena'  # noqa
 
-from diablo.factory import create_app
-
 _app = create_app()
-
-XENA_BROWSER = 'chrome'
-
-TIMEOUT_SHORT = 8
-TIMEOUT_LONG = 30
 
 # Create app context before running tests.
 ctx = _app.app_context()
 ctx.push()
+
+
+@pytest.fixture(scope='session')
+def cdm_salesforce_init(request):
+    session = request.node
+    driver = WebDriverManager.launch_browser()
+    try:
+        for item in session.items:
+            cls = item.getparent(pytest.Class)
+            setattr(cls.obj, 'driver', driver)
+            salesforce_page = SalesforcePage(driver)
+            setattr(cls.obj, 'salesforce_page', salesforce_page)
+        yield
+    finally:
+        WebDriverManager.quit_browser(driver)
