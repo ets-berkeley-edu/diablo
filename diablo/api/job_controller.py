@@ -23,29 +23,18 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-admin_uid = '2040'
-instructor_uid = '8765432'
+from diablo.api.util import admin_required
+from diablo.lib.http import tolerant_jsonify
+from diablo.merged.course_data_mover import CourseDataMover
+from flask import current_app as app
 
 
-class TestCaptureEnabledRooms:
-
-    @staticmethod
-    def _api_capture_enabled_rooms(client, expected_status_code=200):
-        response = client.get('/api/salesforce/enabled_rooms')
-        assert response.status_code == expected_status_code
-        return response.json
-
-    def test_not_authenticated(self, client):
-        self._api_capture_enabled_rooms(client, expected_status_code=401)
-
-    def test_not_authorized(self, client, fake_auth):
-        fake_auth.login(instructor_uid)
-        self._api_capture_enabled_rooms(client, expected_status_code=401)
-
-    def test_admin(self, client, fake_auth):
-        fake_auth.login(admin_uid)
-        api_json = self._api_capture_enabled_rooms(client)
-        assert len(api_json) == 3
-        assert api_json[0]['building'] == 'Barrows'
-        assert api_json[0]['roomNumber'] == '60'
-        assert api_json[0]['capabilities'] == 'Screencast'
+@app.route('/api/job/course_data_mover/start')
+@admin_required
+def course_data_mover():
+    term_id = app.config['CURRENT_TERM_ID']
+    CourseDataMover(term_id).run()
+    return tolerant_jsonify({
+        'status': 'STARTED',
+        'termId': term_id,
+    })

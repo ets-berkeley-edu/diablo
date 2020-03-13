@@ -39,7 +39,7 @@ from flask_login import current_user, login_required
 @login_required
 def course_capture_sign_up():
     approved_by_uid = current_user.get_uid()
-    term_id = app.config['CURRENT_TERM']
+    term_id = app.config['CURRENT_TERM_ID']
     term_name = term_name_for_sis_id(term_id)
 
     params = request.get_json()

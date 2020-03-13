@@ -1,15 +1,15 @@
 [
   {
-    "Id": "a0619000005LtDVAA0",
-    "Building__c": "Dwinelle",
-    "Room_Number_Text__c": "155",
+    "Id": "LtGPAA0a0619000005",
+    "Building__c": "Barker",
+    "Room_Number_Text__c": "101",
     "Recording_Capabilities__c": "Screencast"
   },
   {
-    "Id": "a0619000005LtEdAAK",
-    "Building__c": "Hertz",
-    "Room_Number_Text__c": "320",
-    "Recording_Capabilities__c": "Screencast + VIdeo"
+    "Id": "000005LtGPAA0a0619",
+    "Building__c": "Barrows",
+    "Room_Number_Text__c": "60",
+    "Recording_Capabilities__c": "Screencast"
   },
   {
     "Id": "a0619000005LtFgAAK",
@@ -18,9 +18,27 @@
     "Recording_Capabilities__c": "Screencast"
   },
   {
+    "Id": "a0619000005LtDVAA0",
+    "Building__c": "Dwinelle",
+    "Room_Number_Text__c": "155",
+    "Recording_Capabilities__c": "Screencast"
+  },
+  {
     "Id": "a0619000005LtGPAA0",
     "Building__c": "GPB",
     "Room_Number_Text__c": "105",
     "Recording_Capabilities__c": ""
+  },
+  {
+    "Id": "a0619000005LtEdAAK",
+    "Building__c": "Hertz",
+    "Room_Number_Text__c": "320",
+    "Recording_Capabilities__c": "Screencast + VIdeo"
+  },
+  {
+    "Id": "PAA0a0619000005LtG",
+    "Building__c": "Li Ka Shing",
+    "Room_Number_Text__c": "145",
+    "Recording_Capabilities__c": "Screencast + Video"
   }
 ]

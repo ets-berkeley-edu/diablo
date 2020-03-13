@@ -33,7 +33,7 @@ from flask import current_app as app
 
 @app.route('/api/config')
 def app_config():
-    term_id = app.config['CURRENT_TERM']
+    term_id = app.config['CURRENT_TERM_ID']
     return tolerant_jsonify({
         'courseCaptureExplainedUrl': app.config['COURSE_CAPTURE_EXPLAINED_URL'],
         'courseCapturePoliciesUrl': app.config['COURSE_CAPTURE_POLICIES_URL'],

@@ -91,8 +91,7 @@ CREATE TABLE approvals (
     approver_type approver_types,
     publish_type publish_types NOT NULL,
     recording_type recording_types NOT NULL,
-    created_at timestamp with time zone NOT NULL,
-    updated_at timestamp with time zone NOT NULL
+    created_at timestamp with time zone NOT NULL
 );
 ALTER TABLE approvals OWNER TO diablo;
 ALTER TABLE approvals ADD CONSTRAINT approvals_pkey PRIMARY KEY (approved_by_uid, section_id, term_id);
@@ -114,19 +113,22 @@ CREATE INDEX rooms_location_idx ON rooms USING btree (location);
 
 --
 
-ALTER TABLE ONLY approvals
-    ADD CONSTRAINT approvals_location_fkey FOREIGN KEY (location) REFERENCES rooms(location);
-
---
-
 CREATE TABLE scheduled (
     section_id INTEGER NOT NULL,
     term_id INTEGER NOT NULL,
+    location VARCHAR(255) NOT NULL,
     created_at timestamp with time zone NOT NULL
 );
 ALTER TABLE scheduled OWNER TO diablo;
 ALTER TABLE scheduled ADD CONSTRAINT scheduled_pkey PRIMARY KEY (section_id, term_id);
 CREATE INDEX scheduled_section_id_idx ON scheduled USING btree (section_id);
 CREATE INDEX scheduled_term_id_idx ON scheduled USING btree (term_id);
+
+--
+
+ALTER TABLE ONLY approvals
+    ADD CONSTRAINT approvals_location_fkey FOREIGN KEY (location) REFERENCES rooms(location);
+ALTER TABLE ONLY scheduled
+    ADD CONSTRAINT scheduled_location_fkey FOREIGN KEY (location) REFERENCES rooms(location);
 
 --

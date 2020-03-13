@@ -1,8 +1,8 @@
 import axios from 'axios'
 import utils from '@/api/api-utils'
 
-export function getCaptureEnabledRooms() {
+export function getTermSummary(termId) {
   return axios
-    .get(`${utils.apiBaseUrl()}/api/salesforce/enabled_rooms`)
+    .get(`${utils.apiBaseUrl()}/api/report/term/${termId}`)
     .then(response => response.data, () => null)
 }

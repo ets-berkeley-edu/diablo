@@ -35,6 +35,7 @@ SET row_security = off;
 --
 
 ALTER TABLE IF EXISTS ONLY public.approvals DROP CONSTRAINT IF EXISTS approvals_location_fkey;
+ALTER TABLE IF EXISTS ONLY public.scheduled DROP CONSTRAINT IF EXISTS scheduled_location_fkey;
 
 --
 
