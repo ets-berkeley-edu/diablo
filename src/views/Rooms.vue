@@ -17,7 +17,7 @@
 
 <script>
   import Loading from '@/mixins/Loading'
-  import {getCaptureEnabledRooms} from '@/api/salesforce'
+  import {getTermSummary} from '@/api/report'
 
   export default {
     name: 'Rooms',
@@ -31,7 +31,7 @@
       rooms: undefined
     }),
     created() {
-      getCaptureEnabledRooms().then(data => {
+      getTermSummary().then(data => {
         this.rooms = data
         this.loaded()
       })

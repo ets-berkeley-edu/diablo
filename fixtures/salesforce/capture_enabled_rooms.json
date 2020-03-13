@@ -1,5 +1,5 @@
 [
-  {"building": "Barrows", "roomNumber": "60", "capabilities": "Screencast"},
+  {"building": "Barrows", "roomNumber": "106", "capabilities": "Screencast"},
   {"building": "Barker", "roomNumber": "101", "capabilities": "Screencast"},
   {"building": "Li Ka Shing", "roomNumber": "145", "capabilities": "Screencast + Video"}
 ]

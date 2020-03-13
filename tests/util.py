@@ -25,6 +25,11 @@ ENHANCEMENTS, OR MODIFICATIONS.
 
 from contextlib import contextmanager
 
+from diablo.models.approval import Approval
+from diablo.models.room import Room
+from diablo.models.scheduled import Scheduled
+from sqlalchemy import text
+
 
 @contextmanager
 def override_config(app, key, value):
@@ -35,3 +40,50 @@ def override_config(app, key, value):
         yield
     finally:
         app.config[key] = old_value
+
+
+@contextmanager
+def create_approvals_and_scheduled(db, location):
+    Room.create_or_update(
+        location='Barrows 106',
+        capabilities='Screencast',
+    )
+    section_ids = [30563, 26094]
+    term_id = 2202
+    uids = ['234567', '1015674']
+
+    Approval.create(
+        approved_by_uid=uids[0],
+        term_id=term_id,
+        section_id=section_ids[0],
+        approver_type_='instructor',
+        publish_type_='canvas',
+        recording_type_='presentation_audio',
+        location=location,
+    )
+    Approval.create(
+        approved_by_uid=uids[1],
+        term_id=term_id,
+        section_id=section_ids[1],
+        approver_type_='admin',
+        publish_type_='kaltura_media_gallery',
+        recording_type_='presenter_audio',
+        location=location,
+    )
+    Scheduled.create(
+        term_id=term_id,
+        section_id='26094',
+        location=location,
+    )
+    try:
+        yield
+    finally:
+        for index in range(0, 2):
+            db.session.execute(
+                text('DELETE FROM approvals WHERE section_id = :section_id AND term_id = :term_id AND approved_by_uid = :uid'),
+                {
+                    'section_id': section_ids[index],
+                    'term_id': term_id,
+                    'uid': uids[index],
+                },
+            )

@@ -49,7 +49,7 @@ class TestConfigController:
     def test_anonymous(self, app, client):
         """Returns a well-formed response to anonymous user."""
         term_id = '2218'
-        with override_config(app, 'CURRENT_TERM', term_id):
+        with override_config(app, 'CURRENT_TERM_ID', term_id):
             response = client.get('/api/config')
             assert response.status_code == 200
             assert 'diabloEnv' in response.json

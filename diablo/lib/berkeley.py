@@ -27,13 +27,10 @@ from diablo.models.approval import RECORDING_TYPE_NAMES_PER_ID
 
 
 def get_capture_options(location, enabled_rooms):
-    def _flatten_location(name):
-        return name and ''.join(name.split()).lower()
-
     room_capabilities = []
-    flattened_location = _flatten_location(location)
+    flattened_location = flatten_location(location)
     for enabled_room in enabled_rooms:
-        _flattened_enabled_location = _flatten_location(f'{enabled_room["building"]} {enabled_room["roomNumber"]}')
+        _flattened_enabled_location = flatten_location(f'{enabled_room["building"]} {enabled_room["roomNumber"]}')
         if flattened_location == _flattened_enabled_location:
             if enabled_room['capabilities'] == 'Screencast + Video':
                 for key, value in RECORDING_TYPE_NAMES_PER_ID.items():
@@ -49,6 +46,10 @@ def get_capture_options(location, enabled_rooms):
                 })
             break
     return room_capabilities
+
+
+def flatten_location(name):
+    return name and ''.join(name.split()).lower()
 
 
 def get_instructor_uids(section):

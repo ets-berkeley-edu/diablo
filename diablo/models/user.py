@@ -84,7 +84,7 @@ class User(UserMixin):
             if is_active:
                 is_admin = AdminUser.is_admin(uid)
                 sections = get_sections(
-                    term_id=app.config['CURRENT_TERM'],
+                    term_id=app.config['CURRENT_TERM_ID'],
                     instructor_uid=uid,
                 )
                 is_active = is_admin or bool(sections)

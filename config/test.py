@@ -33,7 +33,7 @@ ALERT_WITHDRAWAL_ENABLED = False
 
 AWS_APP_ROLE_ARN = 'arn:aws:iam::123456789012:role/test-role'
 
-CURRENT_TERM = '2202'
+CURRENT_TERM_ID = '2202'
 
 DATA_LOCH_RDS_URI = 'postgres://diablo:diablo@localhost:5432/pazuzu_loch_test'
 

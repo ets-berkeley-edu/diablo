@@ -40,7 +40,7 @@ CACHE_DIR = f'{BASE_DIR}/.flask_cache'
 CACHE_THRESHOLD = 300
 CACHE_TYPE = 'filesystem'
 
-CURRENT_TERM = None
+CURRENT_TERM_ID = None
 
 # Loch o' Data
 DATA_LOCH_RDS_URI = 'postgres://foo:secret@secret-rds-url.com:5432/data_loch'

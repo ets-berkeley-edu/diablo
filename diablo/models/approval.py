@@ -23,8 +23,10 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
+from datetime import datetime
+
 from diablo import db, std_commit
-from diablo.models.base import Base
+from diablo.lib.util import to_isoformat
 from sqlalchemy.dialects.postgresql import ENUM
 
 
@@ -62,7 +64,7 @@ RECORDING_TYPE_NAMES_PER_ID = {
 }
 
 
-class Approval(Base):
+class Approval(db.Model):
     __tablename__ = 'approvals'
 
     approved_by_uid = db.Column(db.String, nullable=False, primary_key=True)
@@ -72,6 +74,7 @@ class Approval(Base):
     location = db.Column(db.String(255), db.ForeignKey('rooms.location'), nullable=False)
     publish_type = db.Column(publish_type, nullable=False)
     recording_type = db.Column(recording_type, nullable=False)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.now)
 
     def __init__(
             self,
@@ -100,8 +103,7 @@ class Approval(Base):
                     publish_type={self.publish_type},
                     recording_type={self.recording_type},
                     location={self.location},
-                    created_at={self.created_at},
-                    updated_at={self.updated_at}>
+                    created_at={self.created_at}>
                 """
 
     @classmethod
@@ -151,6 +153,7 @@ class Approval(Base):
             'publishTypeName': PUBLISH_TYPE_NAMES_PER_ID[self.publish_type],
             'recordingType': self.recording_type,
             'recordingTypeName': RECORDING_TYPE_NAMES_PER_ID[self.recording_type],
+            'createdAt': to_isoformat(self.created_at),
         }
 
 

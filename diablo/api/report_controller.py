@@ -24,51 +24,65 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 
 from diablo.api.util import admin_required
-from diablo.externals.salesforce import get_all_contacts, get_all_courses, get_all_eligible_courses, get_all_rooms, \
-    get_capture_enabled_rooms
+from diablo.externals.salesforce import get_all_contacts, get_all_courses, get_all_eligible_courses, get_all_rooms
 from diablo.lib.http import tolerant_jsonify
 from diablo.merged.reports import verify_salesforce_data
+from diablo.merged.sis import get_sections_per_ids
+from diablo.models.approval import Approval
+from diablo.models.scheduled import Scheduled
 from flask import current_app as app
 
 
-@app.route('/api/salesforce/enabled_rooms')
+@app.route('/api/report/term/<term_id>')
 @admin_required
-def salesforce_enabled_rooms():
-    return tolerant_jsonify(_to_api_json(get_capture_enabled_rooms))
+def salesforce_enabled_rooms(term_id):
+    def _objects_per_section_id(objects):
+        per_section_id = {}
+        for obj in objects:
+            key = str(obj.section_id)
+            if obj.section_id not in per_section_id:
+                per_section_id[key] = []
+            per_section_id[key].append(obj.to_api_json())
+        return per_section_id
+
+    api_json = []
+    approvals_per_section_id = _objects_per_section_id(Approval.get_approvals_per_term(term_id))
+    scheduled_per_section_id = _objects_per_section_id(Scheduled.get_all_scheduled(term_id))
+    section_ids = set(approvals_per_section_id.keys()).union(set(scheduled_per_section_id.keys()))
+
+    for section in get_sections_per_ids(term_id, section_ids):
+        section_id = section['sectionId']
+        section['approvals'] = approvals_per_section_id.get(section_id, [])
+        section['scheduled'] = scheduled_per_section_id.get(section_id, [])
+        api_json.append(section)
+    return tolerant_jsonify(api_json)
 
 
-@app.route('/api/salesforce/all_courses')
+@app.route('/api/report/salesforce/all_courses')
 @admin_required
 def salesforce_all_courses():
-    return tolerant_jsonify(_to_api_json(get_all_courses))
+    return tolerant_jsonify(_to_api_json(get_all_courses()))
 
 
-@app.route('/api/salesforce/cdm')
-@admin_required
-def course_data_mover():
-    # TODO
-    pass
-
-
-@app.route('/api/salesforce/eligible_courses')
+@app.route('/api/report/salesforce/eligible_courses')
 @admin_required
 def salesforce_all_eligible_courses():
-    return tolerant_jsonify(_to_api_json(get_all_eligible_courses))
+    return tolerant_jsonify(_to_api_json(get_all_eligible_courses()))
 
 
-@app.route('/api/salesforce/all_contacts')
+@app.route('/api/report/salesforce/all_contacts')
 @admin_required
 def salesforce_all_contacts():
-    return tolerant_jsonify(_to_api_json(get_all_contacts))
+    return tolerant_jsonify(_to_api_json(get_all_contacts()))
 
 
-@app.route('/api/salesforce/all_rooms')
+@app.route('/api/report/salesforce/all_rooms')
 @admin_required
 def salesforce_all_rooms():
-    return tolerant_jsonify(_to_api_json(get_all_rooms))
+    return tolerant_jsonify(_to_api_json(get_all_rooms()))
 
 
-@app.route('/api/salesforce/verify')
+@app.route('/api/report/salesforce/verify')
 @admin_required
 def salesforce_verify():
     path_to_stale_data_report, path_to_courses_missing_report = verify_salesforce_data()
@@ -78,9 +92,9 @@ def salesforce_verify():
     })
 
 
-def _to_api_json(factory):
+def _to_api_json(objects):
     api_json = []
-    for obj in factory():
+    for obj in objects:
         obj_json = dict(obj)
         if 'attributes' in obj_json:
             # Salesforce API responses include extraneous metadata in 'attributes' prop
