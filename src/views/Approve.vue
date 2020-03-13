@@ -248,6 +248,9 @@
         this.publishTypeOptions = data.publishTypeOptions
         this.scheduled = data.scheduled
         this.section = data.section
+        if (this.section.room.capabilities.length === 1) {
+          this.recordingType = this.section.room.capabilities[0].value
+        }
         this.setPageTitle(this.pageTitle)
         this.loaded()
       }

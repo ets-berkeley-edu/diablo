@@ -35,7 +35,7 @@ from flask import current_app as app
 
 @app.route('/api/report/term/<term_id>')
 @admin_required
-def salesforce_enabled_rooms(term_id):
+def term_report(term_id):
     def _objects_per_section_id(objects):
         per_section_id = {}
         for obj in objects:
