@@ -34,25 +34,25 @@ class Scheduled(db.Model):
 
     section_id = db.Column(db.Integer, nullable=False, primary_key=True)
     term_id = db.Column(db.Integer, nullable=False, primary_key=True)
-    location = db.Column(db.String(255), db.ForeignKey('rooms.location'), nullable=False)
+    room_id = db.Column(db.Integer, db.ForeignKey('rooms.id'), nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.now)
 
-    def __init__(self, section_id, term_id, location):
+    def __init__(self, section_id, term_id, room_id):
         self.section_id = section_id
         self.term_id = term_id
-        self.location = location
+        self.room_id = room_id
 
     def __repr__(self):
         return f"""<Approval
                     section_id={self.section_id},
                     term_id={self.term_id},
-                    location={self.location}
+                    room_id={self.room_id}
                     created_at={self.created_at}>
                 """
 
     @classmethod
-    def create(cls, section_id, term_id, location):
-        db.session.add(cls(section_id=section_id, term_id=term_id, location=location))
+    def create(cls, section_id, term_id, room_id):
+        db.session.add(cls(section_id=section_id, term_id=term_id, room_id=room_id))
         std_commit()
 
     @classmethod
@@ -67,6 +67,6 @@ class Scheduled(db.Model):
         return {
             'sectionId': self.section_id,
             'termId': self.term_id,
-            'location': self.location,
+            'roomId': self.room_id,
             'createdAt': to_isoformat(self.created_at),
         }

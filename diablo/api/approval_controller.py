@@ -66,9 +66,9 @@ def course_capture_sign_up():
         section_id=section_id,
         term_id=term_id,
         approver_type_='admin' if current_user.is_admin else 'instructor',
-        location=room.location,
         publish_type_=publish_type,
         recording_type_=recording_type,
+        room_id=room.id,
     )
     return tolerant_jsonify(_approvals_to_json(section, term_id))
 

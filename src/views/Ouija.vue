@@ -3,59 +3,78 @@
     <div class="pl-3">
       <h2><v-icon class="pb-3" large>mdi-auto-fix</v-icon> The Ouija Board</h2>
     </div>
-    <v-data-table
-      :headers="headers"
-      :hide-default-footer="true"
-      :items="sections"
-      :items-per-page="100"
-      :loading="loading"
-      class="elevation-1"
-    >
-      <template v-slot:top>
-        <div class="pa-3">
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-        </div>
-      </template>
-      <template v-slot:body="{ items }">
-        <tbody>
-          <tr v-for="item in items" :key="item.name">
-            <td>{{ item.courseName }}</td>
-            <td class="text-no-wrap">{{ item.sectionId }}</td>
-            <td class="text-no-wrap">{{ item.room.location }}</td>
-            <td class="text-no-wrap">{{ item.meetingDays.join(',') }}</td>
-            <td class="text-no-wrap">{{ item.meetingStartTime }} - {{ item.meetingEndTime }}</td>
-            <td>
-              <span v-for="instructor in item.instructors" :key="instructor.uid">
-                <a
-                  :id="`instructor-${instructor.uid}-mailto`"
-                  :href="`mailto:${instructor.campusEmail}`"
-                  target="_blank">
-                  {{ instructor.name }}
-                </a>
-              </span>
-            </td>
-            <td>
-              <span>
-                {{ $_.last(item.approvals).publishTypeName }}
-              </span>
-            </td>
-          </tr>
-        </tbody>
-      </template>
-    </v-data-table>
+    <v-card>
+      <v-card-title>
+        Courses
+        <v-spacer></v-spacer>
+        <v-text-field
+          v-model="search"
+          append-icon="mdi-magnify"
+          label="Search"
+          single-line
+          hide-details
+        ></v-text-field>
+      </v-card-title>
+      <v-data-table
+        :headers="headers"
+        :items="courses"
+        :search="search"
+      >
+        <template v-slot:body="{ items }">
+          <tbody>
+            <tr v-if="!items.length">
+              <td>
+                <div v-if="search">
+                  No matching items
+                </div>
+                <div v-if="!search">
+                  No courses
+                </div>
+              </td>
+            </tr>
+            <tr v-for="item in items" :key="item.name">
+              <td>
+                <CourseDetailsDialog :course="item" />
+              </td>
+              <td class="text-no-wrap">{{ item.sectionId }}</td>
+              <td class="text-no-wrap">{{ item.room.location }}</td>
+              <td class="text-no-wrap">{{ item.meetingDays.join(',') }}</td>
+              <td class="text-no-wrap">{{ item.meetingStartTime }} - {{ item.meetingEndTime }}</td>
+              <td>
+                <span v-for="instructor in item.instructors" :key="instructor.uid">
+                  <a
+                    :id="`instructor-${instructor.uid}-mailto`"
+                    :href="`mailto:${instructor.campusEmail}`"
+                    target="_blank">
+                    {{ instructor.name }}
+                  </a>
+                </span>
+              </td>
+              <td>
+                <span>
+                  {{ $_.last(item.approvals).publishTypeName }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </template>
+      </v-data-table>
+    </v-card>
   </div>
 </template>
 
 <script>
-  import Loading from '@/mixins/Loading'
+  import CourseDetailsDialog from '@/components/CourseDetailsDialog'
   import Utils from '@/mixins/Utils'
   import {getTermSummary} from '@/api/report'
 
   export default {
     name: 'Ouija',
-    mixins: [Loading, Utils],
+    components: {CourseDetailsDialog},
+    mixins: [Utils],
     data: () => ({
-      sections: undefined,
+      courses: undefined,
+      search: '',
       headers: [
         {text: 'Course', value: 'courseName'},
         {text: 'Section', value: 'sectionId'},
@@ -68,8 +87,8 @@
     }),
     created() {
       getTermSummary(this.$config.currentTermId).then(data => {
-        this.sections = data
-        this.loaded()
+        this.courses = data
+        this.$ready()
       })
     }
   }

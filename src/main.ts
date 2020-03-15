@@ -11,12 +11,16 @@ import vuetify from './plugins/vuetify'
 const apiBaseUrl = process.env.VUE_APP_API_BASE_URL
 
 axios.interceptors.response.use(response => response, function(error) {
-  if (_.get(error, 'response.status') === 401) {
+  const errorStatus = _.get(error, 'response.status')
+  if (errorStatus === 401) {
     axios.get(`${apiBaseUrl}/api/user/my_profile`).then(response => {
       Vue.prototype.$currentUser = response.data
       Vue.prototype.$core.initializeCurrentUser().then(router.push({ path: '/login' }).catch(() => null))
     })
+  } else if (errorStatus >= 500) {
+      router.push({ path: '/error', query: { m: error.message }})
   }
+  store.dispatch('context/loadingComplete')
   return Promise.reject(error)
 })
 
@@ -30,6 +34,8 @@ Vue.prototype.$_ = _
 
 // Emit, and listen for, events via hub
 Vue.prototype.$eventHub = new Vue()
+
+Vue.prototype.$ready = () => store.dispatch('context/loadingComplete')
 
 axios.get(`${apiBaseUrl}/api/user/my_profile`).then(response => {
   Vue.prototype.$currentUser = response.data

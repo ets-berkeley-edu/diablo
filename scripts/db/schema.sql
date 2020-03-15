@@ -87,7 +87,7 @@ CREATE TABLE approvals (
     approved_by_uid VARCHAR(80) NOT NULL,
     section_id INTEGER NOT NULL,
     term_id INTEGER NOT NULL,
-    location VARCHAR(255) NOT NULL,
+    room_id INTEGER NOT NULL,
     approver_type approver_types,
     publish_type publish_types NOT NULL,
     recording_type recording_types NOT NULL,
@@ -102,13 +102,25 @@ CREATE INDEX approvals_term_id_idx ON approvals USING btree (term_id);
 --
 
 CREATE TABLE rooms (
+    id INTEGER NOT NULL,
     location VARCHAR(255) NOT NULL,
     capabilities VARCHAR(255)[] NOT NULL,
     created_at timestamp with time zone NOT NULL
 );
 ALTER TABLE rooms OWNER TO diablo;
+CREATE SEQUENCE rooms_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+ALTER TABLE rooms_id_seq OWNER TO diablo;
+ALTER SEQUENCE rooms_id_seq OWNED BY rooms.id;
+ALTER TABLE ONLY rooms ALTER COLUMN id SET DEFAULT nextval('rooms_id_seq'::regclass);
 ALTER TABLE ONLY rooms
-    ADD CONSTRAINT rooms_pkey PRIMARY KEY (location);
+    ADD CONSTRAINT rooms_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY rooms
+    ADD CONSTRAINT rooms_location_unique_constraint UNIQUE (location);
 CREATE INDEX rooms_location_idx ON rooms USING btree (location);
 
 --
@@ -116,7 +128,7 @@ CREATE INDEX rooms_location_idx ON rooms USING btree (location);
 CREATE TABLE scheduled (
     section_id INTEGER NOT NULL,
     term_id INTEGER NOT NULL,
-    location VARCHAR(255) NOT NULL,
+    room_id INTEGER NOT NULL,
     created_at timestamp with time zone NOT NULL
 );
 ALTER TABLE scheduled OWNER TO diablo;
@@ -127,8 +139,8 @@ CREATE INDEX scheduled_term_id_idx ON scheduled USING btree (term_id);
 --
 
 ALTER TABLE ONLY approvals
-    ADD CONSTRAINT approvals_location_fkey FOREIGN KEY (location) REFERENCES rooms(location);
+    ADD CONSTRAINT approvals_room_id_fkey FOREIGN KEY (room_id) REFERENCES rooms(id);
 ALTER TABLE ONLY scheduled
-    ADD CONSTRAINT scheduled_location_fkey FOREIGN KEY (location) REFERENCES rooms(location);
+    ADD CONSTRAINT scheduled_room_id_fkey FOREIGN KEY (room_id) REFERENCES rooms(id);
 
 --

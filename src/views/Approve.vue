@@ -1,6 +1,6 @@
 <template>
   <div>
-    <v-container v-if="!loading" fluid>
+    <v-container fluid>
       <v-row class="pl-3">
         <h2>{{ pageTitle }}</h2>
       </v-row>
@@ -61,7 +61,7 @@
                     <div v-if="hasNecessaryApprovals || mostRecentApproval.approvedByUid !== $currentUser.uid">
                       The preferences below were submitted by {{ getInstructorNames(approvedByUids) }}.
                     </div>
-                    <div v-if="!scheduled" class="pt-2">Recordings have been scheduled in Kaltura.</div>
+                    <div v-if="scheduled" class="pt-2">Recordings have been scheduled in Kaltura.</div>
                   </div>
                   <div>
                     The Course Capture program is the campus service for recording and publishing classroom activity. If you
@@ -186,13 +186,12 @@
 </template>
 
 <script>
-  import Loading from '@/mixins/Loading'
   import Utils from '@/mixins/Utils'
   import {approve, getApprovals} from '@/api/approval'
 
   export default {
     name: 'Approve',
-    mixins: [Loading, Utils],
+    mixins: [Utils],
     data: () => ({
       agreedToTerms: false,
       approvals: undefined,
@@ -252,7 +251,7 @@
           this.recordingType = this.section.room.capabilities[0].value
         }
         this.setPageTitle(this.pageTitle)
-        this.loaded()
+        this.$ready()
       }
     }
   }
