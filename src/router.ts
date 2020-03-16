@@ -3,6 +3,7 @@ import Approve from '@/views/Approve.vue'
 import Attic from '@/views/Attic.vue'
 import auth from './auth'
 import BaseView from '@/views/BaseView.vue'
+import Error from '@/views/Error.vue'
 import Home from '@/views/Home.vue'
 import Login from '@/views/Login.vue'
 import NotFound from '@/views/NotFound.vue'
@@ -103,6 +104,13 @@ const router = new Router({
           component: NotFound,
           meta: {
             title: 'Page not found'
+          }
+        },
+        {
+          path: '/error',
+          component: Error,
+          meta: {
+            title: 'Error'
           }
         },
         {

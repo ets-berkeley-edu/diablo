@@ -44,8 +44,8 @@ def override_config(app, key, value):
 
 @contextmanager
 def create_approvals_and_scheduled(db, location):
-    Room.create_or_update(
-        location='Barrows 106',
+    room = Room.create_or_update(
+        location=location,
         capabilities='Screencast',
     )
     section_ids = [30563, 26094]
@@ -59,7 +59,7 @@ def create_approvals_and_scheduled(db, location):
         approver_type_='instructor',
         publish_type_='canvas',
         recording_type_='presentation_audio',
-        location=location,
+        room_id=room.id,
     )
     Approval.create(
         approved_by_uid=uids[1],
@@ -68,12 +68,12 @@ def create_approvals_and_scheduled(db, location):
         approver_type_='admin',
         publish_type_='kaltura_media_gallery',
         recording_type_='presenter_audio',
-        location=location,
+        room_id=room.id,
     )
     Scheduled.create(
         term_id=term_id,
         section_id='26094',
-        location=location,
+        room_id=room.id,
     )
     try:
         yield

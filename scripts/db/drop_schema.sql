@@ -34,8 +34,8 @@ SET row_security = off;
 
 --
 
-ALTER TABLE IF EXISTS ONLY public.approvals DROP CONSTRAINT IF EXISTS approvals_location_fkey;
-ALTER TABLE IF EXISTS ONLY public.scheduled DROP CONSTRAINT IF EXISTS scheduled_location_fkey;
+ALTER TABLE IF EXISTS ONLY public.approvals DROP CONSTRAINT IF EXISTS approvals_room_id_fkey;
+ALTER TABLE IF EXISTS ONLY public.scheduled DROP CONSTRAINT IF EXISTS scheduled_room_id_fkey;
 
 --
 
@@ -43,6 +43,7 @@ ALTER TABLE IF EXISTS ONLY public.admin_users DROP CONSTRAINT IF EXISTS admin_us
 ALTER TABLE IF EXISTS ONLY public.admin_users DROP CONSTRAINT IF EXISTS admin_users_uid_key;
 ALTER TABLE IF EXISTS public.admin_users ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE IF EXISTS ONLY public.approvals DROP CONSTRAINT IF EXISTS approvals_pkey;
+ALTER TABLE IF EXISTS ONLY public.rooms DROP CONSTRAINT IF EXISTS rooms_location_unique_constraint;
 ALTER TABLE IF EXISTS ONLY public.rooms DROP CONSTRAINT IF EXISTS rooms_pkey;
 ALTER TABLE IF EXISTS ONLY public.scheduled DROP CONSTRAINT IF EXISTS scheduled_pkey;
 
@@ -63,6 +64,7 @@ DROP SEQUENCE IF EXISTS public.admin_users_id_seq;
 DROP TABLE IF EXISTS public.admin_users;
 DROP TABLE IF EXISTS public.approvals;
 DROP TABLE IF EXISTS public.rooms;
+DROP SEQUENCE IF EXISTS public.rooms_id_seq;
 DROP TABLE IF EXISTS public.scheduled;
 
 --

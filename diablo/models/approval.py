@@ -71,7 +71,7 @@ class Approval(db.Model):
     section_id = db.Column(db.Integer, nullable=False, primary_key=True)
     term_id = db.Column(db.Integer, nullable=False, primary_key=True)
     approver_type = db.Column(approver_type, nullable=False)
-    location = db.Column(db.String(255), db.ForeignKey('rooms.location'), nullable=False)
+    room_id = db.Column(db.Integer, db.ForeignKey('rooms.id'), nullable=False)
     publish_type = db.Column(publish_type, nullable=False)
     recording_type = db.Column(recording_type, nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.now)
@@ -82,7 +82,7 @@ class Approval(db.Model):
             section_id,
             term_id,
             approver_type_,
-            location,
+            room_id,
             publish_type_,
             recording_type_,
     ):
@@ -90,7 +90,7 @@ class Approval(db.Model):
         self.section_id = section_id
         self.term_id = term_id
         self.approver_type = approver_type_
-        self.location = location
+        self.room_id = room_id
         self.publish_type = publish_type_
         self.recording_type = recording_type_
 
@@ -102,7 +102,7 @@ class Approval(db.Model):
                     approver_type={self.approver_type},
                     publish_type={self.publish_type},
                     recording_type={self.recording_type},
-                    location={self.location},
+                    room_id={self.room_id},
                     created_at={self.created_at}>
                 """
 
@@ -115,7 +115,7 @@ class Approval(db.Model):
             approver_type_,
             publish_type_,
             recording_type_,
-            location,
+            room_id,
     ):
         approval = cls(
             approved_by_uid=approved_by_uid,
@@ -124,7 +124,7 @@ class Approval(db.Model):
             approver_type_=approver_type_,
             publish_type_=publish_type_,
             recording_type_=recording_type_,
-            location=location,
+            room_id=room_id,
         )
         db.session.add(approval)
         std_commit()
@@ -148,7 +148,7 @@ class Approval(db.Model):
             'sectionId': self.section_id,
             'termId': self.term_id,
             'approverType': self.approver_type,
-            'location': self.location,
+            'roomId': self.room_id,
             'publishType': self.publish_type,
             'publishTypeName': PUBLISH_TYPE_NAMES_PER_ID[self.publish_type],
             'recordingType': self.recording_type,

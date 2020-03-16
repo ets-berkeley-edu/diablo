@@ -1,3 +1,5 @@
+import Vue from 'vue'
+
 const state = {
   loading: undefined,
   screenReaderAlert: undefined
@@ -16,7 +18,11 @@ const mutations = {
 
 const actions = {
   loadingComplete: ({ commit }) => commit('loadingComplete'),
-  loadingStart: ({ commit }) => commit('loadingStart')
+  loadingStart: ({ commit }) => commit('loadingStart'),
+  setScreenReaderAlert: ({ commit }, alert) => {
+    commit('setScreenReaderAlert', '')
+    Vue.nextTick(() => commit('setScreenReaderAlert', alert))
+  }
 }
 
 export default {

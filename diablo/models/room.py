@@ -32,7 +32,8 @@ from sqlalchemy.dialects.postgresql import ARRAY
 class Room(db.Model):
     __tablename__ = 'rooms'
 
-    location = db.Column(db.String(255), nullable=False, primary_key=True)
+    id = db.Column(db.Integer, nullable=False, primary_key=True)  # noqa: A003
+    location = db.Column(db.String(255), nullable=False, unique=True)
     capabilities = db.Column(ARRAY(db.String(255)), nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.now)
 
@@ -46,6 +47,7 @@ class Room(db.Model):
 
     def __repr__(self):
         return f"""<Room
+                    id={self.id},
                     location={self.location},
                     capabilities={self.capabilities},
                     created_at={self.created_at}>

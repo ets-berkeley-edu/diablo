@@ -6,7 +6,6 @@
       :hide-default-footer="true"
       :items="showEligibleCoursesOnly ? courses.eligibleOnly : courses.all"
       :items-per-page="100"
-      :loading="loading"
       class="elevation-1"
     >
       <template v-slot:top>
@@ -76,12 +75,11 @@
         {text: 'Days', value: 'days', sortable: false},
         {text: 'Time', value: 'time', sortable: false}
       ],
-      loading: true,
       showEligibleCoursesOnly: false
     }),
     created() {
       this.courses = this.organizeMySections()
-      this.loading = false
+      this.$ready()
     },
     methods: {
       goApprove(sectionId) {
