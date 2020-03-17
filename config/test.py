@@ -25,6 +25,8 @@ ENHANCEMENTS, OR MODIFICATIONS.
 
 import os
 
+from tests.test_jobs.mock_jobs import increment_counter, reset_counter, turn_on
+
 # Base directory for the application (one level up from this config file).
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
@@ -40,6 +42,34 @@ DATA_LOCH_RDS_URI = 'postgres://diablo:diablo@localhost:5432/pazuzu_loch_test'
 INDEX_HTML = f'{BASE_DIR}/tests/static/test-index.html'
 
 LOGGING_LOCATION = 'STDOUT'
+
+SCHEDULER = {
+    'auto_start': False,
+    'interval_seconds': 0.5,
+    'jobs': [
+        {
+            'callable': turn_on,
+            'schedule': {
+                'type': 'seconds',
+                'value': 1,
+            },
+        },
+        {
+            'callable': increment_counter,
+            'schedule': {
+                'type': 'seconds',
+                'value': 1,
+            },
+        },
+        {
+            'callable': reset_counter,
+            'schedule': {
+                'type': 'day_at',
+                'value': '04:30',
+            },
+        },
+    ],
+}
 
 SQLALCHEMY_DATABASE_URI = 'postgres://diablo:diablo@localhost:5432/pazuzu_test'
 
