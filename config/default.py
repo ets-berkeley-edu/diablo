@@ -85,6 +85,12 @@ SALESFORCE_PASSWORD = ''
 SALESFORCE_TOKEN = ''
 SALESFORCE_USERNAME = ''
 
+SCHEDULER = {
+    'auto_start': False,
+    'interval_seconds': 60,
+    'jobs': [],
+}
+
 # Used to encrypt session cookie.
 SECRET_KEY = 'secret'
 

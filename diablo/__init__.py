@@ -26,6 +26,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 from os.path import dirname
 
 from decorator import decorator
+from diablo.jobs.scheduler import Scheduler
 from diablo.lib.util import get_args_dict
 from flask import current_app as app
 from flask_caching import Cache
@@ -38,6 +39,8 @@ __version__ = '0.1'
 cache = Cache()
 
 db = SQLAlchemy()
+
+job_scheduler = Scheduler()
 
 BASE_DIR = dirname(dirname(__file__))
 

@@ -23,26 +23,22 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-from diablo import cache, db, job_scheduler
-from diablo.configs import load_configs
-from diablo.logger import initialize_logger
-from diablo.routes import register_routes
-from flask import Flask
+import time
+
+from diablo.jobs.scheduler import Scheduler
+from flask import current_app as app
+from tests.test_jobs.mock_jobs import COUNTER, MOCK_STATE
 
 
-def create_app():
-    """Initialize app with configs."""
-    app = Flask(__name__.split('.')[0])
-    load_configs(app)
-    initialize_logger(app)
-    cache.init_app(app)
-    cache.clear()
-    db.init_app(app)
+class TestScheduler:
 
-    if app.config['SCHEDULER']['auto_start']:
-        job_scheduler.start(app)
+    def test_start_mock_jobs(self):
+        scheduler = Scheduler()
+        try:
+            scheduler.start(app)
+            time.sleep(2)
 
-    with app.app_context():
-        register_routes(app)
-
-    return app
+            assert COUNTER['value'] > 0
+            assert MOCK_STATE['value'] is True
+        finally:
+            scheduler.stop()
