@@ -47,33 +47,33 @@ def get_capture_enabled_rooms():
 
 @cachify('salesforce/all_courses', timeout=CACHE_TIMEOUT_MINUTES)
 def get_all_courses():
-    salesforce_term_id = app.config['salesforce.parent_term_id']
+    salesforce_term_id = app.config['SALESFORCE_PARENT_TERM_ID']
     result = _query('get_courses_per_term', {'salesforce_term_id': salesforce_term_id})
     courses = result['records']
-    app.logging.info(f'Salesforce returned {len(courses)} courses.')
+    app.logger.info(f'Salesforce returned {len(courses)} courses.')
     return courses
 
 
 @cachify('salesforce/get_all_eligible_courses', timeout=30)
 def get_all_eligible_courses():
-    salesforce_term_id = app.config['salesforce.parent_term_id']
+    salesforce_term_id = app.config['SALESFORCE_PARENT_TERM_ID']
     result = _query('get_eligible_courses_per_term', {'salesforce_term_id': salesforce_term_id})
     courses = result['records']
-    app.logging.info(f'Salesforce returned {len(courses)} eligible courses.')
+    app.logger.info(f'Salesforce returned {len(courses)} eligible courses.')
     return courses
 
 
 @cachify('salesforce/all_contacts', timeout=CACHE_TIMEOUT_MINUTES)
 def get_all_contacts():
     contacts = _query('get_all_contacts')['records']
-    app.logging.info(f'Salesforce returned {len(contacts)} contacts.')
+    app.logger.info(f'Salesforce returned {len(contacts)} contacts.')
     return contacts
 
 
 @cachify('salesforce/all_rooms', timeout=CACHE_TIMEOUT_MINUTES)
 def get_all_rooms():
     locations = _query('get_all_rooms')['records']
-    app.logging.info(f'Salesforce returned {len(locations)} locations.')
+    app.logger.info(f'Salesforce returned {len(locations)} locations.')
     return locations
 
 

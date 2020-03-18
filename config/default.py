@@ -27,6 +27,8 @@ import logging
 import os
 
 # Base directory for the application (one level up from this config file).
+from diablo.jobs.sample_jobs import HelloWorld
+
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
 CAS_SERVER = 'https://auth-test.berkeley.edu/cas/'
@@ -58,6 +60,24 @@ EDO_DB_USERNAME = ''
 # Directory to search for mock fixtures, if running in "test" or "demo" mode.
 FIXTURES_PATH = None
 
+JOB_MANAGER = {
+    'auto_start': True,
+    'seconds_between_pending_jobs_check': 60,
+    'jobs': [
+        {
+            'cls': HelloWorld,
+            'name': 'Hello cruel world.',
+            'args': {
+                'message': 'Every 5 minutes, I run.',
+            },
+            'schedule': {
+                'type': 'seconds',
+                'value': 300,
+            },
+        },
+    ],
+}
+
 # Minutes of inactivity before session cookie is destroyed
 INACTIVE_SESSION_LIFETIME = 20
 
@@ -84,12 +104,6 @@ SALESFORCE_PARENT_TERM_ID = ''
 SALESFORCE_PASSWORD = ''
 SALESFORCE_TOKEN = ''
 SALESFORCE_USERNAME = ''
-
-SCHEDULER = {
-    'auto_start': False,
-    'interval_seconds': 60,
-    'jobs': [],
-}
 
 # Used to encrypt session cookie.
 SECRET_KEY = 'secret'

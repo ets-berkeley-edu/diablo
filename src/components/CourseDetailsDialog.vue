@@ -30,9 +30,7 @@
               <li>Publish type: {{ approval.publishTypeName }}</li>
               <li>Recording type {{ approval.recordingTypeName }}</li>
             </ul>
-            {{ approval }}
           </div>
-          {{ course }}
         </v-card-text>
 
         <v-divider></v-divider>

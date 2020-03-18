@@ -23,17 +23,26 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-COUNTER = {'value': 0}
-MOCK_STATE = {'value': False}
+from diablo.jobs.background_job_manager import BackgroundJobError
 
 
-def turn_on():
-    MOCK_STATE['value'] = True
+class BaseJob:
 
+    def __init__(self, app_context):
+        self.app_context = app_context
+        self._name = None
 
-def increment_counter():
-    COUNTER['value'] += 1
+    def run_with_app_context(self, args=None):
+        with self.app_context():
+            self.run(args)
 
+    def run(self, args=None):
+        raise BackgroundJobError('Job must implement run()')
 
-def reset_counter():
-    COUNTER['value'] = 0
+    @property
+    def name(self):
+        return self._name
+
+    @name.setter
+    def name(self, new_name):
+        self._name = new_name

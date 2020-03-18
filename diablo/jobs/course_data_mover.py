@@ -27,19 +27,26 @@ import logging
 
 from diablo.externals.salesforce import bulk_upsert_contacts, bulk_upsert_courses, get_all_contacts, get_all_courses, \
     get_all_rooms
+from diablo.jobs.base_job import BaseJob
 from diablo.lib.salesforce_utils import get_salesforce_location_id, is_course_in_capture_enabled_room, \
     prepare_salesforce_contact_record, prepare_salesforce_course_record
 from diablo.merged.sis import get_course_and_instructors
 from flask import current_app as app
 
 
-class CourseDataMover:
+class CourseDataMover(BaseJob):
 
-    def __init__(self, term_id):
-        self.term_id = term_id
+    term_id = None
+    salesforce_locations = None
+    salesforce_ids_per_section_id = None
+    contact_ids_per_uid = None
+
+    def run(self, section_ids=None):
+        self.term_id = app.config['CURRENT_TERM_ID']
         self.salesforce_locations = get_all_rooms()
         self.salesforce_ids_per_section_id = _load_salesforce_ids_per_section_id()
         self.contact_ids_per_uid = _load_contact_ids_per_uid()
+
         logging.info(f"""
             Salesforce returned
             {len(self.salesforce_ids_per_section_id)} courses,
@@ -47,7 +54,6 @@ class CourseDataMover:
             {len(self.contact_ids_per_uid)} persons.
         """)
 
-    def run(self, section_ids=None):
         course_sections = get_course_and_instructors(self.term_id, section_ids)
         if section_ids:
             app.logger.info(f'CDM will only process section ids {", ".join(section_ids)}')

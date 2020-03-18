@@ -26,7 +26,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 from os.path import dirname
 
 from decorator import decorator
-from diablo.jobs.scheduler import Scheduler
+from diablo.jobs.background_job_manager import BackgroundJobManager
 from diablo.lib.util import get_args_dict
 from flask import current_app as app
 from flask_caching import Cache
@@ -40,7 +40,7 @@ cache = Cache()
 
 db = SQLAlchemy()
 
-job_scheduler = Scheduler()
+background_job_manager = BackgroundJobManager()
 
 BASE_DIR = dirname(dirname(__file__))
 
@@ -86,5 +86,6 @@ def cachify(key_pattern, timeout=1440):
 def skip_when_pytest():
     @decorator
     def _skip_when_pytest(func, *args, **kw):
-        return None if app.config['DIABLO_ENV'] == 'test' else func(*args, **kw)
+        return None
+        # return None if app.config['DIABLO_ENV'] == 'test' else func(*args, **kw)
     return _skip_when_pytest
