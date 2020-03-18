@@ -29,11 +29,12 @@ import time
 import schedule
 
 
-class Scheduler:
+class BackgroundJobManager:
 
     def __init__(self):
         self.cease_continuous_run = threading.Event()
         self.continuous_thread = None
+        self._job_instances = []
 
     def start(self, app):
         """Continuously run, executing pending jobs per time interval.
@@ -42,42 +43,72 @@ class Scheduler:
         should run every minute and yet SCHEDULER_INTERVAL is set to one hour, then your job won't run 60 times at
         each interval. It will run once.
         """
-        scheduler_config = app.config['SCHEDULER']
-        interval = scheduler_config['interval_seconds']
-        jobs = scheduler_config['jobs']
+        class JobRunnerThread(threading.Thread):
 
-        if jobs:
-            for job in jobs:
-                callable_ = job['callable']
-                type_ = job['schedule']['type']
-                value = job['schedule']['value']
+            active = False
 
+            @classmethod
+            def run(cls):
+                cls.active = True
+                while not self.cease_continuous_run.is_set():
+                    schedule.run_pending()
+                    time.sleep(interval)
+                schedule.clear()
+                cls.active = False
+
+        if JobRunnerThread.active:
+            return
+
+        scheduler_config = app.config['JOB_MANAGER']
+        interval = scheduler_config['seconds_between_pending_jobs_check']
+        job_configs = scheduler_config['jobs']
+        app.logger.info(f"""
+
+            Starting background job manager.
+            Seconds between pending jobs check = {interval}
+            Jobs:
+                {job_configs}
+
+            """)
+        if job_configs:
+            for job_config in job_configs:
+                if job_config.get('disabled', False) is True:
+                    continue
+
+                job = job_config['cls'](app.app_context)
+                job.name = job_config['name']
+
+                self._job_instances.append(job)
+
+                args = job_config.get('args', [])
+                type_ = job_config['schedule']['type']
+                value = job_config['schedule']['value']
+
+                run_with_context = job.run_with_app_context
                 if type_ == 'minutes':
-                    schedule.every(value).minutes.do(callable_)
+                    schedule.every(value).minutes.do(run_with_context, args)
                 elif type_ == 'seconds':
-                    schedule.every(value).seconds.do(callable_)
+                    schedule.every(value).seconds.do(run_with_context, args)
                 elif type_ == 'day_at':
-                    schedule.every().day.at(value).do(callable_)
+                    schedule.every().day.at(value).do(run_with_context, args)
                 else:
                     raise BackgroundJobError(f'Unrecognized schedule type: {type_}')
 
-            class ScheduleThread(threading.Thread):
-                @classmethod
-                def run(cls):
-                    while not self.cease_continuous_run.is_set():
-                        schedule.run_pending()
-                        time.sleep(interval)
-                    schedule.clear()
-
-            self.continuous_thread = ScheduleThread()
+            self.continuous_thread = JobRunnerThread(daemon=True)
             self.continuous_thread.start()
-
         else:
             app.logger.warn('No jobs registered. Scheduler will do nothing.')
 
     def stop(self):
         """Cease the scheduler thread. Stops everything."""
+        from flask import current_app as app
+
+        app.logger.info(f'Stopping job-runner thread')
         self.cease_continuous_run.set()
+
+    @property
+    def job_instances(self):
+        return self._job_instances
 
 
 class BackgroundJobError(Exception):

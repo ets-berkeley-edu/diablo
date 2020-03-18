@@ -23,26 +23,32 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-from diablo import background_job_manager, cache, db
-from diablo.configs import load_configs
-from diablo.logger import initialize_logger
-from diablo.routes import register_routes
-from flask import Flask
+import time
+
+from diablo.jobs.background_job_manager import BackgroundJobManager
+from flask import current_app as app
 
 
-def create_app():
-    """Initialize app with configs."""
-    app = Flask(__name__.split('.')[0])
-    load_configs(app)
-    initialize_logger(app)
-    cache.init_app(app)
-    cache.clear()
-    db.init_app(app)
+class TestBackgroundJobManager:
 
-    if app.config['JOB_MANAGER']['auto_start']:
-        background_job_manager.start(app)
+    def test_start_mock_jobs(self):
+        job_manager = BackgroundJobManager()
+        try:
+            job_manager.start(app)
+            # The JOB_MANAGER config has four (4) jobs but one is disabled. So, only three are loaded.
+            assert len(job_manager.job_instances) == 3
+            time.sleep(2)
 
-    with app.app_context():
-        register_routes(app)
+            for job_instance in job_manager.job_instances:
+                if job_instance.name == 'This one goes to 11':
+                    assert job_instance.level == 11
+                elif job_instance.name == 'Rock and Roll has got to go!':
+                    # Property not yet set
+                    assert job_instance.level is None
+                elif job_instance.name == 'Turn on, tune in, drop out':
+                    assert job_instance.is_light_on is True
+                else:
+                    assert False
 
-    return app
+        finally:
+            job_manager.stop()

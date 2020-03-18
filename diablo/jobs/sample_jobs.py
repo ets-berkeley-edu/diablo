@@ -23,22 +23,38 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-import time
-
-from diablo.jobs.scheduler import Scheduler
+from diablo.jobs.base_job import BaseJob
 from flask import current_app as app
-from tests.test_jobs.mock_jobs import COUNTER, MOCK_STATE
 
 
-class TestScheduler:
+class Volume(BaseJob):
 
-    def test_start_mock_jobs(self):
-        scheduler = Scheduler()
-        try:
-            scheduler.start(app)
-            time.sleep(2)
+    _level = None
 
-            assert COUNTER['value'] > 0
-            assert MOCK_STATE['value'] is True
-        finally:
-            scheduler.stop()
+    def run(self, args=None):
+        new_level = args['level']
+        app.logger.info(f'Volume will be set to {new_level}')
+        self._level = new_level
+
+    @property
+    def level(self):
+        return self._level
+
+
+class LightSwitch(BaseJob):
+
+    _is_light_on = False
+
+    def run(self, args=None):
+        self._is_light_on = True
+        app.logger.info('Light is now on.')
+
+    @property
+    def is_light_on(self):
+        return self._is_light_on
+
+
+class HelloWorld(BaseJob):
+
+    def run(self, args=None):
+        app.logger.info(f'Hello World! {args["message"]}')

@@ -25,7 +25,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 
 import os
 
-from tests.test_jobs.mock_jobs import increment_counter, reset_counter, turn_on
+from diablo.jobs.sample_jobs import HelloWorld, LightSwitch, Volume
 
 # Base directory for the application (one level up from this config file).
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
@@ -39,37 +39,55 @@ CURRENT_TERM_ID = '2202'
 
 DATA_LOCH_RDS_URI = 'postgres://diablo:diablo@localhost:5432/pazuzu_loch_test'
 
-INDEX_HTML = f'{BASE_DIR}/tests/static/test-index.html'
-
-LOGGING_LOCATION = 'STDOUT'
-
-SCHEDULER = {
+JOB_MANAGER = {
     'auto_start': False,
-    'interval_seconds': 0.5,
+    'seconds_between_pending_jobs_check': 0.5,
     'jobs': [
         {
-            'callable': turn_on,
+            'cls': Volume,
+            'name': 'This one goes to 11',
+            'args': {
+                'level': 11,
+            },
             'schedule': {
                 'type': 'seconds',
                 'value': 1,
             },
         },
         {
-            'callable': increment_counter,
-            'schedule': {
-                'type': 'seconds',
-                'value': 1,
+            'cls': Volume,
+            'name': 'Rock and Roll has got to go!',
+            'args': {
+                'level': 0,
             },
-        },
-        {
-            'callable': reset_counter,
             'schedule': {
                 'type': 'day_at',
                 'value': '04:30',
             },
         },
+        {
+            'cls': HelloWorld,
+            'disabled': True,
+            'name': 'This job is DISABLED',
+            'schedule': {
+                'type': 'seconds',
+                'value': '1',
+            },
+        },
+        {
+            'cls': LightSwitch,
+            'name': 'Turn on, tune in, drop out',
+            'schedule': {
+                'type': 'seconds',
+                'value': 1,
+            },
+        },
     ],
 }
+
+INDEX_HTML = f'{BASE_DIR}/tests/static/test-index.html'
+
+LOGGING_LOCATION = 'STDOUT'
 
 SQLALCHEMY_DATABASE_URI = 'postgres://diablo:diablo@localhost:5432/pazuzu_test'
 
