@@ -84,6 +84,11 @@ INACTIVE_SESSION_LIFETIME = 20
 # These "INDEX_HTML" defaults are good in diablo-[dev|qa|prod]. See development.py for local configs.
 INDEX_HTML = 'dist/static/index.html'
 
+KALTURA_ADMIN_SECRET = 'secret'
+KALTURA_UNIQUE_USER_ID = 'user_id'
+KALTURA_PARTNER_ID = '0000000'
+KALTURA_EXPIRY = 0
+
 LAST_DAY_OF_INSTRUCTION = 'YYYY-MM-DD'
 
 LDAP_HOST = 'ldap-test.berkeley.edu'

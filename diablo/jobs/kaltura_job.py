@@ -23,34 +23,10 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-from diablo import db
-from diablo.externals import data_loch
-from diablo.externals.kaltura import Kaltura
-from diablo.externals.salesforce import test_salesforce_connection
-from diablo.lib.http import tolerant_jsonify
-from flask import current_app as app
-from sqlalchemy.exc import SQLAlchemyError
+from diablo.jobs.base_job import BaseJob
 
 
-@app.route('/api/ping')
-def app_status():
-    def db_status():
-        try:
-            db.session.execute('SELECT 1')
-            return True
-        except SQLAlchemyError:
-            app.logger.exception('Database connection error')
-            return False
+class KalturaJob(BaseJob):
 
-    def data_loch_status():
-        rows = data_loch.safe_execute_rds('SELECT 1')
-        return rows is not None
-
-    resp = {
-        'app': True,
-        'data_loch': data_loch_status(),
-        'db': db_status(),
-        'kaltura': Kaltura().ping(),
-        'salesforce': test_salesforce_connection(),
-    }
-    return tolerant_jsonify(resp)
+    def run(self, args=None):
+        pass

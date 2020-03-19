@@ -5,6 +5,7 @@ Flask-Cors==3.0.8
 Flask-Login==0.4.1
 Flask-SQLAlchemy==2.4.1
 Flask==1.1.1
+KalturaApiClient==15.19.0
 ldap3==2.6
 pprintpp==0.4.0
 psycopg2==2.8.3
