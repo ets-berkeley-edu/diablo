@@ -23,34 +23,36 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-from diablo import db
-from diablo.externals import data_loch
-from diablo.externals.kaltura import Kaltura
-from diablo.externals.salesforce import test_salesforce_connection
-from diablo.lib.http import tolerant_jsonify
 from flask import current_app as app
-from sqlalchemy.exc import SQLAlchemyError
+from KalturaClient import KalturaClient, KalturaConfiguration
+from KalturaClient.Plugins.Core import KalturaFilterPager, KalturaMediaEntryFilter
+from KalturaClient.Plugins.Schedule import KalturaSessionType
 
 
-@app.route('/api/ping')
-def app_status():
-    def db_status():
-        try:
-            db.session.execute('SELECT 1')
-            return True
-        except SQLAlchemyError:
-            app.logger.exception('Database connection error')
-            return False
+class Kaltura:
 
-    def data_loch_status():
-        rows = data_loch.safe_execute_rds('SELECT 1')
-        return rows is not None
+    client = None
 
-    resp = {
-        'app': True,
-        'data_loch': data_loch_status(),
-        'db': db_status(),
-        'kaltura': Kaltura().ping(),
-        'salesforce': test_salesforce_connection(),
-    }
-    return tolerant_jsonify(resp)
+    def __init__(self):
+        admin_secret = app.config['KALTURA_ADMIN_SECRET']
+        unique_user_id = app.config['KALTURA_UNIQUE_USER_ID']
+        partner_id = app.config['KALTURA_PARTNER_ID']
+        expiry = app.config['KALTURA_EXPIRY']
+
+        config = KalturaConfiguration()
+        self.client = KalturaClient(config)
+        ks = self.client.session.start(
+            admin_secret,
+            unique_user_id,
+            KalturaSessionType.ADMIN,
+            partner_id,
+            expiry,
+            'appId:appName-appDomain',
+        )
+        self.client.setKs(ks)
+
+    def ping(self):
+        filter_ = KalturaMediaEntryFilter()
+        filter_.nameLike = 'the'
+        result = self.client.media.list(filter_, KalturaFilterPager(pageSize=1))
+        return result.totalCount is not None
