@@ -3,7 +3,7 @@
     <div class="pl-3">
       <h2><v-icon class="pb-3" large>mdi-auto-fix</v-icon> The Ouija Board</h2>
     </div>
-    <v-card>
+    <v-card flat outlined :class="overrideVuetify($vuetify.theme, 'v-card--outlined')">
       <v-card-title>
         Courses
         <v-spacer></v-spacer>
@@ -33,9 +33,6 @@
               </td>
             </tr>
             <tr v-for="item in items" :key="item.name">
-              <td>
-                <CourseDetailsDialog :course="item" />
-              </td>
               <td class="text-no-wrap">{{ item.sectionId }}</td>
               <td class="text-no-wrap">{{ item.room.location }}</td>
               <td class="text-no-wrap">{{ item.meetingDays.join(',') }}</td>
@@ -64,13 +61,11 @@
 </template>
 
 <script>
-  import CourseDetailsDialog from '@/components/CourseDetailsDialog'
   import Utils from '@/mixins/Utils'
   import {getTermSummary} from '@/api/report'
 
   export default {
     name: 'Ouija',
-    components: {CourseDetailsDialog},
     mixins: [Utils],
     data: () => ({
       courses: undefined,

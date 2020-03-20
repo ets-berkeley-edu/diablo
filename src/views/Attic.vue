@@ -22,7 +22,3 @@
     name: 'Attic'
   }
 </script>
-
-<style scoped>
-
-</style>
