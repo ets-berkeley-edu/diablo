@@ -53,6 +53,6 @@ class Kaltura:
 
     def ping(self):
         filter_ = KalturaMediaEntryFilter()
-        filter_.nameLike = 'the'
+        filter_.nameLike = 'Love is the drug I\'m thinking of'
         result = self.client.media.list(filter_, KalturaFilterPager(pageSize=1))
         return result.totalCount is not None

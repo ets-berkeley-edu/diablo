@@ -1,7 +1,17 @@
-#app .override-light_v-card--outlined {
+#theme-dark .v-card--outlined {
+  border-color: #378dc5;
+}
+
+#theme-light .v-card--outlined {
   border-color: #979797;
 }
 
-#app .override-dark_v-card--outlined {
-  border-color: #378dc5;
+#theme-dark td,
+#theme-dark th {
+  border-bottom-color: #378dc5;
+}
+
+#theme-light td,
+#theme-light th {
+  border-bottom-color: #979797;
 }

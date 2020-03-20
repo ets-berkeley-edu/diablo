@@ -5,9 +5,11 @@
     </div>
     <div class="pt-6">
       <v-data-table
+        hide-default-footer
         :headers="headers"
         :items="rooms"
         :items-per-page="100"
+        outlined
         class="elevation-1"
       ></v-data-table>
     </div>
@@ -15,7 +17,7 @@
 </template>
 
 <script>
-  import {getTermSummary} from '@/api/report'
+  import {getAllRooms} from '@/api/report'
 
   export default {
     name: 'Rooms',
@@ -28,7 +30,7 @@
       rooms: undefined
     }),
     created() {
-      getTermSummary().then(data => {
+      getAllRooms().then(data => {
         this.rooms = data
         this.$ready()
       })
