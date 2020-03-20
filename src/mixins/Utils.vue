@@ -34,6 +34,7 @@
           eligibleOnly
         }
       },
+      overrideVuetify: (theme, vClass) => theme.dark ? `override-dark_${vClass}` : `override-light_${vClass}`,
       putFocusNextTick(id, cssSelector = null) {
         this.$nextTick(() => {
           let counter = 0

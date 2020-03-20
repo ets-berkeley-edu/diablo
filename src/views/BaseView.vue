@@ -3,7 +3,7 @@
     <v-row>
       <v-navigation-drawer
         permanent
-        color="light-blue"
+        color="nav-background"
         :expand-on-hover="true"
         :mini-variant="true"
         :right="false"
@@ -33,16 +33,24 @@
             @click="toRoute(item.path)"
           >
             <v-list-item-icon>
-              <v-icon>{{ item.icon }}</v-icon>
+              <v-icon color="icon-nav-default">{{ item.icon }}</v-icon>
             </v-list-item-icon>
             <v-list-item-content>
               <v-list-item-title>{{ item.title }}</v-list-item-title>
             </v-list-item-content>
           </v-list-item>
+          <v-list-item @click="$vuetify.theme.dark = !$vuetify.theme.dark">
+            <v-list-item-icon>
+              <v-icon color="icon-nav-dark-mode">mdi-lightbulb</v-icon>
+            </v-list-item-icon>
+            <v-list-item-content>
+              <v-list-item-title class="sr-only">Turn on {{ $vuetify.theme.dark ? 'light' : 'dark' }} mode</v-list-item-title>
+            </v-list-item-content>
+          </v-list-item>
         </v-list>
       </v-navigation-drawer>
     </v-row>
-    <v-row class="ma-3 ml-12 mb-12 pl-4" no-gutters>
+    <v-row color="body-background" class="ma-3 ml-12 mb-12 pl-4" no-gutters>
       <v-col v-if="loading">
         <div class="text-center ma-12">
           <v-progress-circular
@@ -89,6 +97,7 @@
         this.navItems = [
           { title: 'Ouija Board', icon: 'mdi-auto-fix', path: '/ouija' },
           { title: 'Rooms', icon: 'mdi-domain', path: '/rooms' },
+          { title: 'Course Changes', icon: 'swap-horizontal', path: '/changes' },
           { title: 'About', icon: 'mdi-help-box' }
         ]
       } else {

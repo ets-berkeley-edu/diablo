@@ -2,7 +2,7 @@
   <v-app>
     <v-app-bar
       app
-      color="primary"
+      color="header-background"
       dark
     >
       <div>
@@ -20,9 +20,6 @@
           </v-btn>
         </template>
         <v-list>
-          <v-list-item @click="goAttic">
-            <v-list-item-title>The Attic</v-list-item-title>
-          </v-list-item>
           <v-list-item
             :href="`mailto:${$config.supportEmailAddress}`"
             target="_blank"
@@ -42,18 +39,17 @@
 </template>
 
 <script>
-  import router from '@/router'
   import { getCasLogoutUrl } from '@/api/auth'
 
   export default {
     name: 'App',
     methods: {
-      goAttic: () => router.push({ path: '/attic' }),
       logOut: () =>getCasLogoutUrl().then(data => window.location.href = data.casLogoutUrl)
     }
   }
 </script>
 
 <style>
-@import './assets/styles/diablo-global.css';
+  @import './assets/styles/diablo-global.css';
+  @import './assets/styles/vuetify-overrides.css';
 </style>

@@ -1,0 +1,7 @@
+#app .override-light_v-card--outlined {
+  border-color: #979797;
+}
+
+#app .override-dark_v-card--outlined {
+  border-color: #378dc5;
+}

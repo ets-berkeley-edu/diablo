@@ -3,6 +3,7 @@ import Approve from '@/views/Approve.vue'
 import Attic from '@/views/Attic.vue'
 import auth from './auth'
 import BaseView from '@/views/BaseView.vue'
+import CourseChanges from '@/views/CourseChanges.vue'
 import Error from '@/views/Error.vue'
 import Home from '@/views/Home.vue'
 import Login from '@/views/Login.vue'
@@ -79,6 +80,13 @@ const router = new Router({
       beforeEnter: auth.requiresAdmin,
       component: BaseView,
       children: [
+        {
+          path: '/changes',
+          component: CourseChanges,
+          meta: {
+            title: 'Course Changes'
+          }
+        },
         {
           path: '/ouija',
           component: Ouija,
