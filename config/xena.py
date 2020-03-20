@@ -33,6 +33,16 @@ INDEX_HTML = f'{BASE_DIR}/tests/static/test-index.html'
 
 LOGGING_LEVEL = logging.INFO
 
+SALESFORCE_BASE_URL = 'https://test.salesforce.com'
+SALESFORCE_PAUSE = 5
+
 SQLALCHEMY_DATABASE_URI = 'postgres://diablo:diablo@localhost:5432/diablo_test'
 
 TESTING = True
+
+TEST_DATA_CDM = f'{BASE_DIR}/xena/fixtures/test-courses-local.json'
+
+TIMEOUT_SHORT = 8
+TIMEOUT_LONG = 30
+
+XENA_BROWSER = 'chrome'
