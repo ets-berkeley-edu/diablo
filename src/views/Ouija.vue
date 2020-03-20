@@ -3,7 +3,7 @@
     <div class="pl-3">
       <h2><v-icon class="pb-3" large>mdi-auto-fix</v-icon> The Ouija Board</h2>
     </div>
-    <v-card flat outlined :class="overrideVuetify($vuetify.theme, 'v-card--outlined')">
+    <v-card outlined class="elevation-1">
       <v-card-title>
         Courses
         <v-spacer></v-spacer>
@@ -16,6 +16,7 @@
         ></v-text-field>
       </v-card-title>
       <v-data-table
+        hide-default-footer
         :headers="headers"
         :items="courses"
         :search="search"
@@ -38,14 +39,14 @@
               <td class="text-no-wrap">{{ item.meetingDays.join(',') }}</td>
               <td class="text-no-wrap">{{ item.meetingStartTime }} - {{ item.meetingEndTime }}</td>
               <td>
-                <span v-for="instructor in item.instructors" :key="instructor.uid">
+                <div v-for="instructor in item.instructors" :key="instructor.uid">
                   <a
                     :id="`instructor-${instructor.uid}-mailto`"
                     :href="`mailto:${instructor.campusEmail}`"
                     target="_blank">
                     {{ instructor.name }}
-                  </a>
-                </span>
+                  </a> ({{ instructor.uid }})
+                </div>
               </td>
               <td>
                 <span>

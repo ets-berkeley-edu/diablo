@@ -106,10 +106,14 @@ def _normalize_rows(rows):
 
     json_ = []
     for section_id, instructor_uids in instructor_uids_per_section_id.items():
+        instructors = []
+        for uid in sorted(instructor_uids):
+            if uid not in [i['uid'] for i in instructors]:
+                instructors.append(get_calnet_user_for_uid(app, uid))
         json_.append({
             **sections_per_id[section_id],
             **{
-                'instructors': [get_calnet_user_for_uid(app, uid) for uid in sorted(instructor_uids)],
+                'instructors': instructors,
             },
         })
     return json_

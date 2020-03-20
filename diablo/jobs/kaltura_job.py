@@ -24,9 +24,10 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 
 from diablo.jobs.base_job import BaseJob
+from KalturaClient.Plugins.Schedule import KalturaScheduleEvent
 
 
 class KalturaJob(BaseJob):
 
     def run(self, args=None):
-        pass
+        KalturaScheduleEvent()

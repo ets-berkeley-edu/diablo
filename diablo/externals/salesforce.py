@@ -34,15 +34,8 @@ CACHE_TIMEOUT_MINUTES = 30
 @cachify('salesforce/capture_enabled_rooms', timeout=CACHE_TIMEOUT_MINUTES)
 def get_capture_enabled_rooms():
     with open(f'{BASE_DIR}/diablo/soql/get_all_enabled_rooms.soql', 'r') as file:
-        rooms = []
         result = _get_client().query(file.read())
-        for row in result['records']:
-            rooms.append({
-                'building': _translate_salesforce_building(row['Building__c']),
-                'roomNumber': row['Room_Number_Text__c'],
-                'capabilities': row['Recording_Capabilities__c'],
-            })
-        return rooms
+        return [_room_to_json(room) for room in result['records']]
 
 
 @cachify('salesforce/all_courses', timeout=CACHE_TIMEOUT_MINUTES)
@@ -72,9 +65,8 @@ def get_all_contacts():
 
 @cachify('salesforce/all_rooms', timeout=CACHE_TIMEOUT_MINUTES)
 def get_all_rooms():
-    locations = _query('get_all_rooms')['records']
-    app.logger.info(f'Salesforce returned {len(locations)} locations.')
-    return locations
+    result = _query('get_all_rooms')
+    return [_room_to_json(room) for room in result['records']]
 
 
 @skip_when_pytest()
@@ -118,3 +110,11 @@ def _query(soql_query_name, args=None):
         for key, value in args.items():
             soql = soql.replace(f':{key}', value)
     return _get_client().query(soql)
+
+
+def _room_to_json(room):
+    return {
+        'building': _translate_salesforce_building(room['Building__c']),
+        'roomNumber': room['Room_Number_Text__c'],
+        'capabilities': room['Recording_Capabilities__c'],
+    }
