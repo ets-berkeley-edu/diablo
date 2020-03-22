@@ -9,7 +9,9 @@ import Home from '@/views/Home.vue'
 import Login from '@/views/Login.vue'
 import NotFound from '@/views/NotFound.vue'
 import Ouija from '@/views/Ouija.vue'
+import Room from '@/views/Room.vue'
 import Rooms from '@/views/Rooms.vue'
+import User from '@/views/User.vue'
 import Router from 'vue-router'
 import Vue from 'vue'
 
@@ -95,10 +97,24 @@ const router = new Router({
           }
         },
         {
+          path: '/room/:id',
+          component: Room,
+          meta: {
+            title: 'Room'
+          }
+        },
+        {
           path: '/rooms',
           component: Rooms,
           meta: {
             title: 'Rooms'
+          }
+        },
+        {
+          path: '/user/:uid',
+          component: User,
+          meta: {
+            title: 'User'
           }
         }
       ]

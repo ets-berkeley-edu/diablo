@@ -25,8 +25,6 @@ ENHANCEMENTS, OR MODIFICATIONS.
 
 import os
 
-from diablo.jobs.sample_jobs import HelloWorld, LightSwitch, Volume
-
 # Base directory for the application (one level up from this config file).
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
@@ -38,52 +36,6 @@ AWS_APP_ROLE_ARN = 'arn:aws:iam::123456789012:role/test-role'
 CURRENT_TERM_ID = '2202'
 
 DATA_LOCH_RDS_URI = 'postgres://diablo:diablo@localhost:5432/pazuzu_loch_test'
-
-JOB_MANAGER = {
-    'auto_start': False,
-    'seconds_between_pending_jobs_check': 0.5,
-    'jobs': [
-        {
-            'cls': Volume,
-            'name': 'This one goes to 11',
-            'args': {
-                'level': 11,
-            },
-            'schedule': {
-                'type': 'seconds',
-                'value': 1,
-            },
-        },
-        {
-            'cls': Volume,
-            'name': 'Rock and Roll has got to go!',
-            'args': {
-                'level': 0,
-            },
-            'schedule': {
-                'type': 'day_at',
-                'value': '04:30',
-            },
-        },
-        {
-            'cls': HelloWorld,
-            'disabled': True,
-            'name': 'This job is DISABLED',
-            'schedule': {
-                'type': 'seconds',
-                'value': '1',
-            },
-        },
-        {
-            'cls': LightSwitch,
-            'name': 'Turn on, tune in, drop out',
-            'schedule': {
-                'type': 'seconds',
-                'value': 1,
-            },
-        },
-    ],
-}
 
 INDEX_HTML = f'{BASE_DIR}/tests/static/test-index.html'
 

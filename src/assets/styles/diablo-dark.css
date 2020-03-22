@@ -1,0 +1,20 @@
+#dark a {
+  color: #f04a00;
+}
+
+#dark a:hover {
+  color: #ff8900;
+}
+
+#dark a:active {
+  color: #b83900;
+}
+
+#dark td,
+#dark th {
+  border-bottom-color: #378dc5;
+}
+
+#dark .v-card--outlined {
+  border-color: #378dc5;
+}

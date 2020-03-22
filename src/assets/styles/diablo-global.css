@@ -1,15 +1,4 @@
 a {
-  color: #f04a00;
-  text-decoration: none !important;
-}
-
-a:hover {
-  color: #ff8900;
-  text-decoration: none !important;
-}
-
-a:active {
-  color: #b83900;
   text-decoration: none !important;
 }
 

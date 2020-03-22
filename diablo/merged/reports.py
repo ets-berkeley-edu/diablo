@@ -29,7 +29,7 @@ import logging
 
 from diablo import BASE_DIR
 from diablo.externals.edo_db import get_edo_db_courses, get_edo_db_instructors_per_section_id
-from diablo.externals.salesforce import get_all_contacts, get_all_courses, get_all_rooms
+from diablo.externals.salesforce import get_all_contacts, get_all_courses, get_all_salesforce_rooms
 from diablo.lib.salesforce_utils import convert_military_time, days_of_week_for_salesforce, \
     get_uids_of_salesforce_contacts, is_course_in_capture_enabled_room
 from flask import current_app as app
@@ -46,7 +46,7 @@ def verify_salesforce_data():
     )
     salesforce_contacts_per_id = dict((p['Id'], p) for p in get_all_contacts())
     salesforce_courses_per_section_id = dict((int(c['CCN__c']), c) for c in get_all_courses())
-    salesforce_locations_per_id = dict((r['Id'], r) for r in get_all_rooms())
+    salesforce_locations_per_id = dict((r['Id'], r) for r in get_all_salesforce_rooms())
 
     path_to_stale_data_report = _write_csv_report(
         'stale-data-in-salesforce-course-data',

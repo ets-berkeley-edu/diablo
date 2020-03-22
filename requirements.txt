@@ -8,7 +8,7 @@ Flask==1.1.1
 KalturaApiClient==15.19.0
 ldap3==2.7
 pprintpp==0.4.0
-psycopg2==2.8.4
+psycopg2-binary==2.8.4
 python-dateutil==2.8.1
 requests==2.23.0
 schedule==0.6.0

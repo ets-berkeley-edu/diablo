@@ -72,7 +72,7 @@ class BackgroundJobManager:
             """)
         if job_configs:
             for job_config in job_configs:
-                if job_config.get('disabled', False) is True:
+                if job_config.get('disable', False) is True:
                     continue
 
                 job = job_config['cls'](app.app_context)

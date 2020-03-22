@@ -4,7 +4,7 @@ BEGIN;
 -- Register UID as Diablo admin
 --
 -- USAGE:
---   psql ... -v uid=123456 -f scripts/db/add_admin_user.sql
+--   psql ... -v uid=1022796 -f scripts/db/add_admin_user.sql
 --
 
 -- Create admin user

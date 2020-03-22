@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div v-if="!loading">
     <h2>Your {{ $config.currentTermName }} courses</h2>
     <v-data-table
       :headers="headers"
@@ -31,7 +31,7 @@
         <tbody>
           <tr v-for="item in items" :key="item.name">
             <td>
-              <div v-if="$_.size(item.room.capabilities)">
+              <div v-if="$_.size(item.room.captureOptions)">
                 <v-btn
                   :id="`approve-${item.sectionId}`"
                   :aria-label="`Approve ${item.name} up for Course Capture.`"
@@ -58,12 +58,13 @@
 </template>
 
 <script>
+  import Context from '@/mixins/Context'
   import Utils from '@/mixins/Utils'
   import router from '@/router'
 
   export default {
     name: 'Home',
-    mixins: [Utils],
+    mixins: [Context, Utils],
     data: () => ({
       courses: undefined,
       headers: [
@@ -78,7 +79,25 @@
       showEligibleCoursesOnly: false
     }),
     created() {
-      this.courses = this.organizeMySections()
+      this.courses = {
+        all: [],
+        eligibleOnly: []
+      }
+      this.$_.each(this.$currentUser.courses, s => {
+        let course = {
+          name: `${s.courseName}, ${s.instructionFormat} ${s.sectionNum}`,
+          days: s.meetingDays ? this.$_.join(s.meetingDays, ', ') : undefined,
+          instructors: this.oxfordJoin(this.$_.map(s.instructors, 'name')),
+          room: s.room,
+          sectionId: s.sectionId,
+          time: s.meetingStartTime ? `${s.meetingStartTime} - ${s.meetingEndTime}` : undefined,
+          title: s.courseTitle
+        }
+        this.courses['all'].push(course)
+        if (s.room.captureOptions.length) {
+          this.courses['eligibleOnly'].push(course)
+        }
+      })
       this.$ready()
     },
     methods: {

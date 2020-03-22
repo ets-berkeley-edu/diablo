@@ -1,6 +1,6 @@
 <template>
-  <div>
-    <div class="pl-3">
+  <div v-if="!loading">
+    <div class="pb-3">
       <h2><v-icon class="pb-3" large>mdi-auto-fix</v-icon> The Ouija Board</h2>
     </div>
     <v-card outlined class="elevation-1">
@@ -34,18 +34,16 @@
               </td>
             </tr>
             <tr v-for="item in items" :key="item.name">
+              <td class="text-no-wrap">{{ item.courseName }}</td>
               <td class="text-no-wrap">{{ item.sectionId }}</td>
               <td class="text-no-wrap">{{ item.room.location }}</td>
               <td class="text-no-wrap">{{ item.meetingDays.join(',') }}</td>
               <td class="text-no-wrap">{{ item.meetingStartTime }} - {{ item.meetingEndTime }}</td>
               <td>
                 <div v-for="instructor in item.instructors" :key="instructor.uid">
-                  <a
-                    :id="`instructor-${instructor.uid}-mailto`"
-                    :href="`mailto:${instructor.campusEmail}`"
-                    target="_blank">
+                  <router-link :id="`instructor-${instructor.uid}-mailto`" :to="`/user/${instructor.uid}`">
                     {{ instructor.name }}
-                  </a> ({{ instructor.uid }})
+                  </router-link> ({{ instructor.uid }})
                 </div>
               </td>
               <td>
@@ -62,12 +60,13 @@
 </template>
 
 <script>
+  import Context from '@/mixins/Context'
   import Utils from '@/mixins/Utils'
   import {getTermSummary} from '@/api/report'
 
   export default {
     name: 'Ouija',
-    mixins: [Utils],
+    mixins: [Context, Utils],
     data: () => ({
       courses: undefined,
       search: '',

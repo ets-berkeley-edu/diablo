@@ -115,7 +115,7 @@ def days_of_week_for_salesforce(edo_db_days):
 
 
 def is_course_in_capture_enabled_room(edo_db_course, salesforce_locations):
-    locations = list(filter(lambda r: r['Recording_Capabilities__c'], salesforce_locations))
+    locations = list(filter(lambda r: r['capability'], salesforce_locations))
     capture_enabled_location_names = dict((normalize_salesforce_location(r), r) for r in locations)
     return _normalize_edo_db_location(edo_db_course) in capture_enabled_location_names
 
@@ -128,7 +128,7 @@ def _normalize_edo_db_location(edo_db_course):
 
 
 def normalize_salesforce_location(record):
-    location_name = f'{record["Building__c"]} {record["Room_Number_Text__c"]}'
+    location_name = f'{record["building"]} {record["roomNumber"]}'
     return ''.join(location_name.split()).lower()
 
 

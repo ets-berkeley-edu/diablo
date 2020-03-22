@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div v-if="!loading">
     <h2>The Attic</h2>
     {{ $route.name }}
     <div class="mr-3">
@@ -18,7 +18,13 @@
 </template>
 
 <script>
+  import Context from '@/mixins/Context'
+
   export default {
-    name: 'Attic'
+    name: 'Attic',
+    mixins: [Context],
+    created() {
+      this.$ready()
+    }
   }
 </script>

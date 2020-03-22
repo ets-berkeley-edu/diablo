@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div v-if="!loading">
     <v-container fluid>
       <v-row class="pl-3">
         <h2>{{ pageTitle }}</h2>
@@ -15,7 +15,15 @@
                 <v-icon>mdi-school-outline</v-icon>
               </v-col>
               <v-col>
-                {{ oxfordJoin($_.map(section.instructors, 'name')) }}
+                <span v-if="$currentUser.isAdmin">
+                  <span v-for="instructor in section.instructors" :key="instructor.uid">
+                    <router-link :id="`instructor-${instructor.uid}`" :to="`/user/${instructor.uid}`">{{ instructor.name }}</router-link>
+                    <span v-if="!$_.last(instructor) && section.instructors.length > 1">and</span>
+                  </span>
+                </span>
+                <span v-if="!$currentUser.isAdmin">
+                  {{ oxfordJoin($_.map(section.instructors, 'name')) }}
+                </span>
               </v-col>
             </v-row>
             <v-row v-if="section.meetingDays">
@@ -38,7 +46,10 @@
               <v-col md="auto">
                 <v-icon>mdi-map-marker</v-icon>
               </v-col>
-              <v-col>
+              <v-col v-if="section.room.id && $currentUser.isAdmin">
+                {{ section.room.location }}
+              </v-col>
+              <v-col v-if="!section.room.id || !$currentUser.isAdmin">
                 {{ section.room.location }}
               </v-col>
             </v-row>
@@ -55,10 +66,10 @@
                 <div>
                   <h4>Course Capture Sign-up</h4>
                   <div v-if="approvedByUids.length" class="font-weight-bold pb-2 pt-2 pink--text">
-                    <span v-if="!hasNecessaryApprovals && mostRecentApproval.approvedByUid === $currentUser.uid">
+                    <span v-if="mostRecentApproval.approvedByUid === $currentUser.uid">
                       You submitted the preferences below.
                     </span>
-                    <div v-if="hasNecessaryApprovals || mostRecentApproval.approvedByUid !== $currentUser.uid">
+                    <div v-if="mostRecentApproval.approvedByUid !== $currentUser.uid">
                       The preferences below were submitted by {{ getInstructorNames(approvedByUids) }}.
                     </div>
                     <div v-if="scheduled" class="pt-2">Recordings have been scheduled in Kaltura.</div>
@@ -102,16 +113,16 @@
                     {{ mostRecentApproval.recordingTypeName }}
                   </div>
                   <div v-if="!hasNecessaryApprovals">
-                    <div v-if="section.room.capabilities.length === 1">
-                      {{ section.room.capabilities[0].text }}
-                      <input type="hidden" name="recordingType" :value="section.room.capabilities[0].value">
+                    <div v-if="section.room.captureOptions.length === 1">
+                      {{ section.room.captureOptions[0].text }}
+                      <input type="hidden" name="recordingType" :value="section.room.captureOptions[0].value">
                     </div>
-                    <div v-if="section.room.capabilities.length > 1">
+                    <div v-if="section.room.captureOptions.length > 1">
                       <v-select
                         id="select-recording-type"
                         v-model="recordingType"
                         :full-width="true"
-                        :items="section.room.capabilities"
+                        :items="section.room.captureOptions"
                         label="Select..."
                         solo
                       ></v-select>
@@ -186,12 +197,13 @@
 </template>
 
 <script>
+  import Context from '@/mixins/Context'
   import Utils from '@/mixins/Utils'
   import {approve, getApprovals} from '@/api/approval'
 
   export default {
     name: 'Approve',
-    mixins: [Utils],
+    mixins: [Context, Utils],
     data: () => ({
       agreedToTerms: false,
       approvals: undefined,
@@ -216,6 +228,7 @@
       const sectionId = this.$_.get(this.$route, 'params.sectionId')
       getApprovals(termId, sectionId).then(data => {
         this.render(data)
+        this.$ready()
       })
     },
     methods: {
@@ -247,8 +260,8 @@
         this.publishTypeOptions = data.publishTypeOptions
         this.scheduled = data.scheduled
         this.section = data.section
-        if (this.section.room.capabilities.length === 1) {
-          this.recordingType = this.section.room.capabilities[0].value
+        if (this.section.room.captureOptions.length === 1) {
+          this.recordingType = this.section.room.captureOptions[0].value
         }
         this.setPageTitle(this.pageTitle)
         this.$ready()

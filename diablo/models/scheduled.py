@@ -27,6 +27,7 @@ from datetime import datetime
 
 from diablo import db, std_commit
 from diablo.lib.util import to_isoformat
+from sqlalchemy import and_
 
 
 class Scheduled(db.Model):
@@ -58,6 +59,11 @@ class Scheduled(db.Model):
     @classmethod
     def get_all_scheduled(cls, term_id):
         return cls.query.filter_by(term_id=term_id).all()
+
+    @classmethod
+    def get_scheduled_per_section_ids(cls, section_ids, term_id):
+        criteria = and_(cls.section_id.in_(section_ids), cls.term_id == term_id)
+        return cls.query.filter(criteria).order_by(cls.created_at).all()
 
     @classmethod
     def was_scheduled(cls, section_id, term_id):

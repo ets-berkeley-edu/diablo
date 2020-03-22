@@ -22,9 +22,8 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-
 from diablo.api.util import admin_required
-from diablo.externals.salesforce import get_all_contacts, get_all_courses, get_all_eligible_courses, get_all_rooms
+from diablo.externals.salesforce import get_all_contacts, get_all_courses, get_all_eligible_courses
 from diablo.lib.http import tolerant_jsonify
 from diablo.merged.reports import verify_salesforce_data
 from diablo.merged.sis import get_sections_per_ids
@@ -74,12 +73,6 @@ def salesforce_all_eligible_courses():
 @admin_required
 def salesforce_all_contacts():
     return tolerant_jsonify(_to_api_json(get_all_contacts()))
-
-
-@app.route('/api/report/salesforce/all_rooms')
-@admin_required
-def salesforce_all_rooms():
-    return tolerant_jsonify(_to_api_json(get_all_rooms()))
 
 
 @app.route('/api/report/salesforce/verify')

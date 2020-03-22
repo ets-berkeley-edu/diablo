@@ -22,30 +22,30 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-
-import inspect
-
-from dateutil.tz import tzutc
-
-"""Generic utilities."""
+from diablo.externals.salesforce import get_capture_enabled_rooms
+from diablo.jobs.base_job import BaseJob
+from diablo.models.room import Room
+from flask import current_app as app
 
 
-def get_args_dict(func, *args, **kw):
-    arg_names = inspect.getfullargspec(func)[0]
-    resp = dict(zip(arg_names, args))
-    resp.update(kw)
-    return resp
+class SalesforceSync(BaseJob):
+
+    def run(self, args=None):
+        term_id = app.config['CURRENT_TERM_ID']
+        _sync_rooms(term_id)
+        _sync_courses(term_id)
 
 
-def items_per_keys(items, field_name_of_key):
-    items_per_key = {}
-    for item in items:
-        key = getattr(item, field_name_of_key)
-        if key not in items_per_key:
-            items_per_key[key] = []
-        items_per_key[key].append(item)
-    return items_per_key
+def _sync_rooms(term_id):
+    rooms = get_capture_enabled_rooms()
+    app.logger.info(f'{len(rooms)} rooms from Salesforce')
+    for room in rooms:
+        Room.create_or_update(
+            term_id=term_id,
+            location=f'{room["building"]} {room["roomNumber"]}',
+            capability=room['capability'],
+        )
 
 
-def to_isoformat(value):
-    return value and value.astimezone(tzutc()).isoformat()
+def _sync_courses(term_id):
+    pass

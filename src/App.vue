@@ -1,5 +1,5 @@
 <template>
-  <v-app :id="`theme-${$vuetify.theme.dark ? 'dark' : 'light'}`">
+  <v-app :id="$vuetify.theme.dark ? 'dark' : 'light'">
     <v-app-bar
       app
       color="header-background"
@@ -50,6 +50,7 @@
 </script>
 
 <style>
+  @import './assets/styles/diablo-dark.css';
   @import './assets/styles/diablo-global.css';
-  @import './assets/styles/vuetify-overrides.css';
+  @import './assets/styles/diablo-light.css';
 </style>
