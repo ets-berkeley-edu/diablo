@@ -103,8 +103,9 @@ CREATE INDEX approvals_term_id_idx ON approvals USING btree (term_id);
 
 CREATE TABLE rooms (
     id INTEGER NOT NULL,
+    term_id INTEGER NOT NULL,
     location VARCHAR(255) NOT NULL,
-    capabilities VARCHAR(255)[] NOT NULL,
+    capability VARCHAR(255) NOT NULL,
     created_at timestamp with time zone NOT NULL
 );
 ALTER TABLE rooms OWNER TO diablo;
@@ -122,6 +123,7 @@ ALTER TABLE ONLY rooms
 ALTER TABLE ONLY rooms
     ADD CONSTRAINT rooms_location_unique_constraint UNIQUE (location);
 CREATE INDEX rooms_location_idx ON rooms USING btree (location);
+CREATE INDEX rooms_term_id_idx ON rooms USING btree (term_id);
 
 --
 

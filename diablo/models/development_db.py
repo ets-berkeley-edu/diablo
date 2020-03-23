@@ -27,6 +27,7 @@ import glob
 import json
 
 from diablo import BASE_DIR, cache, db, std_commit
+from diablo.jobs.salesforce_sync import SalesforceSync
 from diablo.models.admin_user import AdminUser
 from flask import current_app as app
 from sqlalchemy.sql import text
@@ -50,6 +51,7 @@ def load():
     _load_schemas()
     _create_users()
     _cache_externals()
+    _run_jobs()
     return db
 
 
@@ -71,6 +73,11 @@ def _load_schemas():
 def _create_users():
     for test_user in _test_users:
         db.session.add(AdminUser(uid=test_user['uid']))
+    std_commit(allow_test_environment=True)
+
+
+def _run_jobs():
+    SalesforceSync(app_context=app.app_context).run()
     std_commit(allow_test_environment=True)
 
 

@@ -63,7 +63,7 @@
           ></v-progress-circular>
         </div>
       </v-col>
-      <v-col v-show="!loading">
+      <v-col>
         <router-view :key="$route.fullPath"></router-view>
       </v-col>
     </v-row>
@@ -76,20 +76,22 @@
 </template>
 
 <script>
+  import Context from '@/mixins/Context'
   import Footer from '@/components/util/Footer'
   import Util from '@/mixins/Utils'
   import store from '@/store'
-  import {mapGetters} from 'vuex'
 
   export default {
     name: 'BaseView',
     components: {Footer},
-    mixins: [Util],
+    mixins: [Context, Util],
     data: () => ({
       navItems: undefined,
     }),
-    computed: {
-      ...mapGetters('context', ['loading'])
+    watch: {
+      $route() {
+        store.dispatch('context/loadingStart')
+      }
     },
     beforeCreate: () => store.dispatch('context/loadingStart'),
     created() {
@@ -97,7 +99,7 @@
         this.navItems = [
           { title: 'Ouija Board', icon: 'mdi-auto-fix', path: '/ouija' },
           { title: 'Rooms', icon: 'mdi-domain', path: '/rooms' },
-          { title: 'Course Changes', icon: 'swap-horizontal', path: '/changes' },
+          { title: 'Course Changes', icon: 'mdi-swap-horizontal', path: '/changes' },
           { title: 'About', icon: 'mdi-help-box' }
         ]
       } else {
@@ -119,16 +121,16 @@
 </script>
 
 <style scoped>
-.spinner {
-  position: fixed;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  height: 2em;
-  margin: auto;
-  overflow: show;
-  width: 2em;
-  z-index: 999;
-}
+  .spinner {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: 2em;
+    margin: auto;
+    overflow: show;
+    width: 2em;
+    z-index: 999;
+  }
 </style>

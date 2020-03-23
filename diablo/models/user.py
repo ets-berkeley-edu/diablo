@@ -77,17 +77,17 @@ class User(UserMixin):
         calnet_profile = None
         is_active = False
         is_admin = False
-        sections = []
+        courses = []
         if uid:
             calnet_profile = calnet.get_calnet_user_for_uid(app, uid)
             is_active = not calnet_profile.get('isExpiredPerLdap', True)
             if is_active:
                 is_admin = AdminUser.is_admin(uid)
-                sections = get_sections(
+                courses = get_sections(
                     term_id=app.config['CURRENT_TERM_ID'],
                     instructor_uid=uid,
                 )
-                is_active = is_admin or bool(sections)
+                is_active = is_admin or bool(courses)
         return {
             **(calnet_profile or {}),
             **{
@@ -96,8 +96,8 @@ class User(UserMixin):
                 'isAdmin': is_admin,
                 'isAnonymous': not is_active,
                 'isAuthenticated': is_active,
-                'isTeaching': bool(sections),
-                'teachingSections': sections,
+                'isTeaching': bool(courses),
+                'courses': courses,
                 'uid': uid,
             },
         }

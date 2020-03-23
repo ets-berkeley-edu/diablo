@@ -24,7 +24,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 
 from diablo import cache
-from diablo.externals.salesforce import get_all_rooms
+from diablo.externals.salesforce import get_all_salesforce_rooms
 from diablo.lib.salesforce_utils import convert_military_time, days_of_week_for_salesforce, \
     get_salesforce_location_id, is_course_in_capture_enabled_room
 from pytest import raises
@@ -74,12 +74,12 @@ class TestWeekdaysTranslation:
 class TestRoomComparison:
 
     def test_room_normalization(self):
-        all_locations = get_all_rooms()
+        all_locations = get_all_salesforce_rooms()
         assert get_salesforce_location_id({'location': '  BARROWS 106 '}, all_locations) == 'a0619000005LtFgAAK'
         assert get_salesforce_location_id({'location': '  BARROWS 107 '}, all_locations) is None
 
     def test_genetics_plant_bio_location(self):
-        location_id = get_salesforce_location_id({'location': 'Genetics & Plant Bio 105'}, get_all_rooms())
+        location_id = get_salesforce_location_id({'location': 'Genetics & Plant Bio 105'}, get_all_salesforce_rooms())
         assert location_id == 'a0619000005LtGPAA0'
 
     def test_course_in_capture_enabled_room(self):

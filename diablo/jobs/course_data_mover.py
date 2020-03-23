@@ -26,7 +26,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 import logging
 
 from diablo.externals.salesforce import bulk_upsert_contacts, bulk_upsert_courses, get_all_contacts, get_all_courses, \
-    get_all_rooms
+    get_all_salesforce_rooms
 from diablo.jobs.base_job import BaseJob
 from diablo.lib.salesforce_utils import get_salesforce_location_id, is_course_in_capture_enabled_room, \
     prepare_salesforce_contact_record, prepare_salesforce_course_record
@@ -43,7 +43,7 @@ class CourseDataMover(BaseJob):
 
     def run(self, section_ids=None):
         self.term_id = app.config['CURRENT_TERM_ID']
-        self.salesforce_locations = get_all_rooms()
+        self.salesforce_locations = get_all_salesforce_rooms()
         self.salesforce_ids_per_section_id = _load_salesforce_ids_per_section_id()
         self.contact_ids_per_uid = _load_contact_ids_per_uid()
 

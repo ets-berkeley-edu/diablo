@@ -27,6 +27,7 @@ from datetime import datetime
 
 from diablo import db, std_commit
 from diablo.lib.util import to_isoformat
+from sqlalchemy import and_
 from sqlalchemy.dialects.postgresql import ENUM
 
 
@@ -135,12 +136,25 @@ class Approval(db.Model):
         return cls.query.filter_by(approved_by_uid=approved_by_uid, section_id=section_id, term_id=term_id).first()
 
     @classmethod
-    def get_approvals(cls, section_id, term_id):
+    def get_approvals_per_room_id(cls, room_id, term_id):
+        return cls.query.filter_by(room_id=room_id, term_id=term_id).order_by(cls.created_at).all()
+
+    @classmethod
+    def get_approvals_per_section_id(cls, section_id, term_id):
         return cls.query.filter_by(section_id=section_id, term_id=term_id).order_by(cls.created_at).all()
+
+    @classmethod
+    def get_approvals_per_section_ids(cls, section_ids, term_id):
+        criteria = and_(cls.section_id.in_(section_ids), cls.term_id == term_id)
+        return cls.query.filter(criteria).order_by(cls.created_at).all()
 
     @classmethod
     def get_approvals_per_term(cls, term_id):
         return cls.query.filter_by(term_id=int(term_id)).order_by(cls.section_id, cls.created_at).all()
+
+    @classmethod
+    def get_approvals_per_uid(cls, term_id, uid):
+        return cls.query.filter_by(approved_by_uid=uid, term_id=term_id).order_by(cls.created_at).all()
 
     def to_api_json(self):
         return {

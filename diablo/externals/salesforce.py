@@ -64,7 +64,7 @@ def get_all_contacts():
 
 
 @cachify('salesforce/all_rooms', timeout=CACHE_TIMEOUT_MINUTES)
-def get_all_rooms():
+def get_all_salesforce_rooms():
     result = _query('get_all_rooms')
     return [_room_to_json(room) for room in result['records']]
 
@@ -116,5 +116,5 @@ def _room_to_json(room):
     return {
         'building': _translate_salesforce_building(room['Building__c']),
         'roomNumber': room['Room_Number_Text__c'],
-        'capabilities': room['Recording_Capabilities__c'],
+        'capability': room['Recording_Capabilities__c'],
     }

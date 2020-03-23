@@ -22,30 +22,29 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-
-import inspect
-
-from dateutil.tz import tzutc
-
-"""Generic utilities."""
-
-
-def get_args_dict(func, *args, **kw):
-    arg_names = inspect.getfullargspec(func)[0]
-    resp = dict(zip(arg_names, args))
-    resp.update(kw)
-    return resp
+from diablo.api.errors import ResourceNotFoundError
+from diablo.api.util import admin_required
+from diablo.lib.http import tolerant_jsonify
+from diablo.models.approval import Approval
+from diablo.models.room import Room
+from flask import current_app as app
 
 
-def items_per_keys(items, field_name_of_key):
-    items_per_key = {}
-    for item in items:
-        key = getattr(item, field_name_of_key)
-        if key not in items_per_key:
-            items_per_key[key] = []
-        items_per_key[key].append(item)
-    return items_per_key
+@app.route('/api/berkeley/all_rooms')
+@admin_required
+def get_all_rooms():
+    term_id = app.config['CURRENT_TERM_ID']
+    return tolerant_jsonify([room.to_api_json() for room in Room.all_rooms(term_id)])
 
 
-def to_isoformat(value):
-    return value and value.astimezone(tzutc()).isoformat()
+@app.route('/api/berkeley/room/<room_id>')
+@admin_required
+def get_room(room_id):
+    room = Room.get_room(room_id)
+    if room:
+        term_id = app.config['CURRENT_TERM_ID']
+        api_json = room.to_api_json()
+        api_json['approvals'] = [approval.to_api_json() for approval in Approval.get_approvals_per_room_id(room_id=room.id, term_id=term_id)]
+        return tolerant_jsonify(api_json)
+    else:
+        raise ResourceNotFoundError('No such room')

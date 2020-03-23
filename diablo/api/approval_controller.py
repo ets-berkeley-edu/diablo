@@ -49,7 +49,7 @@ def course_capture_sign_up():
     section = get_section(term_id, section_id) if section_id else None
 
     if not section or publish_type not in get_all_publish_types() or recording_type not in get_all_recording_types():
-        raise BadRequestError(f'One or more required params are missing or invalid')
+        raise BadRequestError('One or more required params are missing or invalid')
 
     if not current_user.is_admin and approved_by_uid not in [i['uid'] for i in section['instructors']]:
         raise ForbiddenRequestError('Sorry, request unauthorized')
@@ -57,10 +57,11 @@ def course_capture_sign_up():
     if Approval.get_approval(approved_by_uid, section_id, term_id):
         raise ForbiddenRequestError(f'You have already approved recording of {section["courseName"]}, {term_name}')
 
-    room = Room.create_or_update(
-        location=section['room']['location'],
-        capabilities=[s['value'] for s in section['room']['capabilities']],
-    )
+    location = section['room']['location']
+    room = Room.find_room(term_id=term_id, location=location)
+    if not room:
+        raise BadRequestError(f'{location} is not eligible for Course Capture.')
+
     Approval.create(
         approved_by_uid=approved_by_uid,
         section_id=section_id,
@@ -93,7 +94,7 @@ def approvals_per_term(term_id):
 
 def _approvals_to_json(section, term_id):
     section_id = section['sectionId']
-    all_approvals = Approval.get_approvals(section_id, term_id)
+    all_approvals = Approval.get_approvals_per_section_id(section_id, term_id)
     return {
         'termId': term_id,
         'section': section,

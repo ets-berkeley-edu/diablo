@@ -107,7 +107,7 @@ class TestApprove:
         )
         assert api_json['section']['room'] == {
             'location': 'Barrows 106',
-            'capabilities': [
+            'captureOptions': [
                 {
                     'text': 'Presentation and Audio',
                     'value': 'presentation_audio',
@@ -184,7 +184,7 @@ class TestApprovals:
         assert [i['uid'] for i in api_json['section']['instructors']] == ['234567', '8765432']
         assert api_json['section']['room'] == {
             'location': 'Barrows 106',
-            'capabilities': [
+            'captureOptions': [
                 {
                     'text': 'Presentation and Audio',
                     'value': 'presentation_audio',
@@ -206,7 +206,7 @@ class TestApprovals:
         assert api_json['section']['meetingEndTime'] == '3:59 pm'
         assert api_json['section']['room'] == {
             'location': 'Wheeler 150',
-            'capabilities': [],
+            'captureOptions': [],
         }
 
     def test_li_ka_shing_capture_options(self, client, db, fake_auth):
@@ -217,4 +217,4 @@ class TestApprovals:
             section_id=section_3_id,
         )
         assert api_json['section']['room']['location'] == 'Li Ka Shing 145'
-        assert len(api_json['section']['room']['capabilities']) == len(get_all_recording_types())
+        assert len(api_json['section']['room']['captureOptions']) == len(get_all_recording_types())

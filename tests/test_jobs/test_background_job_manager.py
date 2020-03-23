@@ -26,29 +26,80 @@ ENHANCEMENTS, OR MODIFICATIONS.
 import time
 
 from diablo.jobs.background_job_manager import BackgroundJobManager
+from diablo.jobs.sample_jobs import HelloWorld, LightSwitch, Volume
 from flask import current_app as app
+from tests.util import override_config
 
 
 class TestBackgroundJobManager:
 
     def test_start_mock_jobs(self):
-        job_manager = BackgroundJobManager()
-        try:
-            job_manager.start(app)
-            # The JOB_MANAGER config has four (4) jobs but one is disabled. So, only three are loaded.
-            assert len(job_manager.job_instances) == 3
-            time.sleep(2)
+        with override_config(app, 'JOB_MANAGER', _job_manager_config()):
+            job_manager = BackgroundJobManager()
+            try:
+                job_manager.start(app)
+                # The JOB_MANAGER config has four (4) jobs but one is disabled. So, only three are loaded.
+                assert len(job_manager.job_instances) == 3
+                time.sleep(2)
 
-            for job_instance in job_manager.job_instances:
-                if job_instance.name == 'This one goes to 11':
-                    assert job_instance.level == 11
-                elif job_instance.name == 'Rock and Roll has got to go!':
-                    # Property not yet set
-                    assert job_instance.level is None
-                elif job_instance.name == 'Turn on, tune in, drop out':
-                    assert job_instance.is_light_on is True
-                else:
-                    assert False
+                for job_instance in job_manager.job_instances:
+                    if job_instance.name == 'This one goes to 11':
+                        assert job_instance.level == 11
+                    elif job_instance.name == 'Rock and Roll has got to go!':
+                        # Property not yet set
+                        assert job_instance.level is None
+                    elif job_instance.name == 'Turn on, tune in, drop out':
+                        assert job_instance.is_light_on is True
+                    else:
+                        assert False
 
-        finally:
-            job_manager.stop()
+            finally:
+                job_manager.stop()
+
+
+def _job_manager_config():
+    return {
+        'auto_start': False,
+        'seconds_between_pending_jobs_check': 0.5,
+        'jobs': [
+            {
+                'cls': Volume,
+                'name': 'This one goes to 11',
+                'args': {
+                    'level': 11,
+                },
+                'schedule': {
+                    'type': 'seconds',
+                    'value': 1,
+                },
+            },
+            {
+                'cls': Volume,
+                'name': 'Rock and Roll has got to go!',
+                'args': {
+                    'level': 0,
+                },
+                'schedule': {
+                    'type': 'day_at',
+                    'value': '04:30',
+                },
+            },
+            {
+                'cls': HelloWorld,
+                'disable': True,
+                'name': 'This job is DISABLED',
+                'schedule': {
+                    'type': 'seconds',
+                    'value': 1,
+                },
+            },
+            {
+                'cls': LightSwitch,
+                'name': 'Turn on, tune in, drop out',
+                'schedule': {
+                    'type': 'seconds',
+                    'value': 1,
+                },
+            },
+        ],
+    }

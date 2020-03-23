@@ -92,7 +92,7 @@ def _normalize_rows(rows):
                 'meetingEndTime': _format_time(row['meeting_end_time']),
                 'room': {
                     'location': location,
-                    'capabilities': get_capture_options(location, enabled_rooms),
+                    'captureOptions': get_capture_options(location, enabled_rooms),
                 },
                 'meetingStartDate': row['meeting_start_date'],
                 'meetingStartTime': _format_time(row['meeting_start_time']),

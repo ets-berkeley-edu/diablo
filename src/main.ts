@@ -3,9 +3,11 @@ import _ from 'lodash'
 import App from './App.vue'
 import axios from 'axios'
 import core from './core'
+import moment from 'moment-timezone'
 import router from './router'
 import store from './store'
 import Vue from 'vue'
+import VueMoment from 'vue-moment'
 import vuetify from './plugins/vuetify'
 
 const apiBaseUrl = process.env.VUE_APP_API_BASE_URL
@@ -28,6 +30,8 @@ axios.interceptors.response.use(response => response, function(error) {
 axios.defaults.withCredentials = true
 
 Vue.config.productionTip = false
+
+Vue.use(VueMoment, { moment })
 
 // Lodash
 Vue.prototype.$_ = _
