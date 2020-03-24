@@ -27,8 +27,9 @@ import glob
 import json
 
 from diablo import BASE_DIR, cache, db, std_commit
-from diablo.jobs.salesforce_sync import SalesforceSync
+from diablo.jobs.update_rooms_job import UpdateRoomsJob
 from diablo.models.admin_user import AdminUser
+from diablo.models.room import Room
 from flask import current_app as app
 from sqlalchemy.sql import text
 
@@ -77,7 +78,12 @@ def _create_users():
 
 
 def _run_jobs():
-    SalesforceSync(app_context=app.app_context).run()
+    UpdateRoomsJob(app_context=app.app_context).run()
+    for room in Room.all_rooms():
+        if room.location in ['Barrows 106', 'Barker 101']:
+            Room.update_capability(room.id, 'screencast')
+        elif room.location in ['Barrows 106', 'Li Ka Shing 145']:
+            Room.update_capability(room.id, 'screencast_and_video')
     std_commit(allow_test_environment=True)
 
 

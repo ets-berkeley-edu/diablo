@@ -38,6 +38,13 @@ SET default_with_oids = false;
 
 --
 
+CREATE TYPE approver_types AS ENUM (
+    'admin',
+    'instructor'
+);
+
+--
+
 CREATE TYPE publish_types AS ENUM (
     'canvas',
     'kaltura_media_gallery'
@@ -53,9 +60,9 @@ CREATE TYPE recording_types AS ENUM (
 
 --
 
-CREATE TYPE approver_types AS ENUM (
-    'admin',
-    'instructor'
+CREATE TYPE room_capability_types AS ENUM (
+    'screencast',
+    'screencast_and_video'
 );
 
 --
@@ -103,9 +110,8 @@ CREATE INDEX approvals_term_id_idx ON approvals USING btree (term_id);
 
 CREATE TABLE rooms (
     id INTEGER NOT NULL,
-    term_id INTEGER NOT NULL,
     location VARCHAR(255) NOT NULL,
-    capability VARCHAR(255) NOT NULL,
+    capability room_capability_types,
     created_at timestamp with time zone NOT NULL
 );
 ALTER TABLE rooms OWNER TO diablo;
@@ -123,7 +129,6 @@ ALTER TABLE ONLY rooms
 ALTER TABLE ONLY rooms
     ADD CONSTRAINT rooms_location_unique_constraint UNIQUE (location);
 CREATE INDEX rooms_location_idx ON rooms USING btree (location);
-CREATE INDEX rooms_term_id_idx ON rooms USING btree (term_id);
 
 --
 

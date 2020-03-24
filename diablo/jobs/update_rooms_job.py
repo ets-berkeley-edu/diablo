@@ -22,30 +22,19 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from diablo.externals.salesforce import get_capture_enabled_rooms
+from diablo.externals.data_loch import get_distinct_meeting_locations
 from diablo.jobs.base_job import BaseJob
 from diablo.models.room import Room
 from flask import current_app as app
 
 
-class SalesforceSync(BaseJob):
+class UpdateRoomsJob(BaseJob):
 
     def run(self, args=None):
-        term_id = app.config['CURRENT_TERM_ID']
-        _sync_rooms(term_id)
-        _sync_courses(term_id)
-
-
-def _sync_rooms(term_id):
-    rooms = get_capture_enabled_rooms()
-    app.logger.info(f'{len(rooms)} rooms from Salesforce')
-    for room in rooms:
-        Room.create_or_update(
-            term_id=term_id,
-            location=f'{room["building"]} {room["roomNumber"]}',
-            capability=room['capability'],
-        )
-
-
-def _sync_courses(term_id):
-    pass
+        locations = get_distinct_meeting_locations()
+        existing_locations = Room.get_all_locations()
+        new_locations = [location for location in locations if location not in existing_locations]
+        if new_locations:
+            app.logger.info(f'Creating {len(new_locations)} new rooms')
+            for location in new_locations:
+                Room.create(location=location)

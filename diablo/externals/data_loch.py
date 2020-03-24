@@ -22,7 +22,6 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-
 from datetime import datetime
 
 from flask import current_app as app
@@ -36,6 +35,15 @@ data_loch_db_rds = None
 
 def sis_schema():
     return app.config['DATA_LOCH_SIS_SCHEMA']
+
+
+def get_distinct_meeting_locations():
+    sql = f"""
+        SELECT DISTINCT meeting_location FROM {sis_schema()}.sis_sections
+        WHERE meeting_location IS NOT NULL AND meeting_location != ''
+        ORDER BY meeting_location
+    """
+    return [row['meeting_location'] for row in safe_execute_rds(sql)]
 
 
 def get_section_denormalized(term_id, section_id):

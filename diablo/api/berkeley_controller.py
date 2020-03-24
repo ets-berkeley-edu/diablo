@@ -22,19 +22,30 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from diablo.api.errors import ResourceNotFoundError
+from diablo.api.errors import BadRequestError, ResourceNotFoundError
 from diablo.api.util import admin_required
 from diablo.lib.http import tolerant_jsonify
 from diablo.models.approval import Approval
 from diablo.models.room import Room
-from flask import current_app as app
+from flask import current_app as app, request
 
 
 @app.route('/api/berkeley/all_rooms')
 @admin_required
 def get_all_rooms():
-    term_id = app.config['CURRENT_TERM_ID']
-    return tolerant_jsonify([room.to_api_json() for room in Room.all_rooms(term_id)])
+    return tolerant_jsonify([room.to_api_json() for room in Room.all_rooms()])
+
+
+@app.route('/api/berkeley/capability_options')
+@admin_required
+def get_capability_options():
+    api_json = []
+    for value, label in Room.get_room_capability_options().items():
+        api_json.append({
+            'label': label,
+            'value': value,
+        })
+    return tolerant_jsonify(api_json)
 
 
 @app.route('/api/berkeley/room/<room_id>')
@@ -48,3 +59,15 @@ def get_room(room_id):
         return tolerant_jsonify(api_json)
     else:
         raise ResourceNotFoundError('No such room')
+
+
+@app.route('/api/berkeley/update_room_capability', methods=['POST'])
+@admin_required
+def update_room_capability():
+    params = request.get_json()
+    room_id = params.get('roomId')
+    capability = params.get('capability')
+    if not room_id or not capability:
+        raise BadRequestError('Both "name" and "capability" parameters are required.')
+    room = Room.update_capability(room_id, capability)
+    return tolerant_jsonify(room.to_api_json())
