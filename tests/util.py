@@ -28,7 +28,6 @@ from contextlib import contextmanager
 from diablo.models.approval import Approval
 from diablo.models.room import Room
 from diablo.models.scheduled import Scheduled
-from flask import current_app as app
 from sqlalchemy import text
 
 
@@ -45,12 +44,7 @@ def override_config(app, key, value):
 
 @contextmanager
 def create_approvals_and_scheduled(db, location):
-    term_id = app.config['CURRENT_TERM_ID']
-    room = Room.create_or_update(
-        term_id=term_id,
-        location=location,
-        capability='Screencast',
-    )
+    room = Room.find_room(location)
     section_ids = [30563, 26094]
     term_id = 2202
     uids = ['234567', '1015674']

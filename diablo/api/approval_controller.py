@@ -58,7 +58,7 @@ def course_capture_sign_up():
         raise ForbiddenRequestError(f'You have already approved recording of {section["courseName"]}, {term_name}')
 
     location = section['room']['location']
-    room = Room.find_room(term_id=term_id, location=location)
+    room = Room.find_room(location=location)
     if not room:
         raise BadRequestError(f'{location} is not eligible for Course Capture.')
 

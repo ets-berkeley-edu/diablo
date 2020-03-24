@@ -5,10 +5,12 @@
 </template>
 
 <script>
+  import Context from '@/mixins/Context'
   import {getRoom} from '@/api/berkeley'
 
   export default {
     name: 'Room',
+    mixins: [Context],
     data: () => ({
       room: undefined
     }),

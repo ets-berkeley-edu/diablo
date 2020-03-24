@@ -86,7 +86,7 @@ def _job_manager_config():
             },
             {
                 'cls': HelloWorld,
-                'disable': True,
+                'disabled': True,
                 'name': 'This job is DISABLED',
                 'schedule': {
                     'type': 'seconds',

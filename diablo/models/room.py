@@ -27,63 +27,90 @@ from datetime import datetime
 
 from diablo import db, std_commit
 from diablo.lib.util import to_isoformat
+from sqlalchemy import func, text
+from sqlalchemy.dialects.postgresql import ENUM
+
+
+room_capability_type = ENUM(
+    'screencast',
+    'screencast_and_video',
+    name='room_capability_types',
+    create_type=False,
+)
+
+label_per_capability_type = {
+    'screencast': 'Screencast',
+    'screencast_and_video': 'Screencast + Video',
+}
 
 
 class Room(db.Model):
     __tablename__ = 'rooms'
 
     id = db.Column(db.Integer, nullable=False, primary_key=True)  # noqa: A003
-    term_id = db.Column(db.Integer, nullable=False)
     location = db.Column(db.String(255), nullable=False, unique=True)
-    capability = db.Column(db.String(255), nullable=False)
+    capability = db.Column(room_capability_type)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.now)
 
     def __init__(
             self,
-            term_id,
             location,
             capability,
     ):
-        self.term_id = term_id
         self.location = location
         self.capability = capability
 
     def __repr__(self):
         return f"""<Room
                     id={self.id},
-                    term_id={self.term_id},
                     location={self.location},
                     capability={self.capability},
                     created_at={self.created_at}>
                 """
 
     @classmethod
-    def create_or_update(cls, term_id, location, capability):
-        room = cls.query.filter_by(term_id=term_id, location=location).first()
-        if room:
-            room.capability = capability
-        else:
-            room = cls(term_id=term_id, location=location, capability=capability)
+    def create(cls, location, capability=None):
+        room = cls(location=location, capability=capability)
         db.session.add(room)
         std_commit()
         return room
 
     @classmethod
-    def find_room(cls, term_id, location):
-        return cls.query.filter_by(term_id=term_id, location=location).first()
+    def find_room(cls, location):
+        return cls.query.filter_by(location=location).first()
 
     @classmethod
     def get_room(cls, room_id):
         return cls.query.filter_by(id=room_id).first()
 
     @classmethod
-    def all_rooms(cls, term_id):
-        return cls.query.filter_by(term_id=term_id).all()
+    def all_rooms(cls):
+        return cls.query.order_by(cls.capability, cls.location).all()
+
+    @classmethod
+    def total_room_count(cls):
+        return db.session.query(func.count(cls.id)).scalar()
+
+    @classmethod
+    def get_all_locations(cls):
+        result = db.session.execute(text('SELECT location FROM rooms'))
+        return [row['location'] for row in result]
+
+    @classmethod
+    def update_capability(cls, room_id, capability):
+        room = cls.query.filter_by(id=room_id).first()
+        room.capability = capability
+        db.session.add(room)
+        std_commit()
+        return room
+
+    @classmethod
+    def get_room_capability_options(cls):
+        return label_per_capability_type
 
     def to_api_json(self):
         return {
             'id': self.id,
-            'termId': self.term_id,
             'location': self.location,
             'capability': self.capability,
             'createdAt': to_isoformat(self.created_at),

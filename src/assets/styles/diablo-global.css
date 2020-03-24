@@ -10,3 +10,7 @@ a {
   height: 1px;
   overflow: hidden;
 }
+
+.w-50 {
+  width: 50% !important;
+}

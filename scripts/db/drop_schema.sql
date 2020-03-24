@@ -52,7 +52,6 @@ ALTER TABLE IF EXISTS ONLY public.scheduled DROP CONSTRAINT IF EXISTS scheduled_
 DROP INDEX IF EXISTS public.approvals_term_id_idx;
 DROP INDEX IF EXISTS public.approvals_section_id_idx;
 DROP INDEX IF EXISTS public.rooms_location_idx;
-DROP INDEX IF EXISTS public.rooms_term_id_idx;
 DROP INDEX IF EXISTS public.scheduled_term_id_idx;
 DROP INDEX IF EXISTS public.scheduled_section_id_idx;
 
@@ -73,6 +72,7 @@ DROP TABLE IF EXISTS public.scheduled;
 DROP TYPE IF EXISTS public.approver_types;
 DROP TYPE IF EXISTS public.publish_types;
 DROP TYPE IF EXISTS public.recording_types;
+DROP TYPE IF EXISTS public.room_capability_types;
 DROP TYPE IF EXISTS public.user_types;
 
 --
