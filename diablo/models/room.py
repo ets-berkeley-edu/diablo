@@ -45,6 +45,7 @@ class Room(db.Model):
     id = db.Column(db.Integer, nullable=False, primary_key=True)  # noqa: A003
     capability = db.Column(room_capability_type)
     is_auditorium = db.Column(db.Boolean, nullable=False)
+    kaltura_resource_id = db.Column(db.Integer)
     location = db.Column(db.String(255), nullable=False, unique=True)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.now)
 
@@ -52,10 +53,12 @@ class Room(db.Model):
             self,
             capability,
             is_auditorium,
+            kaltura_resource_id,
             location,
     ):
         self.capability = capability
         self.is_auditorium = is_auditorium
+        self.kaltura_resource_id = kaltura_resource_id
         self.location = location
 
     def __repr__(self):
@@ -64,12 +67,18 @@ class Room(db.Model):
                     capability={self.capability},
                     location={self.location},
                     is_auditorium={self.is_auditorium},
+                    kaltura_resource_id={self.kaltura_resource_id},
                     created_at={self.created_at}>
                 """
 
     @classmethod
-    def create(cls, location, is_auditorium=False, capability=None):
-        room = cls(capability=capability, is_auditorium=is_auditorium, location=location)
+    def create(cls, location, is_auditorium=False, kaltura_resource_id=None, capability=None):
+        room = cls(
+            capability=capability,
+            is_auditorium=is_auditorium,
+            kaltura_resource_id=kaltura_resource_id,
+            location=location,
+        )
         db.session.add(room)
         std_commit()
         return room
@@ -104,6 +113,18 @@ class Room(db.Model):
         return room
 
     @classmethod
+    def update_kaltura_resource_mappings(cls, kaltura_resource_ids_per_room):
+        # First, set kaltura_resource_id = null on all rows
+        cls.query.update({cls.kaltura_resource_id: None})
+        # Next, insert the latest mappings
+        all_rooms_per_id = dict((room.id, room) for room in cls.all_rooms())
+        for room_id, kaltura_resource_id in kaltura_resource_ids_per_room.items():
+            room = all_rooms_per_id[room_id]
+            room.kaltura_resource_id = kaltura_resource_id
+            db.session.add(room)
+        std_commit()
+
+    @classmethod
     def set_auditorium(cls, room_id, is_auditorium):
         room = cls.query.filter_by(id=room_id).first()
         room.is_auditorium = is_auditorium
@@ -132,5 +153,6 @@ class Room(db.Model):
             'capabilityName': self.get_room_capability_options()[self.capability] if self.capability else None,
             'createdAt': to_isoformat(self.created_at),
             'isAuditorium': self.is_auditorium,
+            'kalturaResourceId': self.kaltura_resource_id,
             'recordingTypeOptions': recording_type_options,
         }

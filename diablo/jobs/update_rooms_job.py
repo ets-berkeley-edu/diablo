@@ -23,6 +23,7 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 from diablo.externals.data_loch import get_distinct_meeting_locations
+from diablo.externals.kaltura import Kaltura
 from diablo.jobs.base_job import BaseJob
 from diablo.models.room import Room
 from flask import current_app as app
@@ -38,3 +39,13 @@ class UpdateRoomsJob(BaseJob):
             app.logger.info(f'Creating {len(new_locations)} new rooms')
             for location in new_locations:
                 Room.create(location=location)
+
+        rooms = Room.all_rooms()
+        kaltura_resource_ids_per_room = {}
+        for resource in Kaltura().get_resource_list():
+            room = next((r for r in rooms if r.location == resource['name']), None)
+            if room:
+                kaltura_resource_ids_per_room[room.id] = resource['id']
+
+        if kaltura_resource_ids_per_room:
+            Room.update_kaltura_resource_mappings(kaltura_resource_ids_per_room)

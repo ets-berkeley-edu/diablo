@@ -60,7 +60,7 @@ class TestGetAllRooms:
         """Admin user has access."""
         rooms = self._api_all_rooms(client)
         assert len(rooms)
-        for key in ['id', 'location', 'capability']:
+        for key in ['id', 'capability', 'isAuditorium', 'kalturaResourceId', 'location']:
             assert key in rooms[0]
 
 
@@ -92,8 +92,9 @@ class TestGetRoom:
         assert room
         api_json = self._api_room(client, room.id)
         assert api_json['id'] == room.id
-        assert api_json['location'] == location
         assert api_json['isAuditorium'] is False
+        assert api_json['location'] == location
+        assert api_json['kalturaResourceId'] == 890
         assert len(api_json['recordingTypeOptions']) == 1
 
     def test_get_auditorium(self, client, admin_session):
@@ -103,8 +104,9 @@ class TestGetRoom:
         assert room
         api_json = self._api_room(client, room.id)
         assert api_json['id'] == room.id
-        assert api_json['location'] == location
         assert api_json['isAuditorium'] is True
+        assert api_json['kalturaResourceId'] == 678
+        assert api_json['location'] == location
         assert len(api_json['recordingTypeOptions']) == 3
 
 

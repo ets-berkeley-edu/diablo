@@ -24,16 +24,16 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 
 from diablo.api.util import admin_required
+from diablo.jobs.update_rooms_job import UpdateRoomsJob
 from diablo.lib.http import tolerant_jsonify
-from diablo.merged.course_data_mover import CourseDataMover
 from flask import current_app as app
 
 
-@app.route('/api/job/course_data_mover/start')
+@app.route('/api/job/update_rooms/start')
 @admin_required
 def course_data_mover():
     term_id = app.config['CURRENT_TERM_ID']
-    CourseDataMover(term_id).run()
+    UpdateRoomsJob(app.app_context).run()
     return tolerant_jsonify({
         'status': 'STARTED',
         'termId': term_id,

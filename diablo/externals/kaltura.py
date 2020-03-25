@@ -23,6 +23,7 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
+from diablo import cachify
 from flask import current_app as app
 from KalturaClient import KalturaClient, KalturaConfiguration
 from KalturaClient.Plugins.Core import KalturaFilterPager, KalturaMediaEntryFilter
@@ -34,6 +35,9 @@ class Kaltura:
     client = None
 
     def __init__(self):
+        if app.config['DIABLO_ENV'] == 'test':
+            return
+
         admin_secret = app.config['KALTURA_ADMIN_SECRET']
         unique_user_id = app.config['KALTURA_UNIQUE_USER_ID']
         partner_id = app.config['KALTURA_PARTNER_ID']
@@ -51,11 +55,13 @@ class Kaltura:
         )
         self.client.setKs(ks)
 
+    @cachify('kaltura/get_resource_list')
     def get_resource_list(self):
-        return self.client.schedule.scheduleResource.list(
+        response = self.client.schedule.scheduleResource.list(
             KalturaScheduleResourceFilter(),
             KalturaFilterPager(),
         )
+        return [{'id': o.id, 'name': o.name} for o in response.objects]
 
     def ping(self):
         filter_ = KalturaMediaEntryFilter()
