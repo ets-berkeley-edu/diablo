@@ -224,6 +224,7 @@
       }
     },
     created() {
+      this.$loading()
       const termId = this.$_.get(this.$route, 'params.termId')
       const sectionId = this.$_.get(this.$route, 'params.sectionId')
       getApprovals(termId, sectionId).then(data => {
@@ -244,6 +245,7 @@
         return names.length ? this.oxfordJoin(names) : ''
       },
       render(data) {
+        this.$loading()
         if (data.approvals.length) {
           this.approvals = this.$_.sortBy(data.approvals, ['createdAt'])
           this.approvedByUids = this.$_.map(this.approvals, 'approvedByUid')

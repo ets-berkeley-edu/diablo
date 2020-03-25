@@ -9,6 +9,7 @@ import Home from '@/views/Home.vue'
 import Login from '@/views/Login.vue'
 import NotFound from '@/views/NotFound.vue'
 import Ouija from '@/views/Ouija.vue'
+import PrintableRoom from '@/views/PrintableRoom.vue'
 import Room from '@/views/Room.vue'
 import Rooms from '@/views/Rooms.vue'
 import User from '@/views/User.vue'
@@ -23,6 +24,15 @@ const router = new Router({
     {
       path: '/',
       redirect: '/home'
+    },
+    {
+      beforeEnter: auth.requiresAdmin,
+      path: '/room/printable/:id',
+      component: PrintableRoom,
+      meta: {
+        printable: true,
+        title: 'Print Room'
+      }
     },
     {
       path: '/login',

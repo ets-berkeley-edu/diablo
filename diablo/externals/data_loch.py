@@ -46,7 +46,7 @@ def get_distinct_meeting_locations():
     return [row['meeting_location'] for row in safe_execute_rds(sql)]
 
 
-def get_section_denormalized(term_id, section_id):
+def get_sis_section(term_id, section_id):
     sql = f"""
         SELECT * FROM {sis_schema()}.sis_sections
         WHERE sis_term_id = :term_id AND sis_section_id = :section_id
@@ -55,7 +55,7 @@ def get_section_denormalized(term_id, section_id):
     return safe_execute_rds(sql, term_id=term_id, section_id=section_id)
 
 
-def get_sections_denormalized(term_id, instructor_uid):
+def get_sis_sections(term_id, instructor_uid):
     sql = f"""
         SELECT sis_section_id FROM {sis_schema()}.sis_sections
         WHERE sis_term_id = :term_id AND instructor_uid = :instructor_uid
@@ -63,10 +63,21 @@ def get_sections_denormalized(term_id, instructor_uid):
     section_ids = []
     for row in safe_execute_rds(sql, term_id=term_id, instructor_uid=instructor_uid):
         section_ids.append(row['sis_section_id'])
-    return get_sections_per_ids_denormalized(term_id, section_ids)
+    return get_sis_sections_per_id(term_id, section_ids)
 
 
-def get_sections_per_ids_denormalized(term_id, section_ids):
+def get_sis_sections_per_location(term_id, room_location):
+    sql = f"""
+        SELECT sis_section_id FROM {sis_schema()}.sis_sections
+        WHERE sis_term_id = :term_id AND meeting_location = :room_location
+    """
+    section_ids = []
+    for row in safe_execute_rds(sql, term_id=term_id, room_location=room_location):
+        section_ids.append(row['sis_section_id'])
+    return get_sis_sections_per_id(term_id, section_ids)
+
+
+def get_sis_sections_per_id(term_id, section_ids):
     sql = f"""
         SELECT * FROM {sis_schema()}.sis_sections
         WHERE sis_term_id = :term_id AND sis_section_id = ANY(:section_ids)

@@ -53,14 +53,7 @@
     <v-row color="body-background" class="ma-3 ml-12 mb-12 pl-4" no-gutters>
       <v-col v-if="loading">
         <div class="text-center ma-12">
-          <v-progress-circular
-            class="spinner"
-            :indeterminate="true"
-            rotate="5"
-            size="64"
-            width="8"
-            color="light-blue"
-          ></v-progress-circular>
+          <Spinner />
         </div>
       </v-col>
       <v-col>
@@ -78,22 +71,16 @@
 <script>
   import Context from '@/mixins/Context'
   import Footer from '@/components/util/Footer'
+  import Spinner from '@/components/util/Spinner'
   import Util from '@/mixins/Utils'
-  import store from '@/store'
 
   export default {
     name: 'BaseView',
-    components: {Footer},
+    components: {Footer, Spinner},
     mixins: [Context, Util],
     data: () => ({
       navItems: undefined,
     }),
-    watch: {
-      $route() {
-        store.dispatch('context/loadingStart')
-      }
-    },
-    beforeCreate: () => store.dispatch('context/loadingStart'),
     created() {
       if (this.$currentUser.isAdmin) {
         this.navItems = [
@@ -119,18 +106,3 @@
     }
   }
 </script>
-
-<style scoped>
-  .spinner {
-    position: fixed;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    height: 2em;
-    margin: auto;
-    overflow: show;
-    width: 2em;
-    z-index: 999;
-  }
-</style>

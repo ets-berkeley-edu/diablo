@@ -27,7 +27,7 @@ from diablo.api.errors import BadRequestError, ForbiddenRequestError, ResourceNo
 from diablo.api.util import admin_required
 from diablo.lib.berkeley import get_instructor_uids, has_necessary_approvals, term_name_for_sis_id
 from diablo.lib.http import tolerant_jsonify
-from diablo.merged.sis import get_section, get_sections_per_ids
+from diablo.merged.sis import get_courses_per_section_ids, get_section
 from diablo.models.approval import Approval, get_all_publish_types, get_all_recording_types, PUBLISH_TYPE_NAMES_PER_ID
 from diablo.models.room import Room
 from diablo.models.scheduled import Scheduled
@@ -57,7 +57,7 @@ def course_capture_sign_up():
     if Approval.get_approval(approved_by_uid, section_id, term_id):
         raise ForbiddenRequestError(f'You have already approved recording of {section["courseName"]}, {term_name}')
 
-    location = section['room']['location']
+    location = section['meetingLocation']
     room = Room.find_room(location=location)
     if not room:
         raise BadRequestError(f'{location} is not eligible for Course Capture.')
@@ -101,6 +101,7 @@ def _approvals_to_json(section, term_id):
         'approvals': [approval.to_api_json() for approval in all_approvals],
         'hasNecessaryApprovals': has_necessary_approvals(section, all_approvals),
         'publishTypeOptions': [{'text': text, 'value': value} for value, text in PUBLISH_TYPE_NAMES_PER_ID.items()],
+        'room': Room.find_room(section['meetingLocation']).to_api_json(),
         'scheduled': Scheduled.was_scheduled(section_id=section_id, term_id=term_id),
     }
 
@@ -115,7 +116,7 @@ def _approvals_per_section(term_id):
 
     api_json = []
     section_ids = list(approvals_per_section_id.keys())
-    for section in get_sections_per_ids(term_id, section_ids):
+    for section in get_courses_per_section_ids(term_id, section_ids):
         section_id = section['sectionId']
         section['approvals'] = approvals_per_section_id[section_id] if section_id in approvals_per_section_id else []
         api_json.append(section)

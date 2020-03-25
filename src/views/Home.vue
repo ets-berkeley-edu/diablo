@@ -79,6 +79,7 @@
       showEligibleCoursesOnly: false
     }),
     created() {
+      this.$loading()
       this.courses = {
         all: [],
         eligibleOnly: []

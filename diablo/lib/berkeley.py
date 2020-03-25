@@ -23,30 +23,6 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-from diablo.models.approval import RECORDING_TYPE_NAMES_PER_ID
-
-
-def get_capture_options(location, enabled_rooms):
-    capture_options = []
-    flattened_location = flatten_location(location)
-    for enabled_room in enabled_rooms:
-        _flattened_enabled_location = flatten_location(f'{enabled_room["building"]} {enabled_room["roomNumber"]}')
-        if flattened_location == _flattened_enabled_location:
-            if enabled_room['capability'] == 'Screencast + Video':
-                for key, value in RECORDING_TYPE_NAMES_PER_ID.items():
-                    capture_options.append({
-                        'text': value,
-                        'value': key,
-                    })
-            else:
-                key = 'presentation_audio'
-                capture_options.append({
-                    'text': RECORDING_TYPE_NAMES_PER_ID[key],
-                    'value': key,
-                })
-            break
-    return capture_options
-
 
 def flatten_location(name):
     return name and ''.join(name.split()).lower()

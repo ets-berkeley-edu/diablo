@@ -1,6 +1,7 @@
 <template>
   <v-app :id="$vuetify.theme.dark ? 'dark' : 'light'">
     <v-app-bar
+      v-if="!$route.meta.printable"
       app
       color="header-background"
       dark

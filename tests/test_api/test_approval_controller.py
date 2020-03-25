@@ -24,7 +24,6 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 
 from diablo import std_commit
-from diablo.models.approval import get_all_recording_types
 from flask import current_app as app
 from tests.test_api.api_test_utils import api_approve, api_get_approvals
 
@@ -105,15 +104,7 @@ class TestApprove:
             term_id=app.config['CURRENT_TERM_ID'],
             section_id=section_1_id,
         )
-        assert api_json['section']['room'] == {
-            'location': 'Barrows 106',
-            'captureOptions': [
-                {
-                    'text': 'Presentation and Audio',
-                    'value': 'presentation_audio',
-                },
-            ],
-        }
+        assert api_json['room']['location'] == 'Barrows 106'
         instructor_uids = [i['uid'] for i in api_json['section']['instructors']]
         assert instructor_uids == section_1_instructor_uids
         approvals_ = api_json['approvals']
@@ -182,15 +173,8 @@ class TestApprovals:
         )
         assert api_json['section']
         assert [i['uid'] for i in api_json['section']['instructors']] == ['234567', '8765432']
-        assert api_json['section']['room'] == {
-            'location': 'Barrows 106',
-            'captureOptions': [
-                {
-                    'text': 'Presentation and Audio',
-                    'value': 'presentation_audio',
-                },
-            ],
-        }
+        assert 'id' in api_json['room']
+        assert api_json['room']['location'] == 'Barrows 106'
 
     def test_date_time_format(self, client, db, fake_auth):
         uid = section_2_instructor_uids[0]
@@ -204,10 +188,7 @@ class TestApprovals:
         assert api_json['section']['meetingDays'] == ['MO', 'WE', 'FR']
         assert api_json['section']['meetingStartTime'] == '3:00 pm'
         assert api_json['section']['meetingEndTime'] == '3:59 pm'
-        assert api_json['section']['room'] == {
-            'location': 'Wheeler 150',
-            'captureOptions': [],
-        }
+        assert api_json['section']['meetingLocation'] == 'Wheeler 150'
 
     def test_li_ka_shing_capture_options(self, client, db, fake_auth):
         fake_auth.login(admin_uid)
@@ -216,5 +197,5 @@ class TestApprovals:
             term_id=app.config['CURRENT_TERM_ID'],
             section_id=section_3_id,
         )
-        assert api_json['section']['room']['location'] == 'Li Ka Shing 145'
-        assert len(api_json['section']['room']['captureOptions']) == len(get_all_recording_types())
+        assert api_json['room']['location'] == 'Li Ka Shing 145'
+        assert len(api_json['room']['captureOptions']) == 2
