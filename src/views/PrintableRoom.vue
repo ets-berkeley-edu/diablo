@@ -67,7 +67,7 @@
 <script>
   import Spinner from '@/components/util/Spinner'
   import Context from '@/mixins/Context'
-  import {getRoom} from '@/api/berkeley'
+  import {getRoom} from '@/api/room'
 
   export default {
     name: 'PrintableRoom',

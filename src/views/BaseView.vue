@@ -26,9 +26,9 @@
           </v-list-item>
           <v-divider></v-divider>
           <v-list-item
-            v-for="item in navItems"
+            v-for="(item, index) in navItems"
             :id="`sidebar-link-${item.title}`"
-            :key="item.title"
+            :key="index"
             link
             @click="toRoute(item.path)"
           >
@@ -93,8 +93,14 @@
         this.navItems = [
           { title: 'Home', icon: 'mdi-home', path: '/home' }
         ]
-        this.$_.each(this.organizeMySections().eligibleOnly, eligible => {
-          this.navItems.push({ title: eligible.name, icon: 'mdi-video-plus', path: `/approve/${this.$config.currentTermId}/${eligible.sectionId}` })
+        this.$_.each(this.$currentUser.courses, course => {
+          if (course.room.capability) {
+            this.navItems.push({
+              title: course.courseName,
+              icon: 'mdi-video-plus',
+              path: `/approve/${this.$config.currentTermId}/${course.sectionId}`
+            })
+          }
         })
         this.navItems.push({ title: 'About', icon: 'mdi-help-box' })
       }

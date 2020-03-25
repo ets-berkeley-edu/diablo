@@ -43,29 +43,33 @@ class Room(db.Model):
     __tablename__ = 'rooms'
 
     id = db.Column(db.Integer, nullable=False, primary_key=True)  # noqa: A003
-    location = db.Column(db.String(255), nullable=False, unique=True)
     capability = db.Column(room_capability_type)
+    is_auditorium = db.Column(db.Boolean, nullable=False)
+    location = db.Column(db.String(255), nullable=False, unique=True)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.now)
 
     def __init__(
             self,
-            location,
             capability,
+            is_auditorium,
+            location,
     ):
-        self.location = location
         self.capability = capability
+        self.is_auditorium = is_auditorium
+        self.location = location
 
     def __repr__(self):
         return f"""<Room
                     id={self.id},
-                    location={self.location},
                     capability={self.capability},
+                    location={self.location},
+                    is_auditorium={self.is_auditorium},
                     created_at={self.created_at}>
                 """
 
     @classmethod
-    def create(cls, location, capability=None):
-        room = cls(location=location, capability=capability)
+    def create(cls, location, is_auditorium=False, capability=None):
+        room = cls(capability=capability, is_auditorium=is_auditorium, location=location)
         db.session.add(room)
         std_commit()
         return room
@@ -100,6 +104,14 @@ class Room(db.Model):
         return room
 
     @classmethod
+    def set_auditorium(cls, room_id, is_auditorium):
+        room = cls.query.filter_by(id=room_id).first()
+        room.is_auditorium = is_auditorium
+        db.session.add(room)
+        std_commit()
+        return room
+
+    @classmethod
     def get_room_capability_options(cls):
         return {
             'screencast': 'Screencast',
@@ -107,20 +119,18 @@ class Room(db.Model):
         }
 
     def to_api_json(self):
-        all_options = self.get_room_capability_options()
-        if self.capability:
-            capability_name = all_options[self.capability]
-            capture_options = all_options
-            if self.capability == 'screencast':
-                capture_options.pop('screencast_and_video')
-        else:
-            capability_name = None
-            capture_options = None
+        recording_type_options = {
+            'presentation_audio': 'Presentation + Audio',
+        }
+        if self.is_auditorium:
+            recording_type_options['presenter_audio'] = 'Presenter + Audio'
+            recording_type_options['presenter_presentation_audio'] = 'Presenter + Presentation + Audio'
         return {
             'id': self.id,
             'location': self.location,
             'capability': self.capability,
-            'capabilityName': capability_name,
-            'captureOptions': capture_options,
+            'capabilityName': self.get_room_capability_options()[self.capability] if self.capability else None,
             'createdAt': to_isoformat(self.created_at),
+            'isAuditorium': self.is_auditorium,
+            'recordingTypeOptions': recording_type_options,
         }

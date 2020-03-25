@@ -9,7 +9,10 @@
               <label for="select-room-capability" class="subtitle-1">Capability:</label>
             </div>
             <div>
-              <SelectRoomCapability id="select-room-capability" :capability-options="capabilityOptions" :room="room" />
+              <SelectRoomCapability id="select-room-capability" :options="capabilityOptions" :room="room" />
+            </div>
+            <div class="ml-auto">
+              <v-switch v-model="isAuditorium" label="Auditorium"></v-switch>
             </div>
           </div>
           <v-list-item-title>
@@ -89,7 +92,7 @@
 <script>
   import Context from '@/mixins/Context'
   import SelectRoomCapability from '@/components/room/SelectRoomCapability'
-  import {getCapabilityOptions, getRoom} from '@/api/berkeley'
+  import {getCapabilityOptions, getRoom, setAuditorium} from '@/api/room'
 
   export default {
     name: 'Room',
@@ -104,21 +107,24 @@
         {text: 'Time', value: 'time', sortable: false},
         {text: 'Recording'}
       ],
+      isAuditorium: undefined,
       room: undefined
     }),
+    watch: {
+      isAuditorium(value) {
+        if (!this.loading) {
+          setAuditorium(this.room.id, value).then(this.$_.noop)
+        }
+      }
+    },
     created() {
       this.$loading()
       let id = this.$_.get(this.$route, 'params.id')
       getRoom(id).then(room => {
         this.room = room
+        this.isAuditorium = room.isAuditorium
         getCapabilityOptions().then(options => {
-          this.capabilityOptions = [{
-            'label': 'None',
-            'value': null,
-          }]
-          this.$_.each(options, (label, value) => {
-            this.capabilityOptions.push({label, value})
-          })
+          this.capabilityOptions = options
           this.$ready()
         })
       })

@@ -16,9 +16,9 @@
               </v-col>
               <v-col>
                 <span v-if="$currentUser.isAdmin">
-                  <span v-for="instructor in section.instructors" :key="instructor.uid">
+                  <span v-for="(instructor, index) in section.instructors" :key="instructor.uid">
                     <router-link :id="`instructor-${instructor.uid}`" :to="`/user/${instructor.uid}`">{{ instructor.name }}</router-link>
-                    <span v-if="!$_.last(instructor) && section.instructors.length > 1">and</span>
+                    <span v-if="section.instructors.length > 1 && index === section.instructors.length - 2"> and </span>
                   </span>
                 </span>
                 <span v-if="!$currentUser.isAdmin">
@@ -46,11 +46,11 @@
               <v-col md="auto">
                 <v-icon>mdi-map-marker</v-icon>
               </v-col>
-              <v-col v-if="section.room.id && $currentUser.isAdmin">
-                {{ section.room.location }}
+              <v-col v-if="room.id && $currentUser.isAdmin">
+                {{ room.location }}
               </v-col>
-              <v-col v-if="!section.room.id || !$currentUser.isAdmin">
-                {{ section.room.location }}
+              <v-col v-if="!room.id || !$currentUser.isAdmin">
+                {{ room.location }}
               </v-col>
             </v-row>
           </v-card>
@@ -113,16 +113,18 @@
                     {{ mostRecentApproval.recordingTypeName }}
                   </div>
                   <div v-if="!hasNecessaryApprovals">
-                    <div v-if="section.room.captureOptions.length === 1">
-                      {{ section.room.captureOptions[0].text }}
-                      <input type="hidden" name="recordingType" :value="section.room.captureOptions[0].value">
+                    <div v-if="recordingTypeOptions.length === 1">
+                      {{ recordingTypeOptions[0].text }}
+                      <input type="hidden" name="recordingType" :value="recordingTypeOptions[0].value">
                     </div>
-                    <div v-if="section.room.captureOptions.length > 1">
+                    <div v-if="recordingTypeOptions.length > 1">
                       <v-select
                         id="select-recording-type"
                         v-model="recordingType"
+                        item-text="text"
+                        item-value="value"
                         :full-width="true"
-                        :items="section.room.captureOptions"
+                        :items="recordingTypeOptions"
                         label="Select..."
                         solo
                       ></v-select>
@@ -160,6 +162,8 @@
                     v-if="!hasNecessaryApprovals"
                     id="select-publish-type"
                     v-model="publishType"
+                    item-text="text"
+                    item-value="value"
                     :full-width="true"
                     :items="publishTypeOptions"
                     label="Select..."
@@ -199,7 +203,7 @@
 <script>
   import Context from '@/mixins/Context'
   import Utils from '@/mixins/Utils'
-  import {approve, getApprovals} from '@/api/approval'
+  import {approve, getApprovals} from '@/api/course'
 
   export default {
     name: 'Approve',
@@ -215,6 +219,8 @@
       publishType: undefined,
       publishTypeOptions: undefined,
       recordingType: undefined,
+      recordingTypeOptions: undefined,
+      room: undefined,
       scheduled: undefined,
       section: undefined
     }),
@@ -236,7 +242,7 @@
       approveRecording() {
         approve(this.publishType, this.recordingType, this.section.sectionId).then(data => {
           this.render(data)
-        })
+        }).catch(this.$ready)
       },
       getInstructorNames(uids) {
         const instructors = this.$_.filter(this.section.instructors, instructor => this.$_.includes(uids, instructor.uid))
@@ -246,6 +252,11 @@
       },
       render(data) {
         this.$loading()
+        this.room = data.room
+        this.recordingTypeOptions = []
+        this.$_.each(this.room.recordingTypeOptions, (text, value) => {
+          this.recordingTypeOptions.push({text, value})
+        })
         if (data.approvals.length) {
           this.approvals = this.$_.sortBy(data.approvals, ['createdAt'])
           this.approvedByUids = this.$_.map(this.approvals, 'approvedByUid')
@@ -255,16 +266,19 @@
         } else {
           this.approvals = []
           this.approvedByUids = []
+          if (this.recordingTypeOptions.length === 1) {
+            this.recordingType = this.recordingTypeOptions[0].value
+          }
         }
         this.hasNecessaryApprovals = data.hasNecessaryApprovals
         this.instructorUids = this.$_.map(data.section.instructors, 'uid')
         this.pageTitle = `${data.section.courseName } - ${data.section.instructionFormat} ${data.section.sectionNum}`
-        this.publishTypeOptions = data.publishTypeOptions
+        this.publishTypeOptions = []
+        this.$_.each(data.publishTypeOptions, (text, value) => {
+          this.publishTypeOptions.push({text, value})
+        })
         this.scheduled = data.scheduled
         this.section = data.section
-        if (this.section.room.captureOptions.length === 1) {
-          this.recordingType = this.section.room.captureOptions[0].value
-        }
         this.setPageTitle(this.pageTitle)
         this.$ready()
       }

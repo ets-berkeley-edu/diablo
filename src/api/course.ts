@@ -7,7 +7,7 @@ export function approve(
     sectionId: string
 ) {
   return axios
-    .post(`${utils.apiBaseUrl()}/api/approve`, {
+    .post(`${utils.apiBaseUrl()}/api/course/approve`, {
       publishType,
       recordingType,
       sectionId
@@ -17,12 +17,16 @@ export function approve(
 
 export function getAllApprovals(termId) {
   return axios
-    .get(`${utils.apiBaseUrl()}/api/approvals/${termId}`)
+    .get(`${utils.apiBaseUrl()}/api/courses/approvals/${termId}`)
     .then(response => response.data, () => null)
 }
 
 export function getApprovals(termId: number, sectionId: number) {
   return axios
-    .get(`${utils.apiBaseUrl()}/api/approvals/${termId}/${sectionId}`)
+    .get(`${utils.apiBaseUrl()}/api/course/approvals/${termId}/${sectionId}`)
     .then(response => response.data, () => null)
+}
+
+export function getTermSummary(termId) {
+  return axios.get(`${utils.apiBaseUrl()}/api/courses/term/${termId}`).then(response => response.data, () => null)
 }

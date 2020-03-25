@@ -19,10 +19,11 @@ axios.interceptors.response.use(response => response, function(error) {
       Vue.prototype.$currentUser = response.data
       Vue.prototype.$core.initializeCurrentUser().then(router.push({ path: '/login' }).catch(() => null))
     })
-  } else if (errorStatus >= 500) {
+  } else if (errorStatus === 404) {
+      router.push({ path: '/404' })
+  } else if (errorStatus >= 400) {
       router.push({ path: '/error', query: { m: error.message }})
   }
-  store.dispatch('context/loadingComplete')
   return Promise.reject(error)
 })
 

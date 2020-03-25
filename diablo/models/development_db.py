@@ -83,6 +83,7 @@ def _run_jobs():
         if room.location in ['Barrows 106', 'Barker 101']:
             Room.update_capability(room.id, 'screencast')
         elif room.location in ['Li Ka Shing 145']:
+            Room.set_auditorium(room.id, True)
             Room.update_capability(room.id, 'screencast_and_video')
     std_commit(allow_test_environment=True)
 

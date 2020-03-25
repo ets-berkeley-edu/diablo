@@ -31,7 +31,7 @@
         <tbody>
           <tr v-for="item in items" :key="item.name">
             <td>
-              <div v-if="$_.size(item.room.captureOptions)">
+              <div v-if="item.room.capability">
                 <v-btn
                   :id="`approve-${item.sectionId}`"
                   :aria-label="`Approve ${item.name} up for Course Capture.`"
@@ -95,7 +95,7 @@
           title: s.courseTitle
         }
         this.courses['all'].push(course)
-        if (s.room.captureOptions.length) {
+        if (s.room.capability) {
           this.courses['eligibleOnly'].push(course)
         }
       })

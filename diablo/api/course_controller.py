@@ -35,9 +35,9 @@ from flask import current_app as app, request
 from flask_login import current_user, login_required
 
 
-@app.route('/api/approve', methods=['POST'])
+@app.route('/api/course/approve', methods=['POST'])
 @login_required
-def course_capture_sign_up():
+def approve():
     approved_by_uid = current_user.get_uid()
     term_id = app.config['CURRENT_TERM_ID']
     term_name = term_name_for_sis_id(term_id)
@@ -71,10 +71,10 @@ def course_capture_sign_up():
         recording_type_=recording_type,
         room_id=room.id,
     )
-    return tolerant_jsonify(_approvals_to_json(section, term_id))
+    return tolerant_jsonify(_course_to_json(section, term_id))
 
 
-@app.route('/api/approvals/<term_id>/<section_id>')
+@app.route('/api/course/approvals/<term_id>/<section_id>')
 @login_required
 def get_approvals(term_id, section_id):
     section = get_section(term_id, section_id)
@@ -83,26 +83,52 @@ def get_approvals(term_id, section_id):
 
     if not current_user.is_admin and current_user.get_uid() not in get_instructor_uids(section):
         raise ForbiddenRequestError('Sorry, this request is unauthorized.')
-    return tolerant_jsonify(_approvals_to_json(section, term_id))
+    return tolerant_jsonify(_course_to_json(section, term_id))
 
 
-@app.route('/api/approvals/<term_id>')
+@app.route('/api/courses/approvals/<term_id>')
 @admin_required
 def approvals_per_term(term_id):
     return tolerant_jsonify(_approvals_per_section(term_id))
 
 
-def _approvals_to_json(section, term_id):
+@app.route('/api/courses/term/<term_id>')
+@admin_required
+def term_report(term_id):
+    def _objects_per_section_id(objects):
+        per_section_id = {}
+        for obj in objects:
+            key = str(obj.section_id)
+            if obj.section_id not in per_section_id:
+                per_section_id[key] = []
+            per_section_id[key].append(obj.to_api_json())
+        return per_section_id
+
+    api_json = []
+    approvals_per_section_id = _objects_per_section_id(Approval.get_approvals_per_term(term_id))
+    scheduled_per_section_id = _objects_per_section_id(Scheduled.get_all_scheduled(term_id))
+    section_ids = set(approvals_per_section_id.keys()).union(set(scheduled_per_section_id.keys()))
+
+    for section in get_courses_per_section_ids(term_id, section_ids):
+        section_id = section['sectionId']
+        section['approvals'] = approvals_per_section_id.get(section_id, [])
+        section['scheduled'] = scheduled_per_section_id.get(section_id, [])
+        api_json.append(section)
+    return tolerant_jsonify(api_json)
+
+
+def _course_to_json(section, term_id):
+    room = Room.find_room(section['meetingLocation'])
     section_id = section['sectionId']
     all_approvals = Approval.get_approvals_per_section_id(section_id, term_id)
     return {
-        'termId': term_id,
-        'section': section,
         'approvals': [approval.to_api_json() for approval in all_approvals],
         'hasNecessaryApprovals': has_necessary_approvals(section, all_approvals),
-        'publishTypeOptions': [{'text': text, 'value': value} for value, text in PUBLISH_TYPE_NAMES_PER_ID.items()],
-        'room': Room.find_room(section['meetingLocation']).to_api_json(),
+        'publishTypeOptions': PUBLISH_TYPE_NAMES_PER_ID,
+        'room': room.to_api_json(),
         'scheduled': Scheduled.was_scheduled(section_id=section_id, term_id=term_id),
+        'section': section,
+        'termId': term_id,
     }
 
 

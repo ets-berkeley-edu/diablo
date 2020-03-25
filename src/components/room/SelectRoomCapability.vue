@@ -3,7 +3,7 @@
     :id="id || `select-room-${room.id}-capability`"
     v-model="room.capability"
     dense
-    item-text="label"
+    item-text="text"
     item-value="value"
     :items="capabilityOptions"
     no-data-text="Select..."
@@ -12,14 +12,14 @@
 </template>
 
 <script>
-  import {updateRoomCapability} from '@/api/berkeley'
+  import {updateRoomCapability} from '@/api/room'
 
   export default {
     name: 'SelectRoomCapability',
     props: {
-      capabilityOptions: {
+      options: {
         required: true,
-        type: Array
+        type: Object
       },
       id: {
         required: false,
@@ -29,6 +29,17 @@
         required: true,
         type: Object
       }
+    },
+    data: () => ({
+      capabilityOptions: [{
+        'text': 'None',
+        'value': null,
+      }]
+    }),
+    created() {
+      this.$_.each(this.options, (text, value) => {
+        this.capabilityOptions.push({text, value})
+      })
     },
     methods: {
       update(room) {
