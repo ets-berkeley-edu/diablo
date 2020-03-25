@@ -38,11 +38,6 @@ room_capability_type = ENUM(
     create_type=False,
 )
 
-label_per_capability_type = {
-    'screencast': 'Screencast',
-    'screencast_and_video': 'Screencast + Video',
-}
-
 
 class Room(db.Model):
     __tablename__ = 'rooms'
@@ -106,12 +101,26 @@ class Room(db.Model):
 
     @classmethod
     def get_room_capability_options(cls):
-        return label_per_capability_type
+        return {
+            'screencast': 'Screencast',
+            'screencast_and_video': 'Screencast + Video',
+        }
 
     def to_api_json(self):
+        all_options = self.get_room_capability_options()
+        if self.capability:
+            capability_name = all_options[self.capability]
+            capture_options = all_options
+            if self.capability == 'screencast':
+                capture_options.pop('screencast_and_video')
+        else:
+            capability_name = None
+            capture_options = None
         return {
             'id': self.id,
             'location': self.location,
             'capability': self.capability,
+            'capabilityName': capability_name,
+            'captureOptions': capture_options,
             'createdAt': to_isoformat(self.created_at),
         }

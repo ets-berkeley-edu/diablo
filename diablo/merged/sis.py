@@ -25,27 +25,29 @@ ENHANCEMENTS, OR MODIFICATIONS.
 
 from datetime import datetime
 
-from diablo.externals.data_loch import get_section_denormalized, get_sections_denormalized, \
-    get_sections_per_ids_denormalized
+from diablo.externals.data_loch import get_sis_section, get_sis_sections, \
+    get_sis_sections_per_id, get_sis_sections_per_location
 from diablo.externals.edo_db import get_edo_db_courses, get_edo_db_instructors_per_section_id
-from diablo.externals.salesforce import get_capture_enabled_rooms
-from diablo.lib.berkeley import get_capture_options
 from diablo.merged.calnet import get_calnet_user_for_uid
 from flask import current_app as app
 
 
 def get_section(term_id, section_id):
-    rows = _normalize_rows(get_section_denormalized(term_id=term_id, section_id=section_id))
+    rows = _normalize_rows(get_sis_section(term_id=term_id, section_id=section_id))
     return rows[0] if rows else None
 
 
-def get_sections(term_id, instructor_uid):
-    return _normalize_rows(get_sections_denormalized(term_id=term_id, instructor_uid=instructor_uid))
+def get_courses_per_instructor(term_id, instructor_uid):
+    return _normalize_rows(get_sis_sections(term_id=term_id, instructor_uid=instructor_uid))
 
 
-def get_sections_per_ids(term_id, section_ids):
+def get_courses_per_location(term_id, room_location):
+    return _normalize_rows(get_sis_sections_per_location(term_id=term_id, room_location=room_location))
+
+
+def get_courses_per_section_ids(term_id, section_ids):
     return _normalize_rows(
-        get_sections_per_ids_denormalized(
+        get_sis_sections_per_id(
             term_id=term_id,
             section_ids=[str(section_id) for section_id in section_ids],
         ),
@@ -75,11 +77,9 @@ def get_course_and_instructors(term_id, section_ids=None):
 def _normalize_rows(rows):
     sections_per_id = {}
     instructor_uids_per_section_id = {}
-    enabled_rooms = get_capture_enabled_rooms()
     for row in rows:
         section_id = row['sis_section_id']
         if section_id not in sections_per_id:
-            location = row['meeting_location']
             sections_per_id[section_id] = {
                 'allowedUnits': row['allowed_units'],
                 'courseName': row['sis_course_name'],
@@ -90,10 +90,7 @@ def _normalize_rows(rows):
                 'meetingDays': _format_days(row['meeting_days']),
                 'meetingEndDate': row['meeting_end_date'],
                 'meetingEndTime': _format_time(row['meeting_end_time']),
-                'room': {
-                    'location': location,
-                    'captureOptions': get_capture_options(location, enabled_rooms),
-                },
+                'meetingLocation': row['meeting_location'],
                 'meetingStartDate': row['meeting_start_date'],
                 'meetingStartTime': _format_time(row['meeting_start_time']),
                 'sectionId': section_id,

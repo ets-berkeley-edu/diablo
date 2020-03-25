@@ -80,6 +80,7 @@
       ]
     }),
     created() {
+      this.$loading()
       let uid = this.$_.get(this.$route, 'params.uid')
       getUser(uid).then(user => {
         this.user = user

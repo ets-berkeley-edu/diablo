@@ -22,9 +22,6 @@
 
   export default {
     name: 'Attic',
-    mixins: [Context],
-    created() {
-      this.$ready()
-    }
+    mixins: [Context]
   }
 </script>

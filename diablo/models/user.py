@@ -24,7 +24,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 
 from diablo.merged import calnet
-from diablo.merged.sis import get_sections
+from diablo.merged.sis import get_courses_per_instructor
 from diablo.models.admin_user import AdminUser
 from flask import current_app as app
 from flask_login import UserMixin
@@ -83,7 +83,7 @@ class User(UserMixin):
             is_active = not calnet_profile.get('isExpiredPerLdap', True)
             if is_active:
                 is_admin = AdminUser.is_admin(uid)
-                courses = get_sections(
+                courses = get_courses_per_instructor(
                     term_id=app.config['CURRENT_TERM_ID'],
                     instructor_uid=uid,
                 )

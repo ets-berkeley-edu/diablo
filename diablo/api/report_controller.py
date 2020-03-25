@@ -23,10 +23,8 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 from diablo.api.util import admin_required
-from diablo.externals.salesforce import get_all_contacts, get_all_eligible_courses, get_capture_enabled_rooms
 from diablo.lib.http import tolerant_jsonify
-from diablo.merged.reports import verify_salesforce_data
-from diablo.merged.sis import get_sections_per_ids
+from diablo.merged.sis import get_courses_per_section_ids
 from diablo.models.approval import Approval
 from diablo.models.scheduled import Scheduled
 from flask import current_app as app
@@ -49,48 +47,9 @@ def term_report(term_id):
     scheduled_per_section_id = _objects_per_section_id(Scheduled.get_all_scheduled(term_id))
     section_ids = set(approvals_per_section_id.keys()).union(set(scheduled_per_section_id.keys()))
 
-    for section in get_sections_per_ids(term_id, section_ids):
+    for section in get_courses_per_section_ids(term_id, section_ids):
         section_id = section['sectionId']
         section['approvals'] = approvals_per_section_id.get(section_id, [])
         section['scheduled'] = scheduled_per_section_id.get(section_id, [])
         api_json.append(section)
     return tolerant_jsonify(api_json)
-
-
-@app.route('/api/report/salesforce/all_courses')
-@admin_required
-def salesforce_all_courses():
-    return tolerant_jsonify(_to_api_json(get_capture_enabled_rooms()))
-
-
-@app.route('/api/report/salesforce/eligible_courses')
-@admin_required
-def salesforce_all_eligible_courses():
-    return tolerant_jsonify(_to_api_json(get_all_eligible_courses()))
-
-
-@app.route('/api/report/salesforce/all_contacts')
-@admin_required
-def salesforce_all_contacts():
-    return tolerant_jsonify(_to_api_json(get_all_contacts()))
-
-
-@app.route('/api/report/salesforce/verify')
-@admin_required
-def salesforce_verify():
-    path_to_stale_data_report, path_to_courses_missing_report = verify_salesforce_data()
-    return tolerant_jsonify({
-        'pathToStaleDataReport': path_to_stale_data_report,
-        'pathToCoursesMissingReport': path_to_courses_missing_report,
-    })
-
-
-def _to_api_json(objects):
-    api_json = []
-    for obj in objects:
-        obj_json = dict(obj)
-        if 'attributes' in obj_json:
-            # Salesforce API responses include extraneous metadata in 'attributes' prop
-            obj_json.pop('attributes')
-        api_json.append(obj_json)
-    return api_json

@@ -27,7 +27,6 @@
     }),
     mounted() {
       this.message = this.$route.query.m
-      this.$ready()
     }
   }
 </script>

@@ -23,9 +23,9 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 from diablo.api.errors import BadRequestError, ResourceNotFoundError
-from diablo.api.util import admin_required
+from diablo.api.util import admin_required, put_approvals_and_scheduled
 from diablo.lib.http import tolerant_jsonify
-from diablo.models.approval import Approval
+from diablo.merged.sis import get_courses_per_location
 from diablo.models.room import Room
 from flask import current_app as app, request
 
@@ -39,13 +39,7 @@ def get_all_rooms():
 @app.route('/api/berkeley/capability_options')
 @admin_required
 def get_capability_options():
-    api_json = []
-    for value, label in Room.get_room_capability_options().items():
-        api_json.append({
-            'label': label,
-            'value': value,
-        })
-    return tolerant_jsonify(api_json)
+    return tolerant_jsonify(Room.get_room_capability_options())
 
 
 @app.route('/api/berkeley/room/<room_id>')
@@ -53,9 +47,12 @@ def get_capability_options():
 def get_room(room_id):
     room = Room.get_room(room_id)
     if room:
-        term_id = app.config['CURRENT_TERM_ID']
         api_json = room.to_api_json()
-        api_json['approvals'] = [approval.to_api_json() for approval in Approval.get_approvals_per_room_id(room_id=room.id, term_id=term_id)]
+        api_json['courses'] = get_courses_per_location(
+            term_id=app.config['CURRENT_TERM_ID'],
+            room_location=room.location,
+        )
+        put_approvals_and_scheduled(api_json['courses'])
         return tolerant_jsonify(api_json)
     else:
         raise ResourceNotFoundError('No such room')
@@ -66,8 +63,8 @@ def get_room(room_id):
 def update_room_capability():
     params = request.get_json()
     room_id = params.get('roomId')
-    capability = params.get('capability')
-    if not room_id or not capability:
-        raise BadRequestError('Both "name" and "capability" parameters are required.')
+    capability = params.get('capability') or None
+    if not room_id:
+        raise BadRequestError('Room \'id\' is required.')
     room = Room.update_capability(room_id, capability)
     return tolerant_jsonify(room.to_api_json())

@@ -39,6 +39,7 @@ Vue.prototype.$_ = _
 // Emit, and listen for, events via hub
 Vue.prototype.$eventHub = new Vue()
 
+Vue.prototype.$loading = () => store.dispatch('context/loadingStart')
 Vue.prototype.$ready = () => store.dispatch('context/loadingComplete')
 
 axios.get(`${apiBaseUrl}/api/user/my_profile`).then(response => {

@@ -26,7 +26,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 from flask import current_app as app
 from KalturaClient import KalturaClient, KalturaConfiguration
 from KalturaClient.Plugins.Core import KalturaFilterPager, KalturaMediaEntryFilter
-from KalturaClient.Plugins.Schedule import KalturaSessionType
+from KalturaClient.Plugins.Schedule import KalturaScheduleResourceFilter, KalturaSessionType
 
 
 class Kaltura:
@@ -50,6 +50,12 @@ class Kaltura:
             'appId:appName-appDomain',
         )
         self.client.setKs(ks)
+
+    def get_resource_list(self):
+        return self.client.schedule.scheduleResource.list(
+            KalturaScheduleResourceFilter(),
+            KalturaFilterPager(),
+        )
 
     def ping(self):
         filter_ = KalturaMediaEntryFilter()

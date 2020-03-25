@@ -12,9 +12,6 @@
 
   export default {
     name: 'NotFound',
-    mixins: [Context],
-    created() {
-      this.$ready()
-    }
+    mixins: [Context]
   }
 </script>

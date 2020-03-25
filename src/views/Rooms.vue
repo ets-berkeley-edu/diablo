@@ -1,6 +1,6 @@
 <template>
   <div v-if="!loading">
-    <h2><v-icon class="pb-3" large>mdi-domain</v-icon> {{ rooms.length }} Capture-enabled Rooms</h2>
+    <h2><v-icon class="pb-3" large>mdi-domain</v-icon> {{ $_.size(rooms) }} Capture-enabled Rooms</h2>
     <v-card outlined class="elevation-1">
       <div class="pt-6">
         <v-card-title>
@@ -17,7 +17,6 @@
           :headers="headers"
           hide-default-footer
           :items="rooms"
-          :loading="isFetching"
           no-results-text="No matching rooms"
           :options="options"
           :page.sync="options.page"
@@ -31,21 +30,12 @@
                   No rooms found.
                 </td>
               </tr>
-              <tr v-for="item in items" :key="item.name">
+              <tr v-for="room in items" :key="room.id">
                 <td class="w-50">
-                  <router-link :id="`room-${item.location}`" :to="`/room/${item.id}`">{{ item.location }}</router-link>
+                  <router-link :id="`room-${room.id}`" :to="`/room/${room.id}`">{{ room.location }}</router-link>
                 </td>
                 <td class="w-50">
-                  <v-select
-                    :id="`select-room-${item.id}-capability`"
-                    v-model="item.capability"
-                    dense
-                    item-text="label"
-                    item-value="value"
-                    :items="capabilityOptions"
-                    no-data-text="Select..."
-                    @change="updateCapability(item)"
-                  ></v-select>
+                  <SelectRoomCapability :capability-options="capabilityOptions" :room="room" />
                 </td>
               </tr>
             </tbody>
@@ -65,10 +55,12 @@
 
 <script>
   import Context from '@/mixins/Context'
-  import {getAllRooms, getCapabilityOptions, updateRoomCapability} from '@/api/berkeley'
+  import SelectRoomCapability from '@/components/room/SelectRoomCapability'
+  import {getAllRooms, getCapabilityOptions} from '@/api/berkeley'
 
   export default {
     name: 'Rooms',
+    components: {SelectRoomCapability},
     mixins: [Context],
     data: () => ({
       capabilityOptions: undefined,
@@ -76,7 +68,6 @@
         {text: 'Room', value: 'location'},
         {text: 'Capability', value: 'capability'}
       ],
-      isFetching: true,
       options: {
         page: 1,
         itemsPerPage: 50
@@ -86,24 +77,20 @@
       search: undefined
     }),
     mounted() {
-      this.isFetching = true
+      this.$loading()
       getAllRooms().then(data => {
         this.rooms = data
-        this.isFetching = false
         getCapabilityOptions().then(options => {
-          this.capabilityOptions = options
-          this.capabilityOptions.unshift({
+          this.capabilityOptions = [{
             'label': 'None',
             'value': null,
+          }]
+          this.$_.each(options, (label, value) => {
+            this.capabilityOptions.push({label, value})
           })
+          this.$ready()
         })
-        this.$ready()
       })
-    },
-    methods: {
-      updateCapability(room) {
-        updateRoomCapability(room.id, room.capability)
-      }
     }
   }
 </script>

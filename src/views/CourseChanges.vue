@@ -14,9 +14,6 @@
 
   export default {
     name: 'CourseChanges',
-    mixins: [Context],
-    created() {
-      this.$ready()
-    }
+    mixins: [Context]
   }
 </script>

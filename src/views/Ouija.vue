@@ -81,6 +81,7 @@
       ]
     }),
     created() {
+      this.$loading()
       getTermSummary(this.$config.currentTermId).then(data => {
         this.courses = data
         this.$ready()
