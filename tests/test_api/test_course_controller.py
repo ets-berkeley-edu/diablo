@@ -26,6 +26,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 from diablo import std_commit
 from flask import current_app as app
 from tests.test_api.api_test_utils import api_approve, api_get_approvals
+from tests.util import create_approvals_and_scheduled
 
 admin_uid = '2040'
 section_1_id = '28602'
@@ -190,7 +191,7 @@ class TestApprovals:
         assert api_json['section']['meetingEndTime'] == '3:59 pm'
         assert api_json['section']['meetingLocation'] == 'Wheeler 150'
 
-    def test_li_ka_shing_capture_options(self, client, db, fake_auth):
+    def test_li_ka_shing_recording_options(self, client, db, fake_auth):
         fake_auth.login(admin_uid)
         api_json = api_get_approvals(
             client,
@@ -198,4 +199,42 @@ class TestApprovals:
             section_id=section_3_id,
         )
         assert api_json['room']['location'] == 'Li Ka Shing 145'
-        assert len(api_json['room']['captureOptions']) == 2
+        assert len(api_json['room']['recordingTypeOptions']) == 3
+
+
+class TestTermReport:
+
+    @staticmethod
+    def _api_capture_enabled_rooms(client, term_id=None, expected_status_code=200):
+        term_id = term_id or app.config['CURRENT_TERM_ID']
+        response = client.get(f'/api/courses/term/{term_id}')
+        assert response.status_code == expected_status_code
+        return response.json
+
+    def test_not_authenticated(self, client):
+        self._api_capture_enabled_rooms(client, expected_status_code=401)
+
+    def test_not_authorized(self, client, fake_auth):
+        fake_auth.login(section_1_instructor_uids[0])
+        self._api_capture_enabled_rooms(client, expected_status_code=401)
+
+    def test_admin_runs_report(self, client, db, fake_auth):
+        with create_approvals_and_scheduled(db, 'Barrows 106'):
+            fake_auth.login(admin_uid)
+            api_json = self._api_capture_enabled_rooms(client)
+
+            print(api_json)
+
+            section_1 = next((s for s in api_json if s['sectionId'] == '26094'), None)
+            assert section_1
+            assert len(section_1['approvals']) > 0
+            assert len(section_1['scheduled']) > 0
+
+            section_2 = next((s for s in api_json if s['sectionId'] == '30563'), None)
+            assert section_2
+            assert len(section_2['approvals']) > 0
+            assert len(section_2['scheduled']) == 0
+
+    def test_empty_term(self, client, db, fake_auth):
+        fake_auth.login(admin_uid)
+        assert self._api_capture_enabled_rooms(client, term_id=2302) == []

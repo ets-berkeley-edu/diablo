@@ -110,8 +110,9 @@ CREATE INDEX approvals_term_id_idx ON approvals USING btree (term_id);
 
 CREATE TABLE rooms (
     id INTEGER NOT NULL,
-    location VARCHAR(255) NOT NULL,
     capability room_capability_types,
+    is_auditorium BOOLEAN NOT NULL,
+    location VARCHAR(255) NOT NULL,
     created_at timestamp with time zone NOT NULL
 );
 ALTER TABLE rooms OWNER TO diablo;

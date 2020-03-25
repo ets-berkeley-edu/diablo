@@ -34,8 +34,11 @@
                 <td class="w-50">
                   <router-link :id="`room-${room.id}`" :to="`/room/${room.id}`">{{ room.location }}</router-link>
                 </td>
-                <td class="w-50">
-                  <SelectRoomCapability :capability-options="capabilityOptions" :room="room" />
+                <td class="w-20">
+                  {{ room.isAuditorium ? 'Yes' : 'No' }}
+                </td>
+                <td>
+                  <SelectRoomCapability :options="capabilityOptions" :room="room" />
                 </td>
               </tr>
             </tbody>
@@ -56,7 +59,7 @@
 <script>
   import Context from '@/mixins/Context'
   import SelectRoomCapability from '@/components/room/SelectRoomCapability'
-  import {getAllRooms, getCapabilityOptions} from '@/api/berkeley'
+  import {getAllRooms, getCapabilityOptions} from '@/api/room'
 
   export default {
     name: 'Rooms',
@@ -66,6 +69,7 @@
       capabilityOptions: undefined,
       headers: [
         {text: 'Room', value: 'location'},
+        {text: 'Auditorium', value: 'isAuditorium'},
         {text: 'Capability', value: 'capability'}
       ],
       options: {
@@ -81,13 +85,7 @@
       getAllRooms().then(data => {
         this.rooms = data
         getCapabilityOptions().then(options => {
-          this.capabilityOptions = [{
-            'label': 'None',
-            'value': null,
-          }]
-          this.$_.each(options, (label, value) => {
-            this.capabilityOptions.push({label, value})
-          })
+          this.capabilityOptions = options
           this.$ready()
         })
       })

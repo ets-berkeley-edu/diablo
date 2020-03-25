@@ -30,19 +30,19 @@ from diablo.models.room import Room
 from flask import current_app as app, request
 
 
-@app.route('/api/berkeley/all_rooms')
+@app.route('/api/rooms/all')
 @admin_required
 def get_all_rooms():
     return tolerant_jsonify([room.to_api_json() for room in Room.all_rooms()])
 
 
-@app.route('/api/berkeley/capability_options')
+@app.route('/api/rooms/capability_options')
 @admin_required
 def get_capability_options():
     return tolerant_jsonify(Room.get_room_capability_options())
 
 
-@app.route('/api/berkeley/room/<room_id>')
+@app.route('/api/room/<room_id>')
 @admin_required
 def get_room(room_id):
     room = Room.get_room(room_id)
@@ -58,13 +58,33 @@ def get_room(room_id):
         raise ResourceNotFoundError('No such room')
 
 
-@app.route('/api/berkeley/update_room_capability', methods=['POST'])
+@app.route('/api/room/auditorium', methods=['POST'])
+@admin_required
+def auditorium():
+    params = request.get_json()
+    room_id = params.get('roomId')
+    room = Room.get_room(room_id) if room_id else None
+    if room:
+        is_auditorium = params.get('isAuditorium')
+        if not room_id or is_auditorium is None:
+            raise BadRequestError('\'roomId\' and \'isAuditorium\' are required.')
+        room = Room.set_auditorium(room_id, is_auditorium)
+        return tolerant_jsonify(room.to_api_json())
+    else:
+        raise ResourceNotFoundError('No such room')
+
+
+@app.route('/api/room/update_capability', methods=['POST'])
 @admin_required
 def update_room_capability():
     params = request.get_json()
     room_id = params.get('roomId')
-    capability = params.get('capability') or None
-    if not room_id:
-        raise BadRequestError('Room \'id\' is required.')
-    room = Room.update_capability(room_id, capability)
-    return tolerant_jsonify(room.to_api_json())
+    room = Room.get_room(room_id) if room_id else None
+    if room:
+        capability = params.get('capability')
+        if not room_id or capability is None:
+            raise BadRequestError('Room \'id\' is required.')
+        room = Room.update_capability(room_id, capability)
+        return tolerant_jsonify(room.to_api_json())
+    else:
+        raise ResourceNotFoundError('No such room')

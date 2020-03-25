@@ -62,7 +62,7 @@
 <script>
   import Context from '@/mixins/Context'
   import Utils from '@/mixins/Utils'
-  import {getTermSummary} from '@/api/report'
+  import {getTermSummary} from '@/api/course'
 
   export default {
     name: 'Ouija',
