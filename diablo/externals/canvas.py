@@ -23,26 +23,32 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-from diablo.api.util import admin_required
-from diablo.jobs.canvas_course_sites_job import CanvasCourseSitesJob
-from diablo.jobs.update_rooms_job import UpdateRoomsJob
-from diablo.lib.http import tolerant_jsonify
+from canvasapi import Canvas
+from diablo import cachify
 from flask import current_app as app
 
 
-@app.route('/api/job/update_rooms/start')
-@admin_required
-def update_rooms():
-    UpdateRoomsJob(app.app_context).run()
-    return tolerant_jsonify({
-        'status': 'STARTED',
-    })
-
-
-@app.route('/api/job/canvas_course_sites/start')
-@admin_required
-def update_courses():
-    CanvasCourseSitesJob(app.app_context).run()
-    return tolerant_jsonify({
-        'status': 'STARTED',
-    })
+@cachify('canvas/section_ids_per_course_site_id')
+def get_section_ids_per_course_site_id(canvas_enrollment_term_id):
+    canvas = Canvas(
+        base_url=app.config['CANVAS_API_URL'],
+        access_token=app.config['CANVAS_ACCESS_TOKEN'],
+    )
+    account = canvas.get_account(app.config['CANVAS_BERKELEY_ACCOUNT_ID'])
+    courses = account.get_courses(
+        enrollment_term_id=canvas_enrollment_term_id,
+        search_term='Scandinavian',
+        with_enrollments=True,
+    )
+    section_ids_per_course_site_id = {}
+    for course in courses:
+        for section in course.get_sections():
+            course_site_id = section.course_id
+            # The 'sis_section_id' value will be similar to 'SEC:2020-B-21662'
+            sis_section_id = section.sis_section_id
+            if sis_section_id and 'SEC:' in sis_section_id and '-' in sis_section_id:
+                section_id = int(sis_section_id.rsplit('-', 1)[1])
+                if course_site_id not in section_ids_per_course_site_id:
+                    section_ids_per_course_site_id[course_site_id] = []
+                section_ids_per_course_site_id[course_site_id].append(section_id)
+    return section_ids_per_course_site_id

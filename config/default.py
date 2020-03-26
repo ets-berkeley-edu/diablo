@@ -42,6 +42,11 @@ CACHE_DIR = f'{BASE_DIR}/.flask_cache'
 CACHE_THRESHOLD = 300
 CACHE_TYPE = 'filesystem'
 
+CANVAS_ACCESS_TOKEN = 'a token'
+CANVAS_API_URL = 'https://hard_knocks_api.instructure.com'
+CANVAS_BERKELEY_ACCOUNT_ID = 00000
+CANVAS_ENROLLMENT_TERM_ID = 0000
+
 CURRENT_TERM_ID = None
 
 # Loch o' Data

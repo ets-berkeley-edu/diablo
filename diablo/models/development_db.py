@@ -27,8 +27,10 @@ import glob
 import json
 
 from diablo import BASE_DIR, cache, db, std_commit
+from diablo.jobs.canvas_course_sites_job import CanvasCourseSitesJob
 from diablo.jobs.update_rooms_job import UpdateRoomsJob
 from diablo.models.admin_user import AdminUser
+from diablo.models.canvas_course_site import CanvasCourseSite
 from diablo.models.room import Room
 from flask import current_app as app
 from sqlalchemy.sql import text
@@ -53,11 +55,13 @@ def load():
     _create_users()
     _cache_externals()
     _run_jobs()
+    _create_canvas_course_sites()
+    _set_room_capability()
     return db
 
 
 def _cache_externals():
-    for external in ('calnet', 'edo_db', 'kaltura', 'salesforce'):
+    for external in ('calnet', 'canvas', 'edo_db', 'kaltura', 'salesforce'):
         for path in glob.glob(f'{BASE_DIR}/fixtures/{external}/*.json'):
             with open(path, 'r') as file:
                 key = path.split('/')[-1].split('.')[0]
@@ -77,8 +81,26 @@ def _create_users():
     std_commit(allow_test_environment=True)
 
 
+def _create_canvas_course_sites():
+    term_id = app.config['CURRENT_TERM_ID']
+    CanvasCourseSite.refresh_term_data(
+        term_id=term_id,
+        section_ids_per_course_site_id={
+            '7654321': [28602],
+            '7654323': [26094],
+            '7654325': [30630, 20576],
+        },
+    )
+    std_commit(allow_test_environment=True)
+
+
 def _run_jobs():
+    CanvasCourseSitesJob(app_context=app.app_context).run()
     UpdateRoomsJob(app_context=app.app_context).run()
+    std_commit(allow_test_environment=True)
+
+
+def _set_room_capability():
     for room in Room.all_rooms():
         if room.location in ['Barrows 106', 'Barker 101']:
             Room.update_capability(room.id, 'screencast')
