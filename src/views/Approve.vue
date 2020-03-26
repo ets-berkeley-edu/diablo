@@ -47,10 +47,24 @@
                 <v-icon>mdi-map-marker</v-icon>
               </v-col>
               <v-col v-if="room.id && $currentUser.isAdmin">
-                {{ room.location }}
+                <router-link id="room" :to="`/room/${room.id}`">{{ room.location }}</router-link>
               </v-col>
               <v-col v-if="!room.id || !$currentUser.isAdmin">
                 {{ room.location }}
+              </v-col>
+            </v-row>
+            <v-row v-if="section.canvasCourseSites.length">
+              <v-col md="auto">
+                <v-icon>mdi-bookmark-outline</v-icon>
+              </v-col>
+              <v-col>
+                <span v-for="canvasCourseSite in section.canvasCourseSites" :key="canvasCourseSite.courseSiteId">
+                  <a
+                    :id="`canvas-course-site-${canvasCourseSite.courseSiteId}`"
+                    :href="`${$config.canvasBaseUrl}/courses/${canvasCourseSite.courseSiteId}`"
+                    target="_blank">{{ canvasCourseSite.courseSiteName }}</a>
+                  <span v-if="section.canvasCourseSites.length > 1 && index === section.canvasCourseSites.length - 2"> and </span>
+                </span>
               </v-col>
             </v-row>
           </v-card>
@@ -235,8 +249,7 @@
       const sectionId = this.$_.get(this.$route, 'params.sectionId')
       getApprovals(termId, sectionId).then(data => {
         this.render(data)
-        this.$ready()
-      })
+      }).catch(this.$ready)
     },
     methods: {
       approveRecording() {

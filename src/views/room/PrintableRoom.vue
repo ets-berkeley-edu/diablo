@@ -88,7 +88,7 @@
       getRoom(id).then(room => {
         this.room = room
         this.$ready()
-      })
+      }).catch(this.$ready)
     }
   }
 </script>

@@ -35,33 +35,49 @@ class CanvasCourseSite(db.Model):
     canvas_course_site_id = db.Column(db.Integer, nullable=False, primary_key=True)
     section_id = db.Column(db.Integer, nullable=False, primary_key=True)
     term_id = db.Column(db.Integer, nullable=False, primary_key=True)
+    canvas_course_site_name = db.Column(db.String, nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.now)
 
-    def __init__(self, canvas_course_site_id, section_id, term_id):
+    def __init__(self, canvas_course_site_id, section_id, term_id, canvas_course_site_name):
         self.canvas_course_site_id = canvas_course_site_id
         self.section_id = section_id
         self.term_id = term_id
+        self.canvas_course_site_name = canvas_course_site_name
 
     def __repr__(self):
         return f"""<CanvasCourseSite
                     canvas_course_site_id={self.canvas_course_site_id}
+                    canvas_course_site_name={self.canvas_course_site_name}
                     section_id={self.section_id},
                     term_id={self.term_id},
                     created_at={self.created_at}
                 """
 
     @classmethod
-    def refresh_term_data(cls, term_id, section_ids_per_course_site_id):
+    def get_canvas_course_sites(cls, term_id, section_id):
+        return cls.query.filter_by(term_id=term_id, section_id=section_id).all()
+
+    @classmethod
+    def refresh_term_data(cls, term_id, canvas_course_sites):
         for canvas_course_site in cls.query.filter_by(term_id=term_id).all():
             db.session.delete(canvas_course_site)
-        for course_site_id, section_ids in section_ids_per_course_site_id.items():
-            for section_id in section_ids:
-                db.session.add(cls(canvas_course_site_id=course_site_id, section_id=section_id, term_id=term_id))
+        for course_site_id, summary in canvas_course_sites.items():
+            canvas_course_site_name = summary['canvas_course_site_name']
+            for section_id in summary['section_ids']:
+                db.session.add(
+                    cls(
+                        canvas_course_site_id=course_site_id,
+                        section_id=section_id,
+                        term_id=term_id,
+                        canvas_course_site_name=canvas_course_site_name,
+                    ),
+                )
         std_commit()
 
     def to_api_json(self):
         return {
             'canvasCourseSiteId': self.canvas_course_site_id,
+            'canvasCourseSiteName': self.canvas_course_site_name,
             'sectionId': self.section_id,
             'termId': self.term_id,
             'createdAt': to_isoformat(self.created_at),

@@ -30,7 +30,7 @@ from diablo import BASE_DIR, cache, db, std_commit
 from diablo.jobs.canvas_course_sites_job import CanvasCourseSitesJob
 from diablo.jobs.update_rooms_job import UpdateRoomsJob
 from diablo.models.admin_user import AdminUser
-from diablo.models.canvas_course_site import CanvasCourseSite
+from diablo.models.email_template import EmailTemplate
 from diablo.models.room import Room
 from flask import current_app as app
 from sqlalchemy.sql import text
@@ -49,14 +49,15 @@ def clear():
         std_commit()
 
 
-def load():
+def load(create_test_data=True):
     cache.clear()
     _load_schemas()
-    _create_users()
-    _cache_externals()
-    _run_jobs()
-    _create_canvas_course_sites()
-    _set_room_capability()
+    if create_test_data:
+        _create_email_templates()
+        _create_users()
+        _cache_externals()
+        _run_jobs()
+        _set_room_capability()
     return db
 
 
@@ -75,22 +76,25 @@ def _load_schemas():
         std_commit()
 
 
-def _create_users():
-    for test_user in _test_users:
-        db.session.add(AdminUser(uid=test_user['uid']))
+def _create_email_templates():
+    EmailTemplate.create(
+        template_type='notify_instructor_of_changes',
+        name='I\'m the Devil. Now kindly undo these straps.',
+        subject_line='If you\'re the Devil, why not make the straps disappear?',
+        message='That\'s much too vulgar a display of power.',
+    )
+    EmailTemplate.create(
+        template_type='invitation',
+        name='What an excellent day for an exorcism.',
+        subject_line='You would like that?',
+        message='Intensely.',
+    )
     std_commit(allow_test_environment=True)
 
 
-def _create_canvas_course_sites():
-    term_id = app.config['CURRENT_TERM_ID']
-    CanvasCourseSite.refresh_term_data(
-        term_id=term_id,
-        section_ids_per_course_site_id={
-            '7654321': [28602],
-            '7654323': [26094],
-            '7654325': [30630, 20576],
-        },
-    )
+def _create_users():
+    for test_user in _test_users:
+        db.session.add(AdminUser(uid=test_user['uid']))
     std_commit(allow_test_environment=True)
 
 

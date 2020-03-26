@@ -112,6 +112,8 @@ def term_report(term_id):
     for section in get_courses_per_section_ids(term_id, section_ids):
         section_id = section['sectionId']
         section['approvals'] = approvals_per_section_id.get(section_id, [])
+        room = Room.find_room(section['meetingLocation'])
+        section['room'] = room and room.to_api_json()
         section['scheduled'] = scheduled_per_section_id.get(section_id, [])
         api_json.append(section)
     return tolerant_jsonify(api_json)

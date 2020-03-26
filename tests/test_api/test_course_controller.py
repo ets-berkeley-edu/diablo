@@ -34,6 +34,7 @@ section_1_instructor_uids = ['234567', '8765432']
 section_2_id = '28165'
 section_2_instructor_uids = ['8765432']
 section_3_id = '12601'
+section_with_canvas_course_sites = '22287'
 
 
 class TestApprove:
@@ -200,6 +201,15 @@ class TestApprovals:
         )
         assert api_json['room']['location'] == 'Li Ka Shing 145'
         assert len(api_json['room']['recordingTypeOptions']) == 3
+
+    def test_section_with_canvas_course_sites(self, client, db, fake_auth):
+        fake_auth.login(admin_uid)
+        api_json = api_get_approvals(
+            client,
+            term_id=app.config['CURRENT_TERM_ID'],
+            section_id=section_with_canvas_course_sites,
+        )
+        assert len(api_json['section']['canvasCourseSites']) == 3
 
 
 class TestTermReport:

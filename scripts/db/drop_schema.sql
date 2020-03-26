@@ -44,6 +44,8 @@ ALTER TABLE IF EXISTS ONLY public.admin_users DROP CONSTRAINT IF EXISTS admin_us
 ALTER TABLE IF EXISTS public.admin_users ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE IF EXISTS ONLY public.approvals DROP CONSTRAINT IF EXISTS approvals_pkey;
 ALTER TABLE IF EXISTS ONLY public.canvas_course_sites DROP CONSTRAINT IF EXISTS canvas_course_sites_pkey;
+ALTER TABLE IF EXISTS ONLY public.email_templates DROP CONSTRAINT IF EXISTS email_templates_name_unique_constraint;
+ALTER TABLE IF EXISTS ONLY public.email_templates DROP CONSTRAINT IF EXISTS email_templates_pkey;
 ALTER TABLE IF EXISTS ONLY public.rooms DROP CONSTRAINT IF EXISTS rooms_location_unique_constraint;
 ALTER TABLE IF EXISTS ONLY public.rooms DROP CONSTRAINT IF EXISTS rooms_pkey;
 ALTER TABLE IF EXISTS ONLY public.scheduled DROP CONSTRAINT IF EXISTS scheduled_pkey;
@@ -69,6 +71,8 @@ DROP SEQUENCE IF EXISTS public.admin_users_id_seq;
 DROP TABLE IF EXISTS public.admin_users;
 DROP TABLE IF EXISTS public.approvals;
 DROP TABLE IF EXISTS public.canvas_course_sites;
+DROP TABLE IF EXISTS public.email_templates;
+DROP SEQUENCE IF EXISTS public.email_templates_id_seq;
 DROP TABLE IF EXISTS public.rooms;
 DROP SEQUENCE IF EXISTS public.rooms_id_seq;
 DROP TABLE IF EXISTS public.scheduled;
@@ -76,6 +80,7 @@ DROP TABLE IF EXISTS public.scheduled;
 --
 
 DROP TYPE IF EXISTS public.approver_types;
+DROP TYPE IF EXISTS public.email_template_types;
 DROP TYPE IF EXISTS public.publish_types;
 DROP TYPE IF EXISTS public.recording_types;
 DROP TYPE IF EXISTS public.room_capability_types;

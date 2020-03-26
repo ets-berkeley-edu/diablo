@@ -23,32 +23,50 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
+import re
+
 from canvasapi import Canvas
 from diablo import cachify
 from flask import current_app as app
 
 
-@cachify('canvas/section_ids_per_course_site_id')
-def get_section_ids_per_course_site_id(canvas_enrollment_term_id):
+@cachify('canvas/canvas_course_sites')
+def get_canvas_course_sites():
+    canvas_courses = _get_canvas().get_courses(
+        enrollment_term_id=app.config['CANVAS_ENROLLMENT_TERM_ID'],
+        search_term='CHEM',
+        with_enrollments=True,
+    )
+    canvas_course_sites = {}
+    # Examples of sis_section_id format: 'SEC:2020-B-21662', 'SEC:2020-B-21662-9F6ED069'
+    sis_section_regex = re.compile(r'SEC:\d+-\D-(\d+).*')
+    for canvas_course in canvas_courses:
+        for section in canvas_course.get_sections():
+            course_site_id = section.course_id
+            sis_section_id = section.sis_section_id
+            section_id = sis_section_regex.search(sis_section_id).group(1) if sis_section_id else None
+            if section_id:
+                if course_site_id not in canvas_course_sites:
+                    canvas_course_sites[course_site_id] = {
+                        'section_ids': [],
+                        'canvas_course_site_name': canvas_course.name,
+                    }
+                canvas_course_sites[course_site_id]['section_ids'].append(section_id)
+    return canvas_course_sites
+
+
+def ping_canvas():
+    account = _get_canvas().get_account(app.config['CANVAS_BERKELEY_ACCOUNT_ID'])
+    return account.get_courses(
+        enrollment_term_id=app.config['CANVAS_ENROLLMENT_TERM_ID'],
+        search_term='Scandinavian',
+        with_enrollments=True,
+    )
+
+
+def _get_canvas():
     canvas = Canvas(
         base_url=app.config['CANVAS_API_URL'],
         access_token=app.config['CANVAS_ACCESS_TOKEN'],
     )
-    account = canvas.get_account(app.config['CANVAS_BERKELEY_ACCOUNT_ID'])
-    courses = account.get_courses(
-        enrollment_term_id=canvas_enrollment_term_id,
-        search_term='Scandinavian',
-        with_enrollments=True,
-    )
-    section_ids_per_course_site_id = {}
-    for course in courses:
-        for section in course.get_sections():
-            course_site_id = section.course_id
-            # The 'sis_section_id' value will be similar to 'SEC:2020-B-21662'
-            sis_section_id = section.sis_section_id
-            if sis_section_id and 'SEC:' in sis_section_id and '-' in sis_section_id:
-                section_id = int(sis_section_id.rsplit('-', 1)[1])
-                if course_site_id not in section_ids_per_course_site_id:
-                    section_ids_per_course_site_id[course_site_id] = []
-                section_ids_per_course_site_id[course_site_id].append(section_id)
-    return section_ids_per_course_site_id
+    return canvas.get_account(app.config['CANVAS_BERKELEY_ACCOUNT_ID'])

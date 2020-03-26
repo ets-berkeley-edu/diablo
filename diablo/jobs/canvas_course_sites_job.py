@@ -22,7 +22,8 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from diablo.externals.canvas import get_section_ids_per_course_site_id
+
+from diablo.externals.canvas import get_canvas_course_sites
 from diablo.jobs.base_job import BaseJob
 from diablo.models.canvas_course_site import CanvasCourseSite
 from flask import current_app as app
@@ -31,11 +32,7 @@ from flask import current_app as app
 class CanvasCourseSitesJob(BaseJob):
 
     def run(self, args=None):
-        section_ids_per_course_site_id = get_section_ids_per_course_site_id(
-            canvas_enrollment_term_id=app.config['CANVAS_ENROLLMENT_TERM_ID'],
-        )
-        term_id = app.config['CURRENT_TERM_ID']
         CanvasCourseSite.refresh_term_data(
-            term_id=term_id,
-            section_ids_per_course_site_id=section_ids_per_course_site_id,
+            term_id=app.config['CURRENT_TERM_ID'],
+            canvas_course_sites=get_canvas_course_sites(),
         )

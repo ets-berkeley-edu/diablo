@@ -36,7 +36,15 @@
             <tr v-for="item in items" :key="item.name">
               <td class="text-no-wrap">{{ item.courseName }}</td>
               <td class="text-no-wrap">{{ item.sectionId }}</td>
-              <td class="text-no-wrap">{{ item.room.location }}</td>
+              <td class="text-no-wrap">
+                <router-link
+                  v-if="item.room"
+                  :id="`course-${item.sectionId}-room-${item.room.id}`"
+                  :to="`/room/${item.room.id}`">
+                  {{ item.room.location }}
+                </router-link>
+                <span v-if="!item.room">&nbsp;</span>
+              </td>
               <td class="text-no-wrap">{{ item.meetingDays.join(',') }}</td>
               <td class="text-no-wrap">{{ item.meetingStartTime }} - {{ item.meetingEndTime }}</td>
               <td>
@@ -85,7 +93,7 @@
       getTermSummary(this.$config.currentTermId).then(data => {
         this.courses = data
         this.$ready()
-      })
+      }).catch(this.$ready)
     }
   }
 </script>

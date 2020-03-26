@@ -1,0 +1,121 @@
+<template>
+  <v-form>
+    <v-container v-if="!loading" fluid>
+      <v-row no-gutters class="d-flex justify-space-between pr-4">
+        <h2><v-icon class="pb-2" large>mdi-file-document-outline</v-icon> {{ templateId ? 'Edit' : 'Create' }} Email Template</h2>
+        <h3 class="title">
+          <span class="font-weight-bold">Type:</span>&nbsp;&nbsp;
+          <span class="font-italic">{{ typeName }}</span>
+        </h3>
+      </v-row>
+      <v-row no-gutters>
+        <v-col cols="8">
+          <v-text-field v-model="name" label="Name"></v-text-field>
+        </v-col>
+        <v-spacer></v-spacer>
+      </v-row>
+      <v-row no-gutters>
+        <v-col cols="8">
+          <v-text-field v-model="subjectLine" label="Subject"></v-text-field>
+        </v-col>
+        <v-spacer></v-spacer>
+      </v-row>
+      <v-row class="mt-4">
+        <v-col>
+          <tiptap-vuetify
+            v-model="message"
+            :extensions="extensions"
+            placeholder="Message"
+            :toolbar-attributes="{ color: 'secondary' }"
+          />
+        </v-col>
+      </v-row>
+      <v-row>
+        <v-col cols="9">
+          <TemplateCodesDialog />
+        </v-col>
+        <v-col cols="3">
+          <div class="d-flex">
+            <v-btn color="primary" @click="createTemplate">{{ templateId ? 'Save' : 'Create' }}</v-btn>
+            <v-btn text color="accent">Cancel</v-btn>
+          </div>
+        </v-col>
+      </v-row>
+    </v-container>
+  </v-form>
+</template>
+
+<script>
+  import Context from '@/mixins/Context'
+  import TemplateCodesDialog from '@/components/email/TemplateCodesDialog'
+  import Utils from '@/mixins/Utils'
+  import { TiptapVuetify, Heading, Bold, Italic, Strike, Underline, Code, Paragraph, BulletList, OrderedList, ListItem, Link, Blockquote, HardBreak, HorizontalRule, History } from 'tiptap-vuetify'
+  import {createEmailTemplate, getEmailTemplate, updateEmailTemplate} from '@/api/email-template'
+
+  export default {
+    name: 'CreateEmailTemplate',
+    components: {TemplateCodesDialog, TiptapVuetify},
+    mixins: [Context, Utils],
+    data: () => ({
+      extensions: [
+        History,
+        Blockquote,
+        Link,
+        Underline,
+        Strike,
+        Italic,
+        ListItem,
+        BulletList,
+        OrderedList,
+        [Heading, {
+          options: {
+            levels: [1, 2, 3]
+          }
+        }],
+        Bold,
+        Code,
+        HorizontalRule,
+        Paragraph,
+        HardBreak
+      ],
+      latest: false,
+      message: undefined,
+      name: undefined,
+      subjectLine: undefined,
+      templateId: undefined,
+      templateType: undefined,
+      typeName: undefined
+    }),
+    created() {
+      this.$loading()
+      this.templateType = this.$_.get(this.$route, 'params.type')
+      this.typeName = this.$_.get(this.$config.emailTemplateTypes, this.templateType)
+      if (this.typeName) {
+        this.setPageTitle(this.typeName)
+        this.$ready()
+      } else {
+        this.templateId = this.$_.get(this.$route, 'params.id')
+        getEmailTemplate(this.templateId).then(data => {
+          this.name = data.name
+          this.subjectLine = data.subjectLine
+          this.message = data.message
+          this.templateType = data.templateType
+          this.typeName = this.$_.get(this.$config.emailTemplateTypes, data.templateType)
+          this.$ready()
+        })
+      }
+    },
+    methods: {
+      createTemplate() {
+        const done = () => {
+          this.$router.push({ path: '/email/templates' })
+        }
+        if (this.templateId) {
+          updateEmailTemplate(this.templateId, this.templateType, this.name, this.subjectLine, this.message).then(done)
+        } else {
+          createEmailTemplate(this.templateType, this.name, this.subjectLine, this.message).then(done)
+        }
+      }
+    }
+  }
+</script>

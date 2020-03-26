@@ -21,6 +21,7 @@ config/*.pickle
 # Local dev
 venv
 .tox/
+scripts/*-local.sh
 
 # Compiled/optimized files
 .python-version

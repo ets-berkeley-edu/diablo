@@ -29,25 +29,40 @@ from diablo.externals.data_loch import get_sis_section, get_sis_sections, \
     get_sis_sections_per_id, get_sis_sections_per_location
 from diablo.externals.edo_db import get_edo_db_courses, get_edo_db_instructors_per_section_id
 from diablo.merged.calnet import get_calnet_user_for_uid
+from diablo.models.canvas_course_site import CanvasCourseSite
 from flask import current_app as app
 
 
 def get_section(term_id, section_id):
-    rows = _normalize_rows(get_sis_section(term_id=term_id, section_id=section_id))
-    return rows[0] if rows else None
+    section = get_sis_section(term_id=term_id, section_id=section_id)
+    if section:
+        rows = _to_api_json(
+            term_id=term_id,
+            sis_sections=section,
+        )
+        return rows[0] if rows else None
+    else:
+        return None
 
 
 def get_courses_per_instructor(term_id, instructor_uid):
-    return _normalize_rows(get_sis_sections(term_id=term_id, instructor_uid=instructor_uid))
+    return _to_api_json(
+        term_id=term_id,
+        sis_sections=get_sis_sections(term_id=term_id, instructor_uid=instructor_uid),
+    )
 
 
 def get_courses_per_location(term_id, room_location):
-    return _normalize_rows(get_sis_sections_per_location(term_id=term_id, room_location=room_location))
+    return _to_api_json(
+        term_id=term_id,
+        sis_sections=get_sis_sections_per_location(term_id=term_id, room_location=room_location),
+    )
 
 
 def get_courses_per_section_ids(term_id, section_ids):
-    return _normalize_rows(
-        get_sis_sections_per_id(
+    return _to_api_json(
+        term_id=term_id,
+        sis_sections=get_sis_sections_per_id(
             term_id=term_id,
             section_ids=[str(section_id) for section_id in section_ids],
         ),
@@ -74,32 +89,33 @@ def get_course_and_instructors(term_id, section_ids=None):
     return courses
 
 
-def _normalize_rows(rows):
+def _to_api_json(term_id, sis_sections):
     sections_per_id = {}
     instructor_uids_per_section_id = {}
-    for row in rows:
-        section_id = row['sis_section_id']
+    for sis_section in sis_sections:
+        section_id = sis_section['sis_section_id']
         if section_id not in sections_per_id:
             sections_per_id[section_id] = {
-                'allowedUnits': row['allowed_units'],
-                'courseName': row['sis_course_name'],
-                'courseTitle': row['sis_course_title'],
-                'instructionFormat': row['sis_instruction_format'],
-                'instructorRoleCode': row['instructor_role_code'],
-                'isPrimary': row['is_primary'],
-                'meetingDays': _format_days(row['meeting_days']),
-                'meetingEndDate': row['meeting_end_date'],
-                'meetingEndTime': _format_time(row['meeting_end_time']),
-                'meetingLocation': row['meeting_location'],
-                'meetingStartDate': row['meeting_start_date'],
-                'meetingStartTime': _format_time(row['meeting_start_time']),
+                'allowedUnits': sis_section['allowed_units'],
+                'canvasCourseSites': _canvas_course_sites(term_id, section_id),
+                'courseName': sis_section['sis_course_name'],
+                'courseTitle': sis_section['sis_course_title'],
+                'instructionFormat': sis_section['sis_instruction_format'],
+                'instructorRoleCode': sis_section['instructor_role_code'],
+                'isPrimary': sis_section['is_primary'],
+                'meetingDays': _format_days(sis_section['meeting_days']),
+                'meetingEndDate': sis_section['meeting_end_date'],
+                'meetingEndTime': _format_time(sis_section['meeting_end_time']),
+                'meetingLocation': sis_section['meeting_location'],
+                'meetingStartDate': sis_section['meeting_start_date'],
+                'meetingStartTime': _format_time(sis_section['meeting_start_time']),
                 'sectionId': section_id,
-                'sectionNum': row['sis_section_num'],
-                'termId': row['sis_term_id'],
+                'sectionNum': sis_section['sis_section_num'],
+                'termId': sis_section['sis_term_id'],
             }
         if section_id not in instructor_uids_per_section_id:
             instructor_uids_per_section_id[section_id] = []
-        instructor_uids_per_section_id[section_id].append(row['instructor_uid'])
+        instructor_uids_per_section_id[section_id].append(sis_section['instructor_uid'])
 
     json_ = []
     for section_id, instructor_uids in instructor_uids_per_section_id.items():
@@ -114,6 +130,16 @@ def _normalize_rows(rows):
             },
         })
     return json_
+
+
+def _canvas_course_sites(term_id, section_id):
+    canvas_course_sites = []
+    for row in CanvasCourseSite.get_canvas_course_sites(term_id=term_id, section_id=section_id):
+        canvas_course_sites.append({
+            'courseSiteId': row.canvas_course_site_id,
+            'courseSiteName': row.canvas_course_site_name,
+        })
+    return canvas_course_sites
 
 
 def _format_days(days):

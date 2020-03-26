@@ -15,6 +15,7 @@
     "core-js": "^3.6.4",
     "lodash": "4.17.15",
     "moment-timezone": "0.5.28",
+    "tiptap-vuetify": "2.13.2",
     "vue": "2.6.11",
     "vue-moment": "4.1.0",
     "vue-router": "3.1.6",

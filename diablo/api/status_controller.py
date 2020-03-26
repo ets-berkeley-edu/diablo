@@ -25,6 +25,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 
 from diablo import db
 from diablo.externals import data_loch
+from diablo.externals.canvas import ping_canvas
 from diablo.externals.kaltura import Kaltura
 from diablo.lib.http import tolerant_jsonify
 from flask import current_app as app
@@ -50,5 +51,6 @@ def app_status():
         'data_loch': data_loch_status(),
         'db': db_status(),
         'kaltura': Kaltura().ping(),
+        'canvas': ping_canvas(),
     }
     return tolerant_jsonify(resp)

@@ -22,6 +22,7 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
+
 from diablo.api.errors import BadRequestError, ResourceNotFoundError
 from diablo.api.util import admin_required, put_approvals_and_scheduled
 from diablo.lib.http import tolerant_jsonify
@@ -34,12 +35,6 @@ from flask import current_app as app, request
 @admin_required
 def get_all_rooms():
     return tolerant_jsonify([room.to_api_json() for room in Room.all_rooms()])
-
-
-@app.route('/api/rooms/capability_options')
-@admin_required
-def get_capability_options():
-    return tolerant_jsonify(Room.get_room_capability_options())
 
 
 @app.route('/api/room/<room_id>')

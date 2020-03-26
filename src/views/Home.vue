@@ -31,7 +31,7 @@
         <tbody>
           <tr v-for="item in items" :key="item.name">
             <td>
-              <div v-if="item.room.capability">
+              <div v-if="item.room && item.room.capability">
                 <v-btn
                   :id="`approve-${item.sectionId}`"
                   :aria-label="`Approve ${item.name} up for Course Capture.`"
@@ -47,7 +47,7 @@
             <td class="text-no-wrap">{{ item.name }}</td>
             <td>{{ item.title }}</td>
             <td>{{ item.instructors }}</td>
-            <td class="text-no-wrap">{{ item.room.location }}</td>
+            <td class="text-no-wrap">{{ item.room ? item.room.location : '&mdash;' }}</td>
             <td class="text-no-wrap">{{ item.days }}</td>
             <td class="text-no-wrap">{{ item.time }}</td>
           </tr>
@@ -95,7 +95,7 @@
           title: s.courseTitle
         }
         this.courses['all'].push(course)
-        if (s.room.capability) {
+        if (s.room && s.room.capability) {
           this.courses['eligibleOnly'].push(course)
         }
       })

@@ -20,12 +20,15 @@
             {{ $currentUser.firstName }}
           </v-btn>
         </template>
-        <v-list>
+        <v-list class="pr-2">
           <v-list-item
             :href="`mailto:${$config.supportEmailAddress}`"
             target="_blank"
             aria-label="Send email to the Course Capture support team; this link opens a new tab.">
             <v-list-item-title>Feedback/Help</v-list-item-title>
+          </v-list-item>
+          <v-list-item v-if="$currentUser.isAdmin" @click="goToPath('/email/templates')">
+            <v-list-item-title>Email Templates</v-list-item-title>
           </v-list-item>
           <v-list-item @click="logOut">
             <v-list-item-title>Log Out</v-list-item-title>
@@ -40,12 +43,14 @@
 </template>
 
 <script>
+  import Utils from '@/mixins/Utils'
   import { getCasLogoutUrl } from '@/api/auth'
 
   export default {
     name: 'App',
+    mixins: [Utils],
     methods: {
-      logOut: () =>getCasLogoutUrl().then(data => window.location.href = data.casLogoutUrl)
+      logOut: () => getCasLogoutUrl().then(data => window.location.href = data.casLogoutUrl)
     }
   }
 </script>

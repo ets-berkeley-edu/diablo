@@ -28,6 +28,7 @@ from diablo.api.util import admin_required, put_approvals_and_scheduled
 from diablo.lib.http import tolerant_jsonify
 from diablo.merged.calnet import get_calnet_user_for_uid
 from diablo.merged.sis import get_courses_per_instructor
+from diablo.models.room import Room
 from flask import current_app as app
 from flask_login import current_user
 
@@ -44,9 +45,16 @@ def get_user(uid):
     if user.get('isExpiredPerLdap', True):
         raise ResourceNotFoundError('No such user')
     else:
-        user['courses'] = get_courses_per_instructor(
+        courses = get_courses_per_instructor(
             term_id=app.config['CURRENT_TERM_ID'],
             instructor_uid=uid,
         )
+        user['courses'] = []
+        for course in courses:
+            if course['meetingLocation']:
+                room = Room.find_room(course['meetingLocation'])
+                course['room'] = room and room.to_api_json()
+                user['courses'].append(course)
+
         put_approvals_and_scheduled(user['courses'])
         return tolerant_jsonify(user)

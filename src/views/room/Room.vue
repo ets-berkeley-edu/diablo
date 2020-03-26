@@ -14,7 +14,7 @@
               <label for="select-room-capability" class="subtitle-1">Capability:</label>
             </div>
             <div>
-              <SelectRoomCapability id="select-room-capability" :options="capabilityOptions" :room="room" />
+              <SelectRoomCapability id="select-room-capability" :options="$config.roomCapabilityOptions" :room="room" />
             </div>
             <div class="ml-auto">
               <v-switch v-model="isAuditorium" label="Auditorium"></v-switch>
@@ -97,14 +97,13 @@
 <script>
   import Context from '@/mixins/Context'
   import SelectRoomCapability from '@/components/room/SelectRoomCapability'
-  import {getCapabilityOptions, getRoom, setAuditorium} from '@/api/room'
+  import {getRoom, setAuditorium} from '@/api/room'
 
   export default {
     name: 'Room',
     components: {SelectRoomCapability},
     mixins: [Context],
     data: () => ({
-      capabilityOptions: undefined,
       headers: [
         {text: 'Course', value: 'courseName'},
         {text: 'Section', value: 'sectionId'},
@@ -128,11 +127,9 @@
       getRoom(id).then(room => {
         this.room = room
         this.isAuditorium = room.isAuditorium
-        getCapabilityOptions().then(options => {
-          this.capabilityOptions = options
-          this.$ready()
-        })
-      })
+        this.setPageTitle(this.room.location)
+        this.$ready()
+      }).catch(this.$ready)
     },
     methods: {
       tdClass(course) {

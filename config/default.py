@@ -44,6 +44,7 @@ CACHE_TYPE = 'filesystem'
 
 CANVAS_ACCESS_TOKEN = 'a token'
 CANVAS_API_URL = 'https://hard_knocks_api.instructure.com'
+CANVAS_BASE_URL = 'https://ucberkeley.foo.instructure.com'
 CANVAS_BERKELEY_ACCOUNT_ID = 00000
 CANVAS_ENROLLMENT_TERM_ID = 0000
 
