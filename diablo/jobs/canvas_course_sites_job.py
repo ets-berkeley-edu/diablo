@@ -22,27 +22,20 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-
-from diablo.api.util import admin_required
-from diablo.jobs.canvas_course_sites_job import CanvasCourseSitesJob
-from diablo.jobs.update_rooms_job import UpdateRoomsJob
-from diablo.lib.http import tolerant_jsonify
+from diablo.externals.canvas import get_section_ids_per_course_site_id
+from diablo.jobs.base_job import BaseJob
+from diablo.models.canvas_course_site import CanvasCourseSite
 from flask import current_app as app
 
 
-@app.route('/api/job/update_rooms/start')
-@admin_required
-def update_rooms():
-    UpdateRoomsJob(app.app_context).run()
-    return tolerant_jsonify({
-        'status': 'STARTED',
-    })
+class CanvasCourseSitesJob(BaseJob):
 
-
-@app.route('/api/job/canvas_course_sites/start')
-@admin_required
-def update_courses():
-    CanvasCourseSitesJob(app.app_context).run()
-    return tolerant_jsonify({
-        'status': 'STARTED',
-    })
+    def run(self, args=None):
+        section_ids_per_course_site_id = get_section_ids_per_course_site_id(
+            canvas_enrollment_term_id=app.config['CANVAS_ENROLLMENT_TERM_ID'],
+        )
+        term_id = app.config['CURRENT_TERM_ID']
+        CanvasCourseSite.refresh_term_data(
+            term_id=term_id,
+            section_ids_per_course_site_id=section_ids_per_course_site_id,
+        )

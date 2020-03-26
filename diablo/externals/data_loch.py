@@ -46,6 +46,14 @@ def get_distinct_meeting_locations():
     return [row['meeting_location'] for row in safe_execute_rds(sql)]
 
 
+def get_sis_section_ids(term_id):
+    sql = f"""
+        SELECT sis_section_id FROM {sis_schema()}.sis_sections
+        WHERE sis_term_id = :term_id
+    """
+    return [row['sis_section_id'] for row in safe_execute_rds(sql, term_id=term_id)]
+
+
 def get_sis_section(term_id, section_id):
     sql = f"""
         SELECT * FROM {sis_schema()}.sis_sections
