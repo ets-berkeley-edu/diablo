@@ -35,6 +35,9 @@
                   <router-link :id="`room-${room.id}`" :to="`/room/${room.id}`">{{ room.location }}</router-link>
                 </td>
                 <td class="w-20">
+                  {{ room.kalturaResourceId || '&mdash;' }}
+                </td>
+                <td class="w-20">
                   {{ room.isAuditorium ? 'Yes' : 'No' }}
                 </td>
                 <td>
@@ -69,6 +72,7 @@
       capabilityOptions: undefined,
       headers: [
         {text: 'Room', value: 'location'},
+        {text: 'Kaltura Resource', value: 'kalturaResourceId'},
         {text: 'Auditorium', value: 'isAuditorium'},
         {text: 'Capability', value: 'capability'}
       ],

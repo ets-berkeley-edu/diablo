@@ -112,6 +112,7 @@ CREATE TABLE rooms (
     id INTEGER NOT NULL,
     capability room_capability_types,
     is_auditorium BOOLEAN NOT NULL,
+    kaltura_resource_id INTEGER,
     location VARCHAR(255) NOT NULL,
     created_at timestamp with time zone NOT NULL
 );

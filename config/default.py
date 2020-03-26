@@ -75,6 +75,15 @@ JOB_MANAGER = {
                 'value': 300,
             },
         },
+        {
+            'cls': HelloWorld,
+            'disabled': True,
+            'name': 'This daily job is disabled',
+            'schedule': {
+                'type': 'day_at',
+                'value': '06:00',
+            },
+        },
     ],
 }
 

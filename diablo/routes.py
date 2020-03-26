@@ -44,6 +44,7 @@ def register_routes(app):
     import diablo.api.auth_controller
     import diablo.api.config_controller
     import diablo.api.course_controller
+    import diablo.api.job_controller
     import diablo.api.room_controller
     import diablo.api.status_controller
     import diablo.api.user_controller
