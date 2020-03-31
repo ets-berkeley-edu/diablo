@@ -75,7 +75,7 @@ class EmailTemplate(Base):
     @classmethod
     def create(cls, template_type, name, subject_line, message):
         email_template = cls(
-            template_type='admin_alert_room_change',
+            template_type=template_type,
             name=name,
             subject_line=subject_line,
             message=message,
