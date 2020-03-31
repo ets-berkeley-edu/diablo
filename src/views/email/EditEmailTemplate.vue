@@ -10,7 +10,7 @@
       </v-row>
       <v-row no-gutters>
         <v-col cols="8">
-          <v-text-field v-model="name" label="Name"></v-text-field>
+          <v-text-field v-model="name" label="Template Name"></v-text-field>
         </v-col>
         <v-spacer></v-spacer>
       </v-row>
@@ -37,7 +37,7 @@
         <v-col cols="3">
           <div class="d-flex">
             <v-btn color="primary" @click="createTemplate">{{ templateId ? 'Save' : 'Create' }}</v-btn>
-            <v-btn text color="accent">Cancel</v-btn>
+            <v-btn text color="accent" @click="cancel">Cancel</v-btn>
           </div>
         </v-col>
       </v-row>
@@ -106,6 +106,9 @@
       }
     },
     methods: {
+      cancel() {
+        this.$router.push({ path: '/email/templates' })
+      },
       createTemplate() {
         const done = () => {
           this.$router.push({ path: '/email/templates' })

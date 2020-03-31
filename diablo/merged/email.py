@@ -23,43 +23,53 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
+import re
+
 from diablo.lib.berkeley import term_name_for_sis_id
 from flask import current_app as app
 
 
-def send_test_email(email_template, recipient, course, recording_type_name=None, extra_key_value_pairs=None):
-    message = email_template.message
-    replacements = _get_replacements(
-        recipient=recipient,
+def interpolate_email_content(
+        templated_string,
+        recipient_name=None,
+        course=None,
+        recording_type_name=None,
+        extra_key_value_pairs=None,
+):
+    interpolated = templated_string
+    substitutions = _get_substitutions(
+        recipient_name=recipient_name,
         course=course,
         recording_type_name=recording_type_name,
         extra_key_value_pairs=extra_key_value_pairs,
     )
-    for token, value in replacements.items():
-        message = message.replace(f'<code>{token}</code>', value)
-    app.logger.info(message)
+    for token, value in substitutions.items():
+        if value is not None:
+            value = ','.join(value) if type(value) == list else value
+            interpolated = re.sub(f'<code>[ \n\t]*{token}[ \n\t]*</code>', value, interpolated)
+    return interpolated
 
 
 def get_email_template_codes():
-    return list(_get_replacements().keys())
+    return list(_get_substitutions().keys())
 
 
-def _get_replacements(recipient=None, course=None, recording_type_name=None, extra_key_value_pairs=None):
+def _get_substitutions(recipient_name=None, course=None, recording_type_name=None, extra_key_value_pairs=None):
     term_id = (course and course['termId']) or app.config['CURRENT_TERM_ID']
     return {
         **{
             'course.days': course and course['meetingDays'],
-            'course.time.end': course and course['meetingEndTime'],
             'course.format': course and course['instructionFormat'],
             'course.name': course and course['courseName'],
             'course.room': course and course['meetingLocation'],
             'course.section': course and course['sectionNum'],
+            'course.time.end': course and course['meetingEndTime'],
             'course.time.start': course and course['meetingStartTime'],
             'course.title': course and course['courseTitle'],
-            'diablo.approve.url': course and _get_sign_up_url(term_id, course['sectionId']),
             'recording.type': recording_type_name,
+            'signup.url': course and _get_sign_up_url(term_id, course['sectionId']),
             'term.name': term_name_for_sis_id(term_id),
-            'user.name': recipient and recipient.name,
+            'user.name': recipient_name,
         },
         **(extra_key_value_pairs or {}),
     }

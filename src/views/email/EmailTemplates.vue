@@ -15,6 +15,7 @@
         :headers="headers"
         hide-default-footer
         :items="emailTemplates"
+        :loading="refreshing"
         no-results-text="No matching emailTemplates"
         :options="options"
         :page.sync="options.page"
@@ -93,27 +94,36 @@
         page: 1,
         itemsPerPage: 10
       },
-      pageCount: undefined
+      pageCount: undefined,
+      refreshing: false
     }),
     mounted() {
-      this.loadAllEmailTemplates()
+      this.$loading()
+      this.loadAllEmailTemplates(this.$ready)
     },
     methods: {
       createNewTemplate(type) {
         this.goToPath(`/email/template/create/${type}`)
       },
       deleteEmailTemplate(templateId) {
+        this.refreshing = true
         deleteTemplate(templateId).then(() => {
-          this.loadAllEmailTemplates()
+          this.loadAllEmailTemplates(() => {
+            this.refreshing = false
+          })
         })
       },
-      loadAllEmailTemplates() {
-        this.$loading()
+      loadAllEmailTemplates(done) {
         getAllEmailTemplates().then(data => {
           this.emailTemplates = data
-          this.emailTemplateTypes = this.getSelectOptionsFromObject(this.$config.emailTemplateTypes)
-          this.$ready()
-        }).catch(this.$ready)
+          this.emailTemplateTypes = []
+          const disableTheseTypes = this.$_.map(this.emailTemplates, 'templateType')
+          const isDisabled = type => {
+            return this.$_.includes(disableTheseTypes, type)
+          }
+          this.emailTemplateTypes = this.getSelectOptionsFromObject(this.$config.emailTemplateTypes, isDisabled)
+          done()
+        }).catch(done)
       },
       sendTestEmail(templateId) {
         sendTestEmail(templateId).then(() => {

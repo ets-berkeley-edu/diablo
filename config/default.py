@@ -116,6 +116,10 @@ LOGGING_LOCATION = 'diablo.log'
 LOGGING_LEVEL = logging.DEBUG
 LOGGING_PROPAGATION_LEVEL = logging.INFO
 
+MAILGUN_BASE_URL = 'https://api.mailgun.net/v3'
+MAILGUN_DOMAIN = 'diablo-mail.berkeley.edu'
+MAILGUN_API_KEY = 'secret'
+
 REMEMBER_COOKIE_NAME = 'remember_diablo_token'
 
 SALESFORCE_COURSE_CAPTURE_RECORD_TYPE_ID = ''
