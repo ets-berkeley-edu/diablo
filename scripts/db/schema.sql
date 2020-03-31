@@ -161,6 +161,30 @@ ALTER TABLE ONLY email_templates
 
 --
 
+CREATE TABLE emails_sent (
+    id INTEGER NOT NULL,
+    recipient_uids VARCHAR(80)[] NOT NULL,
+    section_id INTEGER NOT NULL,
+    template_type email_template_types NOT NULL,
+    term_id INTEGER NOT NULL,
+    sent_at timestamp with time zone NOT NULL
+);
+ALTER TABLE emails_sent OWNER TO diablo;
+CREATE SEQUENCE emails_sent_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+ALTER TABLE emails_sent_id_seq OWNER TO diablo;
+ALTER SEQUENCE emails_sent_id_seq OWNED BY emails_sent.id;
+ALTER TABLE ONLY emails_sent ALTER COLUMN id SET DEFAULT nextval('emails_sent_id_seq'::regclass);
+ALTER TABLE ONLY emails_sent
+    ADD CONSTRAINT emails_sent_pkey PRIMARY KEY (id);
+CREATE INDEX emails_sent_section_id_idx ON emails_sent USING btree (section_id);
+
+--
+
 CREATE TABLE rooms (
     id INTEGER NOT NULL,
     capability room_capability_types,

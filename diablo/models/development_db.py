@@ -30,6 +30,7 @@ from diablo import BASE_DIR, cache, db, std_commit
 from diablo.jobs.canvas_course_sites_job import CanvasCourseSitesJob
 from diablo.jobs.update_rooms_job import UpdateRoomsJob
 from diablo.models.admin_user import AdminUser
+from diablo.models.email_sent import EmailSent
 from diablo.models.email_template import EmailTemplate
 from diablo.models.room import Room
 from flask import current_app as app
@@ -54,6 +55,7 @@ def load(create_test_data=True):
     _load_schemas()
     if create_test_data:
         _create_email_templates()
+        _create_emails_sent()
         _create_users()
         _cache_externals()
         _run_jobs()
@@ -88,6 +90,17 @@ def _create_email_templates():
         name='What an excellent day for an exorcism.',
         subject_line='You would like that?',
         message='Intensely.',
+    )
+    std_commit(allow_test_environment=True)
+
+
+def _create_emails_sent():
+    term_id = app.config['CURRENT_TERM_ID']
+    EmailSent.create(
+        recipient_uids=['8765432'],
+        section_id='28165',
+        template_type='invitation',
+        term_id=term_id,
     )
     std_commit(allow_test_environment=True)
 
