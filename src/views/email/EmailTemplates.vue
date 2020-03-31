@@ -23,8 +23,8 @@
         <template v-slot:body="{ items }">
           <tbody>
             <tr v-if="!items.length">
-              <td>
-                No Templates found.
+              <td colspan="6" class="pa-6 subtitle-1">
+                You have no email templates. To get started, select a type of template from the "Create New Template" menu above.
               </td>
             </tr>
             <tr v-for="template in items" :key="template.id">
@@ -44,7 +44,14 @@
                 <v-btn
                   icon
                   @click="sendTestEmail(template.id)">
-                  <v-icon>mdi-email</v-icon>
+                  <v-icon>mdi-email-outline</v-icon>
+                </v-btn>
+              </td>
+              <td>
+                <v-btn
+                  icon
+                  @click="deleteEmailTemplate(template.id)">
+                  <v-icon>mdi-trash-can-outline</v-icon>
                 </v-btn>
               </td>
             </tr>
@@ -65,7 +72,7 @@
 <script>
   import Context from '@/mixins/Context'
   import Utils from '@/mixins/Utils'
-  import {getAllEmailTemplates, sendTestEmail} from '@/api/email-template'
+  import {deleteTemplate, getAllEmailTemplates, sendTestEmail} from '@/api/email-template'
 
   export default {
     name: 'EmailTemplates',
@@ -77,7 +84,8 @@
         {text: 'Subject Line', value: 'subjectLine'},
         {text: 'Type', value: 'typeName'},
         {text: 'Created', value: 'createdAt'},
-        {text: 'Test', sortable: false, class: 'pl-5 pr-0 mr-0'}
+        {text: 'Test', sortable: false, class: 'pl-5 pr-0 mr-0'},
+        {text: 'Delete', sortable: false, class: 'pl-5 pr-0 mr-0'}
       ],
       emailTemplates: undefined,
       emailTemplateTypes: undefined,
@@ -88,16 +96,24 @@
       pageCount: undefined
     }),
     mounted() {
-      this.$loading()
-      getAllEmailTemplates().then(data => {
-        this.emailTemplates = data
-        this.emailTemplateTypes = this.getSelectOptionsFromObject(this.$config.emailTemplateTypes)
-        this.$ready()
-      }).catch(this.$ready)
+      this.loadAllEmailTemplates()
     },
     methods: {
       createNewTemplate(type) {
         this.goToPath(`/email/template/create/${type}`)
+      },
+      deleteEmailTemplate(templateId) {
+        deleteTemplate(templateId).then(() => {
+          this.loadAllEmailTemplates()
+        })
+      },
+      loadAllEmailTemplates() {
+        this.$loading()
+        getAllEmailTemplates().then(data => {
+          this.emailTemplates = data
+          this.emailTemplateTypes = this.getSelectOptionsFromObject(this.$config.emailTemplateTypes)
+          this.$ready()
+        }).catch(this.$ready)
       },
       sendTestEmail(templateId) {
         sendTestEmail(templateId).then(() => {
