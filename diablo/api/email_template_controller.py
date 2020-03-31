@@ -55,6 +55,13 @@ def get_email_template(template_id):
         raise ResourceNotFoundError('No such email_template')
 
 
+@app.route('/api/email_template/delete/<template_id>', methods=['DELETE'])
+@admin_required
+def delete_email_template(template_id):
+    EmailTemplate.delete_template(template_id)
+    return tolerant_jsonify({'message': f'Email template {template_id} has been deleted'}), 200
+
+
 @app.route('/api/email_template/codes')
 @admin_required
 def get_template_codes():

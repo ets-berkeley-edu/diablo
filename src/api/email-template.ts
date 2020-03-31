@@ -10,11 +10,15 @@ export function createEmailTemplate(templateType, name, subjectLine, message) {
   })
 }
 
+export function deleteTemplate(templateId) {
+  return axios.delete(`${utils.apiBaseUrl()}/api/email_template/delete/${templateId}`)
+}
+
 export function getAllEmailTemplates() {
   return axios.get(`${utils.apiBaseUrl()}/api/email_templates/all`)
 }
 
-export function getEmailTemplate(templateId) {
+export function getEmailTemplate(templateId: number) {
   return axios.get(`${utils.apiBaseUrl()}/api/email_template/${templateId}`)
 }
 

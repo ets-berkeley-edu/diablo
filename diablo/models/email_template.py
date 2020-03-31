@@ -85,6 +85,11 @@ class EmailTemplate(Base):
         return email_template
 
     @classmethod
+    def delete_template(cls, template_id):
+        db.session.delete(cls.query.filter_by(id=template_id).first())
+        std_commit()
+
+    @classmethod
     def get_template(cls, template_id):
         return cls.query.filter_by(id=template_id).first()
 

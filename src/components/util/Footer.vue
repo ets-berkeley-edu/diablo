@@ -1,5 +1,5 @@
 <template>
-  <v-footer color="transparent">
+  <v-footer color="transparent" fixed>
     <v-container fluid>
       <v-row no-gutters>
         <v-spacer />
