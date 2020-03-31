@@ -4,9 +4,9 @@
   export default {
     name: 'Utils',
     methods: {
-      getSelectOptionsFromObject(obj) {
+      getSelectOptionsFromObject(obj, isDisabled=() => false) {
         const options = []
-        _.each(obj, (text, value) => options.push({text, value}))
+        _.each(obj, (text, value) => options.push({text, value, disabled: isDisabled(value)}))
         return options
       },
       goToPath(path) {
