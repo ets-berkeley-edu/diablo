@@ -12,21 +12,17 @@ export function approve(
       recordingType,
       sectionId
     })
-    .then(response => response.data, error => error)
 }
 
 export function getAllApprovals(termId) {
-  return axios
-    .get(`${utils.apiBaseUrl()}/api/courses/approvals/${termId}`)
-    .then(response => response.data, () => null)
+  return axios.get(`${utils.apiBaseUrl()}/api/courses/approvals/${termId}`)
 }
 
 export function getApprovals(termId: number, sectionId: number) {
   return axios
     .get(`${utils.apiBaseUrl()}/api/course/approvals/${termId}/${sectionId}`)
-    .then(response => response.data, () => null)
 }
 
 export function getTermSummary(termId) {
-  return axios.get(`${utils.apiBaseUrl()}/api/courses/term/${termId}`).then(response => response.data, () => null)
+  return axios.get(`${utils.apiBaseUrl()}/api/courses/term/${termId}`)
 }

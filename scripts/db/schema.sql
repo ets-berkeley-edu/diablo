@@ -45,6 +45,18 @@ CREATE TYPE approver_types AS ENUM (
 
 --
 
+CREATE TYPE email_template_types AS ENUM (
+    'admin_alert_instructor_change',
+    'admin_alert_room_change',
+    'invitation',
+    'notify_instructor_of_changes',
+    'recordings_scheduled',
+    'room_change_no_longer_eligible',
+    'waiting_for_approval'
+);
+
+--
+
 CREATE TYPE publish_types AS ENUM (
     'canvas',
     'kaltura_media_gallery'
@@ -112,6 +124,7 @@ CREATE TABLE canvas_course_sites (
     canvas_course_site_id INTEGER NOT NULL,
     section_id INTEGER NOT NULL,
     term_id INTEGER NOT NULL,
+    canvas_course_site_name TEXT NOT NULL,
     created_at timestamp with time zone NOT NULL
 );
 ALTER TABLE canvas_course_sites OWNER TO diablo;
@@ -119,6 +132,32 @@ ALTER TABLE canvas_course_sites ADD CONSTRAINT canvas_course_sites_pkey PRIMARY 
 CREATE INDEX canvas_course_sites_canvas_course_site_id_idx ON canvas_course_sites USING btree (canvas_course_site_id);
 CREATE INDEX canvas_course_sites_section_id_idx ON canvas_course_sites USING btree (section_id);
 CREATE INDEX canvas_course_sites_term_id_idx ON canvas_course_sites USING btree (term_id);
+
+--
+
+CREATE TABLE email_templates (
+    id INTEGER NOT NULL,
+    template_type email_template_types NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    message TEXT NOT NULL,
+    subject_line VARCHAR(255) NOT NULL,
+    created_at timestamp with time zone NOT NULL,
+    updated_at timestamp with time zone NOT NULL
+);
+ALTER TABLE email_templates OWNER TO diablo;
+CREATE SEQUENCE email_templates_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+ALTER TABLE email_templates_id_seq OWNER TO diablo;
+ALTER SEQUENCE email_templates_id_seq OWNED BY email_templates.id;
+ALTER TABLE ONLY email_templates ALTER COLUMN id SET DEFAULT nextval('email_templates_id_seq'::regclass);
+ALTER TABLE ONLY email_templates
+    ADD CONSTRAINT email_templates_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY email_templates
+    ADD CONSTRAINT email_templates_name_unique_constraint UNIQUE (name);
 
 --
 

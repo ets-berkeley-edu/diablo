@@ -58,7 +58,7 @@ application = create_app()
 @application.cli.command()
 def initdb():
     from diablo.models import development_db
-    development_db.load()
+    development_db.load(create_test_data=False)
 
 
 host = application.config['HOST']

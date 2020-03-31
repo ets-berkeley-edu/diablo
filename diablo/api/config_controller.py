@@ -28,6 +28,8 @@ import json
 from diablo import __version__ as version
 from diablo.lib.berkeley import term_name_for_sis_id
 from diablo.lib.http import tolerant_jsonify
+from diablo.models.email_template import EmailTemplate
+from diablo.models.room import Room
 from flask import current_app as app
 
 
@@ -35,6 +37,7 @@ from flask import current_app as app
 def app_config():
     term_id = app.config['CURRENT_TERM_ID']
     return tolerant_jsonify({
+        'canvasBaseUrl': app.config['CANVAS_BASE_URL'],
         'courseCaptureExplainedUrl': app.config['COURSE_CAPTURE_EXPLAINED_URL'],
         'courseCapturePoliciesUrl': app.config['COURSE_CAPTURE_POLICIES_URL'],
         'currentTermId': term_id,
@@ -42,6 +45,8 @@ def app_config():
         'devAuthEnabled': app.config['DEVELOPER_AUTH_ENABLED'],
         'diabloEnv': app.config['DIABLO_ENV'],
         'ebEnvironment': app.config['EB_ENVIRONMENT'] if 'EB_ENVIRONMENT' in app.config else None,
+        'emailTemplateTypes': EmailTemplate.get_template_type_options(),
+        'roomCapabilityOptions': Room.get_room_capability_options(),
         'supportEmailAddress': app.config['DIABLO_SUPPORT_EMAIL'],
         'timezone': app.config['TIMEZONE'],
     })

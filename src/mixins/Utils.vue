@@ -4,6 +4,14 @@
   export default {
     name: 'Utils',
     methods: {
+      getSelectOptionsFromObject(obj) {
+        const options = []
+        _.each(obj, (text, value) => options.push({text, value}))
+        return options
+      },
+      goToPath(path) {
+        this.$router.push({ path }, _.noop)
+      },
       oxfordJoin: arr => {
         switch(arr.length) {
           case 1: return _.head(arr)

@@ -51,6 +51,10 @@ class User(UserMixin):
         return self.uid
 
     @property
+    def email(self):
+        return self.api_json['email']
+
+    @property
     def is_active(self):
         return self.api_json['isActive']
 
@@ -66,6 +70,10 @@ class User(UserMixin):
     def is_admin(self):
         return self.api_json['isAdmin']
 
+    @property
+    def name(self):
+        return self.api_json['name']
+
     def to_api_json(self):
         return self.api_json
 
@@ -76,6 +84,7 @@ class User(UserMixin):
     @classmethod
     def _get_api_json(cls, uid=None):
         calnet_profile = None
+        email = None
         is_active = False
         is_admin = False
         courses = []
@@ -83,18 +92,22 @@ class User(UserMixin):
             calnet_profile = calnet.get_calnet_user_for_uid(app, uid)
             is_active = not calnet_profile.get('isExpiredPerLdap', True)
             if is_active:
+                email = calnet_profile.get('campusEmail') or calnet_profile.get('email')
                 is_admin = AdminUser.is_admin(uid)
                 courses = get_courses_per_instructor(
                     term_id=app.config['CURRENT_TERM_ID'],
                     instructor_uid=uid,
                 )
                 for course in courses:
-                    course['room'] = Room.find_room(course['meetingLocation']).to_api_json()
+                    if course['meetingLocation']:
+                        room = Room.find_room(course['meetingLocation'])
+                        course['room'] = room and room.to_api_json()
                 is_active = is_admin or bool(courses)
         return {
             **(calnet_profile or {}),
             **{
                 'id': uid,
+                'email': email,
                 'isActive': is_active,
                 'isAdmin': is_admin,
                 'isAnonymous': not is_active,

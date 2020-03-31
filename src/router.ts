@@ -4,14 +4,16 @@ import Attic from '@/views/Attic.vue'
 import auth from './auth'
 import BaseView from '@/views/BaseView.vue'
 import CourseChanges from '@/views/CourseChanges.vue'
+import EditEmailTemplate from '@/views/email/EditEmailTemplate.vue'
+import EmailTemplates from '@/views/email/EmailTemplates.vue'
 import Error from '@/views/Error.vue'
 import Home from '@/views/Home.vue'
 import Login from '@/views/Login.vue'
 import NotFound from '@/views/NotFound.vue'
 import Ouija from '@/views/Ouija.vue'
-import PrintableRoom from '@/views/PrintableRoom.vue'
-import Room from '@/views/Room.vue'
-import Rooms from '@/views/Rooms.vue'
+import PrintableRoom from '@/views/room/PrintableRoom.vue'
+import Room from '@/views/room/Room.vue'
+import Rooms from '@/views/room/Rooms.vue'
 import User from '@/views/User.vue'
 import Router from 'vue-router'
 import Vue from 'vue'
@@ -93,10 +95,38 @@ const router = new Router({
       component: BaseView,
       children: [
         {
+          path: '/attic',
+          component: Attic,
+          meta: {
+            title: 'The Attic'
+          }
+        },
+        {
           path: '/changes',
           component: CourseChanges,
           meta: {
             title: 'Course Changes'
+          }
+        },
+        {
+          path: '/email/templates',
+          component: EmailTemplates,
+          meta: {
+            title: 'Email Templates'
+          }
+        },
+        {
+          path: '/email/template/create/:type',
+          component: EditEmailTemplate,
+          meta: {
+            title: 'Create Email Template'
+          }
+        },
+        {
+          path: '/email/template/edit/:id',
+          component: EditEmailTemplate,
+          meta: {
+            title: 'Edit Email Template'
           }
         },
         {

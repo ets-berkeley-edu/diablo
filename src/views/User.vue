@@ -19,7 +19,15 @@
               <tr :key="item.sectionId">
                 <td :class="tdClass(item)">{{ item.courseName }}</td>
                 <td :class="tdClass(item)">{{ item.sectionId }}</td>
-                <td :class="tdClass(item)">{{ item.room.location }}</td>
+                <td :class="tdClass(item)">
+                  <router-link
+                    v-if="item.room"
+                    :id="`course-${item.sectionId}-room-${item.room.id}`"
+                    :to="`/room/${item.room.id}`">
+                    {{ item.room.location }}
+                  </router-link>
+                  <span v-if="!item.room">&nbsp;</span>
+                </td>
                 <td :class="tdClass(item)">{{ item.meetingDays ? item.meetingDays.join(',') : '&mdash;' }}</td>
                 <td :class="tdClass(item)">{{ item.meetingStartTime ? `${item.meetingStartTime} - ${item.meetingEndTime}` : '&mdash;' }}</td>
                 <td :class="tdClass(item)">
@@ -84,8 +92,9 @@
       let uid = this.$_.get(this.$route, 'params.uid')
       getUser(uid).then(user => {
         this.user = user
+        this.setPageTitle(this.user.name)
         this.$ready()
-      })
+      }).catch(this.$ready)
     },
     methods: {
       tdClass(item) {

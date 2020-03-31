@@ -31,17 +31,17 @@
                 </td>
               </tr>
               <tr v-for="room in items" :key="room.id">
-                <td class="w-50">
+                <td class="w-20">
                   <router-link :id="`room-${room.id}`" :to="`/room/${room.id}`">{{ room.location }}</router-link>
                 </td>
-                <td class="w-20">
+                <td class="w-10">
                   {{ room.kalturaResourceId || '&mdash;' }}
                 </td>
-                <td class="w-20">
+                <td class="w-10">
                   {{ room.isAuditorium ? 'Yes' : 'No' }}
                 </td>
-                <td>
-                  <SelectRoomCapability :options="capabilityOptions" :room="room" />
+                <td class="w-20">
+                  <SelectRoomCapability :options="$config.roomCapabilityOptions" :room="room" />
                 </td>
               </tr>
             </tbody>
@@ -62,14 +62,13 @@
 <script>
   import Context from '@/mixins/Context'
   import SelectRoomCapability from '@/components/room/SelectRoomCapability'
-  import {getAllRooms, getCapabilityOptions} from '@/api/room'
+  import {getAllRooms} from '@/api/room'
 
   export default {
     name: 'Rooms',
     components: {SelectRoomCapability},
     mixins: [Context],
     data: () => ({
-      capabilityOptions: undefined,
       headers: [
         {text: 'Room', value: 'location'},
         {text: 'Kaltura Resource', value: 'kalturaResourceId'},
@@ -88,11 +87,8 @@
       this.$loading()
       getAllRooms().then(data => {
         this.rooms = data
-        getCapabilityOptions().then(options => {
-          this.capabilityOptions = options
-          this.$ready()
-        })
-      })
+        this.$ready()
+      }).catch(this.$ready)
     }
   }
 </script>

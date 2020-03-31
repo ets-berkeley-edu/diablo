@@ -94,7 +94,7 @@
           { title: 'Home', icon: 'mdi-home', path: '/home' }
         ]
         this.$_.each(this.$currentUser.courses, course => {
-          if (course.room.capability) {
+          if (course.room && course.room.capability) {
             this.navItems.push({
               title: course.courseName,
               icon: 'mdi-video-plus',

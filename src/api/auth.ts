@@ -9,21 +9,17 @@ export function devAuthLogIn(uid: string, password: string) {
       uid: uid,
       password: password
     })
-    .then(response => {
-      Vue.prototype.$currentUser = response.data
+    .then(data => {
+      Vue.prototype.$currentUser = data
       Vue.prototype.$core.initializeCurrentUser().then(_.noop)
       return Vue.prototype.$currentUser
     }, error => error)
 }
 
 export function getCasLoginURL() {
-  return axios
-    .get(`${utils.apiBaseUrl()}/api/auth/cas_login_url`)
-    .then(response => response.data, () => null)
+  return axios.get(`${utils.apiBaseUrl()}/api/auth/cas_login_url`)
 }
 
 export function getCasLogoutUrl() {
-  return axios
-    .get(`${utils.apiBaseUrl()}/api/auth/logout`)
-    .then(response => response.data, () => null)
+  return axios.get(`${utils.apiBaseUrl()}/api/auth/logout`)
 }

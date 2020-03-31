@@ -1,5 +1,5 @@
 <template>
-  <v-banner class="pa-12">
+  <v-banner class="pa-8">
     <v-icon
       slot="icon"
       color="warning"
@@ -27,6 +27,7 @@
     }),
     mounted() {
       this.message = this.$route.query.m
+      this.$ready()
     }
   }
 </script>
