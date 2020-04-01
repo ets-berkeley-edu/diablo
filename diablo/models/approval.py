@@ -53,12 +53,12 @@ approver_type = ENUM(
     create_type=False,
 )
 
-PUBLISH_TYPE_NAMES_PER_ID = {
+NAMES_PER_PUBLISH_TYPE = {
     'canvas': 'bCourses',
     'kaltura_media_gallery': 'My Media (Kaltura)',
 }
 
-RECORDING_TYPE_NAMES_PER_ID = {
+NAMES_PER_RECORDING_TYPE = {
     'presentation_audio': 'Presentation and Audio',
     'presenter_audio': 'Presenter and Audio',
     'presenter_presentation_audio': 'Presenter, Presentation, and Audio',
@@ -164,9 +164,9 @@ class Approval(db.Model):
             'approverType': self.approver_type,
             'roomId': self.room_id,
             'publishType': self.publish_type,
-            'publishTypeName': PUBLISH_TYPE_NAMES_PER_ID[self.publish_type],
+            'publishTypeName': NAMES_PER_PUBLISH_TYPE[self.publish_type],
             'recordingType': self.recording_type,
-            'recordingTypeName': RECORDING_TYPE_NAMES_PER_ID[self.recording_type],
+            'recordingTypeName': NAMES_PER_RECORDING_TYPE[self.recording_type],
             'createdAt': to_isoformat(self.created_at),
         }
 

@@ -26,11 +26,11 @@ ENHANCEMENTS, OR MODIFICATIONS.
 from flask import current_app as app
 
 
-def send_email(email_address, subject_line, message):
+def send_email(recipient_name, email_address, subject_line, message):
     # TODO: Implement according to https://documentation.mailgun.com/en/latest/quickstart-sending.html#send-via-api
     app.logger.info(f"""
 
-        To: {email_address}
+        To: {recipient_name}<{email_address}>
         From: {app.config['DIABLO_SUPPORT_EMAIL']}
         Subject: {subject_line}
 
