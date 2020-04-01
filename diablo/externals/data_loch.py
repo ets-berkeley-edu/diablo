@@ -40,7 +40,10 @@ def sis_schema():
 def get_distinct_meeting_locations():
     sql = f"""
         SELECT DISTINCT meeting_location FROM {sis_schema()}.sis_sections
-        WHERE meeting_location IS NOT NULL AND meeting_location != ''
+        WHERE
+            meeting_location IS NOT NULL
+            AND meeting_location != ''
+            AND instructor_role_code IN ('ICNT', 'PI', 'TNIC')
         ORDER BY meeting_location
     """
     return [row['meeting_location'] for row in safe_execute_rds(sql)]
@@ -49,7 +52,9 @@ def get_distinct_meeting_locations():
 def get_sis_section_ids(term_id):
     sql = f"""
         SELECT sis_section_id FROM {sis_schema()}.sis_sections
-        WHERE sis_term_id = :term_id
+        WHERE
+            sis_term_id = :term_id
+            AND instructor_role_code IN ('ICNT', 'PI', 'TNIC')
     """
     return [row['sis_section_id'] for row in safe_execute_rds(sql, term_id=str(term_id))]
 
@@ -57,7 +62,10 @@ def get_sis_section_ids(term_id):
 def get_sis_section(term_id, section_id):
     sql = f"""
         SELECT * FROM {sis_schema()}.sis_sections
-        WHERE sis_term_id = :term_id AND sis_section_id = :section_id
+        WHERE
+            sis_term_id = :term_id
+            AND sis_section_id = :section_id
+            AND instructor_role_code IN ('ICNT', 'PI', 'TNIC')
         ORDER BY sis_course_title, sis_section_id, instructor_uid
     """
     return safe_execute_rds(sql, term_id=str(term_id), section_id=str(section_id))
@@ -66,7 +74,10 @@ def get_sis_section(term_id, section_id):
 def get_sis_sections(term_id, instructor_uid):
     sql = f"""
         SELECT sis_section_id FROM {sis_schema()}.sis_sections
-        WHERE sis_term_id = :term_id AND instructor_uid = :instructor_uid
+        WHERE
+            sis_term_id = :term_id
+            AND instructor_uid = :instructor_uid
+            AND instructor_role_code IN ('ICNT', 'PI', 'TNIC')
     """
     section_ids = []
     for row in safe_execute_rds(sql, term_id=str(term_id), instructor_uid=instructor_uid):
@@ -77,7 +88,10 @@ def get_sis_sections(term_id, instructor_uid):
 def get_sis_sections_per_location(term_id, room_location):
     sql = f"""
         SELECT sis_section_id FROM {sis_schema()}.sis_sections
-        WHERE sis_term_id = :term_id AND meeting_location = :room_location
+        WHERE
+            sis_term_id = :term_id
+            AND meeting_location = :room_location
+            AND instructor_role_code IN ('ICNT', 'PI', 'TNIC')
     """
     section_ids = []
     for row in safe_execute_rds(sql, term_id=str(term_id), room_location=room_location):
@@ -88,7 +102,10 @@ def get_sis_sections_per_location(term_id, room_location):
 def get_sis_sections_per_id(term_id, section_ids):
     sql = f"""
         SELECT * FROM {sis_schema()}.sis_sections
-        WHERE sis_term_id = :term_id AND sis_section_id = ANY(:section_ids)
+        WHERE
+            sis_term_id = :term_id
+            AND sis_section_id = ANY(:section_ids)
+            AND instructor_role_code IN ('ICNT', 'PI', 'TNIC')
         ORDER BY sis_course_title, sis_section_id, instructor_uid
     """
     return safe_execute_rds(sql, term_id=str(term_id), section_ids=section_ids)

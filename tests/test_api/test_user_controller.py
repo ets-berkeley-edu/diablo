@@ -116,3 +116,13 @@ class TestUserProfile:
         assert len(instructors) > 0
         assert instructors[0]['uid'] == instructor_uid
         assert len(instructors[0]['name'])
+
+    def test_only_courses_taught_by_instructor(self, client, admin_session):
+        """Includes only courses taught by instructor."""
+        def find_course(section_id):
+            return next((c for c in user.get('courses') if c['sectionId'] == section_id), None)
+
+        uid = '8765432'
+        user = self._api_user(client, uid)
+        assert find_course('28602')
+        assert not find_course('22460')
