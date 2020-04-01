@@ -71,7 +71,7 @@ class EmailSent(db.Model):
 
     @classmethod
     def get_emails_sent_to(cls, uid):
-        return cls.query.filter(cls.recipient_uids.any(uid)).all()
+        return cls.query.filter(cls.recipient_uids.any(uid)).order_by(cls.sent_at).all()
 
     def to_api_json(self):
         return {

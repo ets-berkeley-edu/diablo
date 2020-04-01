@@ -29,6 +29,7 @@ from diablo.externals.mailgun import send_email
 from diablo.lib.berkeley import term_name_for_sis_id
 from diablo.merged.sis import get_section
 from diablo.models.approval import NAMES_PER_PUBLISH_TYPE, NAMES_PER_RECORDING_TYPE
+from diablo.models.email_sent import EmailSent
 from diablo.models.email_template import EmailTemplate
 from flask import current_app as app
 
@@ -75,6 +76,12 @@ def notify_instructors_of_changed_preferences(
                 subject_line=subject_line,
                 message=message,
             )
+        EmailSent.create(
+            recipient_uids=[instructor['uid'] for instructor in course['instructors']],
+            section_id=course['sectionId'],
+            template_type=template_type,
+            term_id=term_id,
+        )
     else:
         _send_system_error_email(f'Unable to send email of type {template_type} because no template is available.')
 
