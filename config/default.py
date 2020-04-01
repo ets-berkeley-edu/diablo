@@ -35,7 +35,6 @@ CAS_SERVER = 'https://auth-test.berkeley.edu/cas/'
 
 COURSE_CAPTURE_EXPLAINED_URL = 'https://www.ets.berkeley.edu/services-facilities/course-capture'
 COURSE_CAPTURE_POLICIES_URL = 'https://www.ets.berkeley.edu/services-facilities/course-capture/course-capture-instructors-getting-started/policies'
-DIABLO_SUPPORT_EMAIL = 'coursecapture@berkeley.edu'
 
 CACHE_DEFAULT_TIMEOUT = 86400
 CACHE_DIR = f'{BASE_DIR}/.flask_cache'
@@ -62,6 +61,9 @@ EDO_DB_NAME = ''
 EDO_DB_PASSWORD = ''
 EDO_DB_PORT = 0
 EDO_DB_USERNAME = ''
+
+EMAIL_DIABLO_ADMIN = 'coursecapture-admin-alerts@berkeley.edu'
+EMAIL_DIABLO_SUPPORT = 'coursecapture@berkeley.edu'
 
 # Directory to search for mock fixtures, if running in "test" or "demo" mode.
 FIXTURES_PATH = None

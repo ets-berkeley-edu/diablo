@@ -47,7 +47,7 @@ def app_config():
         'ebEnvironment': app.config['EB_ENVIRONMENT'] if 'EB_ENVIRONMENT' in app.config else None,
         'emailTemplateTypes': EmailTemplate.get_template_type_options(),
         'roomCapabilityOptions': Room.get_room_capability_options(),
-        'supportEmailAddress': app.config['DIABLO_SUPPORT_EMAIL'],
+        'supportEmailAddress': app.config['EMAIL_DIABLO_SUPPORT'],
         'timezone': app.config['TIMEZONE'],
     })
 

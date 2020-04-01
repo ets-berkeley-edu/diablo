@@ -161,7 +161,7 @@ def _send_system_error_email(message):
     subject = f'{message[:50]}...' if len(message) > 50 else message
     send_email(
         recipient_name='Course Capture Admin',
-        email_address=app.config['DIABLO_SUPPORT_EMAIL'],
+        email_address=app.config['EMAIL_DIABLO_ADMIN'],
         subject_line=f'Diablo Alert: {subject}',
         message=message,
     )
