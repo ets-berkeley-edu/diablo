@@ -51,7 +51,7 @@ def get_sis_section_ids(term_id):
         SELECT sis_section_id FROM {sis_schema()}.sis_sections
         WHERE sis_term_id = :term_id
     """
-    return [row['sis_section_id'] for row in safe_execute_rds(sql, term_id=term_id)]
+    return [row['sis_section_id'] for row in safe_execute_rds(sql, term_id=str(term_id))]
 
 
 def get_sis_section(term_id, section_id):
@@ -60,7 +60,7 @@ def get_sis_section(term_id, section_id):
         WHERE sis_term_id = :term_id AND sis_section_id = :section_id
         ORDER BY sis_course_title, sis_section_id, instructor_uid
     """
-    return safe_execute_rds(sql, term_id=term_id, section_id=section_id)
+    return safe_execute_rds(sql, term_id=str(term_id), section_id=str(section_id))
 
 
 def get_sis_sections(term_id, instructor_uid):
@@ -69,7 +69,7 @@ def get_sis_sections(term_id, instructor_uid):
         WHERE sis_term_id = :term_id AND instructor_uid = :instructor_uid
     """
     section_ids = []
-    for row in safe_execute_rds(sql, term_id=term_id, instructor_uid=instructor_uid):
+    for row in safe_execute_rds(sql, term_id=str(term_id), instructor_uid=instructor_uid):
         section_ids.append(row['sis_section_id'])
     return get_sis_sections_per_id(term_id, section_ids)
 
@@ -80,7 +80,7 @@ def get_sis_sections_per_location(term_id, room_location):
         WHERE sis_term_id = :term_id AND meeting_location = :room_location
     """
     section_ids = []
-    for row in safe_execute_rds(sql, term_id=term_id, room_location=room_location):
+    for row in safe_execute_rds(sql, term_id=str(term_id), room_location=room_location):
         section_ids.append(row['sis_section_id'])
     return get_sis_sections_per_id(term_id, section_ids)
 
@@ -91,7 +91,7 @@ def get_sis_sections_per_id(term_id, section_ids):
         WHERE sis_term_id = :term_id AND sis_section_id = ANY(:section_ids)
         ORDER BY sis_course_title, sis_section_id, instructor_uid
     """
-    return safe_execute_rds(sql, term_id=term_id, section_ids=section_ids)
+    return safe_execute_rds(sql, term_id=str(term_id), section_ids=section_ids)
 
 
 def safe_execute_rds(sql, **kwargs):

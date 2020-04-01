@@ -24,17 +24,18 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 
 from diablo import std_commit
+from diablo.models.email_sent import EmailSent
 from flask import current_app as app
 from tests.test_api.api_test_utils import api_approve, api_get_approvals
 from tests.util import create_approvals_and_scheduled
 
 admin_uid = '2040'
-section_1_id = '28602'
+section_1_id = 28602
 section_1_instructor_uids = ['234567', '8765432']
-section_2_id = '28165'
+section_2_id = 28165
 section_2_instructor_uids = ['8765432']
-section_3_id = '12601'
-section_with_canvas_course_sites = '22287'
+section_3_id = 12601
+section_with_canvas_course_sites = 22287
 
 
 class TestApprove:
@@ -100,10 +101,19 @@ class TestApprove:
         )
         std_commit(allow_test_environment=True)
 
+        term_id = app.config['CURRENT_TERM_ID']
+        for uid in ('234567', '8765432'):
+            emails_sent = EmailSent.get_emails_sent_to(uid)
+            assert len(emails_sent) > 0
+            most_recent = emails_sent[-1]
+            assert most_recent.section_id == section_1_id
+            assert most_recent.template_type == 'notify_instructor_of_changes'
+            assert most_recent.term_id == term_id
+
         fake_auth.login(admin_uid)
         api_json = api_get_approvals(
             client,
-            term_id=app.config['CURRENT_TERM_ID'],
+            term_id=term_id,
             section_id=section_1_id,
         )
         assert api_json['room']['location'] == 'Barrows 106'
@@ -232,8 +242,6 @@ class TestTermReport:
         with create_approvals_and_scheduled(db, 'Barrows 106'):
             fake_auth.login(admin_uid)
             api_json = self._api_capture_enabled_rooms(client)
-
-            print(api_json)
 
             section_1 = next((s for s in api_json if s['sectionId'] == '26094'), None)
             assert section_1
