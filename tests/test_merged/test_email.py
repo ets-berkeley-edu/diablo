@@ -26,7 +26,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 import re
 
 from diablo.merged.calnet import get_calnet_user_for_uid
-from diablo.merged.email import interpolate_email_content
+from diablo.merged.emailer import interpolate_email_content
 from diablo.merged.sis import get_section
 from flask import current_app as app
 

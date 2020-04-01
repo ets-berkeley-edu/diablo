@@ -27,8 +27,9 @@ from diablo.api.errors import BadRequestError, ForbiddenRequestError, ResourceNo
 from diablo.api.util import admin_required
 from diablo.lib.berkeley import get_instructor_uids, has_necessary_approvals, term_name_for_sis_id
 from diablo.lib.http import tolerant_jsonify
+from diablo.merged.emailer import notify_instructors_of_changed_preferences
 from diablo.merged.sis import get_courses_per_section_ids, get_section
-from diablo.models.approval import Approval, get_all_publish_types, get_all_recording_types, PUBLISH_TYPE_NAMES_PER_ID
+from diablo.models.approval import Approval, get_all_publish_types, get_all_recording_types, NAMES_PER_PUBLISH_TYPE
 from diablo.models.room import Room
 from diablo.models.scheduled import Scheduled
 from flask import current_app as app, request
@@ -62,7 +63,8 @@ def approve():
     if not room:
         raise BadRequestError(f'{location} is not eligible for Course Capture.')
 
-    Approval.create(
+    prior_approvals = Approval.get_approvals_per_section_id(section_id=section_id, term_id=term_id)
+    approval = Approval.create(
         approved_by_uid=approved_by_uid,
         section_id=section_id,
         term_id=term_id,
@@ -71,6 +73,19 @@ def approve():
         recording_type_=recording_type,
         room_id=room.id,
     )
+    if prior_approvals:
+        # Compare the current approval with preferences submitted in previous approval
+        previous_approval = prior_approvals[-1]
+        previous_publish_type = previous_approval.publish_type
+        previous_recording_type = previous_approval.recording_type
+        if approval.publish_type != previous_publish_type or approval.recording_type != previous_recording_type:
+            notify_instructors_of_changed_preferences(
+                latest_approval=approval,
+                name_of_latest_approver=current_user.name,
+                previous_publish_type=previous_publish_type,
+                previous_recording_type=previous_recording_type,
+                term_id=term_id,
+            )
     return tolerant_jsonify(_course_to_json(section, term_id))
 
 
@@ -126,7 +141,7 @@ def _course_to_json(section, term_id):
     return {
         'approvals': [approval.to_api_json() for approval in all_approvals],
         'hasNecessaryApprovals': has_necessary_approvals(section, all_approvals),
-        'publishTypeOptions': PUBLISH_TYPE_NAMES_PER_ID,
+        'publishTypeOptions': NAMES_PER_PUBLISH_TYPE,
         'room': room.to_api_json(),
         'scheduled': Scheduled.was_scheduled(section_id=section_id, term_id=term_id),
         'section': section,

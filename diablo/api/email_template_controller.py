@@ -27,7 +27,7 @@ from diablo.api.errors import BadRequestError, ResourceNotFoundError
 from diablo.api.util import admin_required
 from diablo.externals.mailgun import send_email
 from diablo.lib.http import tolerant_jsonify
-from diablo.merged.email import get_email_template_codes, interpolate_email_content
+from diablo.merged.emailer import get_email_template_codes, interpolate_email_content
 from diablo.merged.sis import get_section
 from diablo.models.email_template import EmailTemplate
 from flask import current_app as app, request
@@ -108,6 +108,7 @@ def test_email_template(template_id):
             templated_string=template.message,
         )
         send_email(
+            recipient_name=current_user.name,
             email_address=current_user.email_address,
             message=message,
             subject_line=subject_line,
