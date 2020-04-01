@@ -31,7 +31,7 @@ def send_email(recipient_name, email_address, subject_line, message):
     app.logger.info(f"""
 
         To: {recipient_name}<{email_address}>
-        From: {app.config['DIABLO_SUPPORT_EMAIL']}
+        From: {app.config['EMAIL_DIABLO_SUPPORT']}
         Subject: {subject_line}
 
         Message:

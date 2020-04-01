@@ -72,7 +72,7 @@ def cas_login():
         app.logger.error(f'Sorry, user with UID {uid} is not authorized to use Diablo.')
         param = ('error', f"""
             Sorry, you are not registered to use Diablo.
-            Please <a href="mailto:{app.config['DIABLO_SUPPORT_EMAIL']}">email us</a> for assistance.
+            Please <a href="mailto:{app.config['EMAIL_DIABLO_SUPPORT']}">email us</a> for assistance.
         """)
         redirect_url = add_param_to_url('/', param)
     else:
