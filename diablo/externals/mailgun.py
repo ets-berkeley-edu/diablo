@@ -29,6 +29,8 @@ EMAILS_SENT_IN_TEST_MODE = []
 
 
 def send_email(recipient_name, email_address, subject_line, message):
+    use_actual_address = app.config.get('EB_ENVIRONMENT', None) == 'diablo-prod'
+    email_address = email_address if use_actual_address else app.config['EMAIL_REDIRECT_WHEN_TESTING']
     if app.config['DIABLO_ENV'] == 'test':
         EMAILS_SENT_IN_TEST_MODE.append(_get_mock_message(recipient_name, email_address, subject_line, message))
     else:
