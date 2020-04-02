@@ -27,7 +27,7 @@ from diablo.api.errors import BadRequestError, ForbiddenRequestError, ResourceNo
 from diablo.api.util import admin_required
 from diablo.lib.berkeley import get_instructor_uids, has_necessary_approvals, term_name_for_sis_id
 from diablo.lib.http import tolerant_jsonify
-from diablo.merged.emailer import notify_instructors_of_changed_preferences
+from diablo.merged.emailer import notify_instructors
 from diablo.merged.sis import get_courses_per_section_ids, get_section
 from diablo.models.approval import Approval, get_all_publish_types, get_all_recording_types, NAMES_PER_PUBLISH_TYPE
 from diablo.models.room import Room
@@ -47,23 +47,23 @@ def approve():
     publish_type = params.get('publishType')
     recording_type = params.get('recordingType')
     section_id = params.get('sectionId')
-    section = get_section(term_id, section_id) if section_id else None
+    course = get_section(term_id, section_id) if section_id else None
 
-    if not section or publish_type not in get_all_publish_types() or recording_type not in get_all_recording_types():
+    if not course or publish_type not in get_all_publish_types() or recording_type not in get_all_recording_types():
         raise BadRequestError('One or more required params are missing or invalid')
 
-    if not current_user.is_admin and approved_by_uid not in [i['uid'] for i in section['instructors']]:
+    if not current_user.is_admin and approved_by_uid not in [i['uid'] for i in course['instructors']]:
         raise ForbiddenRequestError('Sorry, request unauthorized')
 
     if Approval.get_approval(approved_by_uid, section_id, term_id):
-        raise ForbiddenRequestError(f'You have already approved recording of {section["courseName"]}, {term_name}')
+        raise ForbiddenRequestError(f'You have already approved recording of {course["courseName"]}, {term_name}')
 
-    location = section['meetingLocation']
+    location = course['meetingLocation']
     room = Room.find_room(location=location)
     if not room:
         raise BadRequestError(f'{location} is not eligible for Course Capture.')
 
-    prior_approvals = Approval.get_approvals_per_section_id(section_id=section_id, term_id=term_id)
+    previous_approvals = Approval.get_approvals_per_section_id(section_id=section_id, term_id=term_id)
     approval = Approval.create(
         approved_by_uid=approved_by_uid,
         section_id=section_id,
@@ -73,20 +73,12 @@ def approve():
         recording_type_=recording_type,
         room_id=room.id,
     )
-    if prior_approvals:
-        # Compare the current approval with preferences submitted in previous approval
-        previous_approval = prior_approvals[-1]
-        previous_publish_type = previous_approval.publish_type
-        previous_recording_type = previous_approval.recording_type
-        if approval.publish_type != previous_publish_type or approval.recording_type != previous_recording_type:
-            notify_instructors_of_changed_preferences(
-                latest_approval=approval,
-                name_of_latest_approver=current_user.name,
-                previous_publish_type=previous_publish_type,
-                previous_recording_type=previous_recording_type,
-                term_id=term_id,
-            )
-    return tolerant_jsonify(_course_to_json(section, term_id))
+    _notify_instructors_of_approval(
+        approval=approval,
+        course=course,
+        previous_approvals=previous_approvals,
+    )
+    return tolerant_jsonify(_course_to_json(course, term_id))
 
 
 @app.route('/api/course/approvals/<term_id>/<section_id>')
@@ -164,3 +156,36 @@ def _approvals_per_section(term_id):
         section['approvals'] = approvals_per_section_id[section_id] if section_id in approvals_per_section_id else []
         api_json.append(section)
     return api_json
+
+
+def _notify_instructors_of_approval(approval, course, previous_approvals):
+    type_of_email_sent = None
+    if previous_approvals:
+        # Compare the current approval with preferences submitted in previous approval
+        previous_approval = previous_approvals[-1]
+        previous_publish_type = previous_approval.publish_type
+        previous_recording_type = previous_approval.recording_type
+        if approval.publish_type != previous_publish_type or approval.recording_type != previous_recording_type:
+            type_of_email_sent = 'notify_instructor_of_changes'
+            notify_instructors(
+                course=course,
+                latest_approval=approval,
+                name_of_latest_approver=current_user.name,
+                previous_publish_type=previous_publish_type,
+                previous_recording_type=previous_recording_type,
+                template_type=type_of_email_sent,
+                term_id=course['termId'],
+            )
+    all_approvals = previous_approvals + [approval]
+    if not type_of_email_sent and len(course['instructors']) > len(all_approvals):
+        approval_uids = [a.approved_by_uid for a in all_approvals]
+        type_of_email_sent = 'waiting_for_approval'
+        notify_instructors(
+            pending_instructors=[i for i in course['instructors'] if i not in approval_uids],
+            course=course,
+            latest_approval=approval,
+            name_of_latest_approver=current_user.name,
+            template_type=type_of_email_sent,
+            term_id=course['termId'],
+        )
+    return type_of_email_sent
