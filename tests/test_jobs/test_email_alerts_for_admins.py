@@ -22,15 +22,39 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from contextlib import contextmanager
+from diablo.externals.mailgun import EMAILS_SENT_IN_TEST_MODE
+from diablo.jobs.email_alerts_for_admins_job import EmailAlertsForAdmins
+from diablo.models.approval import Approval
+from diablo.models.room import Room
+from diablo.models.scheduled import Scheduled
+from flask import current_app as app
 
 
-@contextmanager
-def override_config(app, key, value):
-    """Temporarily override an app config value."""
-    old_value = app.config[key]
-    app.config[key] = value
-    try:
-        yield
-    finally:
-        app.config[key] = old_value
+class TestEmailAlertsForAdmins:
+
+    def test_run(self):
+        term_id = app.config['CURRENT_TERM_ID']
+        section_id = 26094
+
+        the_old_room = 'Wheeler 150'
+        the_new_room = 'Li Ka Shing 145'
+
+        scheduled_in_room = Room.find_room(the_old_room)
+        Approval.create(
+            approved_by_uid='8765432',
+            term_id=term_id,
+            section_id=section_id,
+            approver_type_='instructor',
+            publish_type_='kaltura_media_gallery',
+            recording_type_='presenter_audio',
+            room_id=scheduled_in_room.id,
+        )
+        Scheduled.create(
+            term_id=term_id,
+            section_id=section_id,
+            room_id=scheduled_in_room.id,
+        )
+        count_emails_sent = len(EMAILS_SENT_IN_TEST_MODE)
+        EmailAlertsForAdmins(app.app_context).run()
+        assert len(EMAILS_SENT_IN_TEST_MODE) == count_emails_sent + 1
+        assert the_new_room in EMAILS_SENT_IN_TEST_MODE[-1]

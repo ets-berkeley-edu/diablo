@@ -27,7 +27,9 @@ from diablo import db
 from diablo.externals import data_loch
 from diablo.externals.canvas import ping_canvas
 from diablo.externals.kaltura import Kaltura
+from diablo.externals.mailgun import mailgun_ping
 from diablo.lib.http import tolerant_jsonify
+from diablo.models.email_template import EmailTemplate
 from flask import current_app as app
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -48,9 +50,11 @@ def app_status():
 
     resp = {
         'app': True,
-        'data_loch': data_loch_status(),
-        'db': db_status(),
-        'kaltura': Kaltura().ping(),
         'canvas': ping_canvas(),
+        'dataLoch': data_loch_status(),
+        'db': db_status(),
+        'emailTemplates': len(EmailTemplate.all_templates()) == len(EmailTemplate.get_template_type_options()),
+        'kaltura': Kaltura().ping(),
+        'mailgun': mailgun_ping(),
     }
     return tolerant_jsonify(resp)

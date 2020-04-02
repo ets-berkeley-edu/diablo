@@ -22,12 +22,13 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-
 from diablo import std_commit
+from diablo.models.approval import Approval
 from diablo.models.email_sent import EmailSent
+from diablo.models.room import Room
+from diablo.models.scheduled import Scheduled
 from flask import current_app as app
 from tests.test_api.api_test_utils import api_approve, api_get_approvals
-from tests.util import create_approvals_and_scheduled
 
 admin_uid = '2040'
 section_1_id = 28602
@@ -239,19 +240,43 @@ class TestTermReport:
         self._api_capture_enabled_rooms(client, expected_status_code=401)
 
     def test_admin_runs_report(self, client, db, fake_auth):
-        with create_approvals_and_scheduled(db, 'Barrows 106'):
-            fake_auth.login(admin_uid)
-            api_json = self._api_capture_enabled_rooms(client)
+        term_id = app.config['CURRENT_TERM_ID']
+        room = Room.find_room('Barrows 106')
+        Approval.create(
+            approved_by_uid='234567',
+            term_id=term_id,
+            section_id=30563,
+            approver_type_='instructor',
+            publish_type_='canvas',
+            recording_type_='presentation_audio',
+            room_id=room.id,
+        )
+        Approval.create(
+            approved_by_uid=admin_uid,
+            term_id=term_id,
+            section_id=26094,
+            approver_type_='admin',
+            publish_type_='kaltura_media_gallery',
+            recording_type_='presenter_audio',
+            room_id=room.id,
+        )
+        Scheduled.create(
+            term_id=term_id,
+            section_id='26094',
+            room_id=room.id,
+        )
+        fake_auth.login(admin_uid)
+        api_json = self._api_capture_enabled_rooms(client)
 
-            section_1 = next((s for s in api_json if s['sectionId'] == '26094'), None)
-            assert section_1
-            assert len(section_1['approvals']) > 0
-            assert len(section_1['scheduled']) > 0
+        section_1 = next((s for s in api_json if s['sectionId'] == '26094'), None)
+        assert section_1
+        assert len(section_1['approvals']) > 0
+        assert len(section_1['scheduled']) > 0
 
-            section_2 = next((s for s in api_json if s['sectionId'] == '30563'), None)
-            assert section_2
-            assert len(section_2['approvals']) > 0
-            assert len(section_2['scheduled']) == 0
+        section_2 = next((s for s in api_json if s['sectionId'] == '30563'), None)
+        assert section_2
+        assert len(section_2['approvals']) > 0
+        assert len(section_2['scheduled']) == 0
 
     def test_empty_term(self, client, db, fake_auth):
         fake_auth.login(admin_uid)

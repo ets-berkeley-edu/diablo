@@ -33,7 +33,7 @@ from diablo.models.canvas_course_site import CanvasCourseSite
 from flask import current_app as app
 
 
-def get_section(term_id, section_id):
+def get_course(term_id, section_id):
     section = get_sis_section(term_id=term_id, section_id=section_id)
     if section:
         rows = _to_api_json(
@@ -43,6 +43,16 @@ def get_section(term_id, section_id):
         return rows[0] if rows else None
     else:
         return None
+
+
+def get_courses(term_id, section_ids):
+    return _to_api_json(
+        term_id=term_id,
+        sis_sections=get_sis_sections_per_id(
+            term_id=term_id,
+            section_ids=[str(section_id) for section_id in section_ids],
+        ),
+    )
 
 
 def get_courses_per_instructor(term_id, instructor_uid):
@@ -56,16 +66,6 @@ def get_courses_per_location(term_id, room_location):
     return _to_api_json(
         term_id=term_id,
         sis_sections=get_sis_sections_per_location(term_id=term_id, room_location=room_location),
-    )
-
-
-def get_courses_per_section_ids(term_id, section_ids):
-    return _to_api_json(
-        term_id=term_id,
-        sis_sections=get_sis_sections_per_id(
-            term_id=term_id,
-            section_ids=[str(section_id) for section_id in section_ids],
-        ),
     )
 
 

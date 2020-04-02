@@ -28,7 +28,7 @@ from diablo.api.util import admin_required
 from diablo.lib.berkeley import get_instructor_uids, has_necessary_approvals, term_name_for_sis_id
 from diablo.lib.http import tolerant_jsonify
 from diablo.merged.emailer import notify_instructors
-from diablo.merged.sis import get_courses_per_section_ids, get_section
+from diablo.merged.sis import get_course, get_courses
 from diablo.models.approval import Approval, get_all_publish_types, get_all_recording_types, NAMES_PER_PUBLISH_TYPE
 from diablo.models.room import Room
 from diablo.models.scheduled import Scheduled
@@ -47,7 +47,7 @@ def approve():
     publish_type = params.get('publishType')
     recording_type = params.get('recordingType')
     section_id = params.get('sectionId')
-    course = get_section(term_id, section_id) if section_id else None
+    course = get_course(term_id, section_id) if section_id else None
 
     if not course or publish_type not in get_all_publish_types() or recording_type not in get_all_recording_types():
         raise BadRequestError('One or more required params are missing or invalid')
@@ -84,7 +84,7 @@ def approve():
 @app.route('/api/course/approvals/<term_id>/<section_id>')
 @login_required
 def get_approvals(term_id, section_id):
-    section = get_section(term_id, section_id)
+    section = get_course(term_id, section_id)
     if not section:
         raise ResourceNotFoundError(f'No section for term_id = {term_id} and section_id = {section_id}')
 
@@ -116,13 +116,13 @@ def term_report(term_id):
     scheduled_per_section_id = _objects_per_section_id(Scheduled.get_all_scheduled(term_id))
     section_ids = set(approvals_per_section_id.keys()).union(set(scheduled_per_section_id.keys()))
 
-    for section in get_courses_per_section_ids(term_id, section_ids):
-        section_id = section['sectionId']
-        section['approvals'] = approvals_per_section_id.get(section_id, [])
-        room = Room.find_room(section['meetingLocation'])
-        section['room'] = room and room.to_api_json()
-        section['scheduled'] = scheduled_per_section_id.get(section_id, [])
-        api_json.append(section)
+    for course in get_courses(term_id, section_ids):
+        section_id = course['sectionId']
+        course['approvals'] = approvals_per_section_id.get(section_id, [])
+        room = Room.find_room(course['meetingLocation'])
+        course['room'] = room and room.to_api_json()
+        course['scheduled'] = scheduled_per_section_id.get(section_id, [])
+        api_json.append(course)
     return tolerant_jsonify(api_json)
 
 
@@ -151,10 +151,10 @@ def _approvals_per_section(term_id):
 
     api_json = []
     section_ids = list(approvals_per_section_id.keys())
-    for section in get_courses_per_section_ids(term_id, section_ids):
-        section_id = section['sectionId']
-        section['approvals'] = approvals_per_section_id[section_id] if section_id in approvals_per_section_id else []
-        api_json.append(section)
+    for course in get_courses(term_id, section_ids):
+        section_id = course['sectionId']
+        course['approvals'] = approvals_per_section_id[section_id] if section_id in approvals_per_section_id else []
+        api_json.append(course)
     return api_json
 
 
