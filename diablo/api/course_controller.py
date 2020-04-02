@@ -181,7 +181,7 @@ def _notify_instructors_of_approval(approval, course, previous_approvals):
         approval_uids = [a.approved_by_uid for a in all_approvals]
         type_of_email_sent = 'waiting_for_approval'
         notify_instructors(
-            pending_instructors=[i for i in course['instructors'] if i not in approval_uids],
+            pending_instructors=[i for i in course['instructors'] if i['uid'] not in approval_uids],
             course=course,
             latest_approval=approval,
             name_of_latest_approver=current_user.name,
