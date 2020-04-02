@@ -32,7 +32,6 @@ from sqlalchemy.dialects.postgresql import ENUM
 email_template_type = ENUM(
     'admin_alert_instructor_change',
     'admin_alert_room_change',
-    'system_error',
     'invitation',
     'notify_instructor_of_changes',
     'recordings_scheduled',
@@ -126,7 +125,6 @@ class EmailTemplate(Base):
             'notify_instructor_of_changes': 'Notify instructor of changes',
             'recordings_scheduled': 'Recordings scheduled',
             'room_change_no_longer_eligible': 'Room change: No longer eligible',
-            'system_error': 'System Error Alert',
             'waiting_for_approval': 'Waiting for approval',
         }
 

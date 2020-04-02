@@ -80,6 +80,12 @@ def _load_schemas():
 
 def _create_email_templates():
     EmailTemplate.create(
+        template_type='admin_alert_room_change',
+        name='Alert admin when room change',
+        subject_line='Room change alert',
+        message='<code>course.name</code> has changed to a new room: <code>course.room</code>',
+    )
+    EmailTemplate.create(
         template_type='notify_instructor_of_changes',
         name='I\'m the Devil. Now kindly undo these straps.',
         subject_line='If you\'re the Devil, why not make the straps disappear?',

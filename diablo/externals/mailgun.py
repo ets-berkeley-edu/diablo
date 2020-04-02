@@ -25,10 +25,23 @@ ENHANCEMENTS, OR MODIFICATIONS.
 
 from flask import current_app as app
 
+EMAILS_SENT_IN_TEST_MODE = []
+
 
 def send_email(recipient_name, email_address, subject_line, message):
-    # TODO: Implement according to https://documentation.mailgun.com/en/latest/quickstart-sending.html#send-via-api
-    app.logger.info(f"""
+    if app.config['DIABLO_ENV'] == 'test':
+        EMAILS_SENT_IN_TEST_MODE.append(_get_mock_message(recipient_name, email_address, subject_line, message))
+    else:
+        # TODO: Implement according to https://documentation.mailgun.com/en/latest/quickstart-sending.html#send-via-api
+        app.logger.info(_get_mock_message(recipient_name, email_address, subject_line, message))
+
+
+def mailgun_ping():
+    return True
+
+
+def _get_mock_message(recipient_name, email_address, subject_line, message):
+    return f"""
 
         To: {recipient_name}<{email_address}>
         From: {app.config['EMAIL_DIABLO_SUPPORT']}
@@ -37,4 +50,4 @@ def send_email(recipient_name, email_address, subject_line, message):
         Message:
         {message}
 
-    """)
+    """

@@ -92,6 +92,10 @@ class Room(db.Model):
         return cls.query.filter_by(id=room_id).first()
 
     @classmethod
+    def get_rooms(cls, room_ids):
+        return cls.query.filter(cls.id.in_(room_ids)).all()
+
+    @classmethod
     def all_rooms(cls):
         return cls.query.order_by(cls.capability, cls.location).all()
 

@@ -75,7 +75,7 @@ def notify_instructors(
             term_id=term_id,
         )
     else:
-        _send_system_error_email(f'Unable to send email of type {template_type} because no template is available.')
+        send_system_error_email(f'Unable to send email of type {template_type} because no template is available.')
 
 
 def interpolate_email_content(
@@ -111,6 +111,17 @@ def interpolate_email_content(
 
 def get_email_template_codes():
     return list(_get_substitutions().keys())
+
+
+def send_system_error_email(message):
+    subject = f'{message[:50]}...' if len(message) > 50 else message
+    send_email(
+        recipient_name='Course Capture Admin',
+        email_address=app.config['EMAIL_DIABLO_ADMIN'],
+        subject_line=f'Diablo Alert: {subject}',
+        message=message,
+    )
+    app.logger.error(f'Diablo Alert: {message}')
 
 
 def _get_substitutions(
@@ -151,14 +162,3 @@ def _get_substitutions(
 
 def _get_sign_up_url(term_id, section_id):
     return f'https://diablo-TODO.berkeley.edu/approve/{term_id}/{section_id}'
-
-
-def _send_system_error_email(message):
-    subject = f'{message[:50]}...' if len(message) > 50 else message
-    send_email(
-        recipient_name='Course Capture Admin',
-        email_address=app.config['EMAIL_DIABLO_ADMIN'],
-        subject_line=f'Diablo Alert: {subject}',
-        message=message,
-    )
-    app.logger.error(f'Diablo Alert: {message}')
