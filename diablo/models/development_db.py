@@ -80,6 +80,12 @@ def _load_schemas():
 
 def _create_email_templates():
     EmailTemplate.create(
+        template_type='admin_alert_instructor_change',
+        name='Alert admin instructor approval needed',
+        subject_line='Instructor approval needed',
+        message='<code>course.name</code> has new instructor(s).',
+    )
+    EmailTemplate.create(
         template_type='admin_alert_room_change',
         name='Alert admin when room change',
         subject_line='Room change alert',

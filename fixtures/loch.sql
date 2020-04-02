@@ -50,4 +50,5 @@ VALUES
 ('2.0', 'PI', '657654', true, 'MOWEFR', '2020-05-08 00:00:00 UTC', '15:59', 'Barker 101', '2020-01-21 00:00:00 UTC', '15:00', 'PHYSICS 7A', 'Fluid Dynamics', 'LEC', '30563', '001', '2202'),
 ('4.0', 'TNIC', '6789', true, 'MOWE', '2020-05-08 00:00:00 UTC', '13:59', 'Li Ka Shing 145', '2020-01-21 00:00:00 UTC', '13:00', 'CHEM C110L', 'General Biochemistry and Molecular Biology Laboratory', 'LEC', '26094', '001', '2202'),
 ('3.0', 'ICNT', '98765', true, 'TU', '2020-05-08 00:00:00 UTC', '09:59', 'Barker 101', '2020-01-21 00:00:00 UTC', '19:00', 'LAW 23', 'IP in the Entertainment Industries', 'LEC', '22287', '002', '2202'),
+('3.0', 'ICNT', '87654', true, 'TU', '2020-05-08 00:00:00 UTC', '09:59', 'Barker 101', '2020-01-21 00:00:00 UTC', '19:00', 'LAW 23', 'IP in the Entertainment Industries', 'LEC', '22287', '002', '2202'),
 ('4.0', 'APRX', '8765432', false, 'TUTH', '2020-05-08 00:00:00 UTC', '14:59', 'Pimentel 1', '2020-01-21 00:00:00 UTC', '14:00', 'MATH 185', 'Introduction to Complex Analysis', 'LEC', '22460', '001', '2202')
