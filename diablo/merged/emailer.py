@@ -27,57 +27,49 @@ import re
 
 from diablo.externals.mailgun import send_email
 from diablo.lib.berkeley import term_name_for_sis_id
-from diablo.merged.sis import get_section
 from diablo.models.approval import NAMES_PER_PUBLISH_TYPE, NAMES_PER_RECORDING_TYPE
 from diablo.models.email_sent import EmailSent
 from diablo.models.email_template import EmailTemplate
 from flask import current_app as app
 
 
-def notify_instructors_of_changed_preferences(
+def notify_instructors(
+        course,
         latest_approval,
         name_of_latest_approver,
-        previous_publish_type,
-        previous_recording_type,
+        template_type,
         term_id,
+        pending_instructors=None,
+        notify_only_latest_instructor=False,
+        previous_publish_type=None,
+        previous_recording_type=None,
 ):
-    template_type = 'notify_instructor_of_changes'
     template = EmailTemplate.get_template_by_type(template_type)
     if template:
-        course = get_section(section_id=latest_approval.section_id, term_id=term_id)
-        previous_recording_type_name = previous_recording_type and NAMES_PER_RECORDING_TYPE[previous_recording_type]
-        previous_publish_type_name = NAMES_PER_PUBLISH_TYPE[previous_publish_type] if previous_publish_type else None
-        publish_type_name = latest_approval.publish_type and NAMES_PER_PUBLISH_TYPE[latest_approval.publish_type]
-        recording_type_name = latest_approval.recording_type and NAMES_PER_RECORDING_TYPE[latest_approval.recording_type]
-
-        subject_line = interpolate_email_content(
-            templated_string=template.subject_line,
-            course=course,
-            instructor_name=name_of_latest_approver,
-            previous_publish_type_name=previous_publish_type_name,
-            previous_recording_type_name=previous_recording_type_name,
-            publish_type_name=publish_type_name,
-            recording_type_name=recording_type_name,
-        )
-        for instructor in course['instructors']:
-            message = interpolate_email_content(
-                templated_string=template.message,
+        def _interpolate(templated_string):
+            return interpolate_email_content(
                 course=course,
                 instructor_name=name_of_latest_approver,
-                previous_publish_type_name=previous_publish_type_name,
-                previous_recording_type_name=previous_recording_type_name,
-                publish_type_name=publish_type_name,
-                recipient_name=instructor['name'],
-                recording_type_name=recording_type_name,
+                pending_instructors=pending_instructors,
+                previous_publish_type_name=NAMES_PER_PUBLISH_TYPE.get(previous_publish_type),
+                previous_recording_type_name=NAMES_PER_RECORDING_TYPE.get(previous_recording_type),
+                publish_type_name=NAMES_PER_PUBLISH_TYPE.get(latest_approval.publish_type),
+                recording_type_name=NAMES_PER_RECORDING_TYPE.get(latest_approval.recording_type),
+                templated_string=templated_string,
             )
+        if notify_only_latest_instructor:
+            recipients = [next((i for i in course['instructors'] if i['uid'] == latest_approval.uid))]
+        else:
+            recipients = course['instructors']
+        for recipient in recipients:
             send_email(
-                recipient_name=instructor['name'],
-                email_address=instructor['email'],
-                subject_line=subject_line,
-                message=message,
+                recipient_name=recipient['name'],
+                email_address=recipient['email'],
+                subject_line=_interpolate(template.subject_line),
+                message=_interpolate(template.message),
             )
         EmailSent.create(
-            recipient_uids=[instructor['uid'] for instructor in course['instructors']],
+            recipient_uids=[recipient['uid'] for recipient in recipients],
             section_id=course['sectionId'],
             template_type=template_type,
             term_id=term_id,
@@ -91,6 +83,7 @@ def interpolate_email_content(
         course=None,
         extra_key_value_pairs=None,
         instructor_name=None,
+        pending_instructors=None,
         previous_publish_type_name=None,
         previous_recording_type_name=None,
         publish_type_name=None,
@@ -102,6 +95,7 @@ def interpolate_email_content(
         course=course,
         extra_key_value_pairs=extra_key_value_pairs,
         instructor_name=instructor_name,
+        pending_instructors=pending_instructors,
         previous_publish_type_name=previous_publish_type_name,
         previous_recording_type_name=previous_recording_type_name,
         publish_type_name=publish_type_name,
@@ -123,6 +117,7 @@ def _get_substitutions(
         course=None,
         extra_key_value_pairs=None,
         instructor_name=None,
+        pending_instructors=None,
         previous_publish_type_name=None,
         previous_recording_type_name=None,
         publish_type_name=None,
@@ -141,6 +136,7 @@ def _get_substitutions(
             'course.time.start': course and course['meetingStartTime'],
             'course.title': course and course['courseTitle'],
             'instructor.name': instructor_name,
+            'instructors.pending': pending_instructors and [p['name'] for p in pending_instructors],
             'publish.type': publish_type_name,
             'publish.type.previous': previous_publish_type_name,
             'recording.type': recording_type_name,
