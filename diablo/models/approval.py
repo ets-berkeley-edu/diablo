@@ -156,6 +156,11 @@ class Approval(db.Model):
     def get_approvals_per_uid(cls, term_id, uid):
         return cls.query.filter_by(approved_by_uid=uid, term_id=term_id).order_by(cls.created_at).all()
 
+    @classmethod
+    def delete(cls, approval):
+        db.session.delete(approval)
+        std_commit()
+
     def to_api_json(self):
         return {
             'approvedByUid': self.approved_by_uid,

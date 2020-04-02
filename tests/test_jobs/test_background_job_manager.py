@@ -34,6 +34,7 @@ from tests.util import override_config
 class TestBackgroundJobManager:
 
     def test_start_mock_jobs(self):
+        """Runs jobs as scheduled and skips disabled jobs."""
         with override_config(app, 'JOB_MANAGER', _job_manager_config()):
             job_manager = BackgroundJobManager()
             try:

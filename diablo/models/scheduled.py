@@ -44,7 +44,7 @@ class Scheduled(db.Model):
         self.room_id = room_id
 
     def __repr__(self):
-        return f"""<Approval
+        return f"""<Scheduled
                     section_id={self.section_id},
                     term_id={self.term_id},
                     room_id={self.room_id}
@@ -53,8 +53,10 @@ class Scheduled(db.Model):
 
     @classmethod
     def create(cls, section_id, term_id, room_id):
-        db.session.add(cls(section_id=section_id, term_id=term_id, room_id=room_id))
+        scheduled = cls(section_id=section_id, term_id=term_id, room_id=room_id)
+        db.session.add(scheduled)
         std_commit()
+        return scheduled
 
     @classmethod
     def get_all_scheduled(cls, term_id):
@@ -68,6 +70,11 @@ class Scheduled(db.Model):
     @classmethod
     def was_scheduled(cls, section_id, term_id):
         return cls.query.filter_by(section_id=section_id, term_id=term_id).first() is not None
+
+    @classmethod
+    def delete(cls, scheduled):
+        db.session.delete(scheduled)
+        std_commit()
 
     def to_api_json(self):
         return {
