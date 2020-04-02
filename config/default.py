@@ -62,8 +62,9 @@ EDO_DB_PASSWORD = ''
 EDO_DB_PORT = 0
 EDO_DB_USERNAME = ''
 
-EMAIL_DIABLO_ADMIN = 'coursecapture-admin-alerts@berkeley.edu'
-EMAIL_DIABLO_SUPPORT = 'coursecapture@berkeley.edu'
+EMAIL_DIABLO_ADMIN = '__EMAIL_DIABLO_ADMIN__@berkeley.edu'
+EMAIL_DIABLO_SUPPORT = '__EMAIL_DIABLO_SUPPORT__@berkeley.edu'
+EMAIL_REDIRECT_WHEN_TESTING = '__EMAIL_REDIRECT_WHEN_TESTING__@berkeley.edu'
 
 # Directory to search for mock fixtures, if running in "test" or "demo" mode.
 FIXTURES_PATH = None
