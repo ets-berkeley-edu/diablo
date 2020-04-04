@@ -14,10 +14,6 @@ export function approve(
     })
 }
 
-export function getAllApprovals(termId) {
-  return axios.get(`${utils.apiBaseUrl()}/api/courses/approvals/${termId}`)
-}
-
 export function getApprovals(termId: number, sectionId: number) {
   return axios
     .get(`${utils.apiBaseUrl()}/api/course/approvals/${termId}/${sectionId}`)
@@ -25,4 +21,12 @@ export function getApprovals(termId: number, sectionId: number) {
 
 export function getTermSummary(termId) {
   return axios.get(`${utils.apiBaseUrl()}/api/courses/term/${termId}`)
+}
+
+export function updateOptOut(termId, sectionId, optOut) {
+  return axios.post(`${utils.apiBaseUrl()}/api/course/opt_out/update`, {
+    optOut,
+    sectionId,
+    termId
+  })
 }

@@ -22,10 +22,9 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from diablo.externals.mailgun import EMAILS_SENT_IN_TEST_MODE
 from diablo.jobs.email_alerts_for_admins_job import EmailAlertsForAdmins
-from diablo.merged.sis import get_course
 from diablo.models.approval import Approval
+from diablo.models.email_sent import EmailSent
 from diablo.models.room import Room
 from diablo.models.scheduled import Scheduled
 from flask import current_app as app
@@ -39,7 +38,6 @@ class TestEmailAlertsForAdmins:
         section_id = 26094
 
         the_old_room = 'Wheeler 150'
-        the_new_room = 'Li Ka Shing 145'
 
         scheduled_in_room = Room.find_room(the_old_room)
         approval = Approval.create(
@@ -56,10 +54,10 @@ class TestEmailAlertsForAdmins:
             section_id=section_id,
             room_id=scheduled_in_room.id,
         )
-        count_emails_sent = len(EMAILS_SENT_IN_TEST_MODE)
+        email_count = _get_email_count()
         EmailAlertsForAdmins(app.app_context).run()
-        assert len(EMAILS_SENT_IN_TEST_MODE) == count_emails_sent + 1
-        assert the_new_room in EMAILS_SENT_IN_TEST_MODE[-1]
+        assert _get_email_count() == email_count + 1
+
         # Clean up
         Approval.delete(approval)
         Scheduled.delete(scheduled)
@@ -68,7 +66,6 @@ class TestEmailAlertsForAdmins:
         """Emails admin when a scheduled course gets a new instructor."""
         term_id = app.config['CURRENT_TERM_ID']
         section_id = 22287
-        course = get_course(section_id=section_id, term_id=term_id)
         room_id = Room.find_room('Barker 101').id
 
         approval = Approval.create(
@@ -85,11 +82,15 @@ class TestEmailAlertsForAdmins:
             section_id=section_id,
             room_id=room_id,
         )
-
-        count_emails_sent = len(EMAILS_SENT_IN_TEST_MODE)
+        email_count = _get_email_count()
         EmailAlertsForAdmins(app.app_context).run()
-        assert len(EMAILS_SENT_IN_TEST_MODE) == count_emails_sent + 1
-        assert course['courseName'] in EMAILS_SENT_IN_TEST_MODE[-1]
+        assert _get_email_count() == email_count + 1
+
         # Clean up
         Approval.delete(approval)
         Scheduled.delete(scheduled)
+
+
+def _get_email_count():
+    admin_uid = app.config['EMAIL_DIABLO_ADMIN_UID']
+    return len(EmailSent.get_emails_sent_to(uid=admin_uid))

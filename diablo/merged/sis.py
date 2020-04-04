@@ -30,6 +30,7 @@ from diablo.externals.data_loch import get_sis_section, get_sis_sections, \
 from diablo.externals.edo_db import get_edo_db_courses, get_edo_db_instructors_per_section_id
 from diablo.merged.calnet import get_calnet_user_for_uid
 from diablo.models.canvas_course_site import CanvasCourseSite
+from diablo.models.course_preference import CoursePreference
 from flask import current_app as app
 
 
@@ -92,14 +93,16 @@ def get_course_and_instructors(term_id, section_ids=None):
 def _to_api_json(term_id, sis_sections):
     sections_per_id = {}
     instructor_uids_per_section_id = {}
+    section_ids_opted_out = CoursePreference.get_section_ids_opted_out(term_id=term_id)
     for sis_section in sis_sections:
-        section_id = sis_section['sis_section_id']
+        section_id = int(sis_section['sis_section_id'])
         if section_id not in sections_per_id:
             sections_per_id[section_id] = {
                 'allowedUnits': sis_section['allowed_units'],
                 'canvasCourseSites': _canvas_course_sites(term_id, section_id),
                 'courseName': sis_section['sis_course_name'],
                 'courseTitle': sis_section['sis_course_title'],
+                'hasOptedOut': section_id in section_ids_opted_out,
                 'instructionFormat': sis_section['sis_instruction_format'],
                 'instructorRoleCode': sis_section['instructor_role_code'],
                 'isPrimary': sis_section['is_primary'],

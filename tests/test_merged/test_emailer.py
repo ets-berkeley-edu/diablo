@@ -40,9 +40,6 @@ class TestInterpolation:
             course=course,
             recipient_name=user['name'],
             templated_string=_get_email_template(),
-            extra_key_value_pairs={
-                'email.signature': '&copy; 2020 The Regents of the University of California',
-            },
         )
         actual = _normalize(interpolated)
         expected = _normalize(_get_expected_email())
@@ -57,9 +54,7 @@ def _get_expected_email():
 
     Go to <a href="http://foo.berkeley.edu">https://diablo-TODO.berkeley.edu/approve/2202/28165</a> and sign up.
 
-    Thank you.
-
-    &copy; 2020 The Regents of the University of California"""
+    Thank you."""
 
 
 def _get_email_template():
@@ -71,9 +66,7 @@ def _get_email_template():
 
     Go to <a href="http://foo.berkeley.edu"><code> signup.url </code></a> and sign up.
 
-    Thank you.
-
-    <code>email.signature</code>"""
+    Thank you."""
 
 
 def _normalize(message):

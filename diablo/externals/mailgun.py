@@ -22,24 +22,33 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-
+from diablo.models.email_sent import EmailSent
 from flask import current_app as app
 
-EMAILS_SENT_IN_TEST_MODE = []
 
+class Mailgun:
 
-def send_email(recipient_name, email_address, subject_line, message):
-    use_actual_address = app.config.get('EB_ENVIRONMENT', None) == 'diablo-prod'
-    email_address = email_address if use_actual_address else app.config['EMAIL_REDIRECT_WHEN_TESTING']
-    if app.config['DIABLO_ENV'] == 'test':
-        EMAILS_SENT_IN_TEST_MODE.append(_get_mock_message(recipient_name, email_address, subject_line, message))
-    else:
-        # TODO: Implement according to https://documentation.mailgun.com/en/latest/quickstart-sending.html#send-via-api
-        app.logger.info(_get_mock_message(recipient_name, email_address, subject_line, message))
+    def __init__(self):
+        self.email_redirect_when_testing = app.config['EMAIL_REDIRECT_WHEN_TESTING']
+        self.use_actual_address = app.config.get('EB_ENVIRONMENT', None) == 'diablo-prod'
 
+    def send(self, message, recipients, subject_line, term_id=None, section_id=None, template_type=None):
+        for recipient in recipients:
+            email_address = recipient['email'] if self.use_actual_address else self.email_redirect_when_testing
+            if app.config['DIABLO_ENV'] == 'test':
+                app.logger.info(_get_mock_message(recipient['name'], email_address, subject_line, message))
+            else:
+                # TODO: Implement according to https://documentation.mailgun.com/en/latest/quickstart-sending.html#send-via-api
+                app.logger.info(_get_mock_message(recipient['name'], email_address, subject_line, message))
+        EmailSent.create(
+            recipient_uids=[recipient['uid'] for recipient in recipients],
+            section_id=section_id,
+            template_type=template_type,
+            term_id=term_id or app.config['CURRENT_TERM_ID'],
+        )
 
-def mailgun_ping():
-    return True
+    def ping(self):
+        return self.use_actual_address
 
 
 def _get_mock_message(recipient_name, email_address, subject_line, message):

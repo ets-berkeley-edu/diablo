@@ -37,14 +37,24 @@ def get_args_dict(func, *args, **kw):
     return resp
 
 
-def items_per_keys(items, field_name_of_key):
+def json_objects_to_dict(json_objects, field_name_of_key):
     items_per_key = {}
-    for item in items:
-        key = getattr(item, field_name_of_key)
+    for json_object in json_objects:
+        key = json_object[field_name_of_key]
         if key not in items_per_key:
             items_per_key[key] = []
-        items_per_key[key].append(item)
+        items_per_key[key].append(json_object)
     return items_per_key
+
+
+def objects_to_dict_organized_by_section_id(objects):
+    per_section_id = {}
+    for obj in objects:
+        key = obj.section_id
+        if obj.section_id not in per_section_id:
+            per_section_id[key] = []
+        per_section_id[key].append(obj)
+    return per_section_id
 
 
 def to_isoformat(value):

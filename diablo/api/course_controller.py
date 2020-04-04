@@ -27,9 +27,11 @@ from diablo.api.errors import BadRequestError, ForbiddenRequestError, ResourceNo
 from diablo.api.util import admin_required
 from diablo.lib.berkeley import get_instructor_uids, has_necessary_approvals, term_name_for_sis_id
 from diablo.lib.http import tolerant_jsonify
+from diablo.lib.util import objects_to_dict_organized_by_section_id
 from diablo.merged.emailer import notify_instructors
 from diablo.merged.sis import get_course, get_courses
 from diablo.models.approval import Approval, get_all_publish_types, get_all_recording_types, NAMES_PER_PUBLISH_TYPE
+from diablo.models.course_preference import CoursePreference
 from diablo.models.room import Room
 from diablo.models.scheduled import Scheduled
 from flask import current_app as app, request
@@ -39,7 +41,6 @@ from flask_login import current_user, login_required
 @app.route('/api/course/approve', methods=['POST'])
 @login_required
 def approve():
-    approved_by_uid = current_user.get_uid()
     term_id = app.config['CURRENT_TERM_ID']
     term_name = term_name_for_sis_id(term_id)
 
@@ -52,10 +53,10 @@ def approve():
     if not course or publish_type not in get_all_publish_types() or recording_type not in get_all_recording_types():
         raise BadRequestError('One or more required params are missing or invalid')
 
-    if not current_user.is_admin and approved_by_uid not in [i['uid'] for i in course['instructors']]:
+    if not current_user.is_admin and current_user.uid not in [i['uid'] for i in course['instructors']]:
         raise ForbiddenRequestError('Sorry, request unauthorized')
 
-    if Approval.get_approval(approved_by_uid, section_id, term_id):
+    if Approval.get_approval(current_user.uid, section_id, term_id):
         raise ForbiddenRequestError(f'You have already approved recording of {course["courseName"]}, {term_name}')
 
     location = course['meetingLocation']
@@ -63,9 +64,9 @@ def approve():
     if not room:
         raise BadRequestError(f'{location} is not eligible for Course Capture.')
 
-    previous_approvals = Approval.get_approvals_per_section_id(section_id=section_id, term_id=term_id)
+    previous_approvals = Approval.get_approvals_per_section_ids(section_ids=[section_id], term_id=term_id)
     approval = Approval.create(
-        approved_by_uid=approved_by_uid,
+        approved_by_uid=current_user.uid,
         section_id=section_id,
         term_id=term_id,
         approver_type_='admin' if current_user.is_admin else 'instructor',
@@ -88,40 +89,25 @@ def get_approvals(term_id, section_id):
     if not section:
         raise ResourceNotFoundError(f'No section for term_id = {term_id} and section_id = {section_id}')
 
-    if not current_user.is_admin and current_user.get_uid() not in get_instructor_uids(section):
+    if not current_user.is_admin and current_user.uid not in get_instructor_uids(section):
         raise ForbiddenRequestError('Sorry, this request is unauthorized.')
     return tolerant_jsonify(_course_to_json(section, term_id))
-
-
-@app.route('/api/courses/approvals/<term_id>')
-@admin_required
-def approvals_per_term(term_id):
-    return tolerant_jsonify(_approvals_per_section(term_id))
 
 
 @app.route('/api/courses/term/<term_id>')
 @admin_required
 def term_report(term_id):
-    def _objects_per_section_id(objects):
-        per_section_id = {}
-        for obj in objects:
-            key = str(obj.section_id)
-            if obj.section_id not in per_section_id:
-                per_section_id[key] = []
-            per_section_id[key].append(obj.to_api_json())
-        return per_section_id
-
     api_json = []
-    approvals_per_section_id = _objects_per_section_id(Approval.get_approvals_per_term(term_id))
-    scheduled_per_section_id = _objects_per_section_id(Scheduled.get_all_scheduled(term_id))
+    approvals_per_section_id = objects_to_dict_organized_by_section_id(objects=Approval.get_approvals_per_term(term_id))
+    scheduled_per_section_id = objects_to_dict_organized_by_section_id(objects=Scheduled.get_all_scheduled(term_id))
     section_ids = set(approvals_per_section_id.keys()).union(set(scheduled_per_section_id.keys()))
 
     for course in get_courses(term_id, section_ids):
-        section_id = course['sectionId']
-        course['approvals'] = approvals_per_section_id.get(section_id, [])
+        section_id = int(course['sectionId'])
+        course['approvals'] = [a.to_api_json() for a in approvals_per_section_id.get(section_id, [])]
         room = Room.find_room(course['meetingLocation'])
         course['room'] = room and room.to_api_json()
-        course['scheduled'] = scheduled_per_section_id.get(section_id, [])
+        course['scheduled'] = [s.to_api_json() for s in scheduled_per_section_id.get(section_id, [])]
         api_json.append(course)
     return tolerant_jsonify(api_json)
 
@@ -129,7 +115,7 @@ def term_report(term_id):
 def _course_to_json(section, term_id):
     room = Room.find_room(section['meetingLocation'])
     section_id = section['sectionId']
-    all_approvals = Approval.get_approvals_per_section_id(section_id, term_id)
+    all_approvals = Approval.get_approvals_per_section_ids(section_ids=[section_id], term_id=term_id)
     return {
         'approvals': [approval.to_api_json() for approval in all_approvals],
         'hasNecessaryApprovals': has_necessary_approvals(section, all_approvals),
@@ -139,6 +125,21 @@ def _course_to_json(section, term_id):
         'section': section,
         'termId': term_id,
     }
+
+
+@app.route('/api/course/opt_out/update', methods=['POST'])
+@admin_required
+def update_opt_out():
+    params = request.get_json()
+    term_id = params.get('termId')
+    section_id = params.get('sectionId')
+    opt_out = params.get('optOut')
+    preferences = CoursePreference.update_opt_out(
+        term_id=term_id,
+        section_id=section_id,
+        opt_out=opt_out,
+    )
+    return tolerant_jsonify(preferences.to_api_json())
 
 
 def _approvals_per_section(term_id):

@@ -129,9 +129,17 @@ CREATE TABLE canvas_course_sites (
 );
 ALTER TABLE canvas_course_sites OWNER TO diablo;
 ALTER TABLE canvas_course_sites ADD CONSTRAINT canvas_course_sites_pkey PRIMARY KEY (canvas_course_site_id, section_id, term_id);
-CREATE INDEX canvas_course_sites_canvas_course_site_id_idx ON canvas_course_sites USING btree (canvas_course_site_id);
-CREATE INDEX canvas_course_sites_section_id_idx ON canvas_course_sites USING btree (section_id);
-CREATE INDEX canvas_course_sites_term_id_idx ON canvas_course_sites USING btree (term_id);
+
+--
+
+CREATE TABLE course_preferences (
+    term_id INTEGER NOT NULL,
+    section_id INTEGER NOT NULL,
+    has_opted_out BOOLEAN NOT NULL,
+    created_at timestamp with time zone NOT NULL
+);
+ALTER TABLE course_preferences OWNER TO diablo;
+ALTER TABLE course_preferences ADD CONSTRAINT course_preferences_pkey PRIMARY KEY (section_id, term_id);
 
 --
 
@@ -164,8 +172,8 @@ ALTER TABLE ONLY email_templates
 CREATE TABLE emails_sent (
     id INTEGER NOT NULL,
     recipient_uids VARCHAR(80)[] NOT NULL,
-    section_id INTEGER NOT NULL,
-    template_type email_template_types NOT NULL,
+    section_id INTEGER,
+    template_type email_template_types,
     term_id INTEGER NOT NULL,
     sent_at timestamp with time zone NOT NULL
 );

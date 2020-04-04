@@ -140,10 +140,6 @@ class Approval(db.Model):
         return cls.query.filter_by(room_id=room_id, term_id=term_id).order_by(cls.created_at).all()
 
     @classmethod
-    def get_approvals_per_section_id(cls, section_id, term_id):
-        return cls.query.filter_by(section_id=section_id, term_id=term_id).order_by(cls.created_at).all()
-
-    @classmethod
     def get_approvals_per_section_ids(cls, section_ids, term_id):
         criteria = and_(cls.section_id.in_(section_ids), cls.term_id == term_id)
         return cls.query.filter(criteria).order_by(cls.created_at).all()
