@@ -169,7 +169,29 @@ ALTER TABLE ONLY email_templates
 
 --
 
-CREATE TABLE emails_sent (
+CREATE TABLE queued_emails (
+    id INTEGER NOT NULL,
+    section_id INTEGER[] NOT NULL,
+    template_type email_template_types,
+    term_id INTEGER NOT NULL,
+    sent_at timestamp with time zone NOT NULL
+);
+ALTER TABLE queued_emails OWNER TO diablo;
+CREATE SEQUENCE queued_emails_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+ALTER TABLE queued_emails_id_seq OWNER TO diablo;
+ALTER SEQUENCE queued_emails_id_seq OWNED BY queued_emails.id;
+ALTER TABLE ONLY queued_emails ALTER COLUMN id SET DEFAULT nextval('queued_emails_id_seq'::regclass);
+ALTER TABLE ONLY queued_emails
+    ADD CONSTRAINT queued_emails_pkey PRIMARY KEY (id);
+
+--
+
+CREATE TABLE sent_emails (
     id INTEGER NOT NULL,
     recipient_uids VARCHAR(80)[] NOT NULL,
     section_id INTEGER,
@@ -177,19 +199,19 @@ CREATE TABLE emails_sent (
     term_id INTEGER NOT NULL,
     sent_at timestamp with time zone NOT NULL
 );
-ALTER TABLE emails_sent OWNER TO diablo;
-CREATE SEQUENCE emails_sent_id_seq
+ALTER TABLE sent_emails OWNER TO diablo;
+CREATE SEQUENCE sent_emails_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
     NO MAXVALUE
     CACHE 1;
-ALTER TABLE emails_sent_id_seq OWNER TO diablo;
-ALTER SEQUENCE emails_sent_id_seq OWNED BY emails_sent.id;
-ALTER TABLE ONLY emails_sent ALTER COLUMN id SET DEFAULT nextval('emails_sent_id_seq'::regclass);
-ALTER TABLE ONLY emails_sent
-    ADD CONSTRAINT emails_sent_pkey PRIMARY KEY (id);
-CREATE INDEX emails_sent_section_id_idx ON emails_sent USING btree (section_id);
+ALTER TABLE sent_emails_id_seq OWNER TO diablo;
+ALTER SEQUENCE sent_emails_id_seq OWNED BY sent_emails.id;
+ALTER TABLE ONLY sent_emails ALTER COLUMN id SET DEFAULT nextval('sent_emails_id_seq'::regclass);
+ALTER TABLE ONLY sent_emails
+    ADD CONSTRAINT sent_emails_pkey PRIMARY KEY (id);
+CREATE INDEX sent_emails_section_id_idx ON sent_emails USING btree (section_id);
 
 --
 

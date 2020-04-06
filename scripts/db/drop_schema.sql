@@ -47,20 +47,21 @@ ALTER TABLE IF EXISTS ONLY public.canvas_course_sites DROP CONSTRAINT IF EXISTS 
 ALTER TABLE IF EXISTS ONLY public.course_preferences DROP CONSTRAINT IF EXISTS course_preferences_pkey;
 ALTER TABLE IF EXISTS ONLY public.email_templates DROP CONSTRAINT IF EXISTS email_templates_name_unique_constraint;
 ALTER TABLE IF EXISTS ONLY public.email_templates DROP CONSTRAINT IF EXISTS email_templates_pkey;
-ALTER TABLE IF EXISTS ONLY public.emails_sent DROP CONSTRAINT IF EXISTS emails_sent_pkey;
+ALTER TABLE IF EXISTS ONLY public.queued_emails DROP CONSTRAINT IF EXISTS queued_emails_pkey;
 ALTER TABLE IF EXISTS ONLY public.rooms DROP CONSTRAINT IF EXISTS rooms_location_unique_constraint;
 ALTER TABLE IF EXISTS ONLY public.rooms DROP CONSTRAINT IF EXISTS rooms_pkey;
 ALTER TABLE IF EXISTS ONLY public.scheduled DROP CONSTRAINT IF EXISTS scheduled_pkey;
+ALTER TABLE IF EXISTS ONLY public.sent_emails DROP CONSTRAINT IF EXISTS sent_emails_pkey;
 
 --
 
 DROP INDEX IF EXISTS public.approvals_approved_by_uid_idx;
 DROP INDEX IF EXISTS public.approvals_term_id_idx;
 DROP INDEX IF EXISTS public.approvals_section_id_idx;
-DROP INDEX IF EXISTS public.emails_sent_section_id_idx;
 DROP INDEX IF EXISTS public.rooms_location_idx;
 DROP INDEX IF EXISTS public.scheduled_term_id_idx;
 DROP INDEX IF EXISTS public.scheduled_section_id_idx;
+DROP INDEX IF EXISTS public.sent_emails_section_id_idx;
 
 --
 
@@ -74,11 +75,13 @@ DROP TABLE IF EXISTS public.canvas_course_sites;
 DROP TABLE IF EXISTS public.course_preferences;
 DROP TABLE IF EXISTS public.email_templates;
 DROP SEQUENCE IF EXISTS public.email_templates_id_seq;
-DROP TABLE IF EXISTS public.emails_sent;
-DROP SEQUENCE IF EXISTS public.emails_sent_id_seq;
+DROP TABLE IF EXISTS public.queued_emails;
+DROP SEQUENCE IF EXISTS public.queued_emails_id_seq;
 DROP TABLE IF EXISTS public.rooms;
 DROP SEQUENCE IF EXISTS public.rooms_id_seq;
 DROP TABLE IF EXISTS public.scheduled;
+DROP TABLE IF EXISTS public.sent_emails;
+DROP SEQUENCE IF EXISTS public.sent_emails_id_seq;
 
 --
 

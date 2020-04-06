@@ -28,6 +28,8 @@ import json
 from diablo.models.email_template import EmailTemplate
 import pytest
 
+instructor_uid = '8765432'
+
 
 @pytest.fixture()
 def admin_session(fake_auth):
@@ -36,7 +38,7 @@ def admin_session(fake_auth):
 
 @pytest.fixture()
 def instructor_session(fake_auth):
-    fake_auth.login('8765432')
+    fake_auth.login(instructor_uid)
 
 
 class TestGetAllEmailTemplates:
@@ -44,7 +46,7 @@ class TestGetAllEmailTemplates:
 
     @staticmethod
     def _api_all_email_templates(client, expected_status_code=200):
-        response = client.get('/api/email_templates/all')
+        response = client.get('/api/email/templates/all')
         assert response.status_code == expected_status_code
         return response.json
 
@@ -69,7 +71,7 @@ class TestGetEmailTemplate:
 
     @staticmethod
     def _api_email_template(client, email_template_id, expected_status_code=200):
-        response = client.get(f'/api/email_template/{email_template_id}')
+        response = client.get(f'/api/email/template/{email_template_id}')
         assert response.status_code == expected_status_code
         return response.json
 
@@ -108,7 +110,7 @@ class TestUpdateEmailTemplate:
             expected_status_code=200,
     ):
         response = client.post(
-            '/api/email_template/update',
+            '/api/email/template/update',
             data=json.dumps({
                 'templateId': email_template_id,
                 'templateType': template_type,
@@ -187,7 +189,7 @@ class TestCreateEmailTemplate:
             expected_status_code=200,
     ):
         response = client.post(
-            '/api/email_template/create',
+            '/api/email/template/create',
             data=json.dumps({
                 'templateType': template_type,
                 'name': name,
@@ -232,3 +234,28 @@ class TestCreateEmailTemplate:
         )
         assert 'id' in email_template
         assert email_template['subjectLine'] == 'Captain Howdy.'
+
+
+class TestGetEmailsSent:
+    """Only Admin users can get info on emails sent."""
+
+    @staticmethod
+    def _api_emails_sent_to(client, uid, expected_status_code=200):
+        response = client.get(f'/api/emails/sent/{uid}')
+        assert response.status_code == expected_status_code
+        return response.json
+
+    def test_anonymous(self, client):
+        """Denies anonymous access."""
+        self._api_emails_sent_to(client, uid=instructor_uid, expected_status_code=401)
+
+    def test_unauthorized(self, client, instructor_session):
+        """Denies access if user is not an admin."""
+        self._api_emails_sent_to(client, uid=instructor_uid, expected_status_code=401)
+
+    def test_get_emails_sent(self, client, admin_session):
+        """Admin user can get info on emails sent."""
+        api_json = self._api_emails_sent_to(client, uid=instructor_uid)
+        assert len(api_json)
+        assert api_json[0]['id']
+        assert instructor_uid in api_json[0]['recipientUids']

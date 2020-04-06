@@ -30,23 +30,25 @@ from diablo.lib.http import tolerant_jsonify
 from diablo.merged.emailer import get_email_template_codes, interpolate_email_content
 from diablo.merged.sis import get_course
 from diablo.models.email_template import EmailTemplate
+from diablo.models.queued_email import QueuedEmail
+from diablo.models.sent_email import SentEmail
 from flask import current_app as app, request
 from flask_login import current_user
 
 
-@app.route('/api/email_templates/all')
+@app.route('/api/email/templates/all')
 @admin_required
 def get_all_email_templates():
     return tolerant_jsonify([template.to_api_json() for template in EmailTemplate.all_templates()])
 
 
-@app.route('/api/email_templates/names')
+@app.route('/api/email/templates/names')
 @admin_required
 def get_email_templates_names():
     return tolerant_jsonify(EmailTemplate.get_all_templates_names())
 
 
-@app.route('/api/email_template/<template_id>')
+@app.route('/api/email/template/<template_id>')
 @admin_required
 def get_email_template(template_id):
     email_template = EmailTemplate.get_template(template_id)
@@ -56,20 +58,20 @@ def get_email_template(template_id):
         raise ResourceNotFoundError('No such email_template')
 
 
-@app.route('/api/email_template/delete/<template_id>', methods=['DELETE'])
+@app.route('/api/email/template/delete/<template_id>', methods=['DELETE'])
 @admin_required
 def delete_email_template(template_id):
     EmailTemplate.delete_template(template_id)
     return tolerant_jsonify({'message': f'Email template {template_id} has been deleted'}), 200
 
 
-@app.route('/api/email_template/codes')
+@app.route('/api/email/template/codes')
 @admin_required
 def get_template_codes():
     return tolerant_jsonify(get_email_template_codes())
 
 
-@app.route('/api/email_template/create', methods=['POST'])
+@app.route('/api/email/template/create', methods=['POST'])
 @admin_required
 def create():
     params = request.get_json()
@@ -90,7 +92,7 @@ def create():
     return tolerant_jsonify(email_template.to_api_json())
 
 
-@app.route('/api/email_template/test/<template_id>')
+@app.route('/api/email/template/test/<template_id>')
 @admin_required
 def test_email_template(template_id):
     email_template = EmailTemplate.get_template(template_id)
@@ -123,7 +125,7 @@ def test_email_template(template_id):
         raise ResourceNotFoundError('No such email_template')
 
 
-@app.route('/api/email_template/update', methods=['POST'])
+@app.route('/api/email/template/update', methods=['POST'])
 @admin_required
 def update():
     params = request.get_json()
@@ -148,3 +150,25 @@ def update():
         return tolerant_jsonify(email_template.to_api_json())
     else:
         raise ResourceNotFoundError('No such email template')
+
+
+@app.route('/api/emails/queue', methods=['POST'])
+@admin_required
+def queue_emails():
+    params = request.get_json()
+    term_id = params.get('termId')
+    section_ids = params.get('sectionIds')
+    email_template_type = params.get('emailTemplateType')
+    if term_id and section_ids and email_template_type:
+        QueuedEmail.create(section_ids=section_ids, template_type=email_template_type, term_id=term_id)
+    else:
+        raise BadRequestError('Required parameters are missing.')
+    return tolerant_jsonify({
+        'message': f'{len(section_ids)} emails queued up.',
+    })
+
+
+@app.route('/api/emails/sent/<uid>')
+@admin_required
+def get_emails_sent_to_uid(uid):
+    return tolerant_jsonify([e.to_api_json() for e in SentEmail.get_emails_sent_to(uid)])

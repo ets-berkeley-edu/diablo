@@ -30,9 +30,9 @@ from diablo import BASE_DIR, cache, db, std_commit
 from diablo.jobs.canvas_course_sites_job import CanvasCourseSitesJob
 from diablo.jobs.update_rooms_job import UpdateRoomsJob
 from diablo.models.admin_user import AdminUser
-from diablo.models.email_sent import EmailSent
 from diablo.models.email_template import EmailTemplate
 from diablo.models.room import Room
+from diablo.models.sent_email import SentEmail
 from flask import current_app as app
 from sqlalchemy.sql import text
 
@@ -114,7 +114,7 @@ def _create_email_templates():
 
 def _create_emails_sent():
     term_id = app.config['CURRENT_TERM_ID']
-    EmailSent.create(
+    SentEmail.create(
         recipient_uids=['8765432'],
         section_id='28165',
         template_type='invitation',

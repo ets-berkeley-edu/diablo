@@ -45,7 +45,7 @@
 
 <script>
   import Utils from '@/mixins/Utils'
-  import {getEmailTemplateCodes} from '@/api/email-template'
+  import {getEmailTemplateCodes} from '@/api/email'
 
   export default {
     name: 'TemplateCodesDialog',

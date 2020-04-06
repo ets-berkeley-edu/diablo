@@ -31,63 +31,55 @@ from diablo.models.email_template import email_template_type, EmailTemplate
 from sqlalchemy.dialects.postgresql import ARRAY
 
 
-class EmailSent(db.Model):
-    __tablename__ = 'emails_sent'
+class QueuedEmail(db.Model):
+    __tablename__ = 'queued_emails'
 
     id = db.Column(db.Integer, nullable=False, primary_key=True)  # noqa: A003
-    recipient_uids = db.Column(ARRAY(db.String(80)), nullable=False)
-    section_id = db.Column(db.Integer)
-    template_type = db.Column(email_template_type)
+    section_ids = db.Column(ARRAY(db.Integer), nullable=False)
+    template_type = db.Column(email_template_type, nullable=False)
     term_id = db.Column(db.Integer, nullable=False)
-    sent_at = db.Column(db.DateTime, nullable=False, default=datetime.now)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.now)
 
-    def __init__(self, recipient_uids, section_id, template_type, term_id):
-        self.recipient_uids = recipient_uids
+    def __init__(self, section_ids, template_type, term_id):
         self.template_type = template_type
-        self.section_id = section_id
+        self.section_ids = section_ids
         self.term_id = term_id
 
     def __repr__(self):
-        return f"""<EmailSent
+        return f"""<QueuedEmail
                     id={self.id}
-                    recipient_uids={', '.join(self.recipient_uids)}
-                    section_id={self.section_id},
+                    section_ids={self.section_ids},
                     template_type={self.template_type}
                     term_id={self.term_id},
-                    sent_at={self.sent_at}
+                    created_at={self.created_at}
                 """
 
     @classmethod
-    def create(cls, recipient_uids, section_id, template_type, term_id):
-        email_sent = cls(
-            recipient_uids=recipient_uids,
-            section_id=section_id,
+    def create(cls, section_ids, template_type, term_id):
+        queued_email = cls(
+            section_ids=section_ids,
             template_type=template_type,
             term_id=term_id,
         )
-        db.session.add(email_sent)
+        db.session.add(queued_email)
         std_commit()
-        return email_sent
+        return queued_email
 
     @classmethod
-    def get_emails_sent_to(cls, uid):
-        return cls.query.filter(cls.recipient_uids.any(uid)).order_by(cls.sent_at).all()
+    def delete(cls, queued_email):
+        db.session.delete(queued_email)
+        std_commit()
 
     @classmethod
-    def get_emails_of_type(cls, section_id, template_type, term_id):
-        return cls.query.filter_by(
-            section_id=section_id,
-            template_type=template_type,
-            term_id=term_id,
-        ).order_by(cls.sent_at).all()
+    def get_all(cls, term_id):
+        return cls.query.filter_by(term_id=term_id).order_by(cls.created_at).all()
 
     def to_api_json(self):
         return {
             'id': self.id,
-            'recipientUids': self.recipient_uids,
-            'sectionId': self.section_id,
+            'sectionIds': self.section_ids,
             'templateType': self.template_type,
             'templateTypeName': EmailTemplate.get_template_type_options()[self.template_type],
             'termId': self.term_id,
-            'sentAt': to_isoformat(self.sent_at),
+            'createdAt': to_isoformat(self.created_at),
         }

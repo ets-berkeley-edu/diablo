@@ -22,14 +22,22 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-
-from diablo.api.util import admin_required
-from diablo.lib.http import tolerant_jsonify
-from diablo.models.email_sent import EmailSent
+from diablo.jobs.base_job import BaseJob
+from diablo.merged.emailer import send_invite_related_email
+from diablo.merged.sis import get_course
+from diablo.models.queued_email import QueuedEmail
 from flask import current_app as app
 
 
-@app.route('/api/emails_sent/to/<uid>')
-@admin_required
-def get_emails_sent_to_uid(uid):
-    return tolerant_jsonify([e.to_api_json() for e in EmailSent.get_emails_sent_to(uid)])
+class SendQueuedEmailsJob(BaseJob):
+
+    def run(self, args=None):
+        term_id = app.config['CURRENT_TERM_ID']
+        for queued_email in QueuedEmail.get_all(term_id):
+            for section_id in queued_email.section_ids:
+                send_invite_related_email(
+                    course=get_course(term_id, section_id),
+                    template_type=queued_email.template_type,
+                    term_id=term_id,
+                )
+            QueuedEmail.delete(queued_email)

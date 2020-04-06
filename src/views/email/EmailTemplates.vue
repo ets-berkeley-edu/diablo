@@ -73,7 +73,7 @@
 <script>
   import Context from '@/mixins/Context'
   import Utils from '@/mixins/Utils'
-  import {deleteTemplate, getAllEmailTemplates, sendTestEmail} from '@/api/email-template'
+  import {deleteTemplate, getAllEmailTemplates, sendTestEmail} from '@/api/email'
 
   export default {
     name: 'EmailTemplates',

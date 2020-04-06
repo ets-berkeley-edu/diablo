@@ -26,9 +26,10 @@ ENHANCEMENTS, OR MODIFICATIONS.
 import logging
 import os
 
-# Base directory for the application (one level up from this config file).
-from diablo.jobs.sample_jobs import HelloWorld
+from diablo.jobs.email_alerts_for_admins_job import EmailAlertsForAdmins
+from diablo.jobs.update_rooms_job import UpdateRoomsJob
 
+# Base directory for the application (one level up from this config file).
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
 CAS_SERVER = 'https://auth-test.berkeley.edu/cas/'
@@ -70,28 +71,30 @@ EMAIL_REDIRECT_WHEN_TESTING = '__EMAIL_REDIRECT_WHEN_TESTING__@berkeley.edu'
 # Directory to search for mock fixtures, if running in "test" or "demo" mode.
 FIXTURES_PATH = None
 
+# All jobs are disabled below. Use the following as an example when configuring jobs in the real world.
 JOB_MANAGER = {
     'auto_start': True,
     'seconds_between_pending_jobs_check': 60,
     'jobs': [
         {
-            'cls': HelloWorld,
-            'name': 'Hello cruel world.',
+            'cls': UpdateRoomsJob,
+            'disabled': True,
+            'name': 'Update Rooms',
             'args': {
-                'message': 'Every 5 minutes, I run.',
+                'message': 'I run once per day.',
             },
             'schedule': {
-                'type': 'seconds',
-                'value': 300,
+                'type': 'day_at',
+                'value': '10:20',
             },
         },
         {
-            'cls': HelloWorld,
+            'cls': EmailAlertsForAdmins,
             'disabled': True,
-            'name': 'This daily job is disabled',
+            'name': 'Email alerts sent to Admin users',
             'schedule': {
-                'type': 'day_at',
-                'value': '06:00',
+                'type': 'minutes',
+                'value': 60,
             },
         },
     ],

@@ -26,9 +26,9 @@ from diablo import std_commit
 from diablo.jobs.kaltura_job import KalturaJob
 from diablo.merged.sis import get_course
 from diablo.models.approval import Approval
-from diablo.models.email_sent import EmailSent
 from diablo.models.room import Room
 from diablo.models.scheduled import Scheduled
+from diablo.models.sent_email import SentEmail
 from flask import current_app as app
 
 
@@ -102,7 +102,7 @@ class TestKalturaJob:
 def _get_email_count(section_id):
     term_id = app.config['CURRENT_TERM_ID']
     return len(
-        EmailSent.get_emails_of_type(
+        SentEmail.get_emails_of_type(
             section_id=section_id,
             template_type='recordings_scheduled',
             term_id=term_id,

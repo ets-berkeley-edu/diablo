@@ -27,9 +27,9 @@ import json
 from diablo import std_commit
 from diablo.models.approval import Approval
 from diablo.models.course_preference import CoursePreference
-from diablo.models.email_sent import EmailSent
 from diablo.models.room import Room
 from diablo.models.scheduled import Scheduled
+from diablo.models.sent_email import SentEmail
 from flask import current_app as app
 from tests.test_api.api_test_utils import api_approve, api_get_approvals
 
@@ -107,7 +107,7 @@ class TestApprove:
 
         term_id = app.config['CURRENT_TERM_ID']
         for uid in ('234567', '8765432'):
-            emails_sent = EmailSent.get_emails_sent_to(uid)
+            emails_sent = SentEmail.get_emails_sent_to(uid)
             assert len(emails_sent) > 0
             most_recent = emails_sent[-1]
             assert most_recent.section_id == section_1_id
@@ -226,23 +226,29 @@ class TestApprovals:
         assert len(api_json['section']['canvasCourseSites']) == 3
 
 
-class TestTermReport:
+class TestCoursesFilter:
 
     @staticmethod
-    def _api_capture_enabled_rooms(client, term_id=None, expected_status_code=200):
-        term_id = term_id or app.config['CURRENT_TERM_ID']
-        response = client.get(f'/api/courses/term/{term_id}')
+    def _api_courses(client, filter_option=None, term_id=None, expected_status_code=200):
+        response = client.post(
+            '/api/courses',
+            data=json.dumps({
+                'termId': term_id or app.config['CURRENT_TERM_ID'],
+                'filter': filter_option or 'Not Invited',
+            }),
+            content_type='application/json',
+        )
         assert response.status_code == expected_status_code
         return response.json
 
     def test_not_authenticated(self, client):
-        self._api_capture_enabled_rooms(client, expected_status_code=401)
+        self._api_courses(client, expected_status_code=401)
 
     def test_not_authorized(self, client, fake_auth):
         fake_auth.login(section_1_instructor_uids[0])
-        self._api_capture_enabled_rooms(client, expected_status_code=401)
+        self._api_courses(client, expected_status_code=401)
 
-    def test_admin_runs_report(self, client, db, fake_auth):
+    def test_authorized(self, client, db, fake_auth):
         term_id = app.config['CURRENT_TERM_ID']
         room = Room.find_room('Barrows 106')
         approval_1 = Approval.create(
@@ -269,7 +275,7 @@ class TestTermReport:
             room_id=room.id,
         )
         fake_auth.login(admin_uid)
-        api_json = self._api_capture_enabled_rooms(client)
+        api_json = self._api_courses(client)
 
         section_1 = next((s for s in api_json if s['sectionId'] == 26094), None)
         assert section_1
@@ -284,10 +290,6 @@ class TestTermReport:
         Approval.delete(approval_1)
         Approval.delete(approval_2)
         Scheduled.delete(scheduled)
-
-    def test_empty_term(self, client, db, fake_auth):
-        fake_auth.login(admin_uid)
-        assert self._api_capture_enabled_rooms(client, term_id=2302) == []
 
 
 class TestUpdatePreferences:
