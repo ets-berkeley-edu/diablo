@@ -1,5 +1,4 @@
 canvasapi==0.15.0
-cx_Oracle==7.3.0
 decorator==4.4.2
 Flask-Caching==1.8.0
 Flask-Cors==3.0.8

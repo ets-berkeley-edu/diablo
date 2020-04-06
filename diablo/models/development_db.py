@@ -64,7 +64,7 @@ def load(create_test_data=True):
 
 
 def _cache_externals():
-    for external in ('calnet', 'canvas', 'edo_db', 'kaltura', 'salesforce'):
+    for external in ('calnet', 'canvas', 'kaltura', 'salesforce'):
         for path in glob.glob(f'{BASE_DIR}/fixtures/{external}/*.json'):
             with open(path, 'r') as file:
                 key = path.split('/')[-1].split('.')[0]
