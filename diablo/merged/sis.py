@@ -25,9 +25,8 @@ ENHANCEMENTS, OR MODIFICATIONS.
 
 from datetime import datetime
 
-from diablo.externals.data_loch import get_sis_section, get_sis_sections, \
-    get_sis_sections_per_id, get_sis_sections_per_location
-from diablo.externals.edo_db import get_edo_db_courses, get_edo_db_instructors_per_section_id
+from diablo.externals.data_loch import get_sis_section, get_sis_sections, get_sis_sections_per_id, \
+    get_sis_sections_per_location
 from diablo.merged.calnet import get_calnet_user_for_uid
 from diablo.models.canvas_course_site import CanvasCourseSite
 from diablo.models.course_preference import CoursePreference
@@ -68,26 +67,6 @@ def get_courses_per_location(term_id, room_location):
         term_id=term_id,
         sis_sections=get_sis_sections_per_location(term_id=term_id, room_location=room_location),
     )
-
-
-def get_course_and_instructors(term_id, section_ids=None):
-    courses = []
-    distinct_time_and_place_list = []
-    for course in get_edo_db_courses(term_id, section_ids):
-        # Exclude cross-listings
-        time_and_place = f"{course['days_of_week']} {course['start_time']} {course['end_time']} {course['location']}"
-        if time_and_place not in distinct_time_and_place_list:
-            distinct_time_and_place_list.append(time_and_place)
-            courses.append(course)
-
-    instructors_per_section_id = get_edo_db_instructors_per_section_id(
-        section_ids=[c['section_id'] for c in courses],
-        term_id=term_id,
-    )
-    for c in courses:
-        instructors_ = instructors_per_section_id.get(c['section_id'])
-        c['instructors'] = instructors_ or []
-    return courses
 
 
 def _to_api_json(term_id, sis_sections):
