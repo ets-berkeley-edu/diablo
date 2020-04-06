@@ -25,10 +25,9 @@ ENHANCEMENTS, OR MODIFICATIONS.
 
 import re
 
-from diablo.externals.mailgun import send_email
+from diablo.externals.mailgun import Mailgun
 from diablo.lib.berkeley import term_name_for_sis_id
 from diablo.models.approval import NAMES_PER_PUBLISH_TYPE, NAMES_PER_RECORDING_TYPE
-from diablo.models.email_sent import EmailSent
 from diablo.models.email_template import EmailTemplate
 from flask import current_app as app
 
@@ -61,16 +60,11 @@ def notify_instructors(
             recipients = [next((i for i in course['instructors'] if i['uid'] == latest_approval.uid))]
         else:
             recipients = course['instructors']
-        for recipient in recipients:
-            send_email(
-                recipient_name=recipient['name'],
-                email_address=recipient['email'],
-                subject_line=_interpolate(template.subject_line),
-                message=_interpolate(template.message),
-            )
-        EmailSent.create(
-            recipient_uids=[recipient['uid'] for recipient in recipients],
+        Mailgun().send(
+            message=_interpolate(template.message),
+            recipients=recipients,
             section_id=course['sectionId'],
+            subject_line=_interpolate(template.subject_line),
             template_type=template_type,
             term_id=term_id,
         )
@@ -81,7 +75,6 @@ def notify_instructors(
 def interpolate_email_content(
         templated_string,
         course=None,
-        extra_key_value_pairs=None,
         instructor_name=None,
         pending_instructors=None,
         previous_publish_type_name=None,
@@ -93,7 +86,6 @@ def interpolate_email_content(
     interpolated = templated_string
     substitutions = _get_substitutions(
         course=course,
-        extra_key_value_pairs=extra_key_value_pairs,
         instructor_name=instructor_name,
         pending_instructors=pending_instructors,
         previous_publish_type_name=previous_publish_type_name,
@@ -113,20 +105,28 @@ def get_email_template_codes():
     return list(_get_substitutions().keys())
 
 
+def get_admin_alert_recipients():
+    return [
+        {
+            'email': app.config['EMAIL_DIABLO_ADMIN'],
+            'name': 'Course Capture Admin',
+            'uid': app.config['EMAIL_DIABLO_ADMIN_UID'],
+        },
+    ]
+
+
 def send_system_error_email(message):
     subject = f'{message[:50]}...' if len(message) > 50 else message
-    send_email(
-        recipient_name='Course Capture Admin',
-        email_address=app.config['EMAIL_DIABLO_ADMIN'],
-        subject_line=f'Diablo Alert: {subject}',
+    Mailgun().send(
         message=message,
+        recipients=get_admin_alert_recipients(),
+        subject_line=f'Diablo Alert: {subject}',
     )
     app.logger.error(f'Diablo Alert: {message}')
 
 
 def _get_substitutions(
         course=None,
-        extra_key_value_pairs=None,
         instructor_name=None,
         pending_instructors=None,
         previous_publish_type_name=None,
@@ -137,26 +137,23 @@ def _get_substitutions(
 ):
     term_id = (course and course['termId']) or app.config['CURRENT_TERM_ID']
     return {
-        **{
-            'course.days': course and course['meetingDays'],
-            'course.format': course and course['instructionFormat'],
-            'course.name': course and course['courseName'],
-            'course.room': course and course['meetingLocation'],
-            'course.section': course and course['sectionNum'],
-            'course.time.end': course and course['meetingEndTime'],
-            'course.time.start': course and course['meetingStartTime'],
-            'course.title': course and course['courseTitle'],
-            'instructor.name': instructor_name,
-            'instructors.pending': pending_instructors and [p['name'] for p in pending_instructors],
-            'publish.type': publish_type_name,
-            'publish.type.previous': previous_publish_type_name,
-            'recording.type': recording_type_name,
-            'recording.type.previous': previous_recording_type_name,
-            'signup.url': course and _get_sign_up_url(term_id, course['sectionId']),
-            'term.name': term_name_for_sis_id(term_id),
-            'user.name': recipient_name,
-        },
-        **(extra_key_value_pairs or {}),
+        'course.days': course and course['meetingDays'],
+        'course.format': course and course['instructionFormat'],
+        'course.name': course and course['courseName'],
+        'course.room': course and course['meetingLocation'],
+        'course.section': course and course['sectionNum'],
+        'course.time.end': course and course['meetingEndTime'],
+        'course.time.start': course and course['meetingStartTime'],
+        'course.title': course and course['courseTitle'],
+        'instructor.name': instructor_name,
+        'instructors.pending': pending_instructors and [p['name'] for p in pending_instructors],
+        'publish.type': publish_type_name,
+        'publish.type.previous': previous_publish_type_name,
+        'recording.type': recording_type_name,
+        'recording.type.previous': previous_recording_type_name,
+        'signup.url': course and _get_sign_up_url(term_id, course['sectionId']),
+        'term.name': term_name_for_sis_id(term_id),
+        'user.name': recipient_name,
     }
 
 

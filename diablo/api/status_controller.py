@@ -27,7 +27,7 @@ from diablo import db
 from diablo.externals import data_loch
 from diablo.externals.canvas import ping_canvas
 from diablo.externals.kaltura import Kaltura
-from diablo.externals.mailgun import mailgun_ping
+from diablo.externals.mailgun import Mailgun
 from diablo.lib.http import tolerant_jsonify
 from diablo.models.email_template import EmailTemplate
 from flask import current_app as app
@@ -55,6 +55,6 @@ def app_status():
         'db': db_status(),
         'emailTemplates': len(EmailTemplate.all_templates()) == len(EmailTemplate.get_template_type_options()),
         'kaltura': Kaltura().ping(),
-        'mailgun': mailgun_ping(),
+        'mailgun': Mailgun().ping(),
     }
     return tolerant_jsonify(resp)

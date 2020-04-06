@@ -15,6 +15,16 @@
           hide-details
         ></v-text-field>
       </v-card-title>
+      <div class="pl-5">
+        <v-btn :disabled="!selected.length" small>Send Email</v-btn>
+        <v-checkbox
+          :input-value="emailAll"
+          :true-value="emailAll"
+          :indeterminate="emailSome"
+          label="Email all"
+          @click.capture.stop="toggleEmailAll"
+        ></v-checkbox>
+      </div>
       <v-data-table
         hide-default-footer
         :headers="headers"
@@ -34,6 +44,12 @@
               </td>
             </tr>
             <tr v-for="item in items" :key="item.name">
+              <td class="text-no-wrap">
+                <v-checkbox
+                  v-model="selected"
+                  :true-value="$_.includes(selected, item.sectionId)"
+                  :value="item.sectionId"></v-checkbox>
+              </td>
               <td class="text-no-wrap">{{ item.courseName }}</td>
               <td class="text-no-wrap">{{ item.sectionId }}</td>
               <td class="text-no-wrap">
@@ -59,6 +75,9 @@
                   {{ $_.last(item.approvals).publishTypeName }}
                 </span>
               </td>
+              <td>
+                <ToggleOptOut :course="item" />
+              </td>
             </tr>
           </tbody>
         </template>
@@ -69,31 +88,50 @@
 
 <script>
   import Context from '@/mixins/Context'
+  import ToggleOptOut from '@/components/course/ToggleOptOut'
   import Utils from '@/mixins/Utils'
   import {getTermSummary} from '@/api/course'
 
   export default {
     name: 'Ouija',
+    components: {ToggleOptOut},
     mixins: [Context, Utils],
     data: () => ({
       courses: undefined,
-      search: '',
       headers: [
+        {text: '', sortable: false},
         {text: 'Course', value: 'courseName'},
         {text: 'Section', value: 'sectionId'},
         {text: 'Room', value: 'room.location'},
         {text: 'Days', value: 'days', sortable: false},
         {text: 'Time', value: 'time', sortable: false},
         {text: 'Instructor(s)', value: 'instructorNames'},
-        {text: 'Recording', value: 'recording', sortable: false}
-      ]
+        {text: 'Recording', value: 'recording', sortable: false},
+        {text: 'Opt out', value: 'hasOptedOut'}
+      ],
+      search: '',
+      selected: undefined
     }),
+    computed: {
+      emailAll() {
+        return this.selected.length === this.courses.length
+      },
+      emailSome() {
+        return this.selected.length > 0 && !this.emailAll
+      }
+    },
     created() {
       this.$loading()
       getTermSummary(this.$config.currentTermId).then(data => {
         this.courses = data
+        this.selected = this.$_.map(this.courses, 'sectionId')
         this.$ready()
       }).catch(this.$ready)
+    },
+    methods: {
+      toggleEmailAll() {
+        this.selected = this.emailAll ? [] : this.$_.map(this.courses, 'sectionId')
+      }
     }
   }
 </script>

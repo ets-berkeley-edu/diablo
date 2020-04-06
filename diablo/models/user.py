@@ -47,7 +47,7 @@ class User(UserMixin):
         # Type 'int' is required for Flask-login user_id
         return int(self.uid)
 
-    def get_uid(self):
+    def uid(self):
         return self.uid
 
     @property

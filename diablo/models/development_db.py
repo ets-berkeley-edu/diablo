@@ -103,6 +103,12 @@ def _create_email_templates():
         subject_line='You would like that?',
         message='Intensely.',
     )
+    EmailTemplate.create(
+        template_type='recordings_scheduled',
+        name='Recordings scheduled',
+        subject_line='Course scheduled for Course Capture',
+        message='Recordings of type <code>recording.type</code> will be published to <code>publish.type</code>.',
+    )
     std_commit(allow_test_environment=True)
 
 

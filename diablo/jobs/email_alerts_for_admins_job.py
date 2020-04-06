@@ -22,9 +22,9 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from diablo.externals.mailgun import send_email
+from diablo.externals.mailgun import Mailgun
 from diablo.jobs.base_job import BaseJob
-from diablo.merged.emailer import interpolate_email_content
+from diablo.merged.emailer import get_admin_alert_recipients, interpolate_email_content
 from diablo.merged.sis import get_courses
 from diablo.models.approval import Approval
 from diablo.models.email_template import EmailTemplate
@@ -59,7 +59,7 @@ def _alert_admin_of_instructor_change(courses, approval_uids_per_section_id):
         approval_uids = approval_uids_per_section_id[int(course['sectionId'])]
         all_instructors_have_approved = all(uid in approval_uids for uid in instructor_uids)
         if not all_instructors_have_approved:
-            _send_email(course=course, template_type='admin_alert_instructor_change')
+            _notify(course=course, template_type='admin_alert_instructor_change')
 
 
 def _alert_admin_of_room_change(courses, scheduled_rooms_per_section_id):
@@ -68,7 +68,7 @@ def _alert_admin_of_room_change(courses, scheduled_rooms_per_section_id):
         section_id = course['sectionId']
         location = locations_per_section_id[section_id]
         if location != scheduled_rooms_per_section_id[int(section_id)]:
-            _send_email(course=course, template_type='admin_alert_room_change')
+            _notify(course=course, template_type='admin_alert_room_change')
 
 
 def _approval_uids_per_section_id(scheduled, term_id):
@@ -89,17 +89,16 @@ def _scheduled_locations_per_section_id(all_scheduled):
     return locations_per_section_id
 
 
-def _send_email(course, template_type):
+def _notify(course, template_type):
     email_template = EmailTemplate.get_template_by_type(template_type)
-    send_email(
-        recipient_name='Course Capture Admin',
-        email_address=app.config['EMAIL_DIABLO_ADMIN'],
-        subject_line=interpolate_email_content(
-            templated_string=email_template.subject_line,
-            course=course,
-        ),
+    Mailgun().send(
         message=interpolate_email_content(
             templated_string=email_template.message,
+            course=course,
+        ),
+        recipients=get_admin_alert_recipients(),
+        subject_line=interpolate_email_content(
+            templated_string=email_template.subject_line,
             course=course,
         ),
     )

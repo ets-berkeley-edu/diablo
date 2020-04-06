@@ -36,8 +36,8 @@ class EmailSent(db.Model):
 
     id = db.Column(db.Integer, nullable=False, primary_key=True)  # noqa: A003
     recipient_uids = db.Column(ARRAY(db.String(80)), nullable=False)
-    section_id = db.Column(db.Integer, nullable=False, primary_key=True)
-    template_type = db.Column(email_template_type, nullable=False)
+    section_id = db.Column(db.Integer)
+    template_type = db.Column(email_template_type)
     term_id = db.Column(db.Integer, nullable=False)
     sent_at = db.Column(db.DateTime, nullable=False, default=datetime.now)
 
@@ -72,6 +72,14 @@ class EmailSent(db.Model):
     @classmethod
     def get_emails_sent_to(cls, uid):
         return cls.query.filter(cls.recipient_uids.any(uid)).order_by(cls.sent_at).all()
+
+    @classmethod
+    def get_emails_of_type(cls, section_id, template_type, term_id):
+        return cls.query.filter_by(
+            section_id=section_id,
+            template_type=template_type,
+            term_id=term_id,
+        ).order_by(cls.sent_at).all()
 
     def to_api_json(self):
         return {

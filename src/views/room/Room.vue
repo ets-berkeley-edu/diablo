@@ -64,6 +64,9 @@
                     &mdash;
                   </div>
                 </td>
+                <td>
+                  <ToggleOptOut :course="course" />
+                </td>
               </tr>
               <tr v-if="course.approvals.length" :key="`approvals-${course.sectionId}`">
                 <td colspan="5" class="pb-2">
@@ -97,11 +100,12 @@
 <script>
   import Context from '@/mixins/Context'
   import SelectRoomCapability from '@/components/room/SelectRoomCapability'
+  import ToggleOptOut from '@/components/course/ToggleOptOut'
   import {getRoom, setAuditorium} from '@/api/room'
 
   export default {
     name: 'Room',
-    components: {SelectRoomCapability},
+    components: {SelectRoomCapability, ToggleOptOut},
     mixins: [Context],
     data: () => ({
       headers: [
@@ -109,7 +113,8 @@
         {text: 'Section', value: 'sectionId'},
         {text: 'Days', value: 'days', sortable: false},
         {text: 'Time', value: 'time', sortable: false},
-        {text: 'Recording'}
+        {text: 'Recording'},
+        {text: 'Opt out', value: 'hasOptedOut'}
       ],
       isAuditorium: undefined,
       room: undefined

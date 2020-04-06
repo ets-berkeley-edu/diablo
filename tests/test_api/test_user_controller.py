@@ -74,10 +74,10 @@ class TestMyProfile:
 
         sections = api_json['courses']
         assert sections[0]['courseTitle'] == 'Data Structures'
-        assert sections[0]['sectionId'] == '28165'
+        assert sections[0]['sectionId'] == 28165
 
         assert sections[1]['courseTitle'] == 'Foundations of Data Science'
-        assert sections[1]['sectionId'] == '28602'
+        assert sections[1]['sectionId'] == 28602
         assert [i['uid'] for i in sections[1]['instructors']] == ['234567', '8765432']
 
 
@@ -124,5 +124,5 @@ class TestUserProfile:
 
         uid = '8765432'
         user = self._api_user(client, uid)
-        assert find_course('28602')
-        assert not find_course('22460')
+        assert find_course(28602)
+        assert not find_course(22460)
