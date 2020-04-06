@@ -26,6 +26,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 import json
 
 from diablo import __version__ as version
+from diablo.api.util import get_search_filter_options
 from diablo.lib.berkeley import term_name_for_sis_id
 from diablo.lib.http import tolerant_jsonify
 from diablo.models.email_template import EmailTemplate
@@ -47,6 +48,7 @@ def app_config():
         'ebEnvironment': app.config['EB_ENVIRONMENT'] if 'EB_ENVIRONMENT' in app.config else None,
         'emailTemplateTypes': EmailTemplate.get_template_type_options(),
         'roomCapabilityOptions': Room.get_room_capability_options(),
+        'searchFilterOptions': get_search_filter_options(),
         'supportEmailAddress': app.config['EMAIL_DIABLO_SUPPORT'],
         'timezone': app.config['TIMEZONE'],
     })

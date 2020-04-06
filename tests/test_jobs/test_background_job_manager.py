@@ -26,8 +26,8 @@ ENHANCEMENTS, OR MODIFICATIONS.
 import time
 
 from diablo.jobs.background_job_manager import BackgroundJobManager
-from diablo.jobs.sample_jobs import HelloWorld, LightSwitch, Volume
 from flask import current_app as app
+from tests.test_jobs.sample_jobs import HelloWorld, LightSwitch, Volume
 from tests.util import override_config
 
 

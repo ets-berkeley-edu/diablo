@@ -50,7 +50,7 @@
   import TemplateCodesDialog from '@/components/email/TemplateCodesDialog'
   import Utils from '@/mixins/Utils'
   import { TiptapVuetify, Heading, Bold, Italic, Strike, Underline, Code, Paragraph, BulletList, OrderedList, ListItem, Link, Blockquote, HardBreak, HorizontalRule, History } from 'tiptap-vuetify'
-  import {createEmailTemplate, getEmailTemplate, updateEmailTemplate} from '@/api/email-template'
+  import {createEmailTemplate, getEmailTemplate, updateEmailTemplate} from '@/api/email'
 
   export default {
     name: 'CreateEmailTemplate',

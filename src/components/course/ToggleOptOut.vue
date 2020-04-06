@@ -1,5 +1,10 @@
 <template>
-  <v-switch v-model="optOut" dense @change="toggleOptOut()"></v-switch>
+  <v-switch
+    :id="`toggle-opt-out-${course.sectionId}`"
+    v-model="optOut"
+    dense
+    @change="toggleOptOut()"
+  ></v-switch>
 </template>
 
 <script>

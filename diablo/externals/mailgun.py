@@ -22,7 +22,7 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from diablo.models.email_sent import EmailSent
+from diablo.models.sent_email import SentEmail
 from flask import current_app as app
 
 
@@ -40,7 +40,7 @@ class Mailgun:
             else:
                 # TODO: Implement according to https://documentation.mailgun.com/en/latest/quickstart-sending.html#send-via-api
                 app.logger.info(_get_mock_message(recipient['name'], email_address, subject_line, message))
-        EmailSent.create(
+        SentEmail.create(
             recipient_uids=[recipient['uid'] for recipient in recipients],
             section_id=section_id,
             template_type=template_type,

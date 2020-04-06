@@ -19,8 +19,11 @@ export function getApprovals(termId: number, sectionId: number) {
     .get(`${utils.apiBaseUrl()}/api/course/approvals/${termId}/${sectionId}`)
 }
 
-export function getTermSummary(termId) {
-  return axios.get(`${utils.apiBaseUrl()}/api/courses/term/${termId}`)
+export function getCourses(filter, termId) {
+  return axios.post(`${utils.apiBaseUrl()}/api/courses`, {
+    filter,
+    termId
+  })
 }
 
 export function updateOptOut(termId, sectionId, optOut) {

@@ -22,8 +22,9 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-
 import os
+
+from tests.test_jobs.sample_jobs import HelloWorld
 
 # Base directory for the application (one level up from this config file).
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
@@ -36,6 +37,33 @@ AWS_APP_ROLE_ARN = 'arn:aws:iam::123456789012:role/test-role'
 CURRENT_TERM_ID = 2202
 
 DATA_LOCH_RDS_URI = 'postgres://diablo:diablo@localhost:5432/pazuzu_loch_test'
+
+JOB_MANAGER = {
+    'auto_start': True,
+    'seconds_between_pending_jobs_check': 60,
+    'jobs': [
+        {
+            'cls': HelloWorld,
+            'name': 'Hello cruel world.',
+            'args': {
+                'message': 'Every 5 minutes, I run.',
+            },
+            'schedule': {
+                'type': 'seconds',
+                'value': 300,
+            },
+        },
+        {
+            'cls': HelloWorld,
+            'disabled': True,
+            'name': 'This daily job is disabled',
+            'schedule': {
+                'type': 'day_at',
+                'value': '06:00',
+            },
+        },
+    ],
+}
 
 INDEX_HTML = f'{BASE_DIR}/tests/static/test-index.html'
 

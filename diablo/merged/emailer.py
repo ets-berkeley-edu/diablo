@@ -32,7 +32,7 @@ from diablo.models.email_template import EmailTemplate
 from flask import current_app as app
 
 
-def notify_instructors(
+def notify_instructors_of_approval(
         course,
         latest_approval,
         name_of_latest_approver,
@@ -113,6 +113,30 @@ def get_admin_alert_recipients():
             'uid': app.config['EMAIL_DIABLO_ADMIN_UID'],
         },
     ]
+
+
+def send_invite_related_email(
+        course,
+        template_type,
+        term_id,
+):
+    template = EmailTemplate.get_template_by_type(template_type)
+    if template:
+        def _interpolate(templated_string):
+            return interpolate_email_content(
+                course=course,
+                templated_string=templated_string,
+            )
+        Mailgun().send(
+            message=_interpolate(template.message),
+            recipients=course['instructors'],
+            section_id=course['sectionId'],
+            subject_line=_interpolate(template.subject_line),
+            template_type=template_type,
+            term_id=term_id,
+        )
+    else:
+        send_system_error_email(f'Unable to send email of type {template_type} because no template is available.')
 
 
 def send_system_error_email(message):

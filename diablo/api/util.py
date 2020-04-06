@@ -69,3 +69,14 @@ def put_approvals_and_scheduled(courses):
             })
         # Scheduled
         course['scheduled'] = [s.to_api_json() for s in scheduled_per_section_id.get(section_id, [])]
+
+
+def get_search_filter_options():
+    return [
+        'Course Change',
+        'Do Not Email',
+        'Invited',
+        'Not Invited',
+        'Partially Approved',
+        'Scheduled',
+    ]

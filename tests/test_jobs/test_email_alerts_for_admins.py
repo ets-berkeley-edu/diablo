@@ -24,9 +24,9 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 from diablo.jobs.email_alerts_for_admins_job import EmailAlertsForAdmins
 from diablo.models.approval import Approval
-from diablo.models.email_sent import EmailSent
 from diablo.models.room import Room
 from diablo.models.scheduled import Scheduled
+from diablo.models.sent_email import SentEmail
 from flask import current_app as app
 
 
@@ -93,4 +93,4 @@ class TestEmailAlertsForAdmins:
 
 def _get_email_count():
     admin_uid = app.config['EMAIL_DIABLO_ADMIN_UID']
-    return len(EmailSent.get_emails_sent_to(uid=admin_uid))
+    return len(SentEmail.get_emails_sent_to(uid=admin_uid))

@@ -22,27 +22,31 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-
+from diablo.api.errors import ResourceNotFoundError
 from diablo.api.util import admin_required
 from diablo.jobs.canvas_course_sites_job import CanvasCourseSitesJob
+from diablo.jobs.email_alerts_for_admins_job import EmailAlertsForAdmins
+from diablo.jobs.kaltura_job import KalturaJob
+from diablo.jobs.send_queued_email_job import SendQueuedEmailsJob
 from diablo.jobs.update_rooms_job import UpdateRoomsJob
 from diablo.lib.http import tolerant_jsonify
 from flask import current_app as app
 
 
-@app.route('/api/job/update_rooms/start')
+@app.route('/api/job/<job_key>/start')
 @admin_required
-def update_rooms():
-    UpdateRoomsJob(app.app_context).run()
-    return tolerant_jsonify({
-        'status': 'STARTED',
-    })
-
-
-@app.route('/api/job/canvas_course_sites/start')
-@admin_required
-def update_courses():
-    CanvasCourseSitesJob(app.app_context).run()
-    return tolerant_jsonify({
-        'status': 'STARTED',
-    })
+def start_job(job_key):
+    job_class = {
+        'canvas_course_sites': CanvasCourseSitesJob,
+        'email_alerts_for_admins': EmailAlertsForAdmins,
+        'kaltura': KalturaJob,
+        'send_queued_emails': SendQueuedEmailsJob,
+        'update_rooms': UpdateRoomsJob,
+    }.get(job_key)
+    if job_class:
+        job_class(app.app_context).run()
+        return tolerant_jsonify({
+            'status': 'STARTED',
+        })
+    else:
+        raise ResourceNotFoundError(f'Invalid job_key: {job_key}')
