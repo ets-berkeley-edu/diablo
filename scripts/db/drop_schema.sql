@@ -63,8 +63,7 @@ DROP INDEX IF EXISTS public.rooms_location_idx;
 DROP INDEX IF EXISTS public.sent_emails_section_id_idx;
 DROP INDEX IF EXISTS public.sis_sections_instructor_uid_idx;
 DROP INDEX IF EXISTS public.sis_sections_meeting_location_idx;
-DROP INDEX IF EXISTS public.sis_sections_sis_section_id_idx;
-DROP INDEX IF EXISTS public.sis_sections_sis_term_id_idx;
+DROP INDEX IF EXISTS public.sis_sections_term_id_section_id_idx;
 
 --
 

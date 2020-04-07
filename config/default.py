@@ -26,7 +26,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 import logging
 import os
 
-from diablo.jobs.email_alerts_for_admins_job import EmailAlertsForAdmins
+from diablo.jobs.admin_emails_job import AdminEmailsJob
 from diablo.jobs.update_rooms_job import UpdateRoomsJob
 
 # Base directory for the application (one level up from this config file).
@@ -83,7 +83,7 @@ JOB_MANAGER = {
             },
         },
         {
-            'cls': EmailAlertsForAdmins,
+            'cls': AdminEmailsJob,
             'disabled': True,
             'name': 'Email alerts sent to Admin users',
             'schedule': {
@@ -120,6 +120,8 @@ LOGGING_PROPAGATION_LEVEL = logging.INFO
 MAILGUN_BASE_URL = 'https://api.mailgun.net/v3'
 MAILGUN_DOMAIN = 'diablo-mail.berkeley.edu'
 MAILGUN_API_KEY = 'secret'
+
+REDSHIFT_DATABASE = 'redshift_database'
 
 REMEMBER_COOKIE_NAME = 'remember_diablo_token'
 
