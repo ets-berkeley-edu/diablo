@@ -22,7 +22,7 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from diablo.jobs.email_alerts_for_admins_job import EmailAlertsForAdmins
+from diablo.jobs.admin_emails_job import AdminEmailsJob
 from diablo.models.approval import Approval
 from diablo.models.room import Room
 from diablo.models.scheduled import Scheduled
@@ -55,7 +55,7 @@ class TestEmailAlertsForAdmins:
             room_id=scheduled_in_room.id,
         )
         email_count = _get_email_count()
-        EmailAlertsForAdmins(app.app_context).run()
+        AdminEmailsJob(app.app_context).run()
         assert _get_email_count() == email_count + 1
 
         # Clean up
@@ -83,7 +83,7 @@ class TestEmailAlertsForAdmins:
             room_id=room_id,
         )
         email_count = _get_email_count()
-        EmailAlertsForAdmins(app.app_context).run()
+        AdminEmailsJob(app.app_context).run()
         assert _get_email_count() == email_count + 1
 
         # Clean up

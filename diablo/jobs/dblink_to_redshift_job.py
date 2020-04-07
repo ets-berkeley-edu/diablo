@@ -22,17 +22,18 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-
-from diablo.externals.canvas import get_canvas_course_sites
+from diablo.externals.rds import execute
+from diablo.jobs.background_job_manager import BackgroundJobError
 from diablo.jobs.base_job import BaseJob
-from diablo.models.canvas_course_site import CanvasCourseSite
+from diablo.lib.db import resolve_sql_template
 from flask import current_app as app
 
 
-class CanvasCourseSitesJob(BaseJob):
+class DblinkToRedshift(BaseJob):
 
     def run(self, args=None):
-        CanvasCourseSite.refresh_term_data(
-            term_id=app.config['CURRENT_TERM_ID'],
-            canvas_course_sites=get_canvas_course_sites(),
-        )
+        resolved_ddl_rds = resolve_sql_template('update_rds_indexes_sis.template.sql')
+        if execute(resolved_ddl_rds):
+            app.logger.info('RDS indexes updated.')
+        else:
+            raise BackgroundJobError('Failed to update RDS indexes for intermediate schema.')

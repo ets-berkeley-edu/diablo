@@ -33,7 +33,7 @@ from diablo.models.scheduled import Scheduled
 from flask import current_app as app
 
 
-class EmailAlertsForAdmins(BaseJob):
+class AdminEmailsJob(BaseJob):
 
     def run(self, args=None):
         term_id = app.config['CURRENT_TERM_ID']

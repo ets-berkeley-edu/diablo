@@ -29,7 +29,7 @@ from diablo.models.queued_email import QueuedEmail
 from flask import current_app as app
 
 
-class SendQueuedEmailsJob(BaseJob):
+class QueuedEmailsJob(BaseJob):
 
     def run(self, args=None):
         term_id = app.config['CURRENT_TERM_ID']

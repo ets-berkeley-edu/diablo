@@ -27,7 +27,7 @@ import glob
 import json
 
 from diablo import BASE_DIR, cache, db, std_commit
-from diablo.jobs.canvas_course_sites_job import CanvasCourseSitesJob
+from diablo.jobs.canvas_job import CanvasJob
 from diablo.jobs.data_loch_sync_job import DataLochSyncJob
 from diablo.jobs.update_rooms_job import UpdateRoomsJob
 from diablo.models.admin_user import AdminUser
@@ -131,7 +131,7 @@ def _create_users():
 
 
 def _run_jobs():
-    CanvasCourseSitesJob(app_context=app.app_context).run()
+    CanvasJob(app_context=app.app_context).run()
     DataLochSyncJob(app_context=app.app_context).run()
     UpdateRoomsJob(app_context=app.app_context).run()
     std_commit(allow_test_environment=True)

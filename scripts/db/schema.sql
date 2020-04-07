@@ -294,7 +294,6 @@ ALTER TABLE ONLY sis_sections
     ADD CONSTRAINT sis_sections_pkey PRIMARY KEY (id);
 CREATE INDEX sis_sections_instructor_uid_idx ON sis_sections USING btree (instructor_uid);
 CREATE INDEX sis_sections_meeting_location_idx ON sis_sections USING btree (meeting_location);
-CREATE INDEX sis_sections_sis_section_id_idx ON sis_sections USING btree (sis_section_id);
-CREATE INDEX sis_sections_sis_term_id_idx ON sis_sections USING btree (sis_term_id);
+CREATE INDEX sis_sections_term_id_section_id_idx ON sis_sections(sis_term_id, sis_section_id);
 
 --
