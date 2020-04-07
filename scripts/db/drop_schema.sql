@@ -52,6 +52,7 @@ ALTER TABLE IF EXISTS ONLY public.rooms DROP CONSTRAINT IF EXISTS rooms_location
 ALTER TABLE IF EXISTS ONLY public.rooms DROP CONSTRAINT IF EXISTS rooms_pkey;
 ALTER TABLE IF EXISTS ONLY public.scheduled DROP CONSTRAINT IF EXISTS scheduled_pkey;
 ALTER TABLE IF EXISTS ONLY public.sent_emails DROP CONSTRAINT IF EXISTS sent_emails_pkey;
+ALTER TABLE IF EXISTS ONLY public.sis_sections DROP CONSTRAINT IF EXISTS sis_sections_pkey;
 
 --
 
@@ -59,17 +60,16 @@ DROP INDEX IF EXISTS public.approvals_approved_by_uid_idx;
 DROP INDEX IF EXISTS public.approvals_term_id_idx;
 DROP INDEX IF EXISTS public.approvals_section_id_idx;
 DROP INDEX IF EXISTS public.rooms_location_idx;
-DROP INDEX IF EXISTS public.scheduled_term_id_idx;
-DROP INDEX IF EXISTS public.scheduled_section_id_idx;
 DROP INDEX IF EXISTS public.sent_emails_section_id_idx;
-
---
-
-DROP SEQUENCE IF EXISTS public.admin_users_id_seq;
+DROP INDEX IF EXISTS public.sis_sections_instructor_uid_idx;
+DROP INDEX IF EXISTS public.sis_sections_meeting_location_idx;
+DROP INDEX IF EXISTS public.sis_sections_sis_section_id_idx;
+DROP INDEX IF EXISTS public.sis_sections_sis_term_id_idx;
 
 --
 
 DROP TABLE IF EXISTS public.admin_users;
+DROP SEQUENCE IF EXISTS public.admin_users_id_seq;
 DROP TABLE IF EXISTS public.approvals;
 DROP TABLE IF EXISTS public.canvas_course_sites;
 DROP TABLE IF EXISTS public.course_preferences;
@@ -82,6 +82,8 @@ DROP SEQUENCE IF EXISTS public.rooms_id_seq;
 DROP TABLE IF EXISTS public.scheduled;
 DROP TABLE IF EXISTS public.sent_emails;
 DROP SEQUENCE IF EXISTS public.sent_emails_id_seq;
+DROP TABLE IF EXISTS public.sis_sections;
+DROP SEQUENCE IF EXISTS public.sis_sections_id_seq;
 
 --
 

@@ -25,16 +25,13 @@ ENHANCEMENTS, OR MODIFICATIONS.
 
 from datetime import datetime
 
-from diablo.externals.data_loch import get_sis_section, get_sis_sections, get_sis_sections_per_id, \
-    get_sis_sections_per_location
-from diablo.merged.calnet import get_calnet_user_for_uid
 from diablo.models.canvas_course_site import CanvasCourseSite
 from diablo.models.course_preference import CoursePreference
-from flask import current_app as app
+from diablo.models.sis_section import SisSection
 
 
 def get_course(term_id, section_id):
-    section = get_sis_section(term_id=term_id, section_id=section_id)
+    section = SisSection.get_sis_section(term_id=term_id, section_id=section_id)
     if section:
         rows = _to_api_json(
             term_id=term_id,
@@ -48,9 +45,9 @@ def get_course(term_id, section_id):
 def get_courses(term_id, section_ids):
     return _to_api_json(
         term_id=term_id,
-        sis_sections=get_sis_sections_per_id(
+        sis_sections=SisSection.get_sis_sections_per_id(
             term_id=term_id,
-            section_ids=[str(section_id) for section_id in section_ids],
+            section_ids=[section_id for section_id in section_ids],
         ),
     )
 
@@ -58,20 +55,19 @@ def get_courses(term_id, section_ids):
 def get_courses_per_instructor(term_id, instructor_uid):
     return _to_api_json(
         term_id=term_id,
-        sis_sections=get_sis_sections(term_id=term_id, instructor_uid=instructor_uid),
+        sis_sections=SisSection.get_sis_sections(term_id=term_id, instructor_uid=instructor_uid),
     )
 
 
 def get_courses_per_location(term_id, room_location):
     return _to_api_json(
         term_id=term_id,
-        sis_sections=get_sis_sections_per_location(term_id=term_id, room_location=room_location),
+        sis_sections=SisSection.get_sis_sections_per_location(term_id=term_id, room_location=room_location),
     )
 
 
 def _to_api_json(term_id, sis_sections):
     sections_per_id = {}
-    instructor_uids_per_section_id = {}
     section_ids_opted_out = CoursePreference.get_section_ids_opted_out(term_id=term_id)
     for sis_section in sis_sections:
         section_id = int(sis_section['sis_section_id'])
@@ -83,6 +79,8 @@ def _to_api_json(term_id, sis_sections):
                 'courseTitle': sis_section['sis_course_title'],
                 'hasOptedOut': section_id in section_ids_opted_out,
                 'instructionFormat': sis_section['sis_instruction_format'],
+                'instructors': [],
+                'instructorName': sis_section['instructor_name'],
                 'instructorRoleCode': sis_section['instructor_role_code'],
                 'isPrimary': sis_section['is_primary'],
                 'meetingDays': _format_days(sis_section['meeting_days']),
@@ -95,23 +93,12 @@ def _to_api_json(term_id, sis_sections):
                 'sectionNum': sis_section['sis_section_num'],
                 'termId': sis_section['sis_term_id'],
             }
-        if section_id not in instructor_uids_per_section_id:
-            instructor_uids_per_section_id[section_id] = []
-        instructor_uids_per_section_id[section_id].append(sis_section['instructor_uid'])
-
-    json_ = []
-    for section_id, instructor_uids in instructor_uids_per_section_id.items():
-        instructors = []
-        for uid in sorted(instructor_uids):
-            if uid not in [i['uid'] for i in instructors]:
-                instructors.append(get_calnet_user_for_uid(app, uid))
-        json_.append({
-            **sections_per_id[section_id],
-            **{
-                'instructors': instructors,
-            },
+        sections_per_id[section_id]['instructors'].append({
+            'uid': sis_section['instructor_uid'],
+            'name': sis_section['instructor_name'],
+            'roleCode': sis_section['instructor_role_code'],
         })
-    return json_
+    return list(sections_per_id.values())
 
 
 def _canvas_course_sites(term_id, section_id):

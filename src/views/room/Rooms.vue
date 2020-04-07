@@ -1,6 +1,6 @@
 <template>
   <div v-if="!loading">
-    <h2><v-icon class="pb-3" large>mdi-domain</v-icon> {{ $_.size(rooms) }} Capture-enabled Rooms</h2>
+    <h2><v-icon class="pb-3" large>mdi-domain</v-icon> {{ $_.size(rooms) }} Rooms</h2>
     <v-card outlined class="elevation-1">
       <div class="pt-6">
         <v-card-title>

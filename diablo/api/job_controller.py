@@ -25,6 +25,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 from diablo.api.errors import ResourceNotFoundError
 from diablo.api.util import admin_required
 from diablo.jobs.canvas_course_sites_job import CanvasCourseSitesJob
+from diablo.jobs.data_loch_sync_job import DataLochSyncJob
 from diablo.jobs.email_alerts_for_admins_job import EmailAlertsForAdmins
 from diablo.jobs.kaltura_job import KalturaJob
 from diablo.jobs.send_queued_email_job import SendQueuedEmailsJob
@@ -38,6 +39,7 @@ from flask import current_app as app
 def start_job(job_key):
     job_class = {
         'canvas_course_sites': CanvasCourseSitesJob,
+        'data_loch_sync': DataLochSyncJob,
         'email_alerts_for_admins': EmailAlertsForAdmins,
         'kaltura': KalturaJob,
         'send_queued_emails': SendQueuedEmailsJob,
