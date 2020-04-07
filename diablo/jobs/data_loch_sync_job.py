@@ -22,30 +22,15 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from diablo.externals.kaltura import Kaltura
+from diablo.externals.data_loch import get_data_loch_sections
 from diablo.jobs.base_job import BaseJob
-from diablo.models.room import Room
 from diablo.models.sis_section import SisSection
 from flask import current_app as app
 
 
-class UpdateRoomsJob(BaseJob):
+class DataLochSyncJob(BaseJob):
 
     def run(self, args=None):
-        locations = SisSection.get_distinct_meeting_locations()
-        existing_locations = Room.get_all_locations()
-        new_locations = [location for location in locations if location not in existing_locations]
-        if new_locations:
-            app.logger.info(f'Creating {len(new_locations)} new rooms')
-            for location in new_locations:
-                Room.create(location=location)
-
-        rooms = Room.all_rooms()
-        kaltura_resource_ids_per_room = {}
-        for resource in Kaltura().get_resource_list():
-            room = next((r for r in rooms if r.location == resource['name']), None)
-            if room:
-                kaltura_resource_ids_per_room[room.id] = resource['id']
-
-        if kaltura_resource_ids_per_room:
-            Room.update_kaltura_resource_mappings(kaltura_resource_ids_per_room)
+        term_id = app.config['CURRENT_TERM_ID']
+        sis_sections = get_data_loch_sections(term_id)
+        SisSection.refresh(sis_sections)

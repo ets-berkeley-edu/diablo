@@ -249,8 +249,6 @@ CREATE TABLE scheduled (
 );
 ALTER TABLE scheduled OWNER TO diablo;
 ALTER TABLE scheduled ADD CONSTRAINT scheduled_pkey PRIMARY KEY (section_id, term_id);
-CREATE INDEX scheduled_section_id_idx ON scheduled USING btree (section_id);
-CREATE INDEX scheduled_term_id_idx ON scheduled USING btree (term_id);
 
 --
 
@@ -258,5 +256,45 @@ ALTER TABLE ONLY approvals
     ADD CONSTRAINT approvals_room_id_fkey FOREIGN KEY (room_id) REFERENCES rooms(id);
 ALTER TABLE ONLY scheduled
     ADD CONSTRAINT scheduled_room_id_fkey FOREIGN KEY (room_id) REFERENCES rooms(id);
+
+--
+
+CREATE TABLE sis_sections (
+    id INTEGER NOT NULL,
+    allowed_units VARCHAR(80),
+    instructor_name TEXT,
+    instructor_role_code VARCHAR(80),
+    instructor_uid VARCHAR(80),
+    is_primary BOOLEAN,
+    meeting_days VARCHAR(80),
+    meeting_end_date VARCHAR(80),
+    meeting_end_time VARCHAR(80),
+    meeting_location VARCHAR(80),
+    meeting_start_date VARCHAR(80),
+    meeting_start_time VARCHAR(80),
+    sis_course_name VARCHAR(80),
+    sis_course_title TEXT,
+    sis_instruction_format VARCHAR(80),
+    sis_section_id INTEGER NOT NULL,
+    sis_section_num VARCHAR(80),
+    sis_term_id INTEGER NOT NULL,
+    created_at timestamp with time zone NOT NULL
+);
+ALTER TABLE sis_sections OWNER TO diablo;
+CREATE SEQUENCE sis_sections_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+ALTER TABLE sis_sections_id_seq OWNER TO diablo;
+ALTER SEQUENCE sis_sections_id_seq OWNED BY sis_sections.id;
+ALTER TABLE ONLY sis_sections ALTER COLUMN id SET DEFAULT nextval('sis_sections_id_seq'::regclass);
+ALTER TABLE ONLY sis_sections
+    ADD CONSTRAINT sis_sections_pkey PRIMARY KEY (id);
+CREATE INDEX sis_sections_instructor_uid_idx ON sis_sections USING btree (instructor_uid);
+CREATE INDEX sis_sections_meeting_location_idx ON sis_sections USING btree (meeting_location);
+CREATE INDEX sis_sections_sis_section_id_idx ON sis_sections USING btree (sis_section_id);
+CREATE INDEX sis_sections_sis_term_id_idx ON sis_sections USING btree (sis_term_id);
 
 --

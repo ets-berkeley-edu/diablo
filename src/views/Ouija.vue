@@ -63,6 +63,7 @@
             </td>
             <td class="text-no-wrap">{{ item.meetingDays.join(',') }}</td>
             <td class="text-no-wrap">{{ item.meetingStartTime }} - {{ item.meetingEndTime }}</td>
+            <td class="text-no-wrap">TODO: {{ item.status }}</td>
             <td>
               <div v-for="instructor in item.instructors" :key="instructor.uid">
                 <router-link :id="`instructor-${instructor.uid}-mailto`" :to="`/user/${instructor.uid}`">
@@ -105,6 +106,7 @@
         {text: 'Room', value: 'room.location'},
         {text: 'Days', value: 'days', sortable: false},
         {text: 'Time', value: 'time', sortable: false},
+        {text: 'Status', value: 'status'},
         {text: 'Instructor(s)', value: 'instructorNames'},
         {text: 'Recording', value: 'recording', sortable: false},
         {text: 'Opt out', value: 'hasOptedOut'}

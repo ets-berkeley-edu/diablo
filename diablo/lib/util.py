@@ -23,9 +23,11 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
+from datetime import datetime
 import inspect
 
 from dateutil.tz import tzutc
+import pytz
 
 """Generic utilities."""
 
@@ -59,3 +61,7 @@ def objects_to_dict_organized_by_section_id(objects):
 
 def to_isoformat(value):
     return value and value.astimezone(tzutc()).isoformat()
+
+
+def utc_now():
+    return datetime.utcnow().replace(tzinfo=pytz.utc)

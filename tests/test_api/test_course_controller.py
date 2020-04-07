@@ -176,7 +176,7 @@ class TestApprovals:
         api_get_approvals(
             client,
             term_id=app.config['CURRENT_TERM_ID'],
-            section_id=9999999999,
+            section_id=999999,
             expected_status_code=404,
         )
 
