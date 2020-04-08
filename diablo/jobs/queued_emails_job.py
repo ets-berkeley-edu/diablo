@@ -24,8 +24,8 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 from diablo.jobs.base_job import BaseJob
 from diablo.merged.emailer import send_invite_related_email
-from diablo.merged.sis import get_course
 from diablo.models.queued_email import QueuedEmail
+from diablo.models.sis_section import SisSection
 from flask import current_app as app
 
 
@@ -36,7 +36,7 @@ class QueuedEmailsJob(BaseJob):
         for queued_email in QueuedEmail.get_all(term_id):
             for section_id in queued_email.section_ids:
                 send_invite_related_email(
-                    course=get_course(term_id, section_id),
+                    course=SisSection.get_course(term_id, section_id),
                     template_type=queued_email.template_type,
                     term_id=term_id,
                 )

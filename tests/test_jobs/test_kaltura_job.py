@@ -24,10 +24,10 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 from diablo import std_commit
 from diablo.jobs.kaltura_job import KalturaJob
-from diablo.merged.sis import get_course
 from diablo.models.approval import Approval
 from diablo.models.room import Room
 from diablo.models.sent_email import SentEmail
+from diablo.models.sis_section import SisSection
 from flask import current_app as app
 from tests.util import test_approvals_workflow
 
@@ -46,7 +46,7 @@ class TestKalturaJob:
             # Expect no change
             assert _get_email_count(section_id) == email_count
 
-            course = get_course(section_id=section_id, term_id=term_id)
+            course = SisSection.get_course(section_id=section_id, term_id=term_id)
             instructors = course['instructors']
             assert len(instructors) == 2
             room_id = Room.find_room(course['meetingLocation']).id

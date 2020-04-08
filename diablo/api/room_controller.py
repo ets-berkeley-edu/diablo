@@ -26,8 +26,8 @@ ENHANCEMENTS, OR MODIFICATIONS.
 from diablo.api.errors import BadRequestError, ResourceNotFoundError
 from diablo.api.util import admin_required, put_approvals_and_scheduled
 from diablo.lib.http import tolerant_jsonify
-from diablo.merged.sis import get_courses_per_location
 from diablo.models.room import Room
+from diablo.models.sis_section import SisSection
 from flask import current_app as app, request
 
 
@@ -43,9 +43,9 @@ def get_room(room_id):
     room = Room.get_room(room_id)
     if room:
         api_json = room.to_api_json()
-        api_json['courses'] = get_courses_per_location(
+        api_json['courses'] = SisSection.get_courses_per_location(
             term_id=app.config['CURRENT_TERM_ID'],
-            room_location=room.location,
+            location=room.location,
         )
         put_approvals_and_scheduled(api_json['courses'])
         return tolerant_jsonify(api_json)

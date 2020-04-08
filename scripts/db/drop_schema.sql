@@ -47,6 +47,7 @@ ALTER TABLE IF EXISTS ONLY public.canvas_course_sites DROP CONSTRAINT IF EXISTS 
 ALTER TABLE IF EXISTS ONLY public.course_preferences DROP CONSTRAINT IF EXISTS course_preferences_pkey;
 ALTER TABLE IF EXISTS ONLY public.email_templates DROP CONSTRAINT IF EXISTS email_templates_name_unique_constraint;
 ALTER TABLE IF EXISTS ONLY public.email_templates DROP CONSTRAINT IF EXISTS email_templates_pkey;
+ALTER TABLE IF EXISTS ONLY public.instructors DROP CONSTRAINT IF EXISTS instructors_pkey;
 ALTER TABLE IF EXISTS ONLY public.queued_emails DROP CONSTRAINT IF EXISTS queued_emails_pkey;
 ALTER TABLE IF EXISTS ONLY public.rooms DROP CONSTRAINT IF EXISTS rooms_location_unique_constraint;
 ALTER TABLE IF EXISTS ONLY public.rooms DROP CONSTRAINT IF EXISTS rooms_pkey;
@@ -74,6 +75,7 @@ DROP TABLE IF EXISTS public.canvas_course_sites;
 DROP TABLE IF EXISTS public.course_preferences;
 DROP TABLE IF EXISTS public.email_templates;
 DROP SEQUENCE IF EXISTS public.email_templates_id_seq;
+DROP TABLE IF EXISTS public.instructors;
 DROP TABLE IF EXISTS public.queued_emails;
 DROP SEQUENCE IF EXISTS public.queued_emails_id_seq;
 DROP TABLE IF EXISTS public.rooms;

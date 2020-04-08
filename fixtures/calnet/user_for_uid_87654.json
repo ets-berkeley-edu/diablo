@@ -1,6 +1,6 @@
 {
   "campusEmail": "____________berkeley.edu",
-  "departments": "OEMPA",
+  "deptCode": "OEMPA",
   "email": "____________berkeley.edu",
   "firstName": "Regan",
   "isExpiredPerLdap": false,

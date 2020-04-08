@@ -5,7 +5,7 @@
         <h2>{{ pageTitle }}</h2>
       </v-row>
       <v-row class="pl-3">
-        <h3>{{ section.courseTitle }}</h3>
+        <h3>{{ course.courseTitle }}</h3>
       </v-row>
       <v-row>
         <v-col lg="3" md="3" sm="3">
@@ -16,30 +16,30 @@
               </v-col>
               <v-col>
                 <span v-if="$currentUser.isAdmin">
-                  <span v-for="(instructor, index) in section.instructors" :key="instructor.uid">
+                  <span v-for="(instructor, index) in course.instructors" :key="instructor.uid">
                     <router-link :id="`instructor-${instructor.uid}`" :to="`/user/${instructor.uid}`">{{ instructor.name }}</router-link>
-                    <span v-if="section.instructors.length > 1 && index === section.instructors.length - 2"> and </span>
+                    <span v-if="course.instructors.length > 1 && index === course.instructors.length - 2"> and </span>
                   </span>
                 </span>
                 <span v-if="!$currentUser.isAdmin">
-                  {{ oxfordJoin($_.map(section.instructors, 'name')) }}
+                  {{ oxfordJoin($_.map(course.instructors, 'name')) }}
                 </span>
               </v-col>
             </v-row>
-            <v-row v-if="section.meetingDays">
+            <v-row v-if="course.meetingDays">
               <v-col md="auto">
                 <v-icon>mdi-calendar</v-icon>
               </v-col>
               <v-col>
-                {{ $_.join(section.meetingDays, ', ') }}
+                {{ $_.join(course.meetingDays, ', ') }}
               </v-col>
             </v-row>
-            <v-row v-if="section.meetingStartTime">
+            <v-row v-if="course.meetingStartTime">
               <v-col md="auto">
                 <v-icon>mdi-clock-outline</v-icon>
               </v-col>
               <v-col>
-                {{ section.meetingStartTime }} - {{ section.meetingEndTime }}
+                {{ course.meetingStartTime }} - {{ course.meetingEndTime }}
               </v-col>
             </v-row>
             <v-row>
@@ -53,17 +53,17 @@
                 {{ room.location }}
               </v-col>
             </v-row>
-            <v-row v-if="section.canvasCourseSites.length">
+            <v-row v-if="course.canvasCourseSites.length">
               <v-col md="auto">
                 <v-icon>mdi-bookmark-outline</v-icon>
               </v-col>
               <v-col>
-                <span v-for="canvasCourseSite in section.canvasCourseSites" :key="canvasCourseSite.courseSiteId">
+                <span v-for="canvasCourseSite in course.canvasCourseSites" :key="canvasCourseSite.courseSiteId">
                   <a
                     :id="`canvas-course-site-${canvasCourseSite.courseSiteId}`"
                     :href="`${$config.canvasBaseUrl}/courses/${canvasCourseSite.courseSiteId}`"
                     target="_blank">{{ canvasCourseSite.courseSiteName }}</a>
-                  <span v-if="section.canvasCourseSites.length > 1 && index === section.canvasCourseSites.length - 2"> and </span>
+                  <span v-if="course.canvasCourseSites.length > 1 && index === course.canvasCourseSites.length - 2"> and </span>
                 </span>
               </v-col>
             </v-row>
@@ -226,6 +226,7 @@
       agreedToTerms: false,
       approvals: undefined,
       approvedByUids: undefined,
+      course: undefined,
       hasNecessaryApprovals: undefined,
       instructorUids: undefined,
       mostRecentApproval: undefined,
@@ -235,8 +236,7 @@
       recordingType: undefined,
       recordingTypeOptions: undefined,
       room: undefined,
-      scheduled: undefined,
-      section: undefined
+      scheduled: undefined
     }),
     computed: {
       disableSubmit() {
@@ -253,13 +253,13 @@
     },
     methods: {
       approveRecording() {
-        approve(this.publishType, this.recordingType, this.section.sectionId).then(data => {
+        approve(this.publishType, this.recordingType, this.course.sectionId).then(data => {
           this.render(data)
         }).catch(this.$ready)
       },
       getInstructorNames(uids) {
-        const instructors = this.$_.filter(this.section.instructors, instructor => this.$_.includes(uids, instructor.uid))
-        const unrecognized = this.$_.difference(uids, this.$_.map(this.section.instructors, 'uid'))
+        const instructors = this.$_.filter(this.instructors, instructor => this.$_.includes(uids, instructor.uid))
+        const unrecognized = this.$_.difference(uids, this.$_.map(this.instructors, 'uid'))
         const names = this.$_.union(this.$_.map(instructors, 'name'), unrecognized)
         return names.length ? this.oxfordJoin(names) : ''
       },
@@ -284,14 +284,14 @@
           }
         }
         this.hasNecessaryApprovals = data.hasNecessaryApprovals
-        this.instructorUids = this.$_.map(data.section.instructors, 'uid')
-        this.pageTitle = `${data.section.courseName } - ${data.section.instructionFormat} ${data.section.sectionNum}`
+        this.instructorUids = this.$_.map(data.instructors, 'uid')
+        this.pageTitle = `${data.courseName } - ${data.instructionFormat} ${data.sectionNum}`
         this.publishTypeOptions = []
         this.$_.each(data.publishTypeOptions, (text, value) => {
           this.publishTypeOptions.push({text, value})
         })
         this.scheduled = data.scheduled
-        this.section = data.section
+        this.course = data
         this.setPageTitle(this.pageTitle)
         this.$ready()
       }

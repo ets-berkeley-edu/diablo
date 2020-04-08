@@ -29,11 +29,11 @@ from diablo.lib.berkeley import get_instructor_uids, has_necessary_approvals, te
 from diablo.lib.http import tolerant_jsonify
 from diablo.lib.util import objects_to_dict_organized_by_section_id
 from diablo.merged.emailer import notify_instructors_of_approval
-from diablo.merged.sis import get_course, get_courses_invited, get_courses_opted_out, get_eligible_courses_not_invited
 from diablo.models.approval import Approval, get_all_publish_types, get_all_recording_types, NAMES_PER_PUBLISH_TYPE
 from diablo.models.course_preference import CoursePreference
 from diablo.models.room import Room
 from diablo.models.scheduled import Scheduled
+from diablo.models.sis_section import SisSection
 from flask import current_app as app, request
 from flask_login import current_user, login_required
 
@@ -48,7 +48,7 @@ def approve():
     publish_type = params.get('publishType')
     recording_type = params.get('recordingType')
     section_id = params.get('sectionId')
-    course = get_course(term_id, section_id) if section_id else None
+    course = SisSection.get_course(term_id, section_id) if section_id else None
 
     if not course or publish_type not in get_all_publish_types() or recording_type not in get_all_recording_types():
         raise BadRequestError('One or more required params are missing or invalid')
@@ -79,19 +79,19 @@ def approve():
         course=course,
         previous_approvals=previous_approvals,
     )
-    return tolerant_jsonify(_course_to_json(course, term_id))
+    return tolerant_jsonify(_add_approvals_and_scheduled_json(course))
 
 
 @app.route('/api/course/approvals/<term_id>/<section_id>')
 @login_required
 def get_approvals(term_id, section_id):
-    section = get_course(term_id, section_id)
-    if not section:
+    course = SisSection.get_course(term_id, section_id)
+    if not course:
         raise ResourceNotFoundError(f'No section for term_id = {term_id} and section_id = {section_id}')
 
-    if not current_user.is_admin and current_user.uid not in get_instructor_uids(section):
+    if not current_user.is_admin and current_user.uid not in get_instructor_uids(course):
         raise ForbiddenRequestError('Sorry, this request is unauthorized.')
-    return tolerant_jsonify(_course_to_json(section, term_id))
+    return tolerant_jsonify(_add_approvals_and_scheduled_json(course))
 
 
 @app.route('/api/courses', methods=['POST'])
@@ -107,27 +107,17 @@ def find_courses():
         courses = []  # TODO
 
     elif filter_ == 'Do Not Email':
-        courses = get_courses_opted_out(term_id)
-
+        courses = SisSection.get_courses_opted_out(term_id)
     elif filter_ == 'Invited':
-        courses = get_courses_invited(term_id)
-
+        courses = SisSection.get_courses_invited(term_id)
     elif filter_ == 'Not Invited':
-        courses = get_eligible_courses_not_invited(term_id)
-
+        courses = SisSection.get_eligible_courses_not_invited(term_id)
     elif filter_ == 'Partially Approved':
-        courses = []  # TODO
-
+        courses = SisSection.get_courses_partially_approved(term_id)
     elif filter_ == 'Scheduled':
-        courses = []  # TODO
-
+        courses = SisSection.get_courses_scheduled(term_id)
     else:
-        raise BadRequestError(f'TODO: Implement filter: {filter_}')
-
-    locations = [c['meetingLocation'] for c in courses]
-    rooms_per_location = {room.location: room.to_api_json() for room in Room.get_rooms_in_locations(locations=locations)}
-    for course in courses:
-        course['room'] = rooms_per_location.get(course['meetingLocation'])
+        raise BadRequestError(f'Invalid filter: {filter_}')
 
     approvals = Approval.get_approvals_per_term(term_id)
     approvals_per_section_id = objects_to_dict_organized_by_section_id(objects=approvals)
@@ -156,18 +146,18 @@ def update_opt_out():
     return tolerant_jsonify(preferences.to_api_json())
 
 
-def _course_to_json(section, term_id):
-    room = Room.find_room(section['meetingLocation'])
-    section_id = section['sectionId']
+def _add_approvals_and_scheduled_json(course):
+    section_id = course['sectionId']
+    term_id = course['termId']
     all_approvals = Approval.get_approvals_per_section_ids(section_ids=[section_id], term_id=term_id)
     return {
-        'approvals': [approval.to_api_json() for approval in all_approvals],
-        'hasNecessaryApprovals': has_necessary_approvals(section, all_approvals),
-        'publishTypeOptions': NAMES_PER_PUBLISH_TYPE,
-        'room': room.to_api_json(),
-        'scheduled': Scheduled.was_scheduled(section_id=section_id, term_id=term_id),
-        'section': section,
-        'termId': term_id,
+        **course,
+        **{
+            'approvals': [approval.to_api_json() for approval in all_approvals],
+            'hasNecessaryApprovals': has_necessary_approvals(course, all_approvals),
+            'publishTypeOptions': NAMES_PER_PUBLISH_TYPE,
+            'scheduled': Scheduled.was_scheduled(section_id=section_id, term_id=term_id),
+        },
     }
 
 

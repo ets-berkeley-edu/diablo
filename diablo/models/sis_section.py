@@ -28,6 +28,9 @@ import json
 
 from diablo import db
 from diablo.lib.util import utc_now
+from diablo.models.canvas_course_site import CanvasCourseSite
+from diablo.models.course_preference import CoursePreference
+from diablo.models.room import Room
 from sqlalchemy import text
 
 
@@ -128,31 +131,157 @@ class SisSection(db.Model):
         return [row['meeting_location'] for row in db.session.execute(text(sql))]
 
     @classmethod
-    def get_sis_section(cls, term_id, section_id):
+    def get_distinct_instructor_uids(cls):
+        sql = 'SELECT DISTINCT instructor_uid FROM sis_sections WHERE instructor_uid IS NOT NULL'
+        return [row['instructor_uid'] for row in db.session.execute(text(sql))]
+
+    @classmethod
+    def get_courses_per_location(cls, term_id, location):
         sql = f"""
-            SELECT * FROM sis_sections
+            {_get_courses_select_clause()}
             WHERE
-                sis_term_id = :term_id
-                AND sis_section_id = :section_id
-                AND instructor_role_code IN ('ICNT', 'PI', 'TNIC')
-            ORDER BY sis_course_title, sis_section_id, instructor_uid
+                s.sis_term_id = :term_id
+                AND s.meeting_location = :location
+            ORDER BY s.sis_course_title, s.sis_section_id, s.instructor_uid
         """
-        return db.session.execute(
+        rows = db.session.execute(
+            text(sql),
+            {
+                'location': location,
+                'term_id': term_id,
+            },
+        )
+        return _to_api_json(term_id=term_id, rows=rows)
+
+    @classmethod
+    def get_courses_invited(cls, term_id):
+        sql = f"""
+            {_get_courses_select_clause()}
+            JOIN sent_emails e ON e.section_id = s.sis_section_id
+            WHERE
+                s.sis_term_id = :term_id
+                AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
+                AND e.template_type = 'invitation'
+            ORDER BY s.sis_course_title, s.sis_section_id, s.instructor_uid
+        """
+        rows = db.session.execute(
+            text(sql),
+            {
+                'term_id': term_id,
+            },
+        )
+        return _to_api_json(term_id=term_id, rows=rows)
+
+    @classmethod
+    def get_courses_opted_out(cls, term_id):
+        sql = f"""
+            {_get_courses_select_clause()}
+            JOIN course_preferences c ON c.section_id = s.sis_section_id AND c.term_id = :term_id
+            WHERE
+                s.sis_term_id = :term_id
+                AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
+                AND c.has_opted_out IS TRUE
+            ORDER BY s.sis_course_title, s.sis_section_id, s.instructor_uid
+        """
+        rows = db.session.execute(
+            text(sql),
+            {
+                'term_id': term_id,
+            },
+        )
+        return _to_api_json(term_id=term_id, rows=rows)
+
+    @classmethod
+    def get_eligible_courses_not_invited(cls, term_id):
+        sql = f"""
+            {_get_courses_select_clause()}
+            WHERE
+                s.sis_term_id = :term_id
+                AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
+                AND r.capability IS NOT NULL
+                AND NOT EXISTS (
+                    SELECT FROM sent_emails
+                    WHERE template_type = 'invitation' AND section_id = s.sis_section_id
+                )
+            ORDER BY s.sis_course_title, s.sis_section_id, s.instructor_uid
+        """
+        rows = db.session.execute(
+            text(sql),
+            {
+                'term_id': term_id,
+            },
+        )
+        return _to_api_json(term_id=term_id, rows=rows)
+
+    @classmethod
+    def get_course(cls, term_id, section_id):
+        sql = f"""
+            {_get_courses_select_clause()}
+            WHERE
+                s.sis_term_id = :term_id
+                AND s.sis_section_id = :section_id
+                AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
+            ORDER BY s.sis_course_title, s.sis_section_id, s.instructor_uid
+        """
+        rows = db.session.execute(
             text(sql),
             {
                 'section_id': section_id,
                 'term_id': term_id,
             },
         )
+        api_json = _to_api_json(term_id=term_id, rows=rows)
+        return api_json[0] if api_json else None
 
     @classmethod
-    def get_sis_sections(cls, term_id, instructor_uid):
+    def get_courses(cls, term_id, section_ids):
         sql = f"""
-            SELECT sis_section_id FROM sis_sections
+            {_get_courses_select_clause()}
             WHERE
-                sis_term_id = :term_id
-                AND instructor_uid = :instructor_uid
-                AND instructor_role_code IN ('ICNT', 'PI', 'TNIC')
+                s.sis_term_id = :term_id
+                AND s.sis_section_id = ANY(:section_ids)
+                AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
+            ORDER BY s.sis_course_title, s.sis_section_id, s.instructor_uid
+        """
+        rows = db.session.execute(
+            text(sql),
+            {
+                'section_ids': section_ids,
+                'term_id': term_id,
+            },
+        )
+        return _to_api_json(term_id=term_id, rows=rows)
+
+    @classmethod
+    def get_courses_partially_approved(cls, term_id):
+        sql = f"""
+            {_get_courses_select_clause()}
+            JOIN approvals a ON a.section_id = s.sis_section_id AND a.term_id = :term_id
+            WHERE
+                s.sis_term_id = :term_id
+                AND NOT EXISTS (
+                    SELECT FROM scheduled
+                    WHERE section_id = s.sis_section_id
+                )
+            ORDER BY s.sis_course_title, s.sis_section_id, s.instructor_uid
+        """
+        rows = db.session.execute(
+            text(sql),
+            {
+                'term_id': term_id,
+            },
+        )
+        return _to_api_json(term_id=term_id, rows=rows)
+
+    @classmethod
+    def get_courses_per_instructor_uid(cls, term_id, instructor_uid):
+        sql = f"""
+            {_get_courses_select_clause()}
+            WHERE
+                s.sis_term_id = :term_id
+                AND s.instructor_uid = :instructor_uid
+                AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
+            ORDER BY s.sis_course_title, s.sis_section_id, s.instructor_uid
         """
         rows = db.session.execute(
             text(sql),
@@ -164,46 +293,27 @@ class SisSection(db.Model):
         section_ids = []
         for row in rows:
             section_ids.append(row['sis_section_id'])
-        return cls.get_sis_sections_per_id(term_id, section_ids)
+        return cls.get_courses(term_id, section_ids)
 
     @classmethod
-    def get_sis_sections_per_id(cls, term_id, section_ids):
-        sql = """
-            SELECT * FROM sis_sections
-            WHERE
-                sis_term_id = :term_id
-                AND sis_section_id = ANY(:section_ids)
-                AND instructor_role_code IN ('ICNT', 'PI', 'TNIC')
-            ORDER BY sis_course_title, sis_section_id, instructor_uid
-        """
-        return db.session.execute(
-            text(sql),
-            {
-                'section_ids': section_ids,
-                'term_id': term_id,
-            },
-        )
-
-    @classmethod
-    def get_sis_sections_per_location(cls, term_id, room_location):
+    def get_courses_scheduled(cls, term_id):
         sql = f"""
-            SELECT sis_section_id FROM sis_sections
+            {_get_courses_select_clause()}
+            JOIN scheduled d ON d.section_id = s.sis_section_id AND d.term_id = :term_id
             WHERE
-                sis_term_id = :term_id
-                AND meeting_location = :room_location
-                AND instructor_role_code IN ('ICNT', 'PI', 'TNIC')
+                s.sis_term_id = :term_id
+            ORDER BY s.sis_course_title, s.sis_section_id, s.instructor_uid
         """
         rows = db.session.execute(
             text(sql),
             {
-                'room_location': room_location,
                 'term_id': term_id,
             },
         )
         section_ids = []
         for row in rows:
             section_ids.append(row['sis_section_id'])
-        return cls.get_sis_sections_per_id(term_id, section_ids)
+        return cls.get_courses(term_id, section_ids)
 
     @classmethod
     def refresh(cls, rows):
@@ -249,3 +359,78 @@ class SisSection(db.Model):
                 } for row in rows_subset
             ]
             db.session.execute(query, {'json_dumps': json.dumps(data)})
+
+
+def _get_courses_select_clause():
+    return """
+        SELECT
+            s.*,
+            i.dept_code AS instructor_dept_code,
+            i.email AS instructor_email,
+            i.first_name || ' ' || i.last_name AS instructor_name,
+            i.uid AS instructor_uid,
+            r.id AS room_id,
+            r.location AS room_location
+        FROM sis_sections s
+        JOIN instructors i ON i.uid = s.instructor_uid
+        JOIN rooms r ON r.location = s.meeting_location
+    """
+
+
+def _to_api_json(term_id, rows):
+    courses_per_id = {}
+    section_ids_opted_out = CoursePreference.get_section_ids_opted_out(term_id=term_id)
+    for row in rows:
+        section_id = int(row['sis_section_id'])
+        if section_id not in courses_per_id:
+            courses_per_id[section_id] = {
+                'allowedUnits': row['allowed_units'],
+                'canvasCourseSites': _canvas_course_sites(term_id, section_id),
+                'courseName': row['sis_course_name'],
+                'courseTitle': row['sis_course_title'],
+                'hasOptedOut': section_id in section_ids_opted_out,
+                'instructionFormat': row['sis_instruction_format'],
+                'instructors': [],
+                'isPrimary': row['is_primary'],
+                'meetingDays': _format_days(row['meeting_days']),
+                'meetingEndDate': row['meeting_end_date'],
+                'meetingEndTime': _format_time(row['meeting_end_time']),
+                'meetingLocation': row['meeting_location'],
+                'meetingStartDate': row['meeting_start_date'],
+                'meetingStartTime': _format_time(row['meeting_start_time']),
+                'sectionId': section_id,
+                'sectionNum': row['sis_section_num'],
+                'termId': row['sis_term_id'],
+            }
+        courses_per_id[section_id]['instructors'].append({
+            'deptCode': row['instructor_dept_code'],
+            'email': row['instructor_email'],
+            'name': row['instructor_name'],
+            'roleCode': row['instructor_role_code'],
+            'uid': row['instructor_uid'],
+        })
+        if 'room_id' in row:
+            courses_per_id[section_id]['room'] = Room.get_room(row['room_id']).to_api_json()
+        else:
+            courses_per_id[section_id]['room'] = None
+    return list(courses_per_id.values())
+
+
+def _canvas_course_sites(term_id, section_id):
+    canvas_course_sites = []
+    for row in CanvasCourseSite.get_canvas_course_sites(term_id=term_id, section_id=section_id):
+        canvas_course_sites.append({
+            'courseSiteId': row.canvas_course_site_id,
+            'courseSiteName': row.canvas_course_site_name,
+        })
+    return canvas_course_sites
+
+
+def _format_days(days):
+    n = 2
+    return [(days[i:i + n]) for i in range(0, len(days), n)] if days else None
+
+
+def _format_time(military_time):
+    return datetime.strptime(military_time, '%H:%M').strftime('%I:%M %p').lower().lstrip(
+        '0') if military_time else None

@@ -25,11 +25,11 @@ ENHANCEMENTS, OR MODIFICATIONS.
 from diablo.externals.mailgun import Mailgun
 from diablo.jobs.base_job import BaseJob
 from diablo.merged.emailer import get_admin_alert_recipients, interpolate_email_content
-from diablo.merged.sis import get_courses
 from diablo.models.approval import Approval
 from diablo.models.email_template import EmailTemplate
 from diablo.models.room import Room
 from diablo.models.scheduled import Scheduled
+from diablo.models.sis_section import SisSection
 from flask import current_app as app
 
 
@@ -39,7 +39,7 @@ class AdminEmailsJob(BaseJob):
         term_id = app.config['CURRENT_TERM_ID']
         all_scheduled = Scheduled.get_all_scheduled(term_id=term_id)
         if all_scheduled:
-            courses = get_courses(term_id=term_id, section_ids=[s.section_id for s in all_scheduled])
+            courses = SisSection.get_courses(term_id=term_id, section_ids=[s.section_id for s in all_scheduled])
             _alert_admin_of_instructor_change(
                 courses=courses,
                 approval_uids_per_section_id=_approval_uids_per_section_id(

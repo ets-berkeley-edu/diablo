@@ -67,5 +67,7 @@ def resolve_sql_template_string(template_string):
     return template_string.format(
         **{
             'rds_dblink_to_redshift': app.config['REDSHIFT_DATABASE'] + '_redshift',
+            'redshift_schema_intermediate': app.config['REDSHIFT_SCHEMA_INTERMEDIATE'],
+            'term_id': app.config['CURRENT_TERM_ID'],
         },
     )

@@ -21,29 +21,33 @@
           v-model="selectedFilter"
           color="secondary"
           :items="$config.searchFilterOptions"
+          @change="refresh"
         ></v-select>
       </div>
     </v-card-title>
     <v-data-table
       v-model="selectedRows"
-      disable-pagination
       :headers="headers"
       hide-default-footer
       item-key="sectionId"
       :items="courses"
+      :loading="refreshing"
+      :options="options"
+      :page.sync="options.page"
       :search="search"
       show-select
       :single-select="false"
+      @page-count="pageCount = $event"
     >
       <template v-slot:body="{ items }">
         <tbody>
-          <tr v-if="!items.length">
+          <tr v-if="!items.length && !refreshing">
             <td>
               <div v-if="search">
                 No matching items
               </div>
-              <div v-if="!search">
-                No courses
+              <div v-if="!search" class="ma-4 text-no-wrap title">
+                No '{{ selectedFilter }}' courses
               </div>
             </td>
           </tr>
@@ -78,12 +82,19 @@
               </span>
             </td>
             <td>
-              <ToggleOptOut :course="item" />
+              <ToggleOptOut :course="item" :on-toggle="refresh" />
             </td>
           </tr>
         </tbody>
       </template>
     </v-data-table>
+    <div v-if="pageCount > 1" class="text-center pb-4 pt-2">
+      <v-pagination
+        id="ouija-pagination"
+        v-model="options.page"
+        :length="pageCount"
+        total-visible="10"></v-pagination>
+    </div>
   </v-card>
 </template>
 
@@ -112,18 +123,33 @@
         {text: 'Recording', value: 'recording', sortable: false},
         {text: 'Opt out', value: 'hasOptedOut'}
       ],
+      options: {
+        page: 1,
+        itemsPerPage: 50
+      },
+      pageCount: undefined,
+      refreshing: undefined,
       search: '',
       selectedFilter: 'Not Invited',
       selectedRows: []
     }),
     created() {
       this.$loading()
-      getCourses(this.selectedFilter, this.$config.currentTermId).then(data => {
-        this.courses = data
-        this.$ready()
-      }).catch(this.$ready)
+      this.refresh()
     },
     methods: {
+      refresh() {
+        const done = () => {
+          this.selectedRows = []
+          this.refreshing = false
+          this.$ready()
+        }
+        this.refreshing = true
+        getCourses(this.selectedFilter, this.$config.currentTermId).then(data => {
+          this.courses = data
+          done()
+        }).catch(done)
+      },
       sendEmail() {
         if (this.selectedRows.length) {
           const emailTemplateType = undefined

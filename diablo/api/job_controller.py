@@ -27,7 +27,7 @@ from diablo.api.util import admin_required
 from diablo.jobs.admin_emails_job import AdminEmailsJob
 from diablo.jobs.canvas_job import CanvasJob
 from diablo.jobs.data_loch_sync_job import DataLochSyncJob
-from diablo.jobs.dblink_to_redshift_job import DblinkToRedshift
+from diablo.jobs.dblink_to_redshift_job import DblinkToRedshiftJob
 from diablo.jobs.kaltura_job import KalturaJob
 from diablo.jobs.queued_emails_job import QueuedEmailsJob
 from diablo.jobs.update_rooms_job import UpdateRoomsJob
@@ -42,7 +42,7 @@ def start_job(job_key):
         'admin_emails': AdminEmailsJob,
         'canvas': CanvasJob,
         'data_loch_sync': DataLochSyncJob,
-        'dblink_to_redshift': DblinkToRedshift,
+        'dblink_to_redshift': DblinkToRedshiftJob,
         'kaltura': KalturaJob,
         'queued_emails': QueuedEmailsJob,
         'update_rooms': UpdateRoomsJob,

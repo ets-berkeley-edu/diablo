@@ -170,6 +170,21 @@ ALTER TABLE ONLY email_templates
 
 --
 
+CREATE TABLE instructors (
+    uid character varying(255) NOT NULL,
+    dept_code VARCHAR(80),
+    email VARCHAR(255),
+    first_name VARCHAR(255),
+    last_name VARCHAR(255),
+    created_at timestamp with time zone NOT NULL,
+    updated_at timestamp with time zone NOT NULL
+);
+ALTER TABLE instructors OWNER TO diablo;
+ALTER TABLE ONLY instructors
+    ADD CONSTRAINT instructors_pkey PRIMARY KEY (uid);
+
+--
+
 CREATE TABLE queued_emails (
     id INTEGER NOT NULL,
     section_id INTEGER[] NOT NULL,
