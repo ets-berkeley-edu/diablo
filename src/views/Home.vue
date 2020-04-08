@@ -2,6 +2,7 @@
   <div v-if="!loading">
     <h2>Your {{ $config.currentTermName }} courses</h2>
     <v-data-table
+      disable-pagination
       :headers="headers"
       :hide-default-footer="true"
       :items="showEligibleCoursesOnly ? courses.eligibleOnly : courses.all"

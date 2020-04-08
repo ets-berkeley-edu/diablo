@@ -35,6 +35,7 @@
         </v-list-item-content>
       </v-list-item>
       <v-data-table
+        disable-pagination
         hide-default-footer
         :headers="headers"
         :items="room.courses"

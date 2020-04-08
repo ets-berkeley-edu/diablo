@@ -32,6 +32,7 @@ from diablo.models.scheduled import Scheduled
 from diablo.models.sent_email import SentEmail
 from flask import current_app as app
 from tests.test_api.api_test_utils import api_approve, api_get_approvals
+from tests.util import test_approvals_workflow
 
 admin_uid = '2040'
 section_1_id = 28602
@@ -229,12 +230,12 @@ class TestApprovals:
 class TestCoursesFilter:
 
     @staticmethod
-    def _api_courses(client, filter_option=None, term_id=None, expected_status_code=200):
+    def _api_courses(client, filter_=None, term_id=None, expected_status_code=200):
         response = client.post(
             '/api/courses',
             data=json.dumps({
                 'termId': term_id or app.config['CURRENT_TERM_ID'],
-                'filter': filter_option or 'Not Invited',
+                'filter': filter_ or 'Not Invited',
             }),
             content_type='application/json',
         )
@@ -249,47 +250,50 @@ class TestCoursesFilter:
         self._api_courses(client, expected_status_code=401)
 
     def test_authorized(self, client, db, fake_auth):
-        term_id = app.config['CURRENT_TERM_ID']
-        room = Room.find_room('Barrows 106')
-        approval_1 = Approval.create(
-            approved_by_uid='234567',
-            term_id=term_id,
-            section_id=30563,
-            approver_type_='instructor',
-            publish_type_='canvas',
-            recording_type_='presentation_audio',
-            room_id=room.id,
-        )
-        approval_2 = Approval.create(
-            approved_by_uid=admin_uid,
-            term_id=term_id,
-            section_id=26094,
-            approver_type_='admin',
-            publish_type_='kaltura_media_gallery',
-            recording_type_='presenter_audio',
-            room_id=room.id,
-        )
-        scheduled = Scheduled.create(
-            term_id=term_id,
-            section_id=26094,
-            room_id=room.id,
-        )
-        fake_auth.login(admin_uid)
-        api_json = self._api_courses(client)
+        with test_approvals_workflow(app):
+            term_id = app.config['CURRENT_TERM_ID']
+            room = Room.find_room('Barker 101')
+            # First, send invitations
+            instructor_uid = '234567'
+            SentEmail.create(section_id=30563, recipient_uids=[instructor_uid], template_type='invitation', term_id=term_id)
+            SentEmail.create(section_id=26094, recipient_uids=[admin_uid], template_type='invitation', term_id=term_id)
+            # Instructors approve
+            Approval.create(
+                approved_by_uid=instructor_uid,
+                term_id=term_id,
+                section_id=30563,
+                approver_type_='instructor',
+                publish_type_='canvas',
+                recording_type_='presentation_audio',
+                room_id=room.id,
+            )
+            Approval.create(
+                approved_by_uid=admin_uid,
+                term_id=term_id,
+                section_id=26094,
+                approver_type_='admin',
+                publish_type_='kaltura_media_gallery',
+                recording_type_='presenter_audio',
+                room_id=room.id,
+            )
+            Scheduled.create(
+                term_id=term_id,
+                section_id=26094,
+                room_id=room.id,
+            )
+            fake_auth.login(admin_uid)
+            api_json = self._api_courses(client, filter_='Invited')
 
-        section_1 = next((s for s in api_json if s['sectionId'] == 26094), None)
-        assert section_1
-        assert len(section_1['approvals']) > 0
-        assert len(section_1['scheduled']) > 0
+            section_1 = next((s for s in api_json if s['sectionId'] == 26094), None)
+            assert section_1
+            assert len(section_1['approvals']) > 0
+            assert len(section_1['scheduled']) > 0
 
-        section_2 = next((s for s in api_json if s['sectionId'] == 30563), None)
-        assert section_2
-        assert len(section_2['approvals']) > 0
-        assert len(section_2['scheduled']) == 0
-        # Clean up
-        Approval.delete(approval_1)
-        Approval.delete(approval_2)
-        Scheduled.delete(scheduled)
+            section_2 = next((s for s in api_json if s['sectionId'] == 30563), None)
+            assert section_2
+            assert len(section_2['approvals']) > 0
+            assert len(section_2['scheduled']) == 0
+            assert section_2['room'] == room.to_api_json()
 
 
 class TestUpdatePreferences:

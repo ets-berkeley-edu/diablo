@@ -71,11 +71,6 @@ class Scheduled(db.Model):
     def was_scheduled(cls, section_id, term_id):
         return cls.query.filter_by(section_id=section_id, term_id=term_id).first() is not None
 
-    @classmethod
-    def delete(cls, scheduled):
-        db.session.delete(scheduled)
-        std_commit()
-
     def to_api_json(self):
         return {
             'sectionId': self.section_id,
