@@ -83,7 +83,8 @@ CREATE TABLE admin_users (
     id integer NOT NULL,
     uid character varying(255) NOT NULL,
     created_at timestamp with time zone NOT NULL,
-    updated_at timestamp with time zone NOT NULL
+    updated_at timestamp with time zone NOT NULL,
+    deleted_at timestamp with time zone
 );
 ALTER TABLE admin_users OWNER TO diablo;
 CREATE SEQUENCE admin_users_id_seq

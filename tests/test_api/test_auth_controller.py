@@ -28,6 +28,7 @@ import json
 from tests.util import override_config
 
 admin_uid = '2040'
+deleted_admin_user_uid = '1022796'
 instructor_uid = '8765432'
 unauthorized_uid = '1015674'
 no_calnet_record_for_uid = '13'
@@ -83,12 +84,24 @@ class TestDevAuth:
             )
 
     def test_dev_auth_unauthorized(self, app, client):
-        """Fails if the chosen UID does not match an authorized user."""
+        """Deny access to non-admin user with no teaching duties."""
         with override_config(app, 'DEVELOPER_AUTH_ENABLED', True):
             self._api_dev_auth_login(
                 client,
                 params={
                     'uid': unauthorized_uid,
+                    'password': app.config['DEVELOPER_AUTH_PASSWORD'],
+                },
+                expected_status_code=403,
+            )
+
+    def test_deny_deleted_admin_user(self, app, client):
+        """Deny access to deleted admin user."""
+        with override_config(app, 'DEVELOPER_AUTH_ENABLED', True):
+            self._api_dev_auth_login(
+                client,
+                params={
+                    'uid': deleted_admin_user_uid,
                     'password': app.config['DEVELOPER_AUTH_PASSWORD'],
                 },
                 expected_status_code=403,
