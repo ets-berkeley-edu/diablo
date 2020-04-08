@@ -22,10 +22,9 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-
-from diablo import db
+from diablo import db, std_commit
+from diablo.lib.util import utc_now
 from diablo.models.base import Base
-from sqlalchemy import text
 
 
 class AdminUser(Base):
@@ -33,6 +32,7 @@ class AdminUser(Base):
 
     id = db.Column(db.Integer, nullable=False, primary_key=True)  # noqa: A003
     uid = db.Column(db.String(255), nullable=False, unique=True)
+    deleted_at = db.Column(db.DateTime, nullable=True)
 
     def __init__(self, uid):
         self.uid = uid
@@ -45,11 +45,14 @@ class AdminUser(Base):
                 """
 
     @classmethod
-    def is_admin(cls, uid):
-        return cls.query.filter_by(uid=uid).first() is not None
+    def delete(cls, uid):
+        now = utc_now()
+        user = cls.query.filter_by(uid=uid).first()
+        user.deleted_at = now
+        std_commit()
+        return user
 
     @classmethod
-    def get_id_per_uid(cls, uid):
-        query = text('SELECT id FROM admin_users WHERE uid = :uid')
-        result = db.session.execute(query, {'uid': uid}).first()
-        return result and result['id']
+    def is_admin(cls, uid, include_deleted=False):
+        query = cls.query.filter_by(uid=uid) if include_deleted else cls.query.filter_by(uid=uid, deleted_at=None)
+        return query.first() is not None

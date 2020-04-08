@@ -30,6 +30,7 @@ from diablo import BASE_DIR, cache, db, std_commit
 from diablo.jobs.canvas_job import CanvasJob
 from diablo.jobs.data_loch_sync_job import DataLochSyncJob
 from diablo.jobs.update_rooms_job import UpdateRoomsJob
+from diablo.lib.util import utc_now
 from diablo.models.admin_user import AdminUser
 from diablo.models.email_template import EmailTemplate
 from diablo.models.room import Room
@@ -41,6 +42,11 @@ from sqlalchemy.sql import text
 _test_users = [
     {
         'uid': '2040',
+        'deleted_at': None,
+    },
+    {
+        'uid': '1022796',
+        'deleted_at': utc_now(),
     },
 ]
 
@@ -126,7 +132,10 @@ def _create_emails_sent():
 
 def _create_users():
     for test_user in _test_users:
-        db.session.add(AdminUser(uid=test_user['uid']))
+        user = AdminUser(uid=test_user['uid'])
+        db.session.add(user)
+        if test_user['deleted_at']:
+            AdminUser.delete(user.uid)
     std_commit(allow_test_environment=True)
 
 

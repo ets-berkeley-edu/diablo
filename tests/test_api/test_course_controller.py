@@ -35,6 +35,7 @@ from tests.test_api.api_test_utils import api_approve, api_get_approvals
 from tests.util import test_approvals_workflow
 
 admin_uid = '2040'
+deleted_admin_user_uid = '1022796'
 section_1_id = 28602
 section_1_instructor_uids = ['234567', '8765432']
 section_2_id = 28165
@@ -44,6 +45,10 @@ section_with_canvas_course_sites = 22287
 
 
 class TestApprove:
+
+    @property
+    def term_id(self):
+        return app.config['CURRENT_TERM_ID']
 
     def test_not_authenticated(self, client):
         api_approve(
@@ -106,19 +111,18 @@ class TestApprove:
         )
         std_commit(allow_test_environment=True)
 
-        term_id = app.config['CURRENT_TERM_ID']
         for uid in ('234567', '8765432'):
             emails_sent = SentEmail.get_emails_sent_to(uid)
             assert len(emails_sent) > 0
             most_recent = emails_sent[-1]
             assert most_recent.section_id == section_1_id
             assert most_recent.template_type == 'notify_instructor_of_changes'
-            assert most_recent.term_id == term_id
+            assert most_recent.term_id == self.term_id
 
         fake_auth.login(admin_uid)
         api_json = api_get_approvals(
             client,
-            term_id=term_id,
+            term_id=self.term_id,
             section_id=section_1_id,
         )
         assert api_json['room']['location'] == 'Barrows 106'
@@ -153,30 +157,41 @@ class TestApprove:
 
 class TestApprovals:
 
+    @property
+    def term_id(self):
+        return app.config['CURRENT_TERM_ID']
+
     def test_not_authenticated(self, client):
-        term_id = app.config['CURRENT_TERM_ID']
         api_get_approvals(
             client,
-            term_id=term_id,
+            term_id=self.term_id,
             section_id=section_1_id,
             expected_status_code=401,
         )
 
     def test_not_authorized(self, client, fake_auth):
         fake_auth.login(section_1_instructor_uids[0])
-        term_id = app.config['CURRENT_TERM_ID']
         api_get_approvals(
             client,
-            term_id=term_id,
+            term_id=self.term_id,
             section_id=section_2_id,
             expected_status_code=403,
+        )
+
+    def test_deny_deleted_admin_user(self, client, fake_auth):
+        fake_auth.login(deleted_admin_user_uid)
+        api_get_approvals(
+            client,
+            term_id=self.term_id,
+            section_id=section_1_id,
+            expected_status_code=401,
         )
 
     def test_invalid_section_id(self, client, fake_auth):
         fake_auth.login(admin_uid)
         api_get_approvals(
             client,
-            term_id=app.config['CURRENT_TERM_ID'],
+            term_id=self.term_id,
             section_id=999999,
             expected_status_code=404,
         )
@@ -185,7 +200,7 @@ class TestApprovals:
         fake_auth.login(admin_uid)
         api_json = api_get_approvals(
             client,
-            term_id=app.config['CURRENT_TERM_ID'],
+            term_id=self.term_id,
             section_id=section_1_id,
         )
         assert api_json['section']
@@ -198,7 +213,7 @@ class TestApprovals:
         fake_auth.login(uid)
         api_json = api_get_approvals(
             client,
-            term_id=app.config['CURRENT_TERM_ID'],
+            term_id=self.term_id,
             section_id=section_2_id,
         )
         assert api_json['section']
@@ -211,7 +226,7 @@ class TestApprovals:
         fake_auth.login(admin_uid)
         api_json = api_get_approvals(
             client,
-            term_id=app.config['CURRENT_TERM_ID'],
+            term_id=self.term_id,
             section_id=section_3_id,
         )
         assert api_json['room']['location'] == 'Li Ka Shing 145'
@@ -221,7 +236,7 @@ class TestApprovals:
         fake_auth.login(admin_uid)
         api_json = api_get_approvals(
             client,
-            term_id=app.config['CURRENT_TERM_ID'],
+            term_id=self.term_id,
             section_id=section_with_canvas_course_sites,
         )
         assert len(api_json['section']['canvasCourseSites']) == 3
@@ -229,12 +244,16 @@ class TestApprovals:
 
 class TestCoursesFilter:
 
+    @property
+    def term_id(self):
+        return app.config['CURRENT_TERM_ID']
+
     @staticmethod
-    def _api_courses(client, filter_=None, term_id=None, expected_status_code=200):
+    def _api_courses(client, term_id, filter_=None, expected_status_code=200):
         response = client.post(
             '/api/courses',
             data=json.dumps({
-                'termId': term_id or app.config['CURRENT_TERM_ID'],
+                'termId': term_id,
                 'filter': filter_ or 'Not Invited',
             }),
             content_type='application/json',
@@ -243,24 +262,33 @@ class TestCoursesFilter:
         return response.json
 
     def test_not_authenticated(self, client):
-        self._api_courses(client, expected_status_code=401)
+        self._api_courses(client, term_id=self.term_id, expected_status_code=401)
 
     def test_not_authorized(self, client, fake_auth):
         fake_auth.login(section_1_instructor_uids[0])
-        self._api_courses(client, expected_status_code=401)
+        self._api_courses(client, term_id=self.term_id, expected_status_code=401)
 
     def test_authorized(self, client, db, fake_auth):
         with test_approvals_workflow(app):
-            term_id = app.config['CURRENT_TERM_ID']
             room = Room.find_room('Barker 101')
             # First, send invitations
             instructor_uid = '234567'
-            SentEmail.create(section_id=30563, recipient_uids=[instructor_uid], template_type='invitation', term_id=term_id)
-            SentEmail.create(section_id=26094, recipient_uids=[admin_uid], template_type='invitation', term_id=term_id)
+            SentEmail.create(
+                section_id=30563,
+                recipient_uids=[instructor_uid],
+                template_type='invitation',
+                term_id=self.term_id,
+            )
+            SentEmail.create(
+                section_id=26094,
+                recipient_uids=[admin_uid],
+                template_type='invitation',
+                term_id=self.term_id,
+            )
             # Instructors approve
             Approval.create(
                 approved_by_uid=instructor_uid,
-                term_id=term_id,
+                term_id=self.term_id,
                 section_id=30563,
                 approver_type_='instructor',
                 publish_type_='canvas',
@@ -269,7 +297,7 @@ class TestCoursesFilter:
             )
             Approval.create(
                 approved_by_uid=admin_uid,
-                term_id=term_id,
+                term_id=self.term_id,
                 section_id=26094,
                 approver_type_='admin',
                 publish_type_='kaltura_media_gallery',
@@ -277,12 +305,12 @@ class TestCoursesFilter:
                 room_id=room.id,
             )
             Scheduled.create(
-                term_id=term_id,
+                term_id=self.term_id,
                 section_id=26094,
                 room_id=room.id,
             )
             fake_auth.login(admin_uid)
-            api_json = self._api_courses(client, filter_='Invited')
+            api_json = self._api_courses(client, term_id=self.term_id, filter_='Invited')
 
             section_1 = next((s for s in api_json if s['sectionId'] == 26094), None)
             assert section_1
@@ -297,6 +325,10 @@ class TestCoursesFilter:
 
 
 class TestUpdatePreferences:
+
+    @property
+    def term_id(self):
+        return app.config['CURRENT_TERM_ID']
 
     @staticmethod
     def _api_opt_out_update(
@@ -321,7 +353,7 @@ class TestUpdatePreferences:
     def test_not_authenticated(self, client):
         self._api_opt_out_update(
             client,
-            term_id=app.config['CURRENT_TERM_ID'],
+            term_id=self.term_id,
             section_id=section_1_id,
             opt_out=True,
             expected_status_code=401,
@@ -331,7 +363,7 @@ class TestUpdatePreferences:
         fake_auth.login(section_1_instructor_uids[0])
         self._api_opt_out_update(
             client,
-            term_id=app.config['CURRENT_TERM_ID'],
+            term_id=self.term_id,
             section_id=section_1_id,
             opt_out=True,
             expected_status_code=401,
@@ -339,19 +371,18 @@ class TestUpdatePreferences:
 
     def test_authorized(self, client, fake_auth):
         fake_auth.login(admin_uid)
-        term_id = app.config['CURRENT_TERM_ID']
-        section_ids_opted_out = CoursePreference.get_section_ids_opted_out(term_id=term_id)
+        section_ids_opted_out = CoursePreference.get_section_ids_opted_out(term_id=self.term_id)
         previously_opted_out = section_1_id not in section_ids_opted_out
         opt_out = not previously_opted_out
         self._api_opt_out_update(
             client,
-            term_id=term_id,
+            term_id=self.term_id,
             section_id=section_1_id,
             opt_out=opt_out,
         )
         std_commit(allow_test_environment=True)
 
-        section_ids_opted_out = CoursePreference.get_section_ids_opted_out(term_id=term_id)
+        section_ids_opted_out = CoursePreference.get_section_ids_opted_out(term_id=self.term_id)
         if opt_out:
             assert section_1_id in section_ids_opted_out
         else:
