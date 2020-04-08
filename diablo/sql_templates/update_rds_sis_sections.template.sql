@@ -70,6 +70,7 @@ INSERT INTO sis_sections (
       sis_instruction_format, sis_section_num, allowed_units, instructor_uid, instructor_name, instructor_role_code,
       meeting_location, meeting_days, meeting_start_time, meeting_end_time, meeting_start_date, meeting_end_date
     FROM {redshift_schema_intermediate}.sis_sections
+    WHERE sis_term_id='{term_id}'
   $REDSHIFT$)
   AS redshift_sis_sections (
     sis_term_id INTEGER,

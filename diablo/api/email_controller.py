@@ -28,10 +28,10 @@ from diablo.api.util import admin_required
 from diablo.externals.mailgun import Mailgun
 from diablo.lib.http import tolerant_jsonify
 from diablo.merged.emailer import get_email_template_codes, interpolate_email_content
-from diablo.merged.sis import get_course
 from diablo.models.email_template import EmailTemplate
 from diablo.models.queued_email import QueuedEmail
 from diablo.models.sent_email import SentEmail
+from diablo.models.sis_section import SisSection
 from flask import current_app as app, request
 from flask_login import current_user
 
@@ -97,7 +97,7 @@ def create():
 def test_email_template(template_id):
     email_template = EmailTemplate.get_template(template_id)
     if email_template:
-        course = get_course(term_id=app.config['CURRENT_TERM_ID'], section_id='12597')
+        course = SisSection.get_course(term_id=app.config['CURRENT_TERM_ID'], section_id='12597')
         template = EmailTemplate.get_template(template_id)
         subject_line = interpolate_email_content(
             course=course,

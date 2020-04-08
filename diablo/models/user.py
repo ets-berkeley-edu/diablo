@@ -24,9 +24,9 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 
 from diablo.merged import calnet
-from diablo.merged.sis import get_courses_per_instructor
 from diablo.models.admin_user import AdminUser
 from diablo.models.room import Room
+from diablo.models.sis_section import SisSection
 from flask import current_app as app
 from flask_login import UserMixin
 
@@ -94,7 +94,7 @@ class User(UserMixin):
             if is_active:
                 email_address = calnet_profile.get('campusEmail') or calnet_profile.get('email')
                 is_admin = AdminUser.is_admin(uid)
-                courses = get_courses_per_instructor(
+                courses = SisSection.get_courses_per_instructor_uid(
                     term_id=app.config['CURRENT_TERM_ID'],
                     instructor_uid=uid,
                 )

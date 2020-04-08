@@ -1,6 +1,6 @@
 {
   "campusEmail": "____________berkeley.edu",
-  "departments": "SYPSY",
+  "deptCode": "SYPSY",
   "email": "____________berkeley.edu",
   "firstName": "Father",
   "isExpiredPerLdap": false,

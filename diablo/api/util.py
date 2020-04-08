@@ -26,7 +26,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 from functools import wraps
 
 from diablo.lib.util import objects_to_dict_organized_by_section_id
-from diablo.merged.calnet import get_calnet_users_for_uids
+from diablo.merged.calnet import get_calnet_user_for_uid, get_calnet_users_for_uids
 from diablo.models.approval import Approval
 from diablo.models.scheduled import Scheduled
 from flask import current_app as app, request
@@ -59,7 +59,12 @@ def put_approvals_and_scheduled(courses):
         # Approvals
         course['approvals'] = []
         approvals = approvals_per_section_id.get(section_id, [])
-        calnet_users = get_calnet_users_for_uids(app, [a.approved_by_uid for a in approvals])
+        if len(approvals) == 1:
+            # If possible, take advantage of caching-per-UID
+            uid = approvals[0].approved_by_uid
+            calnet_users = {uid: get_calnet_user_for_uid(app, uid)}
+        else:
+            calnet_users = get_calnet_users_for_uids(app, [a.approved_by_uid for a in approvals])
         for approval in approvals:
             course['approvals'].append({
                 **approval.to_api_json(),

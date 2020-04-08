@@ -122,6 +122,7 @@ MAILGUN_DOMAIN = 'diablo-mail.berkeley.edu'
 MAILGUN_API_KEY = 'secret'
 
 REDSHIFT_DATABASE = 'redshift_database'
+REDSHIFT_SCHEMA_INTERMEDIATE = 'intermediate'
 
 REMEMBER_COOKIE_NAME = 'remember_diablo_token'
 

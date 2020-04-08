@@ -109,13 +109,12 @@ class TestUserProfile:
         assert user['uid'] == instructor_uid
         courses = user.get('courses')
         assert len(courses) > 0
-        assert 'approvals' in courses[0]
-        assert 'scheduled' in courses[0]
 
-        instructors = courses[0].get('instructors')
-        assert len(instructors) > 0
-        assert instructors[0]['uid'] == instructor_uid
-        assert len(instructors[0]['name'])
+        for course in courses:
+            assert 'approvals' in course
+            assert 'scheduled' in course
+            instructor = next((i for i in course['instructors'] if i['uid'] == instructor_uid), None)
+            assert instructor
 
     def test_only_courses_taught_by_instructor(self, client, admin_session):
         """Includes only courses taught by instructor."""

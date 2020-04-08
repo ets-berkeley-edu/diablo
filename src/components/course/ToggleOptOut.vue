@@ -16,6 +16,11 @@
       course: {
         required: true,
         type: Object
+      },
+      onToggle: {
+        default: () => {},
+        required: false,
+        type: Function
       }
     },
     data: () => ({
@@ -28,6 +33,7 @@
       toggleOptOut() {
         updateOptOut(this.course.termId, this.course.sectionId, this.optOut).then(data => {
           this.course.hasOptedOut = data.hasOptedOut
+          this.onToggle()
         })
       }
     }

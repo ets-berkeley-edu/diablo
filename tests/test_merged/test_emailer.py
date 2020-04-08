@@ -22,12 +22,11 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-
 import re
 
 from diablo.merged.calnet import get_calnet_user_for_uid
 from diablo.merged.emailer import interpolate_email_content
-from diablo.merged.sis import get_course
+from diablo.models.sis_section import SisSection
 from flask import current_app as app
 
 
@@ -35,7 +34,7 @@ class TestInterpolation:
 
     def test_interpolate_email_content(self):
         user = get_calnet_user_for_uid(app, '8765432')
-        course = get_course(app.config['CURRENT_TERM_ID'], '28165')
+        course = SisSection.get_course(app.config['CURRENT_TERM_ID'], '28165')
         interpolated = interpolate_email_content(
             course=course,
             recipient_name=user['name'],

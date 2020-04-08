@@ -22,21 +22,20 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from diablo.externals.rds import execute
-from diablo.jobs.background_job_manager import BackgroundJobError
-from diablo.jobs.base_job import BaseJob
-from diablo.jobs.util import insert_or_update_instructors
-from diablo.lib.db import resolve_sql_template
-from diablo.models.sis_section import SisSection
+from diablo.merged.calnet import get_calnet_users_for_uids
+from diablo.models.instructor import Instructor
 from flask import current_app as app
 
 
-class DblinkToRedshiftJob(BaseJob):
+def insert_or_update_instructors(instructor_uids):
+    instructors = []
+    for instructor in get_calnet_users_for_uids(app=app, uids=instructor_uids).values():
+        instructors.append({
+            'dept_code': instructor.get('deptCode'),
+            'email': instructor.get('campusEmail') or instructor.get('email'),
+            'first_name': instructor.get('firstName'),
+            'last_name': instructor.get('lastName'),
+            'uid': instructor['uid'],
+        })
 
-    def run(self, args=None):
-        resolved_ddl_rds = resolve_sql_template('update_rds_sis_sections.template.sql')
-        if execute(resolved_ddl_rds):
-            insert_or_update_instructors(SisSection.get_distinct_instructor_uids())
-            app.logger.info('RDS indexes updated.')
-        else:
-            raise BackgroundJobError('Failed to update RDS indexes for intermediate schema.')
+    Instructor.upsert(instructors)

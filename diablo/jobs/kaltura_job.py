@@ -26,10 +26,10 @@ from diablo.externals.mailgun import Mailgun
 from diablo.jobs.base_job import BaseJob
 from diablo.lib.util import objects_to_dict_organized_by_section_id
 from diablo.merged.emailer import interpolate_email_content
-from diablo.merged.sis import get_courses
 from diablo.models.approval import Approval, NAMES_PER_PUBLISH_TYPE, NAMES_PER_RECORDING_TYPE
 from diablo.models.email_template import EmailTemplate
 from diablo.models.scheduled import Scheduled
+from diablo.models.sis_section import SisSection
 from flask import current_app as app
 
 
@@ -56,7 +56,7 @@ def _get_courses_ready_to_schedule(approvals, term_id):
     unscheduled_approvals = [approval for approval in approvals if approval.section_id not in scheduled_section_ids]
 
     if unscheduled_approvals:
-        courses = get_courses(section_ids=[a.section_id for a in unscheduled_approvals], term_id=term_id)
+        courses = SisSection.get_courses(section_ids=[a.section_id for a in unscheduled_approvals], term_id=term_id)
         courses_per_section_id = dict((int(course['sectionId']), course) for course in courses)
 
         for section_id, uids in _get_uids_per_section_id(approvals=unscheduled_approvals).items():

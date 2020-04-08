@@ -126,7 +126,7 @@ class TestApprove:
             section_id=section_1_id,
         )
         assert api_json['room']['location'] == 'Barrows 106'
-        instructor_uids = [i['uid'] for i in api_json['section']['instructors']]
+        instructor_uids = [i['uid'] for i in api_json['instructors']]
         assert instructor_uids == section_1_instructor_uids
         approvals_ = api_json['approvals']
         assert len(approvals_) == 2
@@ -203,8 +203,7 @@ class TestApprovals:
             term_id=self.term_id,
             section_id=section_1_id,
         )
-        assert api_json['section']
-        assert [i['uid'] for i in api_json['section']['instructors']] == ['234567', '8765432']
+        assert [i['uid'] for i in api_json['instructors']] == ['234567', '8765432']
         assert 'id' in api_json['room']
         assert api_json['room']['location'] == 'Barrows 106'
 
@@ -216,11 +215,10 @@ class TestApprovals:
             term_id=self.term_id,
             section_id=section_2_id,
         )
-        assert api_json['section']
-        assert api_json['section']['meetingDays'] == ['MO', 'WE', 'FR']
-        assert api_json['section']['meetingStartTime'] == '3:00 pm'
-        assert api_json['section']['meetingEndTime'] == '3:59 pm'
-        assert api_json['section']['meetingLocation'] == 'Wheeler 150'
+        assert api_json['meetingDays'] == ['MO', 'WE', 'FR']
+        assert api_json['meetingStartTime'] == '3:00 pm'
+        assert api_json['meetingEndTime'] == '3:59 pm'
+        assert api_json['meetingLocation'] == 'Wheeler 150'
 
     def test_li_ka_shing_recording_options(self, client, db, fake_auth):
         fake_auth.login(admin_uid)
@@ -239,7 +237,7 @@ class TestApprovals:
             term_id=self.term_id,
             section_id=section_with_canvas_course_sites,
         )
-        assert len(api_json['section']['canvasCourseSites']) == 3
+        assert len(api_json['canvasCourseSites']) == 3
 
 
 class TestCoursesFilter:
