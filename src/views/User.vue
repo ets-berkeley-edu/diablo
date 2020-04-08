@@ -9,6 +9,7 @@
         Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
       </v-card-title>
       <v-data-table
+        disable-pagination
         hide-default-footer
         :headers="headers"
         :items="user.courses"

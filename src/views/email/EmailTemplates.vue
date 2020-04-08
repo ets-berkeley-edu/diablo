@@ -12,6 +12,7 @@
         ></v-select>
       </v-card-title>
       <v-data-table
+        disable-pagination
         :headers="headers"
         hide-default-footer
         :items="emailTemplates"

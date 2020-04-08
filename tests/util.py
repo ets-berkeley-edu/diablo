@@ -24,6 +24,9 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 from contextlib import contextmanager
 
+from diablo import db
+from sqlalchemy import text
+
 
 @contextmanager
 def override_config(app, key, value):
@@ -34,3 +37,17 @@ def override_config(app, key, value):
         yield
     finally:
         app.config[key] = old_value
+
+
+@contextmanager
+def test_approvals_workflow(app):
+    """Delete all approvals before and after test."""
+    def _delete_all_approvals():
+        db.session.execute(text('DELETE FROM approvals'))
+        db.session.execute(text('DELETE FROM scheduled'))
+
+    try:
+        _delete_all_approvals()
+        yield
+    finally:
+        _delete_all_approvals()

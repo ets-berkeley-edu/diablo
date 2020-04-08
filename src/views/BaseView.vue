@@ -41,10 +41,10 @@
           </v-list-item>
           <v-list-item @click="$vuetify.theme.dark = !$vuetify.theme.dark">
             <v-list-item-icon>
-              <v-icon color="icon-nav-dark-mode">mdi-lightbulb</v-icon>
+              <v-icon color="icon-nav-default">mdi-lightbulb-outline</v-icon>
             </v-list-item-icon>
             <v-list-item-content>
-              <v-list-item-title class="sr-only">Turn on {{ $vuetify.theme.dark ? 'light' : 'dark' }} mode</v-list-item-title>
+              <v-list-item-title>{{ $vuetify.theme.dark ? 'Light' : 'Dark' }} mode</v-list-item-title>
             </v-list-item-content>
           </v-list-item>
         </v-list>
@@ -60,7 +60,7 @@
         <router-view :key="$route.fullPath"></router-view>
       </v-col>
     </v-row>
-    <v-row v-if="!loading" class="ml-8" no-gutters>
+    <v-row v-if="!loading" no-gutters>
       <v-col>
         <Footer />
       </v-col>
@@ -86,8 +86,7 @@
         this.navItems = [
           { title: 'Ouija Board', icon: 'mdi-auto-fix', path: '/ouija' },
           { title: 'Rooms', icon: 'mdi-domain', path: '/rooms' },
-          { title: 'Course Changes', icon: 'mdi-swap-horizontal', path: '/changes' },
-          { title: 'About', icon: 'mdi-help-box' }
+          { title: 'Course Changes', icon: 'mdi-swap-horizontal', path: '/changes' }
         ]
       } else {
         this.navItems = [

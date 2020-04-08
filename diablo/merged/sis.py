@@ -25,9 +25,11 @@ ENHANCEMENTS, OR MODIFICATIONS.
 
 from datetime import datetime
 
+from diablo import db
 from diablo.models.canvas_course_site import CanvasCourseSite
 from diablo.models.course_preference import CoursePreference
 from diablo.models.sis_section import SisSection
+from sqlalchemy import text
 
 
 def get_course(term_id, section_id):
@@ -66,12 +68,73 @@ def get_courses_per_location(term_id, room_location):
     )
 
 
+def get_courses_invited(term_id):
+    sql = f"""
+        SELECT s.*, r.id AS room_id, r.location AS room_location FROM sis_sections s
+        JOIN rooms r ON r.location = s.meeting_location
+        JOIN sent_emails e ON e.section_id = s.sis_section_id
+        WHERE
+            s.sis_term_id = :term_id
+            AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
+            AND e.template_type = 'invitation'
+    """
+    rows = db.session.execute(
+        text(sql),
+        {
+            'term_id': term_id,
+        },
+    )
+    return _to_api_json(term_id, rows)
+
+
+def get_courses_opted_out(term_id):
+    sql = f"""
+        SELECT s.*, r.id AS room_id, r.location AS room_location FROM sis_sections s
+        JOIN rooms r ON r.location = s.meeting_location
+        JOIN course_preferences c ON c.section_id = s.section_id AND c.term_id = :term_id
+        WHERE
+            s.sis_term_id = :term_id
+            AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
+            AND r.has_opted_out IS TRUE
+    """
+    rows = db.session.execute(
+        text(sql),
+        {
+            'term_id': term_id,
+        },
+    )
+    return _to_api_json(term_id, rows)
+
+
+def get_eligible_courses_not_invited(term_id):
+    sql = f"""
+        SELECT s.*, r.id AS room_id, r.location AS room_location FROM sis_sections s
+        JOIN rooms r ON r.location = s.meeting_location
+        WHERE
+            s.sis_term_id = :term_id
+            AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
+            AND r.capability IS NOT NULL
+            AND NOT EXISTS (
+                SELECT FROM sent_emails
+                WHERE template_type = 'invitation' AND section_id = s.sis_section_id
+            )
+    """
+    rows = db.session.execute(
+        text(sql),
+        {
+            'term_id': term_id,
+        },
+    )
+    return _to_api_json(term_id, rows)
+
+
 def _to_api_json(term_id, sis_sections):
     sections_per_id = {}
     section_ids_opted_out = CoursePreference.get_section_ids_opted_out(term_id=term_id)
     for sis_section in sis_sections:
         section_id = int(sis_section['sis_section_id'])
         if section_id not in sections_per_id:
+            room_id = sis_section['room_id'] if 'room_id' in sis_section else None
             sections_per_id[section_id] = {
                 'allowedUnits': sis_section['allowed_units'],
                 'canvasCourseSites': _canvas_course_sites(term_id, section_id),
@@ -89,6 +152,10 @@ def _to_api_json(term_id, sis_sections):
                 'meetingLocation': sis_section['meeting_location'],
                 'meetingStartDate': sis_section['meeting_start_date'],
                 'meetingStartTime': _format_time(sis_section['meeting_start_time']),
+                'room': room_id and {
+                    'id': room_id,
+                    'location': sis_section['room_location'],
+                },
                 'sectionId': section_id,
                 'sectionNum': sis_section['sis_section_num'],
                 'termId': sis_section['sis_term_id'],

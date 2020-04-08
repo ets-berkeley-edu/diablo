@@ -26,6 +26,7 @@
     </v-card-title>
     <v-data-table
       v-model="selectedRows"
+      disable-pagination
       :headers="headers"
       hide-default-footer
       item-key="sectionId"
@@ -72,7 +73,7 @@
               </div>
             </td>
             <td>
-              <span>
+              <span v-if="item.approvals.length">
                 {{ $_.last(item.approvals).publishTypeName }}
               </span>
             </td>

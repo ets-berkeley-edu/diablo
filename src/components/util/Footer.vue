@@ -1,7 +1,7 @@
 <template>
-  <v-footer color="transparent" fixed>
-    <v-container fluid>
-      <v-row no-gutters>
+  <v-footer color="transparent">
+    <v-container>
+      <v-row>
         <v-spacer />
         <v-col class="font-weight-light" offset-md="4">
           <div class="text-no-wrap">

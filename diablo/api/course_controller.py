@@ -29,7 +29,7 @@ from diablo.lib.berkeley import get_instructor_uids, has_necessary_approvals, te
 from diablo.lib.http import tolerant_jsonify
 from diablo.lib.util import objects_to_dict_organized_by_section_id
 from diablo.merged.emailer import notify_instructors_of_approval
-from diablo.merged.sis import get_course, get_courses
+from diablo.merged.sis import get_course, get_courses_invited, get_courses_opted_out, get_eligible_courses_not_invited
 from diablo.models.approval import Approval, get_all_publish_types, get_all_recording_types, NAMES_PER_PUBLISH_TYPE
 from diablo.models.course_preference import CoursePreference
 from diablo.models.room import Room
@@ -96,26 +96,49 @@ def get_approvals(term_id, section_id):
 
 @app.route('/api/courses', methods=['POST'])
 @admin_required
-def courses():
+def find_courses():
     params = request.get_json()
     term_id = params.get('termId')
-    filter_option = params.get('filter', 'Not Invited')
-    if filter_option not in get_search_filter_options() or not term_id:
+    filter_ = params.get('filter', 'Not Invited')
+    if filter_ not in get_search_filter_options() or not term_id:
         raise BadRequestError('One or more required params are missing or invalid')
 
-    api_json = []
-    approvals_per_section_id = objects_to_dict_organized_by_section_id(objects=Approval.get_approvals_per_term(term_id))
-    scheduled_per_section_id = objects_to_dict_organized_by_section_id(objects=Scheduled.get_all_scheduled(term_id))
-    section_ids = set(approvals_per_section_id.keys()).union(set(scheduled_per_section_id.keys()))
+    if filter_ == 'Course Change':
+        courses = []  # TODO
 
-    for course in get_courses(term_id, section_ids):
-        section_id = int(course['sectionId'])
+    elif filter_ == 'Do Not Email':
+        courses = get_courses_opted_out(term_id)
+
+    elif filter_ == 'Invited':
+        courses = get_courses_invited(term_id)
+
+    elif filter_ == 'Not Invited':
+        courses = get_eligible_courses_not_invited(term_id)
+
+    elif filter_ == 'Partially Approved':
+        courses = []  # TODO
+
+    elif filter_ == 'Scheduled':
+        courses = []  # TODO
+
+    else:
+        raise BadRequestError(f'TODO: Implement filter: {filter_}')
+
+    locations = [c['meetingLocation'] for c in courses]
+    rooms_per_location = {room.location: room.to_api_json() for room in Room.get_rooms_in_locations(locations=locations)}
+    for course in courses:
+        course['room'] = rooms_per_location.get(course['meetingLocation'])
+
+    approvals = Approval.get_approvals_per_term(term_id)
+    approvals_per_section_id = objects_to_dict_organized_by_section_id(objects=approvals)
+    scheduled = Scheduled.get_all_scheduled(term_id)
+    scheduled_per_section_id = objects_to_dict_organized_by_section_id(objects=scheduled)
+    for course in courses:
+        section_id = course['sectionId']
         course['approvals'] = [a.to_api_json() for a in approvals_per_section_id.get(section_id, [])]
-        room = Room.find_room(course['meetingLocation'])
-        course['room'] = room and room.to_api_json()
         course['scheduled'] = [s.to_api_json() for s in scheduled_per_section_id.get(section_id, [])]
-        api_json.append(course)
-    return tolerant_jsonify(api_json)
+
+    return tolerant_jsonify(courses)
 
 
 @app.route('/api/course/opt_out/update', methods=['POST'])
@@ -131,23 +154,6 @@ def update_opt_out():
         opt_out=opt_out,
     )
     return tolerant_jsonify(preferences.to_api_json())
-
-
-def _approvals_per_section(term_id):
-    approvals_per_section_id = {}
-    for approval in Approval.get_approvals_per_term(term_id):
-        section_id = approval.section_id
-        if section_id not in approvals_per_section_id:
-            approvals_per_section_id[section_id] = []
-        approvals_per_section_id[section_id].append(approval.to_api_json())
-
-    api_json = []
-    section_ids = list(approvals_per_section_id.keys())
-    for course in get_courses(term_id, section_ids):
-        section_id = course['sectionId']
-        course['approvals'] = approvals_per_section_id[section_id] if section_id in approvals_per_section_id else []
-        api_json.append(course)
-    return api_json
 
 
 def _course_to_json(section, term_id):

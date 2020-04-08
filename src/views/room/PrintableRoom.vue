@@ -19,6 +19,7 @@
           </div>
           <v-data-table
             class="mt-4"
+            disable-pagination
             hide-default-footer
             :headers="headers"
             :items="room.courses"
