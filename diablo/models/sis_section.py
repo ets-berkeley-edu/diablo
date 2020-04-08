@@ -27,10 +27,13 @@ from datetime import datetime
 import json
 
 from diablo import db
-from diablo.lib.util import utc_now
+from diablo.lib.util import objects_to_dict_organized_by_section_id, utc_now
+from diablo.models.approval import Approval
 from diablo.models.canvas_course_site import CanvasCourseSite
 from diablo.models.course_preference import CoursePreference
 from diablo.models.room import Room
+from diablo.models.scheduled import Scheduled
+from diablo.models.sent_email import SentEmail
 from sqlalchemy import text
 
 
@@ -380,28 +383,46 @@ def _get_courses_select_clause():
 def _to_api_json(term_id, rows):
     courses_per_id = {}
     section_ids_opted_out = CoursePreference.get_section_ids_opted_out(term_id=term_id)
+
+    approvals = Approval.get_approvals_per_term(term_id)
+    scheduled = Scheduled.get_all_scheduled(term_id)
+    approvals_per_section_id = objects_to_dict_organized_by_section_id(objects=approvals)
+    scheduled_per_section_id = objects_to_dict_organized_by_section_id(objects=scheduled)
+
     for row in rows:
         section_id = int(row['sis_section_id'])
         if section_id not in courses_per_id:
-            courses_per_id[section_id] = {
+            has_opted_out = section_id in section_ids_opted_out
+            approvals = [a.to_api_json() for a in approvals_per_section_id.get(section_id, [])]
+            scheduled = [s.to_api_json() for s in scheduled_per_section_id.get(section_id, [])]
+            course = {
                 'allowedUnits': row['allowed_units'],
                 'canvasCourseSites': _canvas_course_sites(term_id, section_id),
-                'courseName': row['sis_course_name'],
-                'courseTitle': row['sis_course_title'],
-                'hasOptedOut': section_id in section_ids_opted_out,
-                'instructionFormat': row['sis_instruction_format'],
-                'instructors': [],
-                'isPrimary': row['is_primary'],
-                'meetingDays': _format_days(row['meeting_days']),
-                'meetingEndDate': row['meeting_end_date'],
+                'courseName': row['sis_course_name'], 'courseTitle': row['sis_course_title'],
+                'hasOptedOut': has_opted_out, 'instructionFormat': row['sis_instruction_format'],
+                'instructors': [], 'isPrimary': row['is_primary'],
+                'meetingDays': _format_days(row['meeting_days']), 'meetingEndDate': row['meeting_end_date'],
                 'meetingEndTime': _format_time(row['meeting_end_time']),
-                'meetingLocation': row['meeting_location'],
-                'meetingStartDate': row['meeting_start_date'],
-                'meetingStartTime': _format_time(row['meeting_start_time']),
-                'sectionId': section_id,
-                'sectionNum': row['sis_section_num'],
-                'termId': row['sis_term_id'],
+                'meetingLocation': row['meeting_location'], 'meetingStartDate': row['meeting_start_date'],
+                'meetingStartTime': _format_time(row['meeting_start_time']), 'sectionId': section_id,
+                'sectionNum': row['sis_section_num'], 'termId': row['sis_term_id'],
+                'approvals': approvals,
+                'scheduled': scheduled,
             }
+            if scheduled:
+                course['status'] = 'Scheduled'
+            elif approvals:
+                course['status'] = 'Partially Approved'
+            else:
+                invited = SentEmail.get_emails_of_type(
+                    section_id=section_id,
+                    template_type='invitation',
+                    term_id=term_id,
+                )
+                course['status'] = 'Invited' if invited else 'Not Invited'
+
+            courses_per_id[section_id] = course
+
         courses_per_id[section_id]['instructors'].append({
             'deptCode': row['instructor_dept_code'],
             'email': row['instructor_email'],
