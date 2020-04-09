@@ -1,8 +1,0 @@
-SELECT
-    Id, Name, Course_Title__c, Section__c, CCN__c, Schedule_Days__c, End_Time__c, Start_Time__c, Instructor_1__c,
-    Instructor_2__c, Instructor_3__c, Instructor_4__c, Instructor_5__c, Instructor_6__c, Room__c, Parent_Project__c
-FROM Opportunity
-WHERE
-    Type='Course Capture'
-    AND Parent_Project__c = ':salesforce_term_id'
-    AND Room__r.Recording_Capabilities__c != NULL

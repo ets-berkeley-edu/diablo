@@ -1,1 +1,0 @@
-SELECT Id, Building__c, Room_Number_Text__c, Recording_Capabilities__c FROM Locations__c
