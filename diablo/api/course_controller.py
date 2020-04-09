@@ -27,7 +27,6 @@ from diablo.api.errors import BadRequestError, ForbiddenRequestError, ResourceNo
 from diablo.api.util import admin_required, get_search_filter_options
 from diablo.lib.berkeley import get_instructor_uids, has_necessary_approvals, term_name_for_sis_id
 from diablo.lib.http import tolerant_jsonify
-from diablo.lib.util import objects_to_dict_organized_by_section_id
 from diablo.merged.emailer import notify_instructors_of_approval
 from diablo.models.approval import Approval, get_all_publish_types, get_all_recording_types, NAMES_PER_PUBLISH_TYPE
 from diablo.models.course_preference import CoursePreference
@@ -118,15 +117,6 @@ def find_courses():
         courses = SisSection.get_courses_scheduled(term_id)
     else:
         raise BadRequestError(f'Invalid filter: {filter_}')
-
-    approvals = Approval.get_approvals_per_term(term_id)
-    approvals_per_section_id = objects_to_dict_organized_by_section_id(objects=approvals)
-    scheduled = Scheduled.get_all_scheduled(term_id)
-    scheduled_per_section_id = objects_to_dict_organized_by_section_id(objects=scheduled)
-    for course in courses:
-        section_id = course['sectionId']
-        course['approvals'] = [a.to_api_json() for a in approvals_per_section_id.get(section_id, [])]
-        course['scheduled'] = [s.to_api_json() for s in scheduled_per_section_id.get(section_id, [])]
 
     return tolerant_jsonify(courses)
 

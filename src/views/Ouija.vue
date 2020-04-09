@@ -42,12 +42,10 @@
       <template v-slot:body="{ items }">
         <tbody>
           <tr v-if="!items.length && !refreshing">
-            <td>
-              <div v-if="search">
-                No matching items
-              </div>
-              <div v-if="!search" class="ma-4 text-no-wrap title">
-                No '{{ selectedFilter }}' courses
+            <td colspan="10">
+              <div class="ma-4 text-no-wrap title">
+                <span v-if="search">No results for '{{ search }}'</span>
+                <span v-if="!search">No '{{ selectedFilter }}' courses</span>
               </div>
             </td>
           </tr>
@@ -56,7 +54,7 @@
               <v-checkbox :id="`checkbox-email-course-${item.sectionId}`" v-model="selectedRows" :value="item"></v-checkbox>
             </td>
             <td class="text-no-wrap">{{ item.courseName }}</td>
-            <td class="text-no-wrap">{{ item.sectionId }}</td>
+            <td class="text-no-wrap w-10">{{ item.sectionId }}</td>
             <td class="text-no-wrap">
               <router-link
                 v-if="item.room"
@@ -68,7 +66,9 @@
             </td>
             <td class="text-no-wrap">{{ item.meetingDays.join(',') }}</td>
             <td class="text-no-wrap">{{ item.meetingStartTime }} - {{ item.meetingEndTime }}</td>
-            <td class="text-no-wrap">TODO: {{ item.status }}</td>
+            <td :id="`course-${item.sectionId}-status`" class="text-no-wrap w-10">
+              {{ item.status || '&mdash;' }}
+            </td>
             <td>
               <div v-for="instructor in item.instructors" :key="instructor.uid">
                 <router-link :id="`instructor-${instructor.uid}-mailto`" :to="`/user/${instructor.uid}`">
@@ -77,9 +77,7 @@
               </div>
             </td>
             <td>
-              <span v-if="item.approvals.length">
-                {{ $_.last(item.approvals).publishTypeName }}
-              </span>
+              {{ item.publishTypeNames }}
             </td>
             <td>
               <ToggleOptOut :course="item" :on-toggle="refresh" />
@@ -115,13 +113,13 @@
       headers: [
         {text: 'Course', value: 'courseName'},
         {text: 'Section', value: 'sectionId'},
-        {text: 'Room', value: 'room.location'},
-        {text: 'Days', value: 'days', sortable: false},
-        {text: 'Time', value: 'time', sortable: false},
+        {text: 'Room', value: 'meetingLocation'},
+        {text: 'Days', sortable: false},
+        {text: 'Time', sortable: false},
         {text: 'Status', value: 'status'},
-        {text: 'Instructor(s)', value: 'instructorNames'},
-        {text: 'Recording', value: 'recording', sortable: false},
-        {text: 'Opt out', value: 'hasOptedOut'}
+        {text: 'Instructor(s)', value: 'instructorNames', sortable: false},
+        {text: 'Publish', value: 'publishTypeNames'},
+        {text: 'Opt out', value: 'hasOptedOut', sortable: false}
       ],
       options: {
         page: 1,
@@ -147,6 +145,12 @@
         this.refreshing = true
         getCourses(this.selectedFilter, this.$config.currentTermId).then(data => {
           this.courses = data
+          this.$_.each(this.courses, course => {
+            // In support of search, we index nested course data
+            course['instructorNames'] = this.$_.map(course.instructors, 'name')
+            course['publishTypeNames'] = this.$_.last(course.approvals || []).publishTypeName
+            this.setStatus(course)
+          })
           done()
         }).catch(done)
       },
