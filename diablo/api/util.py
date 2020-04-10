@@ -78,7 +78,6 @@ def put_approvals_and_scheduled(courses):
 
 def get_search_filter_options():
     return [
-        'Course Change',
         'Do Not Email',
         'Invited',
         'Not Invited',

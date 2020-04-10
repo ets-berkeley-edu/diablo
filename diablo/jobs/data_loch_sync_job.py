@@ -24,7 +24,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 from diablo.externals.data_loch import get_data_loch_sections
 from diablo.jobs.base_job import BaseJob
-from diablo.jobs.util import insert_or_update_instructors
+from diablo.jobs.util import insert_or_update_instructors, refresh_rooms
 from diablo.models.sis_section import SisSection
 from flask import current_app as app
 
@@ -37,3 +37,4 @@ class DataLochSyncJob(BaseJob):
         SisSection.refresh(sis_sections)
         instructor_uids = list(set([s['instructor_uid'] for s in sis_sections]))
         insert_or_update_instructors(instructor_uids)
+        refresh_rooms()

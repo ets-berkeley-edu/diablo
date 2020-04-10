@@ -102,10 +102,7 @@ def find_courses():
     if filter_ not in get_search_filter_options() or not term_id:
         raise BadRequestError('One or more required params are missing or invalid')
 
-    if filter_ == 'Course Change':
-        courses = []  # TODO
-
-    elif filter_ == 'Do Not Email':
+    if filter_ == 'Do Not Email':
         courses = SisSection.get_courses_opted_out(term_id)
     elif filter_ == 'Invited':
         courses = SisSection.get_courses_invited(term_id)
@@ -119,6 +116,12 @@ def find_courses():
         raise BadRequestError(f'Invalid filter: {filter_}')
 
     return tolerant_jsonify(courses)
+
+
+@app.route('/api/courses/changes/<term_id>')
+@admin_required
+def course_changes(term_id):
+    return tolerant_jsonify(SisSection.get_course_changes(term_id))
 
 
 @app.route('/api/course/opt_out/update', methods=['POST'])

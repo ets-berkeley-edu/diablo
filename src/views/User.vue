@@ -18,7 +18,16 @@
           <tbody v-if="items.length">
             <template v-for="item in items">
               <tr :key="item.sectionId">
-                <td :class="tdClass(item)">{{ item.courseName }}</td>
+                <td :class="tdClass(item)">
+                  <router-link
+                    v-if="item.room.capability"
+                    :id="`sign-up-${item.sectionId}`"
+                    class="subtitle-1"
+                    :to="`/approve/${$config.currentTermId}/${item.sectionId}`">
+                    <v-icon class="mb-1">mdi-video-plus</v-icon> {{ item.courseName }}
+                  </router-link>
+                  <span v-if="!item.room.capability">{{ item.courseName }}</span>
+                </td>
                 <td :class="tdClass(item)">{{ item.sectionId }}</td>
                 <td :class="tdClass(item)">
                   <router-link
@@ -32,16 +41,14 @@
                 <td :class="tdClass(item)">{{ item.meetingDays ? item.meetingDays.join(',') : '&mdash;' }}</td>
                 <td :class="tdClass(item)">{{ item.meetingStartTime ? `${item.meetingStartTime} - ${item.meetingEndTime}` : '&mdash;' }}</td>
                 <td :class="tdClass(item)">
-                  <div v-if="item.scheduled.length">
-                    {{ item.scheduled }}
-                  </div>
-                  <div v-if="!item.scheduled.length">
-                    &mdash;
-                  </div>
+                  {{ item.publishTypeNames || '&mdash;' }}
+                </td>
+                <td :class="tdClass(item)">
+                  <ToggleOptOut :key="item.sectionId" :course="item" />
                 </td>
               </tr>
               <tr v-if="item.approvals.length" :key="`approvals-${item.sectionId}`">
-                <td colspan="5" class="pb-2">
+                <td colspan="7" class="pb-2">
                   <div v-if="item.approvals.length === 1">
                     "{{ item.approvals[0].recordingTypeName }}" recording was approved for "{{ item.approvals[0].publishTypeName }}" by
                     <router-link :id="`instructor-${item.approvals[0].approvedBy.uid}-mailto`" :to="`/user/${item.approvals[0].approvedBy.uid}`">
@@ -52,7 +59,6 @@
                     <h3>Approvals</h3>
                   </div>
                 </td>
-                <td></td>
               </tr>
             </template>
           </tbody>
@@ -71,11 +77,13 @@
 
 <script>
   import Context from '@/mixins/Context'
+  import ToggleOptOut from '@/components/course/ToggleOptOut'
   import Utils from '@/mixins/Utils'
   import {getUser} from '@/api/user'
 
   export default {
     name: 'Room',
+    components: {ToggleOptOut},
     mixins: [Context, Utils],
     data: () => ({
       user: undefined,
@@ -85,7 +93,8 @@
         {text: 'Room', value: 'room.location'},
         {text: 'Days', value: 'days', sortable: false},
         {text: 'Time', value: 'time', sortable: false},
-        {text: 'Recording'}
+        {text: 'Publish', value: 'publishTypeNames'},
+        {text: 'Opt out', value: 'hasOptedOut', sortable: false}
       ]
     }),
     created() {
@@ -94,6 +103,12 @@
       getUser(uid).then(user => {
         this.user = user
         this.setPageTitle(this.user.name)
+        this.$_.each(this.user.courses, course => {
+          // In support of search, we index nested course data
+          course.instructorNames = this.$_.map(course.instructors, 'name')
+          course.publishTypeNames = course.approvals.length ? this.$_.last(course.approvals).publishTypeName : null
+          course.isSelectable = !course.hasOptedOut
+        })
         this.$ready()
       }).catch(this.$ready)
     },

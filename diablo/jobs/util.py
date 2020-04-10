@@ -22,8 +22,11 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
+from diablo.externals.kaltura import Kaltura
 from diablo.merged.calnet import get_calnet_users_for_uids
 from diablo.models.instructor import Instructor
+from diablo.models.room import Room
+from diablo.models.sis_section import SisSection
 from flask import current_app as app
 
 
@@ -39,3 +42,23 @@ def insert_or_update_instructors(instructor_uids):
         })
 
     Instructor.upsert(instructors)
+
+
+def refresh_rooms():
+    locations = SisSection.get_distinct_meeting_locations()
+    existing_locations = Room.get_all_locations()
+    new_locations = [location for location in locations if location not in existing_locations]
+    if new_locations:
+        app.logger.info(f'Creating {len(new_locations)} new rooms')
+        for location in new_locations:
+            Room.create(location=location)
+
+    rooms = Room.all_rooms()
+    kaltura_resource_ids_per_room = {}
+    for resource in Kaltura().get_resource_list():
+        room = next((r for r in rooms if r.location == resource['name']), None)
+        if room:
+            kaltura_resource_ids_per_room[room.id] = resource['id']
+
+    if kaltura_resource_ids_per_room:
+        Room.update_kaltura_resource_mappings(kaltura_resource_ids_per_room)

@@ -35,6 +35,7 @@
       :options="options"
       :page.sync="options.page"
       :search="search"
+      selectable-key="isSelectable"
       show-select
       :single-select="false"
       @page-count="pageCount = $event"
@@ -51,7 +52,12 @@
           </tr>
           <tr v-for="item in items" :key="item.name">
             <td class="text-no-wrap">
-              <v-checkbox :id="`checkbox-email-course-${item.sectionId}`" v-model="selectedRows" :value="item"></v-checkbox>
+              <v-checkbox
+                :id="`checkbox-email-course-${item.sectionId}`"
+                v-model="selectedRows"
+                :disabled="item.hasOptedOut"
+                :value="item"
+              ></v-checkbox>
             </td>
             <td class="text-no-wrap">{{ item.courseName }}</td>
             <td class="text-no-wrap w-10">{{ item.sectionId }}</td>
@@ -77,10 +83,10 @@
               </div>
             </td>
             <td>
-              {{ item.publishTypeNames }}
+              {{ item.publishTypeNames || '&mdash;' }}
             </td>
             <td>
-              <ToggleOptOut :course="item" :on-toggle="refresh" />
+              <ToggleOptOut :key="item.sectionId" :course="item" />
             </td>
           </tr>
         </tbody>
@@ -117,7 +123,7 @@
         {text: 'Days', sortable: false},
         {text: 'Time', sortable: false},
         {text: 'Status', value: 'status'},
-        {text: 'Instructor(s)', value: 'instructorNames', sortable: false},
+        {text: 'Instructor(s)', value: 'instructorNames'},
         {text: 'Publish', value: 'publishTypeNames'},
         {text: 'Opt out', value: 'hasOptedOut', sortable: false}
       ],
@@ -131,6 +137,14 @@
       selectedFilter: 'Not Invited',
       selectedRows: []
     }),
+    watch: {
+      selectedRows(rows) {
+        const newCount = this.$_.size(this.$_.filter(rows, ['hasOptedOut', false]))
+        if (newCount >= this.options.itemsPerPage) {
+          this.snackbarOpen(`${newCount} courses selected`)
+        }
+      }
+    },
     created() {
       this.$loading()
       this.refresh()
@@ -147,18 +161,17 @@
           this.courses = data
           this.$_.each(this.courses, course => {
             // In support of search, we index nested course data
-            course['instructorNames'] = this.$_.map(course.instructors, 'name')
-            course['publishTypeNames'] = this.$_.last(course.approvals || []).publishTypeName
-            this.setStatus(course)
+            course.instructorNames = this.$_.map(course.instructors, 'name')
+            course.publishTypeNames = course.approvals.length ? this.$_.last(course.approvals).publishTypeName : null
+            course.isSelectable = !course.hasOptedOut
           })
           done()
         }).catch(done)
       },
       sendEmail() {
         if (this.selectedRows.length) {
-          const emailTemplateType = undefined
-          const sectionIds = undefined
-          queueEmails(emailTemplateType, sectionIds, this.$config.currentTermId).then(data => {
+          const sectionIds = this.$_.map(this.selectedRows, 'sectionId')
+          queueEmails('invitation', sectionIds, this.$config.currentTermId).then(data => {
             this.confirmation = data.message
           })
         }

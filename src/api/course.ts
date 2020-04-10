@@ -26,6 +26,10 @@ export function getCourses(filter, termId) {
   })
 }
 
+export function getCourseChanges(termId) {
+  return axios.get(`${utils.apiBaseUrl()}/api/courses/changes/${termId}`)
+}
+
 export function updateOptOut(termId, sectionId, optOut) {
   return axios.post(`${utils.apiBaseUrl()}/api/course/opt_out/update`, {
     optOut,

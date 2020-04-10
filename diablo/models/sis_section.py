@@ -141,7 +141,17 @@ class SisSection(db.Model):
     @classmethod
     def get_courses_per_location(cls, term_id, location):
         sql = f"""
-            {_get_courses_select_clause()}
+            SELECT
+                s.*,
+                i.dept_code AS instructor_dept_code,
+                i.email AS instructor_email,
+                i.first_name || ' ' || i.last_name AS instructor_name,
+                i.uid AS instructor_uid,
+                r.id AS room_id,
+                r.location AS room_location
+            FROM sis_sections s
+            JOIN instructors i ON i.uid = s.instructor_uid
+            JOIN rooms r ON r.location = s.meeting_location
             WHERE
                 s.sis_term_id = :term_id
                 AND s.meeting_location = :location
@@ -159,7 +169,17 @@ class SisSection(db.Model):
     @classmethod
     def get_courses_invited(cls, term_id):
         sql = f"""
-            {_get_courses_select_clause()}
+            SELECT
+                s.*,
+                i.dept_code AS instructor_dept_code,
+                i.email AS instructor_email,
+                i.first_name || ' ' || i.last_name AS instructor_name,
+                i.uid AS instructor_uid,
+                r.id AS room_id,
+                r.location AS room_location
+            FROM sis_sections s
+            JOIN instructors i ON i.uid = s.instructor_uid
+            JOIN rooms r ON r.location = s.meeting_location
             JOIN sent_emails e ON e.section_id = s.sis_section_id
             WHERE
                 s.sis_term_id = :term_id
@@ -178,7 +198,17 @@ class SisSection(db.Model):
     @classmethod
     def get_courses_opted_out(cls, term_id):
         sql = f"""
-            {_get_courses_select_clause()}
+            SELECT
+                s.*,
+                i.dept_code AS instructor_dept_code,
+                i.email AS instructor_email,
+                i.first_name || ' ' || i.last_name AS instructor_name,
+                i.uid AS instructor_uid,
+                r.id AS room_id,
+                r.location AS room_location
+            FROM sis_sections s
+            JOIN instructors i ON i.uid = s.instructor_uid
+            JOIN rooms r ON r.location = s.meeting_location
             JOIN course_preferences c ON c.section_id = s.sis_section_id AND c.term_id = :term_id
             WHERE
                 s.sis_term_id = :term_id
@@ -197,7 +227,17 @@ class SisSection(db.Model):
     @classmethod
     def get_eligible_courses_not_invited(cls, term_id):
         sql = f"""
-            {_get_courses_select_clause()}
+            SELECT
+                s.*,
+                i.dept_code AS instructor_dept_code,
+                i.email AS instructor_email,
+                i.first_name || ' ' || i.last_name AS instructor_name,
+                i.uid AS instructor_uid,
+                r.id AS room_id,
+                r.location AS room_location
+            FROM sis_sections s
+            JOIN instructors i ON i.uid = s.instructor_uid
+            JOIN rooms r ON r.location = s.meeting_location
             WHERE
                 s.sis_term_id = :term_id
                 AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
@@ -219,7 +259,17 @@ class SisSection(db.Model):
     @classmethod
     def get_course(cls, term_id, section_id):
         sql = f"""
-            {_get_courses_select_clause()}
+            SELECT
+                s.*,
+                i.dept_code AS instructor_dept_code,
+                i.email AS instructor_email,
+                i.first_name || ' ' || i.last_name AS instructor_name,
+                i.uid AS instructor_uid,
+                r.id AS room_id,
+                r.location AS room_location
+            FROM sis_sections s
+            JOIN instructors i ON i.uid = s.instructor_uid
+            JOIN rooms r ON r.location = s.meeting_location
             WHERE
                 s.sis_term_id = :term_id
                 AND s.sis_section_id = :section_id
@@ -237,9 +287,49 @@ class SisSection(db.Model):
         return api_json[0] if api_json else None
 
     @classmethod
+    def get_course_changes(cls, term_id):
+        sql = f"""
+            SELECT
+                s.*,
+                i.dept_code AS instructor_dept_code,
+                i.email AS instructor_email,
+                i.first_name || ' ' || i.last_name AS instructor_name,
+                i.uid AS instructor_uid,
+                r.id AS room_id,
+                r.location AS room_location
+            FROM sis_sections s
+            JOIN approvals a ON a.section_id = s.sis_section_id
+            JOIN instructors i ON i.uid = s.instructor_uid
+            JOIN rooms r ON r.location = s.meeting_location
+            JOIN sent_emails e ON e.section_id = s.sis_section_id
+            WHERE
+                s.sis_term_id = :term_id
+                AND r.id != a.room_id
+                AND e.template_type = 'invitation'
+            ORDER BY s.sis_course_title, s.sis_section_id, s.instructor_uid
+        """
+        rows = db.session.execute(
+            text(sql),
+            {
+                'term_id': term_id,
+            },
+        )
+        return _to_api_json(term_id=term_id, rows=rows)
+
+    @classmethod
     def get_courses(cls, term_id, section_ids):
         sql = f"""
-            {_get_courses_select_clause()}
+            SELECT
+                s.*,
+                i.dept_code AS instructor_dept_code,
+                i.email AS instructor_email,
+                i.first_name || ' ' || i.last_name AS instructor_name,
+                i.uid AS instructor_uid,
+                r.id AS room_id,
+                r.location AS room_location
+            FROM sis_sections s
+            JOIN instructors i ON i.uid = s.instructor_uid
+            JOIN rooms r ON r.location = s.meeting_location
             WHERE
                 s.sis_term_id = :term_id
                 AND s.sis_section_id = ANY(:section_ids)
@@ -258,7 +348,17 @@ class SisSection(db.Model):
     @classmethod
     def get_courses_partially_approved(cls, term_id):
         sql = f"""
-            {_get_courses_select_clause()}
+            SELECT
+                s.*,
+                i.dept_code AS instructor_dept_code,
+                i.email AS instructor_email,
+                i.first_name || ' ' || i.last_name AS instructor_name,
+                i.uid AS instructor_uid,
+                r.id AS room_id,
+                r.location AS room_location
+            FROM sis_sections s
+            JOIN instructors i ON i.uid = s.instructor_uid
+            JOIN rooms r ON r.location = s.meeting_location
             JOIN approvals a ON a.section_id = s.sis_section_id AND a.term_id = :term_id
             WHERE
                 s.sis_term_id = :term_id
@@ -279,7 +379,17 @@ class SisSection(db.Model):
     @classmethod
     def get_courses_per_instructor_uid(cls, term_id, instructor_uid):
         sql = f"""
-            {_get_courses_select_clause()}
+            SELECT
+                s.*,
+                i.dept_code AS instructor_dept_code,
+                i.email AS instructor_email,
+                i.first_name || ' ' || i.last_name AS instructor_name,
+                i.uid AS instructor_uid,
+                r.id AS room_id,
+                r.location AS room_location
+            FROM sis_sections s
+            JOIN instructors i ON i.uid = s.instructor_uid
+            JOIN rooms r ON r.location = s.meeting_location
             WHERE
                 s.sis_term_id = :term_id
                 AND s.instructor_uid = :instructor_uid
@@ -301,7 +411,17 @@ class SisSection(db.Model):
     @classmethod
     def get_courses_scheduled(cls, term_id):
         sql = f"""
-            {_get_courses_select_clause()}
+            SELECT
+                s.*,
+                i.dept_code AS instructor_dept_code,
+                i.email AS instructor_email,
+                i.first_name || ' ' || i.last_name AS instructor_name,
+                i.uid AS instructor_uid,
+                r.id AS room_id,
+                r.location AS room_location
+            FROM sis_sections s
+            JOIN instructors i ON i.uid = s.instructor_uid
+            JOIN rooms r ON r.location = s.meeting_location
             JOIN scheduled d ON d.section_id = s.sis_section_id AND d.term_id = :term_id
             WHERE
                 s.sis_term_id = :term_id
@@ -364,22 +484,6 @@ class SisSection(db.Model):
             db.session.execute(query, {'json_dumps': json.dumps(data)})
 
 
-def _get_courses_select_clause():
-    return """
-        SELECT
-            s.*,
-            i.dept_code AS instructor_dept_code,
-            i.email AS instructor_email,
-            i.first_name || ' ' || i.last_name AS instructor_name,
-            i.uid AS instructor_uid,
-            r.id AS room_id,
-            r.location AS room_location
-        FROM sis_sections s
-        JOIN instructors i ON i.uid = s.instructor_uid
-        JOIN rooms r ON r.location = s.meeting_location
-    """
-
-
 def _to_api_json(term_id, rows):
     courses_per_id = {}
     section_ids_opted_out = CoursePreference.get_section_ids_opted_out(term_id=term_id)
@@ -421,6 +525,13 @@ def _to_api_json(term_id, rows):
                 )
                 course['status'] = 'Invited' if invited else 'Not Invited'
 
+            room = Room.get_room(row['room_id']).to_api_json() if 'room_id' in row else None
+            course['room'] = room
+            for action in approvals + scheduled:
+                room_id = action.pop('roomId')
+                obsolete_action = not room or room['id'] != room_id
+                action['room'] = Room.get_room(room_id).to_api_json() if obsolete_action else room
+                action['isObsolete'] = obsolete_action
             courses_per_id[section_id] = course
 
         courses_per_id[section_id]['instructors'].append({
@@ -430,10 +541,6 @@ def _to_api_json(term_id, rows):
             'roleCode': row['instructor_role_code'],
             'uid': row['instructor_uid'],
         })
-        if 'room_id' in row:
-            courses_per_id[section_id]['room'] = Room.get_room(row['room_id']).to_api_json()
-        else:
-            courses_per_id[section_id]['room'] = None
     return list(courses_per_id.values())
 
 

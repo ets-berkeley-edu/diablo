@@ -25,7 +25,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 from diablo.externals.rds import execute
 from diablo.jobs.background_job_manager import BackgroundJobError
 from diablo.jobs.base_job import BaseJob
-from diablo.jobs.util import insert_or_update_instructors
+from diablo.jobs.util import insert_or_update_instructors, refresh_rooms
 from diablo.lib.db import resolve_sql_template
 from diablo.models.sis_section import SisSection
 from flask import current_app as app
@@ -37,6 +37,7 @@ class DblinkToRedshiftJob(BaseJob):
         resolved_ddl_rds = resolve_sql_template('update_rds_sis_sections.template.sql')
         if execute(resolved_ddl_rds):
             insert_or_update_instructors(SisSection.get_distinct_instructor_uids())
+            refresh_rooms()
             app.logger.info('RDS indexes updated.')
         else:
             raise BackgroundJobError('Failed to update RDS indexes for intermediate schema.')

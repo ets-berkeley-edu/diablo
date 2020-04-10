@@ -30,27 +30,66 @@ from diablo.jobs.data_loch_sync_job import DataLochSyncJob
 from diablo.jobs.dblink_to_redshift_job import DblinkToRedshiftJob
 from diablo.jobs.kaltura_job import KalturaJob
 from diablo.jobs.queued_emails_job import QueuedEmailsJob
-from diablo.jobs.update_rooms_job import UpdateRoomsJob
 from diablo.lib.http import tolerant_jsonify
 from flask import current_app as app
 
 
-@app.route('/api/job/<job_key>/start')
+@app.route('/api/job/<job_id>/start')
 @admin_required
-def start_job(job_key):
-    job_class = {
-        'admin_emails': AdminEmailsJob,
-        'canvas': CanvasJob,
-        'data_loch_sync': DataLochSyncJob,
-        'dblink_to_redshift': DblinkToRedshiftJob,
-        'kaltura': KalturaJob,
-        'queued_emails': QueuedEmailsJob,
-        'update_rooms': UpdateRoomsJob,
-    }.get(job_key)
-    if job_class:
-        job_class(app.app_context).run()
+def start_job(job_id):
+    job = next((job for job in _available_jobs() if job['id'] == job_id), None)
+    if job:
+        job['class'](app.app_context).run()
         return tolerant_jsonify({
-            'status': 'STARTED',
+            'id': job['id'],
+            'description': job['description'],
         })
     else:
-        raise ResourceNotFoundError(f'Invalid job_key: {job_key}')
+        raise ResourceNotFoundError(f'Invalid job_id: {job_id}')
+
+
+@app.route('/api/jobs/available')
+@admin_required
+def available_jobs():
+    jobs = []
+    for job in _available_jobs():
+        jobs.append({
+            'id': job['id'],
+            'description': job['description'],
+        })
+    return tolerant_jsonify(jobs)
+
+
+def _available_jobs():
+    return [
+        {
+            'id': 'admin_emails',
+            'class': AdminEmailsJob,
+            'description': 'Notify admins of relevant room and instructor changes.',
+        },
+        {
+            'id': 'canvas',
+            'class': CanvasJob,
+            'description': 'Collect canvas-course-site IDs from Canvas and insert them into Diablo db.',
+        },
+        {
+            'id': 'data_loch_sync',
+            'class': DataLochSyncJob,
+            'description': '[DEPRECATED] Get latest course, instructor and room data from the Data Lake.',
+        },
+        {
+            'id': 'dblink_to_redshift',
+            'class': DblinkToRedshiftJob,
+            'description': 'Get latest course, instructor and room data from the Data Lake',
+        },
+        {
+            'id': 'kaltura',
+            'class': KalturaJob,
+            'description': 'With Kaltura API, schedule recordings and link them to Canvas sites.',
+        },
+        {
+            'id': 'queued_emails',
+            'class': QueuedEmailsJob,
+            'description': 'Send all email that is queued.',
+        },
+    ]
