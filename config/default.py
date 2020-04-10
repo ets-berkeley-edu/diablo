@@ -27,7 +27,7 @@ import logging
 import os
 
 from diablo.jobs.admin_emails_job import AdminEmailsJob
-from diablo.jobs.update_rooms_job import UpdateRoomsJob
+from diablo.jobs.dblink_to_redshift_job import DblinkToRedshiftJob
 
 # Base directory for the application (one level up from this config file).
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
@@ -71,15 +71,15 @@ JOB_MANAGER = {
     'seconds_between_pending_jobs_check': 60,
     'jobs': [
         {
-            'cls': UpdateRoomsJob,
+            'cls': DblinkToRedshiftJob,
             'disabled': True,
-            'name': 'Update Rooms',
+            'name': 'Pull course data from the Data Loch',
             'args': {
                 'message': 'I run once per day.',
             },
             'schedule': {
                 'type': 'day_at',
-                'value': '10:20',
+                'value': '06:00',
             },
         },
         {

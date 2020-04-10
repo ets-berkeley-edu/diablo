@@ -1,5 +1,19 @@
 <template>
   <v-app :id="$vuetify.theme.dark ? 'dark' : 'light'">
+    <v-snackbar
+      v-model="snackbarShow"
+      color="primary"
+      :timeout="snackbar.timeout"
+      :top="true"
+    >
+      {{ snackbar.text }}
+      <v-btn
+        text
+        @click="snackbarClose"
+      >
+        Close
+      </v-btn>
+    </v-snackbar>
     <v-app-bar
       v-if="!$route.meta.printable"
       app
@@ -30,6 +44,9 @@
           <v-list-item v-if="$currentUser.isAdmin" @click="goToPath('/email/templates')">
             <v-list-item-title>Email Templates</v-list-item-title>
           </v-list-item>
+          <v-list-item v-if="$currentUser.isAdmin" @click="goToPath('/jobs')">
+            <v-list-item-title>Jobs</v-list-item-title>
+          </v-list-item>
           <v-list-item @click="logOut">
             <v-list-item-title>Log Out</v-list-item-title>
           </v-list-item>
@@ -43,12 +60,13 @@
 </template>
 
 <script>
+  import Context from '@/mixins/Context'
   import Utils from '@/mixins/Utils'
   import { getCasLogoutUrl } from '@/api/auth'
 
   export default {
     name: 'App',
-    mixins: [Utils],
+    mixins: [Context, Utils],
     methods: {
       logOut: () => getCasLogoutUrl().then(data => window.location.href = data.casLogoutUrl)
     }

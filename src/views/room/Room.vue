@@ -58,15 +58,10 @@
                 <td :class="tdClass(course)">{{ course.meetingDays ? course.meetingDays.join(',') : '&mdash;' }}</td>
                 <td :class="tdClass(course)">{{ course.meetingStartTime ? `${course.meetingStartTime} - ${course.meetingEndTime}` : '&mdash;' }}</td>
                 <td :class="tdClass(course)">
-                  <div v-if="course.scheduled.length">
-                    {{ course.scheduled }}
-                  </div>
-                  <div v-if="!course.scheduled.length">
-                    &mdash;
-                  </div>
+                  {{ course.publishTypeNames || '&mdash;' }}
                 </td>
-                <td>
-                  <ToggleOptOut :course="course" />
+                <td :class="tdClass(course)">
+                  <ToggleOptOut :key="course.sectionId" :course="course" />
                 </td>
               </tr>
               <tr v-if="course.approvals.length" :key="`approvals-${course.sectionId}`">
@@ -114,8 +109,8 @@
         {text: 'Section', value: 'sectionId'},
         {text: 'Days', value: 'days', sortable: false},
         {text: 'Time', value: 'time', sortable: false},
-        {text: 'Recording'},
-        {text: 'Opt out', value: 'hasOptedOut'}
+        {text: 'Publish', value: 'publishTypeNames'},
+        {text: 'Opt out', value: 'hasOptedOut', sortable: false}
       ],
       isAuditorium: undefined,
       room: undefined
@@ -134,6 +129,12 @@
         this.room = room
         this.isAuditorium = room.isAuditorium
         this.setPageTitle(this.room.location)
+        this.$_.each(this.room.courses, course => {
+          // In support of search, we index nested course data
+          course.instructorNames = this.$_.map(course.instructors, 'name')
+          course.publishTypeNames = course.approvals.length ? this.$_.last(course.approvals).publishTypeName : null
+          course.isSelectable = !course.hasOptedOut
+        })
         this.$ready()
       }).catch(this.$ready)
     },

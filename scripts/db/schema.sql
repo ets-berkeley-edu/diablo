@@ -187,7 +187,7 @@ ALTER TABLE ONLY instructors
 
 CREATE TABLE queued_emails (
     id INTEGER NOT NULL,
-    section_id INTEGER[] NOT NULL,
+    section_ids INTEGER[] NOT NULL,
     template_type email_template_types,
     term_id INTEGER NOT NULL,
     sent_at timestamp with time zone NOT NULL

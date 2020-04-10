@@ -1,6 +1,5 @@
 import _ from 'lodash'
 import Approve from '@/views/Approve.vue'
-import Attic from '@/views/Attic.vue'
 import auth from './auth'
 import BaseView from '@/views/BaseView.vue'
 import CourseChanges from '@/views/CourseChanges.vue'
@@ -8,6 +7,7 @@ import EditEmailTemplate from '@/views/email/EditEmailTemplate.vue'
 import EmailTemplates from '@/views/email/EmailTemplates.vue'
 import Error from '@/views/Error.vue'
 import Home from '@/views/Home.vue'
+import Jobs from '@/views/Jobs.vue'
 import Login from '@/views/Login.vue'
 import NotFound from '@/views/NotFound.vue'
 import Ouija from '@/views/Ouija.vue'
@@ -79,13 +79,6 @@ const router = new Router({
         {
           path: '/approve/:termId/:sectionId',
           component: Approve
-        },
-        {
-          path: '/attic',
-          component: Attic,
-          meta: {
-            title: 'The Attic'
-          }
         }
       ]
     },
@@ -95,10 +88,10 @@ const router = new Router({
       component: BaseView,
       children: [
         {
-          path: '/attic',
-          component: Attic,
+          path: '/jobs',
+          component: Jobs,
           meta: {
-            title: 'The Attic'
+            title: 'Jobs'
           }
         },
         {
