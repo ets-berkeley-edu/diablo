@@ -41,3 +41,7 @@ class DblinkToRedshiftJob(BaseJob):
             app.logger.info('RDS indexes updated.')
         else:
             raise BackgroundJobError('Failed to update RDS indexes for intermediate schema.')
+
+    @classmethod
+    def description(cls):
+        return 'Get latest course, instructor and room data from the Data Lake.'

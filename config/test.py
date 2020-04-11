@@ -24,7 +24,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 import os
 
-from tests.test_jobs.sample_jobs import HelloWorld
+from tests.test_jobs.sample_jobs import HelloWorld, LightSwitch
 
 # Base directory for the application (one level up from this config file).
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
@@ -42,19 +42,14 @@ JOB_MANAGER = {
     'jobs': [
         {
             'cls': HelloWorld,
-            'name': 'Hello cruel world.',
-            'args': {
-                'message': 'Every 5 minutes, I run.',
-            },
             'schedule': {
                 'type': 'seconds',
                 'value': 300,
             },
         },
         {
-            'cls': HelloWorld,
+            'cls': LightSwitch,
             'disabled': True,
-            'name': 'This daily job is disabled',
             'schedule': {
                 'type': 'day_at',
                 'value': '06:00',

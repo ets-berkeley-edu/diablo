@@ -46,7 +46,11 @@ class KalturaJob(BaseJob):
                 _schedule_recordings(latest_approval=course_approvals[-1], course=course)
 
                 uids = [approval.approved_by_uid for approval in approvals]
-                app.logger.info(f'Recordings scheduled recordings for course {section_id} per approvals: {", ".join(uids)}')
+                app.logger.info(f'Recordings scheduled for course {section_id} per approvals: {", ".join(uids)}')
+
+    @classmethod
+    def description(cls):
+        return 'With Kaltura API, schedule recordings and link them to Canvas sites.'
 
 
 def _get_courses_ready_to_schedule(approvals, term_id):

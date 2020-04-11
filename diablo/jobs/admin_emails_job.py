@@ -35,7 +35,7 @@ from flask import current_app as app
 
 class AdminEmailsJob(BaseJob):
 
-    def run(self, args=None):
+    def run(self):
         term_id = app.config['CURRENT_TERM_ID']
         all_scheduled = Scheduled.get_all_scheduled(term_id=term_id)
         if all_scheduled:
@@ -51,6 +51,10 @@ class AdminEmailsJob(BaseJob):
                 courses=courses,
                 scheduled_rooms_per_section_id=_scheduled_locations_per_section_id(all_scheduled),
             )
+
+    @classmethod
+    def description(cls):
+        return 'Notify admins of relevant room and instructor changes.'
 
 
 def _alert_admin_of_instructor_change(courses, approval_uids_per_section_id):

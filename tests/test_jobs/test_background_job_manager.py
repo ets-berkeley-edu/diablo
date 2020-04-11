@@ -27,7 +27,7 @@ import time
 
 from diablo.jobs.background_job_manager import BackgroundJobManager
 from flask import current_app as app
-from tests.test_jobs.sample_jobs import HelloWorld, LightSwitch, Volume
+from tests.test_jobs.sample_jobs import HelloWorld, LightSwitch, Volume, VolumeSubClass
 from tests.util import override_config
 
 
@@ -44,12 +44,12 @@ class TestBackgroundJobManager:
                 time.sleep(2)
 
                 for job_instance in job_manager.job_instances:
-                    if job_instance.name == 'This one goes to 11':
+                    if job_instance.key() == 'volume':
                         assert job_instance.level == 11
-                    elif job_instance.name == 'Rock and Roll has got to go!':
+                    elif job_instance.key() == 'volume_sub_class':
                         # Property not yet set
                         assert job_instance.level is None
-                    elif job_instance.name == 'Turn on, tune in, drop out':
+                    elif job_instance.key() == 'light_switch':
                         assert job_instance.is_light_on is True
                     else:
                         assert False
@@ -65,21 +65,13 @@ def _job_manager_config():
         'jobs': [
             {
                 'cls': Volume,
-                'name': 'This one goes to 11',
-                'args': {
-                    'level': 11,
-                },
                 'schedule': {
                     'type': 'seconds',
                     'value': 1,
                 },
             },
             {
-                'cls': Volume,
-                'name': 'Rock and Roll has got to go!',
-                'args': {
-                    'level': 0,
-                },
+                'cls': VolumeSubClass,
                 'schedule': {
                     'type': 'day_at',
                     'value': '04:30',
@@ -88,7 +80,6 @@ def _job_manager_config():
             {
                 'cls': HelloWorld,
                 'disabled': True,
-                'name': 'This job is DISABLED',
                 'schedule': {
                     'type': 'seconds',
                     'value': 1,
@@ -96,7 +87,6 @@ def _job_manager_config():
             },
             {
                 'cls': LightSwitch,
-                'name': 'Turn on, tune in, drop out',
                 'schedule': {
                     'type': 'seconds',
                     'value': 1,

@@ -7,6 +7,7 @@ import EditEmailTemplate from '@/views/email/EditEmailTemplate.vue'
 import EmailTemplates from '@/views/email/EmailTemplates.vue'
 import Error from '@/views/Error.vue'
 import Home from '@/views/Home.vue'
+import JobHistory from '@/views/JobHistory.vue'
 import Jobs from '@/views/Jobs.vue'
 import Login from '@/views/Login.vue'
 import NotFound from '@/views/NotFound.vue'
@@ -88,13 +89,6 @@ const router = new Router({
       component: BaseView,
       children: [
         {
-          path: '/jobs',
-          component: Jobs,
-          meta: {
-            title: 'Jobs'
-          }
-        },
-        {
           path: '/changes',
           component: CourseChanges,
           meta: {
@@ -120,6 +114,20 @@ const router = new Router({
           component: EditEmailTemplate,
           meta: {
             title: 'Edit Email Template'
+          }
+        },
+        {
+          path: '/job/history',
+          component: JobHistory,
+          meta: {
+            title: 'Job History'
+          }
+        },
+        {
+          path: '/jobs',
+          component: Jobs,
+          meta: {
+            title: 'Jobs'
           }
         },
         {

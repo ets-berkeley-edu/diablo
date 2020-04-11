@@ -35,3 +35,7 @@ class CanvasJob(BaseJob):
             term_id=app.config['CURRENT_TERM_ID'],
             canvas_course_sites=get_canvas_course_sites(),
         )
+
+    @classmethod
+    def description(cls):
+        return 'Collect canvas-course-site IDs from Canvas and insert them into Diablo db.'

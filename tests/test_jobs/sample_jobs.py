@@ -24,30 +24,30 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 
 from diablo.jobs.base_job import BaseJob
-from flask import current_app as app
 
 
 class Volume(BaseJob):
 
     _level = None
 
-    def run(self, args=None):
-        new_level = args['level']
-        app.logger.info(f'Volume will be set to {new_level}')
-        self._level = new_level
+    def run(self):
+        self._level = 11
 
     @property
     def level(self):
         return self._level
 
 
+class VolumeSubClass(Volume):
+    pass
+
+
 class LightSwitch(BaseJob):
 
     _is_light_on = False
 
-    def run(self, args=None):
+    def run(self):
         self._is_light_on = True
-        app.logger.info('Light is now on.')
 
     @property
     def is_light_on(self):
@@ -56,5 +56,5 @@ class LightSwitch(BaseJob):
 
 class HelloWorld(BaseJob):
 
-    def run(self, args=None):
-        app.logger.info(f'Hello World! {args["message"]}')
+    def run(self):
+        pass

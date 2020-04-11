@@ -47,6 +47,9 @@
           <v-list-item v-if="$currentUser.isAdmin" @click="goToPath('/jobs')">
             <v-list-item-title>Jobs</v-list-item-title>
           </v-list-item>
+          <v-list-item v-if="$currentUser.isAdmin" @click="goToPath('/job/history')">
+            <v-list-item-title>Job History</v-list-item-title>
+          </v-list-item>
           <v-list-item @click="logOut">
             <v-list-item-title>Log Out</v-list-item-title>
           </v-list-item>

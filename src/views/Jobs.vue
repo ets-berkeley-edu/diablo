@@ -19,23 +19,21 @@
               No jobs found.
             </td>
           </tr>
-          <tr v-for="job in items" :key="job.id">
-            <td>
+          <tr v-for="job in items" :key="job.key">
+            <td class="w-auto">
               <v-btn
-                :id="`approve-${job.id}`"
-                :aria-label="`Run ${job.id}`"
-                color="primary"
+                :id="`run-job-${job.key}`"
+                :aria-label="`Run job ${job.key}`"
                 fab
                 small
-                dark
-                @click="start(job.id)">
-                <v-icon>mdi-video-plus</v-icon>
+                @click="start(job.key)">
+                <v-icon>mdi-run-fast</v-icon>
               </v-btn>
             </td>
-            <td>
-              {{ job.id }}
+            <td class="pr-4 text-no-wrap">
+              {{ job.key }}
             </td>
-            <td class="w-50">
+            <td>
               {{ job.description }}
             </td>
           </tr>
@@ -55,8 +53,8 @@
     mixins: [Context, Utils],
     data: () => ({
       headers: [
-        {text: 'Job'},
-        {text: 'Name', value: 'id'},
+        {text: 'Job', class: 'w-10', sortable: false},
+        {text: 'Key', value: 'key', sortable: false},
         {text: 'Description', value: 'description'}
       ],
       jobs: undefined
@@ -69,10 +67,11 @@
       }).catch(this.$ready)
     },
     methods: {
-      start(jobId) {
-        startJob(jobId).then(() => {
+      start(jobKey) {
+        startJob(jobKey).then(() => {
           console.log('Job started')
         })
       }
     }
-  }</script>
+  }
+</script>

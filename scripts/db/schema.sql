@@ -185,6 +185,28 @@ ALTER TABLE ONLY instructors
 
 --
 
+CREATE TABLE job_history (
+    id INTEGER NOT NULL,
+    job_key VARCHAR(80) NOT NULL,
+    failed BOOLEAN DEFAULT FALSE,
+    started_at timestamp with time zone NOT NULL,
+    finished_at timestamp with time zone
+);
+ALTER TABLE job_history OWNER TO diablo;
+CREATE SEQUENCE job_history_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+ALTER TABLE job_history_id_seq OWNER TO diablo;
+ALTER SEQUENCE job_history_id_seq OWNED BY job_history.id;
+ALTER TABLE ONLY job_history ALTER COLUMN id SET DEFAULT nextval('job_history_id_seq'::regclass);
+ALTER TABLE ONLY job_history
+    ADD CONSTRAINT job_history_pkey PRIMARY KEY (id);
+
+--
+
 CREATE TABLE queued_emails (
     id INTEGER NOT NULL,
     section_ids INTEGER[] NOT NULL,

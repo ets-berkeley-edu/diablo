@@ -73,10 +73,6 @@ JOB_MANAGER = {
         {
             'cls': DblinkToRedshiftJob,
             'disabled': True,
-            'name': 'Pull course data from the Data Loch',
-            'args': {
-                'message': 'I run once per day.',
-            },
             'schedule': {
                 'type': 'day_at',
                 'value': '06:00',
@@ -85,7 +81,6 @@ JOB_MANAGER = {
         {
             'cls': AdminEmailsJob,
             'disabled': True,
-            'name': 'Email alerts sent to Admin users',
             'schedule': {
                 'type': 'minutes',
                 'value': 60,

@@ -25,6 +25,20 @@
             <td class="pa-3 text-no-wrap">
               <div class="font-weight-black">
                 {{ item.courseName }}
+                <v-tooltip v-if="item.adminApproval" bottom nudge-right="200px">
+                  <template v-slot:activator="{ on }">
+                    <v-icon
+                      color="green"
+                      class="pa-0"
+                      dark
+                      v-on="on">
+                      mdi-account-check-outline
+                    </v-icon>
+                  </template>
+                  Course Capture Admin {{ item.adminApproval.approvedByUid }}
+                  submitted approval on
+                  {{ item.adminApproval.createdAt | moment('MMM D, YYYY') }}.
+                </v-tooltip>
               </div>
               <div>
                 {{ item.sectionId }}
@@ -40,7 +54,7 @@
               </div>
             </td>
             <td class="text-no-wrap">
-              <div v-for="roomBefore in item.roomsBefore" :key="roomBefore">
+              <div v-for="roomBefore in item.roomsBefore" :key="roomBefore.id">
                 <div>
                   <router-link
                     :id="`course-${item.sectionId}-room-before-${roomBefore.id}`"
@@ -63,6 +77,20 @@
             </td>
             <td>
               <div v-for="instructor in item.instructors" :key="instructor.uid">
+                <v-tooltip v-if="!instructor.wasSentInvite" bottom>
+                  <template v-slot:activator="{ on }">
+                    <v-icon
+                      color="yellow darken-2"
+                      class="pb-1 pl-1"
+                      dark
+                      v-on="on">
+                      mdi-alert-circle-outline
+                    </v-icon>
+                  </template>
+                  <div>
+                    No invite sent to {{ instructor.name }}.
+                  </div>
+                </v-tooltip>
                 <router-link :id="`instructor-${instructor.uid}-mailto`" :to="`/user/${instructor.uid}`">
                   {{ instructor.name }}
                 </router-link> ({{ instructor.uid }})
@@ -97,7 +125,7 @@
         this.$_.each(data, course => {
           course.roomsBefore = []
           this.$_.each([course.approvals, course.scheduled], actions => {
-            this.$_.each(this.$_.filter(actions, 'isObsolete'), obsolete => {
+            this.$_.each(this.$_.filter(actions, 'hasObsoleteRoom'), obsolete => {
               if (!this.$_.includes(course.roomsBefore, obsolete.room)) {
                 course.roomsBefore.push(obsolete.room)
               }
@@ -105,6 +133,11 @@
           })
           this.courses.push(course)
         })
+        if (this.courses.length < 2) {
+          this.$_.each(this.headers, h => {
+            h.sortable = false
+          })
+        }
         this.$ready()
       })
     }

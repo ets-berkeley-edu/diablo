@@ -139,8 +139,8 @@ def _create_users():
 
 
 def _run_jobs():
-    CanvasJob(app_context=app.app_context).run()
-    DataLochSyncJob(app_context=app.app_context).run()
+    CanvasJob(app_context=app.app_context).run_with_app_context()
+    DataLochSyncJob(app_context=app.app_context).run_with_app_context()
     std_commit(allow_test_environment=True)
 
 
