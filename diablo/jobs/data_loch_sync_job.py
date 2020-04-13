@@ -38,3 +38,7 @@ class DataLochSyncJob(BaseJob):
         instructor_uids = list(set([s['instructor_uid'] for s in sis_sections]))
         insert_or_update_instructors(instructor_uids)
         refresh_rooms()
+
+    @classmethod
+    def description(cls):
+        return '[DEPRECATED] Get latest course, instructor and room data from the Data Lake.'

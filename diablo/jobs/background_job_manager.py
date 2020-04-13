@@ -76,21 +76,19 @@ class BackgroundJobManager:
                     continue
 
                 job = job_config['cls'](app.app_context)
-                job.name = job_config['name']
 
                 self._job_instances.append(job)
 
-                args = job_config.get('args', [])
                 type_ = job_config['schedule']['type']
                 value = job_config['schedule']['value']
 
                 run_with_context = job.run_with_app_context
                 if type_ == 'minutes':
-                    schedule.every(value).minutes.do(run_with_context, args)
+                    schedule.every(value).minutes.do(run_with_context)
                 elif type_ == 'seconds':
-                    schedule.every(value).seconds.do(run_with_context, args)
+                    schedule.every(value).seconds.do(run_with_context)
                 elif type_ == 'day_at':
-                    schedule.every().day.at(value).do(run_with_context, args)
+                    schedule.every().day.at(value).do(run_with_context)
                 else:
                     raise BackgroundJobError(f'Unrecognized schedule type: {type_}')
 

@@ -72,11 +72,42 @@
             </td>
             <td class="text-no-wrap">{{ item.meetingDays.join(',') }}</td>
             <td class="text-no-wrap">{{ item.meetingStartTime }} - {{ item.meetingEndTime }}</td>
-            <td :id="`course-${item.sectionId}-status`" class="text-no-wrap w-10">
+            <td :id="`course-${item.sectionId}-status`" class="w-10">
+              <v-tooltip v-if="item.adminApproval" bottom>
+                <template v-slot:activator="{ on }">
+                  <v-icon
+                    color="green"
+                    class="pa-0"
+                    dark
+                    v-on="on">
+                    mdi-account-check-outline
+                  </v-icon>
+                </template>
+                Course Capture Admin {{ item.adminApproval.approvedByUid }}
+                submitted approval on
+                {{ item.adminApproval.createdAt | moment('MMM D, YYYY') }}.
+              </v-tooltip>
               {{ item.status || '&mdash;' }}
             </td>
             <td>
-              <div v-for="instructor in item.instructors" :key="instructor.uid">
+              <div v-for="instructor in item.instructors" :key="instructor.uid" class="mb-1 mt-1 pa-2">
+                <v-tooltip bottom>
+                  <template v-slot:activator="{ on }">
+                    <v-icon
+                      :color="instructor.approval ? 'green' : 'yellow darken-2'"
+                      class="pa-0"
+                      dark
+                      v-on="on">
+                      {{ instructor.approval ? 'mdi-check' : 'mdi-alert-circle-outline' }}
+                    </v-icon>
+                  </template>
+                  <div v-if="instructor.approval">
+                    Approval submitted on {{ instructor.approval.createdAt | moment('MMM D, YYYY') }}.
+                  </div>
+                  <div v-if="!instructor.approval">
+                    {{ instructor.name }} has not yet approved.
+                  </div>
+                </v-tooltip>
                 <router-link :id="`instructor-${instructor.uid}-mailto`" :to="`/user/${instructor.uid}`">
                   {{ instructor.name }}
                 </router-link> ({{ instructor.uid }})

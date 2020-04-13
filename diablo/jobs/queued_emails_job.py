@@ -41,3 +41,7 @@ class QueuedEmailsJob(BaseJob):
                     term_id=term_id,
                 )
             QueuedEmail.delete(queued_email)
+
+    @classmethod
+    def description(cls):
+        return 'Send all email that is queued.'

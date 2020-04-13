@@ -22,7 +22,7 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from diablo.api.errors import ResourceNotFoundError
+from diablo.api.errors import BadRequestError, ResourceNotFoundError
 from diablo.api.util import admin_required
 from diablo.jobs.admin_emails_job import AdminEmailsJob
 from diablo.jobs.canvas_job import CanvasJob
@@ -31,21 +31,36 @@ from diablo.jobs.dblink_to_redshift_job import DblinkToRedshiftJob
 from diablo.jobs.kaltura_job import KalturaJob
 from diablo.jobs.queued_emails_job import QueuedEmailsJob
 from diablo.lib.http import tolerant_jsonify
+from diablo.models.job_history import JobHistory
 from flask import current_app as app
 
 
-@app.route('/api/job/<job_id>/start')
+@app.route('/api/job/<job_key>/start')
 @admin_required
-def start_job(job_id):
-    job = next((job for job in _available_jobs() if job['id'] == job_id), None)
+def start_job(job_key):
+    job = next((job for job in _available_jobs() if job['key'] == job_key), None)
     if job:
-        job['class'](app.app_context).run()
+        job['class'](app.app_context).run_with_app_context()
         return tolerant_jsonify({
-            'id': job['id'],
+            'key': job['key'],
             'description': job['description'],
         })
     else:
-        raise ResourceNotFoundError(f'Invalid job_id: {job_id}')
+        raise ResourceNotFoundError(f'Invalid job_key: {job_key}')
+
+
+@app.route('/api/job/history/<day_count>')
+@admin_required
+def job_history(day_count):
+    def _raise_error():
+        raise BadRequestError(f'Invalid day_count: {day_count}')
+    try:
+        days = int(day_count)
+        if days < 1:
+            _raise_error()
+        return tolerant_jsonify([h.to_api_json() for h in JobHistory.get_job_history_in_past_days(day_count=days)])
+    except ValueError:
+        _raise_error()
 
 
 @app.route('/api/jobs/available')
@@ -54,42 +69,18 @@ def available_jobs():
     jobs = []
     for job in _available_jobs():
         jobs.append({
-            'id': job['id'],
+            'key': job['key'],
             'description': job['description'],
         })
     return tolerant_jsonify(jobs)
 
 
 def _available_jobs():
-    return [
-        {
-            'id': 'admin_emails',
-            'class': AdminEmailsJob,
-            'description': 'Notify admins of relevant room and instructor changes.',
-        },
-        {
-            'id': 'canvas',
-            'class': CanvasJob,
-            'description': 'Collect canvas-course-site IDs from Canvas and insert them into Diablo db.',
-        },
-        {
-            'id': 'data_loch_sync',
-            'class': DataLochSyncJob,
-            'description': '[DEPRECATED] Get latest course, instructor and room data from the Data Lake.',
-        },
-        {
-            'id': 'dblink_to_redshift',
-            'class': DblinkToRedshiftJob,
-            'description': 'Get latest course, instructor and room data from the Data Lake',
-        },
-        {
-            'id': 'kaltura',
-            'class': KalturaJob,
-            'description': 'With Kaltura API, schedule recordings and link them to Canvas sites.',
-        },
-        {
-            'id': 'queued_emails',
-            'class': QueuedEmailsJob,
-            'description': 'Send all email that is queued.',
-        },
-    ]
+    jobs = []
+    for job_cls in (AdminEmailsJob, CanvasJob, DataLochSyncJob, DblinkToRedshiftJob, KalturaJob, QueuedEmailsJob):
+        jobs.append({
+            'key': job_cls.key(),
+            'class': job_cls,
+            'description': job_cls.description(),
+        })
+    return jobs

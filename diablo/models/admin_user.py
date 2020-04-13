@@ -53,6 +53,11 @@ class AdminUser(Base):
         return user
 
     @classmethod
+    def all_admin_users(cls, include_deleted=False):
+        query = cls.query if include_deleted else cls.query.filter_by(deleted_at=None)
+        return query.order_by(cls.uid).all()
+
+    @classmethod
     def is_admin(cls, uid, include_deleted=False):
         query = cls.query.filter_by(uid=uid) if include_deleted else cls.query.filter_by(uid=uid, deleted_at=None)
         return query.first() is not None

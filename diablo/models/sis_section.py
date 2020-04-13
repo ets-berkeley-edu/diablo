@@ -28,6 +28,7 @@ import json
 
 from diablo import db
 from diablo.lib.util import objects_to_dict_organized_by_section_id, utc_now
+from diablo.models.admin_user import AdminUser
 from diablo.models.approval import Approval
 from diablo.models.canvas_course_site import CanvasCourseSite
 from diablo.models.course_preference import CoursePreference
@@ -486,20 +487,26 @@ class SisSection(db.Model):
 
 def _to_api_json(term_id, rows):
     courses_per_id = {}
+    instructors_per_section_id = {}
     section_ids_opted_out = CoursePreference.get_section_ids_opted_out(term_id=term_id)
 
     approvals = Approval.get_approvals_per_term(term_id)
     scheduled = Scheduled.get_all_scheduled(term_id)
     approvals_per_section_id = objects_to_dict_organized_by_section_id(objects=approvals)
     scheduled_per_section_id = objects_to_dict_organized_by_section_id(objects=scheduled)
+    all_admin_user_uids = [u.uid for u in AdminUser.all_admin_users(include_deleted=True)]
 
+    # If course has multiple instructors then the section_id will be represented across multiple rows.
     for row in rows:
         section_id = int(row['sis_section_id'])
         if section_id not in courses_per_id:
+            # Construct new course
+            instructors_per_section_id[section_id] = []
             has_opted_out = section_id in section_ids_opted_out
             approvals = [a.to_api_json() for a in approvals_per_section_id.get(section_id, [])]
             scheduled = [s.to_api_json() for s in scheduled_per_section_id.get(section_id, [])]
             course = {
+                'adminApproval': next((a for a in approvals if a['approvedByUid'] in all_admin_user_uids), False),
                 'allowedUnits': row['allowed_units'],
                 'canvasCourseSites': _canvas_course_sites(term_id, section_id),
                 'courseName': row['sis_course_name'], 'courseTitle': row['sis_course_title'],
@@ -513,17 +520,21 @@ def _to_api_json(term_id, rows):
                 'approvals': approvals,
                 'scheduled': scheduled,
             }
+            invites = SentEmail.get_emails_of_type(
+                section_id=section_id,
+                template_type='invitation',
+                term_id=term_id,
+            )
+            course['invitees'] = []
+            for invite in invites:
+                course['invitees'].extend(invite.recipient_uids)
+
             if scheduled:
                 course['status'] = 'Scheduled'
             elif approvals:
                 course['status'] = 'Partially Approved'
             else:
-                invited = SentEmail.get_emails_of_type(
-                    section_id=section_id,
-                    template_type='invitation',
-                    term_id=term_id,
-                )
-                course['status'] = 'Invited' if invited else 'Not Invited'
+                course['status'] = 'Invited' if invites else 'Not Invited'
 
             room = Room.get_room(row['room_id']).to_api_json() if 'room_id' in row else None
             course['room'] = room
@@ -531,17 +542,27 @@ def _to_api_json(term_id, rows):
                 room_id = action.pop('roomId')
                 obsolete_action = not room or room['id'] != room_id
                 action['room'] = Room.get_room(room_id).to_api_json() if obsolete_action else room
-                action['isObsolete'] = obsolete_action
+                action['hasObsoleteRoom'] = obsolete_action
             courses_per_id[section_id] = course
 
-        courses_per_id[section_id]['instructors'].append({
-            'deptCode': row['instructor_dept_code'],
-            'email': row['instructor_email'],
-            'name': row['instructor_name'],
-            'roleCode': row['instructor_role_code'],
-            'uid': row['instructor_uid'],
-        })
-    return list(courses_per_id.values())
+        # Build upon course object with one instructor per row.
+        instructor_uid = row['instructor_uid']
+        if instructor_uid not in [i['uid'] for i in instructors_per_section_id[section_id]]:
+            instructors_per_section_id[section_id].append({
+                'approval': next((a for a in approvals if a['approvedByUid'] == instructor_uid), False),
+                'deptCode': row['instructor_dept_code'],
+                'email': row['instructor_email'],
+                'name': row['instructor_name'],
+                'roleCode': row['instructor_role_code'],
+                'uid': instructor_uid,
+                'wasSentInvite': instructor_uid in courses_per_id[section_id]['invitees'],
+            })
+
+    api_json = []
+    for section_id, course in courses_per_id.items():
+        course['instructors'] = instructors_per_section_id[section_id]
+        api_json.append(course)
+    return api_json
 
 
 def _canvas_course_sites(term_id, section_id):

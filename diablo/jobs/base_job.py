@@ -22,27 +22,35 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-
 from diablo.jobs.background_job_manager import BackgroundJobError
+from diablo.lib.util import camel_case_to_snake_case
+from diablo.models.job_history import JobHistory
+from flask import current_app as app
 
 
 class BaseJob:
 
     def __init__(self, app_context):
         self.app_context = app_context
-        self._name = None
 
-    def run_with_app_context(self, args=None):
+    def run_with_app_context(self):
         with self.app_context():
-            self.run(args)
+            job_tracker = JobHistory.job_started(job_key=self.key())
+            try:
+                self.run()
+                JobHistory.job_finished(id_=job_tracker.id)
+            except Exception as e:
+                app.logger.error(f'Job {self.key()} failed')
+                app.logger.exception(e)
+                JobHistory.job_finished(id_=job_tracker.id, failed=True)
 
-    def run(self, args=None):
-        raise BackgroundJobError('Job must implement run()')
+    def run(self):
+        raise BackgroundJobError('Implement this method in Job sub-class')
 
-    @property
-    def name(self):
-        return self._name
+    @classmethod
+    def key(cls):
+        return camel_case_to_snake_case(cls.__name__)
 
-    @name.setter
-    def name(self, new_name):
-        self._name = new_name
+    @classmethod
+    def description(cls):
+        raise BackgroundJobError('Implement this method in Job sub-class')
