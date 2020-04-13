@@ -18,7 +18,8 @@ export default {
     ...mapActions('context', [
       'alertScreenReader',
       'snackbarClose',
-      'snackbarOpen'
+      'snackbarOpen',
+      'snackbarReportError'
     ])
   }
 }

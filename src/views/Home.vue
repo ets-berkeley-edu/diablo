@@ -30,7 +30,7 @@
       </template>
       <template v-slot:body="{ items }">
         <tbody>
-          <tr v-for="item in items" :key="item.name">
+          <tr v-for="item in items" :id="`course-${item.sectionId}`" :key="item.name">
             <td>
               <div v-if="item.room && item.room.capability">
                 <v-btn

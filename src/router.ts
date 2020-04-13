@@ -189,7 +189,7 @@ const router = new Router({
 
 router.afterEach((to: any) => {
   const title = _.get(to, 'meta.title') || _.capitalize(to.name) || 'Welcome'
-  document.title = `${title} | Diablo`
+  document.title = `${title} | Course Capture`
 })
 
 export default router

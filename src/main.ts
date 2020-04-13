@@ -29,22 +29,20 @@ axios.interceptors.response.use(
     },
     error => {
       const errorStatus = _.get(error, 'response.status')
-      if (errorStatus === 401) {
-        axios.get(`${apiBaseUrl}/api/user/my_profile`).then(response => {
-          Vue.prototype.$currentUser = response.data
-          Vue.prototype.$core.initializeCurrentUser().then(router.push({ path: '/login' }).catch(() => null))
-        })
-      } else if (errorStatus === 404) {
-        router.push({ path: '/404' })
-      } else if (errorStatus >= 400) {
-        router.push({
-          path: '/error',
-          query: {
-            m: _.get(error, 'response.data.message') || error.message
-          }
-        })
+      if (_.get(Vue.prototype.$currentUser, 'isAuthenticated')) {
+        if (errorStatus === 404) {
+          router.push({ path: '/404' })
+        } else if (errorStatus >= 500) {
+          router.push({
+            path: '/error',
+            query: {
+              m: _.get(error, 'response.data.message') || error.message
+            }
+          })
+        }
       } else {
-        return Promise.reject(error)
+        // Raise error and let /login page display the message
+        throw _.get(error, 'response.data.message') || `Error: Server responded with status ${errorStatus}`
       }
     })
 

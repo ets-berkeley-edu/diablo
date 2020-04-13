@@ -5,24 +5,25 @@
         <h2><v-icon class="pb-2" large>mdi-file-document-outline</v-icon> {{ templateId ? 'Edit' : 'Create' }} Email Template</h2>
         <h3 class="title">
           <span class="font-weight-bold">Type:</span>&nbsp;&nbsp;
-          <span class="font-italic">{{ typeName }}</span>
+          <span id="template-type-name" class="font-italic">{{ typeName }}</span>
         </h3>
       </v-row>
       <v-row no-gutters>
         <v-col cols="8">
-          <v-text-field v-model="name" label="Template Name"></v-text-field>
+          <v-text-field id="input-template-name" v-model="name" label="Template Name"></v-text-field>
         </v-col>
         <v-spacer></v-spacer>
       </v-row>
       <v-row no-gutters>
         <v-col cols="8">
-          <v-text-field v-model="subjectLine" label="Subject"></v-text-field>
+          <v-text-field id="input-template-subject-line" v-model="subjectLine" label="Subject"></v-text-field>
         </v-col>
         <v-spacer></v-spacer>
       </v-row>
       <v-row class="mt-4">
         <v-col>
           <tiptap-vuetify
+            id="textarea-template-body"
             v-model="message"
             :extensions="extensions"
             placeholder="Message"
@@ -36,8 +37,14 @@
         </v-col>
         <v-col cols="3">
           <div class="d-flex">
-            <v-btn color="primary" @click="createTemplate">{{ templateId ? 'Save' : 'Create' }}</v-btn>
-            <v-btn text color="accent" @click="cancel">Cancel</v-btn>
+            <v-btn id="save-email-template" color="primary" @click="createTemplate">{{ templateId ? 'Save' : 'Create' }}</v-btn>
+            <v-btn
+              id="cancel-edit-of-email-template"
+              text
+              color="accent"
+              @click="cancel">
+              Cancel
+            </v-btn>
           </div>
         </v-col>
       </v-row>

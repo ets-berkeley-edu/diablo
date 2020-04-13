@@ -10,6 +10,7 @@
       <v-spacer></v-spacer>
       <div class="float-right w-50">
         <v-text-field
+          id="input-search"
           v-model="search"
           append-icon="mdi-magnify"
           label="Search"
@@ -17,7 +18,7 @@
           hide-details
         ></v-text-field>
         <v-select
-          id="select-filter"
+          id="ouija-filter-options"
           v-model="selectedFilter"
           color="secondary"
           :items="$config.searchFilterOptions"
@@ -45,8 +46,8 @@
           <tr v-if="!items.length && !refreshing">
             <td colspan="10">
               <div class="ma-4 text-no-wrap title">
-                <span v-if="search">No results for '{{ search }}'</span>
-                <span v-if="!search">No '{{ selectedFilter }}' courses</span>
+                <span v-if="search" id="no-results-for-search">No results for '{{ search }}'</span>
+                <span v-if="!search" id="no-results-in-filter">No '{{ selectedFilter }}' courses</span>
               </div>
             </td>
           </tr>
@@ -59,8 +60,8 @@
                 :value="item"
               ></v-checkbox>
             </td>
-            <td class="text-no-wrap">{{ item.courseName }}</td>
-            <td class="text-no-wrap w-10">{{ item.sectionId }}</td>
+            <td :id="`course-name-${item.sectionId}`" class="text-no-wrap">{{ item.courseName }}</td>
+            <td :id="`section-id-${item.sectionId}`" class="text-no-wrap w-10">{{ item.sectionId }}</td>
             <td class="text-no-wrap">
               <router-link
                 v-if="item.room"
@@ -70,10 +71,10 @@
               </router-link>
               <span v-if="!item.room">&nbsp;</span>
             </td>
-            <td class="text-no-wrap">{{ item.meetingDays.join(',') }}</td>
-            <td class="text-no-wrap">{{ item.meetingStartTime }} - {{ item.meetingEndTime }}</td>
+            <td :id="`meeting-days-${item.sectionId}`" class="text-no-wrap">{{ item.meetingDays.join(',') }}</td>
+            <td :id="`meeting-times-${item.sectionId}`" class="text-no-wrap">{{ item.meetingStartTime }} - {{ item.meetingEndTime }}</td>
             <td :id="`course-${item.sectionId}-status`" class="w-10">
-              <v-tooltip v-if="item.adminApproval" bottom>
+              <v-tooltip v-if="item.adminApproval" :id="`tooltip-admin-approval-${item.sectionId}`" bottom>
                 <template v-slot:activator="{ on }">
                   <v-icon
                     color="green"
@@ -91,7 +92,7 @@
             </td>
             <td>
               <div v-for="instructor in item.instructors" :key="instructor.uid" class="mb-1 mt-1 pa-2">
-                <v-tooltip bottom>
+                <v-tooltip :id="`tooltip-approval-${item.sectionId}-by-${instructor.uid}`" bottom>
                   <template v-slot:activator="{ on }">
                     <v-icon
                       :color="instructor.approval ? 'green' : 'yellow darken-2'"
@@ -108,12 +109,12 @@
                     {{ instructor.name }} has not yet approved.
                   </div>
                 </v-tooltip>
-                <router-link :id="`instructor-${instructor.uid}-mailto`" :to="`/user/${instructor.uid}`">
+                <router-link :id="`course-${item.sectionId}-instructor-${instructor.uid}-mailto`" :to="`/user/${instructor.uid}`">
                   {{ instructor.name }}
                 </router-link> ({{ instructor.uid }})
               </div>
             </td>
-            <td>
+            <td :id="`course-${item.sectionId}-publish-types`">
               {{ item.publishTypeNames || '&mdash;' }}
             </td>
             <td>

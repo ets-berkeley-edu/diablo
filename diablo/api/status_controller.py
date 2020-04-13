@@ -61,8 +61,8 @@ def ping():
     return tolerant_jsonify({
         'app': True,
         # 'canvas': ping_canvas(),
-        'dataLoch': data_loch_status(),
-        'db': db_status(),
+        # 'dataLoch': data_loch_status(),
+        # 'db': db_status(),
         # 'emailTemplates': len(EmailTemplate.all_templates()) == len(EmailTemplate.get_template_type_options()),
         # 'kaltura': Kaltura().ping(),
         # 'mailgun': Mailgun().ping(),
