@@ -41,6 +41,14 @@ def execute(sql, params=None, log_query=True):
             return _execute(sql, cursor, params, 'write', log_query)
 
 
+def log_db_error(e, sql):
+    error_str = str(e)
+    if e.pgcode:
+        error_str += f'{e.pgcode}: {e.pgerror}\n'
+    error_str += f'on SQL: {sql}'
+    app.logger.warning(error_str)
+
+
 @contextmanager
 def _get_cursor(autocommit=True, operation='write'):
     with get_psycopg_cursor(
@@ -61,17 +69,9 @@ def _execute(sql, cursor, params=None, operation='write', log_query=True):
         if log_query:
             app.logger.debug(f'RDS query returned status {result} in {query_time} seconds: \n{sql}\n{params or ""}')
     except psycopg2.Error as e:
-        _log_db_error(e, sql)
+        log_db_error(e, sql)
     if operation == 'read':
         rows = cursor.fetchall()
         return [dict(r) for r in rows]
     else:
         return result
-
-
-def _log_db_error(e, sql):
-    error_str = str(e)
-    if e.pgcode:
-        error_str += f'{e.pgcode}: {e.pgerror}\n'
-    error_str += f'on SQL: {sql}'
-    app.logger.warning(error_str)
