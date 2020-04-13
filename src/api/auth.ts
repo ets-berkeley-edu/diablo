@@ -13,7 +13,9 @@ export function devAuthLogIn(uid: string, password: string) {
       Vue.prototype.$currentUser = data
       Vue.prototype.$core.initializeCurrentUser().then(_.noop)
       return Vue.prototype.$currentUser
-    }, error => error)
+    }).catch(error => {
+      return error
+    })
 }
 
 export function getCasLoginURL() {

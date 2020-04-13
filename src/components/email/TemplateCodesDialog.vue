@@ -6,6 +6,7 @@
     >
       <template v-slot:activator="{ on }">
         <v-btn
+          id="btn-email-template-codes"
           color="secondary"
           dark
           text
@@ -34,7 +35,11 @@
         <v-divider></v-divider>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="primary" text @click="dialog = false">
+          <v-btn
+            id="btn-close-template-codes-dialog"
+            color="primary"
+            text
+            @click="dialog = false">
             Close
           </v-btn>
         </v-card-actions>

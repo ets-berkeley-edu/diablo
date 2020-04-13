@@ -54,7 +54,7 @@
                   type="password"></v-text-field>
               </div>
               <div class="align-self-center pb-2">
-                <v-btn color="primary" @click="devAuth">Login</v-btn>
+                <v-btn id="btn-dev-auth-login" color="primary" @click="devAuth">Login</v-btn>
               </div>
             </div>
           </v-form>
@@ -67,10 +67,11 @@
 <script>
   import Utils from '@/mixins/Utils'
   import { devAuthLogIn, getCasLoginURL } from '@/api/auth'
+  import Context from '@/mixins/Context'
 
   export default {
     name: 'Login',
-    mixins: [Utils],
+    mixins: [Context, Utils],
     data: () => ({
       devAuthUid: undefined,
       devAuthPassword: undefined
@@ -80,14 +81,20 @@
         let uid = this.$_.trim(this.devAuthUid)
         let password = this.$_.trim(this.devAuthPassword)
         if (uid && password) {
-          devAuthLogIn(uid, password).then(user => {
-            if (user.isAuthenticated) {
-              const redirect = this.$_.get(this.$router, 'currentRoute.query.redirect')
-              this.$router.push({ path: redirect || '/home' }, this.$_.noop)
-            } else {
-              this.reportError('Sorry, you are not authorized to use Diablo.')
+          devAuthLogIn(uid, password).then(data => {
+              if (data.isAuthenticated) {
+                const redirect = this.$_.get(this.$router, 'currentRoute.query.redirect')
+                this.$router.push({ path: redirect || '/home' }, this.$_.noop)
+              } else if (data.message) {
+                this.reportError(data.message)
+              } else {
+                this.reportError('Sorry, you are not authorized to use Diablo.')
+              }
+            },
+            error => {
+              this.reportError(error)
             }
-          })
+          )
         } else if (uid) {
           this.reportError('Password required')
           this.putFocusNextTick('dev-auth-password')
@@ -100,7 +107,7 @@
         getCasLoginURL().then(data => window.location.href = data.casLoginUrl)
       },
       reportError(msg) {
-        console.log(msg)
+        this.snackbarReportError(msg)
       }
     }
   }

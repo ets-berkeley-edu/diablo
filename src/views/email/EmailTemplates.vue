@@ -33,10 +33,10 @@
               <td>
                 <router-link :id="`template-${template.id}`" :to="`/email/template/edit/${template.id}`">{{ template.name }}</router-link>
               </td>
-              <td class="w-50">
+              <td :id="`template-${template.typeName}-subject-line`" class="w-50">
                 {{ template.subjectLine }}
               </td>
-              <td>
+              <td :id="`template-${template.typeName}-type-name`">
                 {{ template.typeName }}
               </td>
               <td class="text-no-wrap">
@@ -44,6 +44,7 @@
               </td>
               <td>
                 <v-btn
+                  :id="`send-test-email-${template.typeName}`"
                   icon
                   @click="sendTestEmail(template.id)">
                   <v-icon>mdi-email-outline</v-icon>
@@ -51,6 +52,7 @@
               </td>
               <td>
                 <v-btn
+                  :id="`delete-email-template-${template.typeName}`"
                   icon
                   @click="deleteEmailTemplate(template.id)">
                   <v-icon>mdi-trash-can-outline</v-icon>
@@ -62,7 +64,7 @@
       </v-data-table>
       <div v-if="pageCount > 1" class="text-center pb-4 pt-2">
         <v-pagination
-          id="emailTemplates-pagination"
+          id="email-templates-pagination"
           v-model="options.page"
           :length="pageCount"
           total-visible="10"></v-pagination>

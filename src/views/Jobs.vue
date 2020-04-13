@@ -14,7 +14,7 @@
     >
       <template v-slot:body="{ items }">
         <tbody>
-          <tr v-if="!items.length">
+          <tr v-if="!items.length" id="no-jobs">
             <td>
               No jobs found.
             </td>

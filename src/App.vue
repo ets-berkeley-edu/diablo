@@ -2,12 +2,13 @@
   <v-app :id="$vuetify.theme.dark ? 'dark' : 'light'">
     <v-snackbar
       v-model="snackbarShow"
-      color="primary"
+      :color="snackbar.color"
       :timeout="snackbar.timeout"
       :top="true"
     >
-      {{ snackbar.text }}
+      <span id="alert-text">{{ snackbar.text }}</span>
       <v-btn
+        id="btn-close-alert"
         text
         @click="snackbarClose"
       >
@@ -27,6 +28,7 @@
       <v-menu v-if="$currentUser.isAuthenticated" class="mr-2" offset-y>
         <template v-slot:activator="{ on }">
           <v-btn
+            id="btn-main-menu"
             color="primary"
             dark
             v-on="on"
@@ -36,21 +38,22 @@
         </template>
         <v-list class="pr-2">
           <v-list-item
+            id="menu-item-feedback-and-help"
             :href="`mailto:${$config.supportEmailAddress}`"
             target="_blank"
             aria-label="Send email to the Course Capture support team; this link opens a new tab.">
             <v-list-item-title>Feedback/Help</v-list-item-title>
           </v-list-item>
-          <v-list-item v-if="$currentUser.isAdmin" @click="goToPath('/email/templates')">
+          <v-list-item v-if="$currentUser.isAdmin" id="menu-item-email-templates" @click="goToPath('/email/templates')">
             <v-list-item-title>Email Templates</v-list-item-title>
           </v-list-item>
-          <v-list-item v-if="$currentUser.isAdmin" @click="goToPath('/jobs')">
+          <v-list-item v-if="$currentUser.isAdmin" id="menu-item-jobs" @click="goToPath('/jobs')">
             <v-list-item-title>Jobs</v-list-item-title>
           </v-list-item>
-          <v-list-item v-if="$currentUser.isAdmin" @click="goToPath('/job/history')">
+          <v-list-item v-if="$currentUser.isAdmin" id="menu-item-job-history" @click="goToPath('/job/history')">
             <v-list-item-title>Job History</v-list-item-title>
           </v-list-item>
-          <v-list-item @click="logOut">
+          <v-list-item id="menu-item-log-out" @click="logOut">
             <v-list-item-title>Log Out</v-list-item-title>
           </v-list-item>
         </v-list>

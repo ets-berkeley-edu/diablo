@@ -2,15 +2,15 @@
   <div v-if="!loading">
     <v-container fluid>
       <v-row class="pl-3">
-        <h2>{{ pageTitle }}</h2>
+        <h2 id="page-title">{{ pageTitle }}</h2>
       </v-row>
       <v-row class="pl-3">
-        <h3>{{ course.courseTitle }}</h3>
+        <h3 id="course-title">{{ course.courseTitle }}</h3>
       </v-row>
       <v-row>
         <v-col lg="3" md="3" sm="3">
           <v-card class="mb-3 mr-3 mt-3 pa-6" outlined tile>
-            <v-row>
+            <v-row id="instructors">
               <v-col md="auto">
                 <v-icon>mdi-school-outline</v-icon>
               </v-col>
@@ -26,7 +26,7 @@
                 </span>
               </v-col>
             </v-row>
-            <v-row v-if="course.meetingDays">
+            <v-row v-if="course.meetingDays" id="meeting-days">
               <v-col md="auto">
                 <v-icon>mdi-calendar</v-icon>
               </v-col>
@@ -34,7 +34,7 @@
                 {{ $_.join(course.meetingDays, ', ') }}
               </v-col>
             </v-row>
-            <v-row v-if="course.meetingStartTime">
+            <v-row v-if="course.meetingStartTime" id="meeting-times">
               <v-col md="auto">
                 <v-icon>mdi-clock-outline</v-icon>
               </v-col>
@@ -42,7 +42,7 @@
                 {{ course.meetingStartTime }} - {{ course.meetingEndTime }}
               </v-col>
             </v-row>
-            <v-row>
+            <v-row id="rooms">
               <v-col md="auto">
                 <v-icon>mdi-map-marker</v-icon>
               </v-col>
@@ -53,7 +53,7 @@
                 {{ room.location }}
               </v-col>
             </v-row>
-            <v-row v-if="course.canvasCourseSites.length">
+            <v-row v-if="course.canvasCourseSites.length" id="canvas-course-sites">
               <v-col md="auto">
                 <v-icon>mdi-bookmark-outline</v-icon>
               </v-col>
@@ -106,7 +106,7 @@
                 <v-col cols="4" class="mb-5">
                   <h5>
                     <label for="select-recording-type">Recording Type</label>
-                    <v-tooltip bottom>
+                    <v-tooltip id="tooltip-recording-type" bottom>
                       <template v-slot:activator="{ on }">
                         <v-icon
                           color="primary"
@@ -150,7 +150,7 @@
                 <v-col cols="4" class="mb-5">
                   <h5>
                     <label for="select-publish-type">Publish</label>
-                    <v-tooltip bottom>
+                    <v-tooltip id="tooltip-publish" bottom>
                       <template v-slot:activator="{ on }">
                         <v-icon
                           color="primary"
@@ -169,7 +169,7 @@
                   </h5>
                 </v-col>
                 <v-col cols="8">
-                  <div v-if="hasNecessaryApprovals" class="pb-5">
+                  <div v-if="hasNecessaryApprovals" id="approved-publish-type" class="pb-5">
                     {{ mostRecentApproval.publishTypeName }}
                   </div>
                   <v-select
@@ -204,7 +204,13 @@
               </v-row>
               <v-row v-if="!hasNecessaryApprovals" class="pr-5">
                 <v-spacer />
-                <v-btn color="success" :disabled="disableSubmit" @click="approveRecording">Approve</v-btn>
+                <v-btn
+                  id="btn-approve"
+                  color="success"
+                  :disabled="disableSubmit"
+                  @click="approveRecording">
+                  Approve
+                </v-btn>
               </v-row>
             </v-container>
           </v-card>

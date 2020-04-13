@@ -45,8 +45,24 @@ def cas_login_url():
 
 @app.route('/api/auth/dev_auth_login', methods=['POST'])
 def dev_auth_login():
-    params = request.get_json() or {}
-    return _dev_auth_login(params.get('uid'), params.get('password'))
+    if app.config['DEVELOPER_AUTH_ENABLED']:
+        params = request.get_json() or {}
+        uid = params.get('uid')
+        password = params.get('password')
+        if password != app.config['DEVELOPER_AUTH_PASSWORD']:
+            return tolerant_jsonify({'message': 'Invalid credentials'}, 401)
+        user = User(uid)
+        if not user.is_active:
+            msg = f'UID {uid} is neither a Diablo admin-user nor active in CalNet.'
+            app.logger.error(msg)
+            return tolerant_jsonify({'message': msg}, 403)
+        if not login_user(user, force=True, remember=True):
+            msg = f'The system failed to log in user with UID {uid}.'
+            app.logger.error(msg)
+            return tolerant_jsonify({'message': msg}, 403)
+        return tolerant_jsonify(current_user.to_api_json())
+    else:
+        raise ResourceNotFoundError('Unknown path')
 
 
 @app.route('/api/auth/logout')
@@ -96,24 +112,6 @@ def _cas_client(target_url=None):
     if target_url:
         service_url = service_url + '?' + urlencode({'url': target_url})
     return cas.CASClientV3(server_url=cas_server, service_url=service_url)
-
-
-def _dev_auth_login(uid, password):
-    if app.config['DEVELOPER_AUTH_ENABLED']:
-        if password != app.config['DEVELOPER_AUTH_PASSWORD']:
-            return tolerant_jsonify({'message': 'Invalid credentials'}, 401)
-        user = User(uid)
-        if not user.is_active:
-            msg = f'UID {uid} is neither a Diablo admin-user nor active in CalNet.'
-            app.logger.error(msg)
-            return tolerant_jsonify({'message': msg}, 403)
-        if not login_user(user, force=True, remember=True):
-            msg = f'The system failed to log in user with UID {uid}.'
-            app.logger.error(msg)
-            return tolerant_jsonify({'message': msg}, 403)
-        return tolerant_jsonify(current_user.to_api_json())
-    else:
-        raise ResourceNotFoundError('Unknown path')
 
 
 def _is_safe_url(target):
