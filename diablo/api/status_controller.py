@@ -22,39 +22,48 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-
 from diablo import db
 from diablo.externals import data_loch
-from diablo.externals.canvas import ping_canvas
-from diablo.externals.kaltura import Kaltura
-from diablo.externals.mailgun import Mailgun
+from diablo.externals.rds import log_db_error
 from diablo.lib.http import tolerant_jsonify
-from diablo.models.email_template import EmailTemplate
 from flask import current_app as app
+import psycopg2
 from sqlalchemy.exc import SQLAlchemyError
 
 
 @app.route('/api/ping')
-def app_status():
+def ping():
     def db_status():
+        def _log(exception):
+            app.logger.exception('Database connection error')
+            app.logger.exception(exception)
+
+        sql = 'SELECT 1'
         try:
             db.session.execute('SELECT 1')
+            db.session.execute(sql)
             return True
         except SQLAlchemyError:
             app.logger.exception('Database connection error')
+        except psycopg2.Error as e:
+            _log(e)
+            log_db_error(e, sql)
+            return False
+        except SQLAlchemyError as e:
+            _log(e)
             return False
 
     def data_loch_status():
         rows = data_loch.safe_execute_rds('SELECT 1')
         return rows is not None
 
-    resp = {
+    # TODO: Bring these back, one by one, as we verify in the shared dev environment.
+    return tolerant_jsonify({
         'app': True,
-        'canvas': ping_canvas(),
+        # 'canvas': ping_canvas(),
         'dataLoch': data_loch_status(),
         'db': db_status(),
-        'emailTemplates': len(EmailTemplate.all_templates()) == len(EmailTemplate.get_template_type_options()),
-        'kaltura': Kaltura().ping(),
-        'mailgun': Mailgun().ping(),
-    }
-    return tolerant_jsonify(resp)
+        # 'emailTemplates': len(EmailTemplate.all_templates()) == len(EmailTemplate.get_template_type_options()),
+        # 'kaltura': Kaltura().ping(),
+        # 'mailgun': Mailgun().ping(),
+    })

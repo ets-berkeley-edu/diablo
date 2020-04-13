@@ -56,12 +56,11 @@ def get_canvas_course_sites():
 
 
 def ping_canvas():
-    account = _get_canvas().get_account(app.config['CANVAS_BERKELEY_ACCOUNT_ID'])
-    return account.get_courses(
+    return _get_canvas().get_courses(
         enrollment_term_id=app.config['CANVAS_ENROLLMENT_TERM_ID'],
         search_term='Scandinavian',
         with_enrollments=True,
-    )
+    ) is not None
 
 
 def _get_canvas():
