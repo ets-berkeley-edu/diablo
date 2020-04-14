@@ -6,7 +6,7 @@ const state = {
   snackbar: {
     color: 'primary',
     text: undefined,
-    timeout: 2000
+    timeout: 8000
   },
   snackbarShow: false
 }
@@ -29,13 +29,11 @@ const mutations = {
   snackbarOpen: (state: any, text) => {
     state.snackbar.text = text
     state.snackbar.color = 'primary'
-    state.snackbar.timeout = 2000
     state.snackbarShow = true
   },
   snackbarReportError: (state: any, text) => {
     state.snackbar.text = text
     state.snackbar.color = 'error'
-    state.snackbar.timeout = 5000
     state.snackbarShow = true
   }
 }

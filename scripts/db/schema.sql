@@ -209,7 +209,7 @@ ALTER TABLE ONLY job_history
 
 CREATE TABLE queued_emails (
     id INTEGER NOT NULL,
-    section_ids INTEGER[] NOT NULL,
+    section_id INTEGER NOT NULL,
     template_type email_template_types,
     term_id INTEGER NOT NULL,
     created_at timestamp with time zone NOT NULL
@@ -226,6 +226,8 @@ ALTER SEQUENCE queued_emails_id_seq OWNED BY queued_emails.id;
 ALTER TABLE ONLY queued_emails ALTER COLUMN id SET DEFAULT nextval('queued_emails_id_seq'::regclass);
 ALTER TABLE ONLY queued_emails
     ADD CONSTRAINT queued_emails_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY queued_emails
+    ADD CONSTRAINT queued_emails_section_id_template_type_unique_constraint UNIQUE (section_id, template_type, term_id);
 
 --
 

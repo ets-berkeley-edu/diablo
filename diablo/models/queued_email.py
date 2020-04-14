@@ -28,36 +28,42 @@ from datetime import datetime
 from diablo import db, std_commit
 from diablo.lib.util import to_isoformat
 from diablo.models.email_template import email_template_type, EmailTemplate
-from sqlalchemy.dialects.postgresql import ARRAY
 
 
 class QueuedEmail(db.Model):
     __tablename__ = 'queued_emails'
 
     id = db.Column(db.Integer, nullable=False, primary_key=True)  # noqa: A003
-    section_ids = db.Column(ARRAY(db.Integer), nullable=False)
+    section_id = db.Column(db.Integer, nullable=False)
     template_type = db.Column(email_template_type, nullable=False)
     term_id = db.Column(db.Integer, nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.now)
 
-    def __init__(self, section_ids, template_type, term_id):
+    __table_args__ = (db.UniqueConstraint(
+        'section_id',
+        'template_type',
+        'term_id',
+        name='queued_emails_section_id_template_type_unique_constraint',
+    ),)
+
+    def __init__(self, section_id, template_type, term_id):
         self.template_type = template_type
-        self.section_ids = section_ids
+        self.section_id = section_id
         self.term_id = term_id
 
     def __repr__(self):
         return f"""<QueuedEmail
                     id={self.id}
-                    section_ids={self.section_ids},
+                    section_id={self.section_id},
                     template_type={self.template_type}
                     term_id={self.term_id},
                     created_at={self.created_at}
                 """
 
     @classmethod
-    def create(cls, section_ids, template_type, term_id):
+    def create(cls, section_id, template_type, term_id):
         queued_email = cls(
-            section_ids=section_ids,
+            section_id=section_id,
             template_type=template_type,
             term_id=term_id,
         )
@@ -74,10 +80,14 @@ class QueuedEmail(db.Model):
     def get_all(cls, term_id):
         return cls.query.filter_by(term_id=term_id).order_by(cls.created_at).all()
 
+    @classmethod
+    def get_all_section_ids(cls, template_type, term_id):
+        return [row.section_id for row in cls.query.filter_by(template_type=template_type, term_id=term_id).all()]
+
     def to_api_json(self):
         return {
             'id': self.id,
-            'sectionIds': self.section_ids,
+            'sectionId': self.section_id,
             'templateType': self.template_type,
             'templateTypeName': EmailTemplate.get_template_type_options()[self.template_type],
             'termId': self.term_id,

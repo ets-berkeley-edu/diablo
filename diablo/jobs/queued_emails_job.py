@@ -34,13 +34,12 @@ class QueuedEmailsJob(BaseJob):
     def run(self, args=None):
         term_id = app.config['CURRENT_TERM_ID']
         for queued_email in QueuedEmail.get_all(term_id):
-            for section_id in queued_email.section_ids:
-                send_invite_related_email(
-                    course=SisSection.get_course(term_id, section_id),
-                    template_type=queued_email.template_type,
-                    term_id=term_id,
-                )
-            QueuedEmail.delete(queued_email)
+            if send_invite_related_email(
+                course=SisSection.get_course(term_id, queued_email.section_id),
+                template_type=queued_email.template_type,
+                term_id=term_id,
+            ):
+                QueuedEmail.delete(queued_email)
 
     @classmethod
     def description(cls):

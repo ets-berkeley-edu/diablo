@@ -146,7 +146,6 @@
     components: {ToggleOptOut},
     mixins: [Context, Utils],
     data: () => ({
-      confirmation: undefined,
       courses: undefined,
       headers: [
         {text: 'Course', value: 'courseName'},
@@ -204,7 +203,7 @@
         if (this.selectedRows.length) {
           const sectionIds = this.$_.map(this.selectedRows, 'sectionId')
           queueEmails('invitation', sectionIds, this.$config.currentTermId).then(data => {
-            this.confirmation = data.message
+            this.snackbarOpen(data.message)
           })
         }
       }

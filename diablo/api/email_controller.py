@@ -158,14 +158,30 @@ def queue_emails():
     params = request.get_json()
     term_id = params.get('termId')
     section_ids = params.get('sectionIds')
-    email_template_type = params.get('emailTemplateType')
-    if term_id and section_ids and email_template_type:
-        QueuedEmail.create(section_ids=section_ids, template_type=email_template_type, term_id=term_id)
+    template_type = params.get('emailTemplateType')
+
+    if term_id and section_ids and template_type:
+        section_ids_already_queued = QueuedEmail.get_all_section_ids(template_type=template_type, term_id=term_id)
+        section_ids_to_queue = [id_ for id_ in section_ids if id_ not in section_ids_already_queued]
+
+        for section_id in section_ids_to_queue:
+            QueuedEmail.create(section_id=section_id, template_type=template_type, term_id=term_id)
+
+        section_id_count = len(section_ids)
+        queued_count = len(section_ids_to_queue)
+        if queued_count < section_id_count:
+            message = f"""
+                {len(section_ids_already_queued)} '{template_type}' emails were already queued up for the
+                {'course' if section_id_count == 1 else 'courses'} you submitted.
+                Thus, {'zero' if queued_count == 0 else f'only {queued_count}'} emails will be sent.
+            """
+        else:
+            message = f'{queued_count} \'{template_type}\' emails will be sent.'
+        return tolerant_jsonify({
+            'message': message,
+        })
     else:
         raise BadRequestError('Required parameters are missing.')
-    return tolerant_jsonify({
-        'message': f'{len(section_ids)} emails queued up.',
-    })
 
 
 @app.route('/api/emails/sent/<uid>')
