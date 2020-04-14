@@ -79,8 +79,21 @@ def _get_uids_per_section_id(approvals):
 
 
 def _schedule_recordings(latest_approval, course):
+    term_id = course['termId']
     section_id = int(course['sectionId'])
-    Scheduled.create(section_id=section_id, term_id=course['termId'], room_id=latest_approval.room_id)
+    meeting_days, meeting_start_time, meeting_end_time = SisSection.get_meeting_times(
+        term_id=term_id,
+        section_id=section_id,
+    )
+    Scheduled.create(
+        section_id=section_id,
+        term_id=term_id,
+        instructor_uids=SisSection.get_instructor_uids(term_id=term_id, section_id=section_id),
+        meeting_days=meeting_days,
+        meeting_start_time=meeting_start_time,
+        meeting_end_time=meeting_end_time,
+        room_id=latest_approval.room_id,
+    )
     _notify_instructors(course=course, latest_approval=latest_approval)
 
 

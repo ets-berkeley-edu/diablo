@@ -22,12 +22,12 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-
 from datetime import datetime
 
 from diablo import db, std_commit
-from diablo.lib.util import to_isoformat
+from diablo.lib.util import format_days, format_time, to_isoformat
 from sqlalchemy import and_
+from sqlalchemy.dialects.postgresql import ARRAY
 
 
 class Scheduled(db.Model):
@@ -35,25 +35,63 @@ class Scheduled(db.Model):
 
     section_id = db.Column(db.Integer, nullable=False, primary_key=True)
     term_id = db.Column(db.Integer, nullable=False, primary_key=True)
+    instructor_uids = db.Column(ARRAY(db.String(80)), nullable=False)
+    meeting_days = db.Column(db.String, nullable=False)
+    meeting_start_time = db.Column(db.String, nullable=False)
+    meeting_end_time = db.Column(db.String, nullable=False)
     room_id = db.Column(db.Integer, db.ForeignKey('rooms.id'), nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.now)
 
-    def __init__(self, section_id, term_id, room_id):
+    def __init__(
+            self,
+            section_id,
+            term_id,
+            instructor_uids,
+            meeting_days,
+            meeting_start_time,
+            meeting_end_time,
+            room_id,
+    ):
         self.section_id = section_id
         self.term_id = term_id
+        self.instructor_uids = instructor_uids
+        self.meeting_days = meeting_days
+        self.meeting_start_time = meeting_start_time
+        self.meeting_end_time = meeting_end_time
         self.room_id = room_id
 
     def __repr__(self):
         return f"""<Scheduled
                     section_id={self.section_id},
                     term_id={self.term_id},
-                    room_id={self.room_id}
+                    instructor_uids={', '.join(self.instructor_uids)},
+                    meeting_days={self.meeting_days},
+                    meeting_start_time={self.meeting_start_time},
+                    meeting_end_time={self.meeting_end_time},
+                    room_id={self.room_id},
                     created_at={self.created_at}>
                 """
 
     @classmethod
-    def create(cls, section_id, term_id, room_id):
-        scheduled = cls(section_id=section_id, term_id=term_id, room_id=room_id)
+    def create(
+            cls,
+            section_id,
+            term_id,
+            instructor_uids,
+            meeting_days,
+            meeting_start_time,
+            meeting_end_time,
+            room_id,
+    ):
+        scheduled = cls(
+            section_id=section_id,
+            term_id=term_id,
+            instructor_uids=instructor_uids,
+            meeting_days=meeting_days,
+            meeting_start_time=meeting_start_time,
+            meeting_end_time=meeting_end_time,
+            room_id=room_id,
+        )
         db.session.add(scheduled)
         std_commit()
         return scheduled
@@ -68,13 +106,17 @@ class Scheduled(db.Model):
         return cls.query.filter(criteria).order_by(cls.created_at).all()
 
     @classmethod
-    def was_scheduled(cls, section_id, term_id):
-        return cls.query.filter_by(section_id=section_id, term_id=term_id).first() is not None
+    def get_scheduled(cls, section_id, term_id):
+        return cls.query.filter_by(section_id=section_id, term_id=term_id).first()
 
     def to_api_json(self):
         return {
             'sectionId': self.section_id,
             'termId': self.term_id,
+            'instructorUids': self.instructor_uids,
+            'meetingDays': format_days(self.meeting_days),
+            'meetingEndTime': format_time(self.meeting_end_time),
+            'meetingStartTime': format_time(self.meeting_start_time),
             'roomId': self.room_id,
             'createdAt': to_isoformat(self.created_at),
         }

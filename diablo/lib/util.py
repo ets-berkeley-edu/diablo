@@ -70,3 +70,12 @@ def utc_now():
 def camel_case_to_snake_case(camel_case_str):
     s = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', camel_case_str)
     return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s).lower()
+
+
+def format_days(days):
+    n = 2
+    return [(days[i:i + n]) for i in range(0, len(days), n)] if days else None
+
+
+def format_time(military_time):
+    return datetime.strptime(military_time, '%H:%M').strftime('%I:%M %p').lower().lstrip('0') if military_time else None

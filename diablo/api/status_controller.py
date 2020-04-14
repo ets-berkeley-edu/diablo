@@ -32,7 +32,13 @@ from sqlalchemy.exc import SQLAlchemyError
 
 
 @app.route('/api/ping')
+def ping_temporary():
+    return tolerant_jsonify({})
+
+
+@app.route('/api/ping_RESTORE_ME')
 def ping():
+    # TODO: Bring this back once diablo-dev env is stable
     def db_status():
         def _log(exception):
             app.logger.exception('Database connection error')

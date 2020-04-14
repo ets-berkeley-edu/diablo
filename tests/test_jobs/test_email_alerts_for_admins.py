@@ -28,6 +28,7 @@ from diablo.models.approval import Approval
 from diablo.models.room import Room
 from diablo.models.scheduled import Scheduled
 from diablo.models.sent_email import SentEmail
+from diablo.models.sis_section import SisSection
 from flask import current_app as app
 from tests.util import test_approvals_workflow
 
@@ -51,9 +52,17 @@ class TestEmailAlertsForAdmins:
                 recording_type_='presenter_audio',
                 room_id=scheduled_in_room.id,
             )
+            meeting_days, meeting_start_time, meeting_end_time = SisSection.get_meeting_times(
+                term_id=term_id,
+                section_id=section_id,
+            )
             Scheduled.create(
                 term_id=term_id,
                 section_id=section_id,
+                instructor_uids=SisSection.get_instructor_uids(term_id=term_id, section_id=section_id),
+                meeting_days=meeting_days,
+                meeting_start_time=meeting_start_time,
+                meeting_end_time=meeting_end_time,
                 room_id=scheduled_in_room.id,
             )
 
@@ -78,9 +87,17 @@ class TestEmailAlertsForAdmins:
                 recording_type_='presenter_audio',
                 room_id=room_id,
             )
+            meeting_days, meeting_start_time, meeting_end_time = SisSection.get_meeting_times(
+                term_id=term_id,
+                section_id=section_id,
+            )
             Scheduled.create(
                 term_id=term_id,
                 section_id=section_id,
+                instructor_uids=SisSection.get_instructor_uids(term_id=term_id, section_id=section_id),
+                meeting_days=meeting_days,
+                meeting_start_time=meeting_start_time,
+                meeting_end_time=meeting_end_time,
                 room_id=room_id,
             )
 
