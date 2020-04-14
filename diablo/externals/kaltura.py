@@ -55,7 +55,7 @@ class Kaltura:
         )
         self.client.setKs(ks)
 
-    @cachify('kaltura/get_resource_list')
+    @cachify('kaltura/get_resource_list', timeout=120)
     def get_resource_list(self):
         response = self.client.schedule.scheduleResource.list(
             KalturaScheduleResourceFilter(),

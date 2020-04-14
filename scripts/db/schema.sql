@@ -212,7 +212,7 @@ CREATE TABLE queued_emails (
     section_ids INTEGER[] NOT NULL,
     template_type email_template_types,
     term_id INTEGER NOT NULL,
-    sent_at timestamp with time zone NOT NULL
+    created_at timestamp with time zone NOT NULL
 );
 ALTER TABLE queued_emails OWNER TO diablo;
 CREATE SEQUENCE queued_emails_id_seq

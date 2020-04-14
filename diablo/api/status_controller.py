@@ -32,31 +32,18 @@ from sqlalchemy.exc import SQLAlchemyError
 
 
 @app.route('/api/ping')
-def ping_temporary():
-    return tolerant_jsonify({})
-
-
-@app.route('/api/ping_RESTORE_ME')
 def ping():
-    # TODO: Bring this back once diablo-dev env is stable
     def db_status():
-        def _log(exception):
-            app.logger.exception('Database connection error')
-            app.logger.exception(exception)
-
         sql = 'SELECT 1'
         try:
-            db.session.execute('SELECT 1')
             db.session.execute(sql)
             return True
-        except SQLAlchemyError:
-            app.logger.exception('Database connection error')
         except psycopg2.Error as e:
-            _log(e)
             log_db_error(e, sql)
             return False
         except SQLAlchemyError as e:
-            _log(e)
+            app.logger.exception('Database connection error')
+            app.logger.exception(e)
             return False
 
     def data_loch_status():
@@ -68,8 +55,7 @@ def ping():
         'app': True,
         # 'canvas': ping_canvas(),
         # 'dataLoch': data_loch_status(),
-        # 'db': db_status(),
-        # 'emailTemplates': len(EmailTemplate.all_templates()) == len(EmailTemplate.get_template_type_options()),
+        'db': db_status(),
         # 'kaltura': Kaltura().ping(),
         # 'mailgun': Mailgun().ping(),
     })

@@ -27,6 +27,7 @@ from datetime import datetime
 
 from diablo import db, std_commit
 from diablo.lib.util import to_isoformat
+from diablo.models.room import Room
 from sqlalchemy import and_
 from sqlalchemy.dialects.postgresql import ENUM
 
@@ -158,7 +159,7 @@ class Approval(db.Model):
             'sectionId': self.section_id,
             'termId': self.term_id,
             'approverType': self.approver_type,
-            'roomId': self.room_id,
+            'room': Room.get_room(self.room_id).to_api_json() if self.room_id else None,
             'publishType': self.publish_type,
             'publishTypeName': NAMES_PER_PUBLISH_TYPE[self.publish_type],
             'recordingType': self.recording_type,

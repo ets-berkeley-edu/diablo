@@ -326,13 +326,11 @@ class SisSection(db.Model):
                 r.id AS room_id,
                 r.location AS room_location
             FROM sis_sections s
-            JOIN approvals a ON a.section_id = s.sis_section_id
             JOIN instructors i ON i.uid = s.instructor_uid
             JOIN rooms r ON r.location = s.meeting_location
             JOIN scheduled d ON d.section_id = s.sis_section_id AND d.term_id = :term_id
             WHERE
                 s.sis_term_id = :term_id
-                AND r.id != d.room_id
             ORDER BY s.sis_course_title, s.sis_section_id, s.instructor_uid
         """
         rows = db.session.execute(
@@ -346,7 +344,7 @@ class SisSection(db.Model):
             scheduled = course['scheduled']
             if scheduled['hasObsoleteRoom'] \
                     or scheduled['hasObsoleteInstructors'] \
-                    or scheduled['hasObsoleteSchedule']:
+                    or scheduled['hasObsoleteMeetingTimes']:
                 courses.append(course)
         return courses
 
@@ -440,7 +438,7 @@ class SisSection(db.Model):
         section_ids = []
         for row in rows:
             section_ids.append(row['sis_section_id'])
-        return cls.get_courses(term_id, section_ids)
+        return cls.get_courses(term_id=term_id, section_ids=section_ids)
 
     @classmethod
     def get_courses_scheduled(cls, term_id):
@@ -573,27 +571,6 @@ def _to_api_json(term_id, rows):
 
             room = Room.get_room(row['room_id']).to_api_json() if 'room_id' in row else None
             course['room'] = room
-
-            def _add_and_verify_room(action):
-                accurate_room_id = room or room['id']
-                room_id_ = action.pop('roomId')
-                is_obsolete_room = accurate_room_id != room_id_
-                action['room'] = Room.get_room(room_id_).to_api_json() if is_obsolete_room else room
-                action['hasObsoleteRoom'] = is_obsolete_room
-
-            scheduled = course['scheduled']
-            if scheduled:
-                def _meeting(obj):
-                    return f'{obj["meetingDays"]}-{obj["meetingStartTime"]}-{obj["meetingEndTime"]}'
-                scheduled['hasObsoleteSchedule'] = _meeting(course) != _meeting(scheduled)
-                instructor_uids = set([instructor['uid'] for instructor in course['instructors']])
-                scheduled_by_uids = set(scheduled['instructorUids'])
-                if scheduled_by_uids != instructor_uids:
-                    scheduled['hasObsoleteInstructors'] = True
-                _add_and_verify_room(scheduled)
-
-            for approval in approvals:
-                _add_and_verify_room(approval)
             courses_per_id[section_id] = course
 
         # Build upon course object with one instructor per row.
@@ -611,7 +588,29 @@ def _to_api_json(term_id, rows):
 
     api_json = []
     for section_id, course in courses_per_id.items():
+        room_id = course.get('room', {}).get('id')
+
+        def _add_and_verify_room(approval_or_scheduled):
+            action_room_id = approval_or_scheduled.get('room', {}).get('id')
+            is_obsolete_room = not room_id or room_id != action_room_id
+            approval_or_scheduled['hasObsoleteRoom'] = is_obsolete_room
+
         course['instructors'] = instructors_per_section_id[section_id]
+        scheduled = course['scheduled']
+        # Check for course changes w.r.t. room, meeting times, and instructors.
+        if scheduled:
+            def _meeting(obj):
+                return f'{obj["meetingDays"]}-{obj["meetingStartTime"]}-{obj["meetingEndTime"]}'
+
+            instructor_uids = set([instructor['uid'] for instructor in course['instructors']])
+            scheduled['hasObsoleteInstructors'] = instructor_uids != set(scheduled['instructorUids'])
+            scheduled['hasObsoleteMeetingTimes'] = _meeting(course) != _meeting(scheduled)
+            _add_and_verify_room(scheduled)
+
+        for approval in approvals:
+            _add_and_verify_room(approval)
+
+        # Add course to the feed
         api_json.append(course)
     return api_json
 

@@ -32,6 +32,7 @@ from diablo.models.scheduled import Scheduled
 from diablo.models.sent_email import SentEmail
 from diablo.models.sis_section import SisSection
 from flask import current_app as app
+import pytest
 from tests.test_api.api_test_utils import api_approve, api_get_approvals
 from tests.util import test_approvals_workflow
 
@@ -48,13 +49,20 @@ section_5_id = 30563
 section_5_instructor_uids = ['234567']
 
 
+@pytest.fixture()
+def admin_session(fake_auth):
+    fake_auth.login('2040')
+
+
 class TestApprove:
+    """Only admins and authorized instructors can sign a course up for Course Capture."""
 
     @property
     def term_id(self):
         return app.config['CURRENT_TERM_ID']
 
     def test_not_authenticated(self, client):
+        """Deny anonymous access."""
         api_approve(
             client,
             publish_type='canvas',
@@ -63,8 +71,8 @@ class TestApprove:
             expected_status_code=401,
         )
 
-    def test_invalid_publish_type(self, client, fake_auth):
-        fake_auth.login(admin_uid)
+    def test_invalid_publish_type(self, client, admin_session):
+        """Reject invalid publish types."""
         api_approve(
             client,
             publish_type='youtube',
@@ -74,6 +82,7 @@ class TestApprove:
         )
 
     def test_unauthorized(self, client, db, fake_auth):
+        """Deny access if the instructor is not teaching the requested course."""
         fake_auth.login(section_1_instructor_uids[0])
         api_approve(
             client,
@@ -84,6 +93,7 @@ class TestApprove:
         )
 
     def test_instructor_already_approved(self, client, db, fake_auth):
+        """Instructor can submit his/her approval only once."""
         uid = section_1_instructor_uids[0]
         fake_auth.login(uid)
 
@@ -97,6 +107,7 @@ class TestApprove:
             )
 
     def test_approval_by_instructors(self, client, db, fake_auth):
+        """Instructor can submit approval if s/he is teaching the requested course."""
         fake_auth.login(section_1_instructor_uids[0])
         api_approve(
             client,
@@ -146,8 +157,8 @@ class TestApprove:
         assert api_json['hasNecessaryApprovals'] is True
         assert api_json['scheduled'] is None
 
-    def test_approval_by_admin(self, client, db, fake_auth):
-        fake_auth.login(admin_uid)
+    def test_approval_by_admin(self, client, db, admin_session):
+        """Admins can schedule recordings on behalf of any eligible course."""
         api_json = api_approve(
             client,
             publish_type='canvas',
@@ -159,13 +170,15 @@ class TestApprove:
         assert api_json['scheduled'] is None
 
 
-class TestApprovals:
+class TestViewApprovals:
+    """Only admins can see all Course Capture sign-ups."""
 
     @property
     def term_id(self):
         return app.config['CURRENT_TERM_ID']
 
     def test_not_authenticated(self, client):
+        """Deny anonymous access."""
         api_get_approvals(
             client,
             term_id=self.term_id,
@@ -174,6 +187,7 @@ class TestApprovals:
         )
 
     def test_not_authorized(self, client, fake_auth):
+        """Deny access if user is not an admin."""
         fake_auth.login(section_1_instructor_uids[0])
         api_get_approvals(
             client,
@@ -183,6 +197,7 @@ class TestApprovals:
         )
 
     def test_deny_deleted_admin_user(self, client, fake_auth):
+        """Deny access if admin user was deleted."""
         fake_auth.login(deleted_admin_user_uid)
         api_get_approvals(
             client,
@@ -191,8 +206,8 @@ class TestApprovals:
             expected_status_code=401,
         )
 
-    def test_invalid_section_id(self, client, fake_auth):
-        fake_auth.login(admin_uid)
+    def test_invalid_section_id(self, client, admin_session):
+        """404 if section does not exist."""
         api_get_approvals(
             client,
             term_id=self.term_id,
@@ -200,8 +215,8 @@ class TestApprovals:
             expected_status_code=404,
         )
 
-    def test_admin(self, client, db, fake_auth):
-        fake_auth.login(admin_uid)
+    def test_authorized(self, client, db, admin_session):
+        """Only admins can review approval status of any given course."""
         api_json = api_get_approvals(
             client,
             term_id=self.term_id,
@@ -212,6 +227,7 @@ class TestApprovals:
         assert api_json['room']['location'] == 'Barrows 106'
 
     def test_date_time_format(self, client, db, fake_auth):
+        """Dates and times are properly formatted for front-end display."""
         uid = section_2_instructor_uids[0]
         fake_auth.login(uid)
         api_json = api_get_approvals(
@@ -224,8 +240,8 @@ class TestApprovals:
         assert api_json['meetingEndTime'] == '3:59 pm'
         assert api_json['meetingLocation'] == 'Wheeler 150'
 
-    def test_li_ka_shing_recording_options(self, client, db, fake_auth):
-        fake_auth.login(admin_uid)
+    def test_li_ka_shing_recording_options(self, client, db, admin_session):
+        """Rooms designated as 'auditorium' offer ALL types of recording."""
         api_json = api_get_approvals(
             client,
             term_id=self.term_id,
@@ -234,8 +250,8 @@ class TestApprovals:
         assert api_json['room']['location'] == 'Li Ka Shing 145'
         assert len(api_json['room']['recordingTypeOptions']) == 3
 
-    def test_section_with_canvas_course_sites(self, client, db, fake_auth):
-        fake_auth.login(admin_uid)
+    def test_section_with_canvas_course_sites(self, client, db, admin_session):
+        """Canvas course site information is included in the API."""
         api_json = api_get_approvals(
             client,
             term_id=self.term_id,
@@ -245,6 +261,7 @@ class TestApprovals:
 
 
 class TestCoursesFilter:
+    """Only admins can see who has been invited, who has signed up, etc."""
 
     @property
     def term_id(self):
@@ -264,13 +281,14 @@ class TestCoursesFilter:
         return response.json
 
     def test_not_authenticated(self, client):
+        """Deny anonymous access."""
         self._api_courses(client, term_id=self.term_id, expected_status_code=401)
 
     def test_not_authorized(self, client, fake_auth):
         fake_auth.login(section_1_instructor_uids[0])
         self._api_courses(client, term_id=self.term_id, expected_status_code=401)
 
-    def test_authorized(self, client, db, fake_auth):
+    def test_authorized(self, client, db, admin_session):
         with test_approvals_workflow(app):
             room = Room.find_room('Barker 101')
             # First, send invitations
@@ -318,7 +336,6 @@ class TestCoursesFilter:
                 instructor_uids=SisSection.get_instructor_uids(term_id=self.term_id, section_id=section_2_id),
                 room_id=room.id,
             )
-            fake_auth.login(admin_uid)
             api_json = self._api_courses(client, term_id=self.term_id, filter_='Invited')
 
             section_4 = next((s for s in api_json if s['sectionId'] == section_4_id), None)
@@ -333,7 +350,134 @@ class TestCoursesFilter:
             assert section_5['room'] == room.to_api_json()
 
 
+class TestCoursesChanges:
+    """Only admins can see course changes (e.g., room change) that might disrupt scheduled recordings."""
+
+    @property
+    def term_id(self):
+        return app.config['CURRENT_TERM_ID']
+
+    @staticmethod
+    def _api_course_changes(client, term_id, expected_status_code=200):
+        response = client.get(f'/api/courses/changes/{term_id}')
+        assert response.status_code == expected_status_code
+        return response.json
+
+    def test_not_authenticated(self, client):
+        """Deny anonymous access."""
+        self._api_course_changes(client, term_id=self.term_id, expected_status_code=401)
+
+    def test_unauthorized(self, client, db, fake_auth):
+        """Instructors cannot see course changes."""
+        fake_auth.login(section_1_instructor_uids[0])
+        self._api_course_changes(client, term_id=self.term_id, expected_status_code=401)
+
+    def test_empty_feed(self, client, admin_session):
+        """The /course/changes feed will often be empty."""
+        assert len(self._api_course_changes(client, term_id=2192)) == 0
+
+    def test_has_obsolete_room(self, client, admin_session):
+        """Admins can see room changes that might disrupt scheduled recordings."""
+        course = SisSection.get_course(term_id=self.term_id, section_id=section_2_id)
+        actual_room_id = course['room']['id']
+        obsolete_room = Room.find_room('Barker 101')
+
+        assert obsolete_room
+        assert actual_room_id != obsolete_room.id
+
+        meeting_days, meeting_start_time, meeting_end_time = SisSection.get_meeting_times(
+            term_id=self.term_id,
+            section_id=section_2_id,
+        )
+        Scheduled.create(
+            term_id=self.term_id,
+            section_id=section_2_id,
+            meeting_days=meeting_days,
+            meeting_start_time=meeting_start_time,
+            meeting_end_time=meeting_end_time,
+            instructor_uids=SisSection.get_instructor_uids(term_id=self.term_id, section_id=section_2_id),
+            room_id=obsolete_room.id,
+        )
+        std_commit(allow_test_environment=True)
+
+        course_changes = self._api_course_changes(client, term_id=self.term_id)
+        course_change = next((c for c in course_changes if c['sectionId'] == section_2_id), None)
+        assert course_change
+        assert course_change['scheduled']['hasObsoleteRoom'] is True
+        assert course_change['scheduled']['hasObsoleteMeetingTimes'] is False
+        assert course_change['scheduled']['hasObsoleteInstructors'] is False
+
+    def test_has_obsolete_meeting_times(self, client, admin_session):
+        """Admins can see meeting time changes that might disrupt scheduled recordings."""
+        course = SisSection.get_course(term_id=self.term_id, section_id=section_1_id)
+        meeting_days, meeting_start_time, meeting_end_time = SisSection.get_meeting_times(
+            term_id=self.term_id,
+            section_id=section_1_id,
+        )
+        obsolete_meeting_days = 'MOWE'
+        assert meeting_days != obsolete_meeting_days
+
+        Scheduled.create(
+            term_id=self.term_id,
+            section_id=section_1_id,
+            meeting_days=obsolete_meeting_days,
+            meeting_start_time=meeting_start_time,
+            meeting_end_time=meeting_end_time,
+            instructor_uids=SisSection.get_instructor_uids(term_id=self.term_id, section_id=section_1_id),
+            room_id=course['room']['id'],
+        )
+        std_commit(allow_test_environment=True)
+
+        course_changes = self._api_course_changes(client, term_id=self.term_id)
+        course_change = next((c for c in course_changes if c['sectionId'] == section_1_id), None)
+        assert course_change
+        assert course_change['scheduled']['hasObsoleteRoom'] is False
+        assert course_change['scheduled']['hasObsoleteMeetingTimes'] is True
+        assert course_change['scheduled']['hasObsoleteInstructors'] is False
+
+    def test_has_instructors(self, client, admin_session):
+        """Admins can see instructor changes that might disrupt scheduled recordings."""
+        course = SisSection.get_course(term_id=self.term_id, section_id=section_3_id)
+        meeting_days, meeting_start_time, meeting_end_time = SisSection.get_meeting_times(
+            term_id=self.term_id,
+            section_id=section_3_id,
+        )
+        instructor_uids = SisSection.get_instructor_uids(term_id=self.term_id, section_id=section_3_id)
+        Scheduled.create(
+            term_id=self.term_id,
+            section_id=section_3_id,
+            meeting_days=meeting_days,
+            meeting_start_time=meeting_start_time,
+            meeting_end_time=meeting_end_time,
+            instructor_uids=instructor_uids + ['999999'],
+            room_id=course['room']['id'],
+        )
+        std_commit(allow_test_environment=True)
+
+        course_changes = self._api_course_changes(client, term_id=self.term_id)
+        course_change = next((c for c in course_changes if c['sectionId'] == section_3_id), None)
+        assert course_change
+        assert course_change['scheduled']['hasObsoleteRoom'] is False
+        assert course_change['scheduled']['hasObsoleteMeetingTimes'] is False
+        assert course_change['scheduled']['hasObsoleteInstructors'] is True
+
+# meeting_days, meeting_start_time, meeting_end_time = SisSection.get_meeting_times(
+#     term_id=self.term_id,
+#     section_id=section_2_id,
+# )
+# Scheduled.create(
+#     term_id=self.term_id,
+#     section_id=section_4_id,
+#     meeting_days=meeting_days,
+#     meeting_start_time=meeting_start_time,
+#     meeting_end_time=meeting_end_time,
+#     instructor_uids=SisSection.get_instructor_uids(term_id=self.term_id, section_id=section_2_id),
+#     room_id=room.id,
+# )
+
+
 class TestUpdatePreferences:
+    """Only admins view and modify course preferences. For example, the 'do not email' preference."""
 
     @property
     def term_id(self):
@@ -360,6 +504,7 @@ class TestUpdatePreferences:
         return response.json
 
     def test_not_authenticated(self, client):
+        """Deny anonymous access."""
         self._api_opt_out_update(
             client,
             term_id=self.term_id,
@@ -369,6 +514,7 @@ class TestUpdatePreferences:
         )
 
     def test_unauthorized(self, client, db, fake_auth):
+        """Instructors cannot modify preferences."""
         fake_auth.login(section_1_instructor_uids[0])
         self._api_opt_out_update(
             client,
@@ -378,8 +524,8 @@ class TestUpdatePreferences:
             expected_status_code=401,
         )
 
-    def test_authorized(self, client, fake_auth):
-        fake_auth.login(admin_uid)
+    def test_authorized(self, client, admin_session):
+        """Only admins can toggle the do-not-email preference of any given course."""
         section_ids_opted_out = CoursePreference.get_section_ids_opted_out(term_id=self.term_id)
         previously_opted_out = section_1_id not in section_ids_opted_out
         opt_out = not previously_opted_out

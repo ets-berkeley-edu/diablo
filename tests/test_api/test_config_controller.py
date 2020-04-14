@@ -33,10 +33,10 @@ def admin_session(fake_auth):
 
 
 class TestVersion:
-    """Config API delivers Diablo version."""
+    """Application version API."""
 
     def test_anonymous_version_request(self, client):
-        """Returns a well-formed response."""
+        """All users, even anonymous, can get version info."""
         response = client.get('/api/version')
         assert response.status_code == 200
         assert 'version' in response.json
@@ -47,15 +47,18 @@ class TestConfigController:
     """Config API."""
 
     def test_anonymous(self, app, client):
-        """Returns a well-formed response to anonymous user."""
+        """All users, even anonymous, can get configs."""
         term_id = '2218'
         with override_config(app, 'CURRENT_TERM_ID', term_id):
             response = client.get('/api/config')
             assert response.status_code == 200
             assert 'diabloEnv' in response.json
-            data = response.json
-            assert data['ebEnvironment'] is None
-            assert '@' in data['supportEmailAddress']
-            assert data['timezone'] == 'America/Los_Angeles'
-            assert data['currentTermId'] == term_id
-            assert data['currentTermName'] == 'Fall 2021'
+            api_json = response.json
+            assert api_json['ebEnvironment'] is None
+            assert '@' in api_json['supportEmailAddress']
+            assert api_json['timezone'] == 'America/Los_Angeles'
+            assert api_json['currentTermId'] == term_id
+            assert api_json['currentTermName'] == 'Fall 2021'
+            assert len(api_json['emailTemplateTypes'])
+            assert len(api_json['roomCapabilityOptions'])
+            assert len(api_json['searchFilterOptions'])
