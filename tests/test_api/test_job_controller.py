@@ -38,6 +38,41 @@ def instructor_session(fake_auth):
     fake_auth.login(instructor_uid)
 
 
+class TestStartJob:
+
+    @staticmethod
+    def _api_start_job(client, job_key, expected_status_code=200):
+        response = client.get(f'/api/job/{job_key}/start')
+        assert response.status_code == expected_status_code
+        return response.json
+
+    def test_anonymous(self, client):
+        """Denies anonymous access."""
+        self._api_start_job(client, job_key='queued_emails_job', expected_status_code=401)
+
+    def test_unauthorized(self, client, instructor_session):
+        """Denies access if user is not an admin."""
+        self._api_start_job(client, job_key='queued_emails_job', expected_status_code=401)
+
+    def test_job_not_found(self, client, admin_session):
+        """404 if job key is unrecognized."""
+        self._api_start_job(client, job_key='space_for_rent', expected_status_code=404)
+
+    def test_authorized(self, client, admin_session):
+        """Admin can start a job."""
+        job_key = 'queued_emails_job'
+        self._api_start_job(client, job_key=job_key)
+        # Now verify
+        response = client.get(f'/api/job/history/1')
+        assert response.status_code == 200
+        job_history = response.json
+        assert len(job_history)
+        assert job_history[0]['jobKey'] == job_key
+        assert job_history[0]['failed'] is False
+        assert job_history[0]['startedAt']
+        assert 'finishedAt' in job_history[0]
+
+
 class TestJobHistory:
 
     @staticmethod
@@ -68,3 +103,28 @@ class TestJobHistory:
             assert event['failed'] is False
             assert event['startedAt']
             assert event['finishedAt']
+
+
+class TestJobsAvailable:
+
+    @staticmethod
+    def _api_jobs_available(client, expected_status_code=200):
+        response = client.get('/api/jobs/available')
+        assert response.status_code == expected_status_code
+        return response.json
+
+    def test_anonymous(self, client):
+        """Denies anonymous access."""
+        self._api_jobs_available(client, expected_status_code=401)
+
+    def test_unauthorized(self, client, instructor_session):
+        """Denies access if user is not an admin."""
+        self._api_jobs_available(client, expected_status_code=401)
+
+    def test_authorized(self, client, admin_session):
+        """Admin can access available jobs."""
+        available_jobs = self._api_jobs_available(client)
+        assert len(available_jobs) > 1
+        for available_job in available_jobs:
+            assert available_job['key']
+            assert len(available_job['description'])

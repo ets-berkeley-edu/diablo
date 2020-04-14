@@ -26,6 +26,7 @@ from datetime import datetime
 
 from diablo import db, std_commit
 from diablo.lib.util import format_days, format_time, to_isoformat
+from diablo.models.room import Room
 from sqlalchemy import and_
 from sqlalchemy.dialects.postgresql import ARRAY
 
@@ -117,6 +118,6 @@ class Scheduled(db.Model):
             'meetingDays': format_days(self.meeting_days),
             'meetingEndTime': format_time(self.meeting_end_time),
             'meetingStartTime': format_time(self.meeting_start_time),
-            'roomId': self.room_id,
+            'room': Room.get_room(self.room_id).to_api_json() if self.room_id else None,
             'createdAt': to_isoformat(self.created_at),
         }

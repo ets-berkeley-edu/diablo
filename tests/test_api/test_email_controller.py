@@ -42,7 +42,7 @@ def instructor_session(fake_auth):
 
 
 class TestGetAllEmailTemplates:
-    """Only Admin users can get all email templates."""
+    """Only Admin users can view and edit email templates."""
 
     @staticmethod
     def _api_all_email_templates(client, expected_status_code=200):
@@ -51,11 +51,11 @@ class TestGetAllEmailTemplates:
         return response.json
 
     def test_anonymous(self, client):
-        """Denies anonymous access."""
+        """Deny anonymous access."""
         self._api_all_email_templates(client, expected_status_code=401)
 
     def test_unauthorized(self, client, instructor_session):
-        """Denies access if user is not an admin."""
+        """Deny access if user is not an admin."""
         self._api_all_email_templates(client, expected_status_code=401)
 
     def test_authorized(self, client, admin_session):
