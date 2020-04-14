@@ -143,13 +143,14 @@ def _add_approvals_and_scheduled_json(course):
     section_id = course['sectionId']
     term_id = course['termId']
     all_approvals = Approval.get_approvals_per_section_ids(section_ids=[section_id], term_id=term_id)
+    scheduled = Scheduled.get_scheduled(section_id=section_id, term_id=term_id)
     return {
         **course,
         **{
             'approvals': [approval.to_api_json() for approval in all_approvals],
             'hasNecessaryApprovals': has_necessary_approvals(course, all_approvals),
             'publishTypeOptions': NAMES_PER_PUBLISH_TYPE,
-            'scheduled': Scheduled.was_scheduled(section_id=section_id, term_id=term_id),
+            'scheduled': scheduled and scheduled.to_api_json(),
         },
     }
 

@@ -27,7 +27,7 @@ from datetime import datetime
 import json
 
 from diablo import db
-from diablo.lib.util import objects_to_dict_organized_by_section_id, utc_now
+from diablo.lib.util import format_days, format_time, objects_to_dict_organized_by_section_id, utc_now
 from diablo.models.admin_user import AdminUser
 from diablo.models.approval import Approval
 from diablo.models.canvas_course_site import CanvasCourseSite
@@ -123,6 +123,14 @@ class SisSection(db.Model):
                 """
 
     @classmethod
+    def get_meeting_times(cls, term_id, section_id):
+        course = cls.query.filter_by(sis_term_id=term_id, sis_section_id=section_id).first()
+        if course:
+            return course.meeting_days, course.meeting_start_time, course.meeting_end_time
+        else:
+            return None
+
+    @classmethod
     def get_distinct_meeting_locations(cls):
         sql = """
             SELECT DISTINCT meeting_location FROM sis_sections
@@ -138,6 +146,25 @@ class SisSection(db.Model):
     def get_distinct_instructor_uids(cls):
         sql = 'SELECT DISTINCT instructor_uid FROM sis_sections WHERE instructor_uid IS NOT NULL'
         return [row['instructor_uid'] for row in db.session.execute(text(sql))]
+
+    @classmethod
+    def get_instructor_uids(cls, term_id, section_id):
+        sql = """
+            SELECT DISTINCT instructor_uid
+            FROM sis_sections
+            WHERE
+                sis_term_id = :term_id
+                AND sis_section_id = :section_id
+                AND instructor_uid IS NOT NULL
+        """
+        rows = db.session.execute(
+            text(sql),
+            {
+                'section_id': section_id,
+                'term_id': term_id,
+            },
+        )
+        return [row['instructor_uid'] for row in rows]
 
     @classmethod
     def get_courses_per_location(cls, term_id, location):
@@ -302,11 +329,10 @@ class SisSection(db.Model):
             JOIN approvals a ON a.section_id = s.sis_section_id
             JOIN instructors i ON i.uid = s.instructor_uid
             JOIN rooms r ON r.location = s.meeting_location
-            JOIN sent_emails e ON e.section_id = s.sis_section_id
+            JOIN scheduled d ON d.section_id = s.sis_section_id AND d.term_id = :term_id
             WHERE
                 s.sis_term_id = :term_id
-                AND r.id != a.room_id
-                AND e.template_type = 'invitation'
+                AND r.id != d.room_id
             ORDER BY s.sis_course_title, s.sis_section_id, s.instructor_uid
         """
         rows = db.session.execute(
@@ -315,7 +341,14 @@ class SisSection(db.Model):
                 'term_id': term_id,
             },
         )
-        return _to_api_json(term_id=term_id, rows=rows)
+        courses = []
+        for course in _to_api_json(term_id=term_id, rows=rows):
+            scheduled = course['scheduled']
+            if scheduled['hasObsoleteRoom'] \
+                    or scheduled['hasObsoleteInstructors'] \
+                    or scheduled['hasObsoleteSchedule']:
+                courses.append(course)
+        return courses
 
     @classmethod
     def get_courses(cls, term_id, section_ids):
@@ -491,9 +524,7 @@ def _to_api_json(term_id, rows):
     section_ids_opted_out = CoursePreference.get_section_ids_opted_out(term_id=term_id)
 
     approvals = Approval.get_approvals_per_term(term_id)
-    scheduled = Scheduled.get_all_scheduled(term_id)
     approvals_per_section_id = objects_to_dict_organized_by_section_id(objects=approvals)
-    scheduled_per_section_id = objects_to_dict_organized_by_section_id(objects=scheduled)
     all_admin_user_uids = [u.uid for u in AdminUser.all_admin_users(include_deleted=True)]
 
     # If course has multiple instructors then the section_id will be represented across multiple rows.
@@ -504,7 +535,8 @@ def _to_api_json(term_id, rows):
             instructors_per_section_id[section_id] = []
             has_opted_out = section_id in section_ids_opted_out
             approvals = [a.to_api_json() for a in approvals_per_section_id.get(section_id, [])]
-            scheduled = [s.to_api_json() for s in scheduled_per_section_id.get(section_id, [])]
+            scheduled = Scheduled.get_scheduled(section_id=section_id, term_id=term_id)
+            scheduled = scheduled and scheduled.to_api_json()
             course = {
                 'adminApproval': next((a for a in approvals if a['approvedByUid'] in all_admin_user_uids), False),
                 'allowedUnits': row['allowed_units'],
@@ -512,10 +544,13 @@ def _to_api_json(term_id, rows):
                 'courseName': row['sis_course_name'], 'courseTitle': row['sis_course_title'],
                 'hasOptedOut': has_opted_out, 'instructionFormat': row['sis_instruction_format'],
                 'instructors': [], 'isPrimary': row['is_primary'],
-                'meetingDays': _format_days(row['meeting_days']), 'meetingEndDate': row['meeting_end_date'],
-                'meetingEndTime': _format_time(row['meeting_end_time']),
-                'meetingLocation': row['meeting_location'], 'meetingStartDate': row['meeting_start_date'],
-                'meetingStartTime': _format_time(row['meeting_start_time']), 'sectionId': section_id,
+                'meetingDays': format_days(row['meeting_days']),
+                'meetingEndDate': row['meeting_end_date'],
+                'meetingEndTime': format_time(row['meeting_end_time']),
+                'meetingLocation': row['meeting_location'],
+                'meetingStartDate': row['meeting_start_date'],
+                'meetingStartTime': format_time(row['meeting_start_time']),
+                'sectionId': section_id,
                 'sectionNum': row['sis_section_num'], 'termId': row['sis_term_id'],
                 'approvals': approvals,
                 'scheduled': scheduled,
@@ -538,11 +573,27 @@ def _to_api_json(term_id, rows):
 
             room = Room.get_room(row['room_id']).to_api_json() if 'room_id' in row else None
             course['room'] = room
-            for action in approvals + scheduled:
-                room_id = action.pop('roomId')
-                obsolete_action = not room or room['id'] != room_id
-                action['room'] = Room.get_room(room_id).to_api_json() if obsolete_action else room
-                action['hasObsoleteRoom'] = obsolete_action
+
+            def _add_and_verify_room(action):
+                accurate_room_id = room or room['id']
+                room_id_ = action.pop('roomId')
+                is_obsolete_room = accurate_room_id != room_id_
+                action['room'] = Room.get_room(room_id_).to_api_json() if is_obsolete_room else room
+                action['hasObsoleteRoom'] = is_obsolete_room
+
+            scheduled = course['scheduled']
+            if scheduled:
+                def _meeting(obj):
+                    return f'{obj["meetingDays"]}-{obj["meetingStartTime"]}-{obj["meetingEndTime"]}'
+                scheduled['hasObsoleteSchedule'] = _meeting(course) != _meeting(scheduled)
+                instructor_uids = set([instructor['uid'] for instructor in course['instructors']])
+                scheduled_by_uids = set(scheduled['instructorUids'])
+                if scheduled_by_uids != instructor_uids:
+                    scheduled['hasObsoleteInstructors'] = True
+                _add_and_verify_room(scheduled)
+
+            for approval in approvals:
+                _add_and_verify_room(approval)
             courses_per_id[section_id] = course
 
         # Build upon course object with one instructor per row.
@@ -573,13 +624,3 @@ def _canvas_course_sites(term_id, section_id):
             'courseSiteName': row.canvas_course_site_name,
         })
     return canvas_course_sites
-
-
-def _format_days(days):
-    n = 2
-    return [(days[i:i + n]) for i in range(0, len(days), n)] if days else None
-
-
-def _format_time(military_time):
-    return datetime.strptime(military_time, '%H:%M').strftime('%I:%M %p').lower().lstrip(
-        '0') if military_time else None

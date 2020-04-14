@@ -30,6 +30,7 @@ from diablo.models.course_preference import CoursePreference
 from diablo.models.room import Room
 from diablo.models.scheduled import Scheduled
 from diablo.models.sent_email import SentEmail
+from diablo.models.sis_section import SisSection
 from flask import current_app as app
 from tests.test_api.api_test_utils import api_approve, api_get_approvals
 from tests.util import test_approvals_workflow
@@ -42,6 +43,9 @@ section_2_id = 28165
 section_2_instructor_uids = ['8765432']
 section_3_id = 12601
 section_with_canvas_course_sites = 22287
+section_4_id = 26094
+section_5_id = 30563
+section_5_instructor_uids = ['234567']
 
 
 class TestApprove:
@@ -140,7 +144,7 @@ class TestApprove:
         assert approvals_[1]['recordingTypeName'] == 'Presentation and Audio'
 
         assert api_json['hasNecessaryApprovals'] is True
-        assert api_json['scheduled'] is False
+        assert api_json['scheduled'] is None
 
     def test_approval_by_admin(self, client, db, fake_auth):
         fake_auth.login(admin_uid)
@@ -152,7 +156,7 @@ class TestApprove:
         )
         std_commit(allow_test_environment=True)
         assert api_json['hasNecessaryApprovals'] is True
-        assert api_json['scheduled'] is False
+        assert api_json['scheduled'] is None
 
 
 class TestApprovals:
@@ -270,24 +274,23 @@ class TestCoursesFilter:
         with test_approvals_workflow(app):
             room = Room.find_room('Barker 101')
             # First, send invitations
-            instructor_uid = '234567'
             SentEmail.create(
-                section_id=30563,
-                recipient_uids=[instructor_uid],
+                section_id=section_5_id,
+                recipient_uids=section_5_instructor_uids,
                 template_type='invitation',
                 term_id=self.term_id,
             )
             SentEmail.create(
-                section_id=26094,
+                section_id=section_4_id,
                 recipient_uids=[admin_uid],
                 template_type='invitation',
                 term_id=self.term_id,
             )
             # Instructors approve
             Approval.create(
-                approved_by_uid=instructor_uid,
+                approved_by_uid=section_5_instructor_uids[0],
                 term_id=self.term_id,
-                section_id=30563,
+                section_id=section_5_id,
                 approver_type_='instructor',
                 publish_type_='canvas',
                 recording_type_='presentation_audio',
@@ -296,30 +299,38 @@ class TestCoursesFilter:
             Approval.create(
                 approved_by_uid=admin_uid,
                 term_id=self.term_id,
-                section_id=26094,
+                section_id=section_4_id,
                 approver_type_='admin',
                 publish_type_='kaltura_media_gallery',
                 recording_type_='presenter_audio',
                 room_id=room.id,
             )
+            meeting_days, meeting_start_time, meeting_end_time = SisSection.get_meeting_times(
+                term_id=self.term_id,
+                section_id=section_2_id,
+            )
             Scheduled.create(
                 term_id=self.term_id,
-                section_id=26094,
+                section_id=section_4_id,
+                meeting_days=meeting_days,
+                meeting_start_time=meeting_start_time,
+                meeting_end_time=meeting_end_time,
+                instructor_uids=SisSection.get_instructor_uids(term_id=self.term_id, section_id=section_2_id),
                 room_id=room.id,
             )
             fake_auth.login(admin_uid)
             api_json = self._api_courses(client, term_id=self.term_id, filter_='Invited')
 
-            section_1 = next((s for s in api_json if s['sectionId'] == 26094), None)
-            assert section_1
-            assert len(section_1['approvals']) > 0
-            assert len(section_1['scheduled']) > 0
+            section_4 = next((s for s in api_json if s['sectionId'] == section_4_id), None)
+            assert section_4
+            assert len(section_4['approvals']) > 0
+            assert len(section_4['scheduled']) > 0
 
-            section_2 = next((s for s in api_json if s['sectionId'] == 30563), None)
-            assert section_2
-            assert len(section_2['approvals']) > 0
-            assert len(section_2['scheduled']) == 0
-            assert section_2['room'] == room.to_api_json()
+            section_5 = next((s for s in api_json if s['sectionId'] == section_5_id), None)
+            assert section_5
+            assert len(section_5['approvals']) > 0
+            assert section_5['scheduled'] is None
+            assert section_5['room'] == room.to_api_json()
 
 
 class TestUpdatePreferences:

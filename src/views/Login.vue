@@ -1,5 +1,5 @@
 <template>
-  <v-container fluid fill-height>
+  <v-container fluid fill-height class="header-background">
     <v-layout align-center justify-center>
       <v-card
         class="elevation-12 mx-auto"
@@ -7,22 +7,17 @@
         tile
       >
         <v-img
-          alt=""
           role="button"
           height="100%"
-          src="@/assets/iraqi-sunset-from-exorcist-movie.png"
-          @click="logIn"
+          src="@/assets/cal.png"
         >
-          <div>
-            <div class="d-flex ma-10">
-              <div class="pr-5">
-                <h2 class="display-4 fill-height white--text">Sign In</h2>
-              </div>
-              <div class="align-self-end mb-3">
-                <v-icon color="white" large>mdi-open-in-new</v-icon>
-              </div>
+          <div class="d-flex flex-column text-center">
+            <div class="ma-5 text-center">
+              <v-btn id="log-in" @click="logIn">
+                <span>Sign In</span>
+                <v-icon>mdi-login</v-icon>
+              </v-btn>
             </div>
-            <div class="ml-5 mt-12 pt-5 title white--text">UC Berkeley's Course Capture service</div>
           </div>
         </v-img>
         <div v-if="$config.devAuthEnabled" class="pa-3">
