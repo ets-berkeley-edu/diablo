@@ -6,7 +6,7 @@
       :timeout="snackbar.timeout"
       :top="true"
     >
-      <span id="alert-text">{{ snackbar.text }}</span>
+      <span id="alert-text" class="title">{{ snackbar.text }}</span>
       <v-btn
         id="btn-close-alert"
         text
@@ -49,9 +49,6 @@
           </v-list-item>
           <v-list-item v-if="$currentUser.isAdmin" id="menu-item-jobs" @click="goToPath('/jobs')">
             <v-list-item-title>Jobs</v-list-item-title>
-          </v-list-item>
-          <v-list-item v-if="$currentUser.isAdmin" id="menu-item-job-history" @click="goToPath('/job/history')">
-            <v-list-item-title>Job History</v-list-item-title>
           </v-list-item>
           <v-list-item id="menu-item-log-out" @click="logOut">
             <v-list-item-title>Log Out</v-list-item-title>

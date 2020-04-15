@@ -68,8 +68,10 @@ def notify_instructors_of_approval(
             template_type=template_type,
             term_id=term_id,
         )
+        return True
     else:
         send_system_error_email(f'Unable to send email of type {template_type} because no template is available.')
+        return False
 
 
 def interpolate_email_content(
@@ -135,8 +137,10 @@ def send_invite_related_email(
             template_type=template_type,
             term_id=term_id,
         )
+        return True
     else:
         send_system_error_email(f'Unable to send email of type {template_type} because no template is available.')
+        return False
 
 
 def send_system_error_email(message):
