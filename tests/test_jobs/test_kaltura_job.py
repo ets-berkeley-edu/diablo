@@ -39,12 +39,20 @@ class TestKalturaJob:
         with test_approvals_workflow(app):
             section_id = 22287
             term_id = app.config['CURRENT_TERM_ID']
+            email_template_type = 'recordings_scheduled'
 
-            email_count = _get_email_count(section_id)
+            def _get_emails_sent():
+                return SentEmail.get_emails_of_type(
+                    section_id=section_id,
+                    template_type=email_template_type,
+                    term_id=term_id,
+                )
+
+            emails_sent = _get_emails_sent()
             KalturaJob(app.app_context).run()
             std_commit(allow_test_environment=True)
-            # Expect no change
-            assert _get_email_count(section_id) == email_count
+            # Expect no emails sent during action above
+            assert _get_emails_sent() == emails_sent
 
             course = SisSection.get_course(section_id=section_id, term_id=term_id)
             instructors = course['instructors']
@@ -64,10 +72,10 @@ class TestKalturaJob:
                 ),
             ]
             """If we have insufficient approvals then do nothing."""
-            email_count = _get_email_count(section_id)
+            email_count = _get_emails_sent()
             KalturaJob(app.app_context).run()
             std_commit(allow_test_environment=True)
-            assert _get_email_count(section_id) == email_count
+            assert _get_emails_sent() == email_count
 
             # The second approval
             approvals.append(
@@ -83,23 +91,19 @@ class TestKalturaJob:
             )
 
             """If a course is scheduled for recording then email is sent to its instructor(s)."""
-            email_count = _get_email_count(section_id)
+            email_count = len(_get_emails_sent())
             KalturaJob(app.app_context).run()
             std_commit(allow_test_environment=True)
-            assert _get_email_count(section_id) == email_count + 1
+            emails_sent = _get_emails_sent()
+            assert len(emails_sent) == email_count + 1
+            email_sent = emails_sent[-1].to_api_json()
+            assert set(email_sent['recipientUids']) == {'98765', '87654'}
+            assert email_sent['sectionId'] == section_id
+            assert email_sent['templateType'] == 'recordings_scheduled'
+            assert email_sent['termId'] == term_id
+            assert email_sent['sentAt']
 
             """If recordings were already scheduled then do nothing, send no email."""
-            email_count = _get_email_count(section_id)
+            email_count = len(_get_emails_sent())
             KalturaJob(app.app_context).run()
-            assert _get_email_count(section_id) == email_count
-
-
-def _get_email_count(section_id):
-    term_id = app.config['CURRENT_TERM_ID']
-    return len(
-        SentEmail.get_emails_of_type(
-            section_id=section_id,
-            template_type='recordings_scheduled',
-            term_id=term_id,
-        ),
-    )
+            assert len(_get_emails_sent()) == email_count

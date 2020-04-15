@@ -173,7 +173,7 @@ def queue_emails():
             message = f"""
                 {len(section_ids_already_queued)} '{template_type}' emails were already queued up for the
                 {'course' if section_id_count == 1 else 'courses'} you submitted.
-                Thus, {'zero' if queued_count == 0 else f'only {queued_count}'} emails will be sent.
+                Thus, {'no' if queued_count == 0 else f'only {queued_count}'} emails added to the queue.
             """
         else:
             message = f'{queued_count} \'{template_type}\' emails will be sent.'
