@@ -117,8 +117,9 @@ def get_admin_alert_recipients():
     ]
 
 
-def send_invite_related_email(
+def send_course_related_email(
         course,
+        recipients,
         template_type,
         term_id,
 ):
@@ -131,7 +132,7 @@ def send_invite_related_email(
             )
         Mailgun().send(
             message=_interpolate(template.message),
-            recipients=course['instructors'],
+            recipients=recipients,
             section_id=course['sectionId'],
             subject_line=_interpolate(template.subject_line),
             template_type=template_type,
