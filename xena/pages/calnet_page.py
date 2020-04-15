@@ -23,28 +23,19 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-import logging
-import os
+from flask import current_app as app
+from selenium.webdriver.common.by import By
+from xena.pages.page import Page
 
-# Base directory for the application (one level up from this config file).
-BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
-BASE_URL = 'https://manage-dev.coursecapture.berkeley.edu/'
+class CalNetPage(Page):
 
-INDEX_HTML = f'{BASE_DIR}/tests/static/test-index.html'
+    USERNAME_INPUT = (By.ID, 'username')
+    PASSWORD_INPUT = (By.ID, 'password')
+    SUBMIT_BUTTON = (By.ID, 'submit')
 
-LOGGING_LEVEL = logging.INFO
-
-SALESFORCE_BASE_URL = 'https://test.salesforce.com'
-SALESFORCE_PAUSE = 5
-
-SQLALCHEMY_DATABASE_URI = 'postgres://diablo:diablo@localhost:5432/diablo_test'
-
-TESTING = True
-
-TEST_DATA_CDM = f'{BASE_DIR}/xena/fixtures/test-courses-local.json'
-
-TIMEOUT_SHORT = 8
-TIMEOUT_LONG = 30
-
-XENA_BROWSER = 'chrome'
+    def log_in(self, username, password):
+        app.logger.info(f'Logging in username {username}')
+        self.wait_for_element_and_type(CalNetPage.USERNAME_INPUT, username)
+        self.wait_for_element_and_type(CalNetPage.PASSWORD_INPUT, password)
+        self.wait_for_element_and_click(CalNetPage.SUBMIT_BUTTON)

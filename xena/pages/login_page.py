@@ -23,28 +23,27 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-import logging
-import os
+from config import xena
+from flask import current_app as app
+from selenium.webdriver.common.by import By
+from xena.pages.page import Page
 
-# Base directory for the application (one level up from this config file).
-BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
-BASE_URL = 'https://manage-dev.coursecapture.berkeley.edu/'
+class LoginPage(Page):
 
-INDEX_HTML = f'{BASE_DIR}/tests/static/test-index.html'
+    SIGN_IN_BUTTON = (By.ID, 'log-in')
+    USERNAME_INPUT = (By.ID, 'dev-auth-uid')
+    PASSWORD_INPUT = (By.ID, 'dev-auth-password')
+    DEV_AUTH_LOGIN_BUTTON = (By.ID, 'btn-dev-auth-login')
 
-LOGGING_LEVEL = logging.INFO
+    def load_page(self):
+        app.logger.info('Loading the Diablo login page')
+        self.driver.get(xena.BASE_URL)
 
-SALESFORCE_BASE_URL = 'https://test.salesforce.com'
-SALESFORCE_PAUSE = 5
+    def click_sign_in(self):
+        self.wait_for_page_and_click(LoginPage.SIGN_IN_BUTTON)
 
-SQLALCHEMY_DATABASE_URI = 'postgres://diablo:diablo@localhost:5432/diablo_test'
-
-TESTING = True
-
-TEST_DATA_CDM = f'{BASE_DIR}/xena/fixtures/test-courses-local.json'
-
-TIMEOUT_SHORT = 8
-TIMEOUT_LONG = 30
-
-XENA_BROWSER = 'chrome'
+    def dev_auth(self, uid):
+        app.logger.info('Logging in to El Diablo')
+        self.wait_for_element_and_type(LoginPage.USERNAME_INPUT, uid)
+        self.wait_for_element_and_type(LoginPage.PASSWORD_INPUT, app.config['DEVELOPER_AUTH_PASSWORD'])
