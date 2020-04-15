@@ -32,14 +32,28 @@ class Mailgun:
         self.email_redirect_when_testing = app.config['EMAIL_REDIRECT_WHEN_TESTING']
         self.use_actual_address = app.config.get('EB_ENVIRONMENT', None) == 'diablo-prod'
 
-    def send(self, message, recipients, subject_line, term_id=None, section_id=None, template_type=None):
+    def send(
+            self,
+            message,
+            recipients,
+            subject_line,
+            term_id=None,
+            section_id=None,
+            template_type=None,
+    ):
         for recipient in recipients:
             email_address = recipient['email'] if self.use_actual_address else self.email_redirect_when_testing
+            mock_message = _get_mock_message(
+                recipient['name'],
+                email_address,
+                subject_line,
+                message,
+            )
             if app.config['DIABLO_ENV'] == 'test':
-                app.logger.info(_get_mock_message(recipient['name'], email_address, subject_line, message))
+                app.logger.info(mock_message)
             else:
-                # TODO: Implement according to https://documentation.mailgun.com/en/latest/quickstart-sending.html#send-via-api
-                app.logger.info(_get_mock_message(recipient['name'], email_address, subject_line, message))
+                # TODO: https://documentation.mailgun.com/en/latest/quickstart-sending.html#send-via-api
+                app.logger.info(mock_message)
         SentEmail.create(
             recipient_uids=[recipient['uid'] for recipient in recipients],
             section_id=section_id,
@@ -54,7 +68,8 @@ class Mailgun:
 def _get_mock_message(recipient_name, email_address, subject_line, message):
     return f"""
 
-        To: {recipient_name}<{email_address}>
+        To: {recipient_name} <{email_address}>
+        Cc: Course Capture Admin <{app.config['EMAIL_DIABLO_ADMIN']}>
         From: {app.config['EMAIL_DIABLO_SUPPORT']}
         Subject: {subject_line}
 
