@@ -37,33 +37,36 @@ class QueuedEmailsJob(BaseJob):
         for queued_email in QueuedEmail.get_all(term_id):
             template_type = queued_email.template_type
             course = SisSection.get_course(term_id, queued_email.section_id)
-            if course['hasOptedOut']:
-                # Do not send email; delete the item from queue.
-                QueuedEmail.delete(queued_email)
-            else:
-                if template_type in [
-                    'invitation',
-                    'notify_instructor_of_changes',
-                    'recordings_scheduled',
-                    'room_change_no_longer_eligible',
-                    'waiting_for_approval',
-                ]:
-                    recipients = course['instructors']
-                elif template_type in ['admin_alert_instructor_change', 'admin_alert_room_change']:
-                    recipients = get_admin_alert_recipients()
-                else:
-                    raise BackgroundJobError(f'Email template type not supported: {template_type}')
-
-                # If send() returns False then report the error and DO NOT delete the queued item.
-                if send_course_related_email(
-                    course=course,
-                    recipients=recipients,
-                    template_type=template_type,
-                    term_id=term_id,
-                ):
+            if course:
+                if course['hasOptedOut']:
+                    # Do not send email; delete the item from queue.
                     QueuedEmail.delete(queued_email)
                 else:
-                    app.logger.error(f'Failed to send email: {queued_email}')
+                    if template_type in [
+                        'invitation',
+                        'notify_instructor_of_changes',
+                        'recordings_scheduled',
+                        'room_change_no_longer_eligible',
+                        'waiting_for_approval',
+                    ]:
+                        recipients = course['instructors']
+                    elif template_type in ['admin_alert_instructor_change', 'admin_alert_room_change']:
+                        recipients = get_admin_alert_recipients()
+                    else:
+                        raise BackgroundJobError(f'Email template type not supported: {template_type}')
+
+                    # If send() returns False then report the error and DO NOT delete the queued item.
+                    if send_course_related_email(
+                        course=course,
+                        recipients=recipients,
+                        template_type=template_type,
+                        term_id=term_id,
+                    ):
+                        QueuedEmail.delete(queued_email)
+                    else:
+                        app.logger.error(f'Failed to send email: {queued_email}')
+            else:
+                app.logger.warn(f'Email will remain queued until course gets proper instructor: {queued_email}')
 
     @classmethod
     def description(cls):

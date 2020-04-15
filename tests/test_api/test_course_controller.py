@@ -461,20 +461,6 @@ class TestCoursesChanges:
         assert course_change['scheduled']['hasObsoleteMeetingTimes'] is False
         assert course_change['scheduled']['hasObsoleteInstructors'] is True
 
-# meeting_days, meeting_start_time, meeting_end_time = SisSection.get_meeting_times(
-#     term_id=self.term_id,
-#     section_id=section_2_id,
-# )
-# Scheduled.create(
-#     term_id=self.term_id,
-#     section_id=section_4_id,
-#     meeting_days=meeting_days,
-#     meeting_start_time=meeting_start_time,
-#     meeting_end_time=meeting_end_time,
-#     instructor_uids=SisSection.get_instructor_uids(term_id=self.term_id, section_id=section_2_id),
-#     room_id=room.id,
-# )
-
 
 class TestUpdatePreferences:
     """Only admins view and modify course preferences. For example, the 'do not email' preference."""
