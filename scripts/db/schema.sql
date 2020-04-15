@@ -288,6 +288,8 @@ CREATE TABLE scheduled (
     meeting_days VARCHAR(80),
     meeting_end_time VARCHAR(80),
     meeting_start_time VARCHAR(80),
+    publish_type publish_types NOT NULL,
+    recording_type recording_types NOT NULL,
     room_id INTEGER NOT NULL,
     created_at timestamp with time zone NOT NULL
 );

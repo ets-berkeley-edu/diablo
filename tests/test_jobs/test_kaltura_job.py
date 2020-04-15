@@ -26,10 +26,13 @@ from diablo import std_commit
 from diablo.jobs.kaltura_job import KalturaJob
 from diablo.models.approval import Approval
 from diablo.models.room import Room
+from diablo.models.scheduled import Scheduled
 from diablo.models.sent_email import SentEmail
 from diablo.models.sis_section import SisSection
 from flask import current_app as app
 from tests.util import test_approvals_workflow
+
+admin_uid = '2040'
 
 
 class TestKalturaJob:
@@ -78,22 +81,30 @@ class TestKalturaJob:
             assert _get_emails_sent() == email_count
 
             # The second approval
-            approvals.append(
-                Approval.create(
-                    approved_by_uid=instructors[1]['uid'],
-                    term_id=term_id,
-                    section_id=section_id,
-                    approver_type_='instructor',
-                    publish_type_='kaltura_media_gallery',
-                    recording_type_='presenter_presentation_audio',
-                    room_id=room_id,
-                ),
+            final_approval = Approval.create(
+                approved_by_uid=instructors[1]['uid'],
+                term_id=term_id,
+                section_id=section_id,
+                approver_type_='instructor',
+                publish_type_='kaltura_media_gallery',
+                recording_type_='presenter_presentation_audio',
+                room_id=room_id,
             )
+            approvals.append(final_approval)
 
             """If a course is scheduled for recording then email is sent to its instructor(s)."""
             email_count = len(_get_emails_sent())
             KalturaJob(app.app_context).run()
             std_commit(allow_test_environment=True)
+
+            # Verify publish and recording types
+            scheduled = Scheduled.get_scheduled(term_id=term_id, section_id=section_id)
+            assert scheduled.publish_type == final_approval.publish_type
+            assert scheduled.recording_type == final_approval.recording_type
+            assert scheduled.section_id == section_id
+            assert scheduled.term_id == term_id
+
+            # Verify emails sent
             emails_sent = _get_emails_sent()
             assert len(emails_sent) == email_count + 1
             email_sent = emails_sent[-1].to_api_json()
@@ -107,3 +118,29 @@ class TestKalturaJob:
             email_count = len(_get_emails_sent())
             KalturaJob(app.app_context).run()
             assert len(_get_emails_sent()) == email_count
+
+    def test_admin_approval(self):
+        """Course is scheduled for recording if an admin user has approved."""
+        with test_approvals_workflow(app):
+            section_id = 22287
+            term_id = app.config['CURRENT_TERM_ID']
+            course = SisSection.get_course(section_id=section_id, term_id=term_id)
+            instructors = course['instructors']
+            assert len(instructors) == 2
+
+            # Verify that course is not scheduled
+            assert Scheduled.get_scheduled(section_id=section_id, term_id=term_id) is None
+
+            Approval.create(
+                approved_by_uid=admin_uid,
+                term_id=term_id,
+                section_id=section_id,
+                approver_type_='admin',
+                publish_type_='canvas',
+                recording_type_='presentation_audio',
+                room_id=Room.find_room('Barker 101').id,
+            )
+            KalturaJob(app.app_context).run()
+            std_commit(allow_test_environment=True)
+            # Admin approval is all we need.
+            assert Scheduled.get_scheduled(section_id=section_id, term_id=term_id)

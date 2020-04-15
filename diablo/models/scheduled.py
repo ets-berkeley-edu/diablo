@@ -26,6 +26,7 @@ from datetime import datetime
 
 from diablo import db, std_commit
 from diablo.lib.util import format_days, format_time, to_isoformat
+from diablo.models.approval import NAMES_PER_PUBLISH_TYPE, NAMES_PER_RECORDING_TYPE, publish_type, recording_type
 from diablo.models.room import Room
 from sqlalchemy import and_
 from sqlalchemy.dialects.postgresql import ARRAY
@@ -40,6 +41,8 @@ class Scheduled(db.Model):
     meeting_days = db.Column(db.String, nullable=False)
     meeting_start_time = db.Column(db.String, nullable=False)
     meeting_end_time = db.Column(db.String, nullable=False)
+    publish_type = db.Column(publish_type, nullable=False)
+    recording_type = db.Column(recording_type, nullable=False)
     room_id = db.Column(db.Integer, db.ForeignKey('rooms.id'), nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.now)
 
@@ -51,6 +54,8 @@ class Scheduled(db.Model):
             meeting_days,
             meeting_start_time,
             meeting_end_time,
+            publish_type_,
+            recording_type_,
             room_id,
     ):
         self.section_id = section_id
@@ -59,6 +64,8 @@ class Scheduled(db.Model):
         self.meeting_days = meeting_days
         self.meeting_start_time = meeting_start_time
         self.meeting_end_time = meeting_end_time
+        self.publish_type = publish_type_
+        self.recording_type = recording_type_
         self.room_id = room_id
 
     def __repr__(self):
@@ -69,6 +76,8 @@ class Scheduled(db.Model):
                     meeting_days={self.meeting_days},
                     meeting_start_time={self.meeting_start_time},
                     meeting_end_time={self.meeting_end_time},
+                    publish_type={self.publish_type},
+                    recording_type={self.recording_type},
                     room_id={self.room_id},
                     created_at={self.created_at}>
                 """
@@ -82,6 +91,8 @@ class Scheduled(db.Model):
             meeting_days,
             meeting_start_time,
             meeting_end_time,
+            publish_type_,
+            recording_type_,
             room_id,
     ):
         scheduled = cls(
@@ -91,6 +102,8 @@ class Scheduled(db.Model):
             meeting_days=meeting_days,
             meeting_start_time=meeting_start_time,
             meeting_end_time=meeting_end_time,
+            publish_type_=publish_type_,
+            recording_type_=recording_type_,
             room_id=room_id,
         )
         db.session.add(scheduled)
@@ -118,6 +131,10 @@ class Scheduled(db.Model):
             'meetingDays': format_days(self.meeting_days),
             'meetingEndTime': format_time(self.meeting_end_time),
             'meetingStartTime': format_time(self.meeting_start_time),
+            'publishType': self.publish_type,
+            'publishTypeName': NAMES_PER_PUBLISH_TYPE[self.publish_type],
+            'recordingType': self.recording_type,
+            'recordingTypeName': NAMES_PER_RECORDING_TYPE[self.recording_type],
             'room': Room.get_room(self.room_id).to_api_json() if self.room_id else None,
             'createdAt': to_isoformat(self.created_at),
         }

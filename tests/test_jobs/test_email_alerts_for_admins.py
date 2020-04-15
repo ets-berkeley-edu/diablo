@@ -43,7 +43,7 @@ class TestEmailAlertsForAdmins:
             approved_by_uid = '6789'
             the_old_room = 'Wheeler 150'
             scheduled_in_room = Room.find_room(the_old_room)
-            Approval.create(
+            approval = Approval.create(
                 approved_by_uid=approved_by_uid,
                 term_id=term_id,
                 section_id=section_id,
@@ -63,6 +63,8 @@ class TestEmailAlertsForAdmins:
                 meeting_days=meeting_days,
                 meeting_start_time=meeting_start_time,
                 meeting_end_time=meeting_end_time,
+                publish_type_=approval.publish_type,
+                recording_type_=approval.recording_type,
                 room_id=scheduled_in_room.id,
             )
 
@@ -78,7 +80,7 @@ class TestEmailAlertsForAdmins:
             section_id = 22287
             approved_by_uid = '8765432'
             room_id = Room.find_room('Barker 101').id
-            Approval.create(
+            approval = Approval.create(
                 approved_by_uid=approved_by_uid,
                 term_id=term_id,
                 section_id=section_id,
@@ -98,6 +100,8 @@ class TestEmailAlertsForAdmins:
                 meeting_days=meeting_days,
                 meeting_start_time=meeting_start_time,
                 meeting_end_time=meeting_end_time,
+                publish_type_=approval.publish_type,
+                recording_type_=approval.recording_type,
                 room_id=room_id,
             )
 

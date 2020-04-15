@@ -26,6 +26,7 @@ from diablo.externals.mailgun import Mailgun
 from diablo.jobs.base_job import BaseJob
 from diablo.lib.util import objects_to_dict_organized_by_section_id
 from diablo.merged.emailer import interpolate_email_content
+from diablo.models.admin_user import AdminUser
 from diablo.models.approval import Approval, NAMES_PER_PUBLISH_TYPE, NAMES_PER_RECORDING_TYPE
 from diablo.models.email_template import EmailTemplate
 from diablo.models.scheduled import Scheduled
@@ -43,7 +44,8 @@ class KalturaJob(BaseJob):
             for course in _get_courses_ready_to_schedule(approvals=approvals, term_id=term_id):
                 section_id = int(course['sectionId'])
                 course_approvals = approvals_per_section_id[section_id]
-                _schedule_recordings(latest_approval=course_approvals[-1], course=course)
+                course_approvals.sort(key=lambda a: a.created_at.isoformat())
+                _schedule_recordings(approval=course_approvals[-1], course=course)
 
                 uids = [approval.approved_by_uid for approval in approvals]
                 app.logger.info(f'Recordings scheduled for course {section_id} per approvals: {", ".join(uids)}')
@@ -62,12 +64,16 @@ def _get_courses_ready_to_schedule(approvals, term_id):
     if unscheduled_approvals:
         courses = SisSection.get_courses(section_ids=[a.section_id for a in unscheduled_approvals], term_id=term_id)
         courses_per_section_id = dict((int(course['sectionId']), course) for course in courses)
+        admin_user_uids = set([user.uid for user in AdminUser.all_admin_users(include_deleted=True)])
 
         for section_id, uids in _get_uids_per_section_id(approvals=unscheduled_approvals).items():
-            course = courses_per_section_id[section_id]
-            necessary_uids = [i['uid'] for i in course['instructors']]
-            if all(uid in uids for uid in necessary_uids):
+            if admin_user_uids.intersection(set(uids)):
                 ready_to_schedule.append(courses_per_section_id[section_id])
+            else:
+                course = courses_per_section_id[section_id]
+                necessary_uids = [i['uid'] for i in course['instructors']]
+                if all(uid in uids for uid in necessary_uids):
+                    ready_to_schedule.append(courses_per_section_id[section_id])
     return ready_to_schedule
 
 
@@ -78,29 +84,31 @@ def _get_uids_per_section_id(approvals):
     return uids_per_section_id
 
 
-def _schedule_recordings(latest_approval, course):
+def _schedule_recordings(approval, course):
     term_id = course['termId']
     section_id = int(course['sectionId'])
     meeting_days, meeting_start_time, meeting_end_time = SisSection.get_meeting_times(
         term_id=term_id,
         section_id=section_id,
     )
-    Scheduled.create(
+    scheduled = Scheduled.create(
         section_id=section_id,
         term_id=term_id,
         instructor_uids=SisSection.get_instructor_uids(term_id=term_id, section_id=section_id),
         meeting_days=meeting_days,
         meeting_start_time=meeting_start_time,
         meeting_end_time=meeting_end_time,
-        room_id=latest_approval.room_id,
+        publish_type_=approval.publish_type,
+        recording_type_=approval.recording_type,
+        room_id=approval.room_id,
     )
-    _notify_instructors(course=course, latest_approval=latest_approval)
+    _notify_instructors(course=course, scheduled=scheduled)
 
 
-def _notify_instructors(course, latest_approval):
+def _notify_instructors(course, scheduled):
     email_template = EmailTemplate.get_template_by_type('recordings_scheduled')
-    publish_type_name = NAMES_PER_PUBLISH_TYPE[latest_approval.publish_type]
-    recording_type_name = NAMES_PER_RECORDING_TYPE[latest_approval.recording_type]
+    publish_type_name = NAMES_PER_PUBLISH_TYPE[scheduled.publish_type]
+    recording_type_name = NAMES_PER_RECORDING_TYPE[scheduled.recording_type]
     Mailgun().send(
         message=interpolate_email_content(
             course=course,
