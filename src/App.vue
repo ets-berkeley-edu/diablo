@@ -6,7 +6,11 @@
       :timeout="snackbar.timeout"
       :top="true"
     >
-      <span id="alert-text" class="title">{{ snackbar.text }}</span>
+      <span
+        id="alert-text"
+        aria-live="polite"
+        role="alert"
+        class="title">{{ snackbar.text }}</span>
       <v-btn
         id="btn-close-alert"
         text

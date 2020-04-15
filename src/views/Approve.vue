@@ -1,5 +1,5 @@
 <template>
-  <div v-if="!loading">
+  <div v-if="!loading" class="pa-3">
     <v-container fluid>
       <v-row class="pl-3">
         <h2 id="page-title">{{ pageTitle }}</h2>
@@ -9,7 +9,7 @@
       </v-row>
       <v-row>
         <v-col lg="3" md="3" sm="3">
-          <v-card class="mb-3 mr-3 mt-3 pa-6" outlined tile>
+          <v-card class="pa-6" outlined tile>
             <v-row id="instructors">
               <v-col md="auto">
                 <v-icon>mdi-school-outline</v-icon>
@@ -69,24 +69,41 @@
             </v-row>
           </v-card>
         </v-col>
-        <v-col lg="9" md="9" sm="9">
-          <v-card
-            class="ma-3 pa-6"
-            outlined
-            tile
-          >
-            <v-container fluid>
-              <v-row class="pb-4">
-                <div>
-                  <h4>Course Capture Sign-up</h4>
-                  <div v-if="approvedByUids.length" class="font-weight-bold pb-2 pt-2 pink--text">
+        <v-col>
+          <v-card class="pa-6" outlined>
+            <v-container>
+              <v-row v-if="scheduled">
+                <v-col>
+                  <v-card tile>
+                    <v-list-item-title class="pl-4 pt-4">
+                      <h5 class="title">Recordings scheduled</h5>
+                    </v-list-item-title>
+                    <v-list-item two-line class="pb-3">
+                      <v-list-item-content>
+                        <v-list-item-title>Scheduled on</v-list-item-title>
+                        <v-list-item-subtitle>{{ scheduled.createdAt | moment('MMM DD, YYYY') }}</v-list-item-subtitle>
+                      </v-list-item-content>
+                      <v-list-item-content>
+                        <v-list-item-title>Recording Type</v-list-item-title>
+                        <v-list-item-subtitle>{{ scheduled.recordingTypeName }}</v-list-item-subtitle>
+                      </v-list-item-content>
+                      <v-list-item-content>
+                        <v-list-item-title>Publish Type</v-list-item-title>
+                        <v-list-item-subtitle>{{ scheduled.publishTypeName }}</v-list-item-subtitle>
+                      </v-list-item-content>
+                    </v-list-item>
+                  </v-card>
+                </v-col>
+              </v-row>
+              <v-row no-gutters class="mb-6">
+                <v-col>
+                  <div v-if="!scheduled && approvedByUids.length" class="font-weight-bold pb-5 pink--text">
                     <span v-if="mostRecentApproval.approvedByUid === $currentUser.uid">
                       You submitted the preferences below.
                     </span>
                     <div v-if="mostRecentApproval.approvedByUid !== $currentUser.uid">
-                      The preferences below were submitted by {{ getInstructorNames(approvedByUids) }}.
+                      {{ getInstructorNames(approvedByUids) }} approved.
                     </div>
-                    <div v-if="scheduled" class="pt-2">Recordings have been scheduled in Kaltura.</div>
                   </div>
                   <div>
                     The Course Capture program is the campus service for recording and publishing classroom activity. If you
@@ -100,17 +117,17 @@
                       Course Capture Services Explained <v-icon>mdi-open-in-new</v-icon>
                     </a>.
                   </div>
-                </div>
+                </v-col>
               </v-row>
-              <v-row align="center">
-                <v-col cols="4" class="mb-5">
+              <v-row v-if="!scheduled" justify="start" align="center">
+                <v-col md="3" class="mb-6">
                   <h5>
                     <label for="select-recording-type">Recording Type</label>
                     <v-tooltip id="tooltip-recording-type" bottom>
                       <template v-slot:activator="{ on }">
                         <v-icon
                           color="primary"
-                          class="pb-1 pl-1"
+                          class="pl-1"
                           dark
                           v-on="on">
                           mdi-information-outline
@@ -122,12 +139,12 @@
                     </v-tooltip>
                   </h5>
                 </v-col>
-                <v-col cols="8">
-                  <div v-if="hasNecessaryApprovals" class="pb-5">
+                <v-col md="6">
+                  <div v-if="hasNecessaryApprovals" class="mb-5">
                     {{ mostRecentApproval.recordingTypeName }}
                   </div>
                   <div v-if="!hasNecessaryApprovals">
-                    <div v-if="recordingTypeOptions.length === 1">
+                    <div v-if="recordingTypeOptions.length === 1" class="mb-5">
                       {{ recordingTypeOptions[0].text }}
                       <input type="hidden" name="recordingType" :value="recordingTypeOptions[0].value">
                     </div>
@@ -146,15 +163,15 @@
                   </div>
                 </v-col>
               </v-row>
-              <v-row align="center">
-                <v-col cols="4" class="mb-5">
+              <v-row v-if="!scheduled" justify="start" align="center">
+                <v-col md="3" class="mb-6">
                   <h5>
                     <label for="select-publish-type">Publish</label>
                     <v-tooltip id="tooltip-publish" bottom>
                       <template v-slot:activator="{ on }">
                         <v-icon
                           color="primary"
-                          class="pb-1 pl-1"
+                          class="pl-1"
                           dark
                           v-on="on">
                           mdi-information-outline
@@ -168,8 +185,8 @@
                     </v-tooltip>
                   </h5>
                 </v-col>
-                <v-col cols="8">
-                  <div v-if="hasNecessaryApprovals" id="approved-publish-type" class="pb-5">
+                <v-col md="6">
+                  <div v-if="hasNecessaryApprovals" id="approved-publish-type" class="mb-5">
                     {{ mostRecentApproval.publishTypeName }}
                   </div>
                   <v-select
@@ -178,39 +195,42 @@
                     v-model="publishType"
                     item-text="text"
                     item-value="value"
-                    :full-width="true"
                     :items="publishTypeOptions"
                     label="Select..."
                     solo
                   ></v-select>
                 </v-col>
               </v-row>
-              <v-row v-if="!hasNecessaryApprovals">
-                <v-col md="auto" class="mr-0 pr-0">
-                  <v-checkbox id="agree-to-terms-checkbox" v-model="agreedToTerms" class="mt-0 mr-0 pt-1"></v-checkbox>
+              <v-row v-if="!hasNecessaryApprovals" no-gutters align="start">
+                <v-col md="auto">
+                  <v-checkbox id="agree-to-terms-checkbox" v-model="agreedToTerms" class="mt-0"></v-checkbox>
                 </v-col>
                 <v-col>
-                  <label for="agree-to-terms-checkbox">
-                    I have read the Audio and Video Recording Permission Agreement and I agree to the terms stated within.
-                    <a
-                      id="link-to-course-capture-policies"
-                      :href="$config.courseCapturePoliciesUrl"
-                      target="_blank"
-                      aria-label="Open URL to Course Capture policies in a new window">
-                      Audio and Video Recording Permission Agreement <v-icon>mdi-open-in-new</v-icon>
-                    </a>.
-                  </label>
+                  <div class="pt-1">
+                    <label for="agree-to-terms-checkbox">
+                      I have read the Audio and Video Recording Permission Agreement and I agree to the terms stated within.
+                      <a
+                        id="link-to-course-capture-policies"
+                        :href="$config.courseCapturePoliciesUrl"
+                        target="_blank"
+                        aria-label="Open URL to Course Capture policies in a new window">
+                        Audio and Video Recording Permission Agreement <v-icon>mdi-open-in-new</v-icon>
+                      </a>.
+                    </label>
+                  </div>
                 </v-col>
               </v-row>
-              <v-row v-if="!hasNecessaryApprovals" class="pr-5">
+              <v-row v-if="!hasNecessaryApprovals" lg="2">
                 <v-spacer />
-                <v-btn
-                  id="btn-approve"
-                  color="success"
-                  :disabled="disableSubmit"
-                  @click="approveRecording">
-                  Approve
-                </v-btn>
+                <v-col md="2">
+                  <v-btn
+                    id="btn-approve"
+                    color="success"
+                    :disabled="disableSubmit"
+                    @click="approveRecording">
+                    Approve
+                  </v-btn>
+                </v-col>
               </v-row>
             </v-container>
           </v-card>
@@ -234,7 +254,6 @@
       approvedByUids: undefined,
       course: undefined,
       hasNecessaryApprovals: undefined,
-      instructorUids: undefined,
       mostRecentApproval: undefined,
       pageTitle: undefined,
       publishType: undefined,
@@ -264,8 +283,9 @@
         }).catch(this.$ready)
       },
       getInstructorNames(uids) {
-        const instructors = this.$_.filter(this.instructors, instructor => this.$_.includes(uids, instructor.uid))
-        const unrecognized = this.$_.difference(uids, this.$_.map(this.instructors, 'uid'))
+        const instructors = this.course.instructors
+        const filtered = this.$_.filter(instructors, instructor => this.$_.includes(uids, instructor.uid))
+        const unrecognized = this.$_.difference(uids, this.$_.map(filtered, 'uid'))
         const names = this.$_.union(this.$_.map(instructors, 'name'), unrecognized)
         return names.length ? this.oxfordJoin(names) : ''
       },
@@ -290,7 +310,6 @@
           }
         }
         this.hasNecessaryApprovals = data.hasNecessaryApprovals
-        this.instructorUids = this.$_.map(data.instructors, 'uid')
         this.pageTitle = `${data.courseName } - ${data.instructionFormat} ${data.sectionNum}`
         this.publishTypeOptions = []
         this.$_.each(data.publishTypeOptions, (text, value) => {

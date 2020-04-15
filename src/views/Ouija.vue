@@ -60,7 +60,16 @@
                 :value="item"
               ></v-checkbox>
             </td>
-            <td :id="`course-name-${item.sectionId}`" class="text-no-wrap">{{ item.courseName }}</td>
+            <td :id="`course-name-${item.sectionId}`" class="text-no-wrap">
+              <router-link
+                v-if="item.room.capability"
+                :id="`sign-up-${item.sectionId}`"
+                class="subtitle-1"
+                :to="`/approve/${$config.currentTermId}/${item.sectionId}`">
+                {{ item.courseName }}
+              </router-link>
+              <span v-if="!item.room.capability">{{ item.courseName }}</span>
+            </td>
             <td :id="`section-id-${item.sectionId}`" class="text-no-wrap w-10">{{ item.sectionId }}</td>
             <td class="text-no-wrap">
               <router-link

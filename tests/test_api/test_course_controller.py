@@ -314,7 +314,7 @@ class TestCoursesFilter:
                 recording_type_='presentation_audio',
                 room_id=room.id,
             )
-            Approval.create(
+            approval = Approval.create(
                 approved_by_uid=admin_uid,
                 term_id=self.term_id,
                 section_id=section_4_id,
@@ -334,6 +334,8 @@ class TestCoursesFilter:
                 meeting_start_time=meeting_start_time,
                 meeting_end_time=meeting_end_time,
                 instructor_uids=SisSection.get_instructor_uids(term_id=self.term_id, section_id=section_2_id),
+                publish_type_=approval.publish_type,
+                recording_type_=approval.recording_type,
                 room_id=room.id,
             )
             api_json = self._api_courses(client, term_id=self.term_id, filter_='Invited')
@@ -341,7 +343,9 @@ class TestCoursesFilter:
             section_4 = next((s for s in api_json if s['sectionId'] == section_4_id), None)
             assert section_4
             assert len(section_4['approvals']) > 0
-            assert len(section_4['scheduled']) > 0
+            scheduled = section_4.get('scheduled', {})
+            assert scheduled.get('publishType') == approval.publish_type
+            assert scheduled.get('recordingType') == approval.recording_type
 
             section_5 = next((s for s in api_json if s['sectionId'] == section_5_id), None)
             assert section_5
@@ -396,6 +400,8 @@ class TestCoursesChanges:
             meeting_start_time=meeting_start_time,
             meeting_end_time=meeting_end_time,
             instructor_uids=SisSection.get_instructor_uids(term_id=self.term_id, section_id=section_2_id),
+            publish_type_='kaltura_media_gallery',
+            recording_type_='presenter_presentation_audio',
             room_id=obsolete_room.id,
         )
         std_commit(allow_test_environment=True)
@@ -424,6 +430,8 @@ class TestCoursesChanges:
             meeting_start_time=meeting_start_time,
             meeting_end_time=meeting_end_time,
             instructor_uids=SisSection.get_instructor_uids(term_id=self.term_id, section_id=section_1_id),
+            publish_type_='canvas',
+            recording_type_='presentation_audio',
             room_id=course['room']['id'],
         )
         std_commit(allow_test_environment=True)
@@ -450,6 +458,8 @@ class TestCoursesChanges:
             meeting_start_time=meeting_start_time,
             meeting_end_time=meeting_end_time,
             instructor_uids=instructor_uids + ['999999'],
+            publish_type_='canvas',
+            recording_type_='presenter_audio',
             room_id=course['room']['id'],
         )
         std_commit(allow_test_environment=True)
