@@ -48,6 +48,9 @@ class TestQueuedEmailsJob:
 
     def test_send_invitation_emails(self):
         """Send all email in 'queued_emails' table."""
+        def _emails_sent(section_id):
+            return _get_emails_sent(email_template_type=email_template_type, section_id=section_id, term_id=term_id)
+
         term_id = app.config['CURRENT_TERM_ID']
         courses = [
             {
@@ -61,13 +64,6 @@ class TestQueuedEmailsJob:
         ]
         email_template_type = 'invitation'
 
-        def _get_emails_sent(section_id):
-            return SentEmail.get_emails_of_type(
-                section_id=section_id,
-                template_type=email_template_type,
-                term_id=term_id,
-            )
-
         for course in courses:
             QueuedEmail.create(course['sectionId'], email_template_type, term_id)
             std_commit(allow_test_environment=True)
@@ -75,7 +71,7 @@ class TestQueuedEmailsJob:
         def _get_emails_to_courses():
             emails_sent_ = []
             for course_ in courses:
-                emails_sent_.extend(_get_emails_sent(course_['sectionId']))
+                emails_sent_.extend(_emails_sent(course_['sectionId']))
             return emails_sent_
 
         before = utc_now()
@@ -103,54 +99,48 @@ class TestQueuedEmailsJob:
 
     def test_course_has_opted_out(self):
         """Do not send email to courses that have opted out."""
+        def _emails_sent():
+            return _get_emails_sent(email_template_type=email_template_type, section_id=section_id, term_id=term_id)
+
         term_id = app.config['CURRENT_TERM_ID']
         section_id = 28602
         CoursePreference.update_opt_out(term_id=term_id, section_id=section_id, opt_out=True)
         email_template_type = 'invitation'
 
-        def _get_emails_sent():
-            return SentEmail.get_emails_of_type(
-                section_id=section_id,
-                template_type=email_template_type,
-                term_id=term_id,
-            )
         QueuedEmail.create(section_id, email_template_type, term_id)
         std_commit(allow_test_environment=True)
 
         before = utc_now()
-        emails_sent_before = _get_emails_sent()
+        emails_sent_before = _emails_sent()
         # Run the job
         QueuedEmailsJob(app.app_context).run()
         std_commit(allow_test_environment=True)
 
         # Expect no emails sent
-        emails_sent_after = _get_emails_sent()
+        emails_sent_after = _emails_sent()
         assert len(emails_sent_after) == len(emails_sent_before)
         assert not next((e for e in emails_sent_after if e.section_id == section_id and e.sent_at > before), None)
 
     def test_queued_email_for_admin(self):
         """Certain email template types are for admin recipients only."""
+        def _emails_sent():
+            return _get_emails_sent(email_template_type=email_template_type, section_id=section_id, term_id=term_id)
+
         term_id = app.config['CURRENT_TERM_ID']
         section_id = 22287
         email_template_type = 'admin_alert_room_change'
 
-        def _get_emails_sent():
-            return SentEmail.get_emails_of_type(
-                section_id=section_id,
-                template_type=email_template_type,
-                term_id=term_id,
-            )
         QueuedEmail.create(section_id, email_template_type, term_id)
         std_commit(allow_test_environment=True)
 
         before = utc_now()
-        emails_sent_before = _get_emails_sent()
+        emails_sent_before = _emails_sent()
         # Run the job
         QueuedEmailsJob(app.app_context).run()
         std_commit(allow_test_environment=True)
 
         # Expect email to admin email address
-        emails_sent_after = _get_emails_sent()
+        emails_sent_after = _emails_sent()
         assert len(emails_sent_after) == len(emails_sent_before) + 1
 
         sent_email = next((e for e in emails_sent_after if e.section_id == section_id and e.sent_at > before), None)
@@ -164,28 +154,25 @@ class TestQueuedEmailsJob:
 
     def test_currently_no_person_teaching_course(self):
         """If course does not have a proper instructor then the email remains queued."""
+        def _emails_sent():
+            return _get_emails_sent(email_template_type=email_template_type, section_id=section_id, term_id=term_id)
+
         term_id = app.config['CURRENT_TERM_ID']
         section_id = 22460
         email_template_type = 'invitation'
         # Courses with no proper instructor are excluded from query results.
         assert not SisSection.get_course(term_id=term_id, section_id=section_id)
 
-        def _get_emails_sent():
-            return SentEmail.get_emails_of_type(
-                section_id=section_id,
-                template_type=email_template_type,
-                term_id=term_id,
-            )
         queued_email = QueuedEmail.create(section_id, email_template_type, term_id)
         std_commit(allow_test_environment=True)
 
-        emails_sent_before = _get_emails_sent()
+        emails_sent_before = _emails_sent()
         # Run the job
         QueuedEmailsJob(app.app_context).run()
         std_commit(allow_test_environment=True)
 
         # Expect no email sent
-        emails_sent_after = _get_emails_sent()
+        emails_sent_after = _emails_sent()
         assert len(emails_sent_after) == len(emails_sent_before)
         # Assert that email is still queued
         assert section_id in QueuedEmail.get_all_section_ids(template_type=email_template_type, term_id=term_id)
@@ -194,28 +181,33 @@ class TestQueuedEmailsJob:
 
     def test_no_email_template_available(self):
         """If email_template is not available then keep related emails in the queue."""
+        def _emails_sent():
+            return _get_emails_sent(email_template_type=email_template_type, section_id=section_id, term_id=term_id)
+
         term_id = app.config['CURRENT_TERM_ID']
         section_id = 22287
         email_template_type = 'waiting_for_approval'
 
-        def _get_emails_sent():
-            return SentEmail.get_emails_of_type(
-                section_id=section_id,
-                template_type=email_template_type,
-                term_id=term_id,
-            )
         queued_email = QueuedEmail.create(section_id, email_template_type, term_id)
         std_commit(allow_test_environment=True)
 
-        emails_sent_before = _get_emails_sent()
+        emails_sent_before = _emails_sent()
         # Run the job
         QueuedEmailsJob(app.app_context).run()
         std_commit(allow_test_environment=True)
 
         # Expect no email sent
-        emails_sent_after = _get_emails_sent()
+        emails_sent_after = _emails_sent()
         assert len(emails_sent_after) == len(emails_sent_before)
         # Assert that email is still queued
         assert section_id in QueuedEmail.get_all_section_ids(template_type=email_template_type, term_id=term_id)
         # Clean up
         QueuedEmail.delete(queued_email)
+
+
+def _get_emails_sent(email_template_type, section_id, term_id):
+    return SentEmail.get_emails_of_type(
+        section_id=section_id,
+        template_type=email_template_type,
+        term_id=term_id,
+    )

@@ -49,6 +49,9 @@ CANVAS_BERKELEY_ACCOUNT_ID = 00000
 CANVAS_ENROLLMENT_TERM_ID = 0000
 
 CURRENT_TERM_ID = None
+# YYYY-MM-DD is expected date format. For example, '2020-01-21'
+CURRENT_TERM_BEGIN = None
+CURRENT_TERM_END = None
 
 # Loch o' Data
 DATA_LOCH_RDS_URI = 'postgres://foo:secret@secret-rds-url.com:5432/data_loch'
