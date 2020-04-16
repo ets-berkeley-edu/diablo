@@ -1,0 +1,364 @@
+{
+    "agents": [
+        {
+            "building": "Barker",
+            "room": "101",
+            "captureAgent": "Barker 101",
+            "capability": "Screencast"
+        },
+        {
+            "building": "Barrows",
+            "room": "118",
+            "captureAgent": "Barrows 118",
+            "capability": "Screencast"
+        },
+        {
+            "building": "Barrows",
+            "room": "122",
+            "captureAgent": "Barrows 122",
+            "capability": "Screencast"
+        },
+        {
+            "building": "Barrows",
+            "room": "126",
+            "captureAgent": "Barrows 126",
+            "capability": "Screencast"
+        },
+        {
+            "building": "Barrows",
+            "room": "166",
+            "captureAgent": "Barrows 166",
+            "capability": "Screencast"
+        },
+        {
+            "building": "Barrows",
+            "room": "170",
+            "captureAgent": "Barrows 170",
+            "capability": "Screencast"
+        },
+        {
+            "building": "Barrows",
+            "room": "56",
+            "captureAgent": "Barrows 56",
+            "capability": "Screencast"
+        },
+        {
+            "building": "Barrows",
+            "room": "60",
+            "captureAgent": "Barrows 60",
+            "capability": "Screencast"
+        },
+        {
+            "building": "Birge",
+            "room": "50",
+            "captureAgent": "Birge 50",
+            "capability": "Screencast"
+        },
+        {
+            "building": "Cory",
+            "room": "241",
+            "captureAgent": "Cory 241",
+            "capability": "Screencast"
+        },
+        {
+            "building": "Cory",
+            "room": "277",
+            "captureAgent": "Cory 277",
+            "capability": "Screencast"
+        },
+        {
+            "building": "Cory",
+            "room": "289",
+            "captureAgent": "Cory 289",
+            "capability": "Screencast"
+        },
+        {
+            "building": "Davis",
+            "room": "534",
+            "captureAgent": "Davis 534",
+            "capability": "Screencast"
+        },
+        {
+            "building": "Donner Lab",
+            "room": "155",
+            "captureAgent": "Donner Lab 155",
+            "capability": "Screencast"
+        },
+        {
+            "building": "Dwinelle",
+            "room": "145",
+            "captureAgent": "Dwinelle 145",
+            "capability": "Screencast"
+        },
+        {
+            "building": "Dwinelle",
+            "room": "155",
+            "captureAgent": "Dwinelle 155",
+            "capability": "Screencast"
+        },
+        {
+            "building": "Dwinelle",
+            "room": "219",
+            "captureAgent": "Dwinelle 219",
+            "capability": "Screencast"
+        },
+        {
+            "building": "Dwinelle",
+            "room": "8",
+            "captureAgent": "Dwinelle 8",
+            "capability": "--None--"
+        },
+        {
+            "building": "Etcheverry",
+            "room": "3106",
+            "captureAgent": "Etcheverry 3106",
+            "capability": "Screencast"
+        },
+        {
+            "building": "Etcheverry",
+            "room": "3107",
+            "captureAgent": "Etcheverry 3107",
+            "capability": "Screencast"
+        },
+        {
+            "building": "Etcheverry",
+            "room": "3108",
+            "captureAgent": "Etcheverry 3108",
+            "capability": "Screencast"
+        },
+        {
+            "building": "Etcheverry",
+            "room": "3109",
+            "captureAgent": "Etcheverry 3109",
+            "capability": "Screencast"
+        },
+        {
+            "building": "Etcheverry",
+            "room": "3111",
+            "captureAgent": "Etcheverry 3111",
+            "capability": "Screencast"
+        },
+        {
+            "building": "Etcheverry",
+            "room": "3113",
+            "captureAgent": "Etcheverry 3113",
+            "capability": "Screencast"
+        },
+        {
+            "building": "Evans",
+            "room": "10",
+            "captureAgent": "Evans 10",
+            "capability": "Screencast"
+        },
+        {
+            "building": "Evans",
+            "room": "60",
+            "captureAgent": "Evans 60",
+            "capability": "Screencast"
+        },
+        {
+            "building": "GPB",
+            "room": "100",
+            "captureAgent": "GPB 100",
+            "capability": "Screencast"
+        },
+        {
+            "building": "Haviland",
+            "room": "12",
+            "captureAgent": "Haviland 12",
+            "capability": "Screencast"
+        },
+        {
+            "building": "Hearst Annex",
+            "room": "A1",
+            "captureAgent": "Hearst Annex A1",
+            "capability": "Screencast"
+        },
+        {
+            "building": "Hearst Mining",
+            "room": "390",
+            "captureAgent": "Hearst Mining 390",
+            "capability": "Screencast"
+        },
+        {
+            "building": "Jacobs Hall",
+            "room": "310",
+            "captureAgent": "Jacobs Hall 310",
+            "capability": "Screencast"
+        },
+        {
+            "building": "Kroeber",
+            "room": "155",
+            "captureAgent": "Kroeber 155",
+            "capability": "Screencast"
+        },
+        {
+            "building": "Kroeber",
+            "room": "160",
+            "captureAgent": "Kroeber 160",
+            "capability": "Screencast"
+        },
+        {
+            "building": "Latimer",
+            "room": "120",
+            "captureAgent": "Latimer 120",
+            "capability": "Screencast"
+        },
+        {
+            "building": "LeConte",
+            "room": "1",
+            "captureAgent": "LeConte 1",
+            "capability": "Screencast"
+        },
+        {
+            "building": "LeConte",
+            "room": "2",
+            "captureAgent": "LeConte 2",
+            "capability": "Screencast"
+        },
+        {
+            "building": "LeConte",
+            "room": "3",
+            "captureAgent": "LeConte 3",
+            "capability": "Screencast"
+        },
+        {
+            "building": "LeConte",
+            "room": "4",
+            "captureAgent": "LeConte 4",
+            "capability": "Screencast"
+        },
+        {
+            "building": "Lewis",
+            "room": "100",
+            "captureAgent": "Lewis 100",
+            "capability": "Screencast"
+        },
+        {
+            "building": "Li Ka Shing",
+            "room": "245",
+            "captureAgent": "Li Ka Shing 245",
+            "capability": "Screencast + Video"
+        },
+        {
+            "building": "McCone",
+            "room": "141",
+            "captureAgent": "McCone 141",
+            "capability": "Screencast"
+        },
+        {
+            "building": "Moffitt Library",
+            "room": "101",
+            "captureAgent": "Moffitt 101",
+            "capability": "Screencast"
+        },
+        {
+            "building": "Moffitt Library",
+            "room": "102",
+            "captureAgent": "Moffitt 102",
+            "capability": "Screencast"
+        },
+        {
+            "building": "Moffitt Library",
+            "room": "103",
+            "captureAgent": "Moffitt 103",
+            "capability": "Screencast"
+        },
+        {
+            "building": "Moffitt Library",
+            "room": "106",
+            "captureAgent": "Moffitt 106",
+            "capability": "Screencast"
+        },
+        {
+            "building": "Moffitt Library",
+            "room": "145",
+            "captureAgent": "Moffitt 145",
+            "capability": "Screencast"
+        },
+        {
+            "building": "Morgan",
+            "room": "101",
+            "captureAgent": "Morgan 101",
+            "capability": "Screencast"
+        },
+        {
+            "building": "Morgan",
+            "room": "109",
+            "captureAgent": "Morgan 109",
+            "capability": "Screencast"
+        },
+        {
+            "building": "Mulford",
+            "room": "159",
+            "captureAgent": "Mulford 159",
+            "capability": "Screencast"
+        },
+        {
+            "building": "Mulford",
+            "room": "240",
+            "captureAgent": "Mulford 240",
+            "capability": "Screencast"
+        },
+        {
+            "building": "North Gate",
+            "room": "105",
+            "captureAgent": "North Gate 105",
+            "capability": "Screencast"
+        },
+        {
+            "building": "Pimentel",
+            "room": "1",
+            "captureAgent": "Pimentel 1",
+            "capability": "Screencast + Video"
+        },
+        {
+            "building": "Stanley",
+            "room": "105",
+            "captureAgent": "Stanley 105",
+            "capability": "Screencast"
+        },
+        {
+            "building": "Stanley",
+            "room": "106",
+            "captureAgent": "Stanley 106",
+            "capability": "Screencast"
+        },
+        {
+            "building": "Tan",
+            "room": "180",
+            "captureAgent": "Tan 180",
+            "capability": "Screencast"
+        },
+        {
+            "building": "Valley Life Sciences",
+            "room": "2040",
+            "captureAgent": "Valley Life Sciences 2040",
+            "capability": "Screencast"
+        },
+        {
+            "building": "Valley Life Sciences",
+            "room": "2050",
+            "captureAgent": "Valley Life Sciences 2050",
+            "capability": "Screencast + Video"
+        },
+        {
+            "building": "Valley Life Sciences",
+            "room": "2060",
+            "captureAgent": "Valley Life Sciences 2060",
+            "capability": "Screencast"
+        },
+        {
+            "building": "Wheeler",
+            "room": "150",
+            "captureAgent": "Wheeler Aud (150)",
+            "capability": "Screencast + Video"
+        },
+        {
+            "building": "Wurster",
+            "room": "102",
+            "captureAgent": "Wurster 102",
+            "capability": "Screencast"
+        }
+    ]
+}
