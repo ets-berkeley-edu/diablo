@@ -44,7 +44,9 @@ def test_approvals_workflow(app):
     """Delete all approvals before and after test."""
     def _delete_all_approvals():
         db.session.execute(text('DELETE FROM approvals'))
+        db.session.execute(text('DELETE FROM course_preferences'))
         db.session.execute(text('DELETE FROM scheduled'))
+        db.session.execute(text('DELETE FROM sent_emails'))
 
     try:
         _delete_all_approvals()

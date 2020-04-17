@@ -39,15 +39,13 @@ from tests.util import test_approvals_workflow
 admin_uid = '2040'
 deleted_admin_user_uid = '1022796'
 section_1_id = 28602
-section_1_instructor_uids = ['234567', '8765432']
 section_2_id = 28165
-section_2_instructor_uids = ['8765432']
 section_3_id = 12601
-section_with_canvas_course_sites = 22287
 section_4_id = 26094
-section_4_instructor_uids = ['6789']
 section_5_id = 30563
-section_5_instructor_uids = ['234567']
+section_6_id = 22287
+
+section_with_canvas_course_sites = section_6_id
 
 
 @pytest.fixture()
@@ -84,7 +82,8 @@ class TestApprove:
 
     def test_unauthorized(self, client, db, fake_auth):
         """Deny access if the instructor is not teaching the requested course."""
-        fake_auth.login(section_1_instructor_uids[0])
+        instructor_uids = _get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
+        fake_auth.login(instructor_uids[0])
         api_approve(
             client,
             publish_type='canvas',
@@ -95,8 +94,8 @@ class TestApprove:
 
     def test_instructor_already_approved(self, client, db, fake_auth):
         """Instructor can submit his/her approval only once."""
-        uid = section_1_instructor_uids[0]
-        fake_auth.login(uid)
+        instructor_uids = _get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
+        fake_auth.login(instructor_uids[0])
 
         for expected_status_code in [200, 403]:
             api_approve(
@@ -109,7 +108,8 @@ class TestApprove:
 
     def test_approval_by_instructors(self, client, db, fake_auth):
         """Instructor can submit approval if s/he is teaching the requested course."""
-        fake_auth.login(section_1_instructor_uids[0])
+        instructor_uids = _get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
+        fake_auth.login(instructor_uids[0])
         api_approve(
             client,
             publish_type='canvas',
@@ -118,7 +118,7 @@ class TestApprove:
         )
         std_commit(allow_test_environment=True)
 
-        fake_auth.login(section_1_instructor_uids[1])
+        fake_auth.login(instructor_uids[1])
         api_approve(
             client,
             publish_type='kaltura_media_gallery',
@@ -143,14 +143,14 @@ class TestApprove:
         )
         assert api_json['room']['location'] == 'Barrows 106'
         instructor_uids = [i['uid'] for i in api_json['instructors']]
-        assert instructor_uids == section_1_instructor_uids
+        assert instructor_uids == instructor_uids
         approvals_ = api_json['approvals']
         assert len(approvals_) == 2
 
-        assert approvals_[0]['approvedByUid'] == section_1_instructor_uids[0]
+        assert approvals_[0]['approvedByUid'] == instructor_uids[0]
         assert approvals_[0]['publishType'] == 'canvas'
 
-        assert approvals_[1]['approvedByUid'] == section_1_instructor_uids[1]
+        assert approvals_[1]['approvedByUid'] == instructor_uids[1]
         assert approvals_[1]['publishType'] == 'kaltura_media_gallery'
         assert approvals_[1]['recordingType'] == 'presentation_audio'
         assert approvals_[1]['recordingTypeName'] == 'Presentation and Audio'
@@ -189,7 +189,8 @@ class TestViewApprovals:
 
     def test_not_authorized(self, client, fake_auth):
         """Deny access if user is not an admin."""
-        fake_auth.login(section_1_instructor_uids[0])
+        instructor_uids = _get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
+        fake_auth.login(instructor_uids[0])
         api_get_approvals(
             client,
             term_id=self.term_id,
@@ -229,8 +230,8 @@ class TestViewApprovals:
 
     def test_date_time_format(self, client, db, fake_auth):
         """Dates and times are properly formatted for front-end display."""
-        uid = section_2_instructor_uids[0]
-        fake_auth.login(uid)
+        instructor_uids = _get_instructor_uids(section_id=section_2_id, term_id=self.term_id)
+        fake_auth.login(instructor_uids[0])
         api_json = api_get_approvals(
             client,
             term_id=self.term_id,
@@ -286,19 +287,32 @@ class TestCoursesFilter:
         self._api_courses(client, term_id=self.term_id, expected_status_code=401)
 
     def test_not_authorized(self, client, fake_auth):
-        fake_auth.login(section_1_instructor_uids[0])
+        instructor_uids = _get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
+        fake_auth.login(instructor_uids[0])
         self._api_courses(client, term_id=self.term_id, expected_status_code=401)
 
-    def test_authorized(self, client, db, admin_session):
+    def test_do_not_email_filter(self, client, db, admin_session):
+        with test_approvals_workflow(app):
+            CoursePreference.update_opt_out(section_id=section_1_id, term_id=self.term_id, opt_out=True)
+            std_commit(allow_test_environment=True)
+            api_json = self._api_courses(client, term_id=self.term_id, filter_='Do Not Email')
+            # The 'Do Not Email' course is in the feed
+            assert _find_course(api_json=api_json, section_id=section_1_id)
+            # Course in enabled room and accepting email is NOT in the feed.
+            assert _is_course_in_enabled_room(section_id=section_3_id, term_id=self.term_id)
+            assert not _find_course(api_json=api_json, section_id=section_3_id)
+
+    def test_invited_filter(self, client, db, admin_session):
         """Invited filter: Course in an eligible room, have received invitation. No approvals. Not scheduled."""
         with test_approvals_workflow(app):
             # First, send invitations
             SentEmail.create(
                 section_id=section_4_id,
-                recipient_uids=section_4_instructor_uids,
+                recipient_uids=_get_instructor_uids(section_id=section_4_id, term_id=self.term_id),
                 template_type='invitation',
                 term_id=self.term_id,
             )
+            section_5_instructor_uids = _get_instructor_uids(section_id=section_5_id, term_id=self.term_id)
             SentEmail.create(
                 section_id=section_5_id,
                 recipient_uids=section_5_instructor_uids,
@@ -318,11 +332,121 @@ class TestCoursesFilter:
             std_commit(allow_test_environment=True)
             api_json = self._api_courses(client, term_id=self.term_id, filter_='Invited')
             # Section with ZERO approvals will show up in search results
-            section_4 = next((s for s in api_json if s['sectionId'] == section_4_id), None)
-            assert section_4
+            assert _find_course(api_json=api_json, section_id=section_4_id)
             # The section with approval will NOT show up in search results
-            section_5 = next((s for s in api_json if s['sectionId'] == section_5_id), None)
-            assert not section_5
+            assert not _find_course(api_json=api_json, section_id=section_5_id)
+
+    def test_not_invited_filter(self, client, db, admin_session):
+        """Not-invited filter: Courses in eligible rooms, never sent an invitation. No approval. Not scheduled."""
+        with test_approvals_workflow(app):
+            # The first course gets an invitation
+            section_1_instructor_uids = _get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
+            SentEmail.create(
+                section_id=section_1_id,
+                recipient_uids=section_1_instructor_uids,
+                template_type='invitation',
+                term_id=self.term_id,
+            )
+            # The second course did not receive an invitation BUT it does have approval.
+            invite = SentEmail.get_emails_of_type(
+                section_id=section_2_id,
+                template_type='invitation',
+                term_id=self.term_id,
+            )
+            assert not invite
+            Approval.create(
+                approved_by_uid=_get_instructor_uids(section_id=section_2_id, term_id=self.term_id)[0],
+                term_id=self.term_id,
+                section_id=section_2_id,
+                approver_type_='instructor',
+                publish_type_='canvas',
+                recording_type_='presentation_audio',
+                room_id=SisSection.get_course(term_id=self.term_id, section_id=section_2_id)['room']['id'],
+            )
+            std_commit(allow_test_environment=True)
+            api_json = self._api_courses(client, term_id=self.term_id, filter_='Not Invited')
+            assert not _find_course(api_json=api_json, section_id=section_1_id)
+            assert not _find_course(api_json=api_json, section_id=section_2_id)
+            # Third course is in enabled room and has not received an invite. Therefore, it is in the feed.
+            assert _is_course_in_enabled_room(section_id=section_3_id, term_id=self.term_id)
+            assert _find_course(api_json=api_json, section_id=section_3_id)
+
+    def test_partially_approved_filter(self, client, db, admin_session):
+        """Partially approved: Eligible, invited course with 1+ approvals, but not ALL instructors have approved."""
+        with test_approvals_workflow(app):
+            # Assert multiple instructors
+            section_1_instructor_uids = _get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
+            section_6_instructor_uids = _get_instructor_uids(section_id=section_6_id, term_id=self.term_id)
+            assert len(section_1_instructor_uids) > 1
+            assert len(section_6_instructor_uids) > 1
+            # Send invites
+            courses = [
+                {'section_id': section_1_id, 'instructor_uids': section_1_instructor_uids},
+                {'section_id': section_6_id, 'instructor_uids': section_6_instructor_uids},
+            ]
+            for course in courses:
+                SentEmail.create(
+                    section_id=course['section_id'],
+                    recipient_uids=course['instructor_uids'],
+                    template_type='invitation',
+                    term_id=self.term_id,
+                )
+                Approval.create(
+                    approved_by_uid=course['instructor_uids'][0],
+                    term_id=self.term_id,
+                    section_id=course['section_id'],
+                    approver_type_='instructor',
+                    publish_type_='canvas',
+                    recording_type_='presentation_audio',
+                    room_id=Room.get_room_id(section_id=course['section_id'], term_id=self.term_id),
+                )
+            # Feed will include both scheduled and not scheduled.
+            _schedule_recordings(
+                section_id=section_1_id,
+                term_id=self.term_id,
+            )
+            std_commit(allow_test_environment=True)
+            api_json = self._api_courses(client, term_id=self.term_id, filter_='Partially Approved')
+            assert len(api_json) == 2
+            assert _find_course(api_json=api_json, section_id=section_1_id)
+            assert _find_course(api_json=api_json, section_id=section_6_id)
+
+    def test_scheduled_filter(self, client, db, admin_session):
+        """Scheduled filter: Courses with recordings scheduled."""
+        with test_approvals_workflow(app):
+            section_1_instructor_uids = _get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
+            section_6_instructor_uids = _get_instructor_uids(section_id=section_6_id, term_id=self.term_id)
+            # Send invites
+            courses = [
+                {'section_id': section_1_id, 'instructor_uids': section_1_instructor_uids},
+                {'section_id': section_6_id, 'instructor_uids': section_6_instructor_uids},
+            ]
+            for course in courses:
+                SentEmail.create(
+                    section_id=course['section_id'],
+                    recipient_uids=course['instructor_uids'],
+                    template_type='invitation',
+                    term_id=self.term_id,
+                )
+                Approval.create(
+                    approved_by_uid=course['instructor_uids'][0],
+                    term_id=self.term_id,
+                    section_id=course['section_id'],
+                    approver_type_='instructor',
+                    publish_type_='canvas',
+                    recording_type_='presentation_audio',
+                    room_id=Room.get_room_id(section_id=course['section_id'], term_id=self.term_id),
+                )
+            # Feed will only include courses that were scheduled.
+            _schedule_recordings(
+                section_id=section_1_id,
+                term_id=self.term_id,
+            )
+            std_commit(allow_test_environment=True)
+            api_json = self._api_courses(client, term_id=self.term_id, filter_='Scheduled')
+            assert len(api_json) == 1
+            assert _find_course(api_json=api_json, section_id=section_1_id)
+            assert not _find_course(api_json=api_json, section_id=section_6_id)
 
 
 class TestCoursesChanges:
@@ -344,7 +468,8 @@ class TestCoursesChanges:
 
     def test_unauthorized(self, client, db, fake_auth):
         """Instructors cannot see course changes."""
-        fake_auth.login(section_1_instructor_uids[0])
+        instructor_uids = _get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
+        fake_auth.login(instructor_uids[0])
         self._api_course_changes(client, term_id=self.term_id, expected_status_code=401)
 
     def test_empty_feed(self, client, admin_session):
@@ -360,87 +485,75 @@ class TestCoursesChanges:
         assert obsolete_room
         assert actual_room_id != obsolete_room.id
 
-        meeting_days, meeting_start_time, meeting_end_time = SisSection.get_meeting_times(
-            term_id=self.term_id,
+        _schedule_recordings(
             section_id=section_2_id,
-        )
-        Scheduled.create(
             term_id=self.term_id,
-            section_id=section_2_id,
-            meeting_days=meeting_days,
-            meeting_start_time=meeting_start_time,
-            meeting_end_time=meeting_end_time,
-            instructor_uids=SisSection.get_instructor_uids(term_id=self.term_id, section_id=section_2_id),
-            publish_type_='kaltura_media_gallery',
-            recording_type_='presenter_presentation_audio',
             room_id=obsolete_room.id,
         )
-        std_commit(allow_test_environment=True)
-
-        course_changes = self._api_course_changes(client, term_id=self.term_id)
-        course_change = next((c for c in course_changes if c['sectionId'] == section_2_id), None)
-        assert course_change
-        assert course_change['scheduled']['hasObsoleteRoom'] is True
-        assert course_change['scheduled']['hasObsoleteMeetingTimes'] is False
-        assert course_change['scheduled']['hasObsoleteInstructors'] is False
+        api_json = self._api_course_changes(client, term_id=self.term_id)
+        course = _find_course(api_json=api_json, section_id=section_2_id)
+        assert course
+        assert course['scheduled']['hasObsoleteRoom'] is True
+        assert course['scheduled']['hasObsoleteMeetingTimes'] is False
+        assert course['scheduled']['hasObsoleteInstructors'] is False
 
     def test_has_obsolete_meeting_times(self, client, admin_session):
         """Admins can see meeting time changes that might disrupt scheduled recordings."""
-        course = SisSection.get_course(term_id=self.term_id, section_id=section_1_id)
-        meeting_days, meeting_start_time, meeting_end_time = SisSection.get_meeting_times(
-            term_id=self.term_id,
-            section_id=section_1_id,
-        )
-        obsolete_meeting_days = 'MOWE'
-        assert meeting_days != obsolete_meeting_days
+        with test_approvals_workflow(app):
+            meeting_days, meeting_start_time, meeting_end_time = SisSection.get_meeting_times(
+                term_id=self.term_id,
+                section_id=section_1_id,
+            )
+            obsolete_meeting_days = 'MOWE'
+            assert meeting_days != obsolete_meeting_days
 
-        Scheduled.create(
-            term_id=self.term_id,
-            section_id=section_1_id,
-            meeting_days=obsolete_meeting_days,
-            meeting_start_time=meeting_start_time,
-            meeting_end_time=meeting_end_time,
-            instructor_uids=SisSection.get_instructor_uids(term_id=self.term_id, section_id=section_1_id),
-            publish_type_='canvas',
-            recording_type_='presentation_audio',
-            room_id=course['room']['id'],
-        )
-        std_commit(allow_test_environment=True)
+            Scheduled.create(
+                term_id=self.term_id,
+                section_id=section_1_id,
+                meeting_days=obsolete_meeting_days,
+                meeting_start_time=meeting_start_time,
+                meeting_end_time=meeting_end_time,
+                instructor_uids=SisSection.get_instructor_uids(term_id=self.term_id, section_id=section_1_id),
+                publish_type_='canvas',
+                recording_type_='presentation_audio',
+                room_id=Room.get_room_id(section_id=section_1_id, term_id=self.term_id),
+            )
+            std_commit(allow_test_environment=True)
 
-        course_changes = self._api_course_changes(client, term_id=self.term_id)
-        course_change = next((c for c in course_changes if c['sectionId'] == section_1_id), None)
-        assert course_change
-        assert course_change['scheduled']['hasObsoleteRoom'] is False
-        assert course_change['scheduled']['hasObsoleteMeetingTimes'] is True
-        assert course_change['scheduled']['hasObsoleteInstructors'] is False
+            api_json = self._api_course_changes(client, term_id=self.term_id)
+            course = _find_course(api_json=api_json, section_id=section_1_id)
+            assert course
+            assert course['scheduled']['hasObsoleteRoom'] is False
+            assert course['scheduled']['hasObsoleteMeetingTimes'] is True
+            assert course['scheduled']['hasObsoleteInstructors'] is False
 
     def test_has_instructors(self, client, admin_session):
         """Admins can see instructor changes that might disrupt scheduled recordings."""
-        course = SisSection.get_course(term_id=self.term_id, section_id=section_3_id)
-        meeting_days, meeting_start_time, meeting_end_time = SisSection.get_meeting_times(
-            term_id=self.term_id,
-            section_id=section_3_id,
-        )
-        instructor_uids = SisSection.get_instructor_uids(term_id=self.term_id, section_id=section_3_id)
-        Scheduled.create(
-            term_id=self.term_id,
-            section_id=section_3_id,
-            meeting_days=meeting_days,
-            meeting_start_time=meeting_start_time,
-            meeting_end_time=meeting_end_time,
-            instructor_uids=instructor_uids + ['999999'],
-            publish_type_='canvas',
-            recording_type_='presenter_audio',
-            room_id=course['room']['id'],
-        )
-        std_commit(allow_test_environment=True)
+        with test_approvals_workflow(app):
+            meeting_days, meeting_start_time, meeting_end_time = SisSection.get_meeting_times(
+                term_id=self.term_id,
+                section_id=section_3_id,
+            )
+            instructor_uids = SisSection.get_instructor_uids(term_id=self.term_id, section_id=section_3_id)
+            Scheduled.create(
+                term_id=self.term_id,
+                section_id=section_3_id,
+                meeting_days=meeting_days,
+                meeting_start_time=meeting_start_time,
+                meeting_end_time=meeting_end_time,
+                instructor_uids=instructor_uids + ['999999'],
+                publish_type_='canvas',
+                recording_type_='presenter_audio',
+                room_id=Room.get_room_id(section_id=section_3_id, term_id=self.term_id),
+            )
+            std_commit(allow_test_environment=True)
 
-        course_changes = self._api_course_changes(client, term_id=self.term_id)
-        course_change = next((c for c in course_changes if c['sectionId'] == section_3_id), None)
-        assert course_change
-        assert course_change['scheduled']['hasObsoleteRoom'] is False
-        assert course_change['scheduled']['hasObsoleteMeetingTimes'] is False
-        assert course_change['scheduled']['hasObsoleteInstructors'] is True
+            api_json = self._api_course_changes(client, term_id=self.term_id)
+            course = _find_course(api_json=api_json, section_id=section_3_id)
+            assert course
+            assert course['scheduled']['hasObsoleteRoom'] is False
+            assert course['scheduled']['hasObsoleteMeetingTimes'] is False
+            assert course['scheduled']['hasObsoleteInstructors'] is True
 
 
 class TestUpdatePreferences:
@@ -482,7 +595,8 @@ class TestUpdatePreferences:
 
     def test_unauthorized(self, client, db, fake_auth):
         """Instructors cannot modify preferences."""
-        fake_auth.login(section_1_instructor_uids[0])
+        instructor_uids = _get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
+        fake_auth.login(instructor_uids[0])
         self._api_opt_out_update(
             client,
             term_id=self.term_id,
@@ -509,3 +623,41 @@ class TestUpdatePreferences:
             assert section_1_id in section_ids_opted_out
         else:
             assert section_1_id not in section_ids_opted_out
+
+
+def _is_course_in_enabled_room(section_id, term_id):
+    capability = SisSection.get_course(term_id=term_id, section_id=section_id)['room']['capability']
+    return capability is not None
+
+
+def _find_course(api_json, section_id):
+    return next((s for s in api_json if s['sectionId'] == section_id), None)
+
+
+def _get_instructor_uids(section_id, term_id):
+    return SisSection.get_instructor_uids(term_id=term_id, section_id=section_id)
+
+
+def _schedule_recordings(
+        section_id,
+        term_id,
+        publish_type='kaltura_media_gallery',
+        recording_type='presenter_presentation_audio',
+        room_id=None,
+):
+    meeting_days, meeting_start_time, meeting_end_time = SisSection.get_meeting_times(
+        term_id=term_id,
+        section_id=section_id,
+    )
+    Scheduled.create(
+        term_id=term_id,
+        section_id=section_id,
+        meeting_days=meeting_days,
+        meeting_start_time=meeting_start_time,
+        meeting_end_time=meeting_end_time,
+        instructor_uids=SisSection.get_instructor_uids(term_id=term_id, section_id=section_id),
+        publish_type_=publish_type,
+        recording_type_=recording_type,
+        room_id=room_id or Room.get_room_id(section_id=section_id, term_id=term_id),
+    )
+    std_commit(allow_test_environment=True)

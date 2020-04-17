@@ -113,6 +113,26 @@ class Room(db.Model):
         return [row['location'] for row in result]
 
     @classmethod
+    def get_room_id(cls, section_id, term_id):
+        sql = """
+            SELECT r.id AS room_id
+            FROM rooms r
+            JOIN sis_sections s ON s.meeting_location = r.location
+            WHERE
+                s.sis_section_id = :section_id
+                AND s.sis_term_id = :term_id
+        """
+        rows = db.session.execute(
+            text(sql),
+            {
+                'section_id': section_id,
+                'term_id': term_id,
+            },
+        )
+        ids_ = [row['room_id'] for row in rows]
+        return ids_[0] if ids_ else None
+
+    @classmethod
     def update_capability(cls, room_id, capability):
         room = cls.query.filter_by(id=room_id).first()
         room.capability = capability
