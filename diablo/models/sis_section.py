@@ -222,6 +222,10 @@ class SisSection(db.Model):
                     SELECT FROM scheduled
                     WHERE section_id = s.sis_section_id AND term_id = s.sis_term_id
                 )
+                AND NOT EXISTS (
+                    SELECT FROM course_preferences
+                    WHERE section_id = s.sis_section_id AND term_id = s.sis_term_id AND has_opted_out IS TRUE
+                )
             ORDER BY s.sis_course_title, s.sis_section_id, s.instructor_uid
         """
         rows = db.session.execute(
@@ -249,8 +253,13 @@ class SisSection(db.Model):
             JOIN course_preferences c ON c.section_id = s.sis_section_id AND c.term_id = :term_id
             WHERE
                 s.sis_term_id = :term_id
-                AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
                 AND c.has_opted_out IS TRUE
+                AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
+                AND r.capability IS NOT NULL
+                AND NOT EXISTS (
+                    SELECT FROM scheduled
+                    WHERE section_id = s.sis_section_id AND term_id = s.sis_term_id
+                )
             ORDER BY s.sis_course_title, s.sis_section_id, s.instructor_uid
         """
         rows = db.session.execute(
@@ -290,6 +299,10 @@ class SisSection(db.Model):
                 AND NOT EXISTS (
                     SELECT FROM scheduled
                     WHERE section_id = s.sis_section_id AND term_id = s.sis_term_id
+                )
+                AND NOT EXISTS (
+                    SELECT FROM course_preferences
+                    WHERE section_id = s.sis_section_id AND term_id = s.sis_term_id AND has_opted_out IS TRUE
                 )
             ORDER BY s.sis_course_title, s.sis_section_id, s.instructor_uid
         """
@@ -556,13 +569,19 @@ def _to_api_json(term_id, rows):
             approvals = [a.to_api_json() for a in approvals_per_section_id.get(section_id, [])]
             scheduled = Scheduled.get_scheduled(section_id=section_id, term_id=term_id)
             scheduled = scheduled and scheduled.to_api_json()
+            course_name = row['sis_course_name']
+            instruction_format = row['sis_instruction_format']
+            section_num = row['sis_section_num']
             course = {
                 'adminApproval': next((a for a in approvals if a['approvedByUid'] in all_admin_user_uids), False),
                 'allowedUnits': row['allowed_units'],
                 'canvasCourseSites': _canvas_course_sites(term_id, section_id),
-                'courseName': row['sis_course_name'], 'courseTitle': row['sis_course_title'],
-                'hasOptedOut': has_opted_out, 'instructionFormat': row['sis_instruction_format'],
+                'courseName': course_name,
+                'courseTitle': row['sis_course_title'],
+                'hasOptedOut': has_opted_out,
+                'instructionFormat': instruction_format,
                 'instructors': [], 'isPrimary': row['is_primary'],
+                'label': f'{course_name}, {instruction_format} {section_num}',
                 'meetingDays': format_days(row['meeting_days']),
                 'meetingEndDate': row['meeting_end_date'],
                 'meetingEndTime': format_time(row['meeting_end_time']),
@@ -570,7 +589,8 @@ def _to_api_json(term_id, rows):
                 'meetingStartDate': row['meeting_start_date'],
                 'meetingStartTime': format_time(row['meeting_start_time']),
                 'sectionId': section_id,
-                'sectionNum': row['sis_section_num'], 'termId': row['sis_term_id'],
+                'sectionNum': section_num,
+                'termId': row['sis_term_id'],
                 'approvals': approvals,
                 'scheduled': scheduled,
             }

@@ -6,7 +6,7 @@
       :headers="headers"
       :hide-default-footer="true"
       :items="showEligibleCoursesOnly ? courses.eligibleOnly : courses.all"
-      :items-per-page="100"
+      items-per-page="100"
       class="elevation-1"
     >
       <template v-slot:top>
@@ -85,18 +85,18 @@
         all: [],
         eligibleOnly: []
       }
-      this.$_.each(this.$currentUser.courses, s => {
+      this.$_.each(this.$currentUser.courses, c => {
         let course = {
-          name: `${s.courseName}, ${s.instructionFormat} ${s.sectionNum}`,
-          days: s.meetingDays ? this.$_.join(s.meetingDays, ', ') : undefined,
-          instructors: this.oxfordJoin(this.$_.map(s.instructors, 'name')),
-          room: s.room,
-          sectionId: s.sectionId,
-          time: s.meetingStartTime ? `${s.meetingStartTime} - ${s.meetingEndTime}` : undefined,
-          title: s.courseTitle
+          name: c.label,
+          days: c.meetingDays ? this.$_.join(c.meetingDays, ', ') : undefined,
+          instructors: this.oxfordJoin(this.$_.map(c.instructors, 'name')),
+          room: c.room,
+          sectionId: c.sectionId,
+          time: c.meetingStartTime ? `${c.meetingStartTime} - ${c.meetingEndTime}` : undefined,
+          title: c.courseTitle
         }
         this.courses['all'].push(course)
-        if (s.room && s.room.capability) {
+        if (c.room && c.room.capability) {
           this.courses['eligibleOnly'].push(course)
         }
       })

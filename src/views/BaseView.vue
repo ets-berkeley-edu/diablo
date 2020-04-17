@@ -95,7 +95,7 @@
         this.$_.each(this.$currentUser.courses, course => {
           if (course.room && course.room.capability) {
             this.navItems.push({
-              title: course.courseName,
+              title: course.label,
               icon: 'mdi-video-plus',
               path: `/approve/${this.$config.currentTermId}/${course.sectionId}`
             })

@@ -45,6 +45,7 @@ section_4_id = 26094
 section_5_id = 30563
 section_6_id = 22287
 
+section_in_ineligible_room = section_2_id
 section_with_canvas_course_sites = section_6_id
 
 
@@ -293,14 +294,48 @@ class TestCoursesFilter:
 
     def test_do_not_email_filter(self, client, db, admin_session):
         with test_approvals_workflow(app):
-            CoursePreference.update_opt_out(section_id=section_1_id, term_id=self.term_id, opt_out=True)
+            # Send invites them opt_out.
+            for section_id in (section_1_id, section_in_ineligible_room, section_3_id, section_4_id):
+                CoursePreference.update_opt_out(section_id=section_id, term_id=self.term_id, opt_out=True)
+
+                in_enabled_room = _is_course_in_enabled_room(section_id=section_id, term_id=self.term_id)
+                if section_id == section_in_ineligible_room:
+                    # Courses in ineligible rooms will be excluded from the feed.
+                    assert not in_enabled_room
+                else:
+                    assert in_enabled_room
+                    SentEmail.create(
+                        section_id=section_id,
+                        recipient_uids=_get_instructor_uids(section_id=section_id, term_id=self.term_id),
+                        template_type='invitation',
+                        term_id=self.term_id,
+                    )
+
+            # If course has approvals but not scheduled then it will show up in the feed.
+            Approval.create(
+                approved_by_uid=_get_instructor_uids(section_id=section_1_id, term_id=self.term_id)[0],
+                term_id=self.term_id,
+                section_id=section_1_id,
+                approver_type_='instructor',
+                publish_type_='canvas',
+                recording_type_='presentation_audio',
+                room_id=Room.get_room_id(section_id=section_1_id, term_id=self.term_id),
+            )
+            # Feed will exclude scheduled.
+            _schedule_recordings(
+                section_id=section_3_id,
+                term_id=self.term_id,
+            )
             std_commit(allow_test_environment=True)
+
             api_json = self._api_courses(client, term_id=self.term_id, filter_='Do Not Email')
-            # The 'Do Not Email' course is in the feed
-            assert _find_course(api_json=api_json, section_id=section_1_id)
-            # Course in enabled room and accepting email is NOT in the feed.
-            assert _is_course_in_enabled_room(section_id=section_3_id, term_id=self.term_id)
-            assert not _find_course(api_json=api_json, section_id=section_3_id)
+            for section_id in (section_1_id, section_4_id):
+                # The 'Do Not Email' course is in the feed
+                assert _find_course(api_json=api_json, section_id=section_id)
+
+            for section_id in (section_3_id, section_in_ineligible_room):
+                # Excluded courses
+                assert not _find_course(api_json=api_json, section_id=section_id)
 
     def test_invited_filter(self, client, db, admin_session):
         """Invited filter: Course in an eligible room, have received invitation. No approvals. Not scheduled."""
@@ -332,7 +367,9 @@ class TestCoursesFilter:
             std_commit(allow_test_environment=True)
             api_json = self._api_courses(client, term_id=self.term_id, filter_='Invited')
             # Section with ZERO approvals will show up in search results
-            assert _find_course(api_json=api_json, section_id=section_4_id)
+            course = _find_course(api_json=api_json, section_id=section_4_id)
+            assert course
+            assert course['label'] == 'CHEM C110L, LAB 001'
             # The section with approval will NOT show up in search results
             assert not _find_course(api_json=api_json, section_id=section_5_id)
 
@@ -349,27 +386,29 @@ class TestCoursesFilter:
             )
             # The second course did not receive an invitation BUT it does have approval.
             invite = SentEmail.get_emails_of_type(
-                section_id=section_2_id,
+                section_id=section_4_id,
                 template_type='invitation',
                 term_id=self.term_id,
             )
             assert not invite
             Approval.create(
-                approved_by_uid=_get_instructor_uids(section_id=section_2_id, term_id=self.term_id)[0],
+                approved_by_uid=_get_instructor_uids(section_id=section_4_id, term_id=self.term_id)[0],
                 term_id=self.term_id,
-                section_id=section_2_id,
+                section_id=section_4_id,
                 approver_type_='instructor',
                 publish_type_='canvas',
                 recording_type_='presentation_audio',
-                room_id=SisSection.get_course(term_id=self.term_id, section_id=section_2_id)['room']['id'],
+                room_id=Room.get_room_id(section_id=section_4_id, term_id=self.term_id),
             )
             std_commit(allow_test_environment=True)
             api_json = self._api_courses(client, term_id=self.term_id, filter_='Not Invited')
             assert not _find_course(api_json=api_json, section_id=section_1_id)
-            assert not _find_course(api_json=api_json, section_id=section_2_id)
+            assert not _find_course(api_json=api_json, section_id=section_4_id)
             # Third course is in enabled room and has not received an invite. Therefore, it is in the feed.
             assert _is_course_in_enabled_room(section_id=section_3_id, term_id=self.term_id)
-            assert _find_course(api_json=api_json, section_id=section_3_id)
+            course = _find_course(api_json=api_json, section_id=section_3_id)
+            assert course
+            assert course['label'] == 'BIO 1B, LEC 001'
 
     def test_partially_approved_filter(self, client, db, admin_session):
         """Partially approved: Eligible, invited course with 1+ approvals, but not ALL instructors have approved."""
@@ -409,7 +448,9 @@ class TestCoursesFilter:
             api_json = self._api_courses(client, term_id=self.term_id, filter_='Partially Approved')
             assert len(api_json) == 2
             assert _find_course(api_json=api_json, section_id=section_1_id)
-            assert _find_course(api_json=api_json, section_id=section_6_id)
+            course = _find_course(api_json=api_json, section_id=section_6_id)
+            assert course
+            assert course['label'] == 'LAW 23, LEC 002'
 
     def test_scheduled_filter(self, client, db, admin_session):
         """Scheduled filter: Courses with recordings scheduled."""

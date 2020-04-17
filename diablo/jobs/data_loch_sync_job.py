@@ -34,9 +34,12 @@ class DataLochSyncJob(BaseJob):
     def run(self, args=None):
         term_id = app.config['CURRENT_TERM_ID']
         sis_sections = get_data_loch_sections(term_id)
+        app.logger.info(f'{len(sis_sections)} rows pulled from \'sis_sections\' in Data Lake.')
         SisSection.refresh(sis_sections)
+        app.logger.info('Diablo\'s \'sis_section\' table has been refreshed.')
         instructor_uids = list(set([s['instructor_uid'] for s in sis_sections]))
         insert_or_update_instructors(instructor_uids)
+        app.logger.info(f'{len(instructor_uids)} instructors updated in Diablo\'s db.')
         refresh_rooms()
 
     @classmethod
