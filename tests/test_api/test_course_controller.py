@@ -45,6 +45,7 @@ section_2_instructor_uids = ['8765432']
 section_3_id = 12601
 section_with_canvas_course_sites = 22287
 section_4_id = 26094
+section_4_instructor_uids = ['6789']
 section_5_id = 30563
 section_5_instructor_uids = ['234567']
 
@@ -289,22 +290,22 @@ class TestCoursesFilter:
         self._api_courses(client, term_id=self.term_id, expected_status_code=401)
 
     def test_authorized(self, client, db, admin_session):
+        """Invited filter: Course in an eligible room, have received invitation. No approvals. Not scheduled."""
         with test_approvals_workflow(app):
-            room = Room.find_room('Barker 101')
             # First, send invitations
+            SentEmail.create(
+                section_id=section_4_id,
+                recipient_uids=section_4_instructor_uids,
+                template_type='invitation',
+                term_id=self.term_id,
+            )
             SentEmail.create(
                 section_id=section_5_id,
                 recipient_uids=section_5_instructor_uids,
                 template_type='invitation',
                 term_id=self.term_id,
             )
-            SentEmail.create(
-                section_id=section_4_id,
-                recipient_uids=[admin_uid],
-                template_type='invitation',
-                term_id=self.term_id,
-            )
-            # Instructors approve
+            # The section with approval will NOT show up in search results
             Approval.create(
                 approved_by_uid=section_5_instructor_uids[0],
                 term_id=self.term_id,
@@ -312,46 +313,16 @@ class TestCoursesFilter:
                 approver_type_='instructor',
                 publish_type_='canvas',
                 recording_type_='presentation_audio',
-                room_id=room.id,
+                room_id=SisSection.get_course(term_id=self.term_id, section_id=section_5_id)['room']['id'],
             )
-            approval = Approval.create(
-                approved_by_uid=admin_uid,
-                term_id=self.term_id,
-                section_id=section_4_id,
-                approver_type_='admin',
-                publish_type_='kaltura_media_gallery',
-                recording_type_='presenter_audio',
-                room_id=room.id,
-            )
-            meeting_days, meeting_start_time, meeting_end_time = SisSection.get_meeting_times(
-                term_id=self.term_id,
-                section_id=section_2_id,
-            )
-            Scheduled.create(
-                term_id=self.term_id,
-                section_id=section_4_id,
-                meeting_days=meeting_days,
-                meeting_start_time=meeting_start_time,
-                meeting_end_time=meeting_end_time,
-                instructor_uids=SisSection.get_instructor_uids(term_id=self.term_id, section_id=section_2_id),
-                publish_type_=approval.publish_type,
-                recording_type_=approval.recording_type,
-                room_id=room.id,
-            )
+            std_commit(allow_test_environment=True)
             api_json = self._api_courses(client, term_id=self.term_id, filter_='Invited')
-
+            # Section with ZERO approvals will show up in search results
             section_4 = next((s for s in api_json if s['sectionId'] == section_4_id), None)
             assert section_4
-            assert len(section_4['approvals']) > 0
-            scheduled = section_4.get('scheduled', {})
-            assert scheduled.get('publishType') == approval.publish_type
-            assert scheduled.get('recordingType') == approval.recording_type
-
+            # The section with approval will NOT show up in search results
             section_5 = next((s for s in api_json if s['sectionId'] == section_5_id), None)
-            assert section_5
-            assert len(section_5['approvals']) > 0
-            assert section_5['scheduled'] is None
-            assert section_5['room'] == room.to_api_json()
+            assert not section_5
 
 
 class TestCoursesChanges:

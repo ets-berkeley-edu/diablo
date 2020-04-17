@@ -139,15 +139,6 @@ class TestUpdateRoomCapability:
         """Denies access if user is not an admin."""
         self._api_update_capability(client, 1, 'screencast_and_video', expected_status_code=401)
 
-    def test_room_not_found(self, client, admin_session):
-        """404 when room not found."""
-        self._api_update_capability(
-            client,
-            room_id=999999999,
-            capability='screencast_and_video',
-            expected_status_code=404,
-        )
-
     def test_authorized(self, client, admin_session):
         """Admin user has access."""
         room_id = 1

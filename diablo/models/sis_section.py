@@ -213,6 +213,15 @@ class SisSection(db.Model):
                 s.sis_term_id = :term_id
                 AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
                 AND e.template_type = 'invitation'
+                AND r.capability IS NOT NULL
+                AND NOT EXISTS (
+                    SELECT FROM approvals
+                    WHERE section_id = s.sis_section_id AND term_id = s.sis_term_id
+                )
+                AND NOT EXISTS (
+                    SELECT FROM scheduled
+                    WHERE section_id = s.sis_section_id AND term_id = s.sis_term_id
+                )
             ORDER BY s.sis_course_title, s.sis_section_id, s.instructor_uid
         """
         rows = db.session.execute(
@@ -273,6 +282,14 @@ class SisSection(db.Model):
                 AND NOT EXISTS (
                     SELECT FROM sent_emails
                     WHERE template_type = 'invitation' AND section_id = s.sis_section_id
+                )
+                AND NOT EXISTS (
+                    SELECT FROM approvals
+                    WHERE section_id = s.sis_section_id AND term_id = s.sis_term_id
+                )
+                AND NOT EXISTS (
+                    SELECT FROM scheduled
+                    WHERE section_id = s.sis_section_id AND term_id = s.sis_term_id
                 )
             ORDER BY s.sis_course_title, s.sis_section_id, s.instructor_uid
         """
@@ -389,14 +406,18 @@ class SisSection(db.Model):
                 r.id AS room_id,
                 r.location AS room_location
             FROM sis_sections s
-            JOIN instructors i ON i.uid = s.instructor_uid
-            JOIN rooms r ON r.location = s.meeting_location
             JOIN approvals a ON a.section_id = s.sis_section_id AND a.term_id = :term_id
+            JOIN instructors i ON i.uid = s.instructor_uid
+            JOIN sent_emails e ON e.section_id = s.sis_section_id
+            JOIN rooms r ON r.location = s.meeting_location
             WHERE
                 s.sis_term_id = :term_id
-                AND NOT EXISTS (
-                    SELECT FROM scheduled
-                    WHERE section_id = s.sis_section_id
+                AND e.template_type = 'invitation'
+                AND r.capability IS NOT NULL
+                AND i.uid NOT IN (
+                    SELECT approved_by_uid
+                    FROM approvals
+                    WHERE section_id = s.sis_section_id AND term_id = :term_id
                 )
             ORDER BY s.sis_course_title, s.sis_section_id, s.instructor_uid
         """
