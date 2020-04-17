@@ -50,9 +50,9 @@
                     :id="`sign-up-${course.sectionId}`"
                     class="subtitle-1"
                     :to="`/approve/${$config.currentTermId}/${course.sectionId}`">
-                    <v-icon class="mb-1">mdi-video-plus</v-icon> {{ course.courseName }}
+                    <v-icon class="mb-1">mdi-video-plus</v-icon> {{ course.label }}
                   </router-link>
-                  <span v-if="!room.capability">{{ course.courseName }}</span>
+                  <span v-if="!room.capability">{{ course.label }}</span>
                 </td>
                 <td :class="tdClass(course)">{{ course.sectionId }}</td>
                 <td :class="tdClass(course)">{{ course.meetingDays ? course.meetingDays.join(',') : '&mdash;' }}</td>
@@ -105,7 +105,7 @@
     mixins: [Context],
     data: () => ({
       headers: [
-        {text: 'Course', value: 'courseName'},
+        {text: 'Course', value: 'label'},
         {text: 'Section', value: 'sectionId'},
         {text: 'Days', value: 'days', sortable: false},
         {text: 'Time', value: 'time', sortable: false},

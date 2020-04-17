@@ -33,7 +33,7 @@
       toggleOptOut() {
         updateOptOut(this.course.termId, this.course.sectionId, this.optOut).then(data => {
           this.course.hasOptedOut = data.hasOptedOut
-          this.onToggle()
+          this.onToggle(this.course)
         })
       }
     }

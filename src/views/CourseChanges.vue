@@ -21,10 +21,10 @@
               </div>
             </td>
           </tr>
-          <tr v-for="item in items" :key="item.courseName">
+          <tr v-for="item in items" :key="item.sectionId">
             <td class="pa-3 text-no-wrap">
               <div class="font-weight-black">
-                {{ item.courseName }}
+                {{ item.label }}
                 <v-tooltip v-if="item.adminApproval" bottom nudge-right="200px">
                   <template v-slot:activator="{ on }">
                     <v-icon
@@ -113,7 +113,7 @@
     data: () => ({
       courses: undefined,
       headers: [
-        {text: 'Course Information', value: 'courseName'},
+        {text: 'Course Information', value: 'label'},
         {text: 'Room', value: 'meetingLocation'},
         {text: 'Instructor(s)', value: 'instructorNames', sortable: false}
       ]

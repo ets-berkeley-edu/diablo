@@ -29,7 +29,7 @@
                 <template v-for="course in items">
                   <tr :key="course.sectionId">
                     <td class="w-20">
-                      {{ course.courseName }}
+                      {{ course.label }}
                     </td>
                     <td>{{ course.meetingDays ? course.meetingDays.join(',') : '&mdash;' }}</td>
                     <td>{{ course.meetingStartTime ? `${course.meetingStartTime} - ${course.meetingEndTime}` : '&mdash;' }}</td>
@@ -76,7 +76,7 @@
     mixins: [Context],
     data: () => ({
       headers: [
-        {text: 'Course', value: 'courseName', class: 'font-weight-black', sortable: false},
+        {text: 'Course', value: 'label', class: 'font-weight-black', sortable: false},
         {text: 'Days', value: 'days', class: 'font-weight-black', sortable: false},
         {text: 'Time', value: 'time', class: 'font-weight-black', sortable: false},
         {text: 'Recording', sortable: false}

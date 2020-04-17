@@ -310,7 +310,7 @@
           }
         }
         this.hasNecessaryApprovals = data.hasNecessaryApprovals
-        this.pageTitle = `${data.courseName } - ${data.instructionFormat} ${data.sectionNum}`
+        this.pageTitle = data.label
         this.publishTypeOptions = []
         this.$_.each(data.publishTypeOptions, (text, value) => {
           this.publishTypeOptions.push({text, value})

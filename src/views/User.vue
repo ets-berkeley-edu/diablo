@@ -24,9 +24,9 @@
                     :id="`sign-up-${item.sectionId}`"
                     class="subtitle-1"
                     :to="`/approve/${$config.currentTermId}/${item.sectionId}`">
-                    <v-icon class="mb-1">mdi-video-plus</v-icon> {{ item.courseName }}
+                    <v-icon class="mb-1">mdi-video-plus</v-icon> {{ item.label }}
                   </router-link>
-                  <span v-if="!item.room.capability">{{ item.courseName }}</span>
+                  <span v-if="!item.room.capability">{{ item.label }}</span>
                 </td>
                 <td :class="tdClass(item)">{{ item.sectionId }}</td>
                 <td :class="tdClass(item)">
@@ -88,7 +88,7 @@
     data: () => ({
       user: undefined,
       headers: [
-        {text: 'Course', value: 'courseName'},
+        {text: 'Course', value: 'label'},
         {text: 'Section', value: 'sectionId'},
         {text: 'Room', value: 'room.location'},
         {text: 'Days', value: 'days', sortable: false},

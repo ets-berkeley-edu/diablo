@@ -66,9 +66,9 @@
                 :id="`sign-up-${item.sectionId}`"
                 class="subtitle-1"
                 :to="`/approve/${$config.currentTermId}/${item.sectionId}`">
-                {{ item.courseName }}
+                {{ item.label }}
               </router-link>
-              <span v-if="!item.room.capability">{{ item.courseName }}</span>
+              <span v-if="!item.room.capability">{{ item.label }}</span>
             </td>
             <td :id="`section-id-${item.sectionId}`" class="text-no-wrap w-10">{{ item.sectionId }}</td>
             <td class="text-no-wrap">
@@ -127,7 +127,7 @@
               {{ item.publishTypeNames || '&mdash;' }}
             </td>
             <td>
-              <ToggleOptOut :key="item.sectionId" :course="item" />
+              <ToggleOptOut :key="item.sectionId" :course="item" :on-toggle="onToggleOptOut" />
             </td>
           </tr>
         </tbody>
@@ -157,7 +157,7 @@
     data: () => ({
       courses: undefined,
       headers: [
-        {text: 'Course', value: 'courseName'},
+        {text: 'Course', value: 'label'},
         {text: 'Section', value: 'sectionId'},
         {text: 'Room', value: 'meetingLocation'},
         {text: 'Days', sortable: false},
@@ -190,6 +190,19 @@
       this.refresh()
     },
     methods: {
+      omitCourse(course) {
+        let indexOf = this.courses.findIndex(c => c.sectionId === course.sectionId)
+        if (indexOf >= 0) {
+          this.courses.splice(indexOf, 1)
+        }
+      },
+      onToggleOptOut(course) {
+        const omitCourse = course.hasOptedOut ? this.$_.includes(['Invited', 'Not Invited'], this.selectedFilter) : this.selectedFilter === 'Do Not Email'
+        if (omitCourse) {
+          this.omitCourse(course)
+          this.snackbarOpen(`${course.label} removed from list. It ${course.hasOptedOut ? 'will not' : 'will'} receive email.`)
+        }
+      },
       refresh() {
         const done = () => {
           this.selectedRows = []
