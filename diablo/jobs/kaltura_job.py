@@ -22,13 +22,15 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from diablo.externals.mailgun import Mailgun
+from datetime import datetime, timedelta
+
+from diablo.externals.kaltura import Kaltura
 from diablo.jobs.base_job import BaseJob
-from diablo.lib.util import objects_to_dict_organized_by_section_id
-from diablo.merged.emailer import interpolate_email_content
-from diablo.models.admin_user import AdminUser
-from diablo.models.approval import Approval, NAMES_PER_PUBLISH_TYPE, NAMES_PER_RECORDING_TYPE
-from diablo.models.email_template import EmailTemplate
+from diablo.jobs.util import get_courses_ready_to_schedule
+from diablo.lib.util import format_days, objects_to_dict_organized_by_section_id
+from diablo.merged.emailer import notify_instructors_recordings_scheduled
+from diablo.models.approval import Approval
+from diablo.models.room import Room
 from diablo.models.scheduled import Scheduled
 from diablo.models.sis_section import SisSection
 from flask import current_app as app
@@ -41,89 +43,70 @@ class KalturaJob(BaseJob):
         approvals = Approval.get_approvals_per_term(term_id=term_id)
         if approvals:
             approvals_per_section_id = objects_to_dict_organized_by_section_id(objects=approvals)
-            for course in _get_courses_ready_to_schedule(approvals=approvals, term_id=term_id):
+            for course in get_courses_ready_to_schedule(approvals=approvals, term_id=term_id):
                 section_id = int(course['sectionId'])
-                course_approvals = approvals_per_section_id[section_id]
-                course_approvals.sort(key=lambda a: a.created_at.isoformat())
-                _schedule_recordings(approval=course_approvals[-1], course=course)
-
-                uids = [approval.approved_by_uid for approval in approvals]
-                app.logger.info(f'Recordings scheduled for course {section_id} per approvals: {", ".join(uids)}')
+                _schedule_recordings(
+                    all_approvals=approvals_per_section_id[section_id],
+                    course=course,
+                )
 
     @classmethod
     def description(cls):
         return 'With Kaltura API, schedule recordings and link them to Canvas sites.'
 
 
-def _get_courses_ready_to_schedule(approvals, term_id):
-    ready_to_schedule = []
+def _schedule_recordings(all_approvals, course):
+    all_approvals.sort(key=lambda a: a.created_at.isoformat())
+    approval = all_approvals[-1]
+    room = Room.get_room(approval.room_id)
 
-    scheduled_section_ids = [s.section_id for s in Scheduled.get_all_scheduled(term_id=term_id)]
-    unscheduled_approvals = [approval for approval in approvals if approval.section_id not in scheduled_section_ids]
+    if room.kaltura_resource_id:
+        term_id = course['termId']
 
-    if unscheduled_approvals:
-        courses = SisSection.get_courses(section_ids=[a.section_id for a in unscheduled_approvals], term_id=term_id)
-        courses_per_section_id = dict((int(course['sectionId']), course) for course in courses)
-        admin_user_uids = set([user.uid for user in AdminUser.all_admin_users(include_deleted=True)])
+        section_id = int(course['sectionId'])
+        course_name = course['courseName']
+        section = f'{course["instructionFormat"]} ${course["sectionNum"]} ()'
+        comment = f'Recordings for {course_name} {section} scheduled by Diablo.'
+        meeting_days, meeting_start_time, meeting_end_time = SisSection.get_meeting_times(
+            term_id=term_id,
+            section_id=section_id,
+        )
+        # At UC Berkeley, recording starts 7 minutes after official start and ends 2 minutes after official end time.
+        time_format = '%H:%M'
+        adjusted_start_time = datetime.strptime(meeting_start_time, time_format) + timedelta(minutes=7)
+        adjusted_end_time = datetime.strptime(meeting_end_time, time_format) + timedelta(minutes=2)
 
-        for section_id, uids in _get_uids_per_section_id(approvals=unscheduled_approvals).items():
-            if admin_user_uids.intersection(set(uids)):
-                ready_to_schedule.append(courses_per_section_id[section_id])
-            else:
-                course = courses_per_section_id[section_id]
-                necessary_uids = [i['uid'] for i in course['instructors']]
-                if all(uid in uids for uid in necessary_uids):
-                    ready_to_schedule.append(courses_per_section_id[section_id])
-    return ready_to_schedule
+        Kaltura().schedule_recording(
+            comment=comment,
+            course_name=course_name,
+            instructor_uids=[instructor['uid'] for instructor in course['instructors']],
+            days=format_days(meeting_days),
+            start_time=adjusted_start_time,
+            end_time=adjusted_end_time,
+            publish_type=approval.publish_type,
+            recording_type=approval.recording_type,
+            room=room,
+        )
+        scheduled = Scheduled.create(
+            section_id=section_id,
+            term_id=term_id,
+            instructor_uids=SisSection.get_instructor_uids(term_id=term_id, section_id=section_id),
+            meeting_days=meeting_days,
+            meeting_start_time=meeting_start_time,
+            meeting_end_time=meeting_end_time,
+            publish_type_=approval.publish_type,
+            recording_type_=approval.recording_type,
+            room_id=approval.room_id,
+        )
+        notify_instructors_recordings_scheduled(course=course, scheduled=scheduled)
 
+        uids = [approval.approved_by_uid for approval in all_approvals]
+        app.logger.info(f'Recordings scheduled for course {section_id} per approvals: {", ".join(uids)}')
 
-def _get_uids_per_section_id(approvals):
-    uids_per_section_id = {approval.section_id: [] for approval in approvals}
-    for approval in approvals:
-        uids_per_section_id[approval.section_id].append(approval.approved_by_uid)
-    return uids_per_section_id
-
-
-def _schedule_recordings(approval, course):
-    term_id = course['termId']
-    section_id = int(course['sectionId'])
-    meeting_days, meeting_start_time, meeting_end_time = SisSection.get_meeting_times(
-        term_id=term_id,
-        section_id=section_id,
-    )
-    scheduled = Scheduled.create(
-        section_id=section_id,
-        term_id=term_id,
-        instructor_uids=SisSection.get_instructor_uids(term_id=term_id, section_id=section_id),
-        meeting_days=meeting_days,
-        meeting_start_time=meeting_start_time,
-        meeting_end_time=meeting_end_time,
-        publish_type_=approval.publish_type,
-        recording_type_=approval.recording_type,
-        room_id=approval.room_id,
-    )
-    _notify_instructors(course=course, scheduled=scheduled)
-
-
-def _notify_instructors(course, scheduled):
-    email_template = EmailTemplate.get_template_by_type('recordings_scheduled')
-    publish_type_name = NAMES_PER_PUBLISH_TYPE[scheduled.publish_type]
-    recording_type_name = NAMES_PER_RECORDING_TYPE[scheduled.recording_type]
-    Mailgun().send(
-        message=interpolate_email_content(
-            course=course,
-            publish_type_name=publish_type_name,
-            recording_type_name=recording_type_name,
-            templated_string=email_template.message,
-        ),
-        recipients=course['instructors'],
-        section_id=course['sectionId'],
-        subject_line=interpolate_email_content(
-            course=course,
-            publish_type_name=publish_type_name,
-            recording_type_name=recording_type_name,
-            templated_string=email_template.subject_line,
-        ),
-        template_type=email_template.template_type,
-        term_id=course['termId'],
-    )
+    else:
+        app.logger.error(f"""
+            FAILED to schedule recordings because room has no 'kaltura_resource_id'.
+            Course: {course}
+            Room: {room}
+            Latest approval: {approval}
+        """)

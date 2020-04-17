@@ -117,6 +117,30 @@ def get_admin_alert_recipients():
     ]
 
 
+def notify_instructors_recordings_scheduled(course, scheduled):
+    email_template = EmailTemplate.get_template_by_type('recordings_scheduled')
+    publish_type_name = NAMES_PER_PUBLISH_TYPE[scheduled.publish_type]
+    recording_type_name = NAMES_PER_RECORDING_TYPE[scheduled.recording_type]
+    Mailgun().send(
+        message=interpolate_email_content(
+            course=course,
+            publish_type_name=publish_type_name,
+            recording_type_name=recording_type_name,
+            templated_string=email_template.message,
+        ),
+        recipients=course['instructors'],
+        section_id=course['sectionId'],
+        subject_line=interpolate_email_content(
+            course=course,
+            publish_type_name=publish_type_name,
+            recording_type_name=recording_type_name,
+            templated_string=email_template.subject_line,
+        ),
+        template_type=email_template.template_type,
+        term_id=course['termId'],
+    )
+
+
 def send_course_related_email(
         course,
         recipients,
