@@ -75,11 +75,8 @@ def update_room_capability():
     params = request.get_json()
     room_id = params.get('roomId')
     room = Room.get_room(room_id) if room_id else None
-    if room:
-        capability = params.get('capability')
-        if not room_id or capability is None:
-            raise BadRequestError('Room \'id\' is required.')
-        room = Room.update_capability(room_id, capability)
-        return tolerant_jsonify(room.to_api_json())
-    else:
-        raise ResourceNotFoundError('No such room')
+    if not room or 'capability' not in params:
+        raise BadRequestError('Missing required parameters')
+    capability = params.get('capability')
+    room = Room.update_capability(room_id, capability)
+    return tolerant_jsonify(room.to_api_json())
