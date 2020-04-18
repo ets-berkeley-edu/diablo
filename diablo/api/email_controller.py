@@ -25,7 +25,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 
 from diablo.api.errors import BadRequestError, ResourceNotFoundError
 from diablo.api.util import admin_required
-from diablo.externals.mailgun import Mailgun
+from diablo.externals.b_connected import BConnected
 from diablo.lib.http import tolerant_jsonify
 from diablo.merged.emailer import get_email_template_codes, interpolate_email_content
 from diablo.models.email_template import EmailTemplate
@@ -109,7 +109,7 @@ def test_email_template(template_id):
             recipient_name=current_user.name,
             templated_string=template.message,
         )
-        Mailgun().send(
+        BConnected().send(
             recipients=[
                 {
                     'email': current_user.email_address,

@@ -16,7 +16,7 @@ export function approve(
 
 export function getApprovals(termId: number, sectionId: number) {
   return axios
-    .get(`${utils.apiBaseUrl()}/api/course/approvals/${termId}/${sectionId}`)
+    .get(`${utils.apiBaseUrl()}/api/course/${termId}/${sectionId}`)
 }
 
 export function getCourses(filter, termId) {

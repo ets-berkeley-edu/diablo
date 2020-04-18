@@ -22,10 +22,9 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-
 import re
 
-from diablo.externals.mailgun import Mailgun
+from diablo.externals.b_connected import BConnected
 from diablo.lib.berkeley import term_name_for_sis_id
 from diablo.models.approval import NAMES_PER_PUBLISH_TYPE, NAMES_PER_RECORDING_TYPE
 from diablo.models.email_template import EmailTemplate
@@ -60,7 +59,7 @@ def notify_instructors_of_approval(
             recipients = [next((i for i in course['instructors'] if i['uid'] == latest_approval.uid))]
         else:
             recipients = course['instructors']
-        Mailgun().send(
+        BConnected().send(
             message=_interpolate(template.message),
             recipients=recipients,
             section_id=course['sectionId'],
@@ -121,7 +120,7 @@ def notify_instructors_recordings_scheduled(course, scheduled):
     email_template = EmailTemplate.get_template_by_type('recordings_scheduled')
     publish_type_name = NAMES_PER_PUBLISH_TYPE[scheduled.publish_type]
     recording_type_name = NAMES_PER_RECORDING_TYPE[scheduled.recording_type]
-    Mailgun().send(
+    BConnected().send(
         message=interpolate_email_content(
             course=course,
             publish_type_name=publish_type_name,
@@ -154,7 +153,7 @@ def send_course_related_email(
                 course=course,
                 templated_string=templated_string,
             )
-        Mailgun().send(
+        BConnected().send(
             message=_interpolate(template.message),
             recipients=recipients,
             section_id=course['sectionId'],
@@ -170,7 +169,7 @@ def send_course_related_email(
 
 def send_system_error_email(message):
     subject = f'{message[:50]}...' if len(message) > 50 else message
-    Mailgun().send(
+    BConnected().send(
         message=message,
         recipients=get_admin_alert_recipients(),
         subject_line=f'Diablo Alert: {subject}',

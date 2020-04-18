@@ -24,10 +24,12 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 import re
 
+from diablo.externals.b_connected import BConnected
 from diablo.merged.calnet import get_calnet_user_for_uid
 from diablo.merged.emailer import interpolate_email_content
 from diablo.models.sis_section import SisSection
 from flask import current_app as app
+from tests.util import override_config
 
 
 class TestInterpolation:
@@ -43,6 +45,22 @@ class TestInterpolation:
         actual = _normalize(interpolated)
         expected = _normalize(_get_expected_email())
         assert expected == actual
+
+    def test_email_test_mode_on(self):
+        with override_config(app, 'EMAIL_TEST_MODE', True):
+            recipient = _get_mock_recipient()
+            assert BConnected.get_email_address(recipient) == app.config['EMAIL_REDIRECT_WHEN_TESTING']
+
+    def test_email_test_mode_off(self):
+        with override_config(app, 'EMAIL_TEST_MODE', False):
+            recipient = _get_mock_recipient()
+            assert BConnected.get_email_address(recipient) == recipient['email']
+
+
+def _get_mock_recipient():
+    return {
+        'email': 'sukie@graveyard.com',
+    }
 
 
 def _get_expected_email():

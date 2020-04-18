@@ -22,7 +22,7 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from diablo.externals.mailgun import Mailgun
+from diablo.externals.b_connected import BConnected
 from diablo.jobs.base_job import BaseJob
 from diablo.merged.emailer import get_admin_alert_recipients, interpolate_email_content
 from diablo.models.approval import Approval
@@ -95,7 +95,7 @@ def _scheduled_locations_per_section_id(all_scheduled):
 
 def _notify(course, template_type):
     email_template = EmailTemplate.get_template_by_type(template_type)
-    Mailgun().send(
+    BConnected().send(
         message=interpolate_email_content(
             templated_string=email_template.message,
             course=course,

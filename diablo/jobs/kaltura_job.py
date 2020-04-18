@@ -43,7 +43,9 @@ class KalturaJob(BaseJob):
         approvals = Approval.get_approvals_per_term(term_id=term_id)
         if approvals:
             approvals_per_section_id = objects_to_dict_organized_by_section_id(objects=approvals)
-            for course in get_courses_ready_to_schedule(approvals=approvals, term_id=term_id):
+            ready_to_schedule = get_courses_ready_to_schedule(approvals=approvals, term_id=term_id)
+            app.logger.info(f'Prepare to schedule recordings for {len(ready_to_schedule)} courses.')
+            for course in ready_to_schedule:
                 section_id = int(course['sectionId'])
                 _schedule_recordings(
                     all_approvals=approvals_per_section_id[section_id],
@@ -56,31 +58,36 @@ class KalturaJob(BaseJob):
 
 
 def _schedule_recordings(all_approvals, course):
+    term_id = course['termId']
+    section_id = int(course['sectionId'])
     all_approvals.sort(key=lambda a: a.created_at.isoformat())
     approval = all_approvals[-1]
+
     room = Room.get_room(approval.room_id)
+    meeting_days, meeting_start_time, meeting_end_time = SisSection.get_meeting_times(
+        term_id=term_id,
+        section_id=section_id,
+    )
+    # At UC Berkeley, recording starts 7 minutes after official start and ends 2 minutes after official end time.
+    time_format = '%H:%M'
+    adjusted_start_time = datetime.strptime(meeting_start_time, time_format) + timedelta(minutes=7)
+    adjusted_end_time = datetime.strptime(meeting_end_time, time_format) + timedelta(minutes=2)
+    days = format_days(meeting_days)
+    instructor_uids = [instructor['uid'] for instructor in course['instructors']]
+
+    app.logger.info(f"""
+        Prepare to schedule recordings for {course["label"]}:
+            Room: {room.location}
+            Instructor UIDs: {instructor_uids}
+            Schedule: {days}, {adjusted_start_time} to {adjusted_end_time}
+            Recording: {approval.recording_type}; {approval.publish_type}
+    """)
 
     if room.kaltura_resource_id:
-        term_id = course['termId']
-
-        section_id = int(course['sectionId'])
-        course_name = course['courseName']
-        section = f'{course["instructionFormat"]} ${course["sectionNum"]} ()'
-        comment = f'Recordings for {course_name} {section} scheduled by Diablo.'
-        meeting_days, meeting_start_time, meeting_end_time = SisSection.get_meeting_times(
-            term_id=term_id,
-            section_id=section_id,
-        )
-        # At UC Berkeley, recording starts 7 minutes after official start and ends 2 minutes after official end time.
-        time_format = '%H:%M'
-        adjusted_start_time = datetime.strptime(meeting_start_time, time_format) + timedelta(minutes=7)
-        adjusted_end_time = datetime.strptime(meeting_end_time, time_format) + timedelta(minutes=2)
-
         Kaltura().schedule_recording(
-            comment=comment,
-            course_name=course_name,
-            instructor_uids=[instructor['uid'] for instructor in course['instructors']],
-            days=format_days(meeting_days),
+            course_label=course['label'],
+            instructor_uids=instructor_uids,
+            days=days,
             start_time=adjusted_start_time,
             end_time=adjusted_end_time,
             publish_type=approval.publish_type,
