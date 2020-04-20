@@ -24,6 +24,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 from diablo import db
 from diablo.externals import data_loch
+from diablo.externals.b_connected import BConnected
 from diablo.externals.rds import log_db_error
 from diablo.lib.http import tolerant_jsonify
 from flask import current_app as app
@@ -55,7 +56,7 @@ def ping():
         'app': True,
         # 'canvas': ping_canvas(),
         # 'dataLoch': data_loch_status(),
+        'bConnected': BConnected().ping(),
         'db': db_status(),
         # 'kaltura': Kaltura().ping(),
-        # 'mailgun': Mailgun().ping(),
     })

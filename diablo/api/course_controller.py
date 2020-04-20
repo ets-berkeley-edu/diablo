@@ -81,7 +81,7 @@ def approve():
     return tolerant_jsonify(_add_approvals_and_scheduled_json(course))
 
 
-@app.route('/api/course/approvals/<term_id>/<section_id>')
+@app.route('/api/course/<term_id>/<section_id>')
 @login_required
 def get_approvals(term_id, section_id):
     course = SisSection.get_course(term_id, section_id)

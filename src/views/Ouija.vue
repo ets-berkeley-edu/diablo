@@ -17,13 +17,30 @@
           single-line
           hide-details
         ></v-text-field>
-        <v-select
-          id="ouija-filter-options"
-          v-model="selectedFilter"
-          color="secondary"
-          :items="$config.searchFilterOptions"
-          @change="refresh"
-        ></v-select>
+        <div class="d-flex">
+          <v-select
+            id="ouija-filter-options"
+            v-model="selectedFilter"
+            color="secondary"
+            :items="$_.keys($config.searchFilterOptions)"
+            @change="refresh"
+          >
+            <template v-slot:selection="{ item }">
+              <v-tooltip id="tooltip-ouija-filter" bottom>
+                <template v-slot:activator="{ on }">
+                  <v-icon
+                    slot="prepend-item"
+                    class="pb-1 pr-2"
+                    v-on="on">
+                    mdi-information-outline
+                  </v-icon>
+                </template>
+                <span class="font-weight-bold">{{ selectedFilter }}:</span> {{ $config.searchFilterOptions[selectedFilter] }}
+              </v-tooltip>
+              {{ item }}
+            </template>
+          </v-select>
+        </div>
       </div>
     </v-card-title>
     <v-data-table
@@ -78,7 +95,7 @@
                 :to="`/room/${item.room.id}`">
                 {{ item.room.location }}
               </router-link>
-              <span v-if="!item.room">&nbsp;</span>
+              <span v-if="!item.room">&mdash;</span>
             </td>
             <td :id="`meeting-days-${item.sectionId}`" class="text-no-wrap">{{ item.meetingDays.join(',') }}</td>
             <td :id="`meeting-times-${item.sectionId}`" class="text-no-wrap">{{ item.meetingStartTime }} - {{ item.meetingEndTime }}</td>
@@ -159,7 +176,7 @@
       headers: [
         {text: 'Course', value: 'label'},
         {text: 'Section', value: 'sectionId'},
-        {text: 'Room', value: 'meetingLocation'},
+        {text: 'Room', value: 'room.location'},
         {text: 'Days', sortable: false},
         {text: 'Time', sortable: false},
         {text: 'Status', value: 'status'},

@@ -5,6 +5,9 @@
         <h2 id="page-title">{{ pageTitle }}</h2>
       </v-row>
       <v-row class="pl-3">
+        Section ID: {{ course.sectionId }}
+      </v-row>
+      <v-row class="pl-3">
         <h3 id="course-title">{{ course.courseTitle }}</h3>
       </v-row>
       <v-row>
@@ -286,7 +289,7 @@
         const instructors = this.course.instructors
         const filtered = this.$_.filter(instructors, instructor => this.$_.includes(uids, instructor.uid))
         const unrecognized = this.$_.difference(uids, this.$_.map(filtered, 'uid'))
-        const names = this.$_.union(this.$_.map(instructors, 'name'), unrecognized)
+        const names = this.$_.union(this.$_.map(filtered, 'name'), unrecognized)
         return names.length ? this.oxfordJoin(names) : ''
       },
       render(data) {

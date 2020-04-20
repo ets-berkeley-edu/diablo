@@ -6,7 +6,7 @@
       :headers="headers"
       :hide-default-footer="true"
       :items="showEligibleCoursesOnly ? courses.eligibleOnly : courses.all"
-      items-per-page="100"
+      :items-per-page="100"
       class="elevation-1"
     >
       <template v-slot:top>

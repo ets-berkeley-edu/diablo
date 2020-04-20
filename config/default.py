@@ -32,6 +32,12 @@ from diablo.jobs.dblink_to_redshift_job import DblinkToRedshiftJob
 # Base directory for the application (one level up from this config file).
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
+# bConnected On-Premise (bCOP) SMTP server
+BCOP_SMTP_PASSWORD = None
+BCOP_SMTP_PORT = 587
+BCOP_SMTP_SERVER = 'bcop.berkeley.edu'
+BCOP_SMTP_USERNAME = None
+
 CAS_SERVER = 'https://auth-test.berkeley.edu/cas/'
 
 COURSE_CAPTURE_EXPLAINED_URL = 'https://www.ets.berkeley.edu/services-facilities/course-capture'
@@ -64,6 +70,7 @@ EMAIL_DIABLO_ADMIN = '__EMAIL_DIABLO_ADMIN__@berkeley.edu'
 EMAIL_DIABLO_ADMIN_UID = '0'
 EMAIL_DIABLO_SUPPORT = '__EMAIL_DIABLO_SUPPORT__@berkeley.edu'
 EMAIL_REDIRECT_WHEN_TESTING = '__EMAIL_REDIRECT_WHEN_TESTING__@berkeley.edu'
+EMAIL_TEST_MODE = True
 
 # Directory to search for mock fixtures, if running in "test" or "demo" mode.
 FIXTURES_PATH = None
@@ -114,10 +121,6 @@ LOGGING_FORMAT = '[%(asctime)s] - %(levelname)s: %(message)s [in %(pathname)s:%(
 LOGGING_LOCATION = 'diablo.log'
 LOGGING_LEVEL = logging.DEBUG
 LOGGING_PROPAGATION_LEVEL = logging.INFO
-
-MAILGUN_BASE_URL = 'https://api.mailgun.net/v3'
-MAILGUN_DOMAIN = 'diablo-mail.berkeley.edu'
-MAILGUN_API_KEY = 'secret'
 
 REDSHIFT_DATABASE = 'redshift_database'
 REDSHIFT_SCHEMA_INTERMEDIATE = 'intermediate'

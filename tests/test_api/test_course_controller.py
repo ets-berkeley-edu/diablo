@@ -33,7 +33,7 @@ from diablo.models.sent_email import SentEmail
 from diablo.models.sis_section import SisSection
 from flask import current_app as app
 import pytest
-from tests.test_api.api_test_utils import api_approve, api_get_approvals
+from tests.test_api.api_test_utils import api_approve, api_get_course
 from tests.util import test_approvals_workflow
 
 admin_uid = '2040'
@@ -137,7 +137,7 @@ class TestApprove:
             assert most_recent.term_id == self.term_id
 
         fake_auth.login(admin_uid)
-        api_json = api_get_approvals(
+        api_json = api_get_course(
             client,
             term_id=self.term_id,
             section_id=section_1_id,
@@ -181,7 +181,7 @@ class TestViewApprovals:
 
     def test_not_authenticated(self, client):
         """Deny anonymous access."""
-        api_get_approvals(
+        api_get_course(
             client,
             term_id=self.term_id,
             section_id=section_1_id,
@@ -192,7 +192,7 @@ class TestViewApprovals:
         """Deny access if user is not an admin."""
         instructor_uids = _get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
         fake_auth.login(instructor_uids[0])
-        api_get_approvals(
+        api_get_course(
             client,
             term_id=self.term_id,
             section_id=section_2_id,
@@ -202,7 +202,7 @@ class TestViewApprovals:
     def test_deny_deleted_admin_user(self, client, fake_auth):
         """Deny access if admin user was deleted."""
         fake_auth.login(deleted_admin_user_uid)
-        api_get_approvals(
+        api_get_course(
             client,
             term_id=self.term_id,
             section_id=section_1_id,
@@ -211,29 +211,48 @@ class TestViewApprovals:
 
     def test_invalid_section_id(self, client, admin_session):
         """404 if section does not exist."""
-        api_get_approvals(
+        api_get_course(
             client,
             term_id=self.term_id,
             section_id=999999,
             expected_status_code=404,
         )
 
-    def test_authorized(self, client, db, admin_session):
-        """Only admins can review approval status of any given course."""
-        api_json = api_get_approvals(
-            client,
-            term_id=self.term_id,
-            section_id=section_1_id,
-        )
-        assert [i['uid'] for i in api_json['instructors']] == ['234567', '8765432']
-        assert 'id' in api_json['room']
-        assert api_json['room']['location'] == 'Barrows 106'
+    def test_course_with_partial_approval(self, client, db, admin_session):
+        """Course with two instructors and one approval."""
+        with test_approvals_workflow(app):
+            # If course has approvals but not scheduled then it will show up in the feed.
+            approved_by_uid = _get_instructor_uids(section_id=section_1_id, term_id=self.term_id)[0]
+            room_id = Room.get_room_id(section_id=section_1_id, term_id=self.term_id)
+            Approval.create(
+                approved_by_uid=approved_by_uid,
+                term_id=self.term_id,
+                section_id=section_1_id,
+                approver_type_='instructor',
+                publish_type_='canvas',
+                recording_type_='presentation_audio',
+                room_id=room_id,
+            )
+            std_commit(allow_test_environment=True)
+
+            api_json = api_get_course(
+                client,
+                term_id=self.term_id,
+                section_id=section_1_id,
+            )
+            assert [i['uid'] for i in api_json['instructors']] == ['234567', '8765432']
+
+            approvals = api_json['approvals']
+            assert len(approvals) == 1
+            assert approved_by_uid == approvals[0]['approvedByUid']
+            assert api_json['room']['id'] == room_id
+            assert api_json['room']['location'] == 'Barrows 106'
 
     def test_date_time_format(self, client, db, fake_auth):
         """Dates and times are properly formatted for front-end display."""
         instructor_uids = _get_instructor_uids(section_id=section_2_id, term_id=self.term_id)
         fake_auth.login(instructor_uids[0])
-        api_json = api_get_approvals(
+        api_json = api_get_course(
             client,
             term_id=self.term_id,
             section_id=section_2_id,
@@ -245,7 +264,7 @@ class TestViewApprovals:
 
     def test_li_ka_shing_recording_options(self, client, db, admin_session):
         """Rooms designated as 'auditorium' offer ALL types of recording."""
-        api_json = api_get_approvals(
+        api_json = api_get_course(
             client,
             term_id=self.term_id,
             section_id=section_3_id,
@@ -255,7 +274,7 @@ class TestViewApprovals:
 
     def test_section_with_canvas_course_sites(self, client, db, admin_session):
         """Canvas course site information is included in the API."""
-        api_json = api_get_approvals(
+        api_json = api_get_course(
             client,
             term_id=self.term_id,
             section_id=section_with_canvas_course_sites,
@@ -293,6 +312,7 @@ class TestCoursesFilter:
         self._api_courses(client, term_id=self.term_id, expected_status_code=401)
 
     def test_do_not_email_filter(self, client, db, admin_session):
+        """Do Not Email filter: Courses in eligible room; "opt out" is true; all stages of approval; not scheduled."""
         with test_approvals_workflow(app):
             # Send invites them opt_out.
             for section_id in (section_1_id, section_in_ineligible_room, section_3_id, section_4_id):
