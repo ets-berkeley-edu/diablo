@@ -40,9 +40,6 @@
             <td class="w-10">
               {{ room.isAuditorium ? 'Yes' : 'No' }}
             </td>
-            <td class="w-20">
-              <SelectRoomCapability :options="$config.roomCapabilityOptions" :room="room" />
-            </td>
           </tr>
         </tbody>
       </template>
@@ -59,19 +56,16 @@
 
 <script>
   import Context from '@/mixins/Context'
-  import SelectRoomCapability from '@/components/room/SelectRoomCapability'
   import {getAllRooms} from '@/api/room'
 
   export default {
     name: 'Rooms',
-    components: {SelectRoomCapability},
     mixins: [Context],
     data: () => ({
       headers: [
         {text: 'Room', value: 'location'},
         {text: 'Kaltura Resource', value: 'kalturaResourceId'},
-        {text: 'Auditorium', value: 'isAuditorium'},
-        {text: 'Capability', value: 'capability'}
+        {text: 'Auditorium', value: 'isAuditorium'}
       ],
       options: {
         page: 1,

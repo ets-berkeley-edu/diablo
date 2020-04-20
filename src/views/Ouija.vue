@@ -4,7 +4,7 @@
       <div class="pt-2">
         <h2><v-icon class="pb-3" large>mdi-auto-fix</v-icon> The Ouija Board</h2>
         <div class="pt-4">
-          <v-btn id="btn-send-email" :disabled="!selectedRows.length" @click="sendEmail()">Send Email</v-btn>
+          <v-btn id="btn-send-email" :disabled="!selectedRows.length" @click="sendEmail()">Send Invite</v-btn>
         </div>
       </div>
       <v-spacer></v-spacer>

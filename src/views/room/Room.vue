@@ -14,7 +14,11 @@
               <label for="select-room-capability" class="subtitle-1">Capability:</label>
             </div>
             <div>
-              <SelectRoomCapability id="select-room-capability" :options="$config.roomCapabilityOptions" :room="room" />
+              <SelectRoomCapability
+                :is-auditorium="room.isAuditorium"
+                :on-update="onUpdateRoomCapability"
+                :options="$config.roomCapabilityOptions"
+                :room-id="room.id" />
             </div>
             <div class="ml-auto">
               <v-switch v-model="isAuditorium" label="Auditorium"></v-switch>
@@ -118,7 +122,9 @@
     watch: {
       isAuditorium(value) {
         if (!this.loading) {
-          setAuditorium(this.room.id, value).then(this.$_.noop)
+          setAuditorium(this.room.id, value).then(() => {
+            this.room.isAuditorium = value
+          })
         }
       }
     },
@@ -139,6 +145,9 @@
       }).catch(this.$ready)
     },
     methods: {
+      onUpdateRoomCapability(capability) {
+        this.room.capability = capability
+      },
       tdClass(course) {
         return course.approvals.length ? 'border-bottom-zero text-no-wrap' : 'text-no-wrap'
       }

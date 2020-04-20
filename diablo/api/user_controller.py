@@ -24,7 +24,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 
 from diablo.api.errors import ResourceNotFoundError
-from diablo.api.util import admin_required, put_approvals_and_scheduled
+from diablo.api.util import admin_required
 from diablo.lib.http import tolerant_jsonify
 from diablo.merged.calnet import get_calnet_user_for_uid
 from diablo.models.sis_section import SisSection
@@ -49,5 +49,4 @@ def get_user(uid):
             instructor_uid=uid,
         )
         user['courses'] = courses
-        put_approvals_and_scheduled(user['courses'])
         return tolerant_jsonify(user)

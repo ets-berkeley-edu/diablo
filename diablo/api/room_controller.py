@@ -24,7 +24,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 
 from diablo.api.errors import BadRequestError, ResourceNotFoundError
-from diablo.api.util import admin_required, put_approvals_and_scheduled
+from diablo.api.util import admin_required
 from diablo.lib.http import tolerant_jsonify
 from diablo.models.room import Room
 from diablo.models.sis_section import SisSection
@@ -47,7 +47,6 @@ def get_room(room_id):
             term_id=app.config['CURRENT_TERM_ID'],
             location=room.location,
         )
-        put_approvals_and_scheduled(api_json['courses'])
         return tolerant_jsonify(api_json)
     else:
         raise ResourceNotFoundError('No such room')
