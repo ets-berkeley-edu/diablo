@@ -112,8 +112,6 @@ KALTURA_EXPIRY = 0
 KALTURA_RECORDING_OFFSET_START = 7
 KALTURA_RECORDING_OFFSET_END = 2
 
-LAST_DAY_OF_INSTRUCTION = 'YYYY-MM-DD'
-
 LDAP_HOST = 'ldap-test.berkeley.edu'
 LDAP_BIND = 'mybind'
 LDAP_PASSWORD = 'secret'
@@ -129,16 +127,14 @@ REDSHIFT_SCHEMA_INTERMEDIATE = 'intermediate'
 
 REMEMBER_COOKIE_NAME = 'remember_diablo_token'
 
+SEARCH_ITEMS_PER_PAGE = 50
+
 # Used to encrypt session cookie.
 SECRET_KEY = 'secret'
 
-# Save DB changes at the end of a request.
+# SQLAlchemy
 SQLALCHEMY_COMMIT_ON_TEARDOWN = True
-
-# Override in local configs.
 SQLALCHEMY_DATABASE_URI = 'postgres://diablo:diablo@localhost:5432/pazuzu'
-
-# Disable an expensive bit of the ORM.
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 # A common configuration; one request thread, one background worker thread.

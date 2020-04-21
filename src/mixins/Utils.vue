@@ -12,6 +12,12 @@
       goToPath(path) {
         this.$router.push({ path }, _.noop)
       },
+      onNextTick(callable) {
+        this.$nextTick(() => {
+          let counter = 0
+          const job = setInterval(() => (callable() || ++counter > 3) && clearInterval(job), 500)
+        })
+      },
       oxfordJoin: arr => {
         switch(arr.length) {
           case 1: return _.head(arr)
@@ -20,17 +26,11 @@
         }
       },
       putFocusNextTick(id, cssSelector = null) {
-        this.$nextTick(() => {
-          let counter = 0
-          const putFocus = setInterval(() => {
+        this.onNextTick(() => {
             let el = document.getElementById(id)
             el = el && cssSelector ? el.querySelector(cssSelector) : el
             el && el.focus()
-            if (el || ++counter > 3) {
-              // Abort after success or three attempts
-              clearInterval(putFocus)
-            }
-          }, 500)
+            return !!el
         })
       },
       setPageTitle: phrase => (document.title = `${phrase ? phrase : 'UC Berkeley'} | Course Capture`)

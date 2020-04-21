@@ -1,6 +1,6 @@
 <template>
   <v-select
-    :id="`select-room-capability-${roomId}`"
+    :id="`select-room-capability-${room.id}`"
     v-model="capability"
     dense
     :item-disabled="disableRoomCapability"
@@ -30,9 +30,9 @@
         required: true,
         type: Function
       },
-      roomId: {
+      room: {
         required: true,
-        type: Number
+        type:Object
       }
     },
     data: () => ({
@@ -51,6 +51,7 @@
       }
     },
     created() {
+      this.capability = this.room.capability
       this.$_.each(this.options, (text, value) => {
         this.capabilityOptions.push({text, value})
       })
@@ -60,7 +61,7 @@
         return capability.value === 'screencast_and_video' && !this.isAuditorium
       },
       updateCapability() {
-        updateRoomCapability(this.roomId, this.capability).then(this.onUpdate(this.capability))
+        updateRoomCapability(this.room.id, this.capability).then(this.onUpdate(this.capability))
       }
     }
   }
