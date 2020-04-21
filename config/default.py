@@ -77,7 +77,7 @@ FIXTURES_PATH = None
 
 # All jobs are disabled below. Use the following as an example when configuring jobs in the real world.
 JOB_MANAGER = {
-    'auto_start': True,
+    'auto_start': False,
     'seconds_between_pending_jobs_check': 60,
     'jobs': [
         {
