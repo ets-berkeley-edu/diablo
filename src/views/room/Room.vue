@@ -9,8 +9,8 @@
     <v-card outlined class="elevation-1">
       <v-list-item three-line class="ma-2">
         <v-list-item-content>
-          <div class="align-center overline w-50 d-flex">
-            <div class="pb-4 pr-3">
+          <div class="align-start overline w-50 d-flex">
+            <div class="pr-3 pt-1">
               <label for="select-room-capability" class="subtitle-1">Capability:</label>
             </div>
             <div>
@@ -25,17 +25,27 @@
             </div>
           </div>
           <v-list-item-title>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+            <span v-if="room.courses.length">
+              <router-link
+                v-if="scheduledCourses.length"
+                :id="`print-room-${room.id}-schedule`"
+                class="subtitle-1"
+                target="_blank"
+                :to="`/room/printable/${room.id}`">
+                <v-icon class="linked-icon">mdi-printer</v-icon> Print schedule<span class="sr-only"> (opens a new browser tab)</span>
+              </router-link>
+              <span v-if="scheduledCourses.length">
+                ({{ scheduledCourses.length === 1 ? 'One course has' : `${scheduledCourses.length} courses have` }}
+                recordings scheduled in this room.)
+              </span>
+              <span v-if="!scheduledCourses.length">
+                No course in this room has recordings scheduled.
+              </span>
+            </span>
+            <span v-if="!room.courses.length">
+              No courses are in this room.
+            </span>
           </v-list-item-title>
-          <v-list-item-subtitle v-if="room.courses.length > 0" class="mt-4">
-            <router-link
-              :id="`print-room-${room.id}-schedule`"
-              class="subtitle-1"
-              target="_blank"
-              :to="`/room/printable/${room.id}`">
-              <v-icon class="linked-icon">mdi-printer</v-icon> Print schedule<span class="sr-only"> (opens a new browser tab)</span>
-            </router-link>
-          </v-list-item-subtitle>
         </v-list-item-content>
       </v-list-item>
       <v-data-table
@@ -101,12 +111,13 @@
   import Context from '@/mixins/Context'
   import SelectRoomCapability from '@/components/room/SelectRoomCapability'
   import ToggleOptOut from '@/components/course/ToggleOptOut'
+  import Utils from '@/mixins/Utils'
   import {getRoom, setAuditorium} from '@/api/room'
 
   export default {
     name: 'Room',
     components: {SelectRoomCapability, ToggleOptOut},
-    mixins: [Context],
+    mixins: [Context, Utils],
     data: () => ({
       headers: [
         {text: 'Course', value: 'label'},
@@ -117,6 +128,7 @@
         {text: 'Opt out', value: 'hasOptedOut', sortable: false}
       ],
       isAuditorium: undefined,
+      scheduledCourses: undefined,
       room: undefined
     }),
     watch: {
@@ -141,6 +153,7 @@
           course.publishTypeNames = course.approvals.length ? this.$_.last(course.approvals).publishTypeName : null
           course.isSelectable = !course.hasOptedOut
         })
+        this.scheduledCourses = this.$_.filter(this.room.courses, 'scheduled')
         this.$ready()
       }).catch(this.$ready)
     },

@@ -13,26 +13,23 @@
       </v-row>
       <v-row>
         <v-col class="pt-0">
-          <div>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et
-            dolore magna aliqua.
-          </div>
           <v-data-table
             class="mt-4"
             disable-pagination
+            disable-sort
             hide-default-footer
             :headers="headers"
-            :items="room.courses"
+            :items="scheduledCourses"
           >
             <template v-slot:body="{ items }">
               <tbody v-if="items.length">
                 <template v-for="course in items">
                   <tr :key="course.sectionId">
-                    <td class="w-20">
+                    <td class="font-weight-black text-no-wrap w-30">
                       {{ course.label }}
                     </td>
-                    <td>{{ course.meetingDays ? course.meetingDays.join(',') : '&mdash;' }}</td>
-                    <td>{{ course.meetingStartTime ? `${course.meetingStartTime} - ${course.meetingEndTime}` : '&mdash;' }}</td>
+                    <td class="text-no-wrap">{{ course.meetingDays ? course.meetingDays.join(',') : '&mdash;' }}</td>
+                    <td class="text-no-wrap">{{ course.meetingStartTime ? `${course.meetingStartTime} - ${course.meetingEndTime}` : '&mdash;' }}</td>
                     <td>
                       <div v-if="course.scheduled">
                         {{ course.scheduled.recordingTypeName }}
@@ -55,39 +52,45 @@
           </v-data-table>
         </v-col>
       </v-row>
-      <v-row>
-        <v-footer class="pt-6" color="transparent">
-          <v-icon small color="grey">mdi-copyright</v-icon> {{ new Date().getFullYear() }}
-          The Regents of the University of California
-        </v-footer>
+      <v-row no-gutters>
+        <v-col class="pt-12">
+          <v-footer color="transparent">
+            <v-icon small color="grey">mdi-copyright</v-icon> {{ new Date().getFullYear() }}
+            The Regents of the University of California
+          </v-footer>
+        </v-col>
       </v-row>
     </v-container>
   </div>
 </template>
 
 <script>
-  import Spinner from '@/components/util/Spinner'
   import Context from '@/mixins/Context'
+  import Spinner from '@/components/util/Spinner'
+  import Utils from '@/mixins/Utils'
   import {getRoom} from '@/api/room'
 
   export default {
     name: 'PrintableRoom',
     components: {Spinner},
-    mixins: [Context],
+    mixins: [Context, Utils],
     data: () => ({
       headers: [
-        {text: 'Course', value: 'label', class: 'font-weight-black', sortable: false},
-        {text: 'Days', value: 'days', class: 'font-weight-black', sortable: false},
-        {text: 'Time', value: 'time', class: 'font-weight-black', sortable: false},
-        {text: 'Recording', sortable: false}
+        {text: 'Course'},
+        {text: 'Days'},
+        {text: 'Time'},
+        {text: 'Recording'}
       ],
-      room: undefined
+      room: undefined,
+      scheduledCourses: undefined
     }),
     created() {
       this.$loading()
       let id = this.$_.get(this.$route, 'params.id')
       getRoom(id).then(room => {
         this.room = room
+        this.scheduledCourses = this.$_.filter(this.room.courses, 'scheduled')
+        this.setPageTitle(this.room.location)
         this.$ready()
       }).catch(this.$ready)
     }
