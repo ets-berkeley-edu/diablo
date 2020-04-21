@@ -47,6 +47,7 @@ def app_config():
         'diabloEnv': app.config['DIABLO_ENV'],
         'ebEnvironment': app.config['EB_ENVIRONMENT'] if 'EB_ENVIRONMENT' in app.config else None,
         'emailTemplateTypes': EmailTemplate.get_template_type_options(),
+        'searchItemsPerPage': app.config['SEARCH_ITEMS_PER_PAGE'],
         'roomCapabilityOptions': Room.get_room_capability_options(),
         'searchFilterOptions': get_search_filter_options(),
         'supportEmailAddress': app.config['EMAIL_DIABLO_SUPPORT'],

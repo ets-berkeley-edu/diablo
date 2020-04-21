@@ -8,6 +8,9 @@ a:hover {
 a:active {
   color: #b83900 !important;
 }
+.border-bottom-zero {
+  border-bottom: 0 !important;
+}
 .linked-icon {
   color: #f04a00 !important;
 }
