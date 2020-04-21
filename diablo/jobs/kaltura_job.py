@@ -68,10 +68,12 @@ def _schedule_recordings(all_approvals, course):
         term_id=term_id,
         section_id=section_id,
     )
-    # At UC Berkeley, recording starts 7 minutes after official start and ends 2 minutes after official end time.
     time_format = '%H:%M'
-    adjusted_start_time = datetime.strptime(meeting_start_time, time_format) + timedelta(minutes=7)
-    adjusted_end_time = datetime.strptime(meeting_end_time, time_format) + timedelta(minutes=2)
+    # Recording starts X minutes before/after official start; it ends Y minutes before/after official end time.
+    recording_offset_start = app.config['KALTURA_RECORDING_OFFSET_START']
+    recording_offset_end = app.config['KALTURA_RECORDING_OFFSET_END']
+    adjusted_start_time = datetime.strptime(meeting_start_time, time_format) + timedelta(minutes=recording_offset_start)
+    adjusted_end_time = datetime.strptime(meeting_end_time, time_format) + timedelta(minutes=recording_offset_end)
     days = format_days(meeting_days)
     instructor_uids = [instructor['uid'] for instructor in course['instructors']]
 
