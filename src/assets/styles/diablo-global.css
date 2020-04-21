@@ -2,19 +2,15 @@ a {
   color: #f04a00 !important;
   text-decoration: none !important;
 }
-
 a:hover {
   color: #ff8900 !important;
 }
-
 a:active {
   color: #b83900 !important;
 }
-
 .linked-icon {
   color: #f04a00 !important;
 }
-
 .sr-only {
   position: absolute;
   left: -10000px;
@@ -23,15 +19,15 @@ a:active {
   height: 1px;
   overflow: hidden;
 }
-
 .w-10 {
   width: 10% !important;
 }
-
 .w-20 {
   width: 20% !important;
 }
-
+.w-30 {
+  width: 30% !important;
+}
 .w-50 {
   width: 50% !important;
 }
