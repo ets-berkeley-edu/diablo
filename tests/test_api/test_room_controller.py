@@ -108,6 +108,9 @@ class TestGetRoom:
         assert api_json['kalturaResourceId'] == 678
         assert api_json['location'] == location
         assert len(api_json['recordingTypeOptions']) == 3
+        # Feed includes courses but room-per-course would be redundant
+        assert len(api_json['courses']) > 0
+        assert 'room' not in api_json['courses'][0]
 
 
 class TestUpdateRoomCapability:

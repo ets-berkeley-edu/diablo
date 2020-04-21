@@ -192,7 +192,7 @@ class SisSection(db.Model):
                 'term_id': term_id,
             },
         )
-        return _to_api_json(term_id=term_id, rows=rows)
+        return _to_api_json(term_id=term_id, rows=rows, include_rooms=False)
 
     @classmethod
     def get_courses_invited(cls, term_id):
@@ -550,7 +550,7 @@ class SisSection(db.Model):
             db.session.execute(query, {'json_dumps': json.dumps(data)})
 
 
-def _to_api_json(term_id, rows):
+def _to_api_json(term_id, rows, include_rooms=True):
     courses_per_id = {}
     instructors_per_section_id = {}
     section_ids_opted_out = CoursePreference.get_section_ids_opted_out(term_id=term_id)
@@ -610,8 +610,9 @@ def _to_api_json(term_id, rows):
             else:
                 course['status'] = 'Invited' if invites else 'Not Invited'
 
-            room = Room.get_room(row['room_id']).to_api_json() if 'room_id' in row else None
-            course['room'] = room
+            if include_rooms:
+                room = Room.get_room(row['room_id']).to_api_json() if 'room_id' in row else None
+                course['room'] = room
             courses_per_id[section_id] = course
 
         # Build upon course object with one instructor per row.

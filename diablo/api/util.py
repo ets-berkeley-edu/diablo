@@ -25,10 +25,6 @@ ENHANCEMENTS, OR MODIFICATIONS.
 
 from functools import wraps
 
-from diablo.lib.util import objects_to_dict_organized_by_section_id
-from diablo.merged.calnet import get_calnet_user_for_uid, get_calnet_users_for_uids
-from diablo.models.approval import Approval
-from diablo.models.scheduled import Scheduled
 from flask import current_app as app, request
 from flask_login import current_user
 
@@ -42,38 +38,6 @@ def admin_required(func):
             app.logger.warning(f'Unauthorized request to {request.path}')
             return app.login_manager.unauthorized()
     return _admin_required
-
-
-def put_approvals_and_scheduled(courses):
-    term_id = app.config['CURRENT_TERM_ID']
-    section_ids = [course['sectionId'] for course in courses]
-
-    approvals = Approval.get_approvals_per_section_ids(section_ids=section_ids, term_id=term_id)
-    approvals_per_section_id = objects_to_dict_organized_by_section_id(objects=approvals)
-
-    scheduled = Scheduled.get_scheduled_per_section_ids(section_ids=section_ids, term_id=term_id)
-    scheduled_per_section_id = objects_to_dict_organized_by_section_id(objects=scheduled)
-
-    for course in courses:
-        section_id = int(course['sectionId'])
-        # Approvals
-        course['approvals'] = []
-        approvals = approvals_per_section_id.get(section_id, [])
-        if len(approvals) == 1:
-            # If possible, take advantage of caching-per-UID
-            uid = approvals[0].approved_by_uid
-            calnet_users = {uid: get_calnet_user_for_uid(app, uid)}
-        else:
-            calnet_users = get_calnet_users_for_uids(app, [a.approved_by_uid for a in approvals])
-        for approval in approvals:
-            course['approvals'].append({
-                **approval.to_api_json(),
-                **{
-                    'approvedBy': calnet_users[approval.approved_by_uid],
-                },
-            })
-        # Scheduled
-        course['scheduled'] = [s.to_api_json() for s in scheduled_per_section_id.get(section_id, [])]
 
 
 def get_search_filter_options():

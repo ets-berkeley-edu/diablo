@@ -34,10 +34,10 @@
                     <td>{{ course.meetingDays ? course.meetingDays.join(',') : '&mdash;' }}</td>
                     <td>{{ course.meetingStartTime ? `${course.meetingStartTime} - ${course.meetingEndTime}` : '&mdash;' }}</td>
                     <td>
-                      <div v-if="course.scheduled.length">
-                        {{ course.scheduled }}
+                      <div v-if="course.scheduled">
+                        {{ course.scheduled.recordingTypeName }}
                       </div>
-                      <div v-if="!course.scheduled.length">
+                      <div v-if="!course.scheduled">
                         &mdash;
                       </div>
                     </td>
