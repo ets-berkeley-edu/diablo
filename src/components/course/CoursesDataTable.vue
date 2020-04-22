@@ -5,7 +5,7 @@
     </div>
     <v-data-table
       id="courses-data-table"
-      v-model="undefined"
+      v-model="selectedRows"
       :headers="headers"
       hide-default-footer
       item-key="sectionId"
@@ -180,13 +180,13 @@
     data: () => ({
       headers: [
         {text: 'Course', value: 'label'},
-        {text: 'Section', value: 'sectionId'},
+        {text: 'Section', value: 'sectionId', class: 'w-10'},
         {text: 'Room', value: 'room.location'},
         {text: 'Days', sortable: false},
         {text: 'Time', sortable: false},
-        {text: 'Status', value: 'status'},
+        {text: 'Status', value: 'status', class: 'w-10'},
         {text: 'Instructor(s)', value: 'instructorNames'},
-        {text: 'Publish', value: 'publishTypeNames'},
+        {text: 'Publish', value: 'publishTypeNames', class: 'w-10'},
         {text: 'Opt out', value: 'hasOptedOut', sortable: false}
       ],
       pageCount: undefined,

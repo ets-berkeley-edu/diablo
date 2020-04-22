@@ -17,31 +17,23 @@
       :headers="headers"
       hide-default-footer
       :items="rooms"
-      no-results-text="No matching rooms"
+      no-results-text="No rooms"
       :options="options"
       :page.sync="options.page"
       :search="search"
       @page-count="pageCount = $event"
     >
-      <template v-slot:body="{ items }">
-        <tbody>
-          <tr v-if="!items.length">
-            <td>
-              No rooms found.
-            </td>
-          </tr>
-          <tr v-for="room in items" :key="room.id">
-            <td class="w-20">
-              <router-link :id="`room-${room.id}`" :to="`/room/${room.id}`">{{ room.location }}</router-link>
-            </td>
-            <td class="w-10">
-              {{ room.kalturaResourceId || '&mdash;' }}
-            </td>
-            <td class="w-10">
-              {{ room.isAuditorium ? 'Yes' : 'No' }}
-            </td>
-          </tr>
-        </tbody>
+      <template v-slot:item.location="{ item }">
+        <router-link :id="`room-${item.id}`" :to="`/room/${item.id}`">{{ item.location }}</router-link>
+      </template>
+      <template v-slot:item.kalturaResourceId="{ item }">
+        {{ item.kalturaResourceId || '&mdash;' }}
+      </template>
+      <template v-slot:item.capabilityName="{ item }">
+        {{ item.capability ? item.capabilityName : '&mdash;' }}
+      </template>
+      <template v-slot:item.isAuditorium="{ item }">
+        {{ item.isAuditorium ? 'Yes' : 'No' }}
       </template>
     </v-data-table>
     <div v-if="pageCount > 1" class="text-center pb-4 pt-2">
@@ -63,9 +55,10 @@
     mixins: [Context],
     data: () => ({
       headers: [
-        {text: 'Room', value: 'location'},
-        {text: 'Kaltura Resource', value: 'kalturaResourceId'},
-        {text: 'Auditorium', value: 'isAuditorium'}
+        {text: 'Room', value: 'location', class: 'w-50'},
+        {text: 'Kaltura Resource', value: 'kalturaResourceId', class: 'w-20'},
+        {text: 'Capability', value: 'capabilityName', class: 'w-20'},
+        {text: 'Auditorium', value: 'isAuditorium', class: 'w-10'}
       ],
       options: {
         page: 1,
