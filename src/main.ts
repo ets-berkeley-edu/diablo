@@ -33,10 +33,12 @@ axios.interceptors.response.use(
         if (errorStatus === 404) {
           router.push({ path: '/404' })
         } else if (errorStatus >= 500) {
+          const message = _.get(error, 'response.data.message') || error.message
+          console.error(message)
           router.push({
             path: '/error',
             query: {
-              m: _.get(error, 'response.data.message') || error.message
+              m: message
             }
           })
         }
@@ -49,6 +51,7 @@ axios.interceptors.response.use(
 // Vue config
 Vue.config.productionTip = isDebugMode
 Vue.config.errorHandler = function(error, vm, info) {
+  console.error(error || info)
   router.push({
     path: '/error',
     query: {

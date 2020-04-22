@@ -1,5 +1,8 @@
 <template>
   <div>
+    <div v-if="courses.length && !refreshing" id="courses-data-table-message" class="pb-1 pl-5">
+      {{ messageForCourses }}
+    </div>
     <v-data-table
       id="courses-data-table"
       v-model="undefined"
@@ -22,7 +25,7 @@
         <tbody v-if="items.length">
           <template v-for="course in items">
             <tr :key="course.sectionId">
-              <td v-if="onRowsSelected" :class="tdClass(course)" class="text-no-wrap">
+              <td v-if="onRowsSelected" :class="tdClass(course)">
                 <v-checkbox
                   :id="`checkbox-email-course-${course.sectionId}`"
                   v-model="selectedRows"
@@ -30,7 +33,7 @@
                   :value="course"
                 ></v-checkbox>
               </td>
-              <td :id="`course-name-${course.sectionId}`" :class="tdClass(course)" class="text-no-wrap">
+              <td :id="`course-name-${course.sectionId}`" :class="tdClass(course)">
                 <router-link
                   v-if="course.room && course.room.capability"
                   :id="`sign-up-${course.sectionId}`"
@@ -40,8 +43,8 @@
                 </router-link>
                 <span v-if="!course.room || !course.room.capability">{{ course.label }}</span>
               </td>
-              <td :id="`section-id-${course.sectionId}`" :class="tdClass(course)" class="text-no-wrap w-10">{{ course.sectionId }}</td>
-              <td v-if="includeRoomColumn" :class="tdClass(course)" class="text-no-wrap">
+              <td :id="`section-id-${course.sectionId}`" :class="tdClass(course)">{{ course.sectionId }}</td>
+              <td v-if="includeRoomColumn" :class="tdClass(course)">
                 <router-link
                   v-if="course.room"
                   :id="`course-${course.sectionId}-room-${course.room.id}`"
@@ -50,9 +53,9 @@
                 </router-link>
                 <span v-if="!course.room">&mdash;</span>
               </td>
-              <td :id="`meeting-days-${course.sectionId}`" :class="tdClass(course)" class="text-no-wrap">{{ course.meetingDays.join(',') }}</td>
-              <td :id="`meeting-times-${course.sectionId}`" :class="tdClass(course)" class="text-no-wrap">{{ course.meetingStartTime }} - {{ course.meetingEndTime }}</td>
-              <td :id="`course-${course.sectionId}-status`" :class="tdClass(course)" class="w-10">
+              <td :id="`meeting-days-${course.sectionId}`" :class="tdClass(course)">{{ course.meetingDays.join(',') }}</td>
+              <td :id="`meeting-times-${course.sectionId}`" :class="tdClass(course)">{{ course.meetingStartTime }} - {{ course.meetingEndTime }}</td>
+              <td :id="`course-${course.sectionId}-status`" :class="tdClass(course)">
                 <v-tooltip v-if="course.adminApproval" :id="`tooltip-admin-approval-${course.sectionId}`" bottom>
                   <template v-slot:activator="{ on }">
                     <v-icon
@@ -103,12 +106,14 @@
             <tr v-if="course.approvals.length" :key="`approvals-${course.sectionId}`">
               <td :colspan="headers.length + 1" class="pb-2">
                 <div v-if="course.approvals.length" class="pb-3">
-                  <div v-for="approval in course.approvals" :key="approval.approvedByUid">
-                    "{{ approval.recordingTypeName }}" recording was approved for "{{ approval.publishTypeName }}" by
+                  <span v-for="approval in course.approvals" :key="approval.approvedByUid">
                     <router-link :id="`instructor-${approval.approvedByUid}-mailto`" :to="`/user/${approval.approvedByUid}`">
-                      {{ approval.approvedByUid }}
-                    </router-link> ({{ approval.approvedByUid }}) on {{ approval.createdAt | moment('MMM D, YYYY') }}.
-                  </div>
+                      {{ getInstructorName(course, approval.approvedByUid) }}
+                    </router-link> ({{ approval.approvedByUid }}) selected "{{ approval.recordingTypeName }}".
+                  </span>
+                  <span v-if="course.scheduled">
+                    Recordings scheduled on {{ course.scheduled.createdAt | moment('MMM D, YYYY') }}. They will be published to {{ course.scheduled.publishTypeName }}.
+                  </span>
                 </div>
               </td>
               <td></td>
@@ -118,7 +123,7 @@
         <tbody v-if="!items.length">
           <tr>
             <td id="message-when-zero-courses" class="ma-4 text-no-wrap title" :colspan="headers.length">
-              {{ messageWhenZeroCourses }}
+              <span v-if="!refreshing">{{ messageForCourses }}</span>
             </td>
           </tr>
         </tbody>
@@ -152,8 +157,7 @@
         default: true,
         type: Boolean
       },
-      messageWhenZeroCourses: {
-        required: true,
+      messageForCourses: {
         type: String
       },
       onRowsSelected: {
@@ -210,6 +214,10 @@
       })
     },
     methods: {
+      getInstructorName(course, uid) {
+        const instructor = this.$_.find(course.instructors, ['uid', uid])
+        return instructor ? instructor.name : uid
+      },
       hideSelectCoursesColumn() {
         const hideColumn = () => {
           let el = document.getElementById('courses-data-table')
@@ -224,7 +232,7 @@
         }
       },
       tdClass(course) {
-        return course.approvals.length ? 'border-bottom-zero text-no-wrap' : 'text-no-wrap'
+        return course.approvals.length ? 'border-bottom-zero' : ''
       }
     }
   }
