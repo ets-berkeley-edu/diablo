@@ -23,29 +23,28 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-from config import xena
-from flask import current_app as app
-from selenium.webdriver.common.by import By
-from xena.pages.diablo_pages import DiabloPages
 
+class User(object):
 
-class LoginPage(DiabloPages):
+    def __init__(self, data):
+        self.data = data
 
-    SIGN_IN_BUTTON = (By.ID, 'log-in')
-    USERNAME_INPUT = (By.ID, 'dev-auth-uid')
-    PASSWORD_INPUT = (By.ID, 'dev-auth-password')
-    DEV_AUTH_LOGIN_BUTTON = (By.ID, 'btn-dev-auth-login')
+    @property
+    def uid(self):
+        return self.data['uid']
 
-    def load_page(self):
-        app.logger.info('Loading the Diablo login page')
-        self.driver.get(xena.BASE_URL)
-        self.wait_for_diablo_title('Welcome')
+    @property
+    def first_name(self):
+        return self.data['first_name']
 
-    def click_sign_in(self):
-        self.wait_for_page_and_click(LoginPage.SIGN_IN_BUTTON)
+    @property
+    def last_name(self):
+        return self.data['last_name']
 
-    def dev_auth(self, uid):
-        app.logger.info(f'Logging in to El Diablo as UID {uid}')
-        self.wait_for_element_and_type(LoginPage.USERNAME_INPUT, uid)
-        self.wait_for_element_and_type(LoginPage.PASSWORD_INPUT, app.config['DEVELOPER_AUTH_PASSWORD'])
-        self.wait_for_element_and_click(LoginPage.DEV_AUTH_LOGIN_BUTTON)
+    @property
+    def email(self):
+        return self.data['email']
+
+    @property
+    def role(self):
+        return self.data['role']

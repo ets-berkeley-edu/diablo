@@ -31,6 +31,8 @@ BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
 BASE_URL = 'https://manage-dev.coursecapture.berkeley.edu/'
 
+CURRENT_TERM_NAME = 'Spring 2020'
+
 INDEX_HTML = f'{BASE_DIR}/tests/static/test-index.html'
 
 LOGGING_LEVEL = logging.INFO
@@ -38,11 +40,10 @@ LOGGING_LEVEL = logging.INFO
 SALESFORCE_BASE_URL = 'https://test.salesforce.com'
 SALESFORCE_PAUSE = 5
 
-SQLALCHEMY_DATABASE_URI = 'postgres://diablo:diablo@localhost:5432/diablo_test'
-
 TESTING = True
 
-TEST_DATA_CDM = f'{BASE_DIR}/xena/fixtures/test-courses-local.json'
+# The test-courses.json file is intended as an example of required structure of the test data
+TEST_DATA_SIGNUP = f'{BASE_DIR}/xena/fixtures/test-courses-local.json'
 
 TIMEOUT_SHORT = 8
 TIMEOUT_LONG = 30

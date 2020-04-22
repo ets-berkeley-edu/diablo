@@ -23,29 +23,18 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-from config import xena
-from flask import current_app as app
-from selenium.webdriver.common.by import By
-from xena.pages.diablo_pages import DiabloPages
+from xena.models.capability import Capability
 
 
-class LoginPage(DiabloPages):
+class Room(object):
 
-    SIGN_IN_BUTTON = (By.ID, 'log-in')
-    USERNAME_INPUT = (By.ID, 'dev-auth-uid')
-    PASSWORD_INPUT = (By.ID, 'dev-auth-password')
-    DEV_AUTH_LOGIN_BUTTON = (By.ID, 'btn-dev-auth-login')
+    def __init__(self, data):
+        self.data = data
 
-    def load_page(self):
-        app.logger.info('Loading the Diablo login page')
-        self.driver.get(xena.BASE_URL)
-        self.wait_for_diablo_title('Welcome')
+    @property
+    def name(self):
+        return self.data['name']
 
-    def click_sign_in(self):
-        self.wait_for_page_and_click(LoginPage.SIGN_IN_BUTTON)
-
-    def dev_auth(self, uid):
-        app.logger.info(f'Logging in to El Diablo as UID {uid}')
-        self.wait_for_element_and_type(LoginPage.USERNAME_INPUT, uid)
-        self.wait_for_element_and_type(LoginPage.PASSWORD_INPUT, app.config['DEVELOPER_AUTH_PASSWORD'])
-        self.wait_for_element_and_click(LoginPage.DEV_AUTH_LOGIN_BUTTON)
+    @property
+    def capability(self):
+        return Capability(self.data['capability'])

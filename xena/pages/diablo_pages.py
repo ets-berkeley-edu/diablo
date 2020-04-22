@@ -40,6 +40,9 @@ class DiabloPages(Page):
     JOB_HISTORY_LINK = (By.ID, 'menu-item-job-history')
     LOG_OUT_LINK = (By.ID, 'menu-item-log-out')
 
+    def wait_for_diablo_title(self, string):
+        self.wait_for_title(f'{string} | Course Capture')
+
     def click_ouija_board_link(self):
         app.logger.info('Clicking Ouija Board link')
         self.wait_for_element_and_click(DiabloPages.OUIJA_BOARD_LINK)
