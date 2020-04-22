@@ -1,5 +1,46 @@
 <template>
   <v-container fluid>
+    <v-app-bar
+      v-if="!$route.meta.printable"
+      app
+      color="header-background"
+      dark
+    >
+      <div>
+        <h1>Course Capture</h1>
+      </div>
+      <v-spacer></v-spacer>
+      <v-menu class="mr-2" offset-y>
+        <template v-slot:activator="{ on }">
+          <v-btn
+            id="btn-main-menu"
+            color="primary"
+            dark
+            v-on="on"
+          >
+            {{ $currentUser.firstName }}
+          </v-btn>
+        </template>
+        <v-list class="pr-2">
+          <v-list-item
+            id="menu-item-feedback-and-help"
+            :href="`mailto:${$config.supportEmailAddress}`"
+            target="_blank"
+            aria-label="Send email to the Course Capture support team; this link opens a new tab.">
+            <v-list-item-title>Feedback/Help</v-list-item-title>
+          </v-list-item>
+          <v-list-item v-if="$currentUser.isAdmin" id="menu-item-email-templates" @click="goToPath('/email/templates')">
+            <v-list-item-title>Email Templates</v-list-item-title>
+          </v-list-item>
+          <v-list-item v-if="$currentUser.isAdmin" id="menu-item-jobs" @click="goToPath('/jobs')">
+            <v-list-item-title>Jobs</v-list-item-title>
+          </v-list-item>
+          <v-list-item id="menu-item-log-out" @click="logOut">
+            <v-list-item-title>Log Out</v-list-item-title>
+          </v-list-item>
+        </v-list>
+      </v-menu>
+    </v-app-bar>
     <v-row>
       <v-navigation-drawer
         permanent
@@ -57,7 +98,9 @@
         </div>
       </v-col>
       <v-col>
-        <router-view :key="$route.fullPath"></router-view>
+        <v-content>
+          <router-view :key="$route.fullPath"></router-view>
+        </v-content>
       </v-col>
     </v-row>
     <v-row v-if="!loading" no-gutters>
@@ -73,6 +116,7 @@
   import Footer from '@/components/util/Footer'
   import Spinner from '@/components/util/Spinner'
   import Util from '@/mixins/Utils'
+  import {getCasLogoutUrl} from '@/api/auth'
 
   export default {
     name: 'BaseView',
@@ -105,6 +149,7 @@
       }
     },
     methods: {
+      logOut: () => getCasLogoutUrl().then(data => window.location.href = data.casLogoutUrl),
       toRoute(path) {
         this.$router.push({ path }, this.$_.noop)
       }

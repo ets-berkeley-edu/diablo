@@ -52,6 +52,7 @@ const router = new Router({
         }
       },
       meta: {
+        splash: true,
         title: 'Welcome'
       }
     },

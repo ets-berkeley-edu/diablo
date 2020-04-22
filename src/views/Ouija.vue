@@ -1,6 +1,6 @@
 <template>
   <v-card v-if="!loading" outlined class="elevation-1">
-    <v-card-title class="align-start">
+    <v-card-title class="align-start p-3">
       <div class="pt-2">
         <h2><v-icon class="pb-3" large>mdi-auto-fix</v-icon> The Ouija Board</h2>
         <div class="pt-4">
@@ -50,7 +50,7 @@
     </v-card-title>
     <CoursesDataTable
       :courses="courses"
-      :message-when-zero-courses="searchText ? `No results for '${searchText}'` : `No '${selectedFilter}' courses`"
+      :message-for-courses="getMessageForCourses()"
       :on-rows-selected="onRowsSelected"
       :on-toggle-opt-out="onToggleOptOut"
       :refreshing="refreshing"
@@ -82,6 +82,9 @@
       this.refresh()
     },
     methods: {
+      getMessageForCourses() {
+        return this.summarize(this.courses)
+      },
       onRowsSelected(rows) {
         this.selectedRows = rows
         const newCount = this.$_.size(this.$_.filter(this.selectedRows, ['hasOptedOut', false]))

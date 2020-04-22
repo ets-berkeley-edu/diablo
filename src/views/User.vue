@@ -7,7 +7,7 @@
     <v-card outlined class="elevation-1">
       <CoursesDataTable
         :courses="user.courses"
-        message-when-zero-courses="No courses"
+        :message-for-courses="getMessageForCourses()"
         :on-toggle-opt-out="() => {}"
         :refreshing="false"
       />
@@ -36,6 +36,11 @@
         this.setPageTitle(this.user.name)
         this.$ready()
       }).catch(this.$ready)
+    },
+    methods: {
+      getMessageForCourses() {
+        return this.summarize(this.user.courses)
+      }
     }
   }
 </script>

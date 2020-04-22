@@ -1,61 +1,67 @@
 <template>
-  <v-container fluid fill-height class="header-background">
-    <v-layout align-center justify-center>
-      <v-card
-        class="elevation-12 mx-auto"
-        max-width="434"
-        tile
-      >
-        <v-img
-          role="button"
-          height="100%"
-          src="@/assets/cal.png"
-        >
-          <div class="d-flex flex-column text-center">
-            <div class="ma-5 text-center">
-              <v-btn id="log-in" @click="logIn">
-                <span>Sign In</span>
-                <v-icon>mdi-login</v-icon>
-              </v-btn>
-            </div>
+  <v-container fluid fill-height :class="{'background-splash': $route.meta.splash}">
+    <v-app-bar
+      app
+      color="header-background"
+      dark
+    >
+      <h1>Welcome to Course Capture</h1>
+      <v-spacer />
+      <v-btn
+        id="log-in"
+        light
+        rounded
+        @click="logIn">
+        <span>Sign In</span>
+        <v-icon>mdi-login</v-icon>
+      </v-btn>
+    </v-app-bar>
+    <v-footer v-if="$config.devAuthEnabled" color="transparent" fixed>
+      <v-form @submit.prevent="devAuth">
+        <div class="d-flex">
+          <div class="pr-3">
+            <v-text-field
+              id="dev-auth-uid"
+              v-model="devAuthUid"
+              background-color="#e8f0fe"
+              class="input-dev-auth"
+              dark
+              label="UID"
+              name="devAuth"
+              prepend-icon="person"
+              :rules="[v => !!v || 'Required']"
+              size="16"
+              solo
+              type="text"></v-text-field>
           </div>
-        </v-img>
-        <div v-if="$config.devAuthEnabled" class="pa-3">
-          <v-form @submit.prevent="devAuth">
-            <div class="mb-1 ml-2 mt-1">
-              <h3 class="pb-1 text--disabled">Dev Auth</h3>
-            </div>
-            <div class="d-flex flex-wrap">
-              <div class="pr-2">
-                <v-text-field
-                  id="dev-auth-uid"
-                  v-model="devAuthUid"
-                  label="UID"
-                  name="devAuth"
-                  prepend-icon="person"
-                  :rules="[v => !!v || 'Required']"
-                  size="12"
-                  type="text"></v-text-field>
-              </div>
-              <div class="pr-2">
-                <v-text-field
-                  id="dev-auth-password"
-                  v-model="devAuthPassword"
-                  label="Password"
-                  name="password"
-                  prepend-icon="lock"
-                  :rules="[v => !!v || 'Required']"
-                  size="16"
-                  type="password"></v-text-field>
-              </div>
-              <div class="align-self-center pb-2">
-                <v-btn id="btn-dev-auth-login" color="primary" @click="devAuth">Login</v-btn>
-              </div>
-            </div>
-          </v-form>
+          <div class="pr-4">
+            <v-text-field
+              id="dev-auth-password"
+              v-model="devAuthPassword"
+              background-color="#e8f0fe"
+              dark
+              label="Password"
+              name="password"
+              prepend-icon="lock"
+              :rules="[v => !!v || 'Required']"
+              size="16"
+              solo
+              type="password"></v-text-field>
+          </div>
+          <div class="btn-dev-auth">
+            <v-btn
+              id="btn-dev-auth-login"
+              aria-label="Log in"
+              fab
+              light
+              small
+              @click="devAuth">
+              <v-icon dark>mdi-emoticon-devil-outline</v-icon>
+            </v-btn>
+          </div>
         </div>
-      </v-card>
-    </v-layout>
+      </v-form>
+    </v-footer>
   </v-container>
 </template>
 
@@ -107,3 +113,19 @@
     }
   }
 </script>
+
+<style scoped>
+  h1 {
+    font-size: 3vw;
+  }
+  .background-splash {
+    background: url('~@/assets/sather-gate.png') no-repeat center center fixed;
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    -o-background-size: cover;
+    background-size: cover;
+  }
+  .btn-dev-auth {
+    padding-top: 4px;
+  }
+</style>

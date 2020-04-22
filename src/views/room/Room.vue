@@ -35,16 +35,6 @@
                 :to="`/room/printable/${room.id}`">
                 <v-icon class="linked-icon">mdi-printer</v-icon> Print schedule<span class="sr-only"> (opens a new browser tab)</span>
               </router-link>
-              <span v-if="scheduledCourses.length">
-                ({{ scheduledCourses.length === 1 ? 'One course has' : `${scheduledCourses.length} courses have` }}
-                recordings scheduled in this room.)
-              </span>
-              <span v-if="!scheduledCourses.length">
-                No course in this room has recordings scheduled.
-              </span>
-            </span>
-            <span v-if="!room.courses.length">
-              No courses are in this room.
             </span>
           </v-list-item-title>
         </v-list-item-content>
@@ -52,7 +42,7 @@
       <CoursesDataTable
         :courses="room.courses"
         :include-room-column="false"
-        message-when-zero-courses="No courses"
+        :message-for-courses="getMessageForCourses()"
         :on-toggle-opt-out="() => {}"
         :refreshing="false"
       />
@@ -88,15 +78,18 @@
     created() {
       this.$loading()
       let id = this.$_.get(this.$route, 'params.id')
-      getRoom(id).then(room => {
-        this.room = room
-        this.isAuditorium = room.isAuditorium
-        this.scheduledCourses = this.$_.filter(this.room.courses, 'scheduled')
-        this.setPageTitle(this.room.location)
+      getRoom(id).then(data => {
+        this.room = data
+        this.isAuditorium = data.isAuditorium
+        this.scheduledCourses = this.$_.filter(data.courses, 'scheduled')
+        this.setPageTitle(data.location)
         this.$ready()
       }).catch(this.$ready)
     },
     methods: {
+      getMessageForCourses() {
+        return this.summarize(this.room.courses)
+      },
       onUpdateRoomCapability(capability) {
         this.room.capability = capability
       },
