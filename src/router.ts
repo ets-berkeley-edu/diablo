@@ -1,7 +1,7 @@
 import _ from 'lodash'
-import Approve from '@/views/Approve.vue'
 import auth from './auth'
 import BaseView from '@/views/BaseView.vue'
+import Course from '@/views/Course.vue'
 import CourseChanges from '@/views/CourseChanges.vue'
 import EditEmailTemplate from '@/views/email/EditEmailTemplate.vue'
 import EmailTemplates from '@/views/email/EmailTemplates.vue'
@@ -78,8 +78,8 @@ const router = new Router({
           name: 'home'
         },
         {
-          path: '/approve/:termId/:sectionId',
-          component: Approve
+          path: '/course/:termId/:sectionId',
+          component: Course
         }
       ]
     },

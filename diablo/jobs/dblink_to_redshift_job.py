@@ -27,6 +27,7 @@ from diablo.jobs.background_job_manager import BackgroundJobError
 from diablo.jobs.base_job import BaseJob
 from diablo.jobs.util import insert_or_update_instructors, refresh_rooms
 from diablo.lib.db import resolve_sql_template
+from diablo.models.cross_listing import CrossListing
 from diablo.models.sis_section import SisSection
 from flask import current_app as app
 
@@ -36,7 +37,14 @@ class DblinkToRedshiftJob(BaseJob):
     def run(self, args=None):
         resolved_ddl_rds = resolve_sql_template('update_rds_sis_sections.template.sql')
         if execute(resolved_ddl_rds):
-            insert_or_update_instructors(SisSection.get_distinct_instructor_uids())
+            distinct_instructor_uids = SisSection.get_distinct_instructor_uids()
+            insert_or_update_instructors(distinct_instructor_uids)
+            app.logger.info(f'{len(distinct_instructor_uids)} instructors updated')
+
+            term_id = app.config['CURRENT_TERM_ID']
+            CrossListing.refresh(term_id=term_id)
+            app.logger.info('\'cross_listings\' table refreshed')
+
             refresh_rooms()
             app.logger.info('RDS indexes updated.')
         else:

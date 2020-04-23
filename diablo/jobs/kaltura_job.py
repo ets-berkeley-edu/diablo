@@ -97,8 +97,7 @@ def _schedule_recordings(all_approvals, course):
             room=room,
         )
         scheduled = Scheduled.create(
-            section_id=section_id,
-            term_id=term_id,
+            cross_listed_section_ids=approval.cross_listed_section_ids,
             instructor_uids=SisSection.get_instructor_uids(term_id=term_id, section_id=section_id),
             meeting_days=meeting_days,
             meeting_start_time=meeting_start_time,
@@ -106,6 +105,8 @@ def _schedule_recordings(all_approvals, course):
             publish_type_=approval.publish_type,
             recording_type_=approval.recording_type,
             room_id=approval.room_id,
+            section_id=section_id,
+            term_id=term_id,
         )
         notify_instructors_recordings_scheduled(course=course, scheduled=scheduled)
 

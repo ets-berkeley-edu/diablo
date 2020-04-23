@@ -210,4 +210,6 @@ def _get_substitutions(
 
 
 def _get_sign_up_url(term_id, section_id):
-    return f'https://diablo-TODO.berkeley.edu/approve/{term_id}/{section_id}'
+    diablo_env = app.config['DIABLO_ENV']
+    sub_domain = 'manage' if diablo_env == 'production' else f'manage-{diablo_env}'
+    return f'https://{sub_domain}.coursecapture.berkeley.edu/course/{term_id}/{section_id}'

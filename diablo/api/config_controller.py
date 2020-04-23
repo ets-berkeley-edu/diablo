@@ -29,6 +29,7 @@ from diablo import __version__ as version
 from diablo.api.util import get_search_filter_options
 from diablo.lib.berkeley import term_name_for_sis_id
 from diablo.lib.http import tolerant_jsonify
+from diablo.models.approval import NAMES_PER_PUBLISH_TYPE
 from diablo.models.email_template import EmailTemplate
 from diablo.models.room import Room
 from flask import current_app as app
@@ -47,9 +48,10 @@ def app_config():
         'diabloEnv': app.config['DIABLO_ENV'],
         'ebEnvironment': app.config['EB_ENVIRONMENT'] if 'EB_ENVIRONMENT' in app.config else None,
         'emailTemplateTypes': EmailTemplate.get_template_type_options(),
-        'searchItemsPerPage': app.config['SEARCH_ITEMS_PER_PAGE'],
+        'publishTypeOptions': NAMES_PER_PUBLISH_TYPE,
         'roomCapabilityOptions': Room.get_room_capability_options(),
         'searchFilterOptions': get_search_filter_options(),
+        'searchItemsPerPage': app.config['SEARCH_ITEMS_PER_PAGE'],
         'supportEmailAddress': app.config['EMAIL_DIABLO_SUPPORT'],
         'timezone': app.config['TIMEZONE'],
     })

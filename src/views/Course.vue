@@ -56,6 +56,17 @@
                 {{ room.location }}
               </v-col>
             </v-row>
+            <v-row v-if="course.crossListings.length" id="cross-listings">
+              <v-col md="auto">
+                <v-icon>mdi-arrow-top-right-bottom-left-bold</v-icon>
+              </v-col>
+              <v-col>
+                <h5>Cross-listings</h5>
+                <span v-for="crossListing in course.crossListings" :key="crossListing.sectionId">
+                  {{ crossListing.sectionId }}
+                </span>
+              </v-col>
+            </v-row>
             <v-row v-if="course.canvasCourseSites.length" id="canvas-course-sites">
               <v-col md="auto">
                 <v-icon>mdi-bookmark-outline</v-icon>
@@ -249,7 +260,7 @@
   import {approve, getApprovals} from '@/api/course'
 
   export default {
-    name: 'Approve',
+    name: 'Course',
     mixins: [Context, Utils],
     data: () => ({
       agreedToTerms: false,
@@ -277,6 +288,10 @@
       const sectionId = this.$_.get(this.$route, 'params.sectionId')
       getApprovals(termId, sectionId).then(data => {
         this.render(data)
+        this.publishTypeOptions = []
+        this.$_.each(this.$config.publishTypeOptions, (text, value) => {
+          this.publishTypeOptions.push({text, value})
+        })
       }).catch(this.$ready)
     },
     methods: {
@@ -314,10 +329,6 @@
         }
         this.hasNecessaryApprovals = data.hasNecessaryApprovals
         this.pageTitle = data.label
-        this.publishTypeOptions = []
-        this.$_.each(data.publishTypeOptions, (text, value) => {
-          this.publishTypeOptions.push({text, value})
-        })
         this.scheduled = data.scheduled
         this.course = data
         this.setPageTitle(this.pageTitle)

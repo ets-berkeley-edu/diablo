@@ -25,6 +25,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 from diablo.externals.data_loch import get_data_loch_sections
 from diablo.jobs.base_job import BaseJob
 from diablo.jobs.util import insert_or_update_instructors, refresh_rooms
+from diablo.models.cross_listing import CrossListing
 from diablo.models.sis_section import SisSection
 from flask import current_app as app
 
@@ -35,11 +36,17 @@ class DataLochSyncJob(BaseJob):
         term_id = app.config['CURRENT_TERM_ID']
         sis_sections = get_data_loch_sections(term_id)
         app.logger.info(f'{len(sis_sections)} rows pulled from \'sis_sections\' in Data Lake.')
-        SisSection.refresh(sis_sections)
+
+        SisSection.refresh(sis_sections, term_id=term_id)
         app.logger.info('Diablo\'s \'sis_section\' table has been refreshed.')
+
         instructor_uids = list(set([s['instructor_uid'] for s in sis_sections]))
         insert_or_update_instructors(instructor_uids)
         app.logger.info(f'{len(instructor_uids)} instructors updated in Diablo\'s db.')
+
+        CrossListing.refresh(term_id=term_id)
+        app.logger.info('\'cross_listings\' table refreshed')
+
         refresh_rooms()
 
     @classmethod

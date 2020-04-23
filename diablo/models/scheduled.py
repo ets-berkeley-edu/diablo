@@ -37,6 +37,7 @@ class Scheduled(db.Model):
 
     section_id = db.Column(db.Integer, nullable=False, primary_key=True)
     term_id = db.Column(db.Integer, nullable=False, primary_key=True)
+    cross_listed_section_ids = db.Column(ARRAY(db.Integer))
     instructor_uids = db.Column(ARRAY(db.String(80)), nullable=False)
     meeting_days = db.Column(db.String, nullable=False)
     meeting_start_time = db.Column(db.String, nullable=False)
@@ -50,6 +51,7 @@ class Scheduled(db.Model):
             self,
             section_id,
             term_id,
+            cross_listed_section_ids,
             instructor_uids,
             meeting_days,
             meeting_start_time,
@@ -60,6 +62,7 @@ class Scheduled(db.Model):
     ):
         self.section_id = section_id
         self.term_id = term_id
+        self.cross_listed_section_ids = cross_listed_section_ids
         self.instructor_uids = instructor_uids
         self.meeting_days = meeting_days
         self.meeting_start_time = meeting_start_time
@@ -72,6 +75,7 @@ class Scheduled(db.Model):
         return f"""<Scheduled
                     section_id={self.section_id},
                     term_id={self.term_id},
+                    cross_listed_section_ids={self.cross_listed_section_ids},
                     instructor_uids={', '.join(self.instructor_uids)},
                     meeting_days={self.meeting_days},
                     meeting_start_time={self.meeting_start_time},
@@ -87,6 +91,7 @@ class Scheduled(db.Model):
             cls,
             section_id,
             term_id,
+            cross_listed_section_ids,
             instructor_uids,
             meeting_days,
             meeting_start_time,
@@ -96,8 +101,7 @@ class Scheduled(db.Model):
             room_id,
     ):
         scheduled = cls(
-            section_id=section_id,
-            term_id=term_id,
+            cross_listed_section_ids=cross_listed_section_ids,
             instructor_uids=instructor_uids,
             meeting_days=meeting_days,
             meeting_start_time=meeting_start_time,
@@ -105,6 +109,8 @@ class Scheduled(db.Model):
             publish_type_=publish_type_,
             recording_type_=recording_type_,
             room_id=room_id,
+            section_id=section_id,
+            term_id=term_id,
         )
         db.session.add(scheduled)
         std_commit()
@@ -125,8 +131,8 @@ class Scheduled(db.Model):
 
     def to_api_json(self):
         return {
-            'sectionId': self.section_id,
-            'termId': self.term_id,
+            'createdAt': to_isoformat(self.created_at),
+            'crossListedSectionIds': self.cross_listed_section_ids,
             'instructorUids': self.instructor_uids,
             'meetingDays': format_days(self.meeting_days),
             'meetingEndTime': format_time(self.meeting_end_time),
@@ -136,5 +142,6 @@ class Scheduled(db.Model):
             'recordingType': self.recording_type,
             'recordingTypeName': NAMES_PER_RECORDING_TYPE[self.recording_type],
             'room': Room.get_room(self.room_id).to_api_json() if self.room_id else None,
-            'createdAt': to_isoformat(self.created_at),
+            'sectionId': self.section_id,
+            'termId': self.term_id,
         }

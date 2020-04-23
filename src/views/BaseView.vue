@@ -141,7 +141,7 @@
             this.navItems.push({
               title: course.label,
               icon: 'mdi-video-plus',
-              path: `/approve/${this.$config.currentTermId}/${course.sectionId}`
+              path: `/course/${this.$config.currentTermId}/${course.sectionId}`
             })
           }
         })
