@@ -45,20 +45,20 @@ class TestEmailAlertsForAdmins:
             scheduled_in_room = Room.find_room(the_old_room)
             approval = Approval.create(
                 approved_by_uid=approved_by_uid,
-                term_id=term_id,
-                section_id=section_id,
                 approver_type_='instructor',
+                cross_listed_section_ids=[],
                 publish_type_='kaltura_media_gallery',
                 recording_type_='presenter_audio',
                 room_id=scheduled_in_room.id,
+                section_id=section_id,
+                term_id=term_id,
             )
             meeting_days, meeting_start_time, meeting_end_time = SisSection.get_meeting_times(
                 term_id=term_id,
                 section_id=section_id,
             )
             Scheduled.create(
-                term_id=term_id,
-                section_id=section_id,
+                cross_listed_section_ids=approval.cross_listed_section_ids,
                 instructor_uids=SisSection.get_instructor_uids(term_id=term_id, section_id=section_id),
                 meeting_days=meeting_days,
                 meeting_start_time=meeting_start_time,
@@ -66,6 +66,8 @@ class TestEmailAlertsForAdmins:
                 publish_type_=approval.publish_type,
                 recording_type_=approval.recording_type,
                 room_id=scheduled_in_room.id,
+                section_id=section_id,
+                term_id=term_id,
             )
 
             admin_uid = app.config['EMAIL_DIABLO_ADMIN_UID']
@@ -82,20 +84,20 @@ class TestEmailAlertsForAdmins:
             room_id = Room.find_room('Barker 101').id
             approval = Approval.create(
                 approved_by_uid=approved_by_uid,
-                term_id=term_id,
-                section_id=section_id,
                 approver_type_='instructor',
+                cross_listed_section_ids=[],
                 publish_type_='canvas',
                 recording_type_='presenter_audio',
                 room_id=room_id,
+                section_id=section_id,
+                term_id=term_id,
             )
             meeting_days, meeting_start_time, meeting_end_time = SisSection.get_meeting_times(
                 term_id=term_id,
                 section_id=section_id,
             )
             Scheduled.create(
-                term_id=term_id,
-                section_id=section_id,
+                cross_listed_section_ids=approval.cross_listed_section_ids,
                 instructor_uids=SisSection.get_instructor_uids(term_id=term_id, section_id=section_id),
                 meeting_days=meeting_days,
                 meeting_start_time=meeting_start_time,
@@ -103,6 +105,8 @@ class TestEmailAlertsForAdmins:
                 publish_type_=approval.publish_type,
                 recording_type_=approval.recording_type,
                 room_id=room_id,
+                section_id=section_id,
+                term_id=term_id,
             )
 
             admin_uid = app.config['EMAIL_DIABLO_ADMIN_UID']

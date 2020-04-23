@@ -53,4 +53,8 @@ VALUES
 ('4.0', 'Morris Day', 'TNIC', '6789', true, 'MOWE', '2020-05-08 00:00:00 UTC', '13:59', 'Li Ka Shing 145', '2020-01-21 00:00:00 UTC', '13:00', 'CHEM C110L', 'General Biochemistry and Molecular Biology Laboratory', 'LAB', '26094', '001', '2202'),
 ('3.0', 'Burke Dennings', 'ICNT', '98765', true, 'TU', '2020-05-08 00:00:00 UTC', '09:59', 'Barker 101', '2020-01-21 00:00:00 UTC', '19:00', 'LAW 23', 'IP in the Entertainment Industries', 'LEC', '22287', '002', '2202'),
 ('3.0', 'Regan MacNeil', 'ICNT', '87654', true, 'TU', '2020-05-08 00:00:00 UTC', '09:59', 'Barker 101', '2020-01-21 00:00:00 UTC', '19:00', 'LAW 23', 'IP in the Entertainment Industries', 'LEC', '22287', '002', '2202'),
-('4.0', 'William Peter Blatty', 'APRX', '8765432', false, 'TUTH', '2020-05-08 00:00:00 UTC', '14:59', 'Pimentel 1', '2020-01-21 00:00:00 UTC', '14:00', 'MATH 185', 'Introduction to Complex Analysis', 'LEC', '22460', '001', '2202')
+('4.0', 'William Peter Blatty', 'APRX', '8765432', false, 'TUTH', '2020-05-08 00:00:00 UTC', '14:59', 'Pimentel 1', '2020-01-21 00:00:00 UTC', '14:00', 'MATH 185', 'Introduction to Complex Analysis', 'LEC', '22460', '001', '2202'),
+-- Cross-listed courses
+('4.0', 'William Kinderman', 'ICNT', '269246', true, 'TU', '2020-05-08 00:00:00 UTC', '19:59', 'Li Ka Shing 145', '2020-01-21 00:00:00 UTC', '18:00', 'IND ENG 95', 'Richard Newton Lecture Series', 'COL', '28475', '001', '2202'),
+('4.0', 'William Kinderman', 'TNIC', '269246', true, 'TU', '2020-05-08 00:00:00 UTC', '19:59', 'Li Ka Shing 145', '2020-01-21 00:00:00 UTC', '18:00', 'IND ENG 195', 'Richard Newton Lecture Series', 'COL', '27950', '001', '2202'),
+('4.0', 'William Kinderman', 'TNIC', '269246', true, 'TU', '2020-05-08 00:00:00 UTC', '19:59', 'Li Ka Shing 145', '2020-01-21 00:00:00 UTC', '18:00', 'IND ENG 195', 'Richard Newton Lecture Series', 'COL', '32827', '001', '2202')

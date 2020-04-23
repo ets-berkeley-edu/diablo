@@ -22,14 +22,13 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-
 from datetime import datetime
 
 from diablo import db, std_commit
 from diablo.lib.util import to_isoformat
 from diablo.models.room import Room
 from sqlalchemy import and_
-from sqlalchemy.dialects.postgresql import ENUM
+from sqlalchemy.dialects.postgresql import ARRAY, ENUM
 
 
 publish_type = ENUM(
@@ -69,10 +68,11 @@ NAMES_PER_RECORDING_TYPE = {
 class Approval(db.Model):
     __tablename__ = 'approvals'
 
-    approved_by_uid = db.Column(db.String, nullable=False, primary_key=True)
-    section_id = db.Column(db.Integer, nullable=False, primary_key=True)
     term_id = db.Column(db.Integer, nullable=False, primary_key=True)
+    section_id = db.Column(db.Integer, nullable=False, primary_key=True)
+    approved_by_uid = db.Column(db.String, nullable=False, primary_key=True)
     approver_type = db.Column(approver_type, nullable=False)
+    cross_listed_section_ids = db.Column(ARRAY(db.Integer))
     room_id = db.Column(db.Integer, db.ForeignKey('rooms.id'), nullable=False)
     publish_type = db.Column(publish_type, nullable=False)
     recording_type = db.Column(recording_type, nullable=False)
@@ -80,28 +80,31 @@ class Approval(db.Model):
 
     def __init__(
             self,
-            approved_by_uid,
-            section_id,
             term_id,
+            section_id,
+            approved_by_uid,
             approver_type_,
+            cross_listed_section_ids,
             room_id,
             publish_type_,
             recording_type_,
     ):
-        self.approved_by_uid = approved_by_uid
-        self.section_id = section_id
         self.term_id = term_id
+        self.section_id = section_id
+        self.approved_by_uid = approved_by_uid
         self.approver_type = approver_type_
+        self.cross_listed_section_ids = cross_listed_section_ids
         self.room_id = room_id
         self.publish_type = publish_type_
         self.recording_type = recording_type_
 
     def __repr__(self):
         return f"""<Approval
-                    approved_by_uid={self.approved_by_uid},
-                    section_id={self.section_id},
                     term_id={self.term_id},
+                    section_id={self.section_id},
+                    approved_by_uid={self.approved_by_uid},
                     approver_type={self.approver_type},
+                    cross_listed_section_ids={self.cross_listed_section_ids}
                     publish_type={self.publish_type},
                     recording_type={self.recording_type},
                     room_id={self.room_id},
@@ -111,19 +114,21 @@ class Approval(db.Model):
     @classmethod
     def create(
             cls,
-            approved_by_uid,
             term_id,
             section_id,
+            approved_by_uid,
             approver_type_,
+            cross_listed_section_ids,
             publish_type_,
             recording_type_,
             room_id,
     ):
         approval = cls(
-            approved_by_uid=approved_by_uid,
-            section_id=section_id,
             term_id=term_id,
+            section_id=section_id,
+            approved_by_uid=approved_by_uid,
             approver_type_=approver_type_,
+            cross_listed_section_ids=cross_listed_section_ids,
             publish_type_=publish_type_,
             recording_type_=recording_type_,
             room_id=room_id,
@@ -137,10 +142,6 @@ class Approval(db.Model):
         return cls.query.filter_by(approved_by_uid=approved_by_uid, section_id=section_id, term_id=term_id).first()
 
     @classmethod
-    def get_approvals_per_room_id(cls, room_id, term_id):
-        return cls.query.filter_by(room_id=room_id, term_id=term_id).order_by(cls.created_at).all()
-
-    @classmethod
     def get_approvals_per_section_ids(cls, section_ids, term_id):
         criteria = and_(cls.section_id.in_(section_ids), cls.term_id == term_id)
         return cls.query.filter(criteria).order_by(cls.created_at).all()
@@ -149,22 +150,19 @@ class Approval(db.Model):
     def get_approvals_per_term(cls, term_id):
         return cls.query.filter_by(term_id=int(term_id)).order_by(cls.section_id, cls.created_at).all()
 
-    @classmethod
-    def get_approvals_per_uid(cls, term_id, uid):
-        return cls.query.filter_by(approved_by_uid=uid, term_id=term_id).order_by(cls.created_at).all()
-
     def to_api_json(self):
         return {
             'approvedByUid': self.approved_by_uid,
-            'sectionId': self.section_id,
-            'termId': self.term_id,
             'approverType': self.approver_type,
-            'room': Room.get_room(self.room_id).to_api_json() if self.room_id else None,
+            'createdAt': to_isoformat(self.created_at),
+            'crossListedSectionIds': self.cross_listed_section_ids,
             'publishType': self.publish_type,
             'publishTypeName': NAMES_PER_PUBLISH_TYPE[self.publish_type],
             'recordingType': self.recording_type,
             'recordingTypeName': NAMES_PER_RECORDING_TYPE[self.recording_type],
-            'createdAt': to_isoformat(self.created_at),
+            'room': Room.get_room(self.room_id).to_api_json() if self.room_id else None,
+            'sectionId': self.section_id,
+            'termId': self.term_id,
         }
 
 

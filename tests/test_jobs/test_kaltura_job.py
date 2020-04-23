@@ -66,12 +66,13 @@ class TestKalturaJob:
             approvals = [
                 Approval.create(
                     approved_by_uid=instructors[0]['uid'],
-                    term_id=term_id,
-                    section_id=section_id,
                     approver_type_='instructor',
+                    cross_listed_section_ids=[],
                     publish_type_='canvas',
                     recording_type_='presentation_audio',
                     room_id=Room.find_room('Barker 101').id,
+                    section_id=section_id,
+                    term_id=term_id,
                 ),
             ]
             """If we have insufficient approvals then do nothing."""
@@ -83,12 +84,13 @@ class TestKalturaJob:
             # The second approval
             final_approval = Approval.create(
                 approved_by_uid=instructors[1]['uid'],
-                term_id=term_id,
-                section_id=section_id,
                 approver_type_='instructor',
+                cross_listed_section_ids=[],
                 publish_type_='kaltura_media_gallery',
                 recording_type_='presenter_presentation_audio',
                 room_id=room_id,
+                section_id=section_id,
+                term_id=term_id,
             )
             approvals.append(final_approval)
 
@@ -133,12 +135,13 @@ class TestKalturaJob:
 
             Approval.create(
                 approved_by_uid=admin_uid,
-                term_id=term_id,
-                section_id=section_id,
                 approver_type_='admin',
+                cross_listed_section_ids=[],
                 publish_type_='canvas',
                 recording_type_='presentation_audio',
                 room_id=Room.find_room('Barker 101').id,
+                section_id=section_id,
+                term_id=term_id,
             )
             KalturaJob(app.app_context).run()
             std_commit(allow_test_environment=True)

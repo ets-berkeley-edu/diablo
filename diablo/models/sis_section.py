@@ -32,6 +32,7 @@ from diablo.models.admin_user import AdminUser
 from diablo.models.approval import Approval
 from diablo.models.canvas_course_site import CanvasCourseSite
 from diablo.models.course_preference import CoursePreference
+from diablo.models.cross_listing import CrossListing
 from diablo.models.room import Room
 from diablo.models.scheduled import Scheduled
 from diablo.models.sent_email import SentEmail
@@ -505,12 +506,12 @@ class SisSection(db.Model):
         return cls.get_courses(term_id, section_ids)
 
     @classmethod
-    def refresh(cls, rows):
-        cls.query.delete()
+    def refresh(cls, sis_sections, term_id):
+        db.session.execute(cls.__table__.delete().where(cls.sis_term_id == term_id))
         now = utc_now().strftime('%Y-%m-%dT%H:%M:%S+00')
         count_per_chunk = 10000
-        for chunk in range(0, len(rows), count_per_chunk):
-            rows_subset = rows[chunk:chunk + count_per_chunk]
+        for chunk in range(0, len(sis_sections), count_per_chunk):
+            rows_subset = sis_sections[chunk:chunk + count_per_chunk]
             query = """
                 INSERT INTO sis_sections (
                     allowed_units, created_at, instructor_name, instructor_role_code, instructor_uid, is_primary, meeting_days,
@@ -578,6 +579,7 @@ def _to_api_json(term_id, rows, include_rooms=True):
                 'canvasCourseSites': _canvas_course_sites(term_id, section_id),
                 'courseName': course_name,
                 'courseTitle': row['sis_course_title'],
+                'crossListings': _get_cross_listed_courses(section_id=section_id, term_id=term_id),
                 'hasOptedOut': has_opted_out,
                 'instructionFormat': instruction_format,
                 'instructors': [], 'isPrimary': row['is_primary'],
@@ -638,6 +640,7 @@ def _to_api_json(term_id, rows, include_rooms=True):
             approval_or_scheduled['hasObsoleteRoom'] = is_obsolete_room
 
         course['instructors'] = instructors_per_section_id[section_id]
+        course['hasNecessaryApprovals'] = _has_necessary_approvals(course)
         scheduled = course['scheduled']
         # Check for course changes w.r.t. room, meeting times, and instructors.
         if scheduled:
@@ -665,3 +668,21 @@ def _canvas_course_sites(term_id, section_id):
             'courseSiteName': row.canvas_course_site_name,
         })
     return canvas_course_sites
+
+
+def _get_cross_listed_courses(section_id, term_id):
+    cross_listed_courses = []
+    for section_id in CrossListing.get_cross_listed_sections(section_id=section_id, term_id=term_id):
+        cross_listed_courses.append({
+            'sectionId': section_id,
+        })
+    return cross_listed_courses
+
+
+def _has_necessary_approvals(course):
+    if any(a['approverType'] == 'admin' for a in course['approvals']):
+        return True
+    else:
+        approval_uids = [a['approvedByUid'] for a in course['approvals']]
+        necessary_approval_uids = [i['uid'] for i in course['instructors']]
+        return all(uid in approval_uids for uid in necessary_approval_uids)

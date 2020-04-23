@@ -40,7 +40,7 @@
                   fab
                   small
                   dark
-                  @click="goApprove(item.sectionId)">
+                  @click="visitCourse(item.sectionId)">
                   <v-icon>mdi-video-plus</v-icon>
                 </v-btn>
               </div>
@@ -103,8 +103,8 @@
       this.$ready()
     },
     methods: {
-      goApprove(sectionId) {
-        router.push({ path: `/approve/${this.$config.currentTermId}/${sectionId}` })
+      visitCourse(sectionId) {
+        router.push({ path: `/course/${this.$config.currentTermId}/${sectionId}` })
       }
     }
   }

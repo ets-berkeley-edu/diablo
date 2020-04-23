@@ -172,8 +172,8 @@ class TestApprove:
         assert api_json['scheduled'] is None
 
 
-class TestViewApprovals:
-    """Only admins can see all Course Capture sign-ups."""
+class TestGetCourse:
+    """Course can be viewed by its instructors and Diablo admin users."""
 
     @property
     def term_id(self):
@@ -226,12 +226,13 @@ class TestViewApprovals:
             room_id = Room.get_room_id(section_id=section_1_id, term_id=self.term_id)
             Approval.create(
                 approved_by_uid=approved_by_uid,
-                term_id=self.term_id,
-                section_id=section_1_id,
                 approver_type_='instructor',
+                cross_listed_section_ids=[],
                 publish_type_='canvas',
                 recording_type_='presentation_audio',
                 room_id=room_id,
+                section_id=section_1_id,
+                term_id=self.term_id,
             )
             std_commit(allow_test_environment=True)
 
@@ -280,6 +281,32 @@ class TestViewApprovals:
             section_id=section_with_canvas_course_sites,
         )
         assert len(api_json['canvasCourseSites']) == 3
+
+    def test_cross_listing(self, client, db, fake_auth):
+        """Course has cross-listings."""
+        cross_listed_section_ids = {28475, 27950, 32827}
+        instructor_uid = '269246'
+        fake_auth.login(uid=instructor_uid)
+
+        for section_id in cross_listed_section_ids:
+            api_json = api_get_course(
+                client,
+                term_id=self.term_id,
+                section_id=section_id,
+            )
+            # Cross-listed section IDs are expected in API response
+            actual_section_ids = set(c['sectionId'] for c in api_json['crossListings'])
+            actual_section_ids.add(api_json['sectionId'])
+            assert cross_listed_section_ids == actual_section_ids
+
+    def test_no_cross_listing(self, client, db, admin_session):
+        """Course does not have cross-listing."""
+        api_json = api_get_course(
+            client,
+            term_id=self.term_id,
+            section_id=section_2_id,
+        )
+        assert len(api_json['crossListings']) == 0
 
 
 class TestCoursesFilter:
@@ -334,12 +361,13 @@ class TestCoursesFilter:
             # If course has approvals but not scheduled then it will show up in the feed.
             Approval.create(
                 approved_by_uid=_get_instructor_uids(section_id=section_1_id, term_id=self.term_id)[0],
-                term_id=self.term_id,
-                section_id=section_1_id,
                 approver_type_='instructor',
+                cross_listed_section_ids=[],
                 publish_type_='canvas',
                 recording_type_='presentation_audio',
                 room_id=Room.get_room_id(section_id=section_1_id, term_id=self.term_id),
+                section_id=section_1_id,
+                term_id=self.term_id,
             )
             # Feed will exclude scheduled.
             _schedule_recordings(
@@ -377,12 +405,13 @@ class TestCoursesFilter:
             # The section with approval will NOT show up in search results
             Approval.create(
                 approved_by_uid=section_5_instructor_uids[0],
-                term_id=self.term_id,
-                section_id=section_5_id,
                 approver_type_='instructor',
+                cross_listed_section_ids=[],
                 publish_type_='canvas',
                 recording_type_='presentation_audio',
                 room_id=SisSection.get_course(term_id=self.term_id, section_id=section_5_id)['room']['id'],
+                section_id=section_5_id,
+                term_id=self.term_id,
             )
             std_commit(allow_test_environment=True)
             api_json = self._api_courses(client, term_id=self.term_id, filter_='Invited')
@@ -413,12 +442,13 @@ class TestCoursesFilter:
             assert not invite
             Approval.create(
                 approved_by_uid=_get_instructor_uids(section_id=section_4_id, term_id=self.term_id)[0],
-                term_id=self.term_id,
-                section_id=section_4_id,
                 approver_type_='instructor',
+                cross_listed_section_ids=[],
                 publish_type_='canvas',
                 recording_type_='presentation_audio',
                 room_id=Room.get_room_id(section_id=section_4_id, term_id=self.term_id),
+                section_id=section_4_id,
+                term_id=self.term_id,
             )
             std_commit(allow_test_environment=True)
             api_json = self._api_courses(client, term_id=self.term_id, filter_='Not Invited')
@@ -452,12 +482,13 @@ class TestCoursesFilter:
                 )
                 Approval.create(
                     approved_by_uid=course['instructor_uids'][0],
-                    term_id=self.term_id,
-                    section_id=course['section_id'],
                     approver_type_='instructor',
+                    cross_listed_section_ids=[],
                     publish_type_='canvas',
                     recording_type_='presentation_audio',
                     room_id=Room.get_room_id(section_id=course['section_id'], term_id=self.term_id),
+                    section_id=course['section_id'],
+                    term_id=self.term_id,
                 )
             # Feed will include both scheduled and not scheduled.
             _schedule_recordings(
@@ -491,12 +522,13 @@ class TestCoursesFilter:
                 )
                 Approval.create(
                     approved_by_uid=course['instructor_uids'][0],
-                    term_id=self.term_id,
-                    section_id=course['section_id'],
                     approver_type_='instructor',
+                    cross_listed_section_ids=[],
                     publish_type_='canvas',
                     recording_type_='presentation_audio',
                     room_id=Room.get_room_id(section_id=course['section_id'], term_id=self.term_id),
+                    section_id=course['section_id'],
+                    term_id=self.term_id,
                 )
             # Feed will only include courses that were scheduled.
             _schedule_recordings(
@@ -569,15 +601,16 @@ class TestCoursesChanges:
             assert meeting_days != obsolete_meeting_days
 
             Scheduled.create(
-                term_id=self.term_id,
-                section_id=section_1_id,
+                cross_listed_section_ids=[],
+                instructor_uids=SisSection.get_instructor_uids(term_id=self.term_id, section_id=section_1_id),
                 meeting_days=obsolete_meeting_days,
                 meeting_start_time=meeting_start_time,
                 meeting_end_time=meeting_end_time,
-                instructor_uids=SisSection.get_instructor_uids(term_id=self.term_id, section_id=section_1_id),
                 publish_type_='canvas',
                 recording_type_='presentation_audio',
                 room_id=Room.get_room_id(section_id=section_1_id, term_id=self.term_id),
+                section_id=section_1_id,
+                term_id=self.term_id,
             )
             std_commit(allow_test_environment=True)
 
@@ -597,15 +630,16 @@ class TestCoursesChanges:
             )
             instructor_uids = SisSection.get_instructor_uids(term_id=self.term_id, section_id=section_3_id)
             Scheduled.create(
-                term_id=self.term_id,
-                section_id=section_3_id,
+                cross_listed_section_ids=[],
+                instructor_uids=instructor_uids + ['999999'],
                 meeting_days=meeting_days,
                 meeting_start_time=meeting_start_time,
                 meeting_end_time=meeting_end_time,
-                instructor_uids=instructor_uids + ['999999'],
                 publish_type_='canvas',
                 recording_type_='presenter_audio',
                 room_id=Room.get_room_id(section_id=section_3_id, term_id=self.term_id),
+                section_id=section_3_id,
+                term_id=self.term_id,
             )
             std_commit(allow_test_environment=True)
 
@@ -711,14 +745,15 @@ def _schedule_recordings(
         section_id=section_id,
     )
     Scheduled.create(
-        term_id=term_id,
-        section_id=section_id,
+        cross_listed_section_ids=[],
+        instructor_uids=SisSection.get_instructor_uids(term_id=term_id, section_id=section_id),
         meeting_days=meeting_days,
         meeting_start_time=meeting_start_time,
         meeting_end_time=meeting_end_time,
-        instructor_uids=SisSection.get_instructor_uids(term_id=term_id, section_id=section_id),
         publish_type_=publish_type,
         recording_type_=recording_type,
         room_id=room_id or Room.get_room_id(section_id=section_id, term_id=term_id),
+        section_id=section_id,
+        term_id=term_id,
     )
     std_commit(allow_test_environment=True)

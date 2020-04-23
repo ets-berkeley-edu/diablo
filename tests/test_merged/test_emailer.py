@@ -69,7 +69,7 @@ def _get_expected_email():
     Your Spring 2020 course COMPSCI 61B, "Data Structures", is eligible for Course Capture. This course meets MO,WE,FR
     from 3:00 pm to 3:59 pm.
 
-    Go to <a href="http://foo.berkeley.edu">https://diablo-TODO.berkeley.edu/approve/2202/28165</a> and sign up.
+    Go to <a href="http://foo.berkeley.edu">https://manage-test.coursecapture.berkeley.edu/course/2202/28165</a> and sign up.
 
     Thank you."""
 

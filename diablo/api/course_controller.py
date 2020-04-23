@@ -25,13 +25,12 @@ ENHANCEMENTS, OR MODIFICATIONS.
 
 from diablo.api.errors import BadRequestError, ForbiddenRequestError, ResourceNotFoundError
 from diablo.api.util import admin_required, get_search_filter_options
-from diablo.lib.berkeley import get_instructor_uids, has_necessary_approvals, term_name_for_sis_id
+from diablo.lib.berkeley import get_instructor_uids, term_name_for_sis_id
 from diablo.lib.http import tolerant_jsonify
 from diablo.merged.emailer import notify_instructors_of_approval
-from diablo.models.approval import Approval, get_all_publish_types, get_all_recording_types, NAMES_PER_PUBLISH_TYPE
+from diablo.models.approval import Approval, get_all_publish_types, get_all_recording_types
 from diablo.models.course_preference import CoursePreference
 from diablo.models.room import Room
-from diablo.models.scheduled import Scheduled
 from diablo.models.sis_section import SisSection
 from flask import current_app as app, request
 from flask_login import current_user, login_required
@@ -55,7 +54,7 @@ def approve():
     if not current_user.is_admin and current_user.uid not in [i['uid'] for i in course['instructors']]:
         raise ForbiddenRequestError('Sorry, request unauthorized')
 
-    if Approval.get_approval(current_user.uid, section_id, term_id):
+    if Approval.get_approval(approved_by_uid=current_user.uid, section_id=section_id, term_id=term_id):
         raise ForbiddenRequestError(f'You have already approved recording of {course["courseName"]}, {term_name}')
 
     location = course['meetingLocation']
@@ -66,31 +65,32 @@ def approve():
     previous_approvals = Approval.get_approvals_per_section_ids(section_ids=[section_id], term_id=term_id)
     approval = Approval.create(
         approved_by_uid=current_user.uid,
-        section_id=section_id,
-        term_id=term_id,
         approver_type_='admin' if current_user.is_admin else 'instructor',
+        cross_listed_section_ids=[c['sectionId'] for c in course['crossListings']],
         publish_type_=publish_type,
         recording_type_=recording_type,
         room_id=room.id,
+        section_id=section_id,
+        term_id=term_id,
     )
     _notify_instructors_of_approval(
         approval=approval,
         course=course,
         previous_approvals=previous_approvals,
     )
-    return tolerant_jsonify(_add_approvals_and_scheduled_json(course))
+    return tolerant_jsonify(SisSection.get_course(term_id, section_id))
 
 
 @app.route('/api/course/<term_id>/<section_id>')
 @login_required
-def get_approvals(term_id, section_id):
+def get_course(term_id, section_id):
     course = SisSection.get_course(term_id, section_id)
     if not course:
         raise ResourceNotFoundError(f'No section for term_id = {term_id} and section_id = {section_id}')
 
     if not current_user.is_admin and current_user.uid not in get_instructor_uids(course):
         raise ForbiddenRequestError('Sorry, this request is unauthorized.')
-    return tolerant_jsonify(_add_approvals_and_scheduled_json(course))
+    return tolerant_jsonify(course)
 
 
 @app.route('/api/courses', methods=['POST'])
@@ -137,22 +137,6 @@ def update_opt_out():
         opt_out=opt_out,
     )
     return tolerant_jsonify(preferences.to_api_json())
-
-
-def _add_approvals_and_scheduled_json(course):
-    section_id = course['sectionId']
-    term_id = course['termId']
-    all_approvals = Approval.get_approvals_per_section_ids(section_ids=[section_id], term_id=term_id)
-    scheduled = Scheduled.get_scheduled(section_id=section_id, term_id=term_id)
-    return {
-        **course,
-        **{
-            'approvals': [approval.to_api_json() for approval in all_approvals],
-            'hasNecessaryApprovals': has_necessary_approvals(course, all_approvals),
-            'publishTypeOptions': NAMES_PER_PUBLISH_TYPE,
-            'scheduled': scheduled and scheduled.to_api_json(),
-        },
-    }
 
 
 def _notify_instructors_of_approval(approval, course, previous_approvals):

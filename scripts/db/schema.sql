@@ -107,10 +107,11 @@ CREATE TABLE approvals (
     approved_by_uid VARCHAR(80) NOT NULL,
     section_id INTEGER NOT NULL,
     term_id INTEGER NOT NULL,
-    room_id INTEGER NOT NULL,
     approver_type approver_types,
+    cross_listed_section_ids INTEGER[],
     publish_type publish_types NOT NULL,
     recording_type recording_types NOT NULL,
+    room_id INTEGER NOT NULL,
     created_at timestamp with time zone NOT NULL
 );
 ALTER TABLE approvals OWNER TO diablo;
@@ -141,6 +142,17 @@ CREATE TABLE course_preferences (
 );
 ALTER TABLE course_preferences OWNER TO diablo;
 ALTER TABLE course_preferences ADD CONSTRAINT course_preferences_pkey PRIMARY KEY (section_id, term_id);
+
+--
+
+CREATE TABLE cross_listings (
+    term_id INTEGER NOT NULL,
+    section_id INTEGER NOT NULL,
+    cross_listed_section_ids INTEGER[] NOT NULL,
+    created_at timestamp with time zone NOT NULL
+);
+ALTER TABLE cross_listings OWNER TO diablo;
+ALTER TABLE cross_listings ADD CONSTRAINT cross_listings_pkey PRIMARY KEY (section_id, term_id);
 
 --
 
@@ -231,30 +243,6 @@ ALTER TABLE ONLY queued_emails
 
 --
 
-CREATE TABLE sent_emails (
-    id INTEGER NOT NULL,
-    recipient_uids VARCHAR(80)[] NOT NULL,
-    section_id INTEGER,
-    template_type email_template_types,
-    term_id INTEGER NOT NULL,
-    sent_at timestamp with time zone NOT NULL
-);
-ALTER TABLE sent_emails OWNER TO diablo;
-CREATE SEQUENCE sent_emails_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-ALTER TABLE sent_emails_id_seq OWNER TO diablo;
-ALTER SEQUENCE sent_emails_id_seq OWNED BY sent_emails.id;
-ALTER TABLE ONLY sent_emails ALTER COLUMN id SET DEFAULT nextval('sent_emails_id_seq'::regclass);
-ALTER TABLE ONLY sent_emails
-    ADD CONSTRAINT sent_emails_pkey PRIMARY KEY (id);
-CREATE INDEX sent_emails_section_id_idx ON sent_emails USING btree (section_id);
-
---
-
 CREATE TABLE rooms (
     id INTEGER NOT NULL,
     capability room_capability_types,
@@ -284,6 +272,7 @@ CREATE INDEX rooms_location_idx ON rooms USING btree (location);
 CREATE TABLE scheduled (
     section_id INTEGER NOT NULL,
     term_id INTEGER NOT NULL,
+    cross_listed_section_ids INTEGER[],
     instructor_uids VARCHAR(80)[] NOT NULL,
     meeting_days VARCHAR(80),
     meeting_end_time VARCHAR(80),
@@ -298,10 +287,27 @@ ALTER TABLE scheduled ADD CONSTRAINT scheduled_pkey PRIMARY KEY (section_id, ter
 
 --
 
-ALTER TABLE ONLY approvals
-    ADD CONSTRAINT approvals_room_id_fkey FOREIGN KEY (room_id) REFERENCES rooms(id);
-ALTER TABLE ONLY scheduled
-    ADD CONSTRAINT scheduled_room_id_fkey FOREIGN KEY (room_id) REFERENCES rooms(id);
+CREATE TABLE sent_emails (
+    id INTEGER NOT NULL,
+    recipient_uids VARCHAR(80)[] NOT NULL,
+    section_id INTEGER,
+    template_type email_template_types,
+    term_id INTEGER NOT NULL,
+    sent_at timestamp with time zone NOT NULL
+);
+ALTER TABLE sent_emails OWNER TO diablo;
+CREATE SEQUENCE sent_emails_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+ALTER TABLE sent_emails_id_seq OWNER TO diablo;
+ALTER SEQUENCE sent_emails_id_seq OWNED BY sent_emails.id;
+ALTER TABLE ONLY sent_emails ALTER COLUMN id SET DEFAULT nextval('sent_emails_id_seq'::regclass);
+ALTER TABLE ONLY sent_emails
+    ADD CONSTRAINT sent_emails_pkey PRIMARY KEY (id);
+CREATE INDEX sent_emails_section_id_idx ON sent_emails USING btree (section_id);
 
 --
 
@@ -341,5 +347,12 @@ ALTER TABLE ONLY sis_sections
 CREATE INDEX sis_sections_instructor_uid_idx ON sis_sections USING btree (instructor_uid);
 CREATE INDEX sis_sections_meeting_location_idx ON sis_sections USING btree (meeting_location);
 CREATE INDEX sis_sections_term_id_section_id_idx ON sis_sections(sis_term_id, sis_section_id);
+
+--
+
+ALTER TABLE ONLY approvals
+    ADD CONSTRAINT approvals_room_id_fkey FOREIGN KEY (room_id) REFERENCES rooms(id);
+ALTER TABLE ONLY scheduled
+    ADD CONSTRAINT scheduled_room_id_fkey FOREIGN KEY (room_id) REFERENCES rooms(id);
 
 --

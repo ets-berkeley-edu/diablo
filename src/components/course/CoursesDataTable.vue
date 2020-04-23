@@ -38,7 +38,7 @@
                   v-if="course.room && course.room.capability"
                   :id="`sign-up-${course.sectionId}`"
                   class="subtitle-1"
-                  :to="`/approve/${$config.currentTermId}/${course.sectionId}`">
+                  :to="`/course/${$config.currentTermId}/${course.sectionId}`">
                   {{ course.label }}
                 </router-link>
                 <span v-if="!course.room || !course.room.capability">{{ course.label }}</span>
