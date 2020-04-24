@@ -26,7 +26,9 @@ from datetime import datetime
 
 from diablo import db, std_commit
 from diablo.lib.util import to_isoformat
+from diablo.merged.calnet import get_calnet_user_for_uid
 from diablo.models.room import Room
+from flask import current_app as app
 from sqlalchemy import and_
 from sqlalchemy.dialects.postgresql import ARRAY, ENUM
 
@@ -152,8 +154,8 @@ class Approval(db.Model):
 
     def to_api_json(self):
         return {
-            'approvedByUid': self.approved_by_uid,
-            'approverType': self.approver_type,
+            'approvedBy': get_calnet_user_for_uid(app, self.approved_by_uid),
+            'wasApprovedByAdmin': self.approver_type == 'admin',
             'createdAt': to_isoformat(self.created_at),
             'crossListedSectionIds': self.cross_listed_section_ids,
             'publishType': self.publish_type,

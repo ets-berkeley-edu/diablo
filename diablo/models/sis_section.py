@@ -27,8 +27,7 @@ from datetime import datetime
 import json
 
 from diablo import db
-from diablo.lib.util import format_days, format_time, objects_to_dict_organized_by_section_id, utc_now
-from diablo.models.admin_user import AdminUser
+from diablo.lib.util import format_days, format_time, utc_now
 from diablo.models.approval import Approval
 from diablo.models.canvas_course_site import CanvasCourseSite
 from diablo.models.course_preference import CoursePreference
@@ -555,31 +554,28 @@ def _to_api_json(term_id, rows, include_rooms=True):
     courses_per_id = {}
     instructors_per_section_id = {}
     section_ids_opted_out = CoursePreference.get_section_ids_opted_out(term_id=term_id)
-
-    approvals = Approval.get_approvals_per_term(term_id)
-    approvals_per_section_id = objects_to_dict_organized_by_section_id(objects=approvals)
-    all_admin_user_uids = [u.uid for u in AdminUser.all_admin_users(include_deleted=True)]
-
     # If course has multiple instructors then the section_id will be represented across multiple rows.
     for row in rows:
+        approvals = []
         section_id = int(row['sis_section_id'])
         if section_id not in courses_per_id:
             # Construct new course
             instructors_per_section_id[section_id] = []
             has_opted_out = section_id in section_ids_opted_out
-            approvals = [a.to_api_json() for a in approvals_per_section_id.get(section_id, [])]
-            scheduled = Scheduled.get_scheduled(section_id=section_id, term_id=term_id)
-            scheduled = scheduled and scheduled.to_api_json()
+            cross_listings = _get_cross_listed_courses(section_id=section_id, term_id=term_id)
+            approvals, scheduled = _get_approvals_and_scheduled(
+                section_ids=[section_id] + [c['sectionId'] for c in cross_listings],
+                term_id=term_id,
+            )
             course_name = row['sis_course_name']
             instruction_format = row['sis_instruction_format']
             section_num = row['sis_section_num']
             course = {
-                'adminApproval': next((a for a in approvals if a['approvedByUid'] in all_admin_user_uids), False),
                 'allowedUnits': row['allowed_units'],
                 'canvasCourseSites': _canvas_course_sites(term_id, section_id),
                 'courseName': course_name,
                 'courseTitle': row['sis_course_title'],
-                'crossListings': _get_cross_listed_courses(section_id=section_id, term_id=term_id),
+                'crossListings': cross_listings,
                 'hasOptedOut': has_opted_out,
                 'instructionFormat': instruction_format,
                 'instructors': [], 'isPrimary': row['is_primary'],
@@ -621,7 +617,7 @@ def _to_api_json(term_id, rows, include_rooms=True):
         instructor_uid = row['instructor_uid']
         if instructor_uid not in [i['uid'] for i in instructors_per_section_id[section_id]]:
             instructors_per_section_id[section_id].append({
-                'approval': next((a for a in approvals if a['approvedByUid'] == instructor_uid), False),
+                'approval': next((a for a in approvals if a['approvedBy']['uid'] == instructor_uid), False),
                 'deptCode': row['instructor_dept_code'],
                 'email': row['instructor_email'],
                 'name': row['instructor_name'],
@@ -652,12 +648,23 @@ def _to_api_json(term_id, rows, include_rooms=True):
             scheduled['hasObsoleteMeetingTimes'] = _meeting(course) != _meeting(scheduled)
             _add_and_verify_room(scheduled)
 
-        for approval in approvals:
+        for approval in course['approvals']:
             _add_and_verify_room(approval)
 
         # Add course to the feed
         api_json.append(course)
     return api_json
+
+
+def _get_approvals_and_scheduled(section_ids, term_id):
+    approvals = Approval.get_approvals_per_section_ids(section_ids=section_ids, term_id=term_id)
+    scheduled = None
+    for section_id in section_ids:
+        if not scheduled:
+            scheduled = Scheduled.get_scheduled(section_id=section_id, term_id=term_id)
+            scheduled = scheduled and scheduled.to_api_json()
+            break
+    return [a.to_api_json() for a in approvals], scheduled
 
 
 def _canvas_course_sites(term_id, section_id):
@@ -709,9 +716,9 @@ def _get_cross_listed_courses(section_id, term_id):
 
 
 def _has_necessary_approvals(course):
-    if any(a['approverType'] == 'admin' for a in course['approvals']):
+    if any(a['wasApprovedByAdmin'] for a in course['approvals']):
         return True
     else:
-        approval_uids = [a['approvedByUid'] for a in course['approvals']]
+        approval_uids = [a['approvedBy']['uid'] for a in course['approvals']]
         necessary_approval_uids = [i['uid'] for i in course['instructors']]
         return all(uid in approval_uids for uid in necessary_approval_uids)

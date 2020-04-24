@@ -28,10 +28,6 @@ def flatten_location(name):
     return name and ''.join(name.split()).lower()
 
 
-def get_instructor_uids(section):
-    return [i['uid'] for i in section['instructors']]
-
-
 def term_name_for_sis_id(sis_id=None):
     if sis_id:
         sis_id = str(sis_id)

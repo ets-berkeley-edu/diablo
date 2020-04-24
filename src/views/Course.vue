@@ -58,12 +58,19 @@
             </v-row>
             <v-row v-if="course.crossListings.length" id="cross-listings">
               <v-col md="auto">
-                <v-icon>mdi-arrow-top-right-bottom-left-bold</v-icon>
+                <v-icon>mdi-format-line-spacing</v-icon>
               </v-col>
               <v-col>
-                <h5>Cross-listings</h5>
+                <h5>Cross-listing<span v-if="course.crossListings.length !== 1">s</span></h5>
                 <span v-for="crossListing in course.crossListings" :key="crossListing.sectionId">
-                  {{ crossListing.sectionId }}
+                  <span v-if="$currentUser.isAdmin">
+                    <router-link
+                      :id="`cross-listing-${crossListing.sectionId}`"
+                      :to="`/course/${crossListing.termId}/${crossListing.sectionId}`">
+                      {{ crossListing.label }}
+                    </router-link>
+                  </span>
+                  <span v-if="!$currentUser.isAdmin" :id="`cross-listing-${crossListing.sectionId}`">{{ crossListing.label }}</span>
                 </span>
               </v-col>
             </v-row>
@@ -111,12 +118,14 @@
               </v-row>
               <v-row no-gutters class="mb-6">
                 <v-col>
-                  <div v-if="!scheduled && approvedByUids.length" class="font-weight-bold pb-5 pink--text">
-                    <span v-if="mostRecentApproval.approvedByUid === $currentUser.uid">
+                  <div v-if="!scheduled && course.approvals.length" class="font-weight-bold pb-5 pink--text">
+                    <span v-if="mostRecentApproval.approvedBy.uid === $currentUser.uid">
                       You submitted the preferences below.
                     </span>
-                    <div v-if="mostRecentApproval.approvedByUid !== $currentUser.uid">
-                      {{ getInstructorNames(approvedByUids) }} approved.
+                    <div v-if="mostRecentApproval.approvedBy.uid !== $currentUser.uid">
+                      {{ mostRecentApproval.approvedBy.name }}
+                      <span v-if="mostRecentApproval.wasApprovedByAdmin">(Course Capture administrator)</span>
+                      approved.
                     </div>
                   </div>
                   <div>
@@ -154,10 +163,10 @@
                   </h5>
                 </v-col>
                 <v-col md="6">
-                  <div v-if="hasNecessaryApprovals" class="mb-5">
+                  <div v-if="course.hasNecessaryApprovals" class="mb-5">
                     {{ mostRecentApproval.recordingTypeName }}
                   </div>
-                  <div v-if="!hasNecessaryApprovals">
+                  <div v-if="!course.hasNecessaryApprovals">
                     <div v-if="recordingTypeOptions.length === 1" class="mb-5">
                       {{ recordingTypeOptions[0].text }}
                       <input type="hidden" name="recordingType" :value="recordingTypeOptions[0].value">
@@ -200,11 +209,11 @@
                   </h5>
                 </v-col>
                 <v-col md="6">
-                  <div v-if="hasNecessaryApprovals" id="approved-publish-type" class="mb-5">
+                  <div v-if="course.hasNecessaryApprovals" id="approved-publish-type" class="mb-5">
                     {{ mostRecentApproval.publishTypeName }}
                   </div>
                   <v-select
-                    v-if="!hasNecessaryApprovals"
+                    v-if="!course.hasNecessaryApprovals"
                     id="select-publish-type"
                     v-model="publishType"
                     item-text="text"
@@ -215,7 +224,7 @@
                   ></v-select>
                 </v-col>
               </v-row>
-              <v-row v-if="!hasNecessaryApprovals" no-gutters align="start">
+              <v-row v-if="!course.hasNecessaryApprovals" no-gutters align="start">
                 <v-col md="auto">
                   <v-checkbox id="agree-to-terms-checkbox" v-model="agreedToTerms" class="mt-0"></v-checkbox>
                 </v-col>
@@ -234,7 +243,7 @@
                   </div>
                 </v-col>
               </v-row>
-              <v-row v-if="!hasNecessaryApprovals" lg="2">
+              <v-row v-if="!course.hasNecessaryApprovals" lg="2">
                 <v-spacer />
                 <v-col md="2">
                   <v-btn
@@ -264,11 +273,7 @@
     mixins: [Context, Utils],
     data: () => ({
       agreedToTerms: false,
-      approvals: undefined,
-      approvedByUids: undefined,
       course: undefined,
-      hasNecessaryApprovals: undefined,
-      mostRecentApproval: undefined,
       pageTitle: undefined,
       publishType: undefined,
       publishTypeOptions: undefined,
@@ -280,6 +285,9 @@
     computed: {
       disableSubmit() {
         return !this.agreedToTerms || !this.publishType || !this.recordingType
+      },
+      mostRecentApproval() {
+        return this.$_.last(this.course.approvals)
       }
     },
     created() {
@@ -300,34 +308,23 @@
           this.render(data)
         }).catch(this.$ready)
       },
-      getInstructorNames(uids) {
-        const instructors = this.course.instructors
-        const filtered = this.$_.filter(instructors, instructor => this.$_.includes(uids, instructor.uid))
-        const unrecognized = this.$_.difference(uids, this.$_.map(filtered, 'uid'))
-        const names = this.$_.union(this.$_.map(filtered, 'name'), unrecognized)
-        return names.length ? this.oxfordJoin(names) : ''
-      },
       render(data) {
         this.$loading()
+        this.course = data
         this.room = data.room
         this.recordingTypeOptions = []
         this.$_.each(this.room.recordingTypeOptions, (text, value) => {
           this.recordingTypeOptions.push({text, value})
         })
         if (data.approvals.length) {
-          this.approvals = this.$_.sortBy(data.approvals, ['createdAt'])
-          this.approvedByUids = this.$_.map(this.approvals, 'approvedByUid')
-          this.mostRecentApproval = this.$_.last(this.approvals)
-          this.publishType = this.mostRecentApproval.publishType
-          this.recordingType = this.mostRecentApproval.recordingType
+          const mostRecent = this.$_.last(this.approvals)
+          this.publishType = mostRecent.publishType
+          this.recordingType = mostRecent.recordingType
         } else {
-          this.approvals = []
-          this.approvedByUids = []
           if (this.recordingTypeOptions.length === 1) {
             this.recordingType = this.recordingTypeOptions[0].value
           }
         }
-        this.hasNecessaryApprovals = data.hasNecessaryApprovals
         this.pageTitle = data.label
         this.scheduled = data.scheduled
         this.course = data

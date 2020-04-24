@@ -25,7 +25,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 
 from diablo.api.errors import BadRequestError, ForbiddenRequestError, ResourceNotFoundError
 from diablo.api.util import admin_required, get_search_filter_options
-from diablo.lib.berkeley import get_instructor_uids, term_name_for_sis_id
+from diablo.lib.berkeley import term_name_for_sis_id
 from diablo.lib.http import tolerant_jsonify
 from diablo.merged.emailer import notify_instructors_of_approval
 from diablo.models.approval import Approval, get_all_publish_types, get_all_recording_types
@@ -88,8 +88,8 @@ def get_course(term_id, section_id):
     if not course:
         raise ResourceNotFoundError(f'No section for term_id = {term_id} and section_id = {section_id}')
 
-    if not current_user.is_admin and current_user.uid not in get_instructor_uids(course):
-        raise ForbiddenRequestError('Sorry, this request is unauthorized.')
+    if not current_user.is_admin and current_user.uid not in [i['uid'] for i in course['instructors']]:
+        raise ForbiddenRequestError(f'Sorry, you are unauthorized to view the course {course["label"]}.')
     return tolerant_jsonify(course)
 
 

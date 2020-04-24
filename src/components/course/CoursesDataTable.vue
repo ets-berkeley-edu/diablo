@@ -36,12 +36,13 @@
               <td :id="`course-name-${course.sectionId}`" :class="tdClass(course)">
                 <router-link
                   v-if="course.room && course.room.capability"
-                  :id="`sign-up-${course.sectionId}`"
+                  :id="`link-course-${course.sectionId}`"
                   class="subtitle-1"
                   :to="`/course/${$config.currentTermId}/${course.sectionId}`">
                   {{ course.label }}
                 </router-link>
                 <span v-if="!course.room || !course.room.capability">{{ course.label }}</span>
+                <CrossListingTooltip v-if="course.crossListings.length" icon-class="pb-1 pl-1" :course="course" />
               </td>
               <td :id="`section-id-${course.sectionId}`" :class="tdClass(course)">{{ course.sectionId }}</td>
               <td v-if="includeRoomColumn" :class="tdClass(course)">
@@ -56,7 +57,7 @@
               <td :id="`meeting-days-${course.sectionId}`" :class="tdClass(course)">{{ course.meetingDays.join(',') }}</td>
               <td :id="`meeting-times-${course.sectionId}`" :class="tdClass(course)">{{ course.meetingStartTime }} - {{ course.meetingEndTime }}</td>
               <td :id="`course-${course.sectionId}-status`" :class="tdClass(course)">
-                <v-tooltip v-if="course.adminApproval" :id="`tooltip-admin-approval-${course.sectionId}`" bottom>
+                <v-tooltip v-if="course.wasApprovedByAdmin" :id="`tooltip-admin-approval-${course.sectionId}`" bottom>
                   <template v-slot:activator="{ on }">
                     <v-icon
                       color="green"
@@ -66,9 +67,9 @@
                       mdi-account-check-outline
                     </v-icon>
                   </template>
-                  Course Capture Admin {{ course.adminApproval.approvedByUid }}
+                  Course Capture Admin {{ $_.last(course.approvals).approvedBy.name }}
                   submitted approval on
-                  {{ course.adminApproval.createdAt | moment('MMM D, YYYY') }}.
+                  {{ $_.last(course.approvals).createdAt | moment('MMM D, YYYY') }}.
                 </v-tooltip>
                 {{ course.status || '&mdash;' }}
               </td>
@@ -106,13 +107,14 @@
             <tr v-if="course.approvals.length" :key="`approvals-${course.sectionId}`">
               <td :colspan="headers.length + 1" class="pb-2">
                 <div v-if="course.approvals.length" class="pb-3">
-                  <span v-for="approval in course.approvals" :key="approval.approvedByUid">
-                    <router-link :id="`instructor-${approval.approvedByUid}-mailto`" :to="`/user/${approval.approvedByUid}`">
-                      {{ getInstructorName(course, approval.approvedByUid) }}
-                    </router-link> ({{ approval.approvedByUid }}) selected "{{ approval.recordingTypeName }}".
+                  <span v-for="approval in course.approvals" :key="approval.approvedBy.uid">
+                    <router-link :id="`instructor-${approval.approvedBy.uid}-mailto`" :to="`/user/${approval.approvedBy.uid}`">
+                      {{ approval.approvedBy.name }}
+                    </router-link> ({{ approval.approvedBy.uid }}) selected "{{ approval.recordingTypeName }}".
                   </span>
                   <span v-if="course.scheduled">
-                    Recordings scheduled on {{ course.scheduled.createdAt | moment('MMM D, YYYY') }}. They will be published to {{ course.scheduled.publishTypeName }}.
+                    Recordings scheduled on {{ course.scheduled.createdAt | moment('MMM D, YYYY') }}.
+                    They will be published to {{ course.scheduled.publishTypeName }}.
                   </span>
                 </div>
               </td>
@@ -141,12 +143,13 @@
 
 <script>
   import Context from '@/mixins/Context'
+  import CrossListingTooltip from '@/components/course/CrossListingTooltip'
   import ToggleOptOut from '@/components/course/ToggleOptOut'
   import Utils from '@/mixins/Utils'
 
   export default {
     name: 'CoursesDataTable',
-    components: {ToggleOptOut},
+    components: {CrossListingTooltip, ToggleOptOut},
     mixins: [Context, Utils],
     props: {
       courses: {
@@ -214,10 +217,6 @@
       })
     },
     methods: {
-      getInstructorName(course, uid) {
-        const instructor = this.$_.find(course.instructors, ['uid', uid])
-        return instructor ? instructor.name : uid
-      },
       hideSelectCoursesColumn() {
         const hideColumn = () => {
           let el = document.getElementById('courses-data-table')
