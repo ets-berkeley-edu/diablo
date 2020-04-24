@@ -59,9 +59,6 @@ ALTER TABLE IF EXISTS ONLY public.sis_sections DROP CONSTRAINT IF EXISTS sis_sec
 
 --
 
-DROP INDEX IF EXISTS public.approvals_approved_by_uid_idx;
-DROP INDEX IF EXISTS public.approvals_term_id_idx;
-DROP INDEX IF EXISTS public.approvals_section_id_idx;
 DROP INDEX IF EXISTS public.rooms_location_idx;
 DROP INDEX IF EXISTS public.sent_emails_section_id_idx;
 DROP INDEX IF EXISTS public.sis_sections_instructor_uid_idx;
