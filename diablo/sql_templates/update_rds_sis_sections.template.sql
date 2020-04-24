@@ -27,10 +27,12 @@ DELETE FROM sis_sections WHERE sis_term_id = '{term_id}';
 
 --
 
-INSERT INTO sis_sections (
-  SELECT *
-  FROM dblink('{rds_dblink_to_redshift}',$REDSHIFT$
-    SELECT sis_term_id::INTEGER, sis_section_id::INTEGER, is_primary, sis_course_name, sis_course_title,
+INSERT INTO sis_sections (sis_term_id, sis_section_id, is_primary, sis_course_name, sis_course_title,
+      sis_instruction_format, sis_section_num, allowed_units, instructor_uid, instructor_name, instructor_role_code,
+      meeting_location, meeting_days, meeting_start_time, meeting_end_time, meeting_start_date, meeting_end_date)
+
+   (SELECT * FROM dblink('{rds_dblink_to_redshift}',$REDSHIFT$
+    SELECT sis_term_id::INTEGER, sis_section_id::INTEGER, is_primary::BOOLEAN, sis_course_name, sis_course_title,
       sis_instruction_format, sis_section_num, allowed_units, instructor_uid, instructor_name, instructor_role_code,
       meeting_location, meeting_days, meeting_start_time, meeting_end_time, meeting_start_date, meeting_end_date
     FROM {redshift_schema_intermediate}.sis_sections
@@ -56,9 +58,5 @@ INSERT INTO sis_sections (
     meeting_end_date VARCHAR(80)
   )
 );
-
-CREATE INDEX sis_sections_term_id_section_id_idx ON sis_sections(sis_term_id, sis_section_id);
-CREATE INDEX sis_sections_instructor_uid_idx ON sis_sections USING btree (instructor_uid);
-CREATE INDEX sis_sections_meeting_location_idx ON sis_sections USING btree (meeting_location);
 
 --
