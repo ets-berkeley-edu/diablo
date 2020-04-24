@@ -23,43 +23,7 @@
  * ENHANCEMENTS, OR MODIFICATIONS.
  */
 
-DROP TABLE IF EXISTS sis_sections CASCADE;
-
-CREATE TABLE IF NOT EXISTS sis_sections
-(
-    id INTEGER NOT NULL,
-    sis_term_id INTEGER,
-    sis_section_id INTEGER,
-    is_primary BOOLEAN,
-    sis_course_name VARCHAR(80),
-    sis_course_title TEXT,
-    sis_instruction_format VARCHAR(80),
-    sis_section_num VARCHAR(80),
-    allowed_units DOUBLE PRECISION,
-    instructor_uid VARCHAR(80),
-    instructor_name TEXT,
-    instructor_role_code VARCHAR(80),
-    meeting_location VARCHAR(80),
-    meeting_days VARCHAR(80),
-    meeting_start_time VARCHAR(80),
-    meeting_end_time VARCHAR(80),
-    meeting_start_date VARCHAR(80),
-    meeting_end_date VARCHAR(80),
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL
-);
-ALTER TABLE sis_sections OWNER TO diablo;
-CREATE SEQUENCE sis_sections_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-ALTER TABLE sis_sections_id_seq OWNER TO diablo;
-ALTER SEQUENCE sis_sections_id_seq OWNED BY sis_sections.id;
-ALTER TABLE ONLY sis_sections ALTER COLUMN id SET DEFAULT nextval('sis_sections_id_seq'::regclass);
-ALTER TABLE ONLY sis_sections
-    ADD CONSTRAINT sis_sections_pkey PRIMARY KEY (id);
-ALTER TABLE sis_sections ALTER COLUMN created_at SET DEFAULT now();
+DELETE FROM sis_sections WHERE sis_term_id = '{term_id}';
 
 --
 

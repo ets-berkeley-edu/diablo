@@ -116,9 +116,6 @@ CREATE TABLE approvals (
 );
 ALTER TABLE approvals OWNER TO diablo;
 ALTER TABLE approvals ADD CONSTRAINT approvals_pkey PRIMARY KEY (approved_by_uid, section_id, term_id);
-CREATE INDEX approvals_approved_by_uid_idx ON approvals USING btree (approved_by_uid);
-CREATE INDEX approvals_section_id_idx ON approvals USING btree (section_id);
-CREATE INDEX approvals_term_id_idx ON approvals USING btree (term_id);
 
 --
 
