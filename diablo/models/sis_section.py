@@ -671,12 +671,41 @@ def _canvas_course_sites(term_id, section_id):
 
 
 def _get_cross_listed_courses(section_id, term_id):
-    cross_listed_courses = []
-    for section_id in CrossListing.get_cross_listed_sections(section_id=section_id, term_id=term_id):
-        cross_listed_courses.append({
-            'sectionId': section_id,
-        })
-    return cross_listed_courses
+    section_ids = CrossListing.get_cross_listed_sections(section_id=section_id, term_id=term_id)
+    sql = f"""
+        SELECT * FROM sis_sections WHERE sis_term_id = :term_id AND sis_section_id = ANY(:section_ids)
+        ORDER BY sis_course_title, sis_section_id, instructor_uid
+    """
+    rows = db.session.execute(
+        text(sql),
+        {
+            'section_ids': section_ids,
+            'term_id': term_id,
+        },
+    )
+
+    def _to_json(row):
+        course_name = row['sis_course_name']
+        instruction_format = row['sis_instruction_format']
+        section_num = row['sis_section_num']
+        return {
+            'allowedUnits': row['allowed_units'],
+            'courseName': course_name,
+            'courseTitle': row['sis_course_title'],
+            'instructionFormat': instruction_format,
+            'isPrimary': row['is_primary'],
+            'label': f'{course_name}, {instruction_format} {section_num}',
+            'meetingDays': format_days(row['meeting_days']),
+            'meetingEndDate': row['meeting_end_date'],
+            'meetingEndTime': format_time(row['meeting_end_time']),
+            'meetingLocation': row['meeting_location'],
+            'meetingStartDate': row['meeting_start_date'],
+            'meetingStartTime': format_time(row['meeting_start_time']),
+            'sectionId': row['sis_section_id'],
+            'sectionNum': section_num,
+            'termId': row['sis_term_id'],
+        }
+    return [_to_json(row) for row in rows]
 
 
 def _has_necessary_approvals(course):

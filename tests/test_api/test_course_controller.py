@@ -288,6 +288,7 @@ class TestGetCourse:
         instructor_uid = '269246'
         fake_auth.login(uid=instructor_uid)
 
+        verified_feed_contents = False
         for section_id in cross_listed_section_ids:
             api_json = api_get_course(
                 client,
@@ -295,9 +296,17 @@ class TestGetCourse:
                 section_id=section_id,
             )
             # Cross-listed section IDs are expected in API response
-            actual_section_ids = set(c['sectionId'] for c in api_json['crossListings'])
-            actual_section_ids.add(api_json['sectionId'])
-            assert cross_listed_section_ids == actual_section_ids
+            actual_section_ids = [c['sectionId'] for c in api_json['crossListings']]
+            assert len(actual_section_ids) == 2
+            assert api_json['sectionId'] not in actual_section_ids
+
+            if section_id == 27950:
+                assert api_json['label'] == 'IND ENG 195, COL 001'
+                assert api_json['courseTitle'] == 'Richard Newton Lecture Series'
+                assert api_json['meetingDays'] == ['TU']
+                verified_feed_contents = True
+
+        assert verified_feed_contents
 
     def test_no_cross_listing(self, client, db, admin_session):
         """Course does not have cross-listing."""
