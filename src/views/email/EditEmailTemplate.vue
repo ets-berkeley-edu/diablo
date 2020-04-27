@@ -2,11 +2,11 @@
   <v-form>
     <v-container v-if="!loading" fluid>
       <v-row no-gutters class="d-flex justify-space-between pr-4">
-        <h2><v-icon class="pb-2" large>mdi-file-document-outline</v-icon> {{ templateId ? 'Edit' : 'Create' }} Email Template</h2>
-        <h3 class="title">
+        <h1><v-icon class="pb-2" large>mdi-file-document-outline</v-icon> {{ templateId ? 'Edit' : 'Create' }} Email Template</h1>
+        <h2 class="title">
           <span class="font-weight-bold">Type:</span>&nbsp;&nbsp;
           <span id="template-type-name" class="font-italic">{{ typeName }}</span>
-        </h3>
+        </h2>
       </v-row>
       <v-row no-gutters>
         <v-col cols="8">

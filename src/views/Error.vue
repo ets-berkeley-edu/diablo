@@ -9,6 +9,7 @@
     </v-icon>
     <div>
       <div class="pb-2">
+        <h1 class="sr-only">Error</h1>
         {{ message || 'Uh oh, there was a problem.' }}
       </div>
       <div>

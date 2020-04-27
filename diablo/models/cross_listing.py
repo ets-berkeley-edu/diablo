@@ -23,6 +23,7 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 from datetime import datetime
+from itertools import islice
 
 from diablo import db, std_commit
 from diablo.lib.util import to_isoformat
@@ -86,6 +87,12 @@ class CrossListing(db.Model):
                 trim(concat(meeting_days, meeting_end_date, meeting_end_time, meeting_location, meeting_start_date, meeting_start_time)) as schedule
             FROM sis_sections
             WHERE sis_term_id = :term_id
+                AND meeting_days <> ''
+                AND meeting_end_date <> ''
+                AND meeting_end_time <> ''
+                AND meeting_location <> ''
+                AND meeting_start_date <> ''
+                AND meeting_start_time <> ''
         """
         rows = db.session.execute(
             text(sql),
@@ -118,14 +125,20 @@ class CrossListing(db.Model):
                 for section_id in cross_listed_section_ids:
                     cross_listings[section_id] = [str(id_) for id_ in cross_listed_section_ids if id_ != section_id]
 
-        cross_listing_count = len(cross_listings)
-        query = 'INSERT INTO cross_listings (term_id, section_id, cross_listed_section_ids, created_at) VALUES'
-        for index, (section_id, cross_listed_section_ids) in enumerate(cross_listings.items()):
-            query += f' (:term_id, {section_id}, ' + "'{" + ', '.join(cross_listed_section_ids) + "}', now())"
-            if index < cross_listing_count - 1:
-                query += ','
-        db.session.execute(query, {'term_id': term_id})
-        std_commit()
+        def chunks(data, chunk_size=500):
+            iterator = iter(data)
+            for i in range(0, len(data), chunk_size):
+                yield {k: data[k] for k in islice(iterator, chunk_size)}
+
+        for cross_listings_chunk in chunks(cross_listings):
+            cross_listing_count = len(cross_listings_chunk)
+            query = 'INSERT INTO cross_listings (term_id, section_id, cross_listed_section_ids, created_at) VALUES'
+            for index, (section_id, cross_listed_section_ids) in enumerate(cross_listings_chunk.items()):
+                query += f' (:term_id, {section_id}, ' + "'{" + ', '.join(cross_listed_section_ids) + "}', now())"
+                if index < cross_listing_count - 1:
+                    query += ','
+            db.session.execute(query, {'term_id': term_id})
+            std_commit()
 
     def to_api_json(self):
         return {

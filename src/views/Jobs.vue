@@ -4,7 +4,7 @@
       <v-card outlined class="elevation-1">
         <v-card-title class="align-start">
           <div class="pt-2">
-            <h2><v-icon class="pb-3" large>mdi-wrench-outline</v-icon> Jobs</h2>
+            <h1><v-icon class="pb-3" large>mdi-wrench-outline</v-icon> Jobs</h1>
           </div>
           <v-spacer></v-spacer>
         </v-card-title>

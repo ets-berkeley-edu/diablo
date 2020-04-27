@@ -1,7 +1,7 @@
 <template>
   <div v-if="!loading">
     <div class="mb-3">
-      <h2>{{ room.location }}</h2>
+      <h1>{{ room.location }}</h1>
       <div v-if="room.kalturaResourceId" class="subtitle-1">
         Kaltura resource ID: {{ room.kalturaResourceId }}
       </div>

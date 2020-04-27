@@ -1,7 +1,7 @@
 <template>
   <div v-if="!loading">
     <div class="pb-3">
-      <h2>Your {{ $config.currentTermName }} courses</h2>
+      <h1>Your {{ $config.currentTermName }} courses</h1>
     </div>
     <v-data-table
       disable-pagination

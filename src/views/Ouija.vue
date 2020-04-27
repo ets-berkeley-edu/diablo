@@ -2,7 +2,7 @@
   <v-card v-if="!loading" outlined class="elevation-1">
     <v-card-title class="align-start p-3">
       <div class="pt-2">
-        <h2><v-icon class="pb-3" large>mdi-auto-fix</v-icon> The Ouija Board</h2>
+        <h1><v-icon class="pb-3" large>mdi-auto-fix</v-icon> The Ouija Board</h1>
         <div class="pt-4">
           <v-btn
             id="btn-send-email"
@@ -54,6 +54,7 @@
       :on-rows-selected="onRowsSelected"
       :on-toggle-opt-out="onToggleOptOut"
       :refreshing="refreshing"
+      :show-approval-status="selectedFilter !== 'Not Invited'"
       :search-text="searchText"
     />
   </v-card>
