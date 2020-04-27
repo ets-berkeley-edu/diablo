@@ -123,7 +123,7 @@ LOGGING_LEVEL = logging.DEBUG
 LOGGING_PROPAGATION_LEVEL = logging.INFO
 
 REDSHIFT_DATABASE = 'redshift_database'
-REDSHIFT_SCHEMA_INTERMEDIATE = 'intermediate'
+REDSHIFT_SCHEMA_SIS = 'sis_data_ext_dev'
 
 REMEMBER_COOKIE_NAME = 'remember_diablo_token'
 
