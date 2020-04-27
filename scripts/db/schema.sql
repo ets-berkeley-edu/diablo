@@ -341,6 +341,8 @@ ALTER SEQUENCE sis_sections_id_seq OWNED BY sis_sections.id;
 ALTER TABLE ONLY sis_sections ALTER COLUMN id SET DEFAULT nextval('sis_sections_id_seq'::regclass);
 ALTER TABLE ONLY sis_sections
     ADD CONSTRAINT sis_sections_pkey PRIMARY KEY (id);
+ALTER TABLE sis_sections ALTER COLUMN created_at SET DEFAULT now();
+
 CREATE INDEX sis_sections_instructor_uid_idx ON sis_sections USING btree (instructor_uid);
 CREATE INDEX sis_sections_meeting_location_idx ON sis_sections USING btree (meeting_location);
 CREATE INDEX sis_sections_term_id_section_id_idx ON sis_sections(sis_term_id, sis_section_id);
