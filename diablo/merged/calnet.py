@@ -65,6 +65,8 @@ def _get_calnet_users(app, id_type, ids):
 def _calnet_user_api_feed(person):
     def _get(key):
         return _get_attribute(person, key)
+
+    uid = _get('uid')
     return {
         'campusEmail': _get('campus_email'),
         'deptCode': _get_dept_code(person),
@@ -72,9 +74,9 @@ def _calnet_user_api_feed(person):
         'firstName': _get('first_name'),
         'isExpiredPerLdap': _get('expired'),
         'lastName': _get('last_name'),
-        'name': _get('name'),
+        'name': _get('name') or uid,
         'title': _get('title'),
-        'uid': _get('uid'),
+        'uid': uid,
     }
 
 

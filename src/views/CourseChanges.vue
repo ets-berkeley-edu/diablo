@@ -21,11 +21,11 @@
               </div>
             </td>
           </tr>
-          <tr v-for="item in items" :key="item.sectionId">
+          <tr v-for="course in items" :key="course.sectionId">
             <td class="pa-3 text-no-wrap">
               <div class="font-weight-black">
-                {{ item.label }}
-                <v-tooltip v-if="item.adminApproval" bottom nudge-right="200px">
+                {{ course.label }}
+                <v-tooltip v-if="course.wasApprovedByAdmin" bottom nudge-right="200px">
                   <template v-slot:activator="{ on }">
                     <v-icon
                       color="green"
@@ -35,29 +35,29 @@
                       mdi-account-check-outline
                     </v-icon>
                   </template>
-                  Course Capture Admin {{ item.adminApproval.approvedByUid }}
+                  Course Capture Admin {{ $_.last(course.approvals).approvedBy.name }}
                   submitted approval on
-                  {{ item.adminApproval.createdAt | moment('MMM D, YYYY') }}.
+                  {{ $_.last(course.approvals).createdAt | moment('MMM D, YYYY') }}.
                 </v-tooltip>
               </div>
               <div>
-                {{ item.sectionId }}
+                {{ course.sectionId }}
               </div>
               <div>
-                {{ item.meetingDays.join(',') }}
+                {{ course.meetingDays.join(',') }}
               </div>
               <div>
-                {{ item.meetingStartTime }} - {{ item.meetingEndTime }}
+                {{ course.meetingStartTime }} - {{ course.meetingEndTime }}
               </div>
               <div>
-                {{ item.publishTypeNames }}
+                {{ course.publishTypeNames }}
               </div>
             </td>
             <td class="text-no-wrap">
-              <div v-for="roomBefore in item.roomsBefore" :key="roomBefore.id">
+              <div v-for="roomBefore in course.roomsBefore" :key="roomBefore.id">
                 <div>
                   <router-link
-                    :id="`course-${item.sectionId}-room-before-${roomBefore.id}`"
+                    :id="`course-${course.sectionId}-room-before-${roomBefore.id}`"
                     :to="`/room/${roomBefore.id}`">
                     {{ roomBefore.location }}
                   </router-link>
@@ -68,15 +68,15 @@
                 </div>
               </div>
               <router-link
-                v-if="item.room"
-                :id="`course-${item.sectionId}-room-${item.room.id}`"
-                :to="`/room/${item.room.id}`">
-                {{ item.room.location }}
+                v-if="course.room"
+                :id="`course-${course.sectionId}-room-${course.room.id}`"
+                :to="`/room/${course.room.id}`">
+                {{ course.room.location }}
               </router-link>
-              <span v-if="!item.room">&mdash;</span>
+              <span v-if="!course.room">&mdash;</span>
             </td>
             <td>
-              <div v-for="instructor in item.instructors" :key="instructor.uid">
+              <div v-for="instructor in course.instructors" :key="instructor.uid">
                 <v-tooltip v-if="!instructor.wasSentInvite" bottom>
                   <template v-slot:activator="{ on }">
                     <v-icon

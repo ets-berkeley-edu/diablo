@@ -32,7 +32,7 @@ axios.interceptors.response.use(
       if (_.get(Vue.prototype.$currentUser, 'isAuthenticated')) {
         if (errorStatus === 404) {
           router.push({ path: '/404' })
-        } else if (errorStatus >= 500) {
+        } else if (errorStatus >= 400) {
           const message = _.get(error, 'response.data.message') || error.message
           console.error(message)
           router.push({
