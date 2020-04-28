@@ -680,7 +680,7 @@ def _canvas_course_sites(term_id, section_id):
 def _get_cross_listed_courses(section_id, term_id):
     section_ids = CrossListing.get_cross_listed_sections(section_id=section_id, term_id=term_id)
     sql = f"""
-        SELECT is_primary, sis_course_name, sis_course_title, sis_instruction_format, sis_section_id, sis_section_num, sis_term_id
+        SELECT DISTINCT sis_section_id, is_primary, sis_course_name, sis_course_title, sis_instruction_format, sis_section_num, sis_term_id
         FROM sis_sections
         WHERE sis_term_id = :term_id AND sis_section_id = ANY(:section_ids)
         GROUP BY is_primary, sis_section_id, sis_course_name, sis_course_title, sis_instruction_format, sis_section_num, sis_term_id
