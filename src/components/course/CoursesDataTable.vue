@@ -22,7 +22,21 @@
       @page-count="pageCurrent = $event"
     >
       <template v-slot:body="{ items }">
-        <tbody v-if="items.length">
+        <tbody v-if="refreshing">
+          <tr>
+            <td class="pa-12 text-center" :colspan="headers.length + 1">
+              <v-progress-circular
+                class="spinner"
+                :indeterminate="true"
+                rotate="5"
+                size="64"
+                width="4"
+                color="primary"
+              ></v-progress-circular>
+            </td>
+          </tr>
+        </tbody>
+        <tbody v-if="!refreshing && items.length">
           <template v-for="course in items">
             <tr :key="course.sectionId">
               <td v-if="onRowsSelected" :class="tdClass(course)">
@@ -35,13 +49,11 @@
               </td>
               <td :id="`course-name-${course.sectionId}`" :class="tdClass(course)">
                 <router-link
-                  v-if="course.room && course.room.capability"
                   :id="`link-course-${course.sectionId}`"
                   class="subtitle-1"
                   :to="`/course/${$config.currentTermId}/${course.sectionId}`">
                   {{ course.label }}
                 </router-link>
-                <span v-if="!course.room || !course.room.capability">{{ course.label }}</span>
                 <CrossListingTooltip v-if="course.crossListings.length" icon-class="pb-1 pl-1" :course="course" />
               </td>
               <td :id="`section-id-${course.sectionId}`" :class="tdClass(course)">{{ course.sectionId }}</td>
@@ -75,22 +87,17 @@
               </td>
               <td :class="tdClass(course)">
                 <div v-for="instructor in course.instructors" :key="instructor.uid" class="mb-1 mt-1">
-                  <v-tooltip v-if="showApprovalStatus" :id="`tooltip-approval-${course.sectionId}-by-${instructor.uid}`" bottom>
+                  <v-tooltip v-if="instructor.approval" :id="`tooltip-approval-${course.sectionId}-by-${instructor.uid}`" bottom>
                     <template v-slot:activator="{ on }">
                       <v-icon
                         :color="instructor.approval ? 'green' : 'yellow darken-2'"
                         class="pa-0"
                         dark
                         v-on="on">
-                        {{ instructor.approval ? 'mdi-check' : 'mdi-alert-circle-outline' }}
+                        mdi-check
                       </v-icon>
                     </template>
-                    <div v-if="instructor.approval">
-                      Approval submitted on {{ instructor.approval.createdAt | moment('MMM D, YYYY') }}.
-                    </div>
-                    <div v-if="!instructor.approval">
-                      {{ instructor.name }} has not yet approved.
-                    </div>
+                    Approval submitted on {{ instructor.approval.createdAt | moment('MMM D, YYYY') }}.
                   </v-tooltip>
                   <router-link :id="`course-${course.sectionId}-instructor-${instructor.uid}-mailto`" :to="`/user/${instructor.uid}`">
                     {{ instructor.name }}
@@ -122,7 +129,7 @@
             </tr>
           </template>
         </tbody>
-        <tbody v-if="!items.length">
+        <tbody v-if="!refreshing && !items.length">
           <tr>
             <td id="message-when-zero-courses" class="ma-4 text-no-wrap title" :colspan="headers.length">
               <span v-if="!refreshing">{{ messageForCourses }}</span>
@@ -173,10 +180,6 @@
       },
       refreshing: {
         required: true,
-        type: Boolean
-      },
-      showApprovalStatus: {
-        default: true,
         type: Boolean
       },
       searchText: {

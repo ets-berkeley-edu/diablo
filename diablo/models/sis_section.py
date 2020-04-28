@@ -680,8 +680,11 @@ def _canvas_course_sites(term_id, section_id):
 def _get_cross_listed_courses(section_id, term_id):
     section_ids = CrossListing.get_cross_listed_sections(section_id=section_id, term_id=term_id)
     sql = f"""
-        SELECT * FROM sis_sections WHERE sis_term_id = :term_id AND sis_section_id = ANY(:section_ids)
-        ORDER BY sis_course_title, sis_section_id, instructor_uid
+        SELECT is_primary, sis_course_name, sis_course_title, sis_instruction_format, sis_section_id, sis_section_num, sis_term_id
+        FROM sis_sections
+        WHERE sis_term_id = :term_id AND sis_section_id = ANY(:section_ids)
+        GROUP BY is_primary, sis_section_id, sis_course_name, sis_course_title, sis_instruction_format, sis_section_num, sis_term_id
+        ORDER BY sis_course_title, sis_section_id
     """
     rows = db.session.execute(
         text(sql),
@@ -692,24 +695,11 @@ def _get_cross_listed_courses(section_id, term_id):
     )
 
     def _to_json(row):
-        course_name = row['sis_course_name']
-        instruction_format = row['sis_instruction_format']
-        section_num = row['sis_section_num']
         return {
-            'allowedUnits': row['allowed_units'],
-            'courseName': course_name,
             'courseTitle': row['sis_course_title'],
-            'instructionFormat': instruction_format,
             'isPrimary': row['is_primary'],
-            'label': f'{course_name}, {instruction_format} {section_num}',
-            'meetingDays': format_days(row['meeting_days']),
-            'meetingEndDate': row['meeting_end_date'],
-            'meetingEndTime': format_time(row['meeting_end_time']),
-            'meetingLocation': row['meeting_location'],
-            'meetingStartDate': row['meeting_start_date'],
-            'meetingStartTime': format_time(row['meeting_start_time']),
+            'label': f"{row['sis_course_name']}, {row['sis_instruction_format']} {row['sis_section_num']}",
             'sectionId': row['sis_section_id'],
-            'sectionNum': section_num,
             'termId': row['sis_term_id'],
         }
     return [_to_json(row) for row in rows]

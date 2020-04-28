@@ -1,10 +1,8 @@
 <template>
   <div v-if="!loading">
-    <div class="mb-3">
-      <h1>{{ room.location }}</h1>
-      <div v-if="room.kalturaResourceId" class="subtitle-1">
-        Kaltura resource ID: {{ room.kalturaResourceId }}
-      </div>
+    <h1><v-icon class="pb-2" large>mdi-domain</v-icon> {{ room.location }}</h1>
+    <div v-if="room.kalturaResourceId" class="subtitle-1">
+      Kaltura resource ID: {{ room.kalturaResourceId }}
     </div>
     <v-card outlined class="elevation-1">
       <v-list-item three-line class="ma-2">
