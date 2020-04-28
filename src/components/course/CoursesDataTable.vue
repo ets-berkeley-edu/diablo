@@ -74,8 +74,8 @@
                 {{ course.status || '&mdash;' }}
               </td>
               <td :class="tdClass(course)">
-                <div v-for="instructor in course.instructors" :key="instructor.uid" class="mb-1 mt-1 pa-2">
-                  <v-tooltip :id="`tooltip-approval-${course.sectionId}-by-${instructor.uid}`" bottom>
+                <div v-for="instructor in course.instructors" :key="instructor.uid" class="mb-1 mt-1">
+                  <v-tooltip v-if="showApprovalStatus" :id="`tooltip-approval-${course.sectionId}-by-${instructor.uid}`" bottom>
                     <template v-slot:activator="{ on }">
                       <v-icon
                         :color="instructor.approval ? 'green' : 'yellow darken-2'"
@@ -173,6 +173,10 @@
       },
       refreshing: {
         required: true,
+        type: Boolean
+      },
+      showApprovalStatus: {
+        default: true,
         type: Boolean
       },
       searchText: {

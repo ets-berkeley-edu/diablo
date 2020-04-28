@@ -1,6 +1,6 @@
 <template>
   <div v-if="!loading">
-    <h2>Uh oh!</h2>
+    <h1>Uh oh!</h1>
     <div>
       Page not found.
     </div>

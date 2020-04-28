@@ -2,7 +2,7 @@
   <v-card v-if="!loading" outlined class="elevation-1">
     <v-card-title class="align-start">
       <div class="pt-2">
-        <h2><v-icon class="pb-3" large>mdi-swap-horizontal</v-icon> Course Changes</h2>
+        <h1><v-icon class="pb-3" large>mdi-swap-horizontal</v-icon> Course Changes</h1>
       </div>
     </v-card-title>
     <v-data-table

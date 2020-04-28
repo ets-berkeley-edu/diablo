@@ -1,6 +1,6 @@
 <template>
   <div v-if="!loading">
-    <h2>{{ user.name }} ({{ user.uid }})</h2>
+    <h1>{{ user.name }} ({{ user.uid }})</h1>
     <div class="pb-3">
       <a :href="`mailto:${user.campusEmail}`" target="_blank">{{ user.campusEmail }}<span class="sr-only"> (new browser tab will open)</span></a>
     </div>

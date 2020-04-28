@@ -2,13 +2,13 @@
   <div v-if="!loading" class="pa-3">
     <v-container fluid>
       <v-row class="pl-3">
-        <h2 id="page-title">{{ pageTitle }}</h2>
+        <h1 id="page-title">{{ pageTitle }}</h1>
       </v-row>
       <v-row class="pl-3">
         Section ID: {{ course.sectionId }}
       </v-row>
       <v-row class="pl-3">
-        <h3 id="course-title">{{ course.courseTitle }}</h3>
+        <h2 id="course-title">{{ course.courseTitle }}</h2>
       </v-row>
       <v-row>
         <v-col lg="3" md="3" sm="3">
@@ -61,7 +61,7 @@
                 <v-icon>mdi-format-line-spacing</v-icon>
               </v-col>
               <v-col>
-                <h5>Cross-listing<span v-if="course.crossListings.length !== 1">s</span></h5>
+                <h3>Cross-listing<span v-if="course.crossListings.length !== 1">s</span></h3>
                 <span v-for="crossListing in course.crossListings" :key="crossListing.sectionId">
                   <span v-if="$currentUser.isAdmin">
                     <router-link
@@ -97,7 +97,7 @@
                 <v-col>
                   <v-card tile>
                     <v-list-item-title class="pl-4 pt-4">
-                      <h5 class="title">Recordings scheduled</h5>
+                      <h4 class="title">Recordings scheduled</h4>
                     </v-list-item-title>
                     <v-list-item two-line class="pb-3">
                       <v-list-item-content>
@@ -144,7 +144,7 @@
               </v-row>
               <v-row v-if="!scheduled" justify="start" align="center">
                 <v-col md="3" class="mb-6">
-                  <h5>
+                  <h4>
                     <label for="select-recording-type">Recording Type</label>
                     <v-tooltip id="tooltip-recording-type" bottom>
                       <template v-slot:activator="{ on }">
@@ -160,7 +160,7 @@
                         Foo
                       </div>
                     </v-tooltip>
-                  </h5>
+                  </h4>
                 </v-col>
                 <v-col md="6">
                   <div v-if="course.hasNecessaryApprovals" class="mb-5">
@@ -188,7 +188,7 @@
               </v-row>
               <v-row v-if="!scheduled" justify="start" align="center">
                 <v-col md="3" class="mb-6">
-                  <h5>
+                  <h4>
                     <label for="select-publish-type">Publish</label>
                     <v-tooltip id="tooltip-publish" bottom>
                       <template v-slot:activator="{ on }">
@@ -206,7 +206,7 @@
                         (link to KB article: publishing from my media)
                       </div>
                     </v-tooltip>
-                  </h5>
+                  </h4>
                 </v-col>
                 <v-col md="6">
                   <div v-if="course.hasNecessaryApprovals" id="approved-publish-type" class="mb-5">
