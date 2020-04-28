@@ -6,6 +6,7 @@
     </div>
     <v-card outlined class="elevation-1">
       <CoursesDataTable
+        class="pt-5"
         :courses="user.courses"
         :message-for-courses="getMessageForCourses()"
         :on-toggle-opt-out="() => {}"

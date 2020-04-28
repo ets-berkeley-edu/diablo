@@ -99,8 +99,8 @@
         <Snackbar />
         <Spinner v-if="loading" />
         <router-view id="content" :key="$route.fullPath"></router-view>
-        <Footer v-if="!loading" />
       </div>
+      <Footer />
     </v-content>
   </v-app>
 </template>
@@ -137,7 +137,6 @@
             })
           }
         })
-        this.navItems.push({ title: 'About', icon: 'mdi-help-box' })
       }
     },
     methods: {

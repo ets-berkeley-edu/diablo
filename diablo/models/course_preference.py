@@ -26,6 +26,8 @@ from datetime import datetime
 
 from diablo import db, std_commit
 from diablo.lib.util import to_isoformat
+from diablo.models.cross_listing import CrossListing
+from sqlalchemy import and_
 
 
 class CoursePreference(db.Model):
@@ -55,18 +57,20 @@ class CoursePreference(db.Model):
 
     @classmethod
     def update_opt_out(cls, term_id, section_id, opt_out):
-        preferences = cls.query.filter_by(term_id=term_id, section_id=section_id).first()
-        if preferences:
-            preferences.has_opted_out = opt_out
-        else:
+        section_ids = CrossListing.get_cross_listed_sections(section_id=section_id, term_id=term_id) + [section_id]
+        criteria = and_(cls.section_id.in_(section_ids), cls.term_id == term_id)
+        for row in cls.query.filter(criteria).all():
+            row.has_opted_out = opt_out
+            section_ids.remove(row.section_id)
+        for section_id in section_ids:
             preferences = cls(
                 term_id=term_id,
                 section_id=section_id,
                 has_opted_out=opt_out,
             )
             db.session.add(preferences)
-            std_commit()
-        return preferences
+        std_commit()
+        return cls.query.filter_by(term_id=term_id, section_id=section_id).first()
 
     def to_api_json(self):
         return {

@@ -728,6 +728,33 @@ class TestUpdatePreferences:
         else:
             assert section_1_id not in section_ids_opted_out
 
+    def test_opt_out_cross_listings(self, client, admin_session):
+        """If a section opts out then its cross-listings are automatically opted out."""
+        with test_approvals_workflow(app):
+            # First, opt out
+            cross_listed_section_ids = [28475, 27950, 32827]
+            self._api_opt_out_update(
+                client,
+                term_id=self.term_id,
+                section_id=cross_listed_section_ids[-1],
+                opt_out=True,
+            )
+            section_ids_opted_out = CoursePreference.get_section_ids_opted_out(term_id=self.term_id)
+            for section_id in cross_listed_section_ids:
+                assert section_id in section_ids_opted_out
+            std_commit(allow_test_environment=True)
+
+            # Opt back in
+            self._api_opt_out_update(
+                client,
+                term_id=self.term_id,
+                section_id=cross_listed_section_ids[0],
+                opt_out=False,
+            )
+            section_ids_opted_out = CoursePreference.get_section_ids_opted_out(term_id=self.term_id)
+            for section_id in cross_listed_section_ids:
+                assert section_id not in section_ids_opted_out
+
 
 def _is_course_in_enabled_room(section_id, term_id):
     capability = SisSection.get_course(term_id=term_id, section_id=section_id)['room']['capability']

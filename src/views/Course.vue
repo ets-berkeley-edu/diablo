@@ -1,8 +1,8 @@
 <template>
-  <div v-if="!loading" class="pa-3">
+  <div v-if="!loading">
     <v-container fluid>
       <v-row class="pl-3">
-        <h1 id="page-title">{{ pageTitle }}</h1>
+        <h1>{{ pageTitle }}</h1>
       </v-row>
       <v-row class="pl-3">
         Section ID: {{ course.sectionId }}
@@ -62,7 +62,7 @@
               </v-col>
               <v-col>
                 <h3>Cross-listing<span v-if="course.crossListings.length !== 1">s</span></h3>
-                <span v-for="crossListing in course.crossListings" :key="crossListing.sectionId">
+                <div v-for="crossListing in course.crossListings" :key="crossListing.sectionId">
                   <span v-if="$currentUser.isAdmin">
                     <router-link
                       :id="`cross-listing-${crossListing.sectionId}`"
@@ -71,7 +71,7 @@
                     </router-link>
                   </span>
                   <span v-if="!$currentUser.isAdmin" :id="`cross-listing-${crossListing.sectionId}`">{{ crossListing.label }}</span>
-                </span>
+                </div>
               </v-col>
             </v-row>
             <v-row v-if="course.canvasCourseSites.length" id="canvas-course-sites">
@@ -86,6 +86,14 @@
                     target="_blank">{{ canvasCourseSite.courseSiteName }}</a>
                   <span v-if="course.canvasCourseSites.length > 1 && index === course.canvasCourseSites.length - 2"> and </span>
                 </span>
+              </v-col>
+            </v-row>
+            <v-row v-if="$currentUser.isAdmin && course.hasOptedOut" id="opted-out">
+              <v-col md="auto">
+                <v-icon>mdi-do-not-disturb</v-icon>
+              </v-col>
+              <v-col>
+                Opted out
               </v-col>
             </v-row>
           </v-card>

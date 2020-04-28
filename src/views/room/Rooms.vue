@@ -2,7 +2,7 @@
   <v-card v-if="!loading" outlined class="elevation-1">
     <v-card-title class="align-start">
       <div class="pt-2">
-        <h1><v-icon class="pb-3" large>mdi-domain</v-icon> {{ $_.size(rooms) }} Rooms</h1>
+        <h1><v-icon large>mdi-domain</v-icon> {{ $_.size(rooms) }} Rooms</h1>
       </div>
       <v-spacer></v-spacer>
       <v-text-field
