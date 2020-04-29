@@ -14,11 +14,8 @@ jobs:
     - stage: test
       script:
         - psql -c 'create database pazuzu_test;' -U postgres
-        - psql -c 'create database pazuzu_loch_test;' -U postgres
         - psql pazuzu_test -c 'create extension pg_trgm;' -U postgres
         - psql pazuzu_test -c 'create role diablo superuser login; alter schema public owner to diablo;' -U postgres
-        - psql pazuzu_loch_test -c 'create extension pg_trgm;' -U postgres
-        - psql pazuzu_loch_test -c 'alter schema public owner to diablo;' -U postgres
         - pip3 install -r requirements.txt
         - tox -e test || travis_terminate 1;
     - # Python lint

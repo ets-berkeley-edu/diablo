@@ -36,8 +36,6 @@ CURRENT_TERM_ID = 2202
 CURRENT_TERM_BEGIN = '2020-01-21'
 CURRENT_TERM_END = '2020-05-08'
 
-DATA_LOCH_RDS_URI = 'postgres://diablo:diablo@localhost:5432/pazuzu_loch_test'
-
 JOB_MANAGER = {
     'auto_start': True,
     'seconds_between_pending_jobs_check': 60,

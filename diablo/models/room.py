@@ -118,9 +118,7 @@ class Room(db.Model):
             SELECT r.id AS room_id
             FROM rooms r
             JOIN sis_sections s ON s.meeting_location = r.location
-            WHERE
-                s.sis_section_id = :section_id
-                AND s.sis_term_id = :term_id
+            WHERE s.section_id = :section_id AND s.term_id = :term_id
         """
         rows = db.session.execute(
             text(sql),

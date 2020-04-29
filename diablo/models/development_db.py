@@ -22,18 +22,19 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-
 import glob
 import json
 
 from diablo import BASE_DIR, cache, db, std_commit
 from diablo.jobs.canvas_job import CanvasJob
-from diablo.jobs.data_loch_sync_job import DataLochSyncJob
+from diablo.jobs.util import insert_or_update_instructors, refresh_rooms
 from diablo.lib.util import utc_now
 from diablo.models.admin_user import AdminUser
+from diablo.models.cross_listing import CrossListing
 from diablo.models.email_template import EmailTemplate
 from diablo.models.room import Room
 from diablo.models.sent_email import SentEmail
+from diablo.models.sis_section import SisSection
 from flask import current_app as app
 from sqlalchemy.sql import text
 
@@ -64,6 +65,7 @@ def load(create_test_data=True):
         _create_emails_sent()
         _create_users()
         _cache_externals()
+        _load_courses()
         _run_jobs()
         _set_room_capability()
     return db
@@ -82,6 +84,23 @@ def _load_schemas():
     with open(app.config['BASE_DIR'] + '/scripts/db/schema.sql', 'r') as ddlfile:
         db.session().execute(text(ddlfile.read()))
         std_commit()
+
+
+def _load_courses():
+    term_id = app.config['CURRENT_TERM_ID']
+    with open(f"{app.config['BASE_DIR']}/fixtures/sis/courses.json", 'r') as file:
+        sis_sections = json.loads(file.read())
+        SisSection.refresh(sis_sections=sis_sections, term_id=term_id)
+        std_commit(allow_test_environment=True)
+    _load_supplemental_course_data(term_id=term_id)
+
+
+def _load_supplemental_course_data(term_id):
+    distinct_instructor_uids = SisSection.get_distinct_instructor_uids()
+    insert_or_update_instructors(distinct_instructor_uids)
+    CrossListing.refresh(term_id=term_id)
+    refresh_rooms()
+    std_commit(allow_test_environment=True)
 
 
 def _create_email_templates():
@@ -140,7 +159,6 @@ def _create_users():
 
 def _run_jobs():
     CanvasJob(app_context=app.app_context).run_with_app_context()
-    DataLochSyncJob(app_context=app.app_context).run_with_app_context()
     std_commit(allow_test_environment=True)
 
 

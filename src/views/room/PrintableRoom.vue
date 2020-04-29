@@ -28,6 +28,11 @@
                     <td class="font-weight-black text-no-wrap w-30">
                       {{ course.label }}
                     </td>
+                    <td>
+                      <div v-for="instructor in course.instructors" :key="instructor.uid">
+                        {{ instructor.name }} ({{ instructor.uid }})
+                      </div>
+                    </td>
                     <td class="text-no-wrap">{{ course.meetingDays ? course.meetingDays.join(',') : '&mdash;' }}</td>
                     <td class="text-no-wrap">{{ course.meetingStartTime ? `${course.meetingStartTime} - ${course.meetingEndTime}` : '&mdash;' }}</td>
                     <td>
@@ -77,6 +82,7 @@
     data: () => ({
       headers: [
         {text: 'Course'},
+        {text: 'Instructors'},
         {text: 'Days'},
         {text: 'Time'},
         {text: 'Recording'}

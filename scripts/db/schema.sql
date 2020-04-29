@@ -311,6 +311,9 @@ CREATE INDEX sent_emails_section_id_idx ON sent_emails USING btree (section_id);
 CREATE TABLE sis_sections (
     id INTEGER NOT NULL,
     allowed_units VARCHAR(80),
+    course_name VARCHAR(80),
+    course_title TEXT,
+    instruction_format VARCHAR(80),
     instructor_name TEXT,
     instructor_role_code VARCHAR(80),
     instructor_uid VARCHAR(80),
@@ -321,12 +324,9 @@ CREATE TABLE sis_sections (
     meeting_location VARCHAR(80),
     meeting_start_date VARCHAR(80),
     meeting_start_time VARCHAR(80),
-    sis_course_name VARCHAR(80),
-    sis_course_title TEXT,
-    sis_instruction_format VARCHAR(80),
-    sis_section_id INTEGER NOT NULL,
-    sis_section_num VARCHAR(80),
-    sis_term_id INTEGER NOT NULL,
+    section_id INTEGER NOT NULL,
+    section_num VARCHAR(80),
+    term_id INTEGER NOT NULL,
     created_at timestamp with time zone NOT NULL
 );
 ALTER TABLE sis_sections OWNER TO diablo;
@@ -345,7 +345,7 @@ ALTER TABLE sis_sections ALTER COLUMN created_at SET DEFAULT now();
 
 CREATE INDEX sis_sections_instructor_uid_idx ON sis_sections USING btree (instructor_uid);
 CREATE INDEX sis_sections_meeting_location_idx ON sis_sections USING btree (meeting_location);
-CREATE INDEX sis_sections_term_id_section_id_idx ON sis_sections(sis_term_id, sis_section_id);
+CREATE INDEX sis_sections_term_id_section_id_idx ON sis_sections(term_id, section_id);
 
 --
 

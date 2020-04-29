@@ -38,7 +38,7 @@ def get_canvas_course_sites():
         with_enrollments=True,
     )
     canvas_course_sites = {}
-    # Examples of sis_section_id format: 'SEC:2020-B-21662', 'SEC:2020-B-21662-9F6ED069'
+    # Sample formats: 'SEC:2020-B-21662', 'SEC:2020-B-21662-9F6ED069'
     sis_section_regex = re.compile(r'SEC:\d+-\D-(\d+).*')
     for canvas_course in canvas_courses:
         for section in canvas_course.get_sections():

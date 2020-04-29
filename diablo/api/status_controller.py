@@ -23,7 +23,6 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 from diablo import db
-from diablo.externals import data_loch
 from diablo.externals.b_connected import BConnected
 from diablo.externals.rds import log_db_error
 from diablo.lib.http import tolerant_jsonify
@@ -47,15 +46,10 @@ def ping():
             app.logger.exception(e)
             return False
 
-    def data_loch_status():
-        rows = data_loch.safe_execute_rds('SELECT 1')
-        return rows is not None
-
     # TODO: Bring these back, one by one, as we verify in the shared dev environment.
     return tolerant_jsonify({
         'app': True,
         # 'canvas': ping_canvas(),
-        # 'dataLoch': data_loch_status(),
         'bConnected': BConnected().ping(),
         'db': db_status(),
         # 'kaltura': Kaltura().ping(),

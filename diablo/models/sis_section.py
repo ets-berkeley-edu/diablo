@@ -43,6 +43,9 @@ class SisSection(db.Model):
 
     id = db.Column(db.Integer, nullable=False, primary_key=True)  # noqa: A003
     allowed_units = db.Column(db.String)
+    course_name = db.Column(db.String)
+    course_title = db.Column(db.Text)
+    instruction_format = db.Column(db.String)
     instructor_name = db.Column(db.Text)
     instructor_role_code = db.Column(db.String)
     instructor_uid = db.Column(db.String)
@@ -53,21 +56,19 @@ class SisSection(db.Model):
     meeting_location = db.Column(db.String)
     meeting_start_date = db.Column(db.String)
     meeting_start_time = db.Column(db.String)
-    sis_course_name = db.Column(db.String)
-    sis_course_title = db.Column(db.Text)
-    sis_instruction_format = db.Column(db.String)
-    sis_section_id = db.Column(db.Integer, nullable=False)
-    sis_section_num = db.Column(db.String)
-    sis_term_id = db.Column(db.Integer, nullable=False)
+    section_id = db.Column(db.Integer, nullable=False)
+    section_num = db.Column(db.String)
+    term_id = db.Column(db.Integer, nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.now)
 
     def __init__(
             self,
-            sis_section_id,
-            sis_term_id,
             allowed_units,
-            instructor_role_code,
+            course_name,
+            course_title,
+            instruction_format,
             instructor_name,
+            instructor_role_code,
             instructor_uid,
             is_primary,
             meeting_days,
@@ -76,14 +77,14 @@ class SisSection(db.Model):
             meeting_location,
             meeting_start_date,
             meeting_start_time,
-            sis_course_name,
-            sis_course_title,
-            sis_instruction_format,
-            sis_section_num,
+            section_id,
+            section_num,
+            term_id,
     ):
-        self.sis_section_id = sis_section_id
-        self.sis_term_id = sis_term_id
         self.allowed_units = allowed_units
+        self.course_name = course_name
+        self.course_title = course_title
+        self.instruction_format = instruction_format
         self.instructor_name = instructor_name
         self.instructor_role_code = instructor_role_code
         self.instructor_uid = instructor_uid
@@ -94,17 +95,17 @@ class SisSection(db.Model):
         self.meeting_location = meeting_location
         self.meeting_start_date = meeting_start_date
         self.meeting_start_time = meeting_start_time
-        self.sis_course_name = sis_course_name
-        self.sis_course_title = sis_course_title
-        self.sis_instruction_format = sis_instruction_format
-        self.sis_section_num = sis_section_num
+        self.section_id = section_id
+        self.section_num = section_num
+        self.term_id = term_id
 
     def __repr__(self):
         return f"""<SisSection
                     id={self.id}
-                    sis_section_id={self.sis_section_id},
-                    sis_term_id={self.sis_term_id},
                     allowed_units={self.allowed_units},
+                    course_name={self.course_name},
+                    course_title={self.course_title},
+                    instruction_format={self.instruction_format},
                     instructor_name={self.instructor_name},
                     instructor_role_code={self.instructor_role_code},
                     instructor_uid={self.instructor_uid},
@@ -115,16 +116,15 @@ class SisSection(db.Model):
                     meeting_location={self.meeting_location},
                     meeting_start_date={self.meeting_start_date},
                     meeting_start_time={self.meeting_start_time},
-                    sis_course_name={self.sis_course_name},
-                    sis_course_title={self.sis_course_title},
-                    sis_instruction_format={self.sis_instruction_format},
-                    sis_section_num={self.sis_section_num},
+                    section_id={self.section_id},
+                    section_num={self.section_num},
+                    term_id={self.term_id},
                     created_at={self.created_at}>
                 """
 
     @classmethod
     def get_meeting_times(cls, term_id, section_id):
-        course = cls.query.filter_by(sis_term_id=term_id, sis_section_id=section_id).first()
+        course = cls.query.filter_by(term_id=term_id, section_id=section_id).first()
         if course:
             return course.meeting_days, course.meeting_start_time, course.meeting_end_time
         else:
@@ -153,8 +153,8 @@ class SisSection(db.Model):
             SELECT DISTINCT instructor_uid
             FROM sis_sections
             WHERE
-                sis_term_id = :term_id
-                AND sis_section_id = :section_id
+                term_id = :term_id
+                AND section_id = :section_id
                 AND instructor_uid IS NOT NULL
         """
         rows = db.session.execute(
@@ -181,9 +181,9 @@ class SisSection(db.Model):
             JOIN instructors i ON i.uid = s.instructor_uid
             JOIN rooms r ON r.location = s.meeting_location
             WHERE
-                s.sis_term_id = :term_id
+                s.term_id = :term_id
                 AND s.meeting_location = :location
-            ORDER BY s.sis_course_title, s.sis_section_id, s.instructor_uid
+            ORDER BY s.course_title, s.section_id, s.instructor_uid
         """
         rows = db.session.execute(
             text(sql),
@@ -208,25 +208,25 @@ class SisSection(db.Model):
             FROM sis_sections s
             JOIN instructors i ON i.uid = s.instructor_uid
             JOIN rooms r ON r.location = s.meeting_location
-            JOIN sent_emails e ON e.section_id = s.sis_section_id
+            JOIN sent_emails e ON e.section_id = s.section_id
             WHERE
-                s.sis_term_id = :term_id
+                s.term_id = :term_id
                 AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
                 AND e.template_type = 'invitation'
                 AND r.capability IS NOT NULL
                 AND NOT EXISTS (
                     SELECT FROM approvals
-                    WHERE section_id = s.sis_section_id AND term_id = s.sis_term_id
+                    WHERE section_id = s.section_id AND term_id = s.term_id
                 )
                 AND NOT EXISTS (
                     SELECT FROM scheduled
-                    WHERE section_id = s.sis_section_id AND term_id = s.sis_term_id
+                    WHERE section_id = s.section_id AND term_id = s.term_id
                 )
                 AND NOT EXISTS (
                     SELECT FROM course_preferences
-                    WHERE section_id = s.sis_section_id AND term_id = s.sis_term_id AND has_opted_out IS TRUE
+                    WHERE section_id = s.section_id AND term_id = s.term_id AND has_opted_out IS TRUE
                 )
-            ORDER BY s.sis_course_title, s.sis_section_id, s.instructor_uid
+            ORDER BY s.course_title, s.section_id, s.instructor_uid
         """
         rows = db.session.execute(
             text(sql),
@@ -250,17 +250,17 @@ class SisSection(db.Model):
             FROM sis_sections s
             JOIN instructors i ON i.uid = s.instructor_uid
             JOIN rooms r ON r.location = s.meeting_location
-            JOIN course_preferences c ON c.section_id = s.sis_section_id AND c.term_id = :term_id
+            JOIN course_preferences c ON c.section_id = s.section_id AND c.term_id = :term_id
             WHERE
-                s.sis_term_id = :term_id
+                s.term_id = :term_id
                 AND c.has_opted_out IS TRUE
                 AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
                 AND r.capability IS NOT NULL
                 AND NOT EXISTS (
                     SELECT FROM scheduled
-                    WHERE section_id = s.sis_section_id AND term_id = s.sis_term_id
+                    WHERE section_id = s.section_id AND term_id = s.term_id
                 )
-            ORDER BY s.sis_course_title, s.sis_section_id, s.instructor_uid
+            ORDER BY s.course_title, s.section_id, s.instructor_uid
         """
         rows = db.session.execute(
             text(sql),
@@ -285,26 +285,26 @@ class SisSection(db.Model):
             JOIN instructors i ON i.uid = s.instructor_uid
             JOIN rooms r ON r.location = s.meeting_location
             WHERE
-                s.sis_term_id = :term_id
+                s.term_id = :term_id
                 AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
                 AND r.capability IS NOT NULL
                 AND NOT EXISTS (
                     SELECT FROM sent_emails
-                    WHERE template_type = 'invitation' AND section_id = s.sis_section_id
+                    WHERE template_type = 'invitation' AND section_id = s.section_id
                 )
                 AND NOT EXISTS (
                     SELECT FROM approvals
-                    WHERE section_id = s.sis_section_id AND term_id = s.sis_term_id
+                    WHERE section_id = s.section_id AND term_id = s.term_id
                 )
                 AND NOT EXISTS (
                     SELECT FROM scheduled
-                    WHERE section_id = s.sis_section_id AND term_id = s.sis_term_id
+                    WHERE section_id = s.section_id AND term_id = s.term_id
                 )
                 AND NOT EXISTS (
                     SELECT FROM course_preferences
-                    WHERE section_id = s.sis_section_id AND term_id = s.sis_term_id AND has_opted_out IS TRUE
+                    WHERE section_id = s.section_id AND term_id = s.term_id AND has_opted_out IS TRUE
                 )
-            ORDER BY s.sis_course_title, s.sis_section_id, s.instructor_uid
+            ORDER BY s.course_title, s.section_id, s.instructor_uid
         """
         rows = db.session.execute(
             text(sql),
@@ -329,10 +329,10 @@ class SisSection(db.Model):
             JOIN instructors i ON i.uid = s.instructor_uid
             JOIN rooms r ON r.location = s.meeting_location
             WHERE
-                s.sis_term_id = :term_id
-                AND s.sis_section_id = :section_id
+                s.term_id = :term_id
+                AND s.section_id = :section_id
                 AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
-            ORDER BY s.sis_course_title, s.sis_section_id, s.instructor_uid
+            ORDER BY s.course_title, s.section_id, s.instructor_uid
         """
         rows = db.session.execute(
             text(sql),
@@ -358,10 +358,10 @@ class SisSection(db.Model):
             FROM sis_sections s
             JOIN instructors i ON i.uid = s.instructor_uid
             JOIN rooms r ON r.location = s.meeting_location
-            JOIN scheduled d ON d.section_id = s.sis_section_id AND d.term_id = :term_id
+            JOIN scheduled d ON d.section_id = s.section_id AND d.term_id = :term_id
             WHERE
-                s.sis_term_id = :term_id
-            ORDER BY s.sis_course_title, s.sis_section_id, s.instructor_uid
+                s.term_id = :term_id
+            ORDER BY s.course_title, s.section_id, s.instructor_uid
         """
         rows = db.session.execute(
             text(sql),
@@ -393,10 +393,10 @@ class SisSection(db.Model):
             JOIN instructors i ON i.uid = s.instructor_uid
             JOIN rooms r ON r.location = s.meeting_location
             WHERE
-                s.sis_term_id = :term_id
-                AND s.sis_section_id = ANY(:section_ids)
+                s.term_id = :term_id
+                AND s.section_id = ANY(:section_ids)
                 AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
-            ORDER BY s.sis_course_title, s.sis_section_id, s.instructor_uid
+            ORDER BY s.course_title, s.section_id, s.instructor_uid
         """
         rows = db.session.execute(
             text(sql),
@@ -419,20 +419,20 @@ class SisSection(db.Model):
                 r.id AS room_id,
                 r.location AS room_location
             FROM sis_sections s
-            JOIN approvals a ON a.section_id = s.sis_section_id AND a.term_id = :term_id
+            JOIN approvals a ON a.section_id = s.section_id AND a.term_id = :term_id
             JOIN instructors i ON i.uid = s.instructor_uid
-            JOIN sent_emails e ON e.section_id = s.sis_section_id
+            JOIN sent_emails e ON e.section_id = s.section_id
             JOIN rooms r ON r.location = s.meeting_location
             WHERE
-                s.sis_term_id = :term_id
+                s.term_id = :term_id
                 AND e.template_type = 'invitation'
                 AND r.capability IS NOT NULL
                 AND i.uid NOT IN (
                     SELECT approved_by_uid
                     FROM approvals
-                    WHERE section_id = s.sis_section_id AND term_id = :term_id
+                    WHERE section_id = s.section_id AND term_id = :term_id
                 )
-            ORDER BY s.sis_course_title, s.sis_section_id, s.instructor_uid
+            ORDER BY s.course_title, s.section_id, s.instructor_uid
         """
         rows = db.session.execute(
             text(sql),
@@ -457,10 +457,10 @@ class SisSection(db.Model):
             JOIN instructors i ON i.uid = s.instructor_uid
             JOIN rooms r ON r.location = s.meeting_location
             WHERE
-                s.sis_term_id = :term_id
+                s.term_id = :term_id
                 AND s.instructor_uid = :instructor_uid
                 AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
-            ORDER BY s.sis_course_title, s.sis_section_id, s.instructor_uid
+            ORDER BY s.course_title, s.section_id, s.instructor_uid
         """
         rows = db.session.execute(
             text(sql),
@@ -471,7 +471,7 @@ class SisSection(db.Model):
         )
         section_ids = []
         for row in rows:
-            section_ids.append(row['sis_section_id'])
+            section_ids.append(row['section_id'])
         return cls.get_courses(term_id=term_id, section_ids=section_ids)
 
     @classmethod
@@ -488,10 +488,10 @@ class SisSection(db.Model):
             FROM sis_sections s
             JOIN instructors i ON i.uid = s.instructor_uid
             JOIN rooms r ON r.location = s.meeting_location
-            JOIN scheduled d ON d.section_id = s.sis_section_id AND d.term_id = :term_id
+            JOIN scheduled d ON d.section_id = s.section_id AND d.term_id = :term_id
             WHERE
-                s.sis_term_id = :term_id
-            ORDER BY s.sis_course_title, s.sis_section_id, s.instructor_uid
+                s.term_id = :term_id
+            ORDER BY s.course_title, s.section_id, s.instructor_uid
         """
         rows = db.session.execute(
             text(sql),
@@ -501,34 +501,35 @@ class SisSection(db.Model):
         )
         section_ids = []
         for row in rows:
-            section_ids.append(row['sis_section_id'])
+            section_ids.append(row['section_id'])
         return cls.get_courses(term_id, section_ids)
 
     @classmethod
     def refresh(cls, sis_sections, term_id):
-        db.session.execute(cls.__table__.delete().where(cls.sis_term_id == term_id))
+        db.session.execute(cls.__table__.delete().where(cls.term_id == term_id))
         now = utc_now().strftime('%Y-%m-%dT%H:%M:%S+00')
         count_per_chunk = 10000
         for chunk in range(0, len(sis_sections), count_per_chunk):
             rows_subset = sis_sections[chunk:chunk + count_per_chunk]
             query = """
                 INSERT INTO sis_sections (
-                    allowed_units, created_at, instructor_name, instructor_role_code, instructor_uid, is_primary, meeting_days,
-                    meeting_end_date, meeting_end_time, meeting_location, meeting_start_date, meeting_start_time,
-                    sis_course_name, sis_course_title, sis_instruction_format, sis_section_id, sis_section_num,
-                    sis_term_id
+                    allowed_units, course_name, course_title, created_at, instruction_format, instructor_name,
+                    instructor_role_code, instructor_uid, is_primary, meeting_days, meeting_end_date, meeting_end_time,
+                    meeting_location, meeting_start_date, meeting_start_time, section_id, section_num, term_id
                 )
                 SELECT
-                    allowed_units, created_at, instructor_name, instructor_role_code, instructor_uid, is_primary, meeting_days,
-                    meeting_end_date, meeting_end_time, meeting_location, meeting_start_date, meeting_start_time,
-                    sis_course_name, sis_course_title, sis_instruction_format, sis_section_id, sis_section_num,
-                    sis_term_id
+                    allowed_units, course_name, course_title, created_at, instruction_format, instructor_name,
+                    instructor_role_code, instructor_uid, is_primary, meeting_days, meeting_end_date, meeting_end_time,
+                    meeting_location, meeting_start_date, meeting_start_time, section_id, section_num, term_id
                 FROM json_populate_recordset(null::sis_sections, :json_dumps)
             """
             data = [
                 {
                     'allowed_units': row['allowed_units'],
+                    'course_name': row['course_name'],
+                    'course_title': row['course_title'],
                     'created_at': now,
+                    'instruction_format': row['instruction_format'],
                     'instructor_name': row['instructor_name'],
                     'instructor_role_code': row['instructor_role_code'],
                     'instructor_uid': row['instructor_uid'],
@@ -539,12 +540,9 @@ class SisSection(db.Model):
                     'meeting_location': row['meeting_location'],
                     'meeting_start_date': row['meeting_start_date'],
                     'meeting_start_time': row['meeting_start_time'],
-                    'sis_course_name': row['sis_course_name'],
-                    'sis_course_title': row['sis_course_title'],
-                    'sis_instruction_format': row['sis_instruction_format'],
-                    'sis_section_id': int(row['sis_section_id']),
-                    'sis_section_num': row['sis_section_num'],
-                    'sis_term_id': int(row['sis_term_id']),
+                    'section_id': int(row['section_id']),
+                    'section_num': row['section_num'],
+                    'term_id': int(row['term_id']),
                 } for row in rows_subset
             ]
             db.session.execute(query, {'json_dumps': json.dumps(data)})
@@ -557,7 +555,7 @@ def _to_api_json(term_id, rows, include_rooms=True):
     # If course has multiple instructors then the section_id will be represented across multiple rows.
     for row in rows:
         approvals = []
-        section_id = int(row['sis_section_id'])
+        section_id = int(row['section_id'])
         if section_id not in courses_per_id:
             # Construct new course
             instructors_per_section_id[section_id] = []
@@ -567,14 +565,14 @@ def _to_api_json(term_id, rows, include_rooms=True):
                 section_ids=[section_id] + [c['sectionId'] for c in cross_listings],
                 term_id=term_id,
             )
-            course_name = row['sis_course_name']
-            instruction_format = row['sis_instruction_format']
-            section_num = row['sis_section_num']
+            course_name = row['course_name']
+            instruction_format = row['instruction_format']
+            section_num = row['section_num']
             course = {
                 'allowedUnits': row['allowed_units'],
                 'canvasCourseSites': _canvas_course_sites(term_id, section_id),
                 'courseName': course_name,
-                'courseTitle': row['sis_course_title'],
+                'courseTitle': row['course_title'],
                 'crossListings': cross_listings,
                 'hasOptedOut': has_opted_out,
                 'instructionFormat': instruction_format,
@@ -588,7 +586,7 @@ def _to_api_json(term_id, rows, include_rooms=True):
                 'meetingStartTime': format_time(row['meeting_start_time']),
                 'sectionId': section_id,
                 'sectionNum': section_num,
-                'termId': row['sis_term_id'],
+                'termId': row['term_id'],
                 'approvals': approvals,
                 'scheduled': scheduled,
             }
@@ -680,11 +678,11 @@ def _canvas_course_sites(term_id, section_id):
 def _get_cross_listed_courses(section_id, term_id):
     section_ids = CrossListing.get_cross_listed_sections(section_id=section_id, term_id=term_id)
     sql = f"""
-        SELECT DISTINCT sis_section_id, is_primary, sis_course_name, sis_course_title, sis_instruction_format, sis_section_num, sis_term_id
+        SELECT DISTINCT section_id, is_primary, course_name, course_title, instruction_format, section_num, term_id
         FROM sis_sections
-        WHERE sis_term_id = :term_id AND sis_section_id = ANY(:section_ids)
-        GROUP BY is_primary, sis_section_id, sis_course_name, sis_course_title, sis_instruction_format, sis_section_num, sis_term_id
-        ORDER BY sis_course_title, sis_section_id
+        WHERE term_id = :term_id AND section_id = ANY(:section_ids)
+        GROUP BY is_primary, section_id, course_name, course_title, instruction_format, section_num, term_id
+        ORDER BY course_title, section_id
     """
     rows = db.session.execute(
         text(sql),
@@ -696,11 +694,11 @@ def _get_cross_listed_courses(section_id, term_id):
 
     def _to_json(row):
         return {
-            'courseTitle': row['sis_course_title'],
+            'courseTitle': row['course_title'],
             'isPrimary': row['is_primary'],
-            'label': f"{row['sis_course_name']}, {row['sis_instruction_format']} {row['sis_section_num']}",
-            'sectionId': row['sis_section_id'],
-            'termId': row['sis_term_id'],
+            'label': f"{row['course_name']}, {row['instruction_format']} {row['section_num']}",
+            'sectionId': row['section_id'],
+            'termId': row['term_id'],
         }
     return [_to_json(row) for row in rows]
 
