@@ -7,7 +7,7 @@
         color="header-background"
         dark
       >
-        <h1>Welcome to Course Capture</h1>
+        <h1 class="display-1 header-font-size">Welcome to Course Capture</h1>
         <v-spacer />
         <v-btn
           id="log-in"
@@ -120,11 +120,11 @@
 </script>
 
 <style scoped>
-  h1 {
-    font-size: 3vw;
+  .header-font-size {
+    font-size: 2.5vw !important;
   }
   .background-splash {
-    background: url('~@/assets/sather-gate.png') no-repeat center center fixed;
+    background: url('~@/assets/sather-gate.png') no-repeat center;
     -webkit-background-size: cover;
     -moz-background-size: cover;
     -o-background-size: cover;

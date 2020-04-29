@@ -28,7 +28,6 @@ npm install
 createuser diablo --no-createdb --no-superuser --no-createrole --pwprompt
 createdb pazuzu --owner=diablo
 createdb pazuzu_test --owner=diablo
-createdb pazuzu_loch_test --owner=diablo
 
 # Load schema
 export FLASK_APP=run.py

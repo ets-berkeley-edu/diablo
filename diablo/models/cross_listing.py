@@ -83,10 +83,10 @@ class CrossListing(db.Model):
         # First group section IDs by schedule (time and location)
         sql = f"""
             SELECT
-                sis_section_id AS section_id,
+                section_id,
                 trim(concat(meeting_days, meeting_end_date, meeting_end_time, meeting_location, meeting_start_date, meeting_start_time)) as schedule
             FROM sis_sections
-            WHERE sis_term_id = :term_id
+            WHERE term_id = :term_id
                 AND meeting_days <> ''
                 AND meeting_end_date <> ''
                 AND meeting_end_time <> ''

@@ -26,7 +26,6 @@ from diablo.api.errors import BadRequestError, ResourceNotFoundError
 from diablo.api.util import admin_required
 from diablo.jobs.admin_emails_job import AdminEmailsJob
 from diablo.jobs.canvas_job import CanvasJob
-from diablo.jobs.data_loch_sync_job import DataLochSyncJob
 from diablo.jobs.dblink_to_redshift_job import DblinkToRedshiftJob
 from diablo.jobs.kaltura_job import KalturaJob
 from diablo.jobs.queued_emails_job import QueuedEmailsJob
@@ -77,7 +76,7 @@ def available_jobs():
 
 def _available_jobs():
     jobs = []
-    for job_cls in (AdminEmailsJob, CanvasJob, DataLochSyncJob, DblinkToRedshiftJob, KalturaJob, QueuedEmailsJob):
+    for job_cls in (AdminEmailsJob, CanvasJob, DblinkToRedshiftJob, KalturaJob, QueuedEmailsJob):
         jobs.append({
             'key': job_cls.key(),
             'class': job_cls,

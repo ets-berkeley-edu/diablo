@@ -22,8 +22,6 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-
-import glob
 import json
 import os
 
@@ -116,23 +114,6 @@ def db_session(db):
     db.session = _session
 
     return _session
-
-
-@pytest.fixture(scope='session', autouse=True)
-def fake_loch(app):
-    """Mimic data loch schemas and tables in a local Postgres database."""
-    from sqlalchemy import create_engine
-    from sqlalchemy.sql import text
-    fixture_path = f"{app.config['BASE_DIR']}/fixtures"
-    with open(f'{fixture_path}/loch.sql', 'r') as ddlfile:
-        ddltext = ddlfile.read()
-    params = {}
-    for fixture in glob.glob(f'{fixture_path}/loch_student_*.json'):
-        key = fixture.replace(f'{fixture_path}/loch_student_', '').replace('.json', '')
-        with open(fixture, 'r') as f:
-            params[key] = f.read()
-    data_loch_db = create_engine(app.config['DATA_LOCH_RDS_URI'])
-    data_loch_db.execute(text(ddltext), params)
 
 
 @pytest.fixture(scope='function')

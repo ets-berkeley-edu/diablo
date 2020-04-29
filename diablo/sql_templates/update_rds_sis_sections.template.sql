@@ -27,37 +27,35 @@ DELETE FROM sis_sections WHERE sis_term_id = '{term_id}';
 
 --
 
-INSERT INTO sis_sections (sis_term_id, sis_section_id, is_primary, sis_course_name, sis_course_title,
-      sis_instruction_format, sis_section_num, allowed_units, instructor_uid, instructor_name, instructor_role_code,
-      meeting_location, meeting_days, meeting_start_time, meeting_end_time, meeting_start_date, meeting_end_date)
-
+INSERT INTO sis_sections (allowed_units, course_name, course_title, instruction_format, instructor_name,
+                          instructor_role_code, instructor_uid, is_primary, meeting_days, meeting_end_date,
+                          meeting_end_time, meeting_location, meeting_start_date, meeting_start_time, section_id,
+                          section_num, term_id)
    (SELECT * FROM dblink('{rds_dblink_to_redshift}',$REDSHIFT$
     SELECT
-      term_id::INTEGER, section_id::INTEGER, is_primary::BOOLEAN, course_display_name, course_title,
-      instruction_format, section_num, allowed_units, instructor_uid, instructor_name, instructor_role_code,
-      meeting_location, meeting_days, meeting_start_time, meeting_end_time, meeting_start_date, meeting_end_date
+       allowed_units, course_display_name, course_title, instruction_format, instructor_name, instructor_role_code,
+       instructor_uid, is_primary::BOOLEAN, meeting_days, meeting_end_date, meeting_end_time, meeting_location,
+       meeting_start_date, meeting_start_time, section_id::INTEGER, section_num, term_id::INTEGER
     FROM {redshift_schema_sis}.courses
     WHERE term_id='{term_id}'
   $REDSHIFT$)
   AS redshift_sis_sections (
-    sis_term_id INTEGER,
-    sis_section_id INTEGER,
-    is_primary BOOLEAN,
-    sis_course_name VARCHAR(80),
-    sis_course_title TEXT,
-    sis_instruction_format VARCHAR(80),
-    sis_section_num VARCHAR(80),
     allowed_units DOUBLE PRECISION,
-    instructor_uid VARCHAR(80),
+    course_name VARCHAR(80),
+    course_title TEXT,
+    instruction_format VARCHAR(80),
     instructor_name TEXT,
     instructor_role_code VARCHAR(80),
-    meeting_location VARCHAR(80),
+    instructor_uid VARCHAR(80),
+    is_primary BOOLEAN,
     meeting_days VARCHAR(80),
-    meeting_start_time VARCHAR(80),
+    meeting_end_date VARCHAR(80),
     meeting_end_time VARCHAR(80),
+    meeting_location VARCHAR(80),
     meeting_start_date VARCHAR(80),
-    meeting_end_date VARCHAR(80)
+    meeting_start_time VARCHAR(80),
+    section_id INTEGER,
+    section_num VARCHAR(80),
+    term_id INTEGER
   )
 );
-
---
