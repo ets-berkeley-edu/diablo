@@ -18,15 +18,10 @@
                 <v-icon>mdi-school-outline</v-icon>
               </v-col>
               <v-col>
-                <span v-if="$currentUser.isAdmin">
-                  <span v-for="(instructor, index) in course.instructors" :key="instructor.uid">
-                    <router-link :id="`instructor-${instructor.uid}`" :to="`/user/${instructor.uid}`">{{ instructor.name }}</router-link>
-                    <span v-if="course.instructors.length > 1 && index === course.instructors.length - 2"> and </span>
-                  </span>
-                </span>
-                <span v-if="!$currentUser.isAdmin">
-                  {{ oxfordJoin($_.map(course.instructors, 'name')) }}
-                </span>
+                <OxfordJoin v-slot="{ item }" :items="course.instructors">
+                  <router-link v-if="$currentUser.isAdmin" :id="`instructor-${item.uid}`" :to="`/user/${item.uid}`">{{ item.name }}</router-link>
+                  <span v-if="!$currentUser.isAdmin" :id="`instructor-${item.uid}`">{{ item.name }}</span>
+                </OxfordJoin>
               </v-col>
             </v-row>
             <v-row v-if="course.meetingDays" id="meeting-days">
@@ -61,7 +56,7 @@
                 <v-icon>mdi-format-line-spacing</v-icon>
               </v-col>
               <v-col>
-                <h3>Cross-listing<span v-if="course.crossListings.length !== 1">s</span></h3>
+                <span>Cross-listing<span v-if="course.crossListings.length !== 1">s</span></span>
                 <div v-for="crossListing in course.crossListings" :key="crossListing.sectionId">
                   <span v-if="$currentUser.isAdmin">
                     <router-link
@@ -273,11 +268,13 @@
 
 <script>
   import Context from '@/mixins/Context'
+  import OxfordJoin from '@/components/util/OxfordJoin'
   import Utils from '@/mixins/Utils'
   import {approve, getApprovals} from '@/api/course'
 
   export default {
     name: 'Course',
+    components: {OxfordJoin},
     mixins: [Context, Utils],
     data: () => ({
       agreedToTerms: false,
