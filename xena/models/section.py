@@ -23,29 +23,55 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-from config import xena
-from flask import current_app as app
-from selenium.webdriver.common.by import By
-from xena.pages.diablo_pages import DiabloPages
+from xena.models.room import Room
+from xena.models.user import User
 
 
-class LoginPage(DiabloPages):
+class Section(object):
 
-    SIGN_IN_BUTTON = (By.ID, 'log-in')
-    USERNAME_INPUT = (By.ID, 'dev-auth-uid')
-    PASSWORD_INPUT = (By.ID, 'dev-auth-password')
-    DEV_AUTH_LOGIN_BUTTON = (By.ID, 'btn-dev-auth-login')
+    def __init__(self, data):
+        self.data = data
 
-    def load_page(self):
-        app.logger.info('Loading the Diablo login page')
-        self.driver.get(xena.BASE_URL)
-        self.wait_for_diablo_title('Welcome')
+    @property
+    def term(self):
+        return self.data['term']
 
-    def click_sign_in(self):
-        self.wait_for_page_and_click(LoginPage.SIGN_IN_BUTTON)
+    @property
+    def ccn(self):
+        return self.data['ccn']
 
-    def dev_auth(self, uid):
-        app.logger.info(f'Logging in to El Diablo as UID {uid}')
-        self.wait_for_element_and_type(LoginPage.USERNAME_INPUT, uid)
-        self.wait_for_element_and_type(LoginPage.PASSWORD_INPUT, app.config['DEVELOPER_AUTH_PASSWORD'])
-        self.wait_for_element_and_click(LoginPage.DEV_AUTH_LOGIN_BUTTON)
+    @property
+    def code(self):
+        return self.data['code']
+
+    @property
+    def number(self):
+        return self.data['number']
+
+    @property
+    def title(self):
+        return self.data['title']
+
+    @property
+    def instructors(self):
+        return [User(i) for i in self.data['instructors']]
+
+    @property
+    def days(self):
+        return self.data['days']
+
+    @property
+    def start_time(self):
+        return self.data['start_time']
+
+    @property
+    def end_time(self):
+        return self.data['end_time']
+
+    @property
+    def room(self):
+        return Room(self.data['room'])
+
+    @property
+    def listings(self):
+        return [Section(i) for i in self.data['listings']]

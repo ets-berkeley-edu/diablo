@@ -43,10 +43,35 @@ class OuijaBoardPage(DiabloPages):
     def load_page(self):
         app.logger.info('Loading the Ouija Board')
         self.driver.get(f'{xena.BASE_URL}/ouija')
-        self.wait_for_title('The Ouija Board')
+        self.wait_for_diablo_title('The Ouija Board')
 
     def search_courses(self, string, status):
         app.logger.info(f'Searching courses for {string} with status {status}')
         self.wait_for_element_and_type(OuijaBoardPage.SEARCH_INPUT, string)
         self.wait_for_element_and_click(OuijaBoardPage.SEARCH_SELECT_BUTTON)
         self.wait_for_element_and_click((By.XPATH, self.search_courses_option_xpath(status)))
+
+    def course_row_link(self, section):
+        return self.element((By.ID, f'link-course-{section.ccn}'))
+
+    def course_row_code_el(self, section):
+        return self.element((By.XPATH, f'//tr[@id="{section.ccn}"]/td[2]'))
+
+    def course_row_title_el(self, section):
+        return self.element((By.XPATH, f'//tr[@id="{section.ccn}"]/td[3]'))
+
+    def course_row_instructors_el(self, section):
+        return self.element((By.XPATH, f'//tr[@id="{section.ccn}"]/td[4]'))
+
+    def course_row_room_el(self, section):
+        return self.element((By.XPATH, f'//tr[@id="{section.ccn}"]/td[5]'))
+
+    def course_row_days_el(self, section):
+        return self.element((By.XPATH, f'//tr[@id="{section.ccn}"]/td[6]'))
+
+    def course_row_time_el(self, section):
+        return self.element((By.XPATH, f'//tr[@id="{section.ccn}"]/td[7]'))
+
+    def click_sign_up_page_link(self, section):
+        app.logger.info(f'Clicking the link to the sign up page for {section.code}')
+        self.wait_for_element_and_click((By.ID, f'link-course-{section.ccn}'))

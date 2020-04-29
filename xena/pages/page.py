@@ -27,6 +27,7 @@ import time
 
 from flask import current_app as app
 from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.wait import WebDriverWait as Wait
@@ -37,6 +38,8 @@ class Page(object):
 
     def __init__(self, driver):
         self.driver = driver
+
+    # METHODS TO RETURN SELENIUM ELEMENTS USING A LOCATOR
 
     def element(self, locator):
         strategy = locator[0]
@@ -65,6 +68,8 @@ class Page(object):
             return self.driver.find_elements_by_link_text(target)
         elif strategy == 'xpath':
             return self.driver.find_elements_by_xpath(target)
+
+    # METHODS TO INTERACT WITH ELEMENTS USING A LOCATOR RATHER THAN AN ELEMENT, WHICH HELPS AVOID STALE ELEMENT ERRORS.
 
     def wait_for_element(self, locator, timeout):
         Wait(self.driver, timeout).until(ec.presence_of_element_located(locator))
@@ -102,6 +107,8 @@ class Page(object):
         self.element(locator).clear()
         self.element(locator).send_keys(string)
 
+    # PAGE TITLE AND HEADING
+
     def title(self):
         return self.driver.title
 
@@ -109,5 +116,39 @@ class Page(object):
         app.logger.info(f'Waiting for page title \'{string}\'')
         Wait(self.driver, util.get_long_timeout()).until((ec.title_is(string)))
 
+    def visible_heading(self):
+        return self.element((By.XPATH, '//h1')).text
+
+    # NAVIGATION AND KEYSTROKES
+
+    def mouseover(self, element):
+        ActionChains(self.driver).move_to_element(element).perform()
+
     def hit_enter(self):
         ActionChains(self.driver).send_keys(Keys.ENTER).perform()
+
+    def hit_escape(self):
+        ActionChains(self.driver).send_keys(Keys.ESCAPE).perform()
+
+    # EXTERNAL LINK VALIDATOR
+
+    def external_link_valid(self, locator, expected_page_title):
+        orig_window = self.driver.current_window_handle
+        self.wait_for_element_and_click(locator)
+        time.sleep(1)
+        try:
+            windows = self.driver.window_handles
+            if len(windows) > 1:
+                self.driver.switch_to.window(windows[-1])
+                self.wait_for_title(expected_page_title)
+                app.logger.info(f'Found new window with title "{expected_page_title}"')
+                return True
+            else:
+                app.logger.info('Link did not open in a new window')
+                app.logger.info(
+                    f'Expecting page title {expected_page_title}, but visible page title is {self.driver.title()}')
+                return False
+        finally:
+            if len(self.driver.window_handles) > 1:
+                self.driver.close()
+                self.driver.switch_to.window(orig_window)

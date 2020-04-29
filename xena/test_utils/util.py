@@ -26,6 +26,9 @@ ENHANCEMENTS, OR MODIFICATIONS.
 import json
 
 from config import xena
+from diablo import db, std_commit
+from flask import current_app as app
+from sqlalchemy import text
 
 
 def get_xena_browser():
@@ -40,7 +43,21 @@ def get_long_timeout():
     return xena.TIMEOUT_LONG
 
 
-def parse_cdm_test_data():
-    with open(xena.TEST_DATA_CDM) as f:
+def parse_sign_up_test_data():
+    with open(xena.TEST_DATA_SIGNUP) as f:
         parsed = json.load(f)
         return parsed['courses']
+
+
+def reset_test_data(course_data):
+    ccn = course_data['ccn']
+    term = app.config['CURRENT_TERM_ID']
+    sql = f'DELETE FROM approvals WHERE section_id = {ccn} AND term_id = {term}'
+    db.session.execute(text(sql))
+    sql = f'DELETE FROM scheduled WHERE section_id = {ccn} AND term_id = {term}'
+    db.session.execute(text(sql))
+    sql = f'DELETE FROM sent_emails WHERE section_id = {ccn} AND term_id = {term}'
+    db.session.execute(text(sql))
+    sql = f'DELETE FROM course_preferences WHERE section_id = {ccn} AND term_id = {term}'
+    db.session.execute(text(sql))
+    std_commit(allow_test_environment=True)
