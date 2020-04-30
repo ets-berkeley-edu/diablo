@@ -27,10 +27,9 @@ import json
 
 from diablo import BASE_DIR, cache, db, std_commit
 from diablo.jobs.canvas_job import CanvasJob
-from diablo.jobs.util import insert_or_update_instructors, refresh_rooms
+from diablo.jobs.dblink_to_redshift_job import DblinkToRedshiftJob
 from diablo.lib.util import utc_now
 from diablo.models.admin_user import AdminUser
-from diablo.models.cross_listing import CrossListing
 from diablo.models.email_template import EmailTemplate
 from diablo.models.room import Room
 from diablo.models.sent_email import SentEmail
@@ -92,15 +91,7 @@ def _load_courses():
         sis_sections = json.loads(file.read())
         SisSection.refresh(sis_sections=sis_sections, term_id=term_id)
         std_commit(allow_test_environment=True)
-    _load_supplemental_course_data(term_id=term_id)
-
-
-def _load_supplemental_course_data(term_id):
-    distinct_instructor_uids = SisSection.get_distinct_instructor_uids()
-    insert_or_update_instructors(distinct_instructor_uids)
-    CrossListing.refresh(term_id=term_id)
-    refresh_rooms()
-    std_commit(allow_test_environment=True)
+    DblinkToRedshiftJob.after_dblink_courses_refresh(term_id=term_id)
 
 
 def _create_email_templates():

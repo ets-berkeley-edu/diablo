@@ -227,7 +227,6 @@ class TestGetCourse:
             Approval.create(
                 approved_by_uid=approved_by_uid,
                 approver_type_='instructor',
-                cross_listed_section_ids=[],
                 publish_type_='canvas',
                 recording_type_='presentation_audio',
                 room_id=room_id,
@@ -284,29 +283,25 @@ class TestGetCourse:
 
     def test_cross_listing(self, client, db, fake_auth):
         """Course has cross-listings."""
-        cross_listed_section_ids = {28475, 27950, 32827}
+        section_id = 27950
+        cross_listed_section_ids = {28475, 32827}
         instructor_uid = '269246'
         fake_auth.login(uid=instructor_uid)
 
-        verified_feed_contents = False
-        for section_id in cross_listed_section_ids:
-            api_json = api_get_course(
+        api_json = api_get_course(
+            client,
+            term_id=self.term_id,
+            section_id=section_id,
+        )
+        assert cross_listed_section_ids == set([c['sectionId'] for c in api_json['crossListings']])
+        # Verify that cross-listed section_ids have been "deleted" in sis_sections table
+        for section_id_ in cross_listed_section_ids:
+            api_get_course(
                 client,
                 term_id=self.term_id,
-                section_id=section_id,
+                section_id=section_id_,
+                expected_status_code=404,
             )
-            # Cross-listed section IDs are expected in API response
-            actual_section_ids = [c['sectionId'] for c in api_json['crossListings']]
-            assert len(actual_section_ids) == 2
-            assert api_json['sectionId'] not in actual_section_ids
-
-            if section_id == 27950:
-                assert api_json['label'] == 'IND ENG 195, COL 001'
-                assert api_json['courseTitle'] == 'Richard Newton Lecture Series'
-                assert api_json['meetingDays'] == ['TU']
-                verified_feed_contents = True
-
-        assert verified_feed_contents
 
     def test_no_cross_listing(self, client, db, admin_session):
         """Course does not have cross-listing."""
@@ -371,7 +366,6 @@ class TestCoursesFilter:
             Approval.create(
                 approved_by_uid=_get_instructor_uids(section_id=section_1_id, term_id=self.term_id)[0],
                 approver_type_='instructor',
-                cross_listed_section_ids=[],
                 publish_type_='canvas',
                 recording_type_='presentation_audio',
                 room_id=Room.get_room_id(section_id=section_1_id, term_id=self.term_id),
@@ -415,7 +409,6 @@ class TestCoursesFilter:
             Approval.create(
                 approved_by_uid=section_5_instructor_uids[0],
                 approver_type_='instructor',
-                cross_listed_section_ids=[],
                 publish_type_='canvas',
                 recording_type_='presentation_audio',
                 room_id=SisSection.get_course(term_id=self.term_id, section_id=section_5_id)['room']['id'],
@@ -452,7 +445,6 @@ class TestCoursesFilter:
             Approval.create(
                 approved_by_uid=_get_instructor_uids(section_id=section_4_id, term_id=self.term_id)[0],
                 approver_type_='instructor',
-                cross_listed_section_ids=[],
                 publish_type_='canvas',
                 recording_type_='presentation_audio',
                 room_id=Room.get_room_id(section_id=section_4_id, term_id=self.term_id),
@@ -492,7 +484,6 @@ class TestCoursesFilter:
                 Approval.create(
                     approved_by_uid=course['instructor_uids'][0],
                     approver_type_='instructor',
-                    cross_listed_section_ids=[],
                     publish_type_='canvas',
                     recording_type_='presentation_audio',
                     room_id=Room.get_room_id(section_id=course['section_id'], term_id=self.term_id),
@@ -532,7 +523,6 @@ class TestCoursesFilter:
                 Approval.create(
                     approved_by_uid=course['instructor_uids'][0],
                     approver_type_='instructor',
-                    cross_listed_section_ids=[],
                     publish_type_='canvas',
                     recording_type_='presentation_audio',
                     room_id=Room.get_room_id(section_id=course['section_id'], term_id=self.term_id),
@@ -610,7 +600,6 @@ class TestCoursesChanges:
             assert meeting_days != obsolete_meeting_days
 
             Scheduled.create(
-                cross_listed_section_ids=[],
                 instructor_uids=SisSection.get_instructor_uids(term_id=self.term_id, section_id=section_1_id),
                 meeting_days=obsolete_meeting_days,
                 meeting_start_time=meeting_start_time,
@@ -639,7 +628,6 @@ class TestCoursesChanges:
             )
             instructor_uids = SisSection.get_instructor_uids(term_id=self.term_id, section_id=section_3_id)
             Scheduled.create(
-                cross_listed_section_ids=[],
                 instructor_uids=instructor_uids + ['999999'],
                 meeting_days=meeting_days,
                 meeting_start_time=meeting_start_time,
@@ -728,33 +716,6 @@ class TestUpdatePreferences:
         else:
             assert section_1_id not in section_ids_opted_out
 
-    def test_opt_out_cross_listings(self, client, admin_session):
-        """If a section opts out then its cross-listings are automatically opted out."""
-        with test_approvals_workflow(app):
-            # First, opt out
-            cross_listed_section_ids = [28475, 27950, 32827]
-            self._api_opt_out_update(
-                client,
-                term_id=self.term_id,
-                section_id=cross_listed_section_ids[-1],
-                opt_out=True,
-            )
-            section_ids_opted_out = CoursePreference.get_section_ids_opted_out(term_id=self.term_id)
-            for section_id in cross_listed_section_ids:
-                assert section_id in section_ids_opted_out
-            std_commit(allow_test_environment=True)
-
-            # Opt back in
-            self._api_opt_out_update(
-                client,
-                term_id=self.term_id,
-                section_id=cross_listed_section_ids[0],
-                opt_out=False,
-            )
-            section_ids_opted_out = CoursePreference.get_section_ids_opted_out(term_id=self.term_id)
-            for section_id in cross_listed_section_ids:
-                assert section_id not in section_ids_opted_out
-
 
 def _is_course_in_enabled_room(section_id, term_id):
     capability = SisSection.get_course(term_id=term_id, section_id=section_id)['room']['capability']
@@ -781,7 +742,6 @@ def _schedule_recordings(
         section_id=section_id,
     )
     Scheduled.create(
-        cross_listed_section_ids=[],
         instructor_uids=SisSection.get_instructor_uids(term_id=term_id, section_id=section_id),
         meeting_days=meeting_days,
         meeting_start_time=meeting_start_time,

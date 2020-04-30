@@ -108,7 +108,6 @@ CREATE TABLE approvals (
     section_id INTEGER NOT NULL,
     term_id INTEGER NOT NULL,
     approver_type approver_types,
-    cross_listed_section_ids INTEGER[],
     publish_type publish_types NOT NULL,
     recording_type recording_types NOT NULL,
     room_id INTEGER NOT NULL,
@@ -269,7 +268,6 @@ CREATE INDEX rooms_location_idx ON rooms USING btree (location);
 CREATE TABLE scheduled (
     section_id INTEGER NOT NULL,
     term_id INTEGER NOT NULL,
-    cross_listed_section_ids INTEGER[],
     instructor_uids VARCHAR(80)[] NOT NULL,
     meeting_days VARCHAR(80),
     meeting_end_time VARCHAR(80),
@@ -327,7 +325,8 @@ CREATE TABLE sis_sections (
     section_id INTEGER NOT NULL,
     section_num VARCHAR(80),
     term_id INTEGER NOT NULL,
-    created_at timestamp with time zone NOT NULL
+    created_at timestamp with time zone NOT NULL,
+    deleted_at timestamp with time zone
 );
 ALTER TABLE sis_sections OWNER TO diablo;
 CREATE SEQUENCE sis_sections_id_seq

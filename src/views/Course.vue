@@ -57,15 +57,11 @@
               </v-col>
               <v-col>
                 <span>Cross-listing<span v-if="course.crossListings.length !== 1">s</span></span>
-                <div v-for="crossListing in course.crossListings" :key="crossListing.sectionId">
-                  <span v-if="$currentUser.isAdmin">
-                    <router-link
-                      :id="`cross-listing-${crossListing.sectionId}`"
-                      :to="`/course/${crossListing.termId}/${crossListing.sectionId}`">
-                      {{ crossListing.label }}
-                    </router-link>
-                  </span>
-                  <span v-if="!$currentUser.isAdmin" :id="`cross-listing-${crossListing.sectionId}`">{{ crossListing.label }}</span>
+                <div
+                  v-for="crossListing in course.crossListings"
+                  :id="`cross-listing-${crossListing.sectionId}`"
+                  :key="crossListing.sectionId">
+                  {{ crossListing.label }}
                 </div>
               </v-col>
             </v-row>
@@ -184,7 +180,9 @@
                         :items="recordingTypeOptions"
                         label="Select..."
                         solo
-                      ></v-select>
+                      >
+                        <span :id="`recording-type-option-${data.item.value}`" slot="item" slot-scope="data">{{ data.item.text }}</span>
+                      </v-select>
                     </div>
                   </div>
                 </v-col>
@@ -224,7 +222,9 @@
                     :items="publishTypeOptions"
                     label="Select..."
                     solo
-                  ></v-select>
+                  >
+                    <span :id="`publish-type-option-${data.item.value}`" slot="item" slot-scope="data">{{ data.item.text }}</span>
+                  </v-select>
                 </v-col>
               </v-row>
               <v-row v-if="!course.hasNecessaryApprovals" no-gutters align="start">

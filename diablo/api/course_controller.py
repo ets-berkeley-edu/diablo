@@ -66,7 +66,6 @@ def approve():
     approval = Approval.create(
         approved_by_uid=current_user.uid,
         approver_type_='admin' if current_user.is_admin else 'instructor',
-        cross_listed_section_ids=[c['sectionId'] for c in course['crossListings']],
         publish_type_=publish_type,
         recording_type_=recording_type,
         room_id=room.id,
