@@ -29,7 +29,7 @@ from tests.util import override_config
 
 @pytest.fixture()
 def admin_session(fake_auth):
-    fake_auth.login('2040')
+    fake_auth.login('90001')
 
 
 class TestVersion:

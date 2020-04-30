@@ -45,6 +45,7 @@ def api_approve(
     assert response.status_code == expected_status_code, f"""
         Expected status code: {expected_status_code}
         Actual status code: {response.status_code}
+        section_id: {section_id}
     """
     return response.json
 
@@ -54,5 +55,6 @@ def api_get_course(client, term_id, section_id, expected_status_code=200):
     assert response.status_code == expected_status_code, f"""
         Expected status code: {expected_status_code}
         Actual status code: {response.status_code}
+        section_id: {section_id}
     """
     return response.json

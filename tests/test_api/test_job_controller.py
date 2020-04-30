@@ -24,8 +24,8 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 import pytest
 
-admin_uid = '2040'
-instructor_uid = '8765432'
+admin_uid = '90001'
+instructor_uid = '10001'
 
 
 @pytest.fixture()

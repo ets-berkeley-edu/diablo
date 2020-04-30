@@ -58,18 +58,18 @@ class CrossListing(db.Model):
     @classmethod
     def create(
             cls,
-            term_id,
-            section_id,
             cross_listed_section_ids,
+            section_id,
+            term_id,
     ):
-        approval = cls(
+        cross_listing = cls(
+            cross_listed_section_ids=cross_listed_section_ids,
             section_id=section_id,
             term_id=term_id,
-            cross_listed_section_ids=cross_listed_section_ids,
         )
-        db.session.add(approval)
+        db.session.add(cross_listing)
         std_commit()
-        return approval
+        return cross_listing
 
     @classmethod
     def get_cross_listed_sections(cls, section_id, term_id):

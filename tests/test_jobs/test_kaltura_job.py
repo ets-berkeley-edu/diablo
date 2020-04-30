@@ -32,7 +32,7 @@ from diablo.models.sis_section import SisSection
 from flask import current_app as app
 from tests.util import test_approvals_workflow
 
-admin_uid = '2040'
+admin_uid = '90001'
 
 
 class TestKalturaJob:
@@ -40,7 +40,7 @@ class TestKalturaJob:
     def test_scheduling_of_recordings(self):
         """If a course is scheduled for recording then email is sent to its instructor(s)."""
         with test_approvals_workflow(app):
-            section_id = 22287
+            section_id = 50005
             term_id = app.config['CURRENT_TERM_ID']
             email_template_type = 'recordings_scheduled'
 
@@ -108,7 +108,7 @@ class TestKalturaJob:
             emails_sent = _get_emails_sent()
             assert len(emails_sent) == email_count + 1
             email_sent = emails_sent[-1].to_api_json()
-            assert set(email_sent['recipientUids']) == {'98765', '87654'}
+            assert set(email_sent['recipientUids']) == {'10007', '10006'}
             assert email_sent['sectionId'] == section_id
             assert email_sent['templateType'] == 'recordings_scheduled'
             assert email_sent['termId'] == term_id
@@ -122,7 +122,7 @@ class TestKalturaJob:
     def test_admin_approval(self):
         """Course is scheduled for recording if an admin user has approved."""
         with test_approvals_workflow(app):
-            section_id = 22287
+            section_id = 50005
             term_id = app.config['CURRENT_TERM_ID']
             course = SisSection.get_course(section_id=section_id, term_id=term_id)
             instructors = course['instructors']

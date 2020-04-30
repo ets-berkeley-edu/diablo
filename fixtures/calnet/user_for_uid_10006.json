@@ -1,11 +1,11 @@
 {
   "campusEmail": "____________berkeley.edu",
-  "deptCode": "HDRAM",
+  "deptCode": "OEMPA",
   "email": "____________berkeley.edu",
-  "firstName": "Chris",
+  "firstName": "Regan",
   "isExpiredPerLdap": false,
   "lastName": "MacNeil",
-  "name": "Chris MacNeil",
-  "title": "Actor and mother",
-  "uid": "234567"
+  "name": "Regan MacNeil",
+  "title": "Hostess",
+  "uid": "10006"
 }

@@ -31,12 +31,12 @@ import pytest
 
 @pytest.fixture()
 def admin_session(fake_auth):
-    fake_auth.login('2040')
+    fake_auth.login('90001')
 
 
 @pytest.fixture()
 def instructor_session(fake_auth):
-    fake_auth.login('8765432')
+    fake_auth.login('10001')
 
 
 class TestGetAllRooms:

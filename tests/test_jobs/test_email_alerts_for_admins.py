@@ -39,8 +39,8 @@ class TestEmailAlertsForAdmins:
         """Emails admin when a scheduled course gets a room change."""
         with test_approvals_workflow(app):
             term_id = app.config['CURRENT_TERM_ID']
-            section_id = 26094
-            approved_by_uid = '6789'
+            section_id = 50004
+            approved_by_uid = '10004'
             the_old_room = 'Wheeler 150'
             scheduled_in_room = Room.find_room(the_old_room)
             approval = Approval.create(
@@ -77,8 +77,8 @@ class TestEmailAlertsForAdmins:
         """Emails admin when a scheduled course gets a new instructor."""
         with test_approvals_workflow(app):
             term_id = app.config['CURRENT_TERM_ID']
-            section_id = 22287
-            approved_by_uid = '8765432'
+            section_id = 50005
+            approved_by_uid = '10001'
             room_id = Room.find_room('Barker 101').id
             approval = Approval.create(
                 approved_by_uid=approved_by_uid,
