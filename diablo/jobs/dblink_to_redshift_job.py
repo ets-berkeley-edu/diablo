@@ -84,7 +84,7 @@ class DblinkToRedshiftJob(BaseJob):
                 AND meeting_location <> ''
                 AND meeting_start_date <> ''
                 AND meeting_start_time <> ''
-            ORDER BY schedule
+            ORDER BY schedule, section_id
         """
         rows = db.session.execute(
             text(sql),

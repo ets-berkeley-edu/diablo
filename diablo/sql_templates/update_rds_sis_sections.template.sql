@@ -23,7 +23,7 @@
  * ENHANCEMENTS, OR MODIFICATIONS.
  */
 
-DELETE FROM sis_sections WHERE sis_term_id = '{term_id}';
+DELETE FROM sis_sections WHERE term_id = '{term_id}';
 
 --
 
