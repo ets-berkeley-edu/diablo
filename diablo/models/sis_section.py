@@ -60,6 +60,7 @@ class SisSection(db.Model):
     section_num = db.Column(db.String)
     term_id = db.Column(db.Integer, nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.now)
+    deleted_at = db.Column(db.DateTime)
 
     def __init__(
             self,
@@ -123,6 +124,17 @@ class SisSection(db.Model):
                 """
 
     @classmethod
+    def delete_all(cls, section_ids, term_id):
+        sql = 'UPDATE sis_sections SET deleted_at = now() WHERE term_id = :term_id AND section_id  = ANY(:section_ids)'
+        db.session.execute(
+            text(sql),
+            {
+                'section_ids': section_ids,
+                'term_id': term_id,
+            },
+        )
+
+    @classmethod
     def get_meeting_times(cls, term_id, section_id):
         course = cls.query.filter_by(term_id=term_id, section_id=section_id).first()
         if course:
@@ -183,6 +195,7 @@ class SisSection(db.Model):
             WHERE
                 s.term_id = :term_id
                 AND s.meeting_location = :location
+                AND s.deleted_at IS NULL
             ORDER BY s.course_title, s.section_id, s.instructor_uid
         """
         rows = db.session.execute(
@@ -226,6 +239,7 @@ class SisSection(db.Model):
                     SELECT FROM course_preferences
                     WHERE section_id = s.section_id AND term_id = s.term_id AND has_opted_out IS TRUE
                 )
+                AND s.deleted_at IS NULL
             ORDER BY s.course_title, s.section_id, s.instructor_uid
         """
         rows = db.session.execute(
@@ -260,6 +274,7 @@ class SisSection(db.Model):
                     SELECT FROM scheduled
                     WHERE section_id = s.section_id AND term_id = s.term_id
                 )
+                AND s.deleted_at IS NULL
             ORDER BY s.course_title, s.section_id, s.instructor_uid
         """
         rows = db.session.execute(
@@ -304,6 +319,7 @@ class SisSection(db.Model):
                     SELECT FROM course_preferences
                     WHERE section_id = s.section_id AND term_id = s.term_id AND has_opted_out IS TRUE
                 )
+                AND s.deleted_at IS NULL
             ORDER BY s.course_title, s.section_id, s.instructor_uid
         """
         rows = db.session.execute(
@@ -332,6 +348,7 @@ class SisSection(db.Model):
                 s.term_id = :term_id
                 AND s.section_id = :section_id
                 AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
+                AND s.deleted_at IS NULL
             ORDER BY s.course_title, s.section_id, s.instructor_uid
         """
         rows = db.session.execute(
@@ -361,6 +378,7 @@ class SisSection(db.Model):
             JOIN scheduled d ON d.section_id = s.section_id AND d.term_id = :term_id
             WHERE
                 s.term_id = :term_id
+                AND s.deleted_at IS NULL
             ORDER BY s.course_title, s.section_id, s.instructor_uid
         """
         rows = db.session.execute(
@@ -396,6 +414,7 @@ class SisSection(db.Model):
                 s.term_id = :term_id
                 AND s.section_id = ANY(:section_ids)
                 AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
+                AND s.deleted_at IS NULL
             ORDER BY s.course_title, s.section_id, s.instructor_uid
         """
         rows = db.session.execute(
@@ -432,6 +451,7 @@ class SisSection(db.Model):
                     FROM approvals
                     WHERE section_id = s.section_id AND term_id = :term_id
                 )
+                AND s.deleted_at IS NULL
             ORDER BY s.course_title, s.section_id, s.instructor_uid
         """
         rows = db.session.execute(
@@ -460,6 +480,7 @@ class SisSection(db.Model):
                 s.term_id = :term_id
                 AND s.instructor_uid = :instructor_uid
                 AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
+                AND s.deleted_at IS NULL
             ORDER BY s.course_title, s.section_id, s.instructor_uid
         """
         rows = db.session.execute(
@@ -491,6 +512,7 @@ class SisSection(db.Model):
             JOIN scheduled d ON d.section_id = s.section_id AND d.term_id = :term_id
             WHERE
                 s.term_id = :term_id
+                AND s.deleted_at IS NULL
             ORDER BY s.course_title, s.section_id, s.instructor_uid
         """
         rows = db.session.execute(
@@ -576,7 +598,8 @@ def _to_api_json(term_id, rows, include_rooms=True):
                 'crossListings': cross_listings,
                 'hasOptedOut': has_opted_out,
                 'instructionFormat': instruction_format,
-                'instructors': [], 'isPrimary': row['is_primary'],
+                'instructors': [],
+                'isPrimary': row['is_primary'],
                 'label': f'{course_name}, {instruction_format} {section_num}',
                 'meetingDays': format_days(row['meeting_days']),
                 'meetingEndDate': row['meeting_end_date'],
@@ -676,6 +699,8 @@ def _canvas_course_sites(term_id, section_id):
 
 
 def _get_cross_listed_courses(section_id, term_id):
+    # Cross-listed sections were "deleted" during DblinkToRedshiftJob
+    # and yet we still rely on the metadata of those deleted records.
     section_ids = CrossListing.get_cross_listed_sections(section_id=section_id, term_id=term_id)
     sql = f"""
         SELECT DISTINCT section_id, is_primary, course_name, course_title, instruction_format, section_num, term_id

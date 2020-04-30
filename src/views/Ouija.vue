@@ -30,6 +30,7 @@
             :items="$_.keys($config.searchFilterOptions)"
             @change="refresh"
           >
+            <span :id="`filter-option-${data.item.value}`" slot="item" slot-scope="data">{{ data.item }}</span>
             <template v-slot:selection="{ item }">
               <v-tooltip id="tooltip-ouija-filter" bottom>
                 <template v-slot:activator="{ on }">

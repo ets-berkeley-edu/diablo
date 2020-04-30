@@ -9,7 +9,9 @@
     :items="capabilityOptions"
     no-data-text="Select..."
     @change="updateCapability()"
-  ></v-select>
+  >
+    <span :id="`room-capability-option-${data.item.value}`" slot="item" slot-scope="data">{{ data.item.text }}</span>
+  </v-select>
 </template>
 
 <script>

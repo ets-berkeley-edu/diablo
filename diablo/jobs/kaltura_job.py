@@ -97,7 +97,6 @@ def _schedule_recordings(all_approvals, course):
             room=room,
         )
         scheduled = Scheduled.create(
-            cross_listed_section_ids=approval.cross_listed_section_ids,
             instructor_uids=SisSection.get_instructor_uids(term_id=term_id, section_id=section_id),
             meeting_days=meeting_days,
             meeting_start_time=meeting_start_time,

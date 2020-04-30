@@ -5,11 +5,14 @@
       <v-card-title>
         <v-spacer class="w-50"></v-spacer>
         <v-select
+          id="select-email-template-type"
           :items="emailTemplateTypes"
           label="Create New Template"
           prepend-icon="mdi-file-document-outline"
           @change="createNewTemplate"
-        ></v-select>
+        >
+          <span :id="`email-template-option-${data.item.value}`" slot="item" slot-scope="data">{{ data.item.text }}</span>
+        </v-select>
       </v-card-title>
       <v-data-table
         disable-pagination

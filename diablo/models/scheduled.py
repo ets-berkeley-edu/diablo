@@ -37,7 +37,6 @@ class Scheduled(db.Model):
 
     section_id = db.Column(db.Integer, nullable=False, primary_key=True)
     term_id = db.Column(db.Integer, nullable=False, primary_key=True)
-    cross_listed_section_ids = db.Column(ARRAY(db.Integer))
     instructor_uids = db.Column(ARRAY(db.String(80)), nullable=False)
     meeting_days = db.Column(db.String, nullable=False)
     meeting_start_time = db.Column(db.String, nullable=False)
@@ -51,7 +50,6 @@ class Scheduled(db.Model):
             self,
             section_id,
             term_id,
-            cross_listed_section_ids,
             instructor_uids,
             meeting_days,
             meeting_start_time,
@@ -62,7 +60,6 @@ class Scheduled(db.Model):
     ):
         self.section_id = section_id
         self.term_id = term_id
-        self.cross_listed_section_ids = cross_listed_section_ids
         self.instructor_uids = instructor_uids
         self.meeting_days = meeting_days
         self.meeting_start_time = meeting_start_time
@@ -75,7 +72,6 @@ class Scheduled(db.Model):
         return f"""<Scheduled
                     section_id={self.section_id},
                     term_id={self.term_id},
-                    cross_listed_section_ids={self.cross_listed_section_ids},
                     instructor_uids={', '.join(self.instructor_uids)},
                     meeting_days={self.meeting_days},
                     meeting_start_time={self.meeting_start_time},
@@ -91,7 +87,6 @@ class Scheduled(db.Model):
             cls,
             section_id,
             term_id,
-            cross_listed_section_ids,
             instructor_uids,
             meeting_days,
             meeting_start_time,
@@ -101,7 +96,6 @@ class Scheduled(db.Model):
             room_id,
     ):
         scheduled = cls(
-            cross_listed_section_ids=cross_listed_section_ids,
             instructor_uids=instructor_uids,
             meeting_days=meeting_days,
             meeting_start_time=meeting_start_time,
@@ -132,7 +126,6 @@ class Scheduled(db.Model):
     def to_api_json(self):
         return {
             'createdAt': to_isoformat(self.created_at),
-            'crossListedSectionIds': self.cross_listed_section_ids,
             'instructorUids': self.instructor_uids,
             'meetingDays': format_days(self.meeting_days),
             'meetingEndTime': format_time(self.meeting_end_time),
