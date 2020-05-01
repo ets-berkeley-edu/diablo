@@ -36,7 +36,7 @@ class TestReadFile:
                 read_file(no_such_file)
 
     def test_relative_path(self):
-        assert 'Lankester Merrin' in read_file('fixtures/calnet/user_for_uid_2040.json')
+        assert 'Lankester Merrin' in read_file('fixtures/calnet/user_for_uid_90001.json')
 
     def test_absolute_path(self):
-        assert 'Lankester Merrin' in read_file(f'{BASE_DIR}/fixtures/calnet/user_for_uid_2040.json')
+        assert 'Lankester Merrin' in read_file(f'{BASE_DIR}/fixtures/calnet/user_for_uid_90001.json')

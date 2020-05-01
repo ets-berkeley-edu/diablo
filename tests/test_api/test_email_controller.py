@@ -22,18 +22,17 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-
 import json
 
 from diablo.models.email_template import EmailTemplate
 import pytest
 
-instructor_uid = '8765432'
+instructor_uid = '00001'
 
 
 @pytest.fixture()
 def admin_session(fake_auth):
-    fake_auth.login('2040')
+    fake_auth.login('90001')
 
 
 @pytest.fixture()

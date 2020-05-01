@@ -600,7 +600,12 @@ def _to_api_json(term_id, rows, include_rooms=True):
                 'instructionFormat': instruction_format,
                 'instructors': [],
                 'isPrimary': row['is_primary'],
-                'label': f'{course_name}, {instruction_format} {section_num}',
+                'label': _get_course_label(
+                    course_name=course_name,
+                    instruction_format=instruction_format,
+                    section_num=section_num,
+                    cross_listings=cross_listings,
+                ),
                 'meetingDays': format_days(row['meeting_days']),
                 'meetingEndDate': row['meeting_end_date'],
                 'meetingEndTime': format_time(row['meeting_end_time']),
@@ -719,13 +724,42 @@ def _get_cross_listed_courses(section_id, term_id):
 
     def _to_json(row):
         return {
+            'courseName': row['course_name'],
             'courseTitle': row['course_title'],
+            'instructionFormat': row['instruction_format'],
+            'sectionNum': row['section_num'],
             'isPrimary': row['is_primary'],
             'label': f"{row['course_name']}, {row['instruction_format']} {row['section_num']}",
             'sectionId': row['section_id'],
             'termId': row['term_id'],
         }
     return [_to_json(row) for row in rows]
+
+
+def _merge_distinct(label, other_labels):
+    if label in other_labels:
+        other_labels.remove(label)
+    return [label] + list(set(other_labels))
+
+
+def _get_course_label(course_name, instruction_format, section_num, cross_listings):
+    def _label(course_name_, instruction_format_, section_num_):
+        return f'{course_name_}, {instruction_format_} {section_num_}'
+
+    if cross_listings:
+        distinct_instruction_format = set([instruction_format] + [c['instructionFormat'] for c in cross_listings])
+        if len(cross_listings) > 1 or len(distinct_instruction_format) > 1:
+            merged = _merge_distinct(
+                _label(course_name, instruction_format, section_num),
+                [_label(c['courseName'], c['instructionFormat'], c['sectionNum']) for c in cross_listings],
+            )
+            return ' | '.join(merged)
+        else:
+            distinct_course_names = _merge_distinct(course_name, [c['courseName'] for c in cross_listings])
+            distinct_section_nums = _merge_distinct(section_num, [c['sectionNum'] for c in cross_listings])
+            return f'{" | ".join(distinct_course_names)}, {instruction_format} {"/".join(distinct_section_nums)}'
+    else:
+        return _label(course_name, instruction_format, section_num)
 
 
 def _has_necessary_approvals(course):

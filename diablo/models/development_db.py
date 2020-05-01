@@ -40,11 +40,11 @@ from sqlalchemy.sql import text
 
 _test_users = [
     {
-        'uid': '2040',
+        'uid': '90001',
         'deleted_at': None,
     },
     {
-        'uid': '1022796',
+        'uid': '90002',
         'deleted_at': utc_now(),
     },
 ]
@@ -88,8 +88,17 @@ def _load_schemas():
 def _load_courses():
     term_id = app.config['CURRENT_TERM_ID']
     with open(f"{app.config['BASE_DIR']}/fixtures/sis/courses.json", 'r') as file:
-        sis_sections = json.loads(file.read())
-        SisSection.refresh(sis_sections=sis_sections, term_id=term_id)
+        courses = []
+        json_ = json.loads(file.read())
+        defaults = json_['defaults']
+        instructors = json_['instructors']
+        for c in json_['courses']:
+            c['instructor_name'] = instructors[c['instructor_uid']]
+            for key, value in defaults.items():
+                if key not in c:
+                    c[key] = value
+            courses.append(c)
+        SisSection.refresh(sis_sections=courses, term_id=term_id)
         std_commit(allow_test_environment=True)
     DblinkToRedshiftJob.after_dblink_courses_refresh(term_id=term_id)
 
@@ -131,8 +140,8 @@ def _create_email_templates():
 def _create_emails_sent():
     term_id = app.config['CURRENT_TERM_ID']
     SentEmail.create(
-        recipient_uids=['8765432'],
-        section_id='28165',
+        recipient_uids=['00001'],
+        section_id='50001',
         template_type='invitation',
         term_id=term_id,
     )

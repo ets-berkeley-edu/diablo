@@ -36,14 +36,14 @@ import pytest
 from tests.test_api.api_test_utils import api_approve, api_get_course
 from tests.util import test_approvals_workflow
 
-admin_uid = '2040'
-deleted_admin_user_uid = '1022796'
-section_1_id = 28602
-section_2_id = 28165
-section_3_id = 12601
-section_4_id = 26094
-section_5_id = 30563
-section_6_id = 22287
+admin_uid = '90001'
+deleted_admin_user_uid = '910001'
+section_1_id = 50000
+section_2_id = 50001
+section_3_id = 50002
+section_4_id = 50004
+section_5_id = 50003
+section_6_id = 50005
 
 section_in_ineligible_room = section_2_id
 section_with_canvas_course_sites = section_6_id
@@ -51,7 +51,7 @@ section_with_canvas_course_sites = section_6_id
 
 @pytest.fixture()
 def admin_session(fake_auth):
-    fake_auth.login('2040')
+    fake_auth.login(admin_uid)
 
 
 class TestApprove:
@@ -81,10 +81,9 @@ class TestApprove:
             expected_status_code=400,
         )
 
-    def test_unauthorized(self, client, db, fake_auth):
+    def test_unauthorized(self, client, fake_auth):
         """Deny access if the instructor is not teaching the requested course."""
-        instructor_uids = _get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
-        fake_auth.login(instructor_uids[0])
+        fake_auth.login('10006')
         api_approve(
             client,
             publish_type='canvas',
@@ -93,7 +92,7 @@ class TestApprove:
             expected_status_code=403,
         )
 
-    def test_instructor_already_approved(self, client, db, fake_auth):
+    def test_instructor_already_approved(self, client, fake_auth):
         """Instructor can submit his/her approval only once."""
         instructor_uids = _get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
         fake_auth.login(instructor_uids[0])
@@ -107,7 +106,7 @@ class TestApprove:
                 expected_status_code=expected_status_code,
             )
 
-    def test_approval_by_instructors(self, client, db, fake_auth):
+    def test_approval_by_instructors(self, client, fake_auth):
         """Instructor can submit approval if s/he is teaching the requested course."""
         instructor_uids = _get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
         fake_auth.login(instructor_uids[0])
@@ -128,7 +127,7 @@ class TestApprove:
         )
         std_commit(allow_test_environment=True)
 
-        for uid in ('234567', '8765432'):
+        for uid in ('10001', '10002'):
             emails_sent = SentEmail.get_emails_sent_to(uid)
             assert len(emails_sent) > 0
             most_recent = emails_sent[-1]
@@ -159,7 +158,7 @@ class TestApprove:
         assert api_json['hasNecessaryApprovals'] is True
         assert api_json['scheduled'] is None
 
-    def test_approval_by_admin(self, client, db, admin_session):
+    def test_approval_by_admin(self, client, admin_session):
         """Admins can schedule recordings on behalf of any eligible course."""
         api_json = api_approve(
             client,
@@ -195,7 +194,7 @@ class TestGetCourse:
         api_get_course(
             client,
             term_id=self.term_id,
-            section_id=section_2_id,
+            section_id=section_3_id,
             expected_status_code=403,
         )
 
@@ -218,7 +217,7 @@ class TestGetCourse:
             expected_status_code=404,
         )
 
-    def test_course_with_partial_approval(self, client, db, admin_session):
+    def test_course_with_partial_approval(self, client, admin_session):
         """Course with two instructors and one approval."""
         with test_approvals_workflow(app):
             # If course has approvals but not scheduled then it will show up in the feed.
@@ -240,7 +239,7 @@ class TestGetCourse:
                 term_id=self.term_id,
                 section_id=section_1_id,
             )
-            assert [i['uid'] for i in api_json['instructors']] == ['234567', '8765432']
+            assert [i['uid'] for i in api_json['instructors']] == ['10001', '10002']
 
             approvals = api_json['approvals']
             assert len(approvals) == 1
@@ -248,7 +247,7 @@ class TestGetCourse:
             assert api_json['room']['id'] == room_id
             assert api_json['room']['location'] == 'Barrows 106'
 
-    def test_date_time_format(self, client, db, fake_auth):
+    def test_date_time_format(self, client, fake_auth):
         """Dates and times are properly formatted for front-end display."""
         instructor_uids = _get_instructor_uids(section_id=section_2_id, term_id=self.term_id)
         fake_auth.login(instructor_uids[0])
@@ -262,7 +261,7 @@ class TestGetCourse:
         assert api_json['meetingEndTime'] == '3:59 pm'
         assert api_json['meetingLocation'] == 'Wheeler 150'
 
-    def test_li_ka_shing_recording_options(self, client, db, admin_session):
+    def test_li_ka_shing_recording_options(self, client, admin_session):
         """Rooms designated as 'auditorium' offer ALL types of recording."""
         api_json = api_get_course(
             client,
@@ -272,7 +271,7 @@ class TestGetCourse:
         assert api_json['room']['location'] == 'Li Ka Shing 145'
         assert len(api_json['room']['recordingTypeOptions']) == 3
 
-    def test_section_with_canvas_course_sites(self, client, db, admin_session):
+    def test_section_with_canvas_course_sites(self, client, admin_session):
         """Canvas course site information is included in the API."""
         api_json = api_get_course(
             client,
@@ -281,11 +280,11 @@ class TestGetCourse:
         )
         assert len(api_json['canvasCourseSites']) == 3
 
-    def test_cross_listing(self, client, db, fake_auth):
+    def test_cross_listing(self, client, fake_auth):
         """Course has cross-listings."""
-        section_id = 27950
-        cross_listed_section_ids = {28475, 32827}
-        instructor_uid = '269246'
+        section_id = 50007
+        cross_listed_section_ids = {50008, 50009}
+        instructor_uid = '10008'
         fake_auth.login(uid=instructor_uid)
 
         api_json = api_get_course(
@@ -303,7 +302,7 @@ class TestGetCourse:
                 expected_status_code=404,
             )
 
-    def test_no_cross_listing(self, client, db, admin_session):
+    def test_no_cross_listing(self, client, admin_session):
         """Course does not have cross-listing."""
         api_json = api_get_course(
             client,
@@ -342,7 +341,7 @@ class TestCoursesFilter:
         fake_auth.login(instructor_uids[0])
         self._api_courses(client, term_id=self.term_id, expected_status_code=401)
 
-    def test_do_not_email_filter(self, client, db, admin_session):
+    def test_do_not_email_filter(self, client, admin_session):
         """Do Not Email filter: Courses in eligible room; "opt out" is true; all stages of approval; not scheduled."""
         with test_approvals_workflow(app):
             # Send invites them opt_out.
@@ -388,7 +387,7 @@ class TestCoursesFilter:
                 # Excluded courses
                 assert not _find_course(api_json=api_json, section_id=section_id)
 
-    def test_invited_filter(self, client, db, admin_session):
+    def test_invited_filter(self, client, admin_session):
         """Invited filter: Course in an eligible room, have received invitation. No approvals. Not scheduled."""
         with test_approvals_workflow(app):
             # First, send invitations
@@ -424,7 +423,7 @@ class TestCoursesFilter:
             # The section with approval will NOT show up in search results
             assert not _find_course(api_json=api_json, section_id=section_5_id)
 
-    def test_not_invited_filter(self, client, db, admin_session):
+    def test_not_invited_filter(self, client, admin_session):
         """Not-invited filter: Courses in eligible rooms, never sent an invitation. No approval. Not scheduled."""
         with test_approvals_workflow(app):
             # The first course gets an invitation
@@ -461,7 +460,7 @@ class TestCoursesFilter:
             assert course
             assert course['label'] == 'BIO 1B, LEC 001'
 
-    def test_partially_approved_filter(self, client, db, admin_session):
+    def test_partially_approved_filter(self, client, admin_session):
         """Partially approved: Eligible, invited course with 1+ approvals, but not ALL instructors have approved."""
         with test_approvals_workflow(app):
             # Assert multiple instructors
@@ -503,7 +502,7 @@ class TestCoursesFilter:
             assert course
             assert course['label'] == 'LAW 23, LEC 002'
 
-    def test_scheduled_filter(self, client, db, admin_session):
+    def test_scheduled_filter(self, client, admin_session):
         """Scheduled filter: Courses with recordings scheduled."""
         with test_approvals_workflow(app):
             section_1_instructor_uids = _get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
@@ -558,7 +557,7 @@ class TestCoursesChanges:
         """Deny anonymous access."""
         self._api_course_changes(client, term_id=self.term_id, expected_status_code=401)
 
-    def test_unauthorized(self, client, db, fake_auth):
+    def test_unauthorized(self, client, fake_auth):
         """Instructors cannot see course changes."""
         instructor_uids = _get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
         fake_auth.login(instructor_uids[0])
@@ -628,7 +627,7 @@ class TestCoursesChanges:
             )
             instructor_uids = SisSection.get_instructor_uids(term_id=self.term_id, section_id=section_3_id)
             Scheduled.create(
-                instructor_uids=instructor_uids + ['999999'],
+                instructor_uids=instructor_uids + ['100099'],
                 meeting_days=meeting_days,
                 meeting_start_time=meeting_start_time,
                 meeting_end_time=meeting_end_time,
@@ -646,6 +645,44 @@ class TestCoursesChanges:
             assert course['scheduled']['hasObsoleteRoom'] is False
             assert course['scheduled']['hasObsoleteMeetingTimes'] is False
             assert course['scheduled']['hasObsoleteInstructors'] is True
+
+
+class TestCrossListedNameGeneration:
+    """Rules for collapsing cross-listed courses into a single name/title."""
+
+    @property
+    def term_id(self):
+        return app.config['CURRENT_TERM_ID']
+
+    def test_different_course_names(self, admin_session, client):
+        """Departments sharing catalog id and section code."""
+        self._verify_name_generation(client=client, section_id=50010, expected_name='MATH C51 | STAT C51, LEC 001/003')
+
+    def test_different_instruction_format(self, admin_session, client):
+        """Departments share catalog id but not section code."""
+        self._verify_name_generation(
+            client=client,
+            section_id=50012,
+            expected_name='MATH C51, LEC 001 | STAT C151, COL 001',
+        )
+
+    def _verify_name_generation(self, client, section_id, expected_name):
+        # section_id = self._create_cross_listed(courses=courses)
+        api_json = api_get_course(
+            client,
+            section_id=section_id,
+            term_id=self.term_id,
+        )
+        assert api_json['label'] == expected_name, f'Failed on section_id={section_id}'
+
+        cross_listings = api_json['crossListings']
+        assert len(cross_listings) >= 1
+        api_get_course(
+            client,
+            section_id=cross_listings[0]['sectionId'],
+            term_id=self.term_id,
+            expected_status_code=404,
+        )
 
 
 class TestUpdatePreferences:
@@ -685,7 +722,7 @@ class TestUpdatePreferences:
             expected_status_code=401,
         )
 
-    def test_unauthorized(self, client, db, fake_auth):
+    def test_unauthorized(self, client, fake_auth):
         """Instructors cannot modify preferences."""
         instructor_uids = _get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
         fake_auth.login(instructor_uids[0])

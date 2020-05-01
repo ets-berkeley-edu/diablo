@@ -22,15 +22,14 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-
 import json
 
 from tests.util import override_config
 
-admin_uid = '2040'
-deleted_admin_user_uid = '1022796'
-instructor_uid = '8765432'
-unauthorized_uid = '1015674'
+admin_uid = '90001'
+deleted_admin_user_uid = '910001'
+instructor_uid = '10001'
+unauthorized_uid = '10000'
 no_calnet_record_for_uid = '13'
 
 

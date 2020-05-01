@@ -54,12 +54,12 @@ class TestQueuedEmailsJob:
         term_id = app.config['CURRENT_TERM_ID']
         courses = [
             {
-                'sectionId': 28602,
-                'instructorUids': ['234567', '8765432'],
+                'sectionId': 50000,
+                'instructorUids': ['10001', '10002'],
             },
             {
-                'sectionId': 28165,
-                'instructorUids': ['8765432'],
+                'sectionId': 50001,
+                'instructorUids': ['10001'],
             },
         ]
         email_template_type = 'invitation'
@@ -103,7 +103,7 @@ class TestQueuedEmailsJob:
             return _get_emails_sent(email_template_type=email_template_type, section_id=section_id, term_id=term_id)
 
         term_id = app.config['CURRENT_TERM_ID']
-        section_id = 28602
+        section_id = 50000
         CoursePreference.update_opt_out(term_id=term_id, section_id=section_id, opt_out=True)
         email_template_type = 'invitation'
 
@@ -127,7 +127,7 @@ class TestQueuedEmailsJob:
             return _get_emails_sent(email_template_type=email_template_type, section_id=section_id, term_id=term_id)
 
         term_id = app.config['CURRENT_TERM_ID']
-        section_id = 22287
+        section_id = 50005
         email_template_type = 'admin_alert_room_change'
 
         QueuedEmail.create(section_id, email_template_type, term_id)
@@ -158,7 +158,7 @@ class TestQueuedEmailsJob:
             return _get_emails_sent(email_template_type=email_template_type, section_id=section_id, term_id=term_id)
 
         term_id = app.config['CURRENT_TERM_ID']
-        section_id = 22460
+        section_id = 50006
         email_template_type = 'invitation'
         # Courses with no proper instructor are excluded from query results.
         assert not SisSection.get_course(term_id=term_id, section_id=section_id)
@@ -185,7 +185,7 @@ class TestQueuedEmailsJob:
             return _get_emails_sent(email_template_type=email_template_type, section_id=section_id, term_id=term_id)
 
         term_id = app.config['CURRENT_TERM_ID']
-        section_id = 22287
+        section_id = 50005
         email_template_type = 'waiting_for_approval'
 
         queued_email = QueuedEmail.create(section_id, email_template_type, term_id)

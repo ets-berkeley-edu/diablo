@@ -24,9 +24,9 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 import pytest
 
-admin_uid = '2040'
-instructor_not_teaching_uid = '1015674'
-instructor_uid = '8765432'
+admin_uid = '90001'
+instructor_not_teaching_uid = '10000'
+instructor_uid = '10001'
 
 
 @pytest.fixture()
@@ -74,11 +74,11 @@ class TestMyProfile:
 
         sections = api_json['courses']
         assert sections[0]['courseTitle'] == 'Data Structures'
-        assert sections[0]['sectionId'] == 28165
+        assert sections[0]['sectionId'] == 50001
 
         assert sections[1]['courseTitle'] == 'Foundations of Data Science'
-        assert sections[1]['sectionId'] == 28602
-        assert [i['uid'] for i in sections[1]['instructors']] == ['234567', '8765432']
+        assert sections[1]['sectionId'] == 50000
+        assert [i['uid'] for i in sections[1]['instructors']] == [instructor_uid, '10002']
 
 
 class TestUserProfile:
@@ -100,7 +100,7 @@ class TestUserProfile:
 
     def test_user_not_found(self, client, admin_session):
         """404 when user not found."""
-        self._api_user(client, uid=999999999, expected_status_code=404)
+        self._api_user(client, uid='10009', expected_status_code=404)
 
     def test_authorized(self, client, admin_session):
         """Admin user has access."""
@@ -121,7 +121,6 @@ class TestUserProfile:
         def find_course(section_id):
             return next((c for c in user.get('courses') if c['sectionId'] == section_id), None)
 
-        uid = '8765432'
-        user = self._api_user(client, uid)
-        assert find_course(28602)
-        assert not find_course(22460)
+        user = self._api_user(client, instructor_uid)
+        assert find_course(50000)
+        assert not find_course(50006)
