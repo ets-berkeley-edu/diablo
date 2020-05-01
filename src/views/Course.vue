@@ -2,7 +2,7 @@
   <div v-if="!loading">
     <v-container fluid>
       <v-row class="pl-3">
-        <h1>{{ pageTitle }}</h1>
+        <h1>{{ course.label }}</h1>
       </v-row>
       <v-row class="pl-3">
         Section ID: {{ course.sectionId }}
@@ -40,15 +40,15 @@
                 {{ course.meetingStartTime }} - {{ course.meetingEndTime }}
               </v-col>
             </v-row>
-            <v-row id="rooms">
+            <v-row v-if="course.room" id="rooms">
               <v-col md="auto">
                 <v-icon>mdi-map-marker</v-icon>
               </v-col>
-              <v-col v-if="room.id && $currentUser.isAdmin">
-                <router-link id="room" :to="`/room/${room.id}`">{{ room.location }}</router-link>
+              <v-col v-if="$currentUser.isAdmin">
+                <router-link id="room" :to="`/room/${course.room.id}`">{{ course.room.location }}</router-link>
               </v-col>
-              <v-col v-if="!room.id || !$currentUser.isAdmin">
-                {{ room.location }}
+              <v-col v-if="!$currentUser.isAdmin">
+                {{ course.room.location }}
               </v-col>
             </v-row>
             <v-row v-if="course.crossListings.length" id="cross-listings">
@@ -144,7 +144,7 @@
               <v-row v-if="!scheduled" justify="start" align="center">
                 <v-col md="3" class="mb-6">
                   <h4>
-                    <label for="select-recording-type">Recording Type</label>
+                    <label id="select-recording-type-label" for="select-recording-type">Recording Type</label>
                     <v-tooltip id="tooltip-recording-type" bottom>
                       <template v-slot:activator="{ on }">
                         <v-icon
@@ -181,7 +181,7 @@
                         label="Select..."
                         solo
                       >
-                        <span :id="`recording-type-option-${data.item.value}`" slot="item" slot-scope="data">{{ data.item.text }}</span>
+                        <span :id="`menu-option-recording-type-option-${data.item.value}`" slot="item" slot-scope="data">{{ data.item.text }}</span>
                       </v-select>
                     </div>
                   </div>
@@ -190,7 +190,7 @@
               <v-row v-if="!scheduled" justify="start" align="center">
                 <v-col md="3" class="mb-6">
                   <h4>
-                    <label for="select-publish-type">Publish</label>
+                    <label id="select-publish-type-label" for="select-publish-type">Publish</label>
                     <v-tooltip id="tooltip-publish" bottom>
                       <template v-slot:activator="{ on }">
                         <v-icon
@@ -223,7 +223,7 @@
                     label="Select..."
                     solo
                   >
-                    <span :id="`publish-type-option-${data.item.value}`" slot="item" slot-scope="data">{{ data.item.text }}</span>
+                    <span :id="`menu-option-publish-type-${data.item.value}`" slot="item" slot-scope="data">{{ data.item.text }}</span>
                   </v-select>
                 </v-col>
               </v-row>
@@ -279,12 +279,10 @@
     data: () => ({
       agreedToTerms: false,
       course: undefined,
-      pageTitle: undefined,
       publishType: undefined,
       publishTypeOptions: undefined,
       recordingType: undefined,
       recordingTypeOptions: undefined,
-      room: undefined,
       scheduled: undefined
     }),
     computed: {
@@ -316,13 +314,12 @@
       render(data) {
         this.$loading()
         this.course = data
-        this.room = data.room
         this.recordingTypeOptions = []
-        this.$_.each(this.room.recordingTypeOptions, (text, value) => {
+        this.$_.each(this.course.room.recordingTypeOptions, (text, value) => {
           this.recordingTypeOptions.push({text, value})
         })
-        if (data.approvals.length) {
-          const mostRecent = this.$_.last(this.approvals)
+        if (this.course.approvals.length) {
+          const mostRecent = this.$_.last(this.course.approvals)
           this.publishType = mostRecent.publishType
           this.recordingType = mostRecent.recordingType
         } else {
@@ -330,10 +327,8 @@
             this.recordingType = this.recordingTypeOptions[0].value
           }
         }
-        this.pageTitle = data.label
-        this.scheduled = data.scheduled
-        this.course = data
-        this.setPageTitle(this.pageTitle)
+        this.scheduled = this.course.scheduled
+        this.setPageTitle(this.course.label)
         this.$ready()
       }
     }
