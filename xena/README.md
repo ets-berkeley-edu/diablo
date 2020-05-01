@@ -4,7 +4,8 @@
 
 ## Installation
 
-TODO
+Xena requires:
+* [chromedriver version 83](https://chromedriver.chromium.org/downloads)
 
 ## Run
 
@@ -13,5 +14,5 @@ TODO
 tox -e test -- xena
 
 # Run specific test(s)
-tox -e test -- xena/test_signups/test_multiple_instructors.py
+tox -e test -- xena/tests/test_sign_up_*.py
 ```

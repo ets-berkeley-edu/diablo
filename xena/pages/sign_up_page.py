@@ -23,7 +23,6 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-from config import xena
 from flask import current_app as app
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
@@ -45,9 +44,9 @@ class SignUpPage(DiabloPages):
     PUBLISH_TOOLTIP_BUTTON = (By.XPATH, '//span[@id="tooltip-publish"]/following-sibling::i')
     VISIBLE_TOOLTIP = (By.XPATH, '//div[@class="v-tooltip__content menuable__content__active"]')
     RECORDING_TYPE_STATIC = (By.XPATH, '//input[@name="recordingType"]/..')
-    SELECT_RECORDING_TYPE_INPUT = (By.XPATH, '//input[@id="select-recording-type"]/..')
-    SELECT_PUBLISH_TYPE_INPUT = (By.XPATH, '//input[@id="select-publish-type"]/..')
-    VISIBLE_MENU_OPTION = (By.XPATH, '//div[contains(@class, "menuable__content__active")]//div[@class="v-list-item__title"]')
+    SELECT_RECORDING_TYPE_INPUT = (By.XPATH, '//label[@id="select-recording-type-label"]')
+    SELECT_PUBLISH_TYPE_INPUT = (By.XPATH, '//label[@id="select-publish-type-label"]')
+    VISIBLE_MENU_OPTION = (By.XPATH, '//div[contains(@class, "menuable__content__active")]//span[starts-with(@id, "menu-option-")]')
     AGREE_TO_TERMS_CBX = (By.XPATH, '//input[@id="agree-to-terms-checkbox"]/..')
     CC_POLICIES_LINK = (By.ID, 'link-to-course-capture-policies')
     APPROVE_BUTTON = (By.ID, 'btn-approve')
@@ -67,7 +66,7 @@ class SignUpPage(DiabloPages):
 
     def load_page(self, section):
         app.logger.info(f'Loading sign-up page for term {section.term} section ID {section.ccn}')
-        self.driver.get(f'{xena.BASE_URL}/course/{section.term}/{section.ccn}')
+        self.driver.get(f'{app.config["BASE_URL"]}/course/{section.term}/{section.ccn}')
         self.wait_for_diablo_title(f'{section.code}, {section.number}')
 
     # SIS DATA
@@ -101,12 +100,12 @@ class SignUpPage(DiabloPages):
     def open_rec_type_tooltip(self):
         app.logger.info('Hovering over recording type tooltip')
         self.mouseover(self.element(SignUpPage.RECORDING_TYPE_TOOLTIP_BUTTON))
-        self.wait_for_element(SignUpPage.VISIBLE_TOOLTIP, xena.TIMEOUT_SHORT)
+        self.wait_for_element(SignUpPage.VISIBLE_TOOLTIP, app.config['TIMEOUT_SHORT'])
 
     def open_publish_tooltip(self):
         app.logger.info('Hovering over publish tooltip')
         self.mouseover(self.element(SignUpPage.PUBLISH_TOOLTIP_BUTTON))
-        self.wait_for_element(SignUpPage.VISIBLE_TOOLTIP, xena.TIMEOUT_SHORT)
+        self.wait_for_element(SignUpPage.VISIBLE_TOOLTIP, app.config['TIMEOUT_SHORT'])
 
     def visible_tooltip(self):
         return self.element(SignUpPage.VISIBLE_TOOLTIP).get_attribute('innerText').strip()
@@ -120,7 +119,10 @@ class SignUpPage(DiabloPages):
         self.wait_for_element_and_click(SignUpPage.SELECT_PUBLISH_TYPE_INPUT)
 
     def visible_menu_options(self):
-        Wait(self.driver, xena.TIMEOUT_SHORT).until(ec.visibility_of_any_elements_located(SignUpPage.VISIBLE_MENU_OPTION))
+        Wait(self.driver, app.config['TIMEOUT_SHORT']).until(
+            method=ec.visibility_of_any_elements_located(SignUpPage.VISIBLE_MENU_OPTION),
+            message=f'Failed visible_menu_options: {SignUpPage.VISIBLE_MENU_OPTION}',
+        )
         return [el.text for el in self.elements(SignUpPage.VISIBLE_MENU_OPTION)]
 
     def click_menu_option(self, option_text):
@@ -146,4 +148,7 @@ class SignUpPage(DiabloPages):
         self.wait_for_element_and_click(SignUpPage.APPROVE_BUTTON)
 
     def wait_for_approval_confirmation(self):
-        Wait(self.driver, xena.TIMEOUT_SHORT).until(ec.visibility_of_element_located(SignUpPage.CONFIRMATION_MSG))
+        Wait(self.driver, app.config['TIMEOUT_SHORT']).until(
+            method=ec.visibility_of_element_located(SignUpPage.CONFIRMATION_MSG),
+            message=f'Failed wait_for_approval_confirmation: {SignUpPage.CONFIRMATION_MSG}',
+        )

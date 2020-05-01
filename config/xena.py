@@ -37,9 +37,6 @@ INDEX_HTML = f'{BASE_DIR}/tests/static/test-index.html'
 
 LOGGING_LEVEL = logging.INFO
 
-SALESFORCE_BASE_URL = 'https://test.salesforce.com'
-SALESFORCE_PAUSE = 5
-
 TESTING = True
 
 # The test-courses.json file is intended as an example of required structure of the test data

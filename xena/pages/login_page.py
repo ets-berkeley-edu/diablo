@@ -23,7 +23,6 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-from config import xena
 from flask import current_app as app
 from selenium.webdriver.common.by import By
 from xena.pages.diablo_pages import DiabloPages
@@ -38,7 +37,7 @@ class LoginPage(DiabloPages):
 
     def load_page(self):
         app.logger.info('Loading the Diablo login page')
-        self.driver.get(xena.BASE_URL)
+        self.driver.get(app.config['BASE_URL'])
         self.wait_for_diablo_title('Welcome')
 
     def click_sign_in(self):

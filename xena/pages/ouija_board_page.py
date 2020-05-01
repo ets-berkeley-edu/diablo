@@ -23,7 +23,6 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-from config import xena
 from flask import current_app as app
 from selenium.webdriver.common.by import By
 from xena.pages.diablo_pages import DiabloPages
@@ -42,7 +41,7 @@ class OuijaBoardPage(DiabloPages):
 
     def load_page(self):
         app.logger.info('Loading the Ouija Board')
-        self.driver.get(f'{xena.BASE_URL}/ouija')
+        self.driver.get(f'{app.config["BASE_URL"]}/ouija')
         self.wait_for_diablo_title('The Ouija Board')
 
     def search_courses(self, string, status):

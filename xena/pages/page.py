@@ -72,12 +72,21 @@ class Page(object):
     # METHODS TO INTERACT WITH ELEMENTS USING A LOCATOR RATHER THAN AN ELEMENT, WHICH HELPS AVOID STALE ELEMENT ERRORS.
 
     def wait_for_element(self, locator, timeout):
-        Wait(self.driver, timeout).until(ec.presence_of_element_located(locator))
-        Wait(self.driver, timeout).until(ec.visibility_of_element_located(locator))
+        Wait(self.driver, timeout).until(
+            method=ec.presence_of_element_located(locator),
+            message=f'Failed wait for presence_of_element_located: {str(locator)}',
+        )
+        Wait(self.driver, timeout).until(
+            method=ec.visibility_of_element_located(locator),
+            message=f'Failed wait for visibility_of_element_located: {str(locator)}',
+        )
 
     def click_element(self, locator, addl_pause=0):
         time.sleep(addl_pause)
-        Wait(self.driver, util.get_short_timeout()).until(ec.element_to_be_clickable(locator))
+        Wait(driver=self.driver, timeout=util.get_short_timeout()).until(
+            method=ec.element_to_be_clickable(locator),
+            message=f'Failed to click_element: {str(locator)}',
+        )
         time.sleep(addl_pause)
         self.element(locator).click()
 
@@ -114,7 +123,10 @@ class Page(object):
 
     def wait_for_title(self, string):
         app.logger.info(f'Waiting for page title \'{string}\'')
-        Wait(self.driver, util.get_long_timeout()).until((ec.title_is(string)))
+        Wait(self.driver, util.get_long_timeout()).until(
+            method=(ec.title_is(string)),
+            message=f'Failed wait_for_title: {string}',
+        )
 
     def visible_heading(self):
         return self.element((By.XPATH, '//h1')).text
