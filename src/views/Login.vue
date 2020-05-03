@@ -1,69 +1,79 @@
 <template>
   <v-app :id="$vuetify.theme.dark ? 'dark' : 'light'">
     <Snackbar />
-    <v-container fluid fill-height :class="{'background-splash': $route.meta.splash}">
-      <v-app-bar
-        app
-        color="header-background"
-        dark
-      >
-        <h1 class="display-1 header-font-size">Welcome to Course Capture</h1>
-        <v-spacer />
-        <v-btn
-          id="log-in"
-          light
-          rounded
-          @click="logIn">
-          <span>Sign In</span>
-          <v-icon>mdi-login</v-icon>
-        </v-btn>
-      </v-app-bar>
-      <v-footer v-if="$config.devAuthEnabled" color="transparent" fixed>
-        <v-form @submit.prevent="devAuth">
-          <div class="d-flex">
-            <div class="pr-3">
-              <v-text-field
-                id="dev-auth-uid"
-                v-model="devAuthUid"
-                background-color="#e8f0fe"
-                class="input-dev-auth"
-                dark
-                label="UID"
-                name="devAuth"
-                prepend-icon="person"
-                :rules="[v => !!v || 'Required']"
-                size="16"
-                solo
-                type="text"></v-text-field>
+    <v-container class="background-splash" fill-height fluid>
+      <v-content>
+        <v-card
+          class="mx-auto opaque-card"
+          elevation="24"
+          max-width="400"
+        >
+          <v-system-bar class="accent--text pa-8" color="secondary">
+            <div class="header-bar text-center w-100">
+              <h1>Welcome to Course Capture</h1>
             </div>
-            <div class="pr-4">
-              <v-text-field
-                id="dev-auth-password"
-                v-model="devAuthPassword"
-                background-color="#e8f0fe"
-                dark
-                label="Password"
-                name="password"
-                prepend-icon="lock"
-                :rules="[v => !!v || 'Required']"
-                size="16"
-                solo
-                type="password"></v-text-field>
-            </div>
-            <div class="btn-dev-auth">
-              <v-btn
-                id="btn-dev-auth-login"
-                aria-label="Log in to Course Capture. (You will be sent to CalNet login page.)"
-                fab
-                light
-                small
-                @click="devAuth">
-                <v-icon dark>mdi-emoticon-devil-outline</v-icon>
-              </v-btn>
-            </div>
-          </div>
-        </v-form>
-      </v-footer>
+          </v-system-bar>
+          <v-container fluid>
+            <v-row dense>
+              <v-col cols="12">
+                <v-card class="opaque-card" color="transparent" flat>
+                  <v-card-actions>
+                    <v-btn
+                      id="log-in"
+                      aria-label="Log in to Course Capture. (You will be sent to CalNet login page.)"
+                      block
+                      color="red"
+                      dark
+                      x-large
+                      @click="logIn">
+                      Sign In
+                      <v-icon class="pl-2">mdi-arrow-right-circle-outline</v-icon>
+                    </v-btn>
+                  </v-card-actions>
+                </v-card>
+              </v-col>
+              <v-col v-if="$config.devAuthEnabled">
+                <div class="mb-8 ml-6 mr-6 mt-8">
+                  <hr />
+                </div>
+                <v-card class="opaque-card pa-4" color="transparent" flat>
+                  <v-form @submit.prevent="devAuth">
+                    <v-text-field
+                      id="dev-auth-uid"
+                      v-model="devAuthUid"
+                      background-color="white"
+                      outlined
+                      placeholder="UID"
+                      :rules="[v => !!v || 'Required']"
+                    ></v-text-field>
+                    <v-text-field
+                      id="dev-auth-password"
+                      v-model="devAuthPassword"
+                      background-color="white"
+                      outlined
+                      placeholder="Password"
+                      :rules="[v => !!v || 'Required']"
+                      type="password"
+                    ></v-text-field>
+                    <v-btn
+                      id="btn-dev-auth-login"
+                      block
+                      :color="!devAuthUid || !devAuthPassword ? 'red lighten-2' : 'red'"
+                      dark
+                      large
+                      @click="devAuth"
+                    >
+                      Dev
+                      <v-icon dark>mdi-emoticon-devil-outline</v-icon>
+                      Auth
+                    </v-btn>
+                  </v-form>
+                </v-card>
+              </v-col>
+            </v-row>
+          </v-container>
+        </v-card>
+      </v-content>
     </v-container>
   </v-app>
 </template>
@@ -120,8 +130,8 @@
 </script>
 
 <style scoped>
-  .header-font-size {
-    font-size: 2.5vw !important;
+  h1 {
+    font-size: 24px;
   }
   .background-splash {
     background: url('~@/assets/sather-gate.png') no-repeat center;
@@ -130,7 +140,10 @@
     -o-background-size: cover;
     background-size: cover;
   }
-  .btn-dev-auth {
-    padding-top: 4px;
+  .header-bar {
+    opacity: 1.0;
+  }
+  .opaque-card {
+    background-color: rgba(255, 255, 255, 0.3);
   }
 </style>
