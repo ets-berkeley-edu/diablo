@@ -100,8 +100,8 @@
         <Spinner v-if="loading" />
         <router-view id="content" :key="$route.fullPath"></router-view>
       </div>
-      <Footer />
     </v-content>
+    <Footer />
   </v-app>
 </template>
 
