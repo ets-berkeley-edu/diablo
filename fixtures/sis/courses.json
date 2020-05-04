@@ -19,7 +19,8 @@
     "10006": "Regan MacNeil",
     "10007": "Burke Dennings",
     "10008": "William Kinderman",
-    "10009": "Samuel Klein"
+    "10009": "Samuel Klein",
+    "10010": "Rudolf Schündler"
   },
   "courses": [
     {
@@ -194,7 +195,7 @@
     },
     {
       "allowed_units": "3.0",
-      "instructor_uid": "10009",
+      "instructor_uid": "10010",
       "meeting_days": "TUTH",
       "meeting_end_time": "08:59",
       "meeting_location": "Barrows 106",

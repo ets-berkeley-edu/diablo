@@ -100,7 +100,7 @@ class TestUserProfile:
 
     def test_user_not_found(self, client, admin_session):
         """404 when user not found."""
-        self._api_user(client, uid='10009', expected_status_code=404)
+        self._api_user(client, uid='99999', expected_status_code=404)
 
     def test_authorized(self, client, admin_session):
         """Admin user has access."""

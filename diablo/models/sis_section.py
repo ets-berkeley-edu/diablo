@@ -22,7 +22,6 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-
 from datetime import datetime
 import json
 
@@ -464,35 +463,36 @@ class SisSection(db.Model):
 
     @classmethod
     def get_courses_per_instructor_uid(cls, term_id, instructor_uid):
-        sql = f"""
-            SELECT
-                s.*,
-                i.dept_code AS instructor_dept_code,
-                i.email AS instructor_email,
-                i.first_name || ' ' || i.last_name AS instructor_name,
-                i.uid AS instructor_uid,
-                r.id AS room_id,
-                r.location AS room_location
+        # Find all section_ids, including deleted
+        sql = """
+            SELECT s.section_id, s.deleted_at
             FROM sis_sections s
             JOIN instructors i ON i.uid = s.instructor_uid
-            JOIN rooms r ON r.location = s.meeting_location
             WHERE
                 s.term_id = :term_id
                 AND s.instructor_uid = :instructor_uid
                 AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
-                AND s.deleted_at IS NULL
-            ORDER BY s.course_title, s.section_id, s.instructor_uid
         """
-        rows = db.session.execute(
-            text(sql),
-            {
-                'instructor_uid': instructor_uid,
-                'term_id': term_id,
-            },
-        )
+        deleted_section_ids = []
         section_ids = []
-        for row in rows:
-            section_ids.append(row['section_id'])
+        for row in db.session.execute(text(sql), {'instructor_uid': instructor_uid, 'term_id': term_id}):
+            if row['deleted_at']:
+                deleted_section_ids.append(row['section_id'])
+            else:
+                section_ids.append(row['section_id'])
+
+        if deleted_section_ids:
+            # Instructor is associated with cross-listed section_ids
+            sql = f"""
+                SELECT section_id
+                FROM cross_listings
+                WHERE
+                    term_id = :term_id
+                    AND cross_listed_section_ids && ARRAY[{','.join(str(id_) for id_ in deleted_section_ids)}]
+            """
+            for row in db.session.execute(text(sql), {'section_ids': instructor_uid, 'term_id': term_id}):
+                section_ids.append(row['section_id'])
+
         return cls.get_courses(term_id=term_id, section_ids=section_ids)
 
     @classmethod
@@ -572,39 +572,50 @@ class SisSection(db.Model):
 
 def _to_api_json(term_id, rows, include_rooms=True):
     courses_per_id = {}
-    instructors_per_section_id = {}
     section_ids_opted_out = CoursePreference.get_section_ids_opted_out(term_id=term_id)
     # If course has multiple instructors then the section_id will be represented across multiple rows.
     for row in rows:
-        approvals = []
         section_id = int(row['section_id'])
-        if section_id not in courses_per_id:
-            # Construct new course
-            instructors_per_section_id[section_id] = []
-            has_opted_out = section_id in section_ids_opted_out
-            cross_listings = _get_cross_listed_courses(section_id=section_id, term_id=term_id)
-            approvals, scheduled = _get_approvals_and_scheduled(
-                section_ids=[section_id] + [c['sectionId'] for c in cross_listings],
+        if section_id in courses_per_id:
+            course = courses_per_id[section_id]
+
+        else:
+            # Who received an invite?
+            invites = SentEmail.get_emails_of_type(section_id=section_id, template_type='invitation', term_id=term_id)
+            invited_uids = []
+            for invite in invites:
+                for uid in list(filter(lambda u: u not in invited_uids, invite.recipient_uids)):
+                    invited_uids.append(uid)
+            # Approvals and scheduled (JSON)
+            approvals = Approval.get_approvals_per_section_ids(section_ids=[section_id], term_id=term_id)
+            approvals = [a.to_api_json() for a in approvals]
+            scheduled = Scheduled.get_scheduled(section_id=section_id, term_id=term_id)
+            scheduled = scheduled and scheduled.to_api_json()
+            # Instructors per cross-listings
+            cross_listed_courses, instructors = _get_cross_listed_courses(
+                section_id=section_id,
                 term_id=term_id,
+                approvals=approvals,
+                invited_uids=invited_uids,
             )
-            course_name = row['course_name']
-            instruction_format = row['instruction_format']
-            section_num = row['section_num']
+            # Construct course
             course = {
                 'allowedUnits': row['allowed_units'],
                 'canvasCourseSites': _canvas_course_sites(term_id, section_id),
-                'courseName': course_name,
+                'courseName': row['course_name'],
                 'courseTitle': row['course_title'],
-                'crossListings': cross_listings,
-                'hasOptedOut': has_opted_out,
-                'instructionFormat': instruction_format,
-                'instructors': [],
+                'crossListings': cross_listed_courses,
+                'deletedAt': format_time(row['deleted_at']),
+                'hasOptedOut': section_id in section_ids_opted_out,
+                'instructionFormat': row['instruction_format'],
+                'instructors': instructors,
+                'invitees': invited_uids,
                 'isPrimary': row['is_primary'],
                 'label': _get_course_label(
-                    course_name=course_name,
-                    instruction_format=instruction_format,
-                    section_num=section_num,
-                    cross_listings=cross_listings,
+                    course_name=row['course_name'],
+                    instruction_format=row['instruction_format'],
+                    section_num=row['section_num'],
+                    cross_listings=cross_listed_courses,
                 ),
                 'meetingDays': format_days(row['meeting_days']),
                 'meetingEndDate': row['meeting_end_date'],
@@ -613,20 +624,11 @@ def _to_api_json(term_id, rows, include_rooms=True):
                 'meetingStartDate': row['meeting_start_date'],
                 'meetingStartTime': format_time(row['meeting_start_time']),
                 'sectionId': section_id,
-                'sectionNum': section_num,
+                'sectionNum': row['section_num'],
                 'termId': row['term_id'],
                 'approvals': approvals,
                 'scheduled': scheduled,
             }
-            invites = SentEmail.get_emails_of_type(
-                section_id=section_id,
-                template_type='invitation',
-                term_id=term_id,
-            )
-            course['invitees'] = []
-            for invite in invites:
-                course['invitees'].extend(invite.recipient_uids)
-
             if scheduled:
                 course['status'] = 'Scheduled'
             elif approvals:
@@ -639,58 +641,41 @@ def _to_api_json(term_id, rows, include_rooms=True):
                 course['room'] = room
             courses_per_id[section_id] = course
 
-        # Build upon course object with one instructor per row.
+        # Note: Instructors associated with cross-listings are slurped up separately.
         instructor_uid = row['instructor_uid']
-        if instructor_uid not in [i['uid'] for i in instructors_per_section_id[section_id]]:
-            instructors_per_section_id[section_id].append({
-                'approval': next((a for a in approvals if a['approvedBy']['uid'] == instructor_uid), False),
-                'deptCode': row['instructor_dept_code'],
-                'email': row['instructor_email'],
-                'name': row['instructor_name'],
-                'roleCode': row['instructor_role_code'],
-                'uid': instructor_uid,
-                'wasSentInvite': instructor_uid in courses_per_id[section_id]['invitees'],
-            })
+        if instructor_uid and instructor_uid not in [i['uid'] for i in course['instructors']]:
+            course['instructors'].append(
+                _to_instructor_json(
+                    row=row,
+                    approvals=course['approvals'],
+                    invited_uids=course['invitees'],
+                ),
+            )
 
+    # Next, construct the feed
     api_json = []
     for section_id, course in courses_per_id.items():
         room_id = course.get('room', {}).get('id')
-
-        def _add_and_verify_room(approval_or_scheduled):
-            action_room_id = approval_or_scheduled.get('room', {}).get('id')
-            is_obsolete_room = not room_id or room_id != action_room_id
-            approval_or_scheduled['hasObsoleteRoom'] = is_obsolete_room
-
-        course['instructors'] = instructors_per_section_id[section_id]
         course['hasNecessaryApprovals'] = _has_necessary_approvals(course)
-        scheduled = course['scheduled']
         # Check for course changes w.r.t. room, meeting times, and instructors.
-        if scheduled:
+        if course['scheduled']:
             def _meeting(obj):
                 return f'{obj["meetingDays"]}-{obj["meetingStartTime"]}-{obj["meetingEndTime"]}'
 
-            instructor_uids = set([instructor['uid'] for instructor in course['instructors']])
-            scheduled['hasObsoleteInstructors'] = instructor_uids != set(scheduled['instructorUids'])
-            scheduled['hasObsoleteMeetingTimes'] = _meeting(course) != _meeting(scheduled)
-            _add_and_verify_room(scheduled)
+            instructor_uids = [i['uid'] for i in course['instructors']]
+            has_obsolete_instructors = set(instructor_uids) != set(course.get('scheduled').get('instructorUids'))
+            course['scheduled'].update({
+                'hasObsoleteInstructors': has_obsolete_instructors,
+                'hasObsoleteMeetingTimes': _meeting(course) != _meeting(course['scheduled']),
+                'hasObsoleteRoom': room_id != course.get('scheduled').get('room', {}).get('id'),
+            })
 
         for approval in course['approvals']:
-            _add_and_verify_room(approval)
+            approval['hasObsoleteRoom'] = room_id != approval.get('room', {}).get('id')
 
         # Add course to the feed
         api_json.append(course)
     return api_json
-
-
-def _get_approvals_and_scheduled(section_ids, term_id):
-    approvals = Approval.get_approvals_per_section_ids(section_ids=section_ids, term_id=term_id)
-    scheduled = None
-    for section_id in section_ids:
-        if not scheduled:
-            scheduled = Scheduled.get_scheduled(section_id=section_id, term_id=term_id)
-            scheduled = scheduled and scheduled.to_api_json()
-            break
-    return [a.to_api_json() for a in approvals], scheduled
 
 
 def _canvas_course_sites(term_id, section_id):
@@ -703,15 +688,22 @@ def _canvas_course_sites(term_id, section_id):
     return canvas_course_sites
 
 
-def _get_cross_listed_courses(section_id, term_id):
+def _get_cross_listed_courses(section_id, term_id, approvals, invited_uids):
     # Cross-listed sections were "deleted" during DblinkToRedshiftJob
     # and yet we still rely on the metadata of those deleted records.
     section_ids = CrossListing.get_cross_listed_sections(section_id=section_id, term_id=term_id)
     sql = f"""
-        SELECT DISTINCT section_id, is_primary, course_name, course_title, instruction_format, section_num, term_id
-        FROM sis_sections
-        WHERE term_id = :term_id AND section_id = ANY(:section_ids)
-        GROUP BY is_primary, section_id, course_name, course_title, instruction_format, section_num, term_id
+        SELECT
+            s.*,
+            i.dept_code AS instructor_dept_code,
+            i.email AS instructor_email,
+            i.first_name || ' ' || i.last_name AS instructor_name,
+            i.uid AS instructor_uid
+        FROM sis_sections s
+        JOIN instructors i ON i.uid = s.instructor_uid
+        WHERE
+            s.term_id = :term_id
+            AND section_id = ANY(:section_ids)
         ORDER BY course_title, section_id
     """
     rows = db.session.execute(
@@ -721,19 +713,38 @@ def _get_cross_listed_courses(section_id, term_id):
             'term_id': term_id,
         },
     )
+    courses = []
+    instructors = []
+    for row in rows:
+        section_id = row['section_id']
+        if section_id not in [c['sectionId'] for c in courses]:
+            courses.append({
+                'courseName': row['course_name'],
+                'courseTitle': row['course_title'],
+                'instructionFormat': row['instruction_format'],
+                'sectionNum': row['section_num'],
+                'isPrimary': row['is_primary'],
+                'label': f"{row['course_name']}, {row['instruction_format']} {row['section_num']}",
+                'sectionId': row['section_id'],
+                'termId': row['term_id'],
+            })
+        instructor_uid = row['instructor_uid']
+        if instructor_uid and instructor_uid not in [i['uid'] for i in instructors]:
+            instructors.append(_to_instructor_json(row, approvals, invited_uids=invited_uids))
+    return courses, instructors
 
-    def _to_json(row):
-        return {
-            'courseName': row['course_name'],
-            'courseTitle': row['course_title'],
-            'instructionFormat': row['instruction_format'],
-            'sectionNum': row['section_num'],
-            'isPrimary': row['is_primary'],
-            'label': f"{row['course_name']}, {row['instruction_format']} {row['section_num']}",
-            'sectionId': row['section_id'],
-            'termId': row['term_id'],
-        }
-    return [_to_json(row) for row in rows]
+
+def _to_instructor_json(row, approvals, invited_uids):
+    instructor_uid = row['instructor_uid']
+    return {
+        'approval': next((a for a in approvals if a['approvedBy']['uid'] == instructor_uid), False),
+        'deptCode': row['instructor_dept_code'],
+        'email': row['instructor_email'],
+        'name': row['instructor_name'],
+        'roleCode': row['instructor_role_code'],
+        'uid': instructor_uid,
+        'wasSentInvite': instructor_uid in invited_uids,
+    }
 
 
 def _merge_distinct(label, other_labels):

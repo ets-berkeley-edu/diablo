@@ -94,81 +94,103 @@ class TestApprove:
 
     def test_instructor_already_approved(self, client, fake_auth):
         """Instructor can submit his/her approval only once."""
-        instructor_uids = _get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
-        fake_auth.login(instructor_uids[0])
+        with test_approvals_workflow(app):
+            instructor_uids = _get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
+            fake_auth.login(instructor_uids[0])
 
-        for expected_status_code in [200, 403]:
+            for expected_status_code in [200, 403]:
+                api_approve(
+                    client,
+                    publish_type='canvas',
+                    recording_type='presentation_audio',
+                    section_id=section_1_id,
+                    expected_status_code=expected_status_code,
+                )
+
+    def test_approval_by_instructors(self, client, fake_auth):
+        """Instructor can submit approval if s/he is teaching the requested course."""
+        with test_approvals_workflow(app):
+            instructor_uids = _get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
+            fake_auth.login(instructor_uids[0])
             api_approve(
                 client,
                 publish_type='canvas',
                 recording_type='presentation_audio',
                 section_id=section_1_id,
-                expected_status_code=expected_status_code,
             )
+            std_commit(allow_test_environment=True)
 
-    def test_approval_by_instructors(self, client, fake_auth):
-        """Instructor can submit approval if s/he is teaching the requested course."""
-        instructor_uids = _get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
-        fake_auth.login(instructor_uids[0])
-        api_approve(
-            client,
-            publish_type='canvas',
-            recording_type='presentation_audio',
-            section_id=section_1_id,
-        )
-        std_commit(allow_test_environment=True)
+            fake_auth.login(instructor_uids[1])
+            api_approve(
+                client,
+                publish_type='kaltura_media_gallery',
+                recording_type='presentation_audio',
+                section_id=section_1_id,
+            )
+            std_commit(allow_test_environment=True)
 
-        fake_auth.login(instructor_uids[1])
-        api_approve(
-            client,
-            publish_type='kaltura_media_gallery',
-            recording_type='presentation_audio',
-            section_id=section_1_id,
-        )
-        std_commit(allow_test_environment=True)
+            for uid in ('10001', '10002'):
+                emails_sent = SentEmail.get_emails_sent_to(uid)
+                assert len(emails_sent) > 0
+                most_recent = emails_sent[-1]
+                assert most_recent.section_id == section_1_id
+                assert most_recent.template_type == 'notify_instructor_of_changes'
+                assert most_recent.term_id == self.term_id
 
-        for uid in ('10001', '10002'):
-            emails_sent = SentEmail.get_emails_sent_to(uid)
-            assert len(emails_sent) > 0
-            most_recent = emails_sent[-1]
-            assert most_recent.section_id == section_1_id
-            assert most_recent.template_type == 'notify_instructor_of_changes'
-            assert most_recent.term_id == self.term_id
+            fake_auth.login(admin_uid)
+            api_json = api_get_course(
+                client,
+                term_id=self.term_id,
+                section_id=section_1_id,
+            )
+            assert api_json['room']['location'] == 'Barrows 106'
+            instructor_uids = [i['uid'] for i in api_json['instructors']]
+            assert instructor_uids == instructor_uids
+            approvals_ = api_json['approvals']
+            assert len(approvals_) == 2
 
-        fake_auth.login(admin_uid)
-        api_json = api_get_course(
-            client,
-            term_id=self.term_id,
-            section_id=section_1_id,
-        )
-        assert api_json['room']['location'] == 'Barrows 106'
-        instructor_uids = [i['uid'] for i in api_json['instructors']]
-        assert instructor_uids == instructor_uids
-        approvals_ = api_json['approvals']
-        assert len(approvals_) == 2
+            assert approvals_[0]['approvedBy']['uid'] == instructor_uids[0]
+            assert approvals_[0]['publishType'] == 'canvas'
 
-        assert approvals_[0]['approvedBy']['uid'] == instructor_uids[0]
-        assert approvals_[0]['publishType'] == 'canvas'
+            assert approvals_[1]['approvedBy']['uid'] == instructor_uids[1]
+            assert approvals_[1]['publishType'] == 'kaltura_media_gallery'
+            assert approvals_[1]['recordingType'] == 'presentation_audio'
+            assert approvals_[1]['recordingTypeName'] == 'Presentation and Audio'
 
-        assert approvals_[1]['approvedBy']['uid'] == instructor_uids[1]
-        assert approvals_[1]['publishType'] == 'kaltura_media_gallery'
-        assert approvals_[1]['recordingType'] == 'presentation_audio'
-        assert approvals_[1]['recordingTypeName'] == 'Presentation and Audio'
-
-        assert api_json['hasNecessaryApprovals'] is True
-        assert api_json['scheduled'] is None
+            assert api_json['hasNecessaryApprovals'] is True
+            assert api_json['scheduled'] is None
 
     def test_approval_by_admin(self, client, admin_session):
         """Admins can schedule recordings on behalf of any eligible course."""
-        api_json = api_approve(
-            client,
-            publish_type='canvas',
-            recording_type='presentation_audio',
-            section_id=section_1_id,
-        )
-        std_commit(allow_test_environment=True)
-        assert api_json['hasNecessaryApprovals'] is True
-        assert api_json['scheduled'] is None
+        with test_approvals_workflow(app):
+            api_json = api_approve(
+                client,
+                publish_type='canvas',
+                recording_type='presentation_audio',
+                section_id=section_1_id,
+            )
+            std_commit(allow_test_environment=True)
+            assert api_json['hasNecessaryApprovals'] is True
+            assert api_json['scheduled'] is None
+
+    def test_has_necessary_approvals_when_cross_listed(self, client, fake_auth):
+        """If section X and Y are cross-listed then hasNecessaryApprovals is false until the Y instructor approves."""
+        with test_approvals_workflow(app):
+            def _approve(instructor_uid, expected_has_necessary):
+                fake_auth.login(instructor_uid)
+                api_json = api_approve(
+                    client,
+                    publish_type='canvas',
+                    recording_type='presentation_audio',
+                    section_id=50012,
+                )
+                std_commit(allow_test_environment=True)
+                assert api_json['hasNecessaryApprovals'] is expected_has_necessary, f'instructor_uid: {instructor_uid}'
+
+            _approve(instructor_uid='10009', expected_has_necessary=False)
+            # Log out
+            client.get('/api/auth/logout')
+            _approve(instructor_uid='10010', expected_has_necessary=True)
 
 
 class TestGetCourse:
@@ -301,6 +323,24 @@ class TestGetCourse:
                 section_id=section_id_,
                 expected_status_code=404,
             )
+
+    def test_instructor_of_cross_listing(self, client, fake_auth):
+        """If section X and Y are cross-listed then /course page of X must be reachable by instructor of Y."""
+        section_id = 50012
+        cross_listed_section_id = 50013
+        instructor_uid = '10010'
+        # Confirm that cross-listed section was deleted during dblink_to_redshift_job
+        assert not SisSection.get_course(section_id=cross_listed_section_id, term_id=self.term_id)
+        # Log in as instructor of cross-listed section
+        fake_auth.login(uid=instructor_uid)
+        api_json = api_get_course(
+            client,
+            term_id=self.term_id,
+            section_id=section_id,
+        )
+        assert len(api_json['crossListings']) == 1
+        assert cross_listed_section_id == api_json['crossListings'][0]['sectionId']
+        assert instructor_uid in [i['uid'] for i in api_json['instructors']]
 
     def test_no_cross_listing(self, client, admin_session):
         """Course does not have cross-listing."""
