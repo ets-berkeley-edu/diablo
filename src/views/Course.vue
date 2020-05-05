@@ -60,7 +60,8 @@
                 <div
                   v-for="crossListing in course.crossListings"
                   :id="`cross-listing-${crossListing.sectionId}`"
-                  :key="crossListing.sectionId">
+                  :key="crossListing.sectionId"
+                >
                   {{ crossListing.label }}
                 </div>
               </v-col>
@@ -74,7 +75,8 @@
                   <a
                     :id="`canvas-course-site-${canvasCourseSite.courseSiteId}`"
                     :href="`${$config.canvasBaseUrl}/courses/${canvasCourseSite.courseSiteId}`"
-                    target="_blank">{{ canvasCourseSite.courseSiteName }}</a>
+                    target="_blank"
+                  >{{ canvasCourseSite.courseSiteName }}</a>
                   <span v-if="course.canvasCourseSites.length > 1 && index === course.canvasCourseSites.length - 2"> and </span>
                 </span>
               </v-col>
@@ -135,7 +137,8 @@
                       id="link-to-course-capture-overview"
                       :href="$config.courseCaptureExplainedUrl"
                       target="_blank"
-                      aria-label="Open URL to Course Capture service overview in a new window">
+                      aria-label="Open URL to Course Capture service overview in a new window"
+                    >
                       Course Capture Services Explained <v-icon>mdi-open-in-new</v-icon>
                     </a>.
                   </div>
@@ -151,7 +154,8 @@
                           color="primary"
                           class="pl-1"
                           dark
-                          v-on="on">
+                          v-on="on"
+                        >
                           mdi-information-outline
                         </v-icon>
                       </template>
@@ -197,7 +201,8 @@
                           color="primary"
                           class="pl-1"
                           dark
-                          v-on="on">
+                          v-on="on"
+                        >
                           mdi-information-outline
                         </v-icon>
                       </template>
@@ -239,7 +244,8 @@
                         id="link-to-course-capture-policies"
                         :href="$config.courseCapturePoliciesUrl"
                         target="_blank"
-                        aria-label="Open URL to Course Capture policies in a new window">
+                        aria-label="Open URL to Course Capture policies in a new window"
+                      >
                         Audio and Video Recording Permission Agreement <v-icon>mdi-open-in-new</v-icon>
                       </a>.
                     </label>
@@ -253,7 +259,8 @@
                     id="btn-approve"
                     color="success"
                     :disabled="disableSubmit"
-                    @click="approveRecording">
+                    @click="approveRecording"
+                  >
                     Approve
                   </v-btn>
                 </v-col>

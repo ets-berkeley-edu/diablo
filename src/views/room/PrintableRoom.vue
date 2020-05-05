@@ -35,7 +35,8 @@
                         v-for="instructor in course.instructors"
                         :id="`course-${course.sectionId}-instructor-${instructor.uid}`"
                         :key="instructor.uid"
-                        class="text-no-wrap">
+                        class="text-no-wrap"
+                      >
                         {{ instructor.name }} ({{ instructor.uid }})
                       </div>
                     </td>

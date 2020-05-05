@@ -41,7 +41,8 @@
         id="rooms-pagination"
         v-model="options.page"
         :length="pageCount"
-        total-visible="10"></v-pagination>
+        total-visible="10"
+      ></v-pagination>
     </div>
   </v-card>
 </template>

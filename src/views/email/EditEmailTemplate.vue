@@ -42,7 +42,8 @@
               id="cancel-edit-of-email-template"
               text
               color="accent"
-              @click="cancel">
+              @click="cancel"
+            >
               Cancel
             </v-btn>
           </div>

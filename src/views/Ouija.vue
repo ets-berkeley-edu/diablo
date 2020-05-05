@@ -7,7 +7,8 @@
           <v-btn
             id="btn-send-email"
             :disabled="!selectedRows.length"
-            @click="sendEmail()">
+            @click="sendEmail()"
+          >
             Send Invite
           </v-btn>
         </div>
@@ -37,7 +38,8 @@
                   <v-icon
                     slot="prepend-item"
                     class="pb-1 pr-2"
-                    v-on="on">
+                    v-on="on"
+                  >
                     mdi-information-outline
                   </v-icon>
                 </template>

@@ -29,7 +29,8 @@
                     :aria-label="`Run job ${job.key}`"
                     fab
                     small
-                    @click="start(job.key)">
+                    @click="start(job.key)"
+                  >
                     <v-icon>mdi-run-fast</v-icon>
                   </v-btn>
                 </td>
@@ -95,7 +96,8 @@
           id="rooms-pagination"
           v-model="options.page"
           :length="pageCount"
-          total-visible="10"></v-pagination>
+          total-visible="10"
+        ></v-pagination>
       </div>
     </v-card>
   </div>

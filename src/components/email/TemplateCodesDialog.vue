@@ -26,7 +26,8 @@
               <div
                 v-for="(code, innerIndex) in column"
                 :key="innerIndex"
-                class="font-weight-medium pb-2 pt-4">
+                class="font-weight-medium pb-2 pt-4"
+              >
                 <code>{{ code }}</code>
               </div>
             </div>
@@ -39,7 +40,8 @@
             id="btn-close-template-codes-dialog"
             color="primary"
             text
-            @click="dialog = false">
+            @click="dialog = false"
+          >
             Close
           </v-btn>
         </v-card-actions>

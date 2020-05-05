@@ -20,7 +20,8 @@
                   v-if="course.room && course.room.capability"
                   :id="`link-course-${course.sectionId}`"
                   :aria-label="`Go to ${course.label} page`"
-                  :to="`/course/${$config.currentTermId}/${course.sectionId}`">
+                  :to="`/course/${$config.currentTermId}/${course.sectionId}`"
+                >
                   {{ course.label }}
                 </router-link>
               </div>

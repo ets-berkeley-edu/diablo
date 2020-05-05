@@ -49,7 +49,8 @@
                 <v-btn
                   :id="`send-test-email-${template.typeName}`"
                   icon
-                  @click="sendTestEmail(template.id)">
+                  @click="sendTestEmail(template.id)"
+                >
                   <v-icon>mdi-email-outline</v-icon>
                 </v-btn>
               </td>
@@ -57,7 +58,8 @@
                 <v-btn
                   :id="`delete-email-template-${template.typeName}`"
                   icon
-                  @click="deleteEmailTemplate(template.id)">
+                  @click="deleteEmailTemplate(template.id)"
+                >
                   <v-icon>mdi-trash-can-outline</v-icon>
                 </v-btn>
               </td>
@@ -70,7 +72,8 @@
           id="email-templates-pagination"
           v-model="options.page"
           :length="pageCount"
-          total-visible="10"></v-pagination>
+          total-visible="10"
+        ></v-pagination>
       </div>
     </v-card>
   </v-container>

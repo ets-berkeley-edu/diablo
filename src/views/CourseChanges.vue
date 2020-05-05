@@ -31,7 +31,8 @@
                       color="green"
                       class="pa-0"
                       dark
-                      v-on="on">
+                      v-on="on"
+                    >
                       mdi-account-check-outline
                     </v-icon>
                   </template>
@@ -58,7 +59,8 @@
                 <div>
                   <router-link
                     :id="`course-${course.sectionId}-room-before-${roomBefore.id}`"
-                    :to="`/room/${roomBefore.id}`">
+                    :to="`/room/${roomBefore.id}`"
+                  >
                     {{ roomBefore.location }}
                   </router-link>
                 </div>
@@ -70,7 +72,8 @@
               <router-link
                 v-if="course.room"
                 :id="`course-${course.sectionId}-room-${course.room.id}`"
-                :to="`/room/${course.room.id}`">
+                :to="`/room/${course.room.id}`"
+              >
                 {{ course.room.location }}
               </router-link>
               <span v-if="!course.room">&mdash;</span>
@@ -83,7 +86,8 @@
                       color="yellow darken-2"
                       class="pb-1 pl-1"
                       dark
-                      v-on="on">
+                      v-on="on"
+                    >
                       mdi-alert-circle-outline
                     </v-icon>
                   </template>

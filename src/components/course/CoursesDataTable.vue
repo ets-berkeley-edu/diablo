@@ -51,7 +51,8 @@
                 <router-link
                   :id="`link-course-${course.sectionId}`"
                   class="subtitle-1"
-                  :to="`/course/${$config.currentTermId}/${course.sectionId}`">
+                  :to="`/course/${$config.currentTermId}/${course.sectionId}`"
+                >
                   {{ course.label }}
                 </router-link>
                 <CrossListingTooltip v-if="course.crossListings.length" icon-class="pb-1 pl-1" :course="course" />
@@ -61,7 +62,8 @@
                 <router-link
                   v-if="course.room"
                   :id="`course-${course.sectionId}-room-${course.room.id}`"
-                  :to="`/room/${course.room.id}`">
+                  :to="`/room/${course.room.id}`"
+                >
                   {{ course.room.location }}
                 </router-link>
                 <span v-if="!course.room">&mdash;</span>
@@ -75,7 +77,8 @@
                       color="green"
                       class="pa-0"
                       dark
-                      v-on="on">
+                      v-on="on"
+                    >
                       mdi-account-check-outline
                     </v-icon>
                   </template>
@@ -93,7 +96,8 @@
                         :color="instructor.approval ? 'green' : 'yellow darken-2'"
                         class="pa-0"
                         dark
-                        v-on="on">
+                        v-on="on"
+                      >
                         mdi-check
                       </v-icon>
                     </template>
@@ -143,7 +147,8 @@
         id="ouija-pagination"
         v-model="pageCurrent"
         :length="pageCount"
-        total-visible="10"></v-pagination>
+        total-visible="10"
+      ></v-pagination>
     </div>
   </div>
 </template>
@@ -168,6 +173,7 @@
         type: Boolean
       },
       messageForCourses: {
+        default: undefined,
         type: String
       },
       onRowsSelected: {
