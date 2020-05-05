@@ -159,25 +159,6 @@ class SisSection(db.Model):
         return [row['instructor_uid'] for row in db.session.execute(text(sql))]
 
     @classmethod
-    def get_instructor_uids(cls, term_id, section_id):
-        sql = """
-            SELECT DISTINCT instructor_uid
-            FROM sis_sections
-            WHERE
-                term_id = :term_id
-                AND section_id = :section_id
-                AND instructor_uid IS NOT NULL
-        """
-        rows = db.session.execute(
-            text(sql),
-            {
-                'section_id': section_id,
-                'term_id': term_id,
-            },
-        )
-        return [row['instructor_uid'] for row in rows]
-
-    @classmethod
     def get_courses_per_location(cls, term_id, location):
         sql = f"""
             SELECT

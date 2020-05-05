@@ -27,11 +27,9 @@ from itertools import islice
 from diablo import db, std_commit
 from diablo.externals.kaltura import Kaltura
 from diablo.merged.calnet import get_calnet_users_for_uids
-from diablo.models.admin_user import AdminUser
 from diablo.models.cross_listing import CrossListing
 from diablo.models.instructor import Instructor
 from diablo.models.room import Room
-from diablo.models.scheduled import Scheduled
 from diablo.models.sis_section import SisSection
 from flask import current_app as app
 from sqlalchemy import text
@@ -69,28 +67,6 @@ def refresh_rooms():
 
     if kaltura_resource_ids_per_room:
         Room.update_kaltura_resource_mappings(kaltura_resource_ids_per_room)
-
-
-def get_courses_ready_to_schedule(approvals, term_id):
-    ready_to_schedule = []
-
-    scheduled_section_ids = [s.section_id for s in Scheduled.get_all_scheduled(term_id=term_id)]
-    unscheduled_approvals = [approval for approval in approvals if approval.section_id not in scheduled_section_ids]
-
-    if unscheduled_approvals:
-        courses = SisSection.get_courses(section_ids=[a.section_id for a in unscheduled_approvals], term_id=term_id)
-        courses_per_section_id = dict((int(course['sectionId']), course) for course in courses)
-        admin_user_uids = set([user.uid for user in AdminUser.all_admin_users(include_deleted=True)])
-
-        for section_id, uids in _get_uids_per_section_id(approvals=unscheduled_approvals).items():
-            if admin_user_uids.intersection(set(uids)):
-                ready_to_schedule.append(courses_per_section_id[section_id])
-            else:
-                course = courses_per_section_id[section_id]
-                necessary_uids = [i['uid'] for i in course['instructors']]
-                if all(uid in uids for uid in necessary_uids):
-                    ready_to_schedule.append(courses_per_section_id[section_id])
-    return ready_to_schedule
 
 
 def refresh_cross_listings(term_id):
@@ -176,10 +152,3 @@ def refresh_cross_listings(term_id):
 
 def _join(items, separator=', '):
     return separator.join(str(item) for item in items)
-
-
-def _get_uids_per_section_id(approvals):
-    uids_per_section_id = {approval.section_id: [] for approval in approvals}
-    for approval in approvals:
-        uids_per_section_id[approval.section_id].append(approval.approved_by_uid)
-    return uids_per_section_id

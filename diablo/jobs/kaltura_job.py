@@ -26,9 +26,9 @@ from datetime import datetime, timedelta
 
 from diablo.externals.kaltura import Kaltura
 from diablo.jobs.base_job import BaseJob
-from diablo.jobs.util import get_courses_ready_to_schedule
 from diablo.lib.util import format_days, objects_to_dict_organized_by_section_id
 from diablo.merged.emailer import notify_instructors_recordings_scheduled
+from diablo.models.admin_user import AdminUser
 from diablo.models.approval import Approval
 from diablo.models.room import Room
 from diablo.models.scheduled import Scheduled
@@ -43,7 +43,7 @@ class KalturaJob(BaseJob):
         approvals = Approval.get_approvals_per_term(term_id=term_id)
         if approvals:
             approvals_per_section_id = objects_to_dict_organized_by_section_id(objects=approvals)
-            ready_to_schedule = get_courses_ready_to_schedule(approvals=approvals, term_id=term_id)
+            ready_to_schedule = _get_courses_ready_to_schedule(approvals=approvals, term_id=term_id)
             app.logger.info(f'Prepare to schedule recordings for {len(ready_to_schedule)} courses.')
             for course in ready_to_schedule:
                 section_id = int(course['sectionId'])
@@ -62,48 +62,49 @@ def _schedule_recordings(all_approvals, course):
     section_id = int(course['sectionId'])
     all_approvals.sort(key=lambda a: a.created_at.isoformat())
     approval = all_approvals[-1]
-
     room = Room.get_room(approval.room_id)
-    meeting_days, meeting_start_time, meeting_end_time = SisSection.get_meeting_times(
-        term_id=term_id,
-        section_id=section_id,
-    )
-    time_format = '%H:%M'
-    # Recording starts X minutes before/after official start; it ends Y minutes before/after official end time.
-    recording_offset_start = app.config['KALTURA_RECORDING_OFFSET_START']
-    recording_offset_end = app.config['KALTURA_RECORDING_OFFSET_END']
-    adjusted_start_time = datetime.strptime(meeting_start_time, time_format) + timedelta(minutes=recording_offset_start)
-    adjusted_end_time = datetime.strptime(meeting_end_time, time_format) + timedelta(minutes=recording_offset_end)
-    days = format_days(meeting_days)
-    instructor_uids = [instructor['uid'] for instructor in course['instructors']]
-
-    app.logger.info(f"""
-        Prepare to schedule recordings for {course["label"]}:
-            Room: {room.location}
-            Instructor UIDs: {instructor_uids}
-            Schedule: {days}, {adjusted_start_time} to {adjusted_end_time}
-            Recording: {approval.recording_type}; {approval.publish_type}
-    """)
 
     if room.kaltura_resource_id:
+        # Query for date objects.
+        meeting_days, meeting_start_time, meeting_end_time = SisSection.get_meeting_times(
+            term_id=term_id,
+            section_id=section_id,
+        )
+        time_format = '%H:%M'
+        # Recording starts X minutes before/after official start; it ends Y minutes before/after official end time.
+        offset_start = app.config['KALTURA_RECORDING_OFFSET_START']
+        offset_end = app.config['KALTURA_RECORDING_OFFSET_END']
+        adjusted_start_time = datetime.strptime(meeting_start_time, time_format) + timedelta(minutes=offset_start)
+        adjusted_end_time = datetime.strptime(meeting_end_time, time_format) + timedelta(minutes=offset_end)
+        days = format_days(meeting_days)
+        instructor_uids = [instructor['uid'] for instructor in course['instructors']]
+
+        app.logger.info(f"""
+            Prepare to schedule recordings for {course["label"]}:
+                Room: {room.location}
+                Instructor UIDs: {instructor_uids}
+                Schedule: {days}, {adjusted_start_time} to {adjusted_end_time}
+                Recording: {approval.recording_type}; {approval.publish_type}
+        """)
         Kaltura().schedule_recording(
             course_label=course['label'],
-            instructor_uids=instructor_uids,
+            instructors=course['instructors'],
             days=days,
             start_time=adjusted_start_time,
             end_time=adjusted_end_time,
             publish_type=approval.publish_type,
             recording_type=approval.recording_type,
             room=room,
+            term_id=term_id,
         )
         scheduled = Scheduled.create(
-            instructor_uids=SisSection.get_instructor_uids(term_id=term_id, section_id=section_id),
+            instructor_uids=[i['uid'] for i in course['instructors']],
             meeting_days=meeting_days,
             meeting_start_time=meeting_start_time,
             meeting_end_time=meeting_end_time,
             publish_type_=approval.publish_type,
             recording_type_=approval.recording_type,
-            room_id=approval.room_id,
+            room_id=room.id,
             section_id=section_id,
             term_id=term_id,
         )
@@ -119,3 +120,32 @@ def _schedule_recordings(all_approvals, course):
             Room: {room}
             Latest approval: {approval}
         """)
+
+
+def _get_courses_ready_to_schedule(approvals, term_id):
+    ready_to_schedule = []
+
+    scheduled_section_ids = [s.section_id for s in Scheduled.get_all_scheduled(term_id=term_id)]
+    unscheduled_approvals = [approval for approval in approvals if approval.section_id not in scheduled_section_ids]
+
+    if unscheduled_approvals:
+        courses = SisSection.get_courses(section_ids=[a.section_id for a in unscheduled_approvals], term_id=term_id)
+        courses_per_section_id = dict((int(course['sectionId']), course) for course in courses)
+        admin_user_uids = set([user.uid for user in AdminUser.all_admin_users(include_deleted=True)])
+
+        for section_id, uids in _get_uids_per_section_id(approvals=unscheduled_approvals).items():
+            if admin_user_uids.intersection(set(uids)):
+                ready_to_schedule.append(courses_per_section_id[section_id])
+            else:
+                course = courses_per_section_id[section_id]
+                necessary_uids = [i['uid'] for i in course['instructors']]
+                if all(uid in uids for uid in necessary_uids):
+                    ready_to_schedule.append(courses_per_section_id[section_id])
+    return ready_to_schedule
+
+
+def _get_uids_per_section_id(approvals):
+    uids_per_section_id = {approval.section_id: [] for approval in approvals}
+    for approval in approvals:
+        uids_per_section_id[approval.section_id].append(approval.approved_by_uid)
+    return uids_per_section_id

@@ -22,8 +22,10 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-
 import json
+
+from diablo import db
+from sqlalchemy import text
 
 
 def api_approve(
@@ -58,3 +60,22 @@ def api_get_course(client, term_id, section_id, expected_status_code=200):
         section_id: {section_id}
     """
     return response.json
+
+
+def get_instructor_uids(section_id, term_id):
+    sql = """
+        SELECT DISTINCT instructor_uid
+        FROM sis_sections
+        WHERE
+            term_id = :term_id
+            AND section_id = :section_id
+            AND instructor_uid IS NOT NULL
+    """
+    rows = db.session.execute(
+        text(sql),
+        {
+            'section_id': section_id,
+            'term_id': term_id,
+        },
+    )
+    return [row['instructor_uid'] for row in rows]
