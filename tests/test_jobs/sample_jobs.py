@@ -53,8 +53,16 @@ class LightSwitch(BaseJob):
     def is_light_on(self):
         return self._is_light_on
 
+    @classmethod
+    def description(cls):
+        return 'Turn on, tune in, drop out'
+
 
 class HelloWorld(BaseJob):
 
     def run(self):
         pass
+
+    @classmethod
+    def description(cls):
+        return 'Hello world!'
