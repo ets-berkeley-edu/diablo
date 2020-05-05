@@ -9,6 +9,10 @@ export function getJobHistory(daysCount) {
   return axios.get(`${utils.apiBaseUrl()}/api/job/history/${daysCount}`)
 }
 
+export function getJobSchedule() {
+  return axios.get(`${utils.apiBaseUrl()}/api/job/schedule`)
+}
+
 export function startJob(jobKey) {
   return axios.get(`${utils.apiBaseUrl()}/api/job/${jobKey}/start`)
 }

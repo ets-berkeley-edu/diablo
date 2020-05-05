@@ -22,11 +22,11 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-
 from datetime import datetime
 
 from diablo import db, std_commit
 from diablo.lib.util import to_isoformat
+from sqlalchemy import and_
 
 
 class CanvasCourseSite(db.Model):
@@ -54,8 +54,9 @@ class CanvasCourseSite(db.Model):
                 """
 
     @classmethod
-    def get_canvas_course_sites(cls, term_id, section_id):
-        return cls.query.filter_by(term_id=term_id, section_id=section_id).all()
+    def get_canvas_course_sites(cls, section_ids, term_id):
+        criteria = and_(cls.section_id.in_(section_ids), cls.term_id == term_id)
+        return cls.query.filter(criteria).all()
 
     @classmethod
     def refresh_term_data(cls, term_id, canvas_course_sites):

@@ -22,6 +22,7 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
+from flask import current_app as app
 import pytest
 
 admin_uid = '90001'
@@ -128,3 +129,33 @@ class TestJobsAvailable:
         for available_job in available_jobs:
             assert available_job['key']
             assert len(available_job['description'])
+
+
+class TestJobSchedule:
+
+    @staticmethod
+    def _api_job_schedule(client, expected_status_code=200):
+        response = client.get('/api/job/schedule')
+        assert response.status_code == expected_status_code
+        return response.json
+
+    def test_anonymous(self, client):
+        """Denies anonymous access."""
+        self._api_job_schedule(client, expected_status_code=401)
+
+    def test_unauthorized(self, client, instructor_session):
+        """Denies access if user is not an admin."""
+        self._api_job_schedule(client, expected_status_code=401)
+
+    def test_authorized(self, client, admin_session):
+        """Admin can access job_history."""
+        config = app.config['JOB_MANAGER']
+        api_json = self._api_job_schedule(client)
+        assert api_json['autoStart'] is config['auto_start']
+        assert api_json['secondsBetweenJobsCheck'] == config['seconds_between_pending_jobs_check']
+
+        jobs = api_json['jobs']
+        assert len(jobs) > 0
+        assert len(jobs) == len(config['jobs'])
+        for job in jobs:
+            assert 'schedule' in job

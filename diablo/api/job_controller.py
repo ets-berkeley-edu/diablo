@@ -62,6 +62,24 @@ def job_history(day_count):
         _raise_error()
 
 
+@app.route('/api/job/schedule')
+@admin_required
+def job_schedule():
+    config = app.config['JOB_MANAGER']
+    schedule = {
+        'autoStart': config['auto_start'],
+        'jobs': [],
+        'secondsBetweenJobsCheck': config['seconds_between_pending_jobs_check'],
+    }
+    for job in config['jobs']:
+        schedule['jobs'].append({
+            'name': job['cls'].__name__,
+            'description': job['cls'].description(),
+            'schedule': job['schedule'],
+        })
+    return tolerant_jsonify(schedule)
+
+
 @app.route('/api/jobs/available')
 @admin_required
 def available_jobs():

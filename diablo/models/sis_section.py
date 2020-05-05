@@ -601,7 +601,11 @@ def _to_api_json(term_id, rows, include_rooms=True):
             # Construct course
             course = {
                 'allowedUnits': row['allowed_units'],
-                'canvasCourseSites': _canvas_course_sites(term_id, section_id),
+                'canvasCourseSites': _canvas_course_sites(
+                    cross_listed_courses=cross_listed_courses,
+                    section_id=section_id,
+                    term_id=term_id,
+                ),
                 'courseName': row['course_name'],
                 'courseTitle': row['course_title'],
                 'crossListings': cross_listed_courses,
@@ -678,9 +682,10 @@ def _to_api_json(term_id, rows, include_rooms=True):
     return api_json
 
 
-def _canvas_course_sites(term_id, section_id):
+def _canvas_course_sites(cross_listed_courses, section_id, term_id):
+    section_ids = [section_id] + [c['sectionId'] for c in cross_listed_courses]
     canvas_course_sites = []
-    for row in CanvasCourseSite.get_canvas_course_sites(term_id=term_id, section_id=section_id):
+    for row in CanvasCourseSite.get_canvas_course_sites(section_ids=section_ids, term_id=term_id):
         canvas_course_sites.append({
             'courseSiteId': row.canvas_course_site_id,
             'courseSiteName': row.canvas_course_site_name,

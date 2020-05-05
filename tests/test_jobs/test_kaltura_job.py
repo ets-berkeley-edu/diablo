@@ -37,10 +37,10 @@ admin_uid = '90001'
 
 class TestKalturaJob:
 
-    def test_scheduling_of_recordings(self):
-        """If a course is scheduled for recording then email is sent to its instructor(s)."""
+    def test_cross_listed_course(self):
+        """Recordings will be scheduled if and only if all instructor(s) approve."""
         with test_approvals_workflow(app):
-            section_id = 50005
+            section_id = 50012
             term_id = app.config['CURRENT_TERM_ID']
             email_template_type = 'recordings_scheduled'
 
@@ -59,8 +59,13 @@ class TestKalturaJob:
 
             course = SisSection.get_course(section_id=section_id, term_id=term_id)
             instructors = course['instructors']
-            assert len(instructors) == 2
+            cross_listings = course['crossListings']
             room_id = Room.find_room(course['meetingLocation']).id
+
+            assert len(instructors) == 2
+            assert room_id == Room.find_room('Barrows 106').id
+            assert len(cross_listings) == 1
+            assert len(course['canvasCourseSites']) == 2
 
             # This course requires two (2) approvals.
             approvals = [
@@ -69,7 +74,7 @@ class TestKalturaJob:
                     approver_type_='instructor',
                     publish_type_='canvas',
                     recording_type_='presentation_audio',
-                    room_id=Room.find_room('Barker 101').id,
+                    room_id=room_id,
                     section_id=section_id,
                     term_id=term_id,
                 ),
@@ -108,7 +113,7 @@ class TestKalturaJob:
             emails_sent = _get_emails_sent()
             assert len(emails_sent) == email_count + 1
             email_sent = emails_sent[-1].to_api_json()
-            assert set(email_sent['recipientUids']) == {'10007', '10006'}
+            assert set(email_sent['recipientUids']) == {'10009', '10010'}
             assert email_sent['sectionId'] == section_id
             assert email_sent['templateType'] == 'recordings_scheduled'
             assert email_sent['termId'] == term_id
