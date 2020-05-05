@@ -58,7 +58,8 @@
           id="skip-to-content-link"
           href="#content"
           class="sr-only sr-only-focusable"
-          tabindex="0">
+          tabindex="0"
+        >
           Skip to main content
         </a>
       </div>
@@ -79,7 +80,8 @@
             id="menu-item-feedback-and-help"
             :href="`mailto:${$config.supportEmailAddress}`"
             target="_blank"
-            aria-label="Send email to the Course Capture support team; this link opens a new tab.">
+            aria-label="Send email to the Course Capture support team; this link opens a new tab."
+          >
             <v-list-item-title>Feedback/Help</v-list-item-title>
           </v-list-item>
           <v-list-item v-if="$currentUser.isAdmin" id="menu-item-email-templates" @click="goToPath('/email/templates')">

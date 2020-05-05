@@ -8,7 +8,8 @@
             id="diablo-support-mailto"
             class="white--text"
             :href="`mailto:${$config.supportEmailAddress}`"
-            target="_blank">
+            target="_blank"
+          >
             {{ $config.supportEmailAddress }}
           </a>
         </v-col>

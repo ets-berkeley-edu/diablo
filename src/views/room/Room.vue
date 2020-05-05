@@ -30,7 +30,8 @@
                 :id="`print-room-${room.id}-schedule`"
                 class="subtitle-1"
                 target="_blank"
-                :to="`/room/printable/${room.id}`">
+                :to="`/room/printable/${room.id}`"
+              >
                 <v-icon class="linked-icon">mdi-printer</v-icon> Print schedule<span class="sr-only"> (opens a new browser tab)</span>
               </router-link>
             </span>

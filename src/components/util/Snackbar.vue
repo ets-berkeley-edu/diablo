@@ -9,7 +9,8 @@
       id="alert-text"
       aria-live="polite"
       role="alert"
-      class="title">{{ snackbar.text }}</span>
+      class="title"
+    >{{ snackbar.text }}</span>
     <v-btn
       id="btn-close-alert"
       aria-label="Close this dialog box."

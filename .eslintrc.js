@@ -34,9 +34,12 @@ module.exports = {
     ],
     'vue-a11y/no-onchange': 'off',
     'vue/eqeqeq': 2,
-    'vue/html-closing-bracket-newline': 0,
+    'vue/html-closing-bracket-newline': 2,
+    'vue/html-closing-bracket-spacing': 2,
+    'vue/html-end-tags': 2,
+    'vue/html-indent': 2,
+    'vue/html-quotes': 2,
     'vue/html-self-closing': 0,
-    'vue/attributes-order': 2,
     'vue/max-attributes-per-line': ['error', {
       singleline: 3,
       multiline: {
@@ -45,8 +48,11 @@ module.exports = {
       }
     }],
     'vue/no-v-html': 0,
-    'vue/require-default-prop': 0,
-    'vue/singleline-html-element-content-newline': 0
+    'vue/require-default-prop': 2,
+    'vue/require-prop-types': 2,
+    'vue/singleline-html-element-content-newline': 0,
+    'vue/v-bind-style': 2,
+    'vue/v-on-style': 2
   },
   parserOptions: {
     parser: require.resolve('@typescript-eslint/parser')

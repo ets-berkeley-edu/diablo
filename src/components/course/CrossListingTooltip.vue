@@ -28,6 +28,7 @@
         type: Object
       },
       iconClass: {
+        default: '',
         type: String
       }
     }

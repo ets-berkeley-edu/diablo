@@ -25,7 +25,8 @@
                       color="red"
                       dark
                       x-large
-                      @click="logIn">
+                      @click="logIn"
+                    >
                       Sign In
                       <v-icon class="pl-2">mdi-arrow-right-circle-outline</v-icon>
                     </v-btn>
