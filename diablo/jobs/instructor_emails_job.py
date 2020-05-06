@@ -68,7 +68,7 @@ class InstructorsEmailsJob(BaseJob):
                         else:
                             raise BackgroundJobError(f"""
                                 No email template of type {template_type} is available.
-                                {course["label"]} instructors were NOT notified.
+                                {course['label']} instructors were NOT notified of scheduled: {scheduled}.
                             """)
                 else:
                     error = f'section_id of scheduled recordings was not found in SIS data: {scheduled}'

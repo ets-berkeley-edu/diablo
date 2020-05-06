@@ -111,5 +111,5 @@ def _notify(course, template_type):
     else:
         raise BackgroundJobError(f"""
             No email template of type {template_type} is available.
-            Diablo admin NOT notified in regard to course {course["label"]}.
+            Diablo admin NOT notified in regard to course {course['label']}.
         """)

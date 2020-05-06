@@ -117,27 +117,34 @@ def get_admin_alert_recipients():
 
 
 def notify_instructors_recordings_scheduled(course, scheduled):
-    email_template = EmailTemplate.get_template_by_type('recordings_scheduled')
-    publish_type_name = NAMES_PER_PUBLISH_TYPE[scheduled.publish_type]
-    recording_type_name = NAMES_PER_RECORDING_TYPE[scheduled.recording_type]
-    BConnected().send(
-        message=interpolate_email_content(
-            course=course,
-            publish_type_name=publish_type_name,
-            recording_type_name=recording_type_name,
-            templated_string=email_template.message,
-        ),
-        recipients=course['instructors'],
-        section_id=course['sectionId'],
-        subject_line=interpolate_email_content(
-            course=course,
-            publish_type_name=publish_type_name,
-            recording_type_name=recording_type_name,
-            templated_string=email_template.subject_line,
-        ),
-        template_type=email_template.template_type,
-        term_id=course['termId'],
-    )
+    template_type = 'recordings_scheduled'
+    email_template = EmailTemplate.get_template_by_type(template_type)
+    if email_template:
+        publish_type_name = NAMES_PER_PUBLISH_TYPE[scheduled.publish_type]
+        recording_type_name = NAMES_PER_RECORDING_TYPE[scheduled.recording_type]
+        BConnected().send(
+            message=interpolate_email_content(
+                course=course,
+                publish_type_name=publish_type_name,
+                recording_type_name=recording_type_name,
+                templated_string=email_template.message,
+            ),
+            recipients=course['instructors'],
+            section_id=course['sectionId'],
+            subject_line=interpolate_email_content(
+                course=course,
+                publish_type_name=publish_type_name,
+                recording_type_name=recording_type_name,
+                templated_string=email_template.subject_line,
+            ),
+            template_type=email_template.template_type,
+            term_id=course['termId'],
+        )
+    else:
+        send_system_error_email(f"""
+            No email template of type {template_type} is available.
+            {course['label']} instructors were NOT notified of scheduled: {scheduled}.
+        """)
 
 
 def send_course_related_email(
