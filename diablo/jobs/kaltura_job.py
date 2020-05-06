@@ -22,7 +22,7 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from datetime import datetime, timedelta
+from datetime import date, datetime, time, timedelta
 
 from diablo.externals.kaltura import Kaltura
 from diablo.jobs.base_job import BaseJob
@@ -70,19 +70,15 @@ def _schedule_recordings(all_approvals, course):
             term_id=term_id,
             section_id=section_id,
         )
-        time_format = '%H:%M'
         # Recording starts X minutes before/after official start; it ends Y minutes before/after official end time.
-        offset_start = app.config['KALTURA_RECORDING_OFFSET_START']
-        offset_end = app.config['KALTURA_RECORDING_OFFSET_END']
-        adjusted_start_time = datetime.strptime(meeting_start_time, time_format) + timedelta(minutes=offset_start)
-        adjusted_end_time = datetime.strptime(meeting_end_time, time_format) + timedelta(minutes=offset_end)
         days = format_days(meeting_days)
-        instructor_uids = [instructor['uid'] for instructor in course['instructors']]
+        adjusted_start_time = _adjust_time(meeting_start_time, app.config['KALTURA_RECORDING_OFFSET_START'])
+        adjusted_end_time = _adjust_time(meeting_end_time, app.config['KALTURA_RECORDING_OFFSET_END'])
 
         app.logger.info(f"""
             Prepare to schedule recordings for {course["label"]}:
                 Room: {room.location}
-                Instructor UIDs: {instructor_uids}
+                Instructor UIDs: {[instructor['uid'] for instructor in course['instructors']]}
                 Schedule: {days}, {adjusted_start_time} to {adjusted_end_time}
                 Recording: {approval.recording_type}; {approval.publish_type}
         """)
@@ -149,3 +145,11 @@ def _get_uids_per_section_id(approvals):
     for approval in approvals:
         uids_per_section_id[approval.section_id].append(approval.approved_by_uid)
     return uids_per_section_id
+
+
+def _adjust_time(military_time, offset_minutes):
+    hour_and_minutes = military_time.split(':')
+    return datetime.combine(
+        date.today(),
+        time(int(hour_and_minutes[0]), int(hour_and_minutes[1])),
+    ) + timedelta(minutes=offset_minutes)

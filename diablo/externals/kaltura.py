@@ -67,13 +67,7 @@ class Kaltura:
             room,
             term_id,
     ):
-        # We were not quite ready for KalturaScheduleEvent API
-        skip_kaltura_integration = True
-
-        if skip_kaltura_integration:
-            return []
-
-        else:
+        if app.config['KALTURA_SCHEDULE_API_AVAILABLE']:
             summary = f'{course_label} ({term_name_for_sis_id(term_id)})'
             description = f"""
                 {course_label} meets in {room.location}, {start_time} - {end_time} on {days}.
@@ -91,14 +85,11 @@ class Kaltura:
                 # Creation date as Unix timestamp, in seconds
                 createdAt=utc_now_timestamp,
                 description=description.strip(),
-                # Duration in seconds.
-                duration=end_time.second - start_time.second,
+                # Duration in seconds
+                duration=(end_time - start_time).seconds,
                 endDate=datetime.strptime(app.config['CURRENT_TERM_END'], '%Y-%m-%d').timestamp(),
-                # Specifies the global position for the activity.
-                geoLatitude=None,
-                # Specifies the global position for the activity.
-                geoLongitude=None,
-                # Defines the intended venue for the activity.
+                geoLatitude=37.871853,
+                geoLongitude=-122.258423,
                 location=room.kaltura_resource_id,
                 organizer=app.config['EMAIL_DIABLO_ADMIN'],
                 # TODO: What is proper ownerId? (The following is based on test recordings scheduled by Ops.)
@@ -166,6 +157,9 @@ class Kaltura:
             )
             response = self.kaltura_client.schedule.scheduleResource.add(recurring_event)
             return [{'id': o.id, 'name': o.name} for o in response.objects]
+
+        else:
+            return []
 
     def ping(self):
         filter_ = KalturaMediaEntryFilter()
