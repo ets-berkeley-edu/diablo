@@ -794,6 +794,99 @@ class TestUpdatePreferences:
             assert section_1_id not in section_ids_opted_out
 
 
+class TestUnscheduleCourse:
+    """Only admins can remove existing approvals and schedules for a course."""
+
+    @property
+    def term_id(self):
+        return app.config['CURRENT_TERM_ID']
+
+    @staticmethod
+    def _api_unschedule(
+            client,
+            term_id,
+            section_id,
+            expected_status_code=200,
+    ):
+        response = client.post(
+            '/api/course/unschedule',
+            data=json.dumps({
+                'termId': term_id,
+                'sectionId': section_id,
+            }),
+            content_type='application/json',
+        )
+        assert response.status_code == expected_status_code
+        return response.json
+
+    def test_not_authenticated(self, client):
+        """Deny anonymous access."""
+        self._api_unschedule(
+            client,
+            term_id=self.term_id,
+            section_id=section_1_id,
+            expected_status_code=401,
+        )
+
+    def test_unauthorized(self, client, fake_auth):
+        """Instructors cannot unschedule courses."""
+        instructor_uids = get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
+        fake_auth.login(instructor_uids[0])
+        self._api_unschedule(
+            client,
+            term_id=self.term_id,
+            section_id=section_1_id,
+            expected_status_code=401,
+        )
+
+    def test_not_found(self, client, admin_session):
+        """A course cannot be unscheduled if can't be found."""
+        self._api_unschedule(
+            client,
+            term_id=self.term_id,
+            section_id='99999',
+            expected_status_code=400,
+        )
+
+    def test_not_scheduled(self, client, admin_session):
+        """A course cannot be unscheduled if it hasn't been scheduled first."""
+        self._api_unschedule(
+            client,
+            term_id=self.term_id,
+            section_id=section_1_id,
+            expected_status_code=400,
+        )
+
+    def test_authorized_unschedule(self, client, admin_session):
+        with test_approvals_workflow(app):
+            api_approve(
+                client,
+                publish_type='canvas',
+                recording_type='presentation_audio',
+                section_id=section_1_id,
+            )
+            _schedule_recordings(
+                section_id=section_1_id,
+                term_id=self.term_id,
+            )
+
+            course = api_get_course(client, term_id=self.term_id, section_id=section_1_id)
+            assert len(course['approvals']) == 1
+            assert course['scheduled'] is not None
+            assert course['hasNecessaryApprovals'] is True
+            assert course['hasOptedOut'] is False
+
+            response = self._api_unschedule(
+                client,
+                term_id=self.term_id,
+                section_id=section_1_id,
+            )
+            assert len(response['approvals']) == 0
+            assert response['scheduled'] is None
+            assert response['hasNecessaryApprovals'] is False
+            assert response['hasOptedOut'] is True
+
+
 def _is_course_in_enabled_room(section_id, term_id):
     capability = SisSection.get_course(term_id=term_id, section_id=section_id)['room']['capability']
     return capability is not None

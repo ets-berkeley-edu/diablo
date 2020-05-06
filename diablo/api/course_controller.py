@@ -23,6 +23,7 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
+from diablo import db
 from diablo.api.errors import BadRequestError, ForbiddenRequestError, ResourceNotFoundError
 from diablo.api.util import admin_required, get_search_filter_options
 from diablo.lib.berkeley import term_name_for_sis_id
@@ -31,9 +32,11 @@ from diablo.merged.emailer import notify_instructors_of_approval
 from diablo.models.approval import Approval, get_all_publish_types, get_all_recording_types
 from diablo.models.course_preference import CoursePreference
 from diablo.models.room import Room
+from diablo.models.scheduled import Scheduled
 from diablo.models.sis_section import SisSection
 from flask import current_app as app, request
 from flask_login import current_user, login_required
+from sqlalchemy import and_
 
 
 @app.route('/api/course/approve', methods=['POST'])
@@ -115,6 +118,34 @@ def find_courses():
         raise BadRequestError(f'Invalid filter: {filter_}')
 
     return tolerant_jsonify(courses)
+
+
+@app.route('/api/course/unschedule', methods=['POST'])
+@admin_required
+def unschedule():
+    params = request.get_json()
+    term_id = params.get('termId')
+    section_id = params.get('sectionId')
+    course = SisSection.get_course(term_id, section_id) if (term_id and section_id) else None
+
+    if not course:
+        raise BadRequestError('Required params missing or invalid')
+
+    if course['status'] != 'Scheduled':
+        raise BadRequestError(f'Section id {section_id}, term id {term_id} is not currently scheduled')
+
+    db.session.execute(
+        Approval.__table__.delete().where(and_(Approval.term_id == term_id, Approval.section_id == section_id)),
+    )
+    db.session.execute(
+        Scheduled.__table__.delete().where(and_(Scheduled.term_id == term_id, Scheduled.section_id == section_id)),
+    )
+    CoursePreference.update_opt_out(
+        term_id=term_id,
+        section_id=section_id,
+        opt_out=True,
+    )
+    return tolerant_jsonify(SisSection.get_course(term_id, section_id))
 
 
 @app.route('/api/courses/changes/<term_id>')
