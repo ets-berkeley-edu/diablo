@@ -24,6 +24,8 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 from diablo import db
 from diablo.externals.b_connected import BConnected
+from diablo.externals.canvas import ping_canvas
+from diablo.externals.kaltura import Kaltura
 from diablo.externals.rds import log_db_error
 from diablo.lib.http import tolerant_jsonify
 from flask import current_app as app
@@ -46,11 +48,10 @@ def ping():
             app.logger.exception(e)
             return False
 
-    # TODO: Bring these back, one by one, as we verify in the shared dev environment.
     return tolerant_jsonify({
         'app': True,
-        # 'canvas': ping_canvas(),
+        'canvas': ping_canvas(),
         'bConnected': BConnected().ping(),
         'db': db_status(),
-        # 'kaltura': Kaltura().ping(),
+        'kaltura': Kaltura().ping(),
     })

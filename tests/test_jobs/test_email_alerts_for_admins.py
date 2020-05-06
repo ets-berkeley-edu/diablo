@@ -30,6 +30,7 @@ from diablo.models.scheduled import Scheduled
 from diablo.models.sent_email import SentEmail
 from diablo.models.sis_section import SisSection
 from flask import current_app as app
+from tests.test_api.api_test_utils import get_instructor_uids
 from tests.util import test_approvals_workflow
 
 
@@ -57,7 +58,7 @@ class TestEmailAlertsForAdmins:
                 section_id=section_id,
             )
             Scheduled.create(
-                instructor_uids=SisSection.get_instructor_uids(term_id=term_id, section_id=section_id),
+                instructor_uids=get_instructor_uids(term_id=term_id, section_id=section_id),
                 meeting_days=meeting_days,
                 meeting_start_time=meeting_start_time,
                 meeting_end_time=meeting_end_time,
@@ -94,7 +95,7 @@ class TestEmailAlertsForAdmins:
                 section_id=section_id,
             )
             Scheduled.create(
-                instructor_uids=SisSection.get_instructor_uids(term_id=term_id, section_id=section_id),
+                instructor_uids=get_instructor_uids(section_id=section_id, term_id=term_id),
                 meeting_days=meeting_days,
                 meeting_start_time=meeting_start_time,
                 meeting_end_time=meeting_end_time,

@@ -33,7 +33,7 @@ from diablo.models.sent_email import SentEmail
 from diablo.models.sis_section import SisSection
 from flask import current_app as app
 import pytest
-from tests.test_api.api_test_utils import api_approve, api_get_course
+from tests.test_api.api_test_utils import api_approve, api_get_course, get_instructor_uids
 from tests.util import test_approvals_workflow
 
 admin_uid = '90001'
@@ -95,7 +95,7 @@ class TestApprove:
     def test_instructor_already_approved(self, client, fake_auth):
         """Instructor can submit his/her approval only once."""
         with test_approvals_workflow(app):
-            instructor_uids = _get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
+            instructor_uids = get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
             fake_auth.login(instructor_uids[0])
 
             for expected_status_code in [200, 403]:
@@ -110,7 +110,7 @@ class TestApprove:
     def test_approval_by_instructors(self, client, fake_auth):
         """Instructor can submit approval if s/he is teaching the requested course."""
         with test_approvals_workflow(app):
-            instructor_uids = _get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
+            instructor_uids = get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
             fake_auth.login(instructor_uids[0])
             api_approve(
                 client,
@@ -211,7 +211,7 @@ class TestGetCourse:
 
     def test_not_authorized(self, client, fake_auth):
         """Deny access if user is not an admin."""
-        instructor_uids = _get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
+        instructor_uids = get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
         fake_auth.login(instructor_uids[0])
         api_get_course(
             client,
@@ -243,7 +243,7 @@ class TestGetCourse:
         """Course with two instructors and one approval."""
         with test_approvals_workflow(app):
             # If course has approvals but not scheduled then it will show up in the feed.
-            approved_by_uid = _get_instructor_uids(section_id=section_1_id, term_id=self.term_id)[0]
+            approved_by_uid = get_instructor_uids(section_id=section_1_id, term_id=self.term_id)[0]
             room_id = Room.get_room_id(section_id=section_1_id, term_id=self.term_id)
             Approval.create(
                 approved_by_uid=approved_by_uid,
@@ -271,7 +271,7 @@ class TestGetCourse:
 
     def test_date_time_format(self, client, fake_auth):
         """Dates and times are properly formatted for front-end display."""
-        instructor_uids = _get_instructor_uids(section_id=section_2_id, term_id=self.term_id)
+        instructor_uids = get_instructor_uids(section_id=section_2_id, term_id=self.term_id)
         fake_auth.login(instructor_uids[0])
         api_json = api_get_course(
             client,
@@ -377,7 +377,7 @@ class TestCoursesFilter:
         self._api_courses(client, term_id=self.term_id, expected_status_code=401)
 
     def test_not_authorized(self, client, fake_auth):
-        instructor_uids = _get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
+        instructor_uids = get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
         fake_auth.login(instructor_uids[0])
         self._api_courses(client, term_id=self.term_id, expected_status_code=401)
 
@@ -396,14 +396,14 @@ class TestCoursesFilter:
                     assert in_enabled_room
                     SentEmail.create(
                         section_id=section_id,
-                        recipient_uids=_get_instructor_uids(section_id=section_id, term_id=self.term_id),
+                        recipient_uids=get_instructor_uids(section_id=section_id, term_id=self.term_id),
                         template_type='invitation',
                         term_id=self.term_id,
                     )
 
             # If course has approvals but not scheduled then it will show up in the feed.
             Approval.create(
-                approved_by_uid=_get_instructor_uids(section_id=section_1_id, term_id=self.term_id)[0],
+                approved_by_uid=get_instructor_uids(section_id=section_1_id, term_id=self.term_id)[0],
                 approver_type_='instructor',
                 publish_type_='canvas',
                 recording_type_='presentation_audio',
@@ -433,11 +433,11 @@ class TestCoursesFilter:
             # First, send invitations
             SentEmail.create(
                 section_id=section_4_id,
-                recipient_uids=_get_instructor_uids(section_id=section_4_id, term_id=self.term_id),
+                recipient_uids=get_instructor_uids(section_id=section_4_id, term_id=self.term_id),
                 template_type='invitation',
                 term_id=self.term_id,
             )
-            section_5_instructor_uids = _get_instructor_uids(section_id=section_5_id, term_id=self.term_id)
+            section_5_instructor_uids = get_instructor_uids(section_id=section_5_id, term_id=self.term_id)
             SentEmail.create(
                 section_id=section_5_id,
                 recipient_uids=section_5_instructor_uids,
@@ -467,7 +467,7 @@ class TestCoursesFilter:
         """Not-invited filter: Courses in eligible rooms, never sent an invitation. No approval. Not scheduled."""
         with test_approvals_workflow(app):
             # The first course gets an invitation
-            section_1_instructor_uids = _get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
+            section_1_instructor_uids = get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
             SentEmail.create(
                 section_id=section_1_id,
                 recipient_uids=section_1_instructor_uids,
@@ -482,7 +482,7 @@ class TestCoursesFilter:
             )
             assert not invite
             Approval.create(
-                approved_by_uid=_get_instructor_uids(section_id=section_4_id, term_id=self.term_id)[0],
+                approved_by_uid=get_instructor_uids(section_id=section_4_id, term_id=self.term_id)[0],
                 approver_type_='instructor',
                 publish_type_='canvas',
                 recording_type_='presentation_audio',
@@ -504,8 +504,8 @@ class TestCoursesFilter:
         """Partially approved: Eligible, invited course with 1+ approvals, but not ALL instructors have approved."""
         with test_approvals_workflow(app):
             # Assert multiple instructors
-            section_1_instructor_uids = _get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
-            section_6_instructor_uids = _get_instructor_uids(section_id=section_6_id, term_id=self.term_id)
+            section_1_instructor_uids = get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
+            section_6_instructor_uids = get_instructor_uids(section_id=section_6_id, term_id=self.term_id)
             assert len(section_1_instructor_uids) > 1
             assert len(section_6_instructor_uids) > 1
             # Send invites
@@ -545,8 +545,8 @@ class TestCoursesFilter:
     def test_scheduled_filter(self, client, admin_session):
         """Scheduled filter: Courses with recordings scheduled."""
         with test_approvals_workflow(app):
-            section_1_instructor_uids = _get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
-            section_6_instructor_uids = _get_instructor_uids(section_id=section_6_id, term_id=self.term_id)
+            section_1_instructor_uids = get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
+            section_6_instructor_uids = get_instructor_uids(section_id=section_6_id, term_id=self.term_id)
             # Send invites
             courses = [
                 {'section_id': section_1_id, 'instructor_uids': section_1_instructor_uids},
@@ -599,7 +599,7 @@ class TestCoursesChanges:
 
     def test_unauthorized(self, client, fake_auth):
         """Instructors cannot see course changes."""
-        instructor_uids = _get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
+        instructor_uids = get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
         fake_auth.login(instructor_uids[0])
         self._api_course_changes(client, term_id=self.term_id, expected_status_code=401)
 
@@ -639,7 +639,7 @@ class TestCoursesChanges:
             assert meeting_days != obsolete_meeting_days
 
             Scheduled.create(
-                instructor_uids=SisSection.get_instructor_uids(term_id=self.term_id, section_id=section_1_id),
+                instructor_uids=get_instructor_uids(term_id=self.term_id, section_id=section_1_id),
                 meeting_days=obsolete_meeting_days,
                 meeting_start_time=meeting_start_time,
                 meeting_end_time=meeting_end_time,
@@ -665,7 +665,7 @@ class TestCoursesChanges:
                 term_id=self.term_id,
                 section_id=section_3_id,
             )
-            instructor_uids = SisSection.get_instructor_uids(term_id=self.term_id, section_id=section_3_id)
+            instructor_uids = get_instructor_uids(term_id=self.term_id, section_id=section_3_id)
             Scheduled.create(
                 instructor_uids=instructor_uids + ['100099'],
                 meeting_days=meeting_days,
@@ -764,7 +764,7 @@ class TestUpdatePreferences:
 
     def test_unauthorized(self, client, fake_auth):
         """Instructors cannot modify preferences."""
-        instructor_uids = _get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
+        instructor_uids = get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
         fake_auth.login(instructor_uids[0])
         self._api_opt_out_update(
             client,
@@ -803,10 +803,6 @@ def _find_course(api_json, section_id):
     return next((s for s in api_json if s['sectionId'] == section_id), None)
 
 
-def _get_instructor_uids(section_id, term_id):
-    return SisSection.get_instructor_uids(term_id=term_id, section_id=section_id)
-
-
 def _schedule_recordings(
         section_id,
         term_id,
@@ -819,7 +815,7 @@ def _schedule_recordings(
         section_id=section_id,
     )
     Scheduled.create(
-        instructor_uids=SisSection.get_instructor_uids(term_id=term_id, section_id=section_id),
+        instructor_uids=get_instructor_uids(term_id=term_id, section_id=section_id),
         meeting_days=meeting_days,
         meeting_start_time=meeting_start_time,
         meeting_end_time=meeting_end_time,
