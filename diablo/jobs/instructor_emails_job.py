@@ -23,6 +23,7 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 from diablo.externals.b_connected import BConnected
+from diablo.jobs.background_job_manager import BackgroundJobError
 from diablo.jobs.base_job import BaseJob
 from diablo.merged.emailer import interpolate_email_content, send_system_error_email
 from diablo.models.email_template import EmailTemplate
@@ -43,25 +44,32 @@ class InstructorsEmailsJob(BaseJob):
                 course = courses_per_section_id[scheduled.section_id]
                 if course:
                     if scheduled.room_id != course['room']['id']:
-                        email_template = EmailTemplate.get_template_by_type('room_change_no_longer_eligible')
-                        for instructor in course['instructor']:
-                            BConnected().send(
-                                message=interpolate_email_content(
-                                    templated_string=email_template.message,
-                                    course=course,
-                                    instructor_name=instructor['name'],
-                                    recipient_name=instructor['name'],
-                                    recording_type_name=scheduled.recording_type,
-                                ),
-                                recipients=course['instructors'],
-                                subject_line=interpolate_email_content(
-                                    templated_string=email_template.subject_line,
-                                    course=course,
-                                    instructor_name=instructor['name'],
-                                    recipient_name=instructor['name'],
-                                    recording_type_name=scheduled.recording_type,
-                                ),
-                            )
+                        template_type = 'room_change_no_longer_eligible'
+                        email_template = EmailTemplate.get_template_by_type(template_type)
+                        if email_template:
+                            for instructor in course['instructor']:
+                                BConnected().send(
+                                    message=interpolate_email_content(
+                                        templated_string=email_template.message,
+                                        course=course,
+                                        instructor_name=instructor['name'],
+                                        recipient_name=instructor['name'],
+                                        recording_type_name=scheduled.recording_type,
+                                    ),
+                                    recipients=course['instructors'],
+                                    subject_line=interpolate_email_content(
+                                        templated_string=email_template.subject_line,
+                                        course=course,
+                                        instructor_name=instructor['name'],
+                                        recipient_name=instructor['name'],
+                                        recording_type_name=scheduled.recording_type,
+                                    ),
+                                )
+                        else:
+                            raise BackgroundJobError(f"""
+                                No email template of type {template_type} is available.
+                                {course["label"]} instructors were NOT notified.
+                            """)
                 else:
                     error = f'section_id of scheduled recordings was not found in SIS data: {scheduled}'
                     app.logger.error(error)
