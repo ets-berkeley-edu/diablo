@@ -53,6 +53,10 @@ class JobHistory(db.Model):
                 """
 
     @classmethod
+    def is_job_running(cls, job_key):
+        return cls.query.filter_by(job_key=job_key, finished_at=None).first() is not None
+
+    @classmethod
     def job_started(cls, job_key):
         row = cls(job_key=job_key)
         db.session.add(row)
