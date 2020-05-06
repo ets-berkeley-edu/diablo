@@ -23,6 +23,7 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 from diablo.externals.b_connected import BConnected
+from diablo.jobs.background_job_manager import BackgroundJobError
 from diablo.jobs.base_job import BaseJob
 from diablo.merged.emailer import get_admin_alert_recipients, interpolate_email_content
 from diablo.models.approval import Approval
@@ -95,14 +96,20 @@ def _scheduled_locations_per_section_id(all_scheduled):
 
 def _notify(course, template_type):
     email_template = EmailTemplate.get_template_by_type(template_type)
-    BConnected().send(
-        message=interpolate_email_content(
-            templated_string=email_template.message,
-            course=course,
-        ),
-        recipients=get_admin_alert_recipients(),
-        subject_line=interpolate_email_content(
-            templated_string=email_template.subject_line,
-            course=course,
-        ),
-    )
+    if email_template:
+        BConnected().send(
+            message=interpolate_email_content(
+                templated_string=email_template.message,
+                course=course,
+            ),
+            recipients=get_admin_alert_recipients(),
+            subject_line=interpolate_email_content(
+                templated_string=email_template.subject_line,
+                course=course,
+            ),
+        )
+    else:
+        raise BackgroundJobError(f"""
+            No email template of type {template_type} is available.
+            Diablo admin NOT notified in regard to course {course["label"]}.
+        """)
