@@ -76,7 +76,7 @@ def _schedule_recordings(all_approvals, course):
         adjusted_end_time = _adjust_time(meeting_end_time, app.config['KALTURA_RECORDING_OFFSET_END'])
 
         app.logger.info(f"""
-            Prepare to schedule recordings for {course["label"]}:
+            Prepare to schedule recordings for {course['label']}:
                 Room: {room.location}
                 Instructor UIDs: {[instructor['uid'] for instructor in course['instructors']]}
                 Schedule: {days}, {adjusted_start_time} to {adjusted_end_time}
