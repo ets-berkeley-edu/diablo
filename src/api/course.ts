@@ -30,6 +30,17 @@ export function getCourseChanges(termId) {
   return axios.get(`${utils.apiBaseUrl()}/api/courses/changes/${termId}`)
 }
 
+export function unschedule(
+    termId: string,
+    sectionId: string
+) {
+  return axios
+    .post(`${utils.apiBaseUrl()}/api/course/unschedule`, {
+      termId,
+      sectionId
+    })
+}
+
 export function updateOptOut(termId, sectionId, optOut) {
   return axios.post(`${utils.apiBaseUrl()}/api/course/opt_out/update`, {
     optOut,

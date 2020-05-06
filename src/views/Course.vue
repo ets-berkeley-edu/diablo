@@ -89,6 +89,44 @@
                 Opted out
               </v-col>
             </v-row>
+            <v-row v-if="$currentUser.isAdmin && course.scheduled" id="unschedule" justify="center">
+              <v-col md="auto">
+                <v-dialog v-model="showUnscheduleModal" persistent max-width="400">
+                  <template v-slot:activator="{ on }">
+                    <v-btn
+                      id="unschedule-course-btn"
+                      color="primary"
+                      v-on="on"
+                    >
+                      Unschedule
+                    </v-btn>
+                  </template>
+                  <v-card>
+                    <v-card-title class="headline">Unschedule this course?</v-card-title>
+                    <v-card-text>The schedule and approvals for this course will be removed from Diablo, and the course will be marked as opt-out.</v-card-text>
+                    <v-card-actions>
+                      <v-spacer></v-spacer>
+                      <v-btn 
+                        id="confirm-unschedule-course-btn"
+                        color="blue"
+                        text
+                        @click="unscheduleCourse()"
+                      >
+                        Confirm
+                      </v-btn>
+                      <v-btn
+                        id="cancel-unschedule-course-btn"
+                        color="blue"
+                        text
+                        @click="showUnscheduleModal = false"
+                      >
+                        Cancel
+                      </v-btn>
+                    </v-card-actions>
+                  </v-card>
+                </v-dialog>
+              </v-col>
+            </v-row>
           </v-card>
         </v-col>
         <v-col>
@@ -277,7 +315,7 @@
   import Context from '@/mixins/Context'
   import OxfordJoin from '@/components/util/OxfordJoin'
   import Utils from '@/mixins/Utils'
-  import {approve, getApprovals} from '@/api/course'
+  import {approve, getApprovals, unschedule} from '@/api/course'
 
   export default {
     name: 'Course',
@@ -290,7 +328,8 @@
       publishTypeOptions: undefined,
       recordingType: undefined,
       recordingTypeOptions: undefined,
-      scheduled: undefined
+      scheduled: undefined,
+      showUnscheduleModal: false
     }),
     computed: {
       disableSubmit() {
@@ -315,6 +354,13 @@
     methods: {
       approveRecording() {
         approve(this.publishType, this.recordingType, this.course.sectionId).then(data => {
+          this.render(data)
+        }).catch(this.$ready)
+      },
+      unscheduleCourse() {
+        this.$loading()
+        this.showUnscheduleModal = false
+        unschedule(this.course.termId, this.course.sectionId).then(data => {
           this.render(data)
         }).catch(this.$ready)
       },
