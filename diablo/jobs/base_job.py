@@ -35,16 +35,19 @@ class BaseJob:
 
     def run_with_app_context(self):
         with self.app_context():
-            app.logger.info(f'Job \'{self.key()}\' is starting.')
-            job_tracker = JobHistory.job_started(job_key=self.key())
-            try:
-                self.run()
-                JobHistory.job_finished(id_=job_tracker.id)
-                app.logger.info(f'Job \'{self.key()}\' finished successfully.')
-            except Exception as e:
-                app.logger.error(f'Job {self.key()} failed')
-                app.logger.exception(e)
-                JobHistory.job_finished(id_=job_tracker.id, failed=True)
+            if JobHistory.is_job_running(job_key=self.key()):
+                app.logger(f'Job {self.key()}: Skipping scheduled run because older job instance is still running')
+            else:
+                app.logger.info(f'Job \'{self.key()}\' is starting.')
+                job_tracker = JobHistory.job_started(job_key=self.key())
+                try:
+                    self.run()
+                    JobHistory.job_finished(id_=job_tracker.id)
+                    app.logger.info(f'Job \'{self.key()}\' finished successfully.')
+                except Exception as e:
+                    app.logger.error(f'Job {self.key()} failed')
+                    app.logger.exception(e)
+                    JobHistory.job_finished(id_=job_tracker.id, failed=True)
 
     def run(self):
         raise BackgroundJobError('Implement this method in Job sub-class')
