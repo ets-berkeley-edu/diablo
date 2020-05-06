@@ -24,8 +24,8 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 import json
 
-from diablo import db
-from sqlalchemy import text
+from diablo import cachify
+from diablo.models.sis_section import SisSection
 
 
 def api_approve(
@@ -62,20 +62,7 @@ def api_get_course(client, term_id, section_id, expected_status_code=200):
     return response.json
 
 
+@cachify('instructor_uids_{section_id}_{term_id}')
 def get_instructor_uids(section_id, term_id):
-    sql = """
-        SELECT DISTINCT instructor_uid
-        FROM sis_sections
-        WHERE
-            term_id = :term_id
-            AND section_id = :section_id
-            AND instructor_uid IS NOT NULL
-    """
-    rows = db.session.execute(
-        text(sql),
-        {
-            'section_id': section_id,
-            'term_id': term_id,
-        },
-    )
-    return [row['instructor_uid'] for row in rows]
+    course = SisSection.get_course(section_id=section_id, term_id=term_id)
+    return [instructor['uid'] for instructor in course['instructors']]
