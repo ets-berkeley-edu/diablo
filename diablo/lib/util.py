@@ -63,6 +63,10 @@ def to_isoformat(value):
     return value and value.astimezone(tzutc()).isoformat()
 
 
+def epoch_time_to_isoformat(epoch_time):
+    return epoch_time and to_isoformat(datetime.fromtimestamp(epoch_time))
+
+
 def utc_now():
     return datetime.utcnow().replace(tzinfo=pytz.utc)
 

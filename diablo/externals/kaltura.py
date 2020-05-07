@@ -26,13 +26,14 @@ from datetime import datetime
 
 from diablo import cachify, skip_when_pytest
 from diablo.lib.berkeley import term_name_for_sis_id
+from diablo.lib.kaltura_util import schedule_event_to_api_json
 from diablo.lib.util import to_isoformat
 from flask import current_app as app
 from KalturaClient import KalturaClient, KalturaConfiguration
 from KalturaClient.Plugins.Core import KalturaFilterPager, KalturaMediaEntryFilter
 from KalturaClient.Plugins.Schedule import KalturaScheduleEvent, KalturaScheduleEventClassificationType, \
-    KalturaScheduleEventRecurrence, KalturaScheduleEventRecurrenceFrequency, KalturaScheduleEventRecurrenceType, \
-    KalturaScheduleEventStatus, KalturaScheduleResourceFilter, KalturaSessionType
+    KalturaScheduleEventFilter, KalturaScheduleEventRecurrence, KalturaScheduleEventRecurrenceFrequency, \
+    KalturaScheduleEventRecurrenceType, KalturaScheduleEventStatus, KalturaScheduleResourceFilter, KalturaSessionType
 
 
 class Kaltura:
@@ -49,44 +50,10 @@ class Kaltura:
     @cachify('kaltura/get_schedule_event_list', timeout=30)
     def get_schedule_event_list(self, kaltura_resource_id):
         response = self.kaltura_client.schedule.scheduleEvent.list(
-            KalturaScheduleResourceFilter(),
+            KalturaScheduleEventFilter(resourceIdsLike=str(kaltura_resource_id)),
             KalturaFilterPager(),
         )
-        api_json = []
-        for obj in response.objects:
-            api_json.append({
-                'blackoutConflicts': obj.blackoutConflicts,
-                'categoryIds': obj.categoryIds,
-                'classificationType': obj.classificationType and obj.classificationType.value,
-                'comment': obj.comment,
-                'contact': obj.contact,
-                'createdAt': obj.createdAt,
-                'description': obj.description,
-                'duration': obj.duration,
-                'endDate': obj.endDate,
-                'entryIds': obj.entryIds,
-                'geoLatitude': obj.geoLatitude,
-                'geoLongitude': obj.geoLongitude,
-                'id': obj.id,
-                'location': obj.location,
-                'organizer': obj.organizer,
-                'ownerId': obj.ownerId,
-                'parentId': obj.parentId,
-                'partnerId': obj.partnerId,
-                'priority': obj.priority,
-                'recurrence': obj.recurrence,
-                'recurrenceType': obj.recurrenceType and obj.recurrenceType.value,
-                'referenceId': obj.referenceId,
-                'relatedObjects': obj.relatedObjects,
-                'sequence': obj.sequence,
-                'startDate': obj.startDate,
-                'status': obj.status and obj.status.value,
-                'summary': obj.summary,
-                'tags': obj.tags,
-                'templateEntryId': obj.templateEntryId,
-                'updatedAt': obj.updatedAt,
-            })
-        return api_json
+        return [schedule_event_to_api_json(obj) for obj in response.objects]
 
     @cachify('kaltura/get_resource_list', timeout=30)
     def get_resource_list(self):
