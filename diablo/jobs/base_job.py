@@ -36,7 +36,7 @@ class BaseJob:
     def run_with_app_context(self):
         with self.app_context():
             if JobHistory.is_job_running(job_key=self.key()):
-                app.logger(f'Job {self.key()}: Skipping scheduled run because older job instance is still running')
+                app.logger.warn(f'Job {self.key()}: Skipping scheduled run because older job instance is still running')
             else:
                 app.logger.info(f'Job \'{self.key()}\' is starting.')
                 job_tracker = JobHistory.job_started(job_key=self.key())

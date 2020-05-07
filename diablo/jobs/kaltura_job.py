@@ -112,9 +112,9 @@ def _schedule_recordings(all_approvals, course):
     else:
         app.logger.error(f"""
             FAILED to schedule recordings because room has no 'kaltura_resource_id'.
-            Course: {course}
-            Room: {room}
-            Latest approval: {approval}
+            Course: {course['label']}
+            Room: {room.location}
+            Latest approved_by_uid: {approval.approved_by_uid}
         """)
 
 

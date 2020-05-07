@@ -22,8 +22,6 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-
-
 import logging
 from logging.handlers import RotatingFileHandler
 
@@ -64,6 +62,5 @@ def initialize_logger(app):
             logger.addHandler(handler)
             logger.setLevel(level)
 
-    logging.getLogger('boto3').setLevel(log_propagation_level)
-    logging.getLogger('botocore').setLevel(log_propagation_level)
-    logging.getLogger('s3transfer').setLevel(log_propagation_level)
+    for name in ['boto3', 'botocore', 's3transfer', 'werkzeug']:
+        logging.getLogger(name).setLevel(log_propagation_level)

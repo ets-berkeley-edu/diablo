@@ -116,7 +116,7 @@ LDAP_PASSWORD = 'secret'
 LOGGING_FORMAT = '[%(asctime)s] - %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
 LOGGING_LOCATION = 'diablo.log'
 LOGGING_LEVEL = logging.DEBUG
-LOGGING_PROPAGATION_LEVEL = logging.INFO
+LOGGING_PROPAGATION_LEVEL = logging.WARN
 
 REDSHIFT_DATABASE = 'redshift_database'
 REDSHIFT_SCHEMA_SIS = 'sis_data_ext_dev'

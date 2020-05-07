@@ -68,15 +68,18 @@ class Kaltura:
             term_id,
     ):
         if app.config['KALTURA_SCHEDULE_API_AVAILABLE']:
-            summary = f'{course_label} ({term_name_for_sis_id(term_id)})'
+            utc_now_timestamp = int(datetime.utcnow().timestamp())
+            term_name = term_name_for_sis_id(term_id)
+            summary = f'{course_label} ({term_name})'
+
             description = f"""
-                {course_label} meets in {room.location}, {start_time} - {end_time} on {days}.
+                {course_label} ({term_name}) meets in {room.location}, {start_time} - {end_time} on {days}.
                 Recordings of type {recording_type} will be published to {publish_type}.
             """
-            utc_now_timestamp = int(datetime.utcnow().timestamp())
+            app.logger.info(description)
 
-            # https://developer.kaltura.com/api-docs/General_Objects/Objects/KalturaScheduleEvent
             recurring_event = KalturaScheduleEvent(
+                # https://developer.kaltura.com/api-docs/General_Objects/Objects/KalturaScheduleEvent
                 classificationType=KalturaScheduleEventClassificationType.PRIVATE_EVENT,
                 # Specifies non-processing information intended to provide a comment to the calendar user.
                 comment=f'{summary} recordings scheduled by Diablo on {to_isoformat(datetime.now())}',
@@ -155,6 +158,7 @@ class Kaltura:
                 tags=NotImplemented,
                 updatedAt=utc_now_timestamp,
             )
+            # Error codes: https://developer.kaltura.com/api-docs/Error_Codes
             response = self.kaltura_client.schedule.scheduleResource.add(recurring_event)
             return [{'id': o.id, 'name': o.name} for o in response.objects]
 
