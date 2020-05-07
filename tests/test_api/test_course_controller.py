@@ -372,6 +372,25 @@ class TestCoursesFilter:
         assert response.status_code == expected_status_code
         return response.json
 
+    def _send_invitation_email(self, section_id):
+        SentEmail.create(
+            section_id=section_id,
+            recipient_uids=get_instructor_uids(section_id=section_id, term_id=self.term_id),
+            template_type='invitation',
+            term_id=self.term_id,
+        )
+
+    def _create_approval(self, section_id):
+        Approval.create(
+            approved_by_uid=get_instructor_uids(section_id=section_id, term_id=self.term_id)[0],
+            approver_type_='instructor',
+            publish_type_='canvas',
+            recording_type_='presentation_audio',
+            room_id=Room.get_room_id(section_id=section_id, term_id=self.term_id),
+            section_id=section_id,
+            term_id=self.term_id,
+        )
+
     def test_not_authenticated(self, client):
         """Deny anonymous access."""
         self._api_courses(client, term_id=self.term_id, expected_status_code=401)
@@ -394,23 +413,10 @@ class TestCoursesFilter:
                     assert not in_enabled_room
                 else:
                     assert in_enabled_room
-                    SentEmail.create(
-                        section_id=section_id,
-                        recipient_uids=get_instructor_uids(section_id=section_id, term_id=self.term_id),
-                        template_type='invitation',
-                        term_id=self.term_id,
-                    )
+                    self._send_invitation_email(section_id)
 
             # If course has approvals but not scheduled then it will show up in the feed.
-            Approval.create(
-                approved_by_uid=get_instructor_uids(section_id=section_1_id, term_id=self.term_id)[0],
-                approver_type_='instructor',
-                publish_type_='canvas',
-                recording_type_='presentation_audio',
-                room_id=Room.get_room_id(section_id=section_1_id, term_id=self.term_id),
-                section_id=section_1_id,
-                term_id=self.term_id,
-            )
+            self._create_approval(section_id)
             # Feed will exclude scheduled.
             _schedule_recordings(
                 section_id=section_3_id,
@@ -431,29 +437,11 @@ class TestCoursesFilter:
         """Invited filter: Course in an eligible room, have received invitation. No approvals. Not scheduled."""
         with test_approvals_workflow(app):
             # First, send invitations
-            SentEmail.create(
-                section_id=section_4_id,
-                recipient_uids=get_instructor_uids(section_id=section_4_id, term_id=self.term_id),
-                template_type='invitation',
-                term_id=self.term_id,
-            )
-            section_5_instructor_uids = get_instructor_uids(section_id=section_5_id, term_id=self.term_id)
-            SentEmail.create(
-                section_id=section_5_id,
-                recipient_uids=section_5_instructor_uids,
-                template_type='invitation',
-                term_id=self.term_id,
-            )
+            self._send_invitation_email(section_4_id)
+            self._send_invitation_email(section_5_id)
             # The section with approval will NOT show up in search results
-            Approval.create(
-                approved_by_uid=section_5_instructor_uids[0],
-                approver_type_='instructor',
-                publish_type_='canvas',
-                recording_type_='presentation_audio',
-                room_id=SisSection.get_course(term_id=self.term_id, section_id=section_5_id)['room']['id'],
-                section_id=section_5_id,
-                term_id=self.term_id,
-            )
+            self._create_approval(section_5_id)
+
             std_commit(allow_test_environment=True)
             api_json = self._api_courses(client, term_id=self.term_id, filter_='Invited')
             # Section with ZERO approvals will show up in search results
@@ -467,13 +455,8 @@ class TestCoursesFilter:
         """Not-invited filter: Courses in eligible rooms, never sent an invitation. No approval. Not scheduled."""
         with test_approvals_workflow(app):
             # The first course gets an invitation
-            section_1_instructor_uids = get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
-            SentEmail.create(
-                section_id=section_1_id,
-                recipient_uids=section_1_instructor_uids,
-                template_type='invitation',
-                term_id=self.term_id,
-            )
+            self._send_invitation_email(section_1_id)
+
             # The second course did not receive an invitation BUT it does have approval.
             invite = SentEmail.get_emails_of_type(
                 section_id=section_4_id,
@@ -481,15 +464,8 @@ class TestCoursesFilter:
                 term_id=self.term_id,
             )
             assert not invite
-            Approval.create(
-                approved_by_uid=get_instructor_uids(section_id=section_4_id, term_id=self.term_id)[0],
-                approver_type_='instructor',
-                publish_type_='canvas',
-                recording_type_='presentation_audio',
-                room_id=Room.get_room_id(section_id=section_4_id, term_id=self.term_id),
-                section_id=section_4_id,
-                term_id=self.term_id,
-            )
+
+            self._create_approval(section_4_id)
             std_commit(allow_test_environment=True)
             api_json = self._api_courses(client, term_id=self.term_id, filter_='Not Invited')
             assert not _find_course(api_json=api_json, section_id=section_1_id)
@@ -508,27 +484,13 @@ class TestCoursesFilter:
             section_6_instructor_uids = get_instructor_uids(section_id=section_6_id, term_id=self.term_id)
             assert len(section_1_instructor_uids) > 1
             assert len(section_6_instructor_uids) > 1
-            # Send invites
-            courses = [
-                {'section_id': section_1_id, 'instructor_uids': section_1_instructor_uids},
-                {'section_id': section_6_id, 'instructor_uids': section_6_instructor_uids},
-            ]
-            for course in courses:
-                SentEmail.create(
-                    section_id=course['section_id'],
-                    recipient_uids=course['instructor_uids'],
-                    template_type='invitation',
-                    term_id=self.term_id,
-                )
-                Approval.create(
-                    approved_by_uid=course['instructor_uids'][0],
-                    approver_type_='instructor',
-                    publish_type_='canvas',
-                    recording_type_='presentation_audio',
-                    room_id=Room.get_room_id(section_id=course['section_id'], term_id=self.term_id),
-                    section_id=course['section_id'],
-                    term_id=self.term_id,
-                )
+
+            for section_id in [section_1_id, section_6_id]:
+                # Send invites
+                self._send_invitation_email(section_id)
+                # Approval by first instructor only
+                self._create_approval(section_id)
+
             # Feed will include both scheduled and not scheduled.
             _schedule_recordings(
                 section_id=section_1_id,
@@ -545,29 +507,11 @@ class TestCoursesFilter:
     def test_scheduled_filter(self, client, admin_session):
         """Scheduled filter: Courses with recordings scheduled."""
         with test_approvals_workflow(app):
-            section_1_instructor_uids = get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
-            section_6_instructor_uids = get_instructor_uids(section_id=section_6_id, term_id=self.term_id)
             # Send invites
-            courses = [
-                {'section_id': section_1_id, 'instructor_uids': section_1_instructor_uids},
-                {'section_id': section_6_id, 'instructor_uids': section_6_instructor_uids},
-            ]
-            for course in courses:
-                SentEmail.create(
-                    section_id=course['section_id'],
-                    recipient_uids=course['instructor_uids'],
-                    template_type='invitation',
-                    term_id=self.term_id,
-                )
-                Approval.create(
-                    approved_by_uid=course['instructor_uids'][0],
-                    approver_type_='instructor',
-                    publish_type_='canvas',
-                    recording_type_='presentation_audio',
-                    room_id=Room.get_room_id(section_id=course['section_id'], term_id=self.term_id),
-                    section_id=course['section_id'],
-                    term_id=self.term_id,
-                )
+            for section_id in [section_1_id, section_6_id]:
+                self._send_invitation_email(section_id)
+                self._create_approval(section_id)
+
             # Feed will only include courses that were scheduled.
             _schedule_recordings(
                 section_id=section_1_id,
@@ -578,6 +522,25 @@ class TestCoursesFilter:
             assert len(api_json) == 1
             assert _find_course(api_json=api_json, section_id=section_1_id)
             assert not _find_course(api_json=api_json, section_id=section_6_id)
+
+    def test_all_filter(self, client, admin_session):
+        """The 'all' filter returns all courses in eligible rooms."""
+        with test_approvals_workflow(app):
+            # Put courses in a few different states.
+            for section_id in [section_1_id, section_6_id]:
+                self._send_invitation_email(section_id)
+                self._create_approval(section_id)
+            _schedule_recordings(
+                section_id=section_1_id,
+                term_id=self.term_id,
+            )
+            std_commit(allow_test_environment=True)
+            # We gotta catch 'em all.
+            api_json = self._api_courses(client, term_id=self.term_id, filter_='All')
+            assert len(api_json) == 8
+            for section_id in [section_1_id, section_3_id, section_4_id, section_5_id, section_6_id]:
+                assert _find_course(api_json=api_json, section_id=section_id)
+            assert not _find_course(api_json=api_json, section_id=section_in_ineligible_room)
 
 
 class TestCoursesChanges:
