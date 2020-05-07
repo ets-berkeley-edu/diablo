@@ -1,8 +1,11 @@
 <template>
   <div v-if="!loading">
     <h1><v-icon class="pb-2" large>mdi-domain</v-icon> {{ room.location }}</h1>
-    <div v-if="room.kalturaResourceId" class="subtitle-1">
+    <div v-if="room.kalturaResourceId" class="pa-3 subtitle-1">
       Kaltura resource ID: {{ room.kalturaResourceId }}
+      <span v-if="kalturaEventList">
+        (<a id="skip-to-kaltura-event-list" @keypress="scrollToKalturaEvents" @click="scrollToKalturaEvents">Scroll to Kaltura events</a>)
+      </span>
     </div>
     <v-card outlined class="elevation-1">
       <v-list-item three-line class="ma-2">
@@ -24,26 +27,15 @@
             </div>
           </div>
           <v-list-item-title>
-            <span v-if="room.courses.length">
+            <span v-if="scheduledCourses.length">
               <router-link
-                v-if="scheduledCourses.length"
                 :id="`print-room-${room.id}-schedule`"
                 class="subtitle-1"
                 target="_blank"
                 :to="`/room/printable/${room.id}`"
               >
                 <v-icon class="linked-icon">mdi-printer</v-icon> Print schedule<span class="sr-only"> (opens a new browser tab)</span>
-              </router-link><span v-if="kalturaEventList"> | </span>
-            </span>
-            <span>
-              <a
-                v-if="kalturaEventList"
-                id="skip-to-kaltura-event-list"
-                @keypress="scrollToKalturaEvents"
-                @click="scrollToKalturaEvents"
-              >
-                Scroll to Kaltura events
-              </a>
+              </router-link>
             </span>
           </v-list-item-title>
         </v-list-item-content>
@@ -77,6 +69,24 @@
             <pre>{{ item }}</pre>
           </v-tooltip>
         </template>
+        <template v-slot:item.startDate="{ item }">
+          <span v-if="item.startDate" class="text-no-wrap">
+            {{ item.startDate | moment('ddd, MMM D, YYYY') }}
+          </span>
+        </template>
+        <template v-slot:item.endDate="{ item }">
+          <span v-if="item.endDate" class="text-no-wrap">
+            {{ item.endDate | moment('ddd, MMM D, YYYY') }}
+          </span>
+        </template>
+        <template v-slot:item.duration="{ item }">
+          <span v-if="item.duration" class="text-no-wrap">
+            {{ [item.duration, 'seconds'] | duration('as', 'hours') }} hours
+          </span>
+        </template>
+        <template v-slot:item.days="{ item }">
+          {{ $_.get(item.recurrence, 'byDay') || '&mdash;' }}
+        </template>
       </v-data-table>
     </div>
   </div>
@@ -103,15 +113,11 @@
             sortable: false,
             value: 'id',
           },
-          { text: 'Start Date', value: 'startDate', sortable: false },
-          { text: 'End Date', value: 'endDate', sortable: false },
+          { text: 'Start', value: 'startDate', sortable: false },
+          { text: 'End', value: 'endDate', sortable: false },
           { text: 'Duration', value: 'duration', sortable: false },
-          { text: 'Organizer', value: 'organizer', sortable: false },
-          { text: 'Owner', value: 'ownerId', sortable: false },
-          { text: 'Recurrence', value: 'recurrence', sortable: false },
-          { text: 'Recurrence Type', value: 'recurrenceType', sortable: false },
-          { text: 'Summary', value: 'summary', sortable: false },
-          { text: 'Created', value: 'createdAt' },
+          { text: 'Days', value: 'days', sortable: false },
+          { text: 'Summary', value: 'summary', sortable: false }
       ],
       scheduledCourses: undefined,
       room: undefined
@@ -133,11 +139,13 @@
         this.isAuditorium = data.isAuditorium
         this.scheduledCourses = this.$_.filter(data.courses, 'scheduled')
         this.setPageTitle(data.location)
-        this.$ready()
         if (this.room.kalturaResourceId) {
           getKalturaEventList(this.room.id).then(data => {
             this.kalturaEventList = data
+            this.$ready()
           })
+        } else {
+          this.$ready()
         }
       }).catch(this.$ready)
     },
@@ -149,7 +157,7 @@
         this.room.capability = capability
       },
       scrollToKalturaEvents() {
-        this.$vuetify.goTo('#kaltura-event-list', {duration: 300, offset: 0, easing: 'easeInOutCubic'})
+        this.$vuetify.goTo('#kaltura-event-list', {duration: 300, offset: 100, easing: 'easeInOutCubic'})
       },
       tdClass(course) {
         return course.approvals.length ? 'border-bottom-zero text-no-wrap' : 'text-no-wrap'
