@@ -25,6 +25,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 
 from diablo.api.errors import BadRequestError, ResourceNotFoundError
 from diablo.api.util import admin_required
+from diablo.externals.kaltura import Kaltura
 from diablo.lib.http import tolerant_jsonify
 from diablo.models.room import Room
 from diablo.models.sis_section import SisSection
@@ -35,6 +36,16 @@ from flask import current_app as app, request
 @admin_required
 def get_all_rooms():
     return tolerant_jsonify([room.to_api_json() for room in Room.all_rooms()])
+
+
+@app.route('/api/room/<room_id>/kaltura_event_list')
+@admin_required
+def kaltura_event_list(room_id):
+    room = Room.get_room(room_id)
+    if room and room.kaltura_resource_id:
+        return tolerant_jsonify(Kaltura().get_schedule_event_list(kaltura_resource_id=room.kaltura_resource_id))
+    else:
+        raise ResourceNotFoundError('No such room')
 
 
 @app.route('/api/room/<room_id>')

@@ -33,7 +33,17 @@
                 :to="`/room/printable/${room.id}`"
               >
                 <v-icon class="linked-icon">mdi-printer</v-icon> Print schedule<span class="sr-only"> (opens a new browser tab)</span>
-              </router-link>
+              </router-link><span v-if="kalturaEventList"> | </span>
+            </span>
+            <span>
+              <a
+                v-if="kalturaEventList"
+                id="skip-to-kaltura-event-list"
+                @keypress="scrollToKalturaEvents"
+                @click="scrollToKalturaEvents"
+              >
+                Scroll to Kaltura events
+              </a>
             </span>
           </v-list-item-title>
         </v-list-item-content>
@@ -46,6 +56,29 @@
         :refreshing="false"
       />
     </v-card>
+    <div v-if="kalturaEventList" class="ma-3 pt-5">
+      <h2>Kaltura Events in {{ room.location }}</h2>
+      <v-data-table
+        id="kaltura-event-list"
+        disable-pagination
+        :headers="kalturaEventListHeaders"
+        hide-default-footer
+        item-key="id"
+        :items="kalturaEventList"
+        class="elevation-1 mt-3"
+      >
+        <template v-slot:item.id="{ item }">
+          <v-tooltip nudge-right="200" top>
+            <template v-slot:activator="{ on }">
+              <v-icon :id="`kaltura-event-{item.id}`" v-on="on">
+                mdi-code-json
+              </v-icon>
+            </template>
+            <pre>{{ item }}</pre>
+          </v-tooltip>
+        </template>
+      </v-data-table>
+    </div>
   </div>
 </template>
 
@@ -54,7 +87,7 @@
   import CoursesDataTable from '@/components/course/CoursesDataTable'
   import SelectRoomCapability from '@/components/room/SelectRoomCapability'
   import Utils from '@/mixins/Utils'
-  import {getRoom, setAuditorium} from '@/api/room'
+  import {getKalturaEventList, getRoom, setAuditorium} from '@/api/room'
 
   export default {
     name: 'Room',
@@ -62,6 +95,24 @@
     mixins: [Context, Utils],
     data: () => ({
       isAuditorium: undefined,
+      kalturaEventList: undefined,
+      kalturaEventListHeaders: [
+          {
+            text: '',
+            align: 'start',
+            sortable: false,
+            value: 'id',
+          },
+          { text: 'Start Date', value: 'startDate', sortable: false },
+          { text: 'End Date', value: 'endDate', sortable: false },
+          { text: 'Duration', value: 'duration', sortable: false },
+          { text: 'Organizer', value: 'organizer', sortable: false },
+          { text: 'Owner', value: 'ownerId', sortable: false },
+          { text: 'Recurrence', value: 'recurrence', sortable: false },
+          { text: 'Recurrence Type', value: 'recurrenceType', sortable: false },
+          { text: 'Summary', value: 'summary', sortable: false },
+          { text: 'Created', value: 'createdAt' },
+      ],
       scheduledCourses: undefined,
       room: undefined
     }),
@@ -83,6 +134,11 @@
         this.scheduledCourses = this.$_.filter(data.courses, 'scheduled')
         this.setPageTitle(data.location)
         this.$ready()
+        if (this.room.kalturaResourceId) {
+          getKalturaEventList(this.room.id).then(data => {
+            this.kalturaEventList = data
+          })
+        }
       }).catch(this.$ready)
     },
     methods: {
@@ -91,6 +147,9 @@
       },
       onUpdateRoomCapability(capability) {
         this.room.capability = capability
+      },
+      scrollToKalturaEvents() {
+        this.$vuetify.goTo('#kaltura-event-list', {duration: 300, offset: 0, easing: 'easeInOutCubic'})
       },
       tdClass(course) {
         return course.approvals.length ? 'border-bottom-zero text-no-wrap' : 'text-no-wrap'
