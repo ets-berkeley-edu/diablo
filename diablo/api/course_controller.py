@@ -104,7 +104,9 @@ def find_courses():
     if filter_ not in get_search_filter_options() or not term_id:
         raise BadRequestError('One or more required params are missing or invalid')
 
-    if filter_ == 'Do Not Email':
+    if filter_ == 'All':
+        courses = SisSection.get_courses(term_id)
+    elif filter_ == 'Do Not Email':
         courses = SisSection.get_courses_opted_out(term_id)
     elif filter_ == 'Invited':
         courses = SisSection.get_courses_invited(term_id)

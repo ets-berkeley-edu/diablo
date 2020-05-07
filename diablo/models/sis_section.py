@@ -377,7 +377,14 @@ class SisSection(db.Model):
         return courses
 
     @classmethod
-    def get_courses(cls, term_id, section_ids):
+    def get_courses(cls, term_id, section_ids=None):
+        params = {'term_id': term_id}
+        if section_ids is None:
+            # If no section IDs are specified, return everything with an eligible room.
+            course_filter = 'AND r.capability IS NOT NULL'
+        else:
+            course_filter = 'AND s.section_id = ANY(:section_ids)'
+            params['section_ids'] = section_ids
         sql = f"""
             SELECT
                 s.*,
@@ -392,18 +399,12 @@ class SisSection(db.Model):
             JOIN rooms r ON r.location = s.meeting_location
             WHERE
                 s.term_id = :term_id
-                AND s.section_id = ANY(:section_ids)
+                {course_filter}
                 AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
                 AND s.deleted_at IS NULL
             ORDER BY s.course_title, s.section_id, s.instructor_uid
         """
-        rows = db.session.execute(
-            text(sql),
-            {
-                'section_ids': section_ids,
-                'term_id': term_id,
-            },
-        )
+        rows = db.session.execute(text(sql), params)
         return _to_api_json(term_id=term_id, rows=rows)
 
     @classmethod
