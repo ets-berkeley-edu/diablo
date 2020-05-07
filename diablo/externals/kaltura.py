@@ -46,6 +46,48 @@ class Kaltura:
         # TODO: Close Kaltura client connection?
         pass
 
+    @cachify('kaltura/get_schedule_event_list', timeout=30)
+    def get_schedule_event_list(self, kaltura_resource_id):
+        response = self.kaltura_client.schedule.scheduleEvent.list(
+            KalturaScheduleResourceFilter(),
+            KalturaFilterPager(),
+        )
+        api_json = []
+        for obj in response.objects:
+            api_json.append({
+                'blackoutConflicts': obj.blackoutConflicts,
+                'categoryIds': obj.categoryIds,
+                'classificationType': obj.classificationType and obj.classificationType.value,
+                'comment': obj.comment,
+                'contact': obj.contact,
+                'createdAt': obj.createdAt,
+                'description': obj.description,
+                'duration': obj.duration,
+                'endDate': obj.endDate,
+                'entryIds': obj.entryIds,
+                'geoLatitude': obj.geoLatitude,
+                'geoLongitude': obj.geoLongitude,
+                'id': obj.id,
+                'location': obj.location,
+                'organizer': obj.organizer,
+                'ownerId': obj.ownerId,
+                'parentId': obj.parentId,
+                'partnerId': obj.partnerId,
+                'priority': obj.priority,
+                'recurrence': obj.recurrence,
+                'recurrenceType': obj.recurrenceType and obj.recurrenceType.value,
+                'referenceId': obj.referenceId,
+                'relatedObjects': obj.relatedObjects,
+                'sequence': obj.sequence,
+                'startDate': obj.startDate,
+                'status': obj.status and obj.status.value,
+                'summary': obj.summary,
+                'tags': obj.tags,
+                'templateEntryId': obj.templateEntryId,
+                'updatedAt': obj.updatedAt,
+            })
+        return api_json
+
     @cachify('kaltura/get_resource_list', timeout=30)
     def get_resource_list(self):
         response = self.kaltura_client.schedule.scheduleResource.list(
@@ -96,7 +138,7 @@ class Kaltura:
                 location=room.kaltura_resource_id,
                 organizer=app.config['EMAIL_DIABLO_ADMIN'],
                 # TODO: What is proper ownerId? (The following is based on test recordings scheduled by Ops.)
-                ownerId='kmsAdminServiceUser',
+                ownerId=app.config['KALTURA_KMS_OWNER_ID'],
                 # TODO: What is parentId?
                 parentId=NotImplemented,
                 partnerId=self.kaltura_partner_id,

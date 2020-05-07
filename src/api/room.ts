@@ -5,6 +5,10 @@ export function getAllRooms() {
   return axios.get(`${utils.apiBaseUrl()}/api/rooms/all`)
 }
 
+export function getKalturaEventList(roomId) {
+  return axios.get(`${utils.apiBaseUrl()}/api/room/${roomId}/kaltura_event_list`)
+}
+
 export function getRoom(id) {
   return axios.get(`${utils.apiBaseUrl()}/api/room/${id}`)
 }
