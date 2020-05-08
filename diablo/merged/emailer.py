@@ -174,8 +174,9 @@ def send_course_related_email(
         return False
 
 
-def send_system_error_email(message):
-    subject = f'{message[:50]}...' if len(message) > 50 else message
+def send_system_error_email(message, subject=None):
+    if subject is None:
+        subject = f'{message[:50]}...' if len(message) > 50 else message
     BConnected().send(
         message=message,
         recipients=get_admin_alert_recipients(),

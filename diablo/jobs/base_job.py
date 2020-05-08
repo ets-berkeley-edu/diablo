@@ -22,8 +22,11 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
+import traceback
+
 from diablo.jobs.background_job_manager import BackgroundJobError
 from diablo.lib.util import camel_case_to_snake_case
+from diablo.merged.emailer import send_system_error_email
 from diablo.models.job_history import JobHistory
 from flask import current_app as app
 
@@ -45,8 +48,11 @@ class BaseJob:
                     JobHistory.job_finished(id_=job_tracker.id)
                     app.logger.info(f'Job \'{self.key()}\' finished successfully.')
                 except Exception as e:
-                    app.logger.error(f'Job {self.key()} failed')
+                    trace = traceback.format_exc()
+                    summary = f'Job {self.key()} failed'
+                    app.logger.error(summary)
                     app.logger.exception(e)
+                    send_system_error_email(message=f'{summary}. Detailed error information appears below.\n\n{trace}', subject=summary)
                     JobHistory.job_finished(id_=job_tracker.id, failed=True)
 
     def run(self):
