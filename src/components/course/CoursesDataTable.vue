@@ -19,7 +19,7 @@
       selectable-key="isSelectable"
       show-select
       :single-select="!onRowsSelected"
-      @page-count="pageCurrent = $event"
+      @page-count="pageCount = $event"
     >
       <template v-slot:body="{ items }">
         <tbody v-if="refreshing">
@@ -142,7 +142,7 @@
         </tbody>
       </template>
     </v-data-table>
-    <div v-if="pageCount > 1" class="text-center pb-4 pt-2">
+    <div v-if="!refreshing && pageCount > 1" class="text-center pb-4 pt-2">
       <v-pagination
         id="ouija-pagination"
         v-model="pageCurrent"
@@ -211,6 +211,11 @@
       selectedFilter: 'Not Invited'
     }),
     watch: {
+      refreshing(isRefreshing) {
+        if (isRefreshing) {
+          this.pageCurrent = 1
+        }
+      },
       selectedRows(rows) {
         if (this.onRowsSelected) {
           this.onRowsSelected(rows)
