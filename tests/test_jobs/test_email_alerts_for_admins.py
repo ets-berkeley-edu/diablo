@@ -31,6 +31,7 @@ from diablo.models.sent_email import SentEmail
 from diablo.models.sis_section import SisSection
 from flask import current_app as app
 from tests.test_api.api_test_utils import get_instructor_uids
+from tests.test_jobs.sample_jobs import DoomedToFailure, LightSwitch
 from tests.util import test_approvals_workflow
 
 
@@ -112,6 +113,16 @@ class TestEmailAlertsForAdmins:
             AdminEmailsJob(app.app_context).run()
             std_commit(allow_test_environment=True)
             assert _get_email_count(admin_uid) > email_count
+
+    def test_alert_on_job_failure(self):
+        admin_uid = app.config['EMAIL_DIABLO_ADMIN_UID']
+        email_count = _get_email_count(admin_uid)
+        # No alert on happy job.
+        LightSwitch(app.app_context).run_with_app_context()
+        assert _get_email_count(admin_uid) == email_count
+        # Alert on sad job.
+        DoomedToFailure(app.app_context).run_with_app_context()
+        assert _get_email_count(admin_uid) == email_count + 1
 
 
 def _get_email_count(uid):

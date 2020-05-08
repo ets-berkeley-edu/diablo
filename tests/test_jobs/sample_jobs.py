@@ -66,3 +66,14 @@ class HelloWorld(BaseJob):
     @classmethod
     def description(cls):
         return 'Hello world!'
+
+
+class DoomedToFailure(BaseJob):
+
+    def run(self):
+        secret_of_life = 1 / 0
+        return secret_of_life
+
+    @classmethod
+    def description(cls):
+        return "This time I'm gonna kick that football!"
