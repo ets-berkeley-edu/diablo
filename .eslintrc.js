@@ -33,6 +33,7 @@ module.exports = {
       }
     ],
     'vue-a11y/no-onchange': 'off',
+    'vue/attributes-order': 2,
     'vue/eqeqeq': 2,
     'vue/html-closing-bracket-newline': 2,
     'vue/html-closing-bracket-spacing': 2,

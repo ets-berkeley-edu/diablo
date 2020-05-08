@@ -109,7 +109,7 @@
                 <v-dialog v-model="rawJsonDialog[item.id]">
                   <template v-slot:activator="{ on }">
                     <v-btn color="accent" dark v-on="on">
-                      <v-icon :id="`kaltura-event-{item.id}-children`" v-on="on" class="pr-3">
+                      <v-icon :id="`kaltura-event-{item.id}-children`" class="pr-3" v-on="on">
                         mdi-code-json
                       </v-icon> Raw JSON
                     </v-btn>
