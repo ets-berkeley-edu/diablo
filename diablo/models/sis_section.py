@@ -174,6 +174,7 @@ class SisSection(db.Model):
             JOIN rooms r ON r.location = s.meeting_location
             WHERE
                 s.term_id = :term_id
+                AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
                 AND s.meeting_location = :location
                 AND s.deleted_at IS NULL
             ORDER BY s.course_title, s.section_id, s.instructor_uid
