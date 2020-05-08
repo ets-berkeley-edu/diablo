@@ -52,23 +52,15 @@
       <h2>Kaltura Events in {{ room.location }}</h2>
       <v-data-table
         id="kaltura-event-list"
+        class="elevation-1 mt-3"
         disable-pagination
         :headers="kalturaEventListHeaders"
         hide-default-footer
         item-key="id"
         :items="kalturaEventList"
-        class="elevation-1 mt-3"
+        show-expand
+        :single-expand="true"
       >
-        <template v-slot:item.id="{ item }">
-          <v-tooltip nudge-right="200" top>
-            <template v-slot:activator="{ on }">
-              <v-icon :id="`kaltura-event-{item.id}`" v-on="on">
-                mdi-code-json
-              </v-icon>
-            </template>
-            <pre>{{ item }}</pre>
-          </v-tooltip>
-        </template>
         <template v-slot:item.startDate="{ item }">
           <span v-if="item.startDate" class="text-no-wrap">
             {{ item.startDate | moment('ddd, MMM D, YYYY') }}
@@ -86,6 +78,68 @@
         </template>
         <template v-slot:item.days="{ item }">
           {{ $_.get(item.recurrence, 'byDay') || '&mdash;' }}
+        </template>
+        <template v-slot:expanded-item="{ headers, item }">
+          <td :colspan="headers.length">
+            <div v-if="item.children" class="ma-5">
+              <div class="title">
+                Series
+              </div>
+              <v-simple-table>
+                <template v-slot:default>
+                  <thead>
+                    <tr>
+                      <th class="text-left">Parent Id</th>
+                      <th class="text-left">Id</th>
+                      <th class="text-left">Start</th>
+                      <th class="text-left">End</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="event in item.children" :key="event.id">
+                      <td>{{ event.parentId }}</td>
+                      <td>{{ event.id }}</td>
+                      <td>{{ event.startDate | moment('h:mma, ddd, MMM D') }}</td>
+                      <td>{{ event.endDate | moment('h:mma, ddd, MMM D') }}</td>
+                    </tr>
+                  </tbody>
+                </template>
+              </v-simple-table>
+              <div class="ma-5">
+                <v-dialog v-model="rawJsonDialog[item.id]">
+                  <template v-slot:activator="{ on }">
+                    <v-btn color="accent" dark v-on="on">
+                      <v-icon :id="`kaltura-event-{item.id}-children`" v-on="on" class="pr-3">
+                        mdi-code-json
+                      </v-icon> Raw JSON
+                    </v-btn>
+                  </template>
+                  <v-card>
+                    <v-card-title class="headline grey lighten-2" primary-title>
+                      Raw JSON of Event {{ item.id }} Children
+                    </v-card-title>
+                    <v-card-text>
+                      <pre>{{ item.children }}</pre>
+                    </v-card-text>
+                    <v-divider></v-divider>
+                    <v-card-actions>
+                      <v-spacer></v-spacer>
+                      <v-btn
+                        color="primary"
+                        text
+                        @click="rawJsonDialog[item.id] = false"
+                      >
+                        Close
+                      </v-btn>
+                    </v-card-actions>
+                  </v-card>
+                </v-dialog>
+              </div>
+            </div>
+            <pre v-if="!item.children">
+              {{ item }}
+            </pre>
+          </td>
         </template>
       </v-data-table>
     </div>
@@ -107,19 +161,15 @@
       isAuditorium: undefined,
       kalturaEventList: undefined,
       kalturaEventListHeaders: [
-          {
-            text: '',
-            align: 'start',
-            sortable: false,
-            value: 'id',
-          },
+          { text: 'Id', value: 'id' },
+          { text: 'Summary', value: 'summary', sortable: false, class: 'w-30' },
           { text: 'Start', value: 'startDate', sortable: false },
           { text: 'End', value: 'endDate', sortable: false },
           { text: 'Duration', value: 'duration', sortable: false },
-          { text: 'Days', value: 'days', sortable: false },
-          { text: 'Summary', value: 'summary', sortable: false }
+          { text: 'Days', value: 'days', sortable: false }
       ],
       scheduledCourses: undefined,
+      rawJsonDialog: {},
       room: undefined
     }),
     watch: {

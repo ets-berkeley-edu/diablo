@@ -26,7 +26,7 @@ from datetime import datetime
 
 from diablo import cachify, skip_when_pytest
 from diablo.lib.berkeley import term_name_for_sis_id
-from diablo.lib.kaltura_util import schedule_event_to_api_json
+from diablo.lib.kaltura_util import events_to_api_json
 from diablo.lib.util import to_isoformat
 from flask import current_app as app
 from KalturaClient import KalturaClient, KalturaConfiguration
@@ -53,7 +53,7 @@ class Kaltura:
             KalturaScheduleEventFilter(resourceIdsLike=str(kaltura_resource_id)),
             KalturaFilterPager(),
         )
-        return [schedule_event_to_api_json(obj) for obj in response.objects]
+        return events_to_api_json(response.objects)
 
     @cachify('kaltura/get_resource_list', timeout=30)
     def get_resource_list(self):
