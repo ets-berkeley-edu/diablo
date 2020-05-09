@@ -61,6 +61,16 @@
         show-expand
         :single-expand="true"
       >
+        <template v-slot:item.summary="{ item }">
+          <a
+            :id="`kaltura-media-space-${item.id}`"
+            :href="`${$config.kalturaMediaSpaceUrl}/recscheduling/index/edit-event/eventid/${item.id}`"
+            target="_blank"
+            aria-label="Open Kaltura MediaSpace in a new window"
+          >
+            {{ item.summary }} <v-icon small class="pl-2">mdi-open-in-new</v-icon>
+          </a>
+        </template>
         <template v-slot:item.startDate="{ item }">
           <span v-if="item.startDate" class="text-no-wrap">
             {{ item.startDate | moment('ddd, MMM D, YYYY') }}
