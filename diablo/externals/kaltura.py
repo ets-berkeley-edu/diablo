@@ -82,13 +82,13 @@ class Kaltura:
 
         start_date = get_first_matching_datetime_of_term(
             meeting_days=days,
-            time_hours=start_time.hours,
-            time_minutes=start_time.minutes,
+            time_hours=start_time.hour,
+            time_minutes=start_time.minute,
         )
         end_date = get_first_matching_datetime_of_term(
             meeting_days=days,
-            time_hours=end_time.hours,
-            time_minutes=end_time.minutes,
+            time_hours=end_time.hour,
+            time_minutes=end_time.minute,
         )
         description = f"""
             {course_label} ({term_name}) meets in {room.location},
@@ -148,7 +148,7 @@ class Kaltura:
                 # the nth occurrence of the specific occurrence within the set of events specified by the rule.
                 byOffset=None,
                 # Comma separated numbers between 0 to 59
-                bySecond=0,
+                bySecond=None,
                 # Comma separated of numbers between -53 to 53, excluding 0. This corresponds to weeks according to
                 # week numbering. A week is defined as a seven day period, starting on day of the week defined to
                 # be the week start. Week number one of the calendar year is the first week which contains at least

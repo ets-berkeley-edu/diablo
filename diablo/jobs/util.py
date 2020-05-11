@@ -76,7 +76,7 @@ def refresh_cross_listings(term_id):
     #  3. We collapse the names of the three section into a single name/title for section 123
 
     # IMPORTANT: These will be ordered by schedule (time and location)
-    sql = f"""
+    sql = """
                 SELECT
                     section_id,
                     trim(concat(

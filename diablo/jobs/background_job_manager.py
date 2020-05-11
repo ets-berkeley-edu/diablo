@@ -101,7 +101,7 @@ class BackgroundJobManager:
         """Cease the scheduler thread. Stops everything."""
         from flask import current_app as app
 
-        app.logger.info(f'Stopping job-runner thread')
+        app.logger.info('Stopping job-runner thread')
         self.cease_continuous_run.set()
 
     @property
