@@ -89,6 +89,19 @@
                 Opted out
               </v-col>
             </v-row>
+            <v-row 
+              v-if="$currentUser.isAdmin && course.room && course.room.capability"
+              id="send-invite"
+              justify="center"
+              class="mt-2"
+            >
+              <v-btn
+                id="send-invite-btn"
+                @click="sendInvite()"
+              >
+                Send Invite
+              </v-btn>
+            </v-row>
             <v-row v-if="$currentUser.isAdmin && course.scheduled" id="unschedule" justify="center">
               <v-col md="auto">
                 <v-dialog v-model="showUnscheduleModal" persistent max-width="400">
@@ -316,6 +329,7 @@
   import OxfordJoin from '@/components/util/OxfordJoin'
   import Utils from '@/mixins/Utils'
   import {approve, getApprovals, unschedule} from '@/api/course'
+  import {queueEmails} from '@/api/email'
 
   export default {
     name: 'Course',
@@ -383,6 +397,11 @@
         this.scheduled = this.course.scheduled
         this.setPageTitle(this.course.label)
         this.$ready()
+      },
+      sendInvite() {
+        queueEmails('invitation', [this.course.sectionId], this.course.termId).then(data => {
+          this.snackbarOpen(data.message)
+        })
       }
     }
   }
