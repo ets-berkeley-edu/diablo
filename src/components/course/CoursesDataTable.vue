@@ -16,9 +16,6 @@
       }"
       :page.sync="pageCurrent"
       :search="searchText"
-      selectable-key="isSelectable"
-      show-select
-      :single-select="!onRowsSelected"
       @page-count="pageCount = $event"
     >
       <template v-slot:body="{ items }">
@@ -39,14 +36,6 @@
         <tbody v-if="!refreshing && items.length">
           <template v-for="course in items">
             <tr :key="course.sectionId">
-              <td v-if="onRowsSelected" :class="tdClass(course)">
-                <v-checkbox
-                  :id="`checkbox-email-course-${course.sectionId}`"
-                  v-model="selectedRows"
-                  :disabled="course.hasOptedOut"
-                  :value="course"
-                ></v-checkbox>
-              </td>
               <td :id="`course-name-${course.sectionId}`" :class="tdClass(course)">
                 <router-link
                   :id="`link-course-${course.sectionId}`"
@@ -176,10 +165,6 @@
         default: undefined,
         type: String
       },
-      onRowsSelected: {
-        default: undefined,
-        type: Function
-      },
       onToggleOptOut: {
         required: true,
         type: Function
@@ -215,18 +200,10 @@
         if (isRefreshing) {
           this.pageCurrent = 1
         }
-      },
-      selectedRows(rows) {
-        if (this.onRowsSelected) {
-          this.onRowsSelected(rows)
-        }
       }
     },
     mounted() {
       this.headers = this.includeRoomColumn ? this.headers : this.$_.filter(this.headers, h => h.text !== 'Room')
-      if (!this.onRowsSelected) {
-        this.hideSelectCoursesColumn()
-      }
       this.$_.each(this.courses, course => {
         // In support of search, we index nested course data
         course.instructorNames = this.$_.map(course.instructors, 'name')
@@ -235,19 +212,6 @@
       })
     },
     methods: {
-      hideSelectCoursesColumn() {
-        const hideColumn = () => {
-          let el = document.getElementById('courses-data-table')
-          el = el && el.querySelector('table tr th')
-          if (el) {
-            el.style.display = 'none'
-          }
-          return !!el
-        }
-        if (!hideColumn()) {
-          this.onNextTick(hideColumn)
-        }
-      },
       tdClass(course) {
         return course.approvals.length ? 'border-bottom-zero' : ''
       }

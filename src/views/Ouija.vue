@@ -3,15 +3,6 @@
     <v-card-title class="align-start p-3">
       <div class="pt-2">
         <h1><v-icon class="pb-2" large>mdi-auto-fix</v-icon> The Ouija Board</h1>
-        <div class="pt-4">
-          <v-btn
-            id="btn-send-email"
-            :disabled="!selectedRows.length"
-            @click="sendEmail()"
-          >
-            Send Invite
-          </v-btn>
-        </div>
       </div>
       <v-spacer></v-spacer>
       <div class="float-right w-50">
@@ -54,7 +45,6 @@
     <CoursesDataTable
       :courses="courses"
       :message-for-courses="getMessageForCourses()"
-      :on-rows-selected="onRowsSelected"
       :on-toggle-opt-out="onToggleOptOut"
       :refreshing="refreshing"
       :search-text="searchText"
@@ -66,7 +56,6 @@
   import CoursesDataTable from '@/components/course/CoursesDataTable'
   import Context from '@/mixins/Context'
   import Utils from '@/mixins/Utils'
-  import {queueEmails} from '@/api/email'
   import {getCourses} from '@/api/course'
 
   export default {
@@ -77,8 +66,7 @@
       courses: undefined,
       refreshing: undefined,
       searchText: '',
-      selectedFilter: 'Not Invited',
-      selectedRows: []
+      selectedFilter: 'Not Invited'
     }),
     created() {
       this.$loading()
@@ -87,13 +75,6 @@
     methods: {
       getMessageForCourses() {
         return this.summarize(this.courses)
-      },
-      onRowsSelected(rows) {
-        this.selectedRows = rows
-        const newCount = this.$_.size(this.$_.filter(this.selectedRows, ['hasOptedOut', false]))
-        if (newCount >= this.$config.searchItemsPerPage) {
-          this.snackbarOpen(`${newCount} courses selected`)
-        }
       },
       onToggleOptOut(course) {
         if (!course.hasOptedOut && this.selectedFilter === 'Do Not Email') {
@@ -106,7 +87,6 @@
       },
       refresh() {
         const done = () => {
-          this.selectedRows = []
           this.refreshing = false
           this.$ready()
         }
@@ -121,14 +101,6 @@
           })
           done()
         }).catch(done)
-      },
-      sendEmail() {
-        if (this.selectedRows.length) {
-          const sectionIds = this.$_.map(this.selectedRows, 'sectionId')
-          queueEmails('invitation', sectionIds, this.$config.currentTermId).then(data => {
-            this.snackbarOpen(data.message)
-          })
-        }
       }
     }
   }
