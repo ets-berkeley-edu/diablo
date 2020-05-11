@@ -82,6 +82,7 @@ def _schedule_recordings(all_approvals, course):
                 Schedule: {days}, {adjusted_start_time} to {adjusted_end_time}
                 Recording: {approval.recording_type}; {approval.publish_type}
         """)
+        # TODO: Grab series id from the following return value and put it in db
         Kaltura().schedule_recording(
             course_label=course['label'],
             instructors=course['instructors'],

@@ -179,7 +179,13 @@ def send_system_error_email(message, subject=None):
         subject = f'{message[:50]}...' if len(message) > 50 else message
     BConnected().send(
         message=message,
-        recipients=get_admin_alert_recipients(),
+        recipients=[
+            {
+                'email': app.config['EMAIL_SYSTEM_ERRORS'],
+                'name': 'Course Capture Errors',
+                'uid': '0',
+            },
+        ],
         subject_line=f'Diablo Alert: {subject}',
     )
     app.logger.error(f'Diablo Alert: {message}')
