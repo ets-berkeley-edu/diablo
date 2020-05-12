@@ -26,8 +26,6 @@ ENHANCEMENTS, OR MODIFICATIONS.
 # Development environment.
 DEBUG = True
 
-DEMO_MODE_AVAILABLE = True
-
 INDEX_HTML = 'public/index.html'
 
 VUE_LOCALHOST_BASE_URL = 'http://localhost:8080'

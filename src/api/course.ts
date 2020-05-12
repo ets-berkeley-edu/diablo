@@ -4,15 +4,13 @@ import utils from '@/api/api-utils'
 export function approve(
     publishType: string,
     recordingType: string,
-    sectionId: string,
-    andSchedule?: boolean
+    sectionId: string
 ) {
   return axios
     .post(`${utils.apiBaseUrl()}/api/course/approve`, {
       publishType,
       recordingType,
-      sectionId,
-      andSchedule
+      sectionId
     })
 }
 

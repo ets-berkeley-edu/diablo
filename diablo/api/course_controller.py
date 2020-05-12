@@ -50,7 +50,6 @@ def approve():
     publish_type = params.get('publishType')
     recording_type = params.get('recordingType')
     section_id = params.get('sectionId')
-    and_schedule = params.get('andSchedule') if current_user.is_admin else False
 
     course = SisSection.get_course(term_id, section_id) if section_id else None
 
@@ -83,11 +82,8 @@ def approve():
         course=course,
         previous_approvals=previous_approvals,
     )
-    if and_schedule:
-        schedule_recordings(
-            all_approvals=Approval.get_approvals(section_id=section_id, term_id=term_id),
-            course=course,
-        )
+    if app.config['FEATURE_FLAG_SCHEDULE_RECORDINGS_SYNCHRONOUSLY']:
+        _schedule_if_has_necessary_approvals(course)
     return tolerant_jsonify(SisSection.get_course(term_id, section_id))
 
 
@@ -210,3 +206,17 @@ def _notify_instructors_of_approval(approval, course, previous_approvals):
             term_id=course['termId'],
         )
     return type_of_sent_email
+
+
+def _schedule_if_has_necessary_approvals(course):
+    def _has_necessary_approvals():
+        approval_uids = [a.approved_by_uid for a in all_approvals]
+        necessary_approval_uids = [i['uid'] for i in course['instructors']]
+        return all(uid in approval_uids for uid in necessary_approval_uids)
+
+    all_approvals = Approval.get_approvals(section_id=course['sectionId'], term_id=course['termId'])
+    if current_user.is_admin or _has_necessary_approvals():
+        schedule_recordings(
+            all_approvals=all_approvals,
+            course=course,
+        )
