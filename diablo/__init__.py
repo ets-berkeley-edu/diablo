@@ -83,8 +83,8 @@ def cachify(key_pattern, timeout=1440):
     return _cachify
 
 
-def skip_when_pytest():
+def skip_when_pytest(mock_object=None):
     @decorator
     def _skip_when_pytest(func, *args, **kw):
-        return None if app.config['DIABLO_ENV'] == 'test' else func(*args, **kw)
+        return mock_object if app.config['DIABLO_ENV'] == 'test' else func(*args, **kw)
     return _skip_when_pytest

@@ -38,6 +38,7 @@ class Scheduled(db.Model):
     section_id = db.Column(db.Integer, nullable=False, primary_key=True)
     term_id = db.Column(db.Integer, nullable=False, primary_key=True)
     instructor_uids = db.Column(ARRAY(db.String(80)), nullable=False)
+    kaltura_schedule_id = db.Column(db.Integer, nullable=False)
     meeting_days = db.Column(db.String, nullable=False)
     meeting_start_time = db.Column(db.String, nullable=False)
     meeting_end_time = db.Column(db.String, nullable=False)
@@ -51,6 +52,7 @@ class Scheduled(db.Model):
             section_id,
             term_id,
             instructor_uids,
+            kaltura_schedule_id,
             meeting_days,
             meeting_start_time,
             meeting_end_time,
@@ -61,6 +63,7 @@ class Scheduled(db.Model):
         self.section_id = section_id
         self.term_id = term_id
         self.instructor_uids = instructor_uids
+        self.kaltura_schedule_id = kaltura_schedule_id
         self.meeting_days = meeting_days
         self.meeting_start_time = meeting_start_time
         self.meeting_end_time = meeting_end_time
@@ -73,6 +76,7 @@ class Scheduled(db.Model):
                     section_id={self.section_id},
                     term_id={self.term_id},
                     instructor_uids={', '.join(self.instructor_uids)},
+                    kaltura_schedule_id={self.kaltura_schedule_id}
                     meeting_days={self.meeting_days},
                     meeting_start_time={self.meeting_start_time},
                     meeting_end_time={self.meeting_end_time},
@@ -88,6 +92,7 @@ class Scheduled(db.Model):
             section_id,
             term_id,
             instructor_uids,
+            kaltura_schedule_id,
             meeting_days,
             meeting_start_time,
             meeting_end_time,
@@ -97,6 +102,7 @@ class Scheduled(db.Model):
     ):
         scheduled = cls(
             instructor_uids=instructor_uids,
+            kaltura_schedule_id=kaltura_schedule_id,
             meeting_days=meeting_days,
             meeting_start_time=meeting_start_time,
             meeting_end_time=meeting_end_time,
@@ -127,6 +133,7 @@ class Scheduled(db.Model):
         return {
             'createdAt': to_isoformat(self.created_at),
             'instructorUids': self.instructor_uids,
+            'kalturaScheduleId': self.kaltura_schedule_id,
             'meetingDays': format_days(self.meeting_days),
             'meetingEndTime': format_time(self.meeting_end_time),
             'meetingStartTime': format_time(self.meeting_start_time),

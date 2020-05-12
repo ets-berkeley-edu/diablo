@@ -23,6 +23,7 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 import json
+import random
 
 from diablo import std_commit
 from diablo.models.approval import Approval
@@ -603,6 +604,7 @@ class TestCoursesChanges:
 
             Scheduled.create(
                 instructor_uids=get_instructor_uids(term_id=self.term_id, section_id=section_1_id),
+                kaltura_schedule_id=random.randint(1, 10),
                 meeting_days=obsolete_meeting_days,
                 meeting_start_time=meeting_start_time,
                 meeting_end_time=meeting_end_time,
@@ -631,6 +633,7 @@ class TestCoursesChanges:
             instructor_uids = get_instructor_uids(term_id=self.term_id, section_id=section_3_id)
             Scheduled.create(
                 instructor_uids=instructor_uids + ['100099'],
+                kaltura_schedule_id=random.randint(1, 10),
                 meeting_days=meeting_days,
                 meeting_start_time=meeting_start_time,
                 meeting_end_time=meeting_end_time,
@@ -872,6 +875,7 @@ def _schedule_recordings(
     )
     Scheduled.create(
         instructor_uids=get_instructor_uids(term_id=term_id, section_id=section_id),
+        kaltura_schedule_id=random.randint(1, 10),
         meeting_days=meeting_days,
         meeting_start_time=meeting_start_time,
         meeting_end_time=meeting_end_time,

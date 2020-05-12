@@ -269,6 +269,7 @@ CREATE TABLE scheduled (
     section_id INTEGER NOT NULL,
     term_id INTEGER NOT NULL,
     instructor_uids VARCHAR(80)[] NOT NULL,
+    kaltura_schedule_id INTEGER NOT NULL,
     meeting_days VARCHAR(80),
     meeting_end_time VARCHAR(80),
     meeting_start_time VARCHAR(80),
