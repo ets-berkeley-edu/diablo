@@ -150,6 +150,16 @@
                   <v-card tile>
                     <v-list-item-title class="pl-4 pt-4">
                       <h4 class="title">Recordings scheduled</h4>
+                      <div v-if="$currentUser.isAdmin">
+                        <a
+                          id="link-to-edit-kaltura-event"
+                          :href="`${$config.kalturaMediaSpaceUrl}/recscheduling/index/edit-event/eventid/${scheduled.kalturaScheduleId}`"
+                          target="_blank"
+                          aria-label="Open Kaltura MediaSpace in a new window"
+                        >
+                          Kaltura event {{ scheduled.kalturaScheduleId }} <v-icon small class="pb-1">mdi-open-in-new</v-icon>
+                        </a>
+                      </div>
                     </v-list-item-title>
                     <v-list-item two-line class="pb-3">
                       <v-list-item-content>

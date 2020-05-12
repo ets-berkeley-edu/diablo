@@ -22,10 +22,10 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-
 from diablo import db
 from diablo.api.errors import BadRequestError, ForbiddenRequestError, ResourceNotFoundError
 from diablo.api.util import admin_required, get_search_filter_options
+from diablo.externals.kaltura import Kaltura
 from diablo.jobs.util import schedule_recordings
 from diablo.lib.berkeley import term_name_for_sis_id
 from diablo.lib.http import tolerant_jsonify
@@ -37,6 +37,7 @@ from diablo.models.scheduled import Scheduled
 from diablo.models.sis_section import SisSection
 from flask import current_app as app, request
 from flask_login import current_user, login_required
+from KalturaClient.exceptions import KalturaClientException, KalturaException
 from sqlalchemy import and_
 
 
@@ -137,7 +138,8 @@ def unschedule():
     if not course:
         raise BadRequestError('Required params missing or invalid')
 
-    if course['status'] != 'Scheduled':
+    scheduled = course['scheduled']
+    if not scheduled:
         raise BadRequestError(f'Section id {section_id}, term id {term_id} is not currently scheduled')
 
     db.session.execute(
@@ -146,6 +148,14 @@ def unschedule():
     db.session.execute(
         Scheduled.__table__.delete().where(and_(Scheduled.term_id == term_id, Scheduled.section_id == section_id)),
     )
+
+    kaltura_schedule_id = scheduled['kalturaScheduleId']
+    try:
+        Kaltura().delete_scheduled_recordings(kaltura_schedule_id)
+    except (KalturaClientException, KalturaException) as e:
+        app.logger.error(f'Failed to delete Kaltura schedule: {kaltura_schedule_id}')
+        app.logger.exception(e)
+
     CoursePreference.update_opt_out(
         term_id=term_id,
         section_id=section_id,

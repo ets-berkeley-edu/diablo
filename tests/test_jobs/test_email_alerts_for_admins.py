@@ -22,6 +22,8 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
+import random
+
 from diablo import std_commit
 from diablo.jobs.admin_emails_job import AdminEmailsJob
 from diablo.models.approval import Approval
@@ -60,6 +62,7 @@ class TestEmailAlertsForAdmins:
             )
             Scheduled.create(
                 instructor_uids=get_instructor_uids(term_id=term_id, section_id=section_id),
+                kaltura_schedule_id=random.randint(1, 10),
                 meeting_days=meeting_days,
                 meeting_start_time=meeting_start_time,
                 meeting_end_time=meeting_end_time,
@@ -97,6 +100,7 @@ class TestEmailAlertsForAdmins:
             )
             Scheduled.create(
                 instructor_uids=get_instructor_uids(section_id=section_id, term_id=term_id),
+                kaltura_schedule_id=random.randint(1, 10),
                 meeting_days=meeting_days,
                 meeting_start_time=meeting_start_time,
                 meeting_end_time=meeting_end_time,

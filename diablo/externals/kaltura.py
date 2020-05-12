@@ -47,6 +47,10 @@ class Kaltura:
         # TODO: Close Kaltura client connection?
         pass
 
+    @skip_when_pytest()
+    def delete_scheduled_recordings(self, kaltura_schedule_id):
+        return self.kaltura_client.schedule.scheduleEvent.delete(kaltura_schedule_id)
+
     @cachify('kaltura/get_schedule_event_list', timeout=30)
     def get_schedule_event_list(self, kaltura_resource_id):
         response = self.kaltura_client.schedule.scheduleEvent.list(
@@ -63,7 +67,7 @@ class Kaltura:
         )
         return [{'id': o.id, 'name': o.name} for o in response.objects]
 
-    @skip_when_pytest()
+    @skip_when_pytest(mock_object=int(datetime.now().timestamp()))
     def schedule_recording(
             self,
             course_label,
@@ -181,7 +185,8 @@ class Kaltura:
             updatedAt=utc_now_timestamp,
         )
         # Error codes: https://developer.kaltura.com/api-docs/Error_Codes
-        return self.kaltura_client.schedule.scheduleEvent.add(recurring_event)
+        kaltura_schedule = self.kaltura_client.schedule.scheduleEvent.add(recurring_event)
+        return kaltura_schedule.id
 
     def ping(self):
         filter_ = KalturaMediaEntryFilter()
