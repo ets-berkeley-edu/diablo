@@ -25,13 +25,13 @@ ENHANCEMENTS, OR MODIFICATIONS.
 import json
 import os
 
-os.environ['DIABLO_ENV'] = 'test'  # noqa
-
 from diablo import cache
 import diablo.factory
 from moto import mock_sts
 import pytest
 from tests.util import override_config
+
+os.environ['DIABLO_ENV'] = 'test'  # noqa
 
 
 class FakeAuth(object):

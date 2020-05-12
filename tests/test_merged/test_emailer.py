@@ -75,7 +75,7 @@ def _get_expected_email():
 
 
 def _get_email_template():
-    return f"""Hello <code> user.name </code>,
+    return """Hello <code> user.name </code>,
 
     Your <code>term.name</code> course <code>course.name</code>, "<code>course.title</code>", is eligible
     for Course Capture. This course meets <code>course.days</code> from <code>course.time.start</code> to <code>

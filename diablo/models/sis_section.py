@@ -160,7 +160,7 @@ class SisSection(db.Model):
 
     @classmethod
     def get_courses_per_location(cls, term_id, location):
-        sql = f"""
+        sql = """
             SELECT
                 s.*,
                 i.dept_code AS instructor_dept_code,
@@ -190,7 +190,7 @@ class SisSection(db.Model):
 
     @classmethod
     def get_courses_invited(cls, term_id):
-        sql = f"""
+        sql = """
             SELECT
                 s.*,
                 i.dept_code AS instructor_dept_code,
@@ -233,7 +233,7 @@ class SisSection(db.Model):
 
     @classmethod
     def get_courses_opted_out(cls, term_id):
-        sql = f"""
+        sql = """
             SELECT
                 s.*,
                 i.dept_code AS instructor_dept_code,
@@ -268,7 +268,7 @@ class SisSection(db.Model):
 
     @classmethod
     def get_eligible_courses_not_invited(cls, term_id):
-        sql = f"""
+        sql = """
             SELECT
                 s.*,
                 i.dept_code AS instructor_dept_code,
@@ -313,7 +313,7 @@ class SisSection(db.Model):
 
     @classmethod
     def get_course(cls, term_id, section_id):
-        sql = f"""
+        sql = """
             SELECT
                 s.*,
                 i.dept_code AS instructor_dept_code,
@@ -344,7 +344,7 @@ class SisSection(db.Model):
 
     @classmethod
     def get_course_changes(cls, term_id):
-        sql = f"""
+        sql = """
             SELECT
                 s.*,
                 i.dept_code AS instructor_dept_code,
@@ -410,7 +410,7 @@ class SisSection(db.Model):
 
     @classmethod
     def get_courses_partially_approved(cls, term_id):
-        sql = f"""
+        sql = """
             SELECT
                 s.*,
                 i.dept_code AS instructor_dept_code,
@@ -480,7 +480,7 @@ class SisSection(db.Model):
 
     @classmethod
     def get_courses_scheduled(cls, term_id):
-        sql = f"""
+        sql = """
             SELECT
                 s.*,
                 i.dept_code AS instructor_dept_code,
@@ -680,7 +680,7 @@ def _get_cross_listed_courses(section_id, term_id, approvals, invited_uids):
     # Cross-listed sections were "deleted" during DblinkToRedshiftJob
     # and yet we still rely on the metadata of those deleted records.
     section_ids = CrossListing.get_cross_listed_sections(section_id=section_id, term_id=term_id)
-    sql = f"""
+    sql = """
         SELECT
             s.*,
             i.dept_code AS instructor_dept_code,

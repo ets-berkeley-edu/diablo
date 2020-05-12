@@ -64,7 +64,7 @@ class TestStartJob:
         job_key = 'queued_emails_job'
         self._api_start_job(client, job_key=job_key)
         # Now verify
-        response = client.get(f'/api/job/history/1')
+        response = client.get('/api/job/history/1')
         assert response.status_code == 200
         job_history = response.json
         assert len(job_history)
