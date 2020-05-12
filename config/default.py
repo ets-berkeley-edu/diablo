@@ -68,6 +68,9 @@ EMAIL_REDIRECT_WHEN_TESTING = '__EMAIL_REDIRECT_WHEN_TESTING__at_berkeley.edu'
 EMAIL_SYSTEM_ERRORS = '__EMAIL_SYSTEM_ERRORS__at_berkeley.edu'
 EMAIL_TEST_MODE = True
 
+# Useful when working on or debugging the Kaltura integration. Recommended for localhost only.
+FEATURE_FLAG_SCHEDULE_RECORDINGS_SYNCHRONOUSLY = False
+
 # Directory to search for mock fixtures, if running in "test" or "demo" mode.
 FIXTURES_PATH = None
 

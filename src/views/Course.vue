@@ -305,16 +305,6 @@
               </v-row>
               <v-row v-if="!course.hasNecessaryApprovals" lg="2" class="pr-6 pt-6">
                 <v-spacer />
-                <v-col v-if="$currentUser.isAdmin" md="4" class="mr-3">
-                  <v-btn
-                    id="btn-approve-and-schedule"
-                    color="outline"
-                    :disabled="disableSubmit"
-                    @click="approveAndSchedule"
-                  >
-                    Approve and Schedule
-                  </v-btn>
-                </v-col>
                 <v-col md="2">
                   <v-btn
                     id="btn-approve"
@@ -378,11 +368,6 @@
     methods: {
       approve() {
         approve(this.publishType, this.recordingType, this.course.sectionId).then(data => {
-          this.render(data)
-        }).catch(this.$ready)
-      },
-      approveAndSchedule() {
-        approve(this.publishType, this.recordingType, this.course.sectionId, true).then(data => {
           this.render(data)
         }).catch(this.$ready)
       },
