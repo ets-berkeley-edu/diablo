@@ -26,8 +26,9 @@ ENHANCEMENTS, OR MODIFICATIONS.
 
 class RecordingSchedule(object):
 
-    def __init__(self, section, recording_type=None, publish_type=None, status=None):
+    def __init__(self, section, recording_type=None, publish_type=None, status=None, series_id=None):
         self.section = section
         self.recording_type = recording_type
         self.publish_type = publish_type
         self.status = status
+        self.series_id = series_id

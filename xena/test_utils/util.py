@@ -23,6 +23,7 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
+from datetime import datetime
 import json
 
 from config import xena
@@ -46,6 +47,19 @@ def get_long_timeout():
 
 def get_admin_uid():
     return xena.ADMIN_UID
+
+
+def get_kaltura_username():
+    return xena.KALTURA_USERNAME
+
+
+def get_kaltura_password():
+    return xena.KALTURA_PASSWORD
+
+
+def get_kaltura_term_date_str(date_str):
+    parsed = datetime.strptime(date_str, '%Y-%m-%d')
+    return datetime.strftime(parsed, '%m/%d/%Y')
 
 
 def parse_rooms_data():

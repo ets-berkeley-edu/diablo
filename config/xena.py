@@ -37,6 +37,9 @@ CURRENT_TERM_NAME = 'Fall 2020'
 
 INDEX_HTML = f'{BASE_DIR}/tests/static/test-index.html'
 
+KALTURA_USERNAME = 'some-user-name@domain.com'
+KALTURA_PASSWORD = 'some-complicated-string'
+
 LOGGING_LEVEL = logging.INFO
 
 TESTING = True

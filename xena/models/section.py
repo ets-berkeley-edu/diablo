@@ -23,6 +23,9 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
+from datetime import datetime
+from datetime import timedelta
+
 from xena.models.room import Room
 from xena.models.user import User
 
@@ -75,3 +78,14 @@ class Section(object):
     @property
     def listings(self):
         return [Section(i) for i in self.data['listings']]
+
+    @staticmethod
+    def add_minutes(section_time_str, minutes):
+        parsed = datetime.strptime(section_time_str, '%I:%M %p') + timedelta(minutes=minutes)
+        datetime.strftime(parsed, '%I:%M %p').lower()
+
+    def get_berkeley_start_time_str(self):
+        return Section.add_minutes(self.start_time, 7)
+
+    def get_berkeley_end_time_str(self):
+        return Section.add_minutes(self.end_time, 2)
