@@ -28,6 +28,6 @@ from enum import Enum
 
 class RecordingType(Enum):
 
-    SCREENCAST = 'Presentation + Audio'
-    SCREENCAST_AND_VIDEO = 'Presenter + Presentation + Audio'
-    VIDEO = 'Presenter'
+    SCREENCAST = {'option': 'Presentation + Audio', 'selection': 'Presentation and Audio'}
+    SCREENCAST_AND_VIDEO = {'option': 'Presenter + Presentation + Audio', 'selection': 'Presenter, Presentation, and Audio'}
+    VIDEO = {'option': 'Presenter + Audio', 'selection': 'Presenter and Audio'}

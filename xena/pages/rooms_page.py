@@ -25,13 +25,38 @@ ENHANCEMENTS, OR MODIFICATIONS.
 
 from flask import current_app as app
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as ec
+from selenium.webdriver.support.wait import WebDriverWait as Wait
 from xena.pages.diablo_pages import DiabloPages
+from xena.test_utils import util
 
 
 class RoomsPage(DiabloPages):
 
     SEARCH_INPUT = (By.XPATH, '//label[text()="Search"]/following-sibling::input')
+    ROOM_LINK = (By.XPATH, '//a[contains(@id, "room-")]')
+
+    @staticmethod
+    def room_row_locator(room):
+        return By.XPATH, f'//a[text()="{room.name}"]'
+
+    def load_page(self):
+        app.logger.info('Loading Rooms page')
+        self.driver.get(f'{app.config["BASE_URL"]}/rooms')
 
     def search_rooms(self, string):
         app.logger.info(f'Searching for room {string}')
         self.wait_for_element_and_type(RoomsPage.SEARCH_INPUT, string)
+
+    def wait_for_room_result(self, room):
+        self.wait_for_element(RoomsPage.room_row_locator(room), util.get_short_timeout())
+
+    def find_room(self, room):
+        self.search_rooms(room.name)
+        self.wait_for_room_result(room)
+
+    def wait_for_rooms_list(self):
+        Wait(self.driver, util.get_short_timeout()).until(ec.visibility_of_any_elements_located(RoomsPage.ROOM_LINK))
+
+    def click_room_link(self, room):
+        self.wait_for_element_and_click(RoomsPage.room_row_locator(room))

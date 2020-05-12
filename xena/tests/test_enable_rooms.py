@@ -24,24 +24,30 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 
 from flask import current_app as app
-from selenium import webdriver
-from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+import pytest
 from xena.test_utils import util
 
 
-class WebDriverManager(object):
+room_data = util.parse_rooms_data()
 
-    @classmethod
-    def launch_browser(cls):
-        app.logger.warning(f'Launching {util.get_xena_browser().capitalize()}')
-        if util.get_xena_browser() == 'firefox':
-            return webdriver.Firefox()
+
+@pytest.mark.usefixtures('page_objects')
+@pytest.mark.parametrize('room', room_data, scope='class', ids=[room.name for room in room_data])
+class TestEnableRooms:
+
+    def test_room_search(self, room):
+        if 'Course Capture' not in self.rooms_page.title():
+            self.login_page.load_page()
+            self.login_page.dev_auth(util.get_admin_uid())
         else:
-            d = DesiredCapabilities.CHROME
-            d['loggingPrefs'] = {'browser': 'ALL'}
-            return webdriver.Chrome(desired_capabilities=d)
+            app.logger.info('Already logged in')
+        self.rooms_page.load_page()
+        self.rooms_page.wait_for_rooms_list()
+        self.rooms_page.find_room(room)
 
-    @classmethod
-    def quit_browser(cls, driver):
-        app.logger.warning(f'Quitting {util.get_xena_browser().capitalize()}')
-        driver.quit()
+    def test_room_link(self, room):
+        self.rooms_page.click_room_link(room)
+        self.room_page.wait_for_diablo_title(room.name)
+
+    def test_set_capability(self, room):
+        self.room_page.set_capability(room.capability)

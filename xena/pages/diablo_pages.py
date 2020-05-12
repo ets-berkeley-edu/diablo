@@ -25,6 +25,8 @@ ENHANCEMENTS, OR MODIFICATIONS.
 
 from flask import current_app as app
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as ec
+from selenium.webdriver.support.wait import WebDriverWait as Wait
 from xena.pages.page import Page
 
 
@@ -39,6 +41,12 @@ class DiabloPages(Page):
     JOBS_LINK = (By.ID, 'menu-item-jobs')
     JOB_HISTORY_LINK = (By.ID, 'menu-item-job-history')
     LOG_OUT_LINK = (By.ID, 'menu-item-log-out')
+
+    VISIBLE_MENU_OPTION = (By.XPATH, '//div[contains(@class, "menuable__content__active")]//span[contains(@id, "-option-")]')
+
+    @staticmethod
+    def menu_option_locator(option_str):
+        return By.XPATH, f'//div[@role="option"][contains(., "{option_str}")]'
 
     def wait_for_diablo_title(self, string):
         self.wait_for_title(f'{string} | Course Capture')
@@ -59,7 +67,8 @@ class DiabloPages(Page):
         self.wait_for_element_and_click(DiabloPages.MENU_BUTTON)
 
     def open_menu(self):
-        if not self.element(DiabloPages.LOG_OUT_LINK).is_displayed():
+        if not self.is_present(DiabloPages.LOG_OUT_LINK):
+            app.logger.info('Clicking header menu button')
             self.click_menu_button()
 
     def click_email_templates_link(self):
@@ -81,3 +90,14 @@ class DiabloPages(Page):
         app.logger.info('Logging out')
         self.open_menu()
         self.wait_for_element_and_click(DiabloPages.LOG_OUT_LINK)
+
+    def click_menu_option(self, option_text):
+        app.logger.info(f'Clicking the option \'{option_text}\'')
+        self.wait_for_element_and_click(DiabloPages.menu_option_locator(option_text))
+
+    def visible_menu_options(self):
+        Wait(self.driver, app.config['TIMEOUT_SHORT']).until(
+            method=ec.visibility_of_any_elements_located(DiabloPages.VISIBLE_MENU_OPTION),
+            message=f'Failed visible_menu_options: {DiabloPages.VISIBLE_MENU_OPTION}',
+        )
+        return [el.text for el in self.elements(DiabloPages.VISIBLE_MENU_OPTION)]
