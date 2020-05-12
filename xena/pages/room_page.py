@@ -23,25 +23,31 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
+import time
+
 from flask import current_app as app
-from selenium import webdriver
-from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
-from xena.test_utils import util
+from selenium.webdriver.common.by import By
+from xena.models.capability import Capability
+from xena.pages.diablo_pages import DiabloPages
 
 
-class WebDriverManager(object):
+class RoomPage(DiabloPages):
 
-    @classmethod
-    def launch_browser(cls):
-        app.logger.warning(f'Launching {util.get_xena_browser().capitalize()}')
-        if util.get_xena_browser() == 'firefox':
-            return webdriver.Firefox()
-        else:
-            d = DesiredCapabilities.CHROME
-            d['loggingPrefs'] = {'browser': 'ALL'}
-            return webdriver.Chrome(desired_capabilities=d)
+    SELECT_CAPABILITY_INPUT = (By.XPATH, '//input[contains(@id, "select-room-capability")]/ancestor::div[@role="button"]')
+    AUDITORIUM_TOGGLE = (By.XPATH, '//label[text()="Auditorium"]/preceding-sibling::div')
 
-    @classmethod
-    def quit_browser(cls, driver):
-        app.logger.warning(f'Quitting {util.get_xena_browser().capitalize()}')
-        driver.quit()
+    def auditorium_selected(self):
+        el = self.element((By.XPATH, '//label[text()="Auditorium"]/preceding-sibling::div/input'))
+        return el.get_attribute('aria-checked') == 'true'
+
+    def click_auditorium_toggle(self):
+        app.logger.info('Clicking the auditorium toggle')
+        self.wait_for_element_and_click(RoomPage.AUDITORIUM_TOGGLE)
+
+    def set_capability(self, capability):
+        app.logger.info(f'Setting room capability "{capability.value}"')
+        if (capability == Capability.SCREENCAST_AND_VIDEO) and not self.auditorium_selected():
+            self.click_auditorium_toggle()
+        self.wait_for_element_and_click(RoomPage.SELECT_CAPABILITY_INPUT)
+        self.click_menu_option(capability.value)
+        time.sleep(1)

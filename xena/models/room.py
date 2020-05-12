@@ -28,8 +28,9 @@ from xena.models.capability import Capability
 
 class Room(object):
 
-    def __init__(self, data):
+    def __init__(self, data, resource_id=None):
         self.data = data
+        self.resource_id = resource_id
 
     @property
     def name(self):

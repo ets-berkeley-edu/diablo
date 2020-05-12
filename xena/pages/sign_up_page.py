@@ -35,6 +35,7 @@ class SignUpPage(DiabloPages):
     SECTION_ID = (By.XPATH, '//div[contains(text(), "Section ID:")]')
     COURSE_TITLE = (By.ID, 'course-title')
     INSTRUCTORS = (By.ID, 'instructors')
+    INSTRUCTOR = (By.XPATH, '//*[contains(@id, "instructor-")]')
     MEETING_DAYS = (By.ID, 'meeting-days')
     MEETING_TIMES = (By.ID, 'meeting-times')
     ROOMS = (By.ID, 'rooms')
@@ -45,12 +46,14 @@ class SignUpPage(DiabloPages):
     VISIBLE_TOOLTIP = (By.XPATH, '//div[@class="v-tooltip__content menuable__content__active"]')
     RECORDING_TYPE_STATIC = (By.XPATH, '//input[@name="recordingType"]/..')
     SELECT_RECORDING_TYPE_INPUT = (By.XPATH, '//label[@id="select-recording-type-label"]')
-    SELECT_PUBLISH_TYPE_INPUT = (By.XPATH, '//label[@id="select-publish-type-label"]')
-    VISIBLE_MENU_OPTION = (By.XPATH, '//div[contains(@class, "menuable__content__active")]//span[starts-with(@id, "menu-option-")]')
+    SELECT_PUBLISH_TYPE_INPUT = (By.XPATH, '//input[@id="select-publish-type"]/..')
     AGREE_TO_TERMS_CBX = (By.XPATH, '//input[@id="agree-to-terms-checkbox"]/..')
     CC_POLICIES_LINK = (By.ID, 'link-to-course-capture-policies')
     APPROVE_BUTTON = (By.ID, 'btn-approve')
     CONFIRMATION_MSG = (By.XPATH, '//span[contains(text(), "You submitted the preferences below.")]')
+
+    RECORDING_TYPE_APPROVED = (By.XPATH, '//h4[contains(., "Recording Type")]/../following-sibling::div/div')
+    PUBLISH_TYPE_APPROVED = (By.ID, 'approved-publish-type')
 
     @staticmethod
     def instructor_link_locator(instructor):
@@ -59,10 +62,6 @@ class SignUpPage(DiabloPages):
     @staticmethod
     def room_link_locator(room):
         return By.LINK_TEXT, room.name
-
-    @staticmethod
-    def menu_option_locator(recording_type):
-        return By.XPATH, f'//div[@role="option"][contains(., "{recording_type}")]'
 
     def load_page(self, section):
         app.logger.info(f'Loading sign-up page for term {section.term} section ID {section.ccn}')
@@ -78,7 +77,8 @@ class SignUpPage(DiabloPages):
         return self.element(SignUpPage.COURSE_TITLE).text
 
     def visible_instructors(self):
-        return self.element(SignUpPage.INSTRUCTORS).get_attribute('innerText').strip().replace('and ', '').split(', ')
+        els = self.elements(SignUpPage.INSTRUCTOR)
+        return [el.text for el in els]
 
     def visible_meeting_days(self):
         return self.element(SignUpPage.MEETING_DAYS).get_attribute('innerText').strip()
@@ -96,6 +96,14 @@ class SignUpPage(DiabloPages):
         return [el.get_attribute('id').split('-')[2] for el in self.elements(SignUpPage.CROSS_LISTING)]
 
     # CAPTURE + APPROVAL SETTINGS
+
+    def instructor_approval_present(self, instructor):
+        locator = (By.XPATH, f'//div[contains(text(), "{instructor.first_name} {instructor.last_name}")][contains(., "approved.")]')
+        return self.is_present(locator)
+
+    def admin_approval_present(self):
+        locator = (By.XPATH, '//span[text()="(Course Capture administrator)"]/..[contains(., "approved.")]')
+        return self.is_present(locator)
 
     def open_rec_type_tooltip(self):
         app.logger.info('Hovering over recording type tooltip')
@@ -117,17 +125,6 @@ class SignUpPage(DiabloPages):
     def click_publish_type_input(self):
         app.logger.info('Clicking the publish type input')
         self.wait_for_element_and_click(SignUpPage.SELECT_PUBLISH_TYPE_INPUT)
-
-    def visible_menu_options(self):
-        Wait(self.driver, app.config['TIMEOUT_SHORT']).until(
-            method=ec.visibility_of_any_elements_located(SignUpPage.VISIBLE_MENU_OPTION),
-            message=f'Failed visible_menu_options: {SignUpPage.VISIBLE_MENU_OPTION}',
-        )
-        return [el.text for el in self.elements(SignUpPage.VISIBLE_MENU_OPTION)]
-
-    def click_menu_option(self, option_text):
-        app.logger.info(f'Clicking the option \'{option_text}\'')
-        self.wait_for_element_and_click(SignUpPage.menu_option_locator(option_text))
 
     def select_rec_type(self, recording_type):
         app.logger.info(f'Selecting recording type {recording_type}')
@@ -152,3 +149,12 @@ class SignUpPage(DiabloPages):
             method=ec.visibility_of_element_located(SignUpPage.CONFIRMATION_MSG),
             message=f'Failed wait_for_approval_confirmation: {SignUpPage.CONFIRMATION_MSG}',
         )
+
+    def default_rec_type(self):
+        return self.element(SignUpPage.RECORDING_TYPE_STATIC).text.strip()
+
+    def approved_rec_type(self):
+        return self.element(SignUpPage.RECORDING_TYPE_APPROVED).text.strip()
+
+    def approved_publish_type(self):
+        return self.element(SignUpPage.PUBLISH_TYPE_APPROVED).text.strip()

@@ -23,42 +23,39 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-from config import xena
 import pytest
 from xena.models.publish_type import PublishType
 from xena.models.recording_schedule import RecordingSchedule
-from xena.models.recording_schedule_status import RecordingScheduleStatus
 from xena.models.recording_type import RecordingType
 from xena.models.section import Section
 from xena.pages.sign_up_page import SignUpPage
 from xena.test_utils import util
 
+
 """
 SCENARIO:
-- Sole instructor visits sign-up page, selects presentation + presenter, approves
+- Admin visits sign-up page, selects presentation
 - Recordings scheduled
+- Sole instructor visits sign-up page and approves
 """
 
-test_data = util.parse_sign_up_test_data()[0]
+test_data = util.parse_sign_up_test_data()[1]
 util.reset_test_data(test_data)
 
 
 @pytest.mark.usefixtures('page_objects')
-class TestSignUp0:
+class TestSignUp1:
+
     section = Section(test_data)
     recording_schedule = RecordingSchedule(section)
 
-    def test_home_page(self):
+    def test_admin_login(self):
         self.login_page.load_page()
-        self.login_page.dev_auth(self.section.instructors[0].uid)
-        self.ouija_page.wait_for_diablo_title('Home')
+        self.login_page.dev_auth(util.get_admin_uid())
+        self.ouija_page.wait_for_diablo_title('The Ouija Board')
 
-    def test_current_term(self):
-        assert self.ouija_page.visible_heading() == f'Your {xena.CURRENT_TERM_NAME} Courses Eligible for Capture'
-
-    def test_sign_up_link(self):
-        self.ouija_page.click_sign_up_page_link(self.section)
-        self.sign_up_page.wait_for_diablo_title(f'{self.section.code}, {self.section.number}')
+    def test_load_sign_up_page(self):
+        self.sign_up_page.load_page(self.section)
 
     # VERIFY STATIC COURSE SIS DATA
 
@@ -85,29 +82,11 @@ class TestSignUp0:
         listing_codes = [li.code for li in self.section.listings]
         assert self.sign_up_page.visible_cross_listing_codes() == listing_codes
 
-    # VERIFY TOOLTIPS AND EXTERNAL LINKS
-
-    def test_rec_type_tooltip(self):
-        self.sign_up_page.open_rec_type_tooltip()
-        # TODO verify tooltip content
-
-    def test_publish_tooltip(self):
-        self.sign_up_page.open_publish_tooltip()
-        # TODO verify tooltip content
-
-    def test_overview_link(self):
-        assert self.sign_up_page.external_link_valid(SignUpPage.CC_EXPLAINED_LINK, 'Course Capture | Educational Technology Services') is True
-
-    def test_policies_link(self):
-        assert self.sign_up_page.external_link_valid(SignUpPage.CC_POLICIES_LINK, 'Policies | Educational Technology Services') is True
-
     # VERIFY AVAILABLE OPTIONS AND DISABLED APPROVE BUTTON
 
-    def test_rec_type_options(self):
-        self.sign_up_page.click_rec_type_input()
-        visible_opts = self.sign_up_page.visible_menu_options()
-        expected = [RecordingType.SCREENCAST.value['option'], RecordingType.VIDEO.value['option'], RecordingType.SCREENCAST_AND_VIDEO.value['option']]
-        assert visible_opts == expected
+    def test_rec_type_pre_selected(self):
+        self.recording_schedule.recording_type = RecordingType.SCREENCAST
+        assert self.sign_up_page.default_rec_type() == self.recording_schedule.recording_type.value['option']
 
     def test_publish_options(self):
         self.sign_up_page.hit_escape()
@@ -115,20 +94,13 @@ class TestSignUp0:
         visible_opts = self.sign_up_page.visible_menu_options()
         assert visible_opts == [PublishType.BCOURSES.value, PublishType.KALTURA.value]
 
-    def test_approve_disabled_no_selections(self):
-        self.sign_up_page.hit_escape()
+    def test_approve_disabled_no_pub_no_terms(self):
         assert self.sign_up_page.element(SignUpPage.APPROVE_BUTTON).get_attribute('disabled') == 'true'
 
     # SELECT OPTIONS, APPROVE
 
-    def test_choose_rec_type(self):
-        self.sign_up_page.select_rec_type(RecordingType.SCREENCAST_AND_VIDEO.value['option'])
-        self.recording_schedule.recording_type = RecordingType.SCREENCAST_AND_VIDEO
-
-    def test_approve_disabled_no_pub_no_terms(self):
-        assert self.sign_up_page.element(SignUpPage.APPROVE_BUTTON).get_attribute('disabled') == 'true'
-
     def test_choose_publish_type(self):
+        self.sign_up_page.hit_escape()
         self.sign_up_page.select_publish_type(PublishType.BCOURSES.value)
         self.recording_schedule.publish_type = PublishType.BCOURSES
 
@@ -143,8 +115,30 @@ class TestSignUp0:
 
     def test_confirmation(self):
         self.sign_up_page.wait_for_approval_confirmation()
-        self.recording_schedule.status = RecordingScheduleStatus.APPROVED
 
     # TODO VERIFY THE APPROVAL IN DB
     # TODO RUN SCHEDULING JOB
     # TODO VERIFY KALTURA RECORDINGS
+
+    def test_admin_logout(self):
+        self.sign_up_page.log_out()
+        self.login_page.wait_for_diablo_title('Welcome')
+
+    # INSTRUCTOR VISITS SIGN-UP PAGE AND APPROVES
+
+    def test_instructor_login(self):
+        self.login_page.dev_auth(self.section.instructors[0].uid)
+        self.ouija_page.wait_for_diablo_title('Home')
+
+    def test_sign_up_link(self):
+        self.ouija_page.click_sign_up_page_link(self.section)
+        self.sign_up_page.wait_for_diablo_title(f'{self.section.code}, {self.section.number}')
+
+    def test_selected_rec_type(self):
+        self.sign_up_page.wait_for_element(SignUpPage.RECORDING_TYPE_APPROVED, util.get_short_timeout())
+        assert self.sign_up_page.approved_rec_type() == self.recording_schedule.recording_type.value['selection']
+
+    def test_selected_pub_type(self):
+        assert self.sign_up_page.approved_publish_type() == self.recording_schedule.publish_type.value
+
+    # TODO - def test_instructor_agree_terms(self):

@@ -26,6 +26,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 import time
 
 from flask import current_app as app
+from selenium.common import exceptions
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -71,7 +72,16 @@ class Page(object):
 
     # METHODS TO INTERACT WITH ELEMENTS USING A LOCATOR RATHER THAN AN ELEMENT, WHICH HELPS AVOID STALE ELEMENT ERRORS.
 
+    def is_present(self, locator):
+        try:
+            self.element(locator)
+            return True
+        except exceptions.NoSuchElementException:
+            return False
+
     def wait_for_element(self, locator, timeout):
+        for entry in self.driver.get_log('browser'):
+            app.logger.warning(f'Console error: {entry}')
         Wait(self.driver, timeout).until(
             method=ec.presence_of_element_located(locator),
             message=f'Failed wait for presence_of_element_located: {str(locator)}',

@@ -26,18 +26,22 @@ ENHANCEMENTS, OR MODIFICATIONS.
 import logging
 import os
 
+ADMIN_UID = '1049291'
+
 # Base directory for the application (one level up from this config file).
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
-BASE_URL = 'https://manage-dev.coursecapture.berkeley.edu/'
+BASE_URL = 'https://manage-dev.coursecapture.berkeley.edu'
 
-CURRENT_TERM_NAME = 'Spring 2020'
+CURRENT_TERM_NAME = 'Fall 2020'
 
 INDEX_HTML = f'{BASE_DIR}/tests/static/test-index.html'
 
 LOGGING_LEVEL = logging.INFO
 
 TESTING = True
+
+TEST_DATA_ROOMS = f'{BASE_DIR}/xena/fixtures/test-rooms.json'
 
 # The test-courses.json file is intended as an example of required structure of the test data
 TEST_DATA_SIGNUP = f'{BASE_DIR}/xena/fixtures/test-courses-local.json'

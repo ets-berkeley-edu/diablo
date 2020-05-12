@@ -24,24 +24,34 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 
 from flask import current_app as app
-from selenium import webdriver
-from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
-from xena.test_utils import util
+from selenium.webdriver.common.by import By
+from xena.pages.diablo_pages import DiabloPages
 
 
-class WebDriverManager(object):
+class JobsPage(DiabloPages):
 
-    @classmethod
-    def launch_browser(cls):
-        app.logger.warning(f'Launching {util.get_xena_browser().capitalize()}')
-        if util.get_xena_browser() == 'firefox':
-            return webdriver.Firefox()
-        else:
-            d = DesiredCapabilities.CHROME
-            d['loggingPrefs'] = {'browser': 'ALL'}
-            return webdriver.Chrome(desired_capabilities=d)
+    RUN_ADMIN_EMAILS_JOB_BUTTON = (By.ID, 'run-job-admin_emails_job')
+    RUN_CANVAS_JOB_BUTTON = (By.ID, 'run-job-canvas_job')
+    RUN_DBLINK_TO_REDSHIFT_JOB_BUTTON = (By.ID, 'run-job-dblink_to_redshift_job')
+    RUN_KALTURA_JOB_BUTTON = (By.ID, 'run-job-kaltura_job')
+    RUN_QUEUED_EMAILS_JOB_BUTTON = (By.ID, 'run-job-queued_emails_job')
 
-    @classmethod
-    def quit_browser(cls, driver):
-        app.logger.warning(f'Quitting {util.get_xena_browser().capitalize()}')
-        driver.quit()
+    def run_admin_emails_job(self):
+        app.logger.info('Running the admin emails job')
+        self.wait_for_element_and_click(JobsPage.RUN_ADMIN_EMAILS_JOB_BUTTON)
+
+    def run_canvas_job(self):
+        app.logger.info('Running the Canvas job')
+        self.wait_for_element_and_click(JobsPage.RUN_CANVAS_JOB_BUTTON)
+
+    def run_dblink_to_redshift_job(self):
+        app.logger.info('Running DBLink to Redshift job')
+        self.wait_for_element_and_click(JobsPage.RUN_DBLINK_TO_REDSHIFT_JOB_BUTTON)
+
+    def run_kaltura_job(self):
+        app.logger.info('Running Kaltura job')
+        self.wait_for_element_and_click(JobsPage.RUN_KALTURA_JOB_BUTTON)
+
+    def run_queued_emails_job(self):
+        app.logger.info('Running queued emails job')
+        self.wait_for_element_and_click(JobsPage.RUN_QUEUED_EMAILS_JOB_BUTTON)

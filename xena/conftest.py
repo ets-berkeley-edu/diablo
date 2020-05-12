@@ -27,12 +27,11 @@ import os
 
 from diablo.factory import create_app
 import pytest
-from xena.models.recording_schedule import RecordingSchedule
-from xena.models.section import Section
 from xena.pages.login_page import LoginPage
 from xena.pages.ouija_board_page import OuijaBoardPage
+from xena.pages.room_page import RoomPage
+from xena.pages.rooms_page import RoomsPage
 from xena.pages.sign_up_page import SignUpPage
-from xena.test_utils import util
 from xena.test_utils.webdriver_manager import WebDriverManager
 
 
@@ -46,31 +45,25 @@ ctx.push()
 
 
 @pytest.fixture(scope='session')
-def sign_up_0_test(request):
+def page_objects(request):
     driver = WebDriverManager.launch_browser()
-
-    # Reset course data in Diablo and Kaltura
-    test_data = util.parse_sign_up_test_data()
-    util.reset_test_data(test_data[0])
-
-    # Define the course data for the test
-    section = Section(test_data[0])
-    recording_schedule = RecordingSchedule(section)
 
     # Define page objects
     login_page = LoginPage(driver)
     ouija_page = OuijaBoardPage(driver)
+    room_page = RoomPage(driver)
+    rooms_page = RoomsPage(driver)
     sign_up_page = SignUpPage(driver)
 
     session = request.node
     try:
         for item in session.items:
             cls = item.getparent(pytest.Class)
-            setattr(cls.obj, 'section', section)
-            setattr(cls.obj, 'recording_schedule', recording_schedule)
             setattr(cls.obj, 'driver', driver)
             setattr(cls.obj, 'login_page', login_page)
             setattr(cls.obj, 'ouija_page', ouija_page)
+            setattr(cls.obj, 'room_page', room_page)
+            setattr(cls.obj, 'rooms_page', rooms_page)
             setattr(cls.obj, 'sign_up_page', sign_up_page)
         yield
     finally:

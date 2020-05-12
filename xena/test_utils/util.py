@@ -29,6 +29,7 @@ from config import xena
 from diablo import db, std_commit
 from flask import current_app as app
 from sqlalchemy import text
+from xena.models.room import Room
 
 
 def get_xena_browser():
@@ -41,6 +42,16 @@ def get_short_timeout():
 
 def get_long_timeout():
     return xena.TIMEOUT_LONG
+
+
+def get_admin_uid():
+    return xena.ADMIN_UID
+
+
+def parse_rooms_data():
+    with open(xena.TEST_DATA_ROOMS) as f:
+        parsed = json.load(f)
+        return [Room(agent) for agent in parsed['agents']]
 
 
 def parse_sign_up_test_data():
