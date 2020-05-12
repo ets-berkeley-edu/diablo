@@ -29,13 +29,14 @@ from diablo import db, std_commit
 from diablo.externals.kaltura import Kaltura
 from diablo.lib.util import format_days
 from diablo.merged.calnet import get_calnet_users_for_uids
-from diablo.merged.emailer import notify_instructors_recordings_scheduled
+from diablo.merged.emailer import notify_instructors_recordings_scheduled, send_system_error_email
 from diablo.models.cross_listing import CrossListing
 from diablo.models.instructor import Instructor
 from diablo.models.room import Room
 from diablo.models.scheduled import Scheduled
 from diablo.models.sis_section import SisSection
 from flask import current_app as app
+from KalturaClient.exceptions import KalturaClientException, KalturaException
 from sqlalchemy import text
 
 
@@ -179,33 +180,39 @@ def schedule_recordings(all_approvals, course):
                 Schedule: {days}, {adjusted_start_time} to {adjusted_end_time}
                 Recording: {approval.recording_type}; {approval.publish_type}
         """)
-        kaltura_schedule_id = Kaltura().schedule_recording(
-            course_label=course['label'],
-            instructors=course['instructors'],
-            days=days,
-            start_time=adjusted_start_time,
-            end_time=adjusted_end_time,
-            publish_type=approval.publish_type,
-            recording_type=approval.recording_type,
-            room=room,
-            term_id=term_id,
-        )
-        scheduled = Scheduled.create(
-            instructor_uids=[i['uid'] for i in course['instructors']],
-            kaltura_schedule_id=kaltura_schedule_id,
-            meeting_days=meeting_days,
-            meeting_start_time=meeting_start_time,
-            meeting_end_time=meeting_end_time,
-            publish_type_=approval.publish_type,
-            recording_type_=approval.recording_type,
-            room_id=room.id,
-            section_id=section_id,
-            term_id=term_id,
-        )
-        notify_instructors_recordings_scheduled(course=course, scheduled=scheduled)
+        try:
+            kaltura_schedule_id = Kaltura().schedule_recording(
+                course_label=course['label'],
+                instructors=course['instructors'],
+                days=days,
+                start_time=adjusted_start_time,
+                end_time=adjusted_end_time,
+                publish_type=approval.publish_type,
+                recording_type=approval.recording_type,
+                room=room,
+                term_id=term_id,
+            )
+            scheduled = Scheduled.create(
+                instructor_uids=[i['uid'] for i in course['instructors']],
+                kaltura_schedule_id=kaltura_schedule_id,
+                meeting_days=meeting_days,
+                meeting_start_time=meeting_start_time,
+                meeting_end_time=meeting_end_time,
+                publish_type_=approval.publish_type,
+                recording_type_=approval.recording_type,
+                room_id=room.id,
+                section_id=section_id,
+                term_id=term_id,
+            )
+            notify_instructors_recordings_scheduled(course=course, scheduled=scheduled)
+            uids = [approval.approved_by_uid for approval in all_approvals]
+            app.logger.info(f'Recordings scheduled for course {section_id} per approvals: {", ".join(uids)}')
 
-        uids = [approval.approved_by_uid for approval in all_approvals]
-        app.logger.info(f'Recordings scheduled for course {section_id} per approvals: {", ".join(uids)}')
+        except (KalturaClientException, KalturaException) as e:
+            error = f"Failed to schedule recordings {course['label']} (section_id: {course['sectionId']})"
+            app.logger.error(error)
+            app.logger.exception(e)
+            send_system_error_email(message=str(e), subject=error)
 
     else:
         app.logger.error(f"""
