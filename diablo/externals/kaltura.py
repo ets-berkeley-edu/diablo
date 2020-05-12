@@ -33,7 +33,8 @@ from KalturaClient import KalturaClient, KalturaConfiguration
 from KalturaClient.Plugins.Core import KalturaFilterPager, KalturaMediaEntryFilter
 from KalturaClient.Plugins.Schedule import KalturaRecordScheduleEvent, KalturaScheduleEventClassificationType, \
     KalturaScheduleEventFilter, KalturaScheduleEventRecurrence, KalturaScheduleEventRecurrenceFrequency, \
-    KalturaScheduleEventRecurrenceType, KalturaScheduleEventStatus, KalturaScheduleResourceFilter, KalturaSessionType
+    KalturaScheduleEventRecurrenceType, KalturaScheduleEventResource, KalturaScheduleEventStatus, \
+    KalturaScheduleResourceFilter, KalturaSessionType
 
 
 class Kaltura:
@@ -186,6 +187,18 @@ class Kaltura:
         )
         # Error codes: https://developer.kaltura.com/api-docs/Error_Codes
         kaltura_schedule = self.kaltura_client.schedule.scheduleEvent.add(recurring_event)
+
+        # Link the schedule to the room (ie, capture agent)
+        event_resource = self.kaltura_client.schedule.scheduleEventResource.add(
+            KalturaScheduleEventResource(
+                eventId=kaltura_schedule.id,
+                resourceId=room.kaltura_resource_id,
+                partnerId=self.kaltura_partner_id,
+                createdAt=utc_now_timestamp,
+                updatedAt=utc_now_timestamp,
+            ),
+        )
+        app.logger.info(f'Kaltura schedule {kaltura_schedule.id} attached to {room.location}: {event_resource}')
         return kaltura_schedule.id
 
     def ping(self):
