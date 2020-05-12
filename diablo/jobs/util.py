@@ -22,14 +22,18 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
+from datetime import date, datetime, time, timedelta
 from itertools import islice
 
 from diablo import db, std_commit
 from diablo.externals.kaltura import Kaltura
+from diablo.lib.util import format_days
 from diablo.merged.calnet import get_calnet_users_for_uids
+from diablo.merged.emailer import notify_instructors_recordings_scheduled
 from diablo.models.cross_listing import CrossListing
 from diablo.models.instructor import Instructor
 from diablo.models.room import Room
+from diablo.models.scheduled import Scheduled
 from diablo.models.sis_section import SisSection
 from flask import current_app as app
 from sqlalchemy import text
@@ -148,6 +152,76 @@ def refresh_cross_listings(term_id):
     SisSection.delete_all(section_ids=delete_section_ids, term_id=term_id)
 
     std_commit()
+
+
+def schedule_recordings(all_approvals, course):
+    term_id = course['termId']
+    section_id = int(course['sectionId'])
+    all_approvals.sort(key=lambda a: a.created_at.isoformat())
+    approval = all_approvals[-1]
+    room = Room.get_room(approval.room_id)
+
+    if room.kaltura_resource_id:
+        # Query for date objects.
+        meeting_days, meeting_start_time, meeting_end_time = SisSection.get_meeting_times(
+            term_id=term_id,
+            section_id=section_id,
+        )
+        # Recording starts X minutes before/after official start; it ends Y minutes before/after official end time.
+        days = format_days(meeting_days)
+        adjusted_start_time = _adjust_time(meeting_start_time, app.config['KALTURA_RECORDING_OFFSET_START'])
+        adjusted_end_time = _adjust_time(meeting_end_time, app.config['KALTURA_RECORDING_OFFSET_END'])
+
+        app.logger.info(f"""
+            Prepare to schedule recordings for {course['label']}:
+                Room: {room.location}
+                Instructor UIDs: {[instructor['uid'] for instructor in course['instructors']]}
+                Schedule: {days}, {adjusted_start_time} to {adjusted_end_time}
+                Recording: {approval.recording_type}; {approval.publish_type}
+        """)
+        # TODO: Grab series id from the following return value and put it in db
+        Kaltura().schedule_recording(
+            course_label=course['label'],
+            instructors=course['instructors'],
+            days=days,
+            start_time=adjusted_start_time,
+            end_time=adjusted_end_time,
+            publish_type=approval.publish_type,
+            recording_type=approval.recording_type,
+            room=room,
+            term_id=term_id,
+        )
+        scheduled = Scheduled.create(
+            instructor_uids=[i['uid'] for i in course['instructors']],
+            meeting_days=meeting_days,
+            meeting_start_time=meeting_start_time,
+            meeting_end_time=meeting_end_time,
+            publish_type_=approval.publish_type,
+            recording_type_=approval.recording_type,
+            room_id=room.id,
+            section_id=section_id,
+            term_id=term_id,
+        )
+        notify_instructors_recordings_scheduled(course=course, scheduled=scheduled)
+
+        uids = [approval.approved_by_uid for approval in all_approvals]
+        app.logger.info(f'Recordings scheduled for course {section_id} per approvals: {", ".join(uids)}')
+
+    else:
+        app.logger.error(f"""
+            FAILED to schedule recordings because room has no 'kaltura_resource_id'.
+            Course: {course['label']}
+            Room: {room.location}
+            Latest approved_by_uid: {approval.approved_by_uid}
+        """)
+
+
+def _adjust_time(military_time, offset_minutes):
+    hour_and_minutes = military_time.split(':')
+    return datetime.combine(
+        date.today(),
+        time(int(hour_and_minutes[0]), int(hour_and_minutes[1])),
+    ) + timedelta(minutes=offset_minutes)
 
 
 def _join(items, separator=', '):

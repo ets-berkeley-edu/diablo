@@ -22,15 +22,11 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from datetime import date, datetime, time, timedelta
-
-from diablo.externals.kaltura import Kaltura
 from diablo.jobs.base_job import BaseJob
-from diablo.lib.util import format_days, objects_to_dict_organized_by_section_id
-from diablo.merged.emailer import notify_instructors_recordings_scheduled
+from diablo.jobs.util import schedule_recordings
+from diablo.lib.util import objects_to_dict_organized_by_section_id
 from diablo.models.admin_user import AdminUser
 from diablo.models.approval import Approval
-from diablo.models.room import Room
 from diablo.models.scheduled import Scheduled
 from diablo.models.sis_section import SisSection
 from flask import current_app as app
@@ -47,7 +43,7 @@ class KalturaJob(BaseJob):
             app.logger.info(f'Prepare to schedule recordings for {len(ready_to_schedule)} courses.')
             for course in ready_to_schedule:
                 section_id = int(course['sectionId'])
-                _schedule_recordings(
+                schedule_recordings(
                     all_approvals=approvals_per_section_id[section_id],
                     course=course,
                 )
@@ -55,68 +51,6 @@ class KalturaJob(BaseJob):
     @classmethod
     def description(cls):
         return 'With Kaltura API, schedule recordings and link them to Canvas sites.'
-
-
-def _schedule_recordings(all_approvals, course):
-    term_id = course['termId']
-    section_id = int(course['sectionId'])
-    all_approvals.sort(key=lambda a: a.created_at.isoformat())
-    approval = all_approvals[-1]
-    room = Room.get_room(approval.room_id)
-
-    if room.kaltura_resource_id:
-        # Query for date objects.
-        meeting_days, meeting_start_time, meeting_end_time = SisSection.get_meeting_times(
-            term_id=term_id,
-            section_id=section_id,
-        )
-        # Recording starts X minutes before/after official start; it ends Y minutes before/after official end time.
-        days = format_days(meeting_days)
-        adjusted_start_time = _adjust_time(meeting_start_time, app.config['KALTURA_RECORDING_OFFSET_START'])
-        adjusted_end_time = _adjust_time(meeting_end_time, app.config['KALTURA_RECORDING_OFFSET_END'])
-
-        app.logger.info(f"""
-            Prepare to schedule recordings for {course['label']}:
-                Room: {room.location}
-                Instructor UIDs: {[instructor['uid'] for instructor in course['instructors']]}
-                Schedule: {days}, {adjusted_start_time} to {adjusted_end_time}
-                Recording: {approval.recording_type}; {approval.publish_type}
-        """)
-        # TODO: Grab series id from the following return value and put it in db
-        Kaltura().schedule_recording(
-            course_label=course['label'],
-            instructors=course['instructors'],
-            days=days,
-            start_time=adjusted_start_time,
-            end_time=adjusted_end_time,
-            publish_type=approval.publish_type,
-            recording_type=approval.recording_type,
-            room=room,
-            term_id=term_id,
-        )
-        scheduled = Scheduled.create(
-            instructor_uids=[i['uid'] for i in course['instructors']],
-            meeting_days=meeting_days,
-            meeting_start_time=meeting_start_time,
-            meeting_end_time=meeting_end_time,
-            publish_type_=approval.publish_type,
-            recording_type_=approval.recording_type,
-            room_id=room.id,
-            section_id=section_id,
-            term_id=term_id,
-        )
-        notify_instructors_recordings_scheduled(course=course, scheduled=scheduled)
-
-        uids = [approval.approved_by_uid for approval in all_approvals]
-        app.logger.info(f'Recordings scheduled for course {section_id} per approvals: {", ".join(uids)}')
-
-    else:
-        app.logger.error(f"""
-            FAILED to schedule recordings because room has no 'kaltura_resource_id'.
-            Course: {course['label']}
-            Room: {room.location}
-            Latest approved_by_uid: {approval.approved_by_uid}
-        """)
 
 
 def _get_courses_ready_to_schedule(approvals, term_id):
@@ -146,11 +80,3 @@ def _get_uids_per_section_id(approvals):
     for approval in approvals:
         uids_per_section_id[approval.section_id].append(approval.approved_by_uid)
     return uids_per_section_id
-
-
-def _adjust_time(military_time, offset_minutes):
-    hour_and_minutes = military_time.split(':')
-    return datetime.combine(
-        date.today(),
-        time(int(hour_and_minutes[0]), int(hour_and_minutes[1])),
-    ) + timedelta(minutes=offset_minutes)
