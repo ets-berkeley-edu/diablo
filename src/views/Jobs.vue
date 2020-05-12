@@ -166,6 +166,14 @@
         ></v-pagination>
       </div>
     </v-card>
+    <v-bottom-sheet v-model="richardPryor">
+      <v-sheet class="text-center" dark height="800px">
+        <v-btn class="mt-6" color="primary" @click="richardPryor = !richardPryor">Close</v-btn>
+        <div class="py-3">
+          <img alt="The bed is on my foot!" src="@/assets/the-bed-is-on-my-foot.jpg">
+        </div>
+      </v-sheet>
+    </v-bottom-sheet>
   </div>
 </template>
 
@@ -202,8 +210,14 @@
       pageCount: undefined,
       refresher: undefined,
       refreshing: false,
+      richardPryor: false,
       search: undefined
     }),
+    watch: {
+      search(value) {
+        this.richardPryor = value && value.toLowerCase() === 'the bed is on my foot'
+      }
+    },
     created() {
       this.$loading()
       getAvailableJobs().then(data => {
