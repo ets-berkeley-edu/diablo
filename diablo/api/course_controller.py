@@ -26,6 +26,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 from diablo import db
 from diablo.api.errors import BadRequestError, ForbiddenRequestError, ResourceNotFoundError
 from diablo.api.util import admin_required, get_search_filter_options
+from diablo.jobs.util import schedule_recordings
 from diablo.lib.berkeley import term_name_for_sis_id
 from diablo.lib.http import tolerant_jsonify
 from diablo.merged.emailer import notify_instructors_of_approval
@@ -49,6 +50,8 @@ def approve():
     publish_type = params.get('publishType')
     recording_type = params.get('recordingType')
     section_id = params.get('sectionId')
+    and_schedule = params.get('andSchedule') if current_user.is_admin else False
+
     course = SisSection.get_course(term_id, section_id) if section_id else None
 
     if not course or publish_type not in get_all_publish_types() or recording_type not in get_all_recording_types():
@@ -80,6 +83,11 @@ def approve():
         course=course,
         previous_approvals=previous_approvals,
     )
+    if and_schedule:
+        schedule_recordings(
+            all_approvals=Approval.get_approvals(section_id=section_id, term_id=term_id),
+            course=course,
+        )
     return tolerant_jsonify(SisSection.get_course(term_id, section_id))
 
 
