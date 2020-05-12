@@ -27,6 +27,7 @@ import os
 
 from diablo.factory import create_app
 import pytest
+from xena.pages.kaltura_page import KalturaPage
 from xena.pages.login_page import LoginPage
 from xena.pages.ouija_board_page import OuijaBoardPage
 from xena.pages.room_page import RoomPage
@@ -54,6 +55,7 @@ def page_objects(request):
     room_page = RoomPage(driver)
     rooms_page = RoomsPage(driver)
     sign_up_page = SignUpPage(driver)
+    kaltura_page = KalturaPage(driver)
 
     session = request.node
     try:
@@ -65,6 +67,7 @@ def page_objects(request):
             setattr(cls.obj, 'room_page', room_page)
             setattr(cls.obj, 'rooms_page', rooms_page)
             setattr(cls.obj, 'sign_up_page', sign_up_page)
+            setattr(cls.obj, 'kaltura_page', kaltura_page)
         yield
     finally:
         WebDriverManager.quit_browser(driver)
