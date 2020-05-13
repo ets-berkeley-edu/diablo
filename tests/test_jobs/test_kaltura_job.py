@@ -111,13 +111,12 @@ class TestKalturaJob:
 
             # Verify emails sent
             emails_sent = _get_emails_sent()
-            assert len(emails_sent) == email_count + 1
-            email_sent = emails_sent[-1].to_api_json()
-            assert set(email_sent['recipientUids']) == {'10009', '10010'}
-            assert email_sent['sectionId'] == section_id
-            assert email_sent['templateType'] == 'recordings_scheduled'
-            assert email_sent['termId'] == term_id
-            assert email_sent['sentAt']
+            assert len(emails_sent) == email_count + 2
+            assert emails_sent[-1].recipient_uids + emails_sent[-2].recipient_uids == ['10009', '10010']
+            email_sent = emails_sent[-1]
+            assert email_sent.section_id == section_id
+            assert email_sent.template_type == 'recordings_scheduled'
+            assert email_sent.term_id == term_id
 
             """If recordings were already scheduled then do nothing, send no email."""
             email_count = len(_get_emails_sent())
