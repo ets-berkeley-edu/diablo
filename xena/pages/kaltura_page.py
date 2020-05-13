@@ -62,8 +62,8 @@ class KalturaPage(Page):
     def log_in(self):
         app.logger.info('Logging in to Kaltura')
         self.driver.get(f'{app.config["KALTURA_MEDIA_SPACE_URL"]}/user/login')
-        self.wait_for_element_and_type(KalturaPage.USERNAME_INPUT, util.get_kaltura_username())
-        self.wait_for_element_and_type(KalturaPage.PASSWORD_INPUT, util.get_kaltura_password())
+        self.wait_for_element_and_type(KalturaPage.USERNAME_INPUT, app.config['XENA_KALTURA_USERNAME'])
+        self.wait_for_element_and_type(KalturaPage.PASSWORD_INPUT, app.config['XENA_KALTURA_PASSWORD'])
         self.wait_for_element_and_click(KalturaPage.LOG_IN_BUTTON)
         Wait(self.driver, util.get_short_timeout()).until(self.is_present(KalturaPage.LOG_OUT_LINK))
 
