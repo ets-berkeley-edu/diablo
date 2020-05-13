@@ -10,7 +10,7 @@
         >
           <v-system-bar class="accent--text pa-8" color="secondary">
             <div class="header-bar text-center w-100">
-              <h1>Welcome to Course Capture</h1>
+              <h1>Welcome to {{ $config.currentTermName }} Course Capture</h1>
             </div>
           </v-system-bar>
           <v-container fluid>
@@ -132,7 +132,7 @@
 
 <style scoped>
   h1 {
-    font-size: 24px;
+    font-size: 18px;
   }
   .background-splash {
     background: url('~@/assets/sather-gate.png') no-repeat center;
