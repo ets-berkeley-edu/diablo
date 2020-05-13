@@ -55,6 +55,9 @@ class SignUpPage(DiabloPages):
     RECORDING_TYPE_APPROVED = (By.XPATH, '//h4[contains(., "Recording Type")]/../following-sibling::div/div')
     PUBLISH_TYPE_APPROVED = (By.ID, 'approved-publish-type')
 
+    RECORDING_TYPE_SCHEDULED = (By.XPATH, '//div[text()="Recording Type"]/following-sibling::div')
+    PUBLISH_TYPE_SCHEDULED = (By.XPATH, '//div[text()="Publish Type"]/following-sibling::div')
+
     @staticmethod
     def instructor_link_locator(instructor):
         return By.ID, f'instructor-{instructor.uid}'
@@ -158,3 +161,9 @@ class SignUpPage(DiabloPages):
 
     def approved_publish_type(self):
         return self.element(SignUpPage.PUBLISH_TYPE_APPROVED).text.strip()
+
+    def scheduled_rec_type(self):
+        return self.element(SignUpPage.RECORDING_TYPE_SCHEDULED).text.strip()
+
+    def scheduled_publish_type(self):
+        return self.element(SignUpPage.PUBLISH_TYPE_SCHEDULED).text.strip()

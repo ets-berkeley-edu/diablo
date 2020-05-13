@@ -27,7 +27,9 @@ import os
 
 from diablo.factory import create_app
 import pytest
+from xena.models.term import Term
 from xena.pages.email_page import EmailPage
+from xena.pages.jobs_page import JobsPage
 from xena.pages.kaltura_page import KalturaPage
 from xena.pages.login_page import LoginPage
 from xena.pages.ouija_board_page import OuijaBoardPage
@@ -49,9 +51,11 @@ ctx.push()
 @pytest.fixture(scope='session')
 def page_objects(request):
     driver = WebDriverManager.launch_browser()
+    term = Term()
 
     # Define page objects
     email_page = EmailPage(driver)
+    jobs_page = JobsPage(driver)
     login_page = LoginPage(driver)
     ouija_page = OuijaBoardPage(driver)
     room_page = RoomPage(driver)
@@ -64,7 +68,9 @@ def page_objects(request):
         for item in session.items:
             cls = item.getparent(pytest.Class)
             setattr(cls.obj, 'driver', driver)
+            setattr(cls.obj, 'term', term)
             setattr(cls.obj, 'email_page', email_page)
+            setattr(cls.obj, 'jobs_page', jobs_page)
             setattr(cls.obj, 'login_page', login_page)
             setattr(cls.obj, 'ouija_page', ouija_page)
             setattr(cls.obj, 'room_page', room_page)

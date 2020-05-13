@@ -41,6 +41,8 @@ class Page(object):
     def __init__(self, driver):
         self.driver = driver
 
+    PAGE_HEADING = (By.XPATH, '//h1')
+
     # METHODS TO RETURN SELENIUM ELEMENTS USING A LOCATOR
 
     def element(self, locator):
@@ -93,7 +95,7 @@ class Page(object):
             message=f'Failed wait for visibility_of_element_located: {str(locator)}',
         )
 
-    def click_element(self, locator, addl_pause=0):
+    def click_element(self, locator, addl_pause=xena.CLICK_SLEEP):
         time.sleep(addl_pause)
         Wait(driver=self.driver, timeout=util.get_short_timeout()).until(
             method=ec.element_to_be_clickable(locator),
@@ -140,7 +142,7 @@ class Page(object):
         )
 
     def visible_heading(self):
-        return self.element((By.XPATH, '//h1')).text
+        return self.element(Page.PAGE_HEADING).text
 
     # NAVIGATION AND KEYSTROKES
 

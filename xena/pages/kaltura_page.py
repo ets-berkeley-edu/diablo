@@ -23,8 +23,10 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
+from diablo.models.scheduled import Scheduled
 from flask import current_app as app
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.wait import WebDriverWait as Wait
 from xena.pages.page import Page
 from xena.test_utils import util
@@ -42,7 +44,9 @@ class KalturaPage(Page):
     SERIES_RECUR_DESC = (By.ID, 'CreateEvent-RecurrenceDescription')
     SERIES_RECUR_BUTTON = (By.ID, 'CreateEvent-recurrenceMain')
     SERIES_DELETE_BUTTON = (By.ID, 'CreateEvent-btnDelete')
+    SERIES_DELETE_CONFIRM_BUTTON = (By.XPATH, '//div[@class="modal-footer"]/a[text()="Delete"]')
 
+    RECUR_DESC = (By.ID, 'CreateEvent-RecurrenceDescription')
     RECUR_MODAL_H3 = (By.XPATH, '//h3[text()="Event Recurrence"]')
     RECUR_WEEKLY_RADIO = (By.ID, 'EventRecurrence-recurrence-weeks')
     RECUR_WEEKLY_FREQUENCY = (By.ID, 'EventRecurrence-weekly_index')
@@ -54,7 +58,7 @@ class KalturaPage(Page):
     RECUR_WEEKLY_SAT_CBX = (By.ID, 'EventRecurrence-weekly_days-SA')
     RECUR_WEEKLY_SUN_CBX = (By.ID, 'EventRecurrence-weekly_days-SU')
     RECUR_DATE_START = (By.ID, 'EventRecurrence-start')
-    RECUR_DATE_END = (By.ID, 'EventRecurrence-end_main-endBy')
+    RECUR_DATE_END = (By.ID, 'EventRecurrence-endby_date')
     RECUR_TIME_START = (By.ID, 'EventRecurrence-startTime')
     RECUR_TIME_END = (By.ID, 'EventRecurrence-endTime')
     RECUR_MODAL_CANCEL_BUTTON = (By.LINK_TEXT, 'Cancel')
@@ -65,10 +69,11 @@ class KalturaPage(Page):
         self.wait_for_element_and_type(KalturaPage.USERNAME_INPUT, app.config['XENA_KALTURA_USERNAME'])
         self.wait_for_element_and_type(KalturaPage.PASSWORD_INPUT, app.config['XENA_KALTURA_PASSWORD'])
         self.wait_for_element_and_click(KalturaPage.LOG_IN_BUTTON)
-        Wait(self.driver, util.get_short_timeout()).until(self.is_present(KalturaPage.LOG_OUT_LINK))
+        Wait(self.driver, util.get_short_timeout()).until(ec.presence_of_element_located(KalturaPage.LOG_OUT_LINK))
 
     def load_event_edit_page(self, recording_schedule):
         self.driver.get(f'{app.config["KALTURA_MEDIA_SPACE_URL"]}/recscheduling/index/edit-event/eventid/{recording_schedule.series_id}')
+        self.wait_for_element(KalturaPage.SERIES_DELETE_BUTTON, util.get_short_timeout())
 
     def selected_resource_el(self, room):
         return self.element((By.XPATH, f'//span[@id="{room.resource_id}"][text()="{room.name}"]'))
@@ -76,13 +81,16 @@ class KalturaPage(Page):
     def open_recurrence_modal(self):
         app.logger.info('Clicking recurrence button')
         self.wait_for_element_and_click(KalturaPage.SERIES_RECUR_BUTTON)
-        self.wait_for_element(KalturaPage.RECUR_MODAL_H3)
+        self.wait_for_element(KalturaPage.RECUR_MODAL_H3, util.get_short_timeout())
 
     def visible_series_title(self):
         return self.element(KalturaPage.SERIES_TITLE).get_attribute('value')
 
     def visible_series_organizer(self):
         return self.element(KalturaPage.SERIES_ORGANIZER).get_attribute('value')
+
+    def visible_recurrence_desc(self):
+        return self.element(KalturaPage.RECUR_DESC).text
 
     def is_weekly_checked(self):
         return self.element(KalturaPage.RECUR_WEEKLY_RADIO).is_selected()
@@ -111,14 +119,27 @@ class KalturaPage(Page):
     def is_sun_checked(self):
         return self.element(KalturaPage.RECUR_WEEKLY_SUN_CBX).is_selected()
 
-    def visible_start_date(self):
-        return self.element(KalturaPage.RECUR_DATE_START).get_attribute('value')
-
-    def visible_end_date(self):
-        return self.element(KalturaPage.RECUR_DATE_END).get_attribute('value')
-
     def visible_start_time(self):
         return self.element(KalturaPage.RECUR_TIME_START).get_attribute('value')
 
     def visible_end_time(self):
         return self.element(KalturaPage.RECUR_TIME_END).get_attribute('value')
+
+    # DELETION
+
+    def reset_test_data(self, term, recording_schedule):
+        old_schedule = Scheduled.get_scheduled(recording_schedule.section.ccn, term.id)
+        if old_schedule:
+            recording_schedule.series_id = old_schedule.kaltura_schedule_id
+            app.logger.info(f'Deleting an existing Kaltura series id {recording_schedule.series.id}')
+            self.delete_series(recording_schedule)
+        else:
+            app.logger.info('Cannot find any existing Kaltura series')
+
+    def delete_series(self, recording_schedule):
+        app.logger.info('Clicking the delete button')
+        self.load_event_edit_page(recording_schedule)
+        self.wait_for_page_and_click(KalturaPage.SERIES_DELETE_BUTTON)
+        self.wait_for_element_and_click(KalturaPage.SERIES_DELETE_CONFIRM_BUTTON)
+        redirect_url = f'{app.config["KALTURA_MEDIA_SPACE_URL"]}/calendar/index/calendar/'
+        Wait(self.driver, util.get_short_timeout()).until(ec.url_to_be(redirect_url))
