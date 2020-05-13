@@ -460,7 +460,7 @@ class TestCoursesFilter:
 
             # The second course did not receive an invitation BUT it does have approval.
             invite = SentEmail.get_emails_of_type(
-                section_id=section_4_id,
+                section_ids=[section_4_id],
                 template_type='invitation',
                 term_id=self.term_id,
             )

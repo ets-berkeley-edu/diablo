@@ -26,6 +26,7 @@ from datetime import datetime
 
 from diablo import db, std_commit
 from diablo.lib.util import to_isoformat
+from sqlalchemy import and_
 from sqlalchemy.dialects.postgresql import ARRAY
 
 
@@ -75,6 +76,12 @@ class CrossListing(db.Model):
     def get_cross_listed_sections(cls, section_id, term_id):
         row = cls.query.filter_by(section_id=section_id, term_id=term_id).first()
         return row.cross_listed_section_ids if row else []
+
+    @classmethod
+    def get_cross_listings_for_section_ids(cls, section_ids, term_id):
+        criteria = and_(cls.section_id.in_(section_ids), cls.term_id == term_id)
+        rows = cls.query.filter(criteria).all()
+        return {row.section_id: row.cross_listed_section_ids for row in rows}
 
     def to_api_json(self):
         return {
