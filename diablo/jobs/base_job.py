@@ -25,7 +25,6 @@ ENHANCEMENTS, OR MODIFICATIONS.
 import traceback
 
 from diablo.jobs.background_job_manager import BackgroundJobError
-from diablo.lib.util import camel_case_to_snake_case
 from diablo.merged.emailer import send_system_error_email
 from diablo.models.job_history import JobHistory
 from flask import current_app as app
@@ -39,20 +38,25 @@ class BaseJob:
     def run_with_app_context(self):
         with self.app_context():
             if JobHistory.is_job_running(job_key=self.key()):
-                app.logger.warn(f'Job {self.key()}: Skipping scheduled run because older job instance is still running')
+                app.logger.warn(f'Skipping job {self.key()} because an older instance is still running')
+
             else:
-                app.logger.info(f'Job \'{self.key()}\' is starting.')
+                app.logger.info(f'Job {self.key()} is starting.')
                 job_tracker = JobHistory.job_started(job_key=self.key())
                 try:
                     self.run()
                     JobHistory.job_finished(id_=job_tracker.id)
-                    app.logger.info(f'Job \'{self.key()}\' finished successfully.')
+                    app.logger.info(f'Job {self.key()} finished successfully.')
+
                 except Exception as e:
                     trace = traceback.format_exc()
                     summary = f'Job {self.key()} failed'
                     app.logger.error(summary)
                     app.logger.exception(e)
-                    send_system_error_email(message=f'{summary}. Detailed error information appears below.\n\n{trace}', subject=summary)
+                    send_system_error_email(
+                        message=f'{summary}. Detailed error information appears below.\n\n{trace}',
+                        subject=summary,
+                    )
                     JobHistory.job_finished(id_=job_tracker.id, failed=True)
 
     def run(self):
@@ -60,7 +64,7 @@ class BaseJob:
 
     @classmethod
     def key(cls):
-        return camel_case_to_snake_case(cls.__name__)
+        raise BackgroundJobError('Implement this method in Job sub-class')
 
     @classmethod
     def description(cls):

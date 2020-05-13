@@ -24,7 +24,6 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 from datetime import datetime
 import inspect
-import re
 
 from dateutil.tz import tzutc
 import pytz
@@ -70,11 +69,6 @@ def epoch_time_to_isoformat(epoch_time, as_utc=False):
 
 def utc_now():
     return datetime.utcnow().replace(tzinfo=pytz.utc)
-
-
-def camel_case_to_snake_case(camel_case_str):
-    s = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', camel_case_str)
-    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s).lower()
 
 
 def format_days(days):

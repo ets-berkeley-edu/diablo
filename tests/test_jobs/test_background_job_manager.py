@@ -22,12 +22,12 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-
 import time
 
 from diablo.jobs.background_job_manager import BackgroundJobManager
+from diablo.models.job_history import JobHistory
 from flask import current_app as app
-from tests.test_jobs.sample_jobs import HelloWorld, LightSwitch, Volume, VolumeSubClass
+from tests.test_jobs.sample_jobs import DoomedToFailure, HelloWorld, LightSwitch, Volume, VolumeSubClass
 from tests.util import override_config
 
 
@@ -36,23 +36,23 @@ class TestBackgroundJobManager:
     def test_start_mock_jobs(self):
         """Runs jobs as scheduled and skips disabled jobs."""
         with override_config(app, 'JOB_MANAGER', _job_manager_config()):
-            job_manager = BackgroundJobManager()
+            job_manager = BackgroundJobManager(
+                available_job_classes=[
+                    DoomedToFailure,
+                    HelloWorld,
+                    LightSwitch,
+                    Volume,
+                    VolumeSubClass,
+                ],
+            )
             try:
-                job_manager.start(app)
-                # The JOB_MANAGER config has four (4) jobs but one is disabled. So, only three are loaded.
-                assert len(job_manager.job_instances) == 3
-                time.sleep(2)
+                def _get_job_history_ids():
+                    return [item.id for item in JobHistory.get_job_history_in_past_days(day_count=1)]
 
-                for job_instance in job_manager.job_instances:
-                    if job_instance.key() == 'volume':
-                        assert job_instance.level == 11
-                    elif job_instance.key() == 'volume_sub_class':
-                        # Property not yet set
-                        assert job_instance.level is None
-                    elif job_instance.key() == 'light_switch':
-                        assert job_instance.is_light_on is True
-                    else:
-                        assert False
+                original_job_history_ids = _get_job_history_ids()
+                job_manager.start(app)
+                time.sleep(2)
+                assert len(_get_job_history_ids()) == len(original_job_history_ids) + 2
 
             finally:
                 job_manager.stop()
@@ -64,21 +64,21 @@ def _job_manager_config():
         'seconds_between_pending_jobs_check': 0.5,
         'jobs': [
             {
-                'cls': Volume,
+                'key': 'volume',
                 'schedule': {
                     'type': 'seconds',
                     'value': 1,
                 },
             },
             {
-                'cls': VolumeSubClass,
+                'key': 'volume_sub_class',
                 'schedule': {
                     'type': 'day_at',
                     'value': '04:30',
                 },
             },
             {
-                'cls': HelloWorld,
+                'key': 'hello_world',
                 'disabled': True,
                 'schedule': {
                     'type': 'seconds',
@@ -86,7 +86,7 @@ def _job_manager_config():
                 },
             },
             {
-                'cls': LightSwitch,
+                'key': 'light_switch',
                 'schedule': {
                     'type': 'seconds',
                     'value': 1,

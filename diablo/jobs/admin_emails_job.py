@@ -23,8 +23,8 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 from diablo.externals.b_connected import BConnected
-from diablo.jobs.background_job_manager import BackgroundJobError
 from diablo.jobs.base_job import BaseJob
+from diablo.jobs.errors import BackgroundJobError
 from diablo.merged.emailer import get_admin_alert_recipients, interpolate_email_content
 from diablo.models.approval import Approval
 from diablo.models.email_template import EmailTemplate
@@ -56,6 +56,10 @@ class AdminEmailsJob(BaseJob):
     @classmethod
     def description(cls):
         return 'Notify admins of relevant room and instructor changes.'
+
+    @classmethod
+    def key(cls):
+        return 'admin_emails'
 
 
 def _alert_admin_of_instructor_change(courses, approval_uids_per_section_id):

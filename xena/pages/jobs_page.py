@@ -30,11 +30,12 @@ from xena.pages.diablo_pages import DiabloPages
 
 class JobsPage(DiabloPages):
 
-    RUN_ADMIN_EMAILS_JOB_BUTTON = (By.ID, 'run-job-admin_emails_job')
-    RUN_CANVAS_JOB_BUTTON = (By.ID, 'run-job-canvas_job')
-    RUN_DBLINK_TO_REDSHIFT_JOB_BUTTON = (By.ID, 'run-job-dblink_to_redshift_job')
-    RUN_KALTURA_JOB_BUTTON = (By.ID, 'run-job-kaltura_job')
-    RUN_QUEUED_EMAILS_JOB_BUTTON = (By.ID, 'run-job-queued_emails_job')
+    RUN_ADMIN_EMAILS_JOB_BUTTON = (By.ID, 'run-job-admin_emails')
+    RUN_CANVAS_JOB_BUTTON = (By.ID, 'run-job-canvas')
+    RUN_INSTRUCTOR_EMAILS_JOB_BUTTON = (By.ID, 'run-job-instructor_emails')
+    RUN_KALTURA_JOB_BUTTON = (By.ID, 'run-job-kaltura')
+    RUN_QUEUED_EMAILS_JOB_BUTTON = (By.ID, 'run-job-queued_emails')
+    RUN_SIS_DATA_REFRESH_JOB_BUTTON = (By.ID, 'run-job-sis_data_refresh')
 
     def run_admin_emails_job(self):
         app.logger.info('Running the admin emails job')
@@ -44,9 +45,9 @@ class JobsPage(DiabloPages):
         app.logger.info('Running the Canvas job')
         self.wait_for_element_and_click(JobsPage.RUN_CANVAS_JOB_BUTTON)
 
-    def run_dblink_to_redshift_job(self):
-        app.logger.info('Running DBLink to Redshift job')
-        self.wait_for_element_and_click(JobsPage.RUN_DBLINK_TO_REDSHIFT_JOB_BUTTON)
+    def run_instructor_emails_job(self):
+        app.logger.info('Running instructor emails job')
+        self.wait_for_element_and_click(JobsPage.RUN_INSTRUCTOR_EMAILS_JOB_BUTTON)
 
     def run_kaltura_job(self):
         app.logger.info('Running Kaltura job')
@@ -55,3 +56,7 @@ class JobsPage(DiabloPages):
     def run_queued_emails_job(self):
         app.logger.info('Running queued emails job')
         self.wait_for_element_and_click(JobsPage.RUN_QUEUED_EMAILS_JOB_BUTTON)
+
+    def run_sis_data_refresh_job(self):
+        app.logger.info('Running SIS data refresh job')
+        self.wait_for_element_and_click(JobsPage.RUN_SIS_DATA_REFRESH_JOB_BUTTON)

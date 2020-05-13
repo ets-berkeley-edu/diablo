@@ -39,3 +39,7 @@ class CanvasJob(BaseJob):
     @classmethod
     def description(cls):
         return 'Collect canvas-course-site IDs from Canvas and insert them into Diablo db.'
+
+    @classmethod
+    def key(cls):
+        return 'canvas'

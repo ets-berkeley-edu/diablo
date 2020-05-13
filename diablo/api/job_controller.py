@@ -26,24 +26,31 @@ from diablo.api.errors import BadRequestError, ResourceNotFoundError
 from diablo.api.util import admin_required
 from diablo.jobs.admin_emails_job import AdminEmailsJob
 from diablo.jobs.canvas_job import CanvasJob
-from diablo.jobs.dblink_to_redshift_job import DblinkToRedshiftJob
+from diablo.jobs.instructor_emails_job import InstructorEmailsJob
 from diablo.jobs.kaltura_job import KalturaJob
 from diablo.jobs.queued_emails_job import QueuedEmailsJob
+from diablo.jobs.sis_data_refresh_job import SisDataRefreshJob
 from diablo.lib.http import tolerant_jsonify
 from diablo.models.job_history import JobHistory
 from flask import current_app as app
+
+available_jobs = [
+    AdminEmailsJob,
+    CanvasJob,
+    InstructorEmailsJob,
+    KalturaJob,
+    QueuedEmailsJob,
+    SisDataRefreshJob,
+]
 
 
 @app.route('/api/job/<job_key>/start')
 @admin_required
 def start_job(job_key):
-    job = next((job for job in _available_jobs() if job['key'] == job_key), None)
-    if job:
-        job['class'](app.app_context).run_with_app_context()
-        return tolerant_jsonify({
-            'key': job['key'],
-            'description': job['description'],
-        })
+    job_class = next((job for job in available_jobs if job.key() == job_key), None)
+    if job_class:
+        job_class(app.app_context).run_with_app_context()
+        return tolerant_jsonify(_job_class_to_json(job_class))
     else:
         raise ResourceNotFoundError(f'Invalid job_key: {job_key}')
 
@@ -71,33 +78,26 @@ def job_schedule():
         'jobs': [],
         'secondsBetweenJobsCheck': config['seconds_between_pending_jobs_check'],
     }
-    for job in config['jobs']:
-        schedule['jobs'].append({
-            'name': job['cls'].__name__,
-            'description': job['cls'].description(),
-            'schedule': job['schedule'],
-        })
+    for entry in config['jobs']:
+        job_class = next((job for job in available_jobs if job.key() == entry['key']), None)
+        if job_class:
+            schedule['jobs'].append({
+                'name': job_class.__name__,
+                'description': job_class.description(),
+                'schedule': entry['schedule'],
+            })
     return tolerant_jsonify(schedule)
 
 
 @app.route('/api/jobs/available')
 @admin_required
-def available_jobs():
-    jobs = []
-    for job in _available_jobs():
-        jobs.append({
-            'key': job['key'],
-            'description': job['description'],
-        })
-    return tolerant_jsonify(jobs)
+def available():
+    return tolerant_jsonify([_job_class_to_json(job_class=job_class) for job_class in available_jobs])
 
 
-def _available_jobs():
-    jobs = []
-    for job_cls in (AdminEmailsJob, CanvasJob, DblinkToRedshiftJob, KalturaJob, QueuedEmailsJob):
-        jobs.append({
-            'key': job_cls.key(),
-            'class': job_cls,
-            'description': job_cls.description(),
-        })
-    return jobs
+def _job_class_to_json(job_class):
+    return {
+        'key': job_class.key(),
+        'class': job_class.__name__,
+        'description': job_class.description(),
+    }

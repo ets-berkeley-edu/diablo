@@ -22,8 +22,8 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from diablo.jobs.background_job_manager import BackgroundJobError
 from diablo.jobs.base_job import BaseJob
+from diablo.jobs.errors import BackgroundJobError
 from diablo.merged.emailer import get_admin_alert_recipients, send_course_related_email
 from diablo.models.queued_email import QueuedEmail
 from diablo.models.sis_section import SisSection
@@ -71,3 +71,7 @@ class QueuedEmailsJob(BaseJob):
     @classmethod
     def description(cls):
         return 'Send all email that is queued.'
+
+    @classmethod
+    def key(cls):
+        return 'queued_emails'

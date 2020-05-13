@@ -24,8 +24,6 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 import os
 
-from tests.test_jobs.sample_jobs import HelloWorld, LightSwitch
-
 # Base directory for the application (one level up from this config file).
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
@@ -37,18 +35,18 @@ CURRENT_TERM_BEGIN = '2020-01-21'
 CURRENT_TERM_END = '2020-05-08'
 
 JOB_MANAGER = {
-    'auto_start': True,
+    'auto_start': False,
     'seconds_between_pending_jobs_check': 60,
     'jobs': [
         {
-            'cls': HelloWorld,
+            'key': 'hello_world',
             'schedule': {
                 'type': 'seconds',
                 'value': 300,
             },
         },
         {
-            'cls': LightSwitch,
+            'key': 'light_switch',
             'disabled': True,
             'schedule': {
                 'type': 'day_at',

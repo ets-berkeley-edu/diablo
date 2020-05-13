@@ -23,8 +23,15 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-from diablo import background_job_manager, cache, db
+from diablo import cache, db
 from diablo.configs import load_configs
+from diablo.jobs.admin_emails_job import AdminEmailsJob
+from diablo.jobs.background_job_manager import BackgroundJobManager
+from diablo.jobs.canvas_job import CanvasJob
+from diablo.jobs.instructor_emails_job import InstructorEmailsJob
+from diablo.jobs.kaltura_job import KalturaJob
+from diablo.jobs.queued_emails_job import QueuedEmailsJob
+from diablo.jobs.sis_data_refresh_job import SisDataRefreshJob
 from diablo.logger import initialize_logger
 from diablo.routes import register_routes
 from flask import Flask
@@ -40,7 +47,16 @@ def create_app():
     db.init_app(app)
 
     if app.config['JOB_MANAGER']['auto_start']:
-        background_job_manager.start(app)
+        BackgroundJobManager(
+            available_job_classes=[
+                AdminEmailsJob,
+                CanvasJob,
+                InstructorEmailsJob,
+                KalturaJob,
+                QueuedEmailsJob,
+                SisDataRefreshJob,
+            ],
+        ).start(app)
 
     with app.app_context():
         register_routes(app)

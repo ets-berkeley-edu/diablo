@@ -61,7 +61,7 @@ class TestStartJob:
 
     def test_authorized(self, client, admin_session):
         """Admin can start a job."""
-        job_key = 'queued_emails_job'
+        job_key = 'queued_emails'
         self._api_start_job(client, job_key=job_key)
         # Now verify
         response = client.get('/api/job/history/1')
@@ -153,9 +153,3 @@ class TestJobSchedule:
         api_json = self._api_job_schedule(client)
         assert api_json['autoStart'] is config['auto_start']
         assert api_json['secondsBetweenJobsCheck'] == config['seconds_between_pending_jobs_check']
-
-        jobs = api_json['jobs']
-        assert len(jobs) > 0
-        assert len(jobs) == len(config['jobs'])
-        for job in jobs:
-            assert 'schedule' in job
