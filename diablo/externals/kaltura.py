@@ -83,85 +83,52 @@ class Kaltura:
     ):
         utc_now_timestamp = int(datetime.utcnow().timestamp())
         term_name = term_name_for_sis_id(term_id)
-        summary = f'{course_label} ({term_name})'
+        term_end = datetime.strptime(app.config['CURRENT_TERM_END'], '%Y-%m-%d')
 
-        start_date = get_first_matching_datetime_of_term(
-            meeting_days=days,
-            time_hours=start_time.hour,
-            time_minutes=start_time.minute,
-        )
-        end_date = get_first_matching_datetime_of_term(
-            meeting_days=days,
-            time_hours=end_time.hour,
-            time_minutes=end_time.minute,
-        )
+        summary = f'{course_label} ({term_name})'
         description = f"""
             {course_label} ({term_name}) meets in {room.location},
-            between {start_time.isoformat()} and {end_time.isoformat()}, on {days}.
+            between {start_time.strftime('%H:%M')} and {end_time.strftime('%H:%M')}, on {days}.
             Recordings of type {recording_type} will be published to {publish_type}.
         """
         app.logger.info(description)
 
+        first_day_start = get_first_matching_datetime_of_term(
+            meeting_days=days,
+            time_hours=start_time.hour,
+            time_minutes=start_time.minute,
+        )
+        first_day_end = get_first_matching_datetime_of_term(
+            meeting_days=days,
+            time_hours=end_time.hour,
+            time_minutes=end_time.minute,
+        )
         recurring_event = KalturaRecordScheduleEvent(
             # https://developer.kaltura.com/api-docs/General_Objects/Objects/KalturaScheduleEvent
             classificationType=KalturaScheduleEventClassificationType.PUBLIC_EVENT,
-            # Specifies non-processing information intended to provide a comment to the calendar user.
             comment=f'{summary} recordings scheduled by Diablo on {to_isoformat(datetime.now())}',
-            # Used to represent contact information or alternately a reference to contact information.
             contact=','.join(instructor['uid'] for instructor in instructors),
-            # Creation date as Unix timestamp, in seconds
-            createdAt=utc_now_timestamp,
             description=description.strip(),
-            # Duration in seconds
             duration=(end_time - start_time).seconds,
-            # First meeting's end
-            endDate=end_date.timestamp(),
+            endDate=first_day_end.timestamp(),
             geoLatitude=None,  # TODO: Kaltura API did not like: 37.871853,
             geoLongitude=None,  # TODO: Kaltura API did not like: -122.258423,
-            location=room.location,
+            location=None,  # Room is assigned below with 'scheduleEventResource.add'.
             organizer=app.config['KALTURA_EVENT_ORGANIZER'],
-            # TODO: What is proper ownerId? (The following is based on test recordings scheduled by Ops.)
             ownerId=app.config['KALTURA_KMS_OWNER_ID'],
-            # parent_id is relevant to "recurrence" events, individual events in a series. Unnecessary here?
             parentId=None,
             partnerId=self.kaltura_partner_id,
             priority=None,
-            # https://developer.kaltura.com/api-docs/General_Objects/Objects/KalturaScheduleEventRecurrence
             recurrence=KalturaScheduleEventRecurrence(
-                # Comma separated of KalturaScheduleEventRecurrenceDay Each byDay value can also be preceded by a
-                # positive (+n) or negative (-n) integer. If present, this indicates the nth occurrence of the
-                # specific day within the MONTHLY or YEARLY RRULE. For example, within a MONTHLY rule,
-                # +1MO (or simply 1MO) represents the first Monday within month, whereas -1MO represents the last
-                # Monday of the month. If an integer modifier is not present, it means all days of this type within
-                # the specified frequency. For example, within a MONTHLY rule, MO represents all Mondays within
-                # the month.
+                # https://developer.kaltura.com/api-docs/General_Objects/Objects/KalturaScheduleEventRecurrence
                 byDay=','.join(days),
-                # Comma separated numbers between 0 to 23
                 byHour=None,
-                # Comma separated numbers between 0 to 59
                 byMinute=None,
-                # Comma separated numbers between 1 to 12
                 byMonth=None,
-                # Comma separated of numbers between -31 to 31, excluding 0.
-                # For example, -10 represents the tenth to the last day of the month.
                 byMonthDay=None,
-                # Comma separated numbers between -366 to 366, excluding 0. Corresponds to the nth occurrence within
-                # the set of events specified by the rule. It must be used in conjunction with another by-rule part.
-                # For example "the last work day of the month" could be represented as:
-                #   frequency=MONTHLY;byDay=MO,TU,WE,TH,FR;byOffset=-1
-                # Each byOffset value can include a positive (+n) or negative (-n) integer. It indicates
-                # the nth occurrence of the specific occurrence within the set of events specified by the rule.
                 byOffset=None,
-                # Comma separated numbers between 0 to 59
                 bySecond=None,
-                # Comma separated of numbers between -53 to 53, excluding 0. This corresponds to weeks according to
-                # week numbering. A week is defined as a seven day period, starting on day of the week defined to
-                # be the week start. Week number one of the calendar year is the first week which contains at least
-                # four (4) days in that calendar year. This rule part is only valid for YEARLY frequency.
-                # For example, 3 represents the third week of the year.
                 byWeekNumber=None,
-                # Comma separated of numbers between -366 to 366, excluding 0. For example, -1 represents last day
-                # of the year (December 31st) and -306 represents the 306th to the last day of the year (March 1st).
                 byYearDay=None,
                 count=None,
                 frequency=KalturaScheduleEventRecurrenceFrequency.WEEKLY,
@@ -169,23 +136,18 @@ class Kaltura:
                 interval=1,
                 name=summary,
                 timeZone='US/Pacific',
-                until=end_date.timestamp(),
-                # See KalturaScheduleEventRecurrenceDay enum
-                weekStartDay=days[0],
+                until=term_end.replace(hour=23, minute=59).timestamp(),
+                weekStartDay=days[0],  # See KalturaScheduleEventRecurrenceDay enum
             ),
             recurrenceType=KalturaScheduleEventRecurrenceType.RECURRING,
-            # referenceId is not documented. When scheduling manually, the value was blank.
             referenceId=None,
-            # 'sequence' defines the revision sequence number.
             sequence=None,
-            # First meeting's start
-            startDate=start_date.timestamp(),
+            startDate=first_day_start.timestamp(),
             status=KalturaScheduleEventStatus.ACTIVE,
             summary=summary,
             tags=None,
-            updatedAt=utc_now_timestamp,
+            templateEntryId=app.config['KALTURA_TEMPLATE_ENTRY_ID'],
         )
-        # Error codes: https://developer.kaltura.com/api-docs/Error_Codes
         kaltura_schedule = self.kaltura_client.schedule.scheduleEvent.add(recurring_event)
 
         # Link the schedule to the room (ie, capture agent)

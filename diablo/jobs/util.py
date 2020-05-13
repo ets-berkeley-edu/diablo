@@ -209,6 +209,7 @@ def schedule_recordings(all_approvals, course):
             app.logger.info(f'Recordings scheduled for course {section_id} per approvals: {", ".join(uids)}')
 
         except (KalturaClientException, KalturaException) as e:
+            # Error codes: https://developer.kaltura.com/api-docs/Error_Codes
             error = f"Failed to schedule recordings {course['label']} (section_id: {course['sectionId']})"
             app.logger.error(error)
             app.logger.exception(e)
