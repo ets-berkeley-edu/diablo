@@ -122,24 +122,27 @@ def notify_instructors_recordings_scheduled(course, scheduled):
     if email_template:
         publish_type_name = NAMES_PER_PUBLISH_TYPE[scheduled.publish_type]
         recording_type_name = NAMES_PER_RECORDING_TYPE[scheduled.recording_type]
-        BConnected().send(
-            message=interpolate_email_content(
-                course=course,
-                publish_type_name=publish_type_name,
-                recording_type_name=recording_type_name,
-                templated_string=email_template.message,
-            ),
-            recipients=course['instructors'],
-            section_id=course['sectionId'],
-            subject_line=interpolate_email_content(
-                course=course,
-                publish_type_name=publish_type_name,
-                recording_type_name=recording_type_name,
-                templated_string=email_template.subject_line,
-            ),
-            template_type=email_template.template_type,
-            term_id=course['termId'],
-        )
+        for instructor in course['instructors']:
+            BConnected().send(
+                message=interpolate_email_content(
+                    course=course,
+                    instructor_name=instructor['name'],
+                    publish_type_name=publish_type_name,
+                    recording_type_name=recording_type_name,
+                    templated_string=email_template.message,
+                ),
+                recipients=[instructor],
+                section_id=course['sectionId'],
+                subject_line=interpolate_email_content(
+                    course=course,
+                    instructor_name=instructor['name'],
+                    publish_type_name=publish_type_name,
+                    recording_type_name=recording_type_name,
+                    templated_string=email_template.subject_line,
+                ),
+                template_type=email_template.template_type,
+                term_id=course['termId'],
+            )
     else:
         send_system_error_email(f"""
             No email template of type {template_type} is available.
