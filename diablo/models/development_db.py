@@ -27,7 +27,7 @@ import json
 
 from diablo import BASE_DIR, cache, db, std_commit
 from diablo.jobs.canvas_job import CanvasJob
-from diablo.jobs.dblink_to_redshift_job import DblinkToRedshiftJob
+from diablo.jobs.sis_data_refresh_job import SisDataRefreshJob
 from diablo.lib.util import utc_now
 from diablo.models.admin_user import AdminUser
 from diablo.models.email_template import EmailTemplate
@@ -100,7 +100,7 @@ def _load_courses():
             courses.append(c)
         SisSection.refresh(sis_sections=courses, term_id=term_id)
         std_commit(allow_test_environment=True)
-    DblinkToRedshiftJob.after_dblink_courses_refresh(term_id=term_id)
+    SisDataRefreshJob.after_sis_data_refresh(term_id=term_id)
 
 
 def _create_email_templates():

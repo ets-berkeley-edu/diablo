@@ -24,8 +24,8 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 
 from diablo.externals.b_connected import BConnected
-from diablo.jobs.background_job_manager import BackgroundJobError
 from diablo.jobs.base_job import BaseJob
+from diablo.jobs.errors import BackgroundJobError
 from diablo.merged.emailer import interpolate_email_content, send_course_related_email, send_system_error_email
 from diablo.models.email_template import EmailTemplate
 from diablo.models.scheduled import Scheduled
@@ -100,3 +100,7 @@ class InstructorEmailsJob(BaseJob):
     @classmethod
     def description(cls):
         return 'Notify instructors of room changes and similar.'
+
+    @classmethod
+    def key(cls):
+        return 'instructor_emails'

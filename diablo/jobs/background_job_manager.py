@@ -22,19 +22,19 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-
 import threading
 import time
 
+from diablo.jobs.errors import BackgroundJobError
 import schedule
 
 
 class BackgroundJobManager:
 
-    def __init__(self):
+    def __init__(self, available_job_classes):
         self.cease_continuous_run = threading.Event()
         self.continuous_thread = None
-        self._job_instances = []
+        self._job_classes = available_job_classes
 
     def start(self, app):
         """Continuously run, executing pending jobs per time interval.
@@ -72,30 +72,12 @@ class BackgroundJobManager:
             """)
         if job_configs:
             for job_config in job_configs:
-                if job_config.get('disabled', False) is True:
-                    continue
-
-                job = job_config['cls'](app.app_context)
-
-                self._job_instances.append(job)
-
-                type_ = job_config['schedule']['type']
-                value = job_config['schedule']['value']
-
-                run_with_context = job.run_with_app_context
-                if type_ == 'minutes':
-                    schedule.every(value).minutes.do(run_with_context)
-                elif type_ == 'seconds':
-                    schedule.every(value).seconds.do(run_with_context)
-                elif type_ == 'day_at':
-                    schedule.every().day.at(value).do(run_with_context)
-                else:
-                    raise BackgroundJobError(f'Unrecognized schedule type: {type_}')
+                self._add_job_to_schedule(app=app, job_config=job_config)
 
             self.continuous_thread = JobRunnerThread(daemon=True)
             self.continuous_thread.start()
         else:
-            app.logger.warn('No jobs registered. Scheduler will do nothing.')
+            app.logger.warn('No jobs. Nothing scheduled.')
 
     def stop(self):
         """Cease the scheduler thread. Stops everything."""
@@ -104,10 +86,27 @@ class BackgroundJobManager:
         app.logger.info('Stopping job-runner thread')
         self.cease_continuous_run.set()
 
-    @property
-    def job_instances(self):
-        return self._job_instances
+    def _add_job_to_schedule(self, app, job_config):
+        if job_config.get('disabled', False) is True:
+            return
 
+        job_key = job_config['key']
+        job_class = next((job for job in self._job_classes if job.key() == job_key), None)
 
-class BackgroundJobError(Exception):
-    pass
+        if job_class:
+            job = job_class(app.app_context)
+        else:
+            raise BackgroundJobError(f'Failed to find job with key {job_key}')
+
+        type_ = job_config['schedule']['type']
+        value = job_config['schedule']['value']
+
+        run_with_context = job.run_with_app_context
+        if type_ == 'minutes':
+            schedule.every(value).minutes.do(run_with_context)
+        elif type_ == 'seconds':
+            schedule.every(value).seconds.do(run_with_context)
+        elif type_ == 'day_at':
+            schedule.every().day.at(value).do(run_with_context)
+        else:
+            raise BackgroundJobError(f'Unrecognized schedule type: {type_}')

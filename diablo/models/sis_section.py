@@ -677,7 +677,7 @@ def _canvas_course_sites(cross_listed_courses, section_id, term_id):
 
 
 def _get_cross_listed_courses(section_id, term_id, approvals, invited_uids):
-    # Cross-listed sections were "deleted" during DblinkToRedshiftJob
+    # Cross-listed sections were "deleted" during SIS data refresh job
     # and yet we still rely on the metadata of those deleted records.
     section_ids = CrossListing.get_cross_listed_sections(section_id=section_id, term_id=term_id)
     sql = """

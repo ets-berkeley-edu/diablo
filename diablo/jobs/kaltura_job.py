@@ -52,6 +52,10 @@ class KalturaJob(BaseJob):
     def description(cls):
         return 'With Kaltura API, schedule recordings and link them to Canvas sites.'
 
+    @classmethod
+    def key(cls):
+        return 'kaltura'
+
 
 def _get_courses_ready_to_schedule(approvals, term_id):
     ready_to_schedule = []

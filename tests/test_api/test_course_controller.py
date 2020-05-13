@@ -330,7 +330,7 @@ class TestGetCourse:
         section_id = 50012
         cross_listed_section_id = 50013
         instructor_uid = '10010'
-        # Confirm that cross-listed section was deleted during dblink_to_redshift_job
+        # Confirm that cross-listed section was deleted during sis_data_refresh job
         assert not SisSection.get_course(section_id=cross_listed_section_id, term_id=self.term_id)
         # Log in as instructor of cross-listed section
         fake_auth.login(uid=instructor_uid)

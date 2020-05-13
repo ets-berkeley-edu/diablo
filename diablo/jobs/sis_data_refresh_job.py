@@ -23,21 +23,21 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 from diablo.externals.rds import execute
-from diablo.jobs.background_job_manager import BackgroundJobError
 from diablo.jobs.base_job import BaseJob
+from diablo.jobs.errors import BackgroundJobError
 from diablo.jobs.util import insert_or_update_instructors, refresh_cross_listings, refresh_rooms
 from diablo.lib.db import resolve_sql_template
 from diablo.models.sis_section import SisSection
 from flask import current_app as app
 
 
-class DblinkToRedshiftJob(BaseJob):
+class SisDataRefreshJob(BaseJob):
 
     def run(self, args=None):
         resolved_ddl_rds = resolve_sql_template('update_rds_sis_sections.template.sql')
         if execute(resolved_ddl_rds):
             term_id = app.config['CURRENT_TERM_ID']
-            self.after_dblink_courses_refresh(term_id)
+            self.after_sis_data_refresh(term_id)
         else:
             raise BackgroundJobError('Failed to update RDS indexes for intermediate schema.')
 
@@ -46,7 +46,11 @@ class DblinkToRedshiftJob(BaseJob):
         return 'Get latest course, instructor and room data from the Data Lake.'
 
     @classmethod
-    def after_dblink_courses_refresh(cls, term_id):
+    def key(cls):
+        return 'sis_data_refresh'
+
+    @classmethod
+    def after_sis_data_refresh(cls, term_id):
         distinct_instructor_uids = SisSection.get_distinct_instructor_uids()
         insert_or_update_instructors(distinct_instructor_uids)
         app.logger.info(f'{len(distinct_instructor_uids)} instructors updated')
