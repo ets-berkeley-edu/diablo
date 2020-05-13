@@ -25,6 +25,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 
 import time
 
+from config import xena
 from flask import current_app as app
 from selenium.common import exceptions
 from selenium.webdriver.common.action_chains import ActionChains
@@ -81,7 +82,8 @@ class Page(object):
 
     def wait_for_element(self, locator, timeout):
         for entry in self.driver.get_log('browser'):
-            app.logger.warning(f'Console error: {entry}')
+            if xena.BASE_URL in entry:
+                app.logger.warning(f'Console error: {entry}')
         Wait(self.driver, timeout).until(
             method=ec.presence_of_element_located(locator),
             message=f'Failed wait for presence_of_element_located: {str(locator)}',
@@ -121,10 +123,9 @@ class Page(object):
         self.element(locator).clear()
         self.element(locator).send_keys(string)
 
-    def wait_for_element_and_type_js(self, locator, string, addl_pause=0):
-        self.wait_for_page_and_click_js(locator, addl_pause)
-        self.element(locator).clear()
-        self.element(locator).send_keys(string)
+    def wait_for_element_and_type_js(self, element_id, string, addl_pause=0):
+        self.wait_for_page_and_click_js((By.ID, element_id), addl_pause)
+        self.driver.execute_script(f'document.getElementById(\'{element_id}\').value=\'{string}\'')
 
     # PAGE TITLE AND HEADING
 
@@ -142,6 +143,9 @@ class Page(object):
         return self.element((By.XPATH, '//h1')).text
 
     # NAVIGATION AND KEYSTROKES
+
+    def scroll_to_bottom(self):
+        self.driver.execute_script('window.scrollTo(0, document.body.scrollHeight);')
 
     def mouseover(self, element):
         ActionChains(self.driver).move_to_element(element).perform()

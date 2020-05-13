@@ -31,7 +31,6 @@ from xena.models.section import Section
 from xena.test_utils import util
 
 test_data = util.parse_sign_up_test_data()[0]
-util.reset_test_data(test_data)
 
 
 @pytest.mark.usefixtures('page_objects')
