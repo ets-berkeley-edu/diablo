@@ -293,7 +293,7 @@
                   </v-select>
                 </v-col>
               </v-row>
-              <v-row v-if="!course.hasNecessaryApprovals" no-gutters align="start">
+              <v-row v-if="!course.hasNecessaryApprovals && !$currentUser.isAdmin" no-gutters align="start">
                 <v-col md="auto">
                   <v-checkbox id="agree-to-terms-checkbox" v-model="agreedToTerms" class="mt-0"></v-checkbox>
                 </v-col>
@@ -313,7 +313,7 @@
                   </div>
                 </v-col>
               </v-row>
-              <v-row v-if="!course.hasNecessaryApprovals" lg="2" class="pr-6 pt-6">
+              <v-row v-if="!course.hasNecessaryApprovals" lg="2" class="pr-6 pt-4">
                 <v-spacer />
                 <v-col md="2">
                   <v-btn
@@ -390,6 +390,7 @@
       },
       render(data) {
         this.$loading()
+        this.agreedToTerms = this.$currentUser.isAdmin
         this.course = data
         this.recordingTypeOptions = []
         this.$_.each(this.course.room.recordingTypeOptions, (text, value) => {

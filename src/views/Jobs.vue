@@ -168,7 +168,14 @@
     </v-card>
     <v-bottom-sheet v-model="richardPryor">
       <v-sheet class="text-center" dark height="800px">
-        <v-btn class="mt-6" color="primary" @click="richardPryor = !richardPryor">Close</v-btn>
+        <v-btn
+          id="get-the-damn-bed-off-my-foot"
+          class="mt-6"
+          color="primary"
+          @click="richardPryor = !richardPryor"
+        >
+          Close
+        </v-btn>
         <div class="py-3">
           <img alt="The bed is on my foot!" src="@/assets/the-bed-is-on-my-foot.jpg">
         </div>
