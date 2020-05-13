@@ -28,6 +28,7 @@ from datetime import datetime
 from diablo import db, std_commit
 from diablo.lib.util import to_isoformat
 from diablo.models.email_template import email_template_type, EmailTemplate
+from sqlalchemy import and_
 from sqlalchemy.dialects.postgresql import ARRAY
 
 
@@ -74,12 +75,9 @@ class SentEmail(db.Model):
         return cls.query.filter(cls.recipient_uids.any(uid)).order_by(cls.sent_at).all()
 
     @classmethod
-    def get_emails_of_type(cls, section_id, template_type, term_id):
-        return cls.query.filter_by(
-            section_id=section_id,
-            template_type=template_type,
-            term_id=term_id,
-        ).order_by(cls.sent_at).all()
+    def get_emails_of_type(cls, section_ids, template_type, term_id):
+        criteria = and_(cls.section_id.in_(section_ids), cls.template_type == template_type, cls.term_id == term_id)
+        return cls.query.filter(criteria).order_by(cls.sent_at).all()
 
     def to_api_json(self):
         return {

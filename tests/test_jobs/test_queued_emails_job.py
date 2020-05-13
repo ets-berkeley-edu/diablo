@@ -202,7 +202,7 @@ class TestQueuedEmailsJob:
 
 def _get_emails_sent(email_template_type, section_id, term_id):
     return SentEmail.get_emails_of_type(
-        section_id=section_id,
+        section_ids=[section_id],
         template_type=email_template_type,
         term_id=term_id,
     )

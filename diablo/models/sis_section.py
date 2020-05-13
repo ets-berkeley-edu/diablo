@@ -554,41 +554,53 @@ class SisSection(db.Model):
 
 
 def _to_api_json(term_id, rows, include_rooms=True):
+    rows = rows.fetchall()
+    section_ids = list(set(int(row['section_id']) for row in rows))
     courses_per_id = {}
+
+    # Perform bulk queries and build data structures for feed generation.
     section_ids_opted_out = CoursePreference.get_section_ids_opted_out(term_id=term_id)
+
+    invited_uids_by_section_id = {section_id: [] for section_id in section_ids}
+    for invite in SentEmail.get_emails_of_type(section_ids=section_ids, template_type='invitation', term_id=term_id):
+        for uid in list(filter(lambda u: u not in invited_uids_by_section_id[invite.section_id], invite.recipient_uids)):
+            invited_uids_by_section_id[invite.section_id].append(uid)
+
+    approvals_by_section_id = {section_id: [] for section_id in section_ids}
+    for approval in Approval.get_approvals_per_section_ids(section_ids=section_ids, term_id=term_id):
+        approvals_by_section_id[approval.section_id].append(approval.to_api_json())
+
+    scheduled_results = Scheduled.get_scheduled_per_section_ids(section_ids=section_ids, term_id=term_id)
+    scheduled_by_section_id = {s.section_id: s.to_api_json() for s in scheduled_results}
+
+    cross_listings_per_section_id, instructors_per_section_id, canvas_sites_by_section_id = _get_cross_listed_courses(
+        section_ids=section_ids,
+        term_id=term_id,
+        approvals=approvals_by_section_id,
+        invited_uids=invited_uids_by_section_id,
+    )
+
+    rooms = Room.get_rooms(list(set(row['room_id'] for row in rows)))
+    rooms_by_id = {room.id: room for room in rooms}
+
+    # Construct course objects.
     # If course has multiple instructors then the section_id will be represented across multiple rows.
     for row in rows:
         section_id = int(row['section_id'])
         if section_id in courses_per_id:
             course = courses_per_id[section_id]
-
         else:
-            # Who received an invite?
-            invites = SentEmail.get_emails_of_type(section_id=section_id, template_type='invitation', term_id=term_id)
-            invited_uids = []
-            for invite in invites:
-                for uid in list(filter(lambda u: u not in invited_uids, invite.recipient_uids)):
-                    invited_uids.append(uid)
             # Approvals and scheduled (JSON)
-            approvals = Approval.get_approvals_per_section_ids(section_ids=[section_id], term_id=term_id)
-            approvals = [a.to_api_json() for a in approvals]
-            scheduled = Scheduled.get_scheduled(section_id=section_id, term_id=term_id)
-            scheduled = scheduled and scheduled.to_api_json()
+            approvals = approvals_by_section_id.get(section_id)
+            scheduled = scheduled_by_section_id.get(section_id)
             # Instructors per cross-listings
-            cross_listed_courses, instructors = _get_cross_listed_courses(
-                section_id=section_id,
-                term_id=term_id,
-                approvals=approvals,
-                invited_uids=invited_uids,
-            )
+            cross_listed_courses = cross_listings_per_section_id.get(section_id, [])
+            instructors = instructors_per_section_id.get(section_id, [])
             # Construct course
             course = {
                 'allowedUnits': row['allowed_units'],
-                'canvasCourseSites': _canvas_course_sites(
-                    cross_listed_courses=cross_listed_courses,
-                    section_id=section_id,
-                    term_id=term_id,
-                ),
+                'approvals': approvals,
+                'canvasCourseSites': canvas_sites_by_section_id.get(section_id, []),
                 'courseName': row['course_name'],
                 'courseTitle': row['course_title'],
                 'crossListings': cross_listed_courses,
@@ -596,9 +608,9 @@ def _to_api_json(term_id, rows, include_rooms=True):
                 'hasOptedOut': section_id in section_ids_opted_out,
                 'instructionFormat': row['instruction_format'],
                 'instructors': instructors,
-                'invitees': invited_uids,
+                'invitees': invited_uids_by_section_id.get(section_id),
                 'isPrimary': row['is_primary'],
-                'label': _get_course_label(
+                'label': _construct_course_label(
                     course_name=row['course_name'],
                     instruction_format=row['instruction_format'],
                     section_num=row['section_num'],
@@ -612,20 +624,19 @@ def _to_api_json(term_id, rows, include_rooms=True):
                 'meetingStartTime': format_time(row['meeting_start_time']),
                 'sectionId': section_id,
                 'sectionNum': row['section_num'],
-                'termId': row['term_id'],
-                'approvals': approvals,
                 'scheduled': scheduled,
+                'termId': row['term_id'],
             }
             if scheduled:
                 course['status'] = 'Scheduled'
             elif approvals:
                 course['status'] = 'Partially Approved'
             else:
-                course['status'] = 'Invited' if invites else 'Not Invited'
+                course['status'] = 'Invited' if course['invitees'] else 'Not Invited'
 
             if include_rooms:
-                room = Room.get_room(row['room_id']).to_api_json() if 'room_id' in row else None
-                course['room'] = room
+                room = rooms_by_id.get(row['room_id']) if 'room_id' in row else None
+                course['room'] = room.to_api_json() if room else None
             courses_per_id[section_id] = course
 
         # Note: Instructors associated with cross-listings are slurped up separately.
@@ -642,44 +653,41 @@ def _to_api_json(term_id, rows, include_rooms=True):
     # Next, construct the feed
     api_json = []
     for section_id, course in courses_per_id.items():
-        room_id = course.get('room', {}).get('id')
-        course['hasNecessaryApprovals'] = _has_necessary_approvals(course)
-        # Check for course changes w.r.t. room, meeting times, and instructors.
-        if course['scheduled']:
-            def _meeting(obj):
-                return f'{obj["meetingDays"]}-{obj["meetingStartTime"]}-{obj["meetingEndTime"]}'
-
-            instructor_uids = [i['uid'] for i in course['instructors']]
-            has_obsolete_instructors = set(instructor_uids) != set(course.get('scheduled').get('instructorUids'))
-            course['scheduled'].update({
-                'hasObsoleteInstructors': has_obsolete_instructors,
-                'hasObsoleteMeetingTimes': _meeting(course) != _meeting(course['scheduled']),
-                'hasObsoleteRoom': room_id != course.get('scheduled').get('room', {}).get('id'),
-            })
-
-        for approval in course['approvals']:
-            approval['hasObsoleteRoom'] = room_id != approval.get('room', {}).get('id')
-
+        _decorate_course(course)
         # Add course to the feed
         api_json.append(course)
+
     return api_json
 
 
-def _canvas_course_sites(cross_listed_courses, section_id, term_id):
-    section_ids = [section_id] + [c['sectionId'] for c in cross_listed_courses]
-    canvas_course_sites = []
-    for row in CanvasCourseSite.get_canvas_course_sites(section_ids=section_ids, term_id=term_id):
-        canvas_course_sites.append({
-            'courseSiteId': row.canvas_course_site_id,
-            'courseSiteName': row.canvas_course_site_name,
+def _decorate_course(course):
+    room_id = course.get('room', {}).get('id')
+    course['hasNecessaryApprovals'] = _has_necessary_approvals(course)
+    # Check for course changes w.r.t. room, meeting times, and instructors.
+    if course['scheduled']:
+        def _meeting(obj):
+            return f'{obj["meetingDays"]}-{obj["meetingStartTime"]}-{obj["meetingEndTime"]}'
+
+        instructor_uids = [i['uid'] for i in course['instructors']]
+        has_obsolete_instructors = set(instructor_uids) != set(course.get('scheduled').get('instructorUids'))
+        course['scheduled'].update({
+            'hasObsoleteInstructors': has_obsolete_instructors,
+            'hasObsoleteMeetingTimes': _meeting(course) != _meeting(course['scheduled']),
+            'hasObsoleteRoom': room_id != course.get('scheduled').get('room', {}).get('id'),
         })
-    return canvas_course_sites
+
+    for approval in course['approvals']:
+        approval['hasObsoleteRoom'] = room_id != approval.get('room', {}).get('id')
 
 
-def _get_cross_listed_courses(section_id, term_id, approvals, invited_uids):
-    # Cross-listed sections were "deleted" during SIS data refresh job
-    # and yet we still rely on the metadata of those deleted records.
-    section_ids = CrossListing.get_cross_listed_sections(section_id=section_id, term_id=term_id)
+def _get_cross_listed_courses(section_ids, term_id, approvals, invited_uids):
+    # Return course and instructor info for cross-listings, and Canvas site info for cross-listings as well as the
+    # principal section. Although cross-listed sections were "deleted" during SIS data refresh job, we still rely
+    # on metadata from those deleted records.
+    cross_listings_by_section_id = CrossListing.get_cross_listings_for_section_ids(section_ids=section_ids, term_id=term_id)
+    all_cross_listing_ids = list(set(section_id for k, v in cross_listings_by_section_id.items() for section_id in v))
+    all_section_ids = list(set(section_ids + all_cross_listing_ids))
+
     sql = """
         SELECT
             s.*,
@@ -691,35 +699,67 @@ def _get_cross_listed_courses(section_id, term_id, approvals, invited_uids):
         JOIN instructors i ON i.uid = s.instructor_uid
         WHERE
             s.term_id = :term_id
-            AND section_id = ANY(:section_ids)
+            AND section_id = ANY(:all_cross_listing_ids)
         ORDER BY course_title, section_id
     """
     rows = db.session.execute(
         text(sql),
         {
-            'section_ids': section_ids,
+            'all_cross_listing_ids': all_cross_listing_ids,
             'term_id': term_id,
         },
     )
-    courses = []
-    instructors = []
+    rows_by_cross_listing_id = {section_id: [] for section_id in all_cross_listing_ids}
     for row in rows:
-        section_id = row['section_id']
-        if section_id not in [c['sectionId'] for c in courses]:
-            courses.append({
-                'courseName': row['course_name'],
-                'courseTitle': row['course_title'],
-                'instructionFormat': row['instruction_format'],
-                'sectionNum': row['section_num'],
-                'isPrimary': row['is_primary'],
-                'label': f"{row['course_name']}, {row['instruction_format']} {row['section_num']}",
-                'sectionId': row['section_id'],
-                'termId': row['term_id'],
-            })
-        instructor_uid = row['instructor_uid']
-        if instructor_uid and instructor_uid not in [i['uid'] for i in instructors]:
-            instructors.append(_to_instructor_json(row, approvals, invited_uids=invited_uids))
-    return courses, instructors
+        rows_by_cross_listing_id[row['section_id']].append(row)
+
+    canvas_sites_by_cross_listing_id = {section_id: [] for section_id in all_section_ids}
+    for site in CanvasCourseSite.get_canvas_course_sites(section_ids=all_section_ids, term_id=term_id):
+        canvas_sites_by_cross_listing_id[site.section_id].append({
+            'courseSiteId': site.canvas_course_site_id,
+            'courseSiteName': site.canvas_course_site_name,
+        })
+
+    courses_by_section_id = {}
+    instructors_by_section_id = {}
+    canvas_sites_by_section_id = {}
+
+    # First, collect Canvas sites associated with principal section ids.
+    for section_id in section_ids:
+        canvas_sites_by_section_id[section_id] = []
+        for canvas_site in canvas_sites_by_cross_listing_id.get(section_id, []):
+            canvas_sites_by_section_id[section_id].append(canvas_site)
+
+    # Next, collect course data, instructor data, and Canvas sites associated with cross-listings.
+    for section_id, cross_listing_ids in cross_listings_by_section_id.items():
+        approvals_for_section = approvals.get(section_id, [])
+        invited_uids_for_section = invited_uids.get(section_id, [])
+        courses_by_section_id[section_id] = []
+        instructors_by_section_id[section_id] = []
+        for cross_listing_id in cross_listing_ids:
+            if rows_by_cross_listing_id[cross_listing_id]:
+                # Our first row provides course-specific data.
+                row = rows_by_cross_listing_id[cross_listing_id][0]
+                courses_by_section_id[section_id].append({
+                    'courseName': row['course_name'],
+                    'courseTitle': row['course_title'],
+                    'instructionFormat': row['instruction_format'],
+                    'sectionNum': row['section_num'],
+                    'isPrimary': row['is_primary'],
+                    'label': f"{row['course_name']}, {row['instruction_format']} {row['section_num']}",
+                    'sectionId': row['section_id'],
+                    'termId': row['term_id'],
+                })
+                # Instructor-specific data may be spread across multiple rows.
+                for row in rows_by_cross_listing_id[cross_listing_id]:
+                    if row['instructor_uid'] and row['instructor_uid'] not in [i['uid'] for i in instructors_by_section_id[section_id]]:
+                        instructors_by_section_id[section_id].append(
+                            _to_instructor_json(row, approvals_for_section, invited_uids=invited_uids_for_section),
+                        )
+                for canvas_site in canvas_sites_by_cross_listing_id[cross_listing_id]:
+                    canvas_sites_by_section_id[section_id].append(canvas_site)
+
+    return courses_by_section_id, instructors_by_section_id, canvas_sites_by_section_id
 
 
 def _to_instructor_json(row, approvals, invited_uids):
@@ -741,7 +781,7 @@ def _merge_distinct(label, other_labels):
     return [label] + list(set(other_labels))
 
 
-def _get_course_label(course_name, instruction_format, section_num, cross_listings):
+def _construct_course_label(course_name, instruction_format, section_num, cross_listings):
     def _label(course_name_, instruction_format_, section_num_):
         return f'{course_name_}, {instruction_format_} {section_num_}'
 
