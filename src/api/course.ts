@@ -14,7 +14,7 @@ export function approve(
     })
 }
 
-export function getApprovals(termId: number, sectionId: number) {
+export function getCourse(termId: number, sectionId: number) {
   return axios
     .get(`${utils.apiBaseUrl()}/api/course/${termId}/${sectionId}`)
 }

@@ -22,11 +22,13 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
+from diablo.externals.kaltura import Kaltura
 from diablo.jobs.base_job import BaseJob
 from diablo.jobs.util import schedule_recordings
 from diablo.lib.util import objects_to_dict_organized_by_section_id
 from diablo.models.admin_user import AdminUser
 from diablo.models.approval import Approval
+from diablo.models.canvas_course_site import CanvasCourseSite
 from diablo.models.scheduled import Scheduled
 from diablo.models.sis_section import SisSection
 from flask import current_app as app
@@ -47,6 +49,31 @@ class KalturaJob(BaseJob):
                     all_approvals=approvals_per_section_id[section_id],
                     course=course,
                 )
+
+        all_scheduled = Scheduled.get_all_scheduled(term_id=term_id)
+        if all_scheduled:
+            # In Kaltura, connect scheduled recordings with Canvas course sites (ie, categories)
+            canvas_category_objects = Kaltura().get_canvas_category_objects()
+            if canvas_category_objects:
+                course_sites_by_section_id = {}
+                for c in CanvasCourseSite.get_all_canvas_course_sites(term_id=term_id):
+                    if c.section_id not in course_sites_by_section_id:
+                        course_sites_by_section_id[c.section_id] = []
+                    course_sites_by_section_id[c.section_id].append(c)
+
+                for scheduled in all_scheduled:
+                    for s in course_sites_by_section_id.get(scheduled.section_id, []):
+                        canvas_course_site_id = s.canvas_course_site_id
+                        category_object = next(
+                            (obj for obj in canvas_category_objects if obj['courseSiteId'] == canvas_course_site_id),
+                            None,
+                        )
+                        if category_object:
+                            app.logger.info(f"""
+                                In Kaltura, scheduled recordings of course {scheduled.section_id} will be added to
+                                Canvas course site {canvas_course_site_id} (Kaltura category {category_object['id']}).
+                            """)
+                            Kaltura().add_scheduled_event_to_category(scheduled.kaltura_schedule_id, category_object)
 
     @classmethod
     def description(cls):

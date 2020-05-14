@@ -338,7 +338,7 @@
   import Context from '@/mixins/Context'
   import OxfordJoin from '@/components/util/OxfordJoin'
   import Utils from '@/mixins/Utils'
-  import {approve, getApprovals, unschedule} from '@/api/course'
+  import {approve, getCourse, unschedule} from '@/api/course'
   import {queueEmails} from '@/api/email'
 
   export default {
@@ -367,7 +367,7 @@
       this.$loading()
       const termId = this.$_.get(this.$route, 'params.termId')
       const sectionId = this.$_.get(this.$route, 'params.sectionId')
-      getApprovals(termId, sectionId).then(data => {
+      getCourse(termId, sectionId).then(data => {
         this.render(data)
         this.publishTypeOptions = []
         this.$_.each(this.$config.publishTypeOptions, (text, value) => {

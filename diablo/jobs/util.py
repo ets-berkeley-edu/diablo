@@ -37,6 +37,7 @@ from diablo.models.scheduled import Scheduled
 from diablo.models.sis_section import SisSection
 from flask import current_app as app
 from KalturaClient.exceptions import KalturaClientException, KalturaException
+import pytz
 from sqlalchemy import text
 
 
@@ -161,6 +162,7 @@ def schedule_recordings(all_approvals, course):
     all_approvals.sort(key=lambda a: a.created_at.isoformat())
     approval = all_approvals[-1]
     room = Room.get_room(approval.room_id)
+    scheduled = None
 
     if room.kaltura_resource_id:
         # Query for date objects.
@@ -223,13 +225,15 @@ def schedule_recordings(all_approvals, course):
             Latest approved_by_uid: {approval.approved_by_uid}
         """)
 
+    return scheduled
+
 
 def _adjust_time(military_time, offset_minutes):
     hour_and_minutes = military_time.split(':')
-    return datetime.combine(
-        date.today(),
-        time(int(hour_and_minutes[0]), int(hour_and_minutes[1])),
-    ) + timedelta(minutes=offset_minutes)
+    hour = int(hour_and_minutes[0])
+    minutes = int(hour_and_minutes[1])
+    timezone = pytz.timezone(app.config['TIMEZONE'])
+    return datetime.combine(date.today(), time(hour, minutes), tzinfo=timezone) + timedelta(minutes=offset_minutes)
 
 
 def _join(items, separator=', '):

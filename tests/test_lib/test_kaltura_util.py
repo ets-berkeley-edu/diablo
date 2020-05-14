@@ -26,6 +26,7 @@ from datetime import datetime
 
 from diablo.lib.kaltura_util import get_first_matching_datetime_of_term
 from flask import current_app as app
+import pytz
 from tests.util import override_config
 
 
@@ -39,7 +40,7 @@ class TestFirstDayRecording:
                 time_hours=13,
                 time_minutes=30,
             )
-            assert first_day_start == datetime(2020, 8, 26, 13, 30)
+            assert first_day_start == datetime(2020, 8, 26, 13, 30, tzinfo=_timezone())
 
     def test_first_meeting_is_day_after_term_begin(self):
         """First meeting is the day after start of term."""
@@ -49,7 +50,7 @@ class TestFirstDayRecording:
                 time_hours=13,
                 time_minutes=30,
             )
-            assert first_day_start == datetime(2020, 8, 27, 13, 30)
+            assert first_day_start == datetime(2020, 8, 27, 13, 30, tzinfo=_timezone())
 
     def test_first_meeting_is_week_after_term_begin(self):
         """First meeting is the Monday following first week of term."""
@@ -59,7 +60,7 @@ class TestFirstDayRecording:
                 time_hours=8,
                 time_minutes=45,
             )
-            assert first_day_start == datetime(2020, 8, 31, 8, 45)
+            assert first_day_start == datetime(2020, 8, 31, 8, 45, tzinfo=_timezone())
 
     def test_first_meeting_is_different_month(self):
         """First meeting is in week after start of term, in a new month."""
@@ -69,9 +70,13 @@ class TestFirstDayRecording:
                 time_hours=9,
                 time_minutes=15,
             )
-            assert first_day_start == datetime(2020, 9, 1, 9, 15)
+            assert first_day_start == datetime(2020, 9, 1, 9, 15, tzinfo=_timezone())
 
 
 def _get_wednesday_august_26():
     # Aug 26, 2020, is a Wednesday.
     return '2020-08-26'
+
+
+def _timezone():
+    return pytz.timezone(app.config['TIMEZONE'])

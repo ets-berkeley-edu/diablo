@@ -804,7 +804,9 @@ def _construct_course_label(course_name, instruction_format, section_num, cross_
 def _has_necessary_approvals(course):
     if any(a['wasApprovedByAdmin'] for a in course['approvals']):
         return True
-    else:
+    elif course['instructors']:
         approval_uids = [a['approvedBy']['uid'] for a in course['approvals']]
         necessary_approval_uids = [i['uid'] for i in course['instructors']]
         return all(uid in approval_uids for uid in necessary_approval_uids)
+    else:
+        return False

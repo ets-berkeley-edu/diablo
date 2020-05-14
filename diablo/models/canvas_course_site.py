@@ -54,6 +54,10 @@ class CanvasCourseSite(db.Model):
                 """
 
     @classmethod
+    def get_all_canvas_course_sites(cls, term_id):
+        return cls.query.filter_by(term_id=term_id).all()
+
+    @classmethod
     def get_canvas_course_sites(cls, section_ids, term_id):
         criteria = and_(cls.section_id.in_(section_ids), cls.term_id == term_id)
         return cls.query.filter(criteria).all()
