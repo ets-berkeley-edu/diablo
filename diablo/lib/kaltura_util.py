@@ -28,6 +28,7 @@ from diablo.lib.util import epoch_time_to_isoformat
 from flask import current_app as app
 from KalturaClient.Plugins.Schedule import KalturaScheduleEventClassificationType, KalturaScheduleEventRecurrenceType, \
     KalturaScheduleEventStatus
+import pytz
 
 # This order of days is aligned with datetime module: https://pythontic.com/datetime/date/weekday
 DAYS = ('MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU')
@@ -111,7 +112,8 @@ def get_recurrence_name(recurrence_type):
 
 
 def get_first_matching_datetime_of_term(meeting_days, time_hours, time_minutes):
-    start_date = datetime.strptime(app.config['CURRENT_TERM_BEGIN'], '%Y-%m-%d')
+    timezone = pytz.timezone(app.config['TIMEZONE'])
+    start_date = datetime.strptime(app.config['CURRENT_TERM_BEGIN'], '%Y-%m-%d').replace(tzinfo=timezone)
     first_day = None
     meeting_day_indices = [DAYS.index(day) for day in meeting_days]
     for index in range(7):

@@ -83,8 +83,11 @@ def approve():
         course=course,
         previous_approvals=previous_approvals,
     )
+
     if app.config['FEATURE_FLAG_SCHEDULE_RECORDINGS_SYNCHRONOUSLY']:
+        # This feature-flag is intended for developer workstation ONLY. Do not enable in diablo-dev|qa|prod.
         _schedule_if_has_necessary_approvals(course)
+
     return tolerant_jsonify(SisSection.get_course(term_id, section_id))
 
 
@@ -226,7 +229,16 @@ def _schedule_if_has_necessary_approvals(course):
 
     all_approvals = Approval.get_approvals(section_id=course['sectionId'], term_id=course['termId'])
     if current_user.is_admin or _has_necessary_approvals():
-        schedule_recordings(
+        scheduled = schedule_recordings(
             all_approvals=all_approvals,
             course=course,
         )
+        if scheduled:
+            for c in course['canvasCourseSites']:
+                category_object = Kaltura().get_canvas_category_object(canvas_course_site_id=c['courseSiteId'])
+                if category_object:
+                    app.logger.info(f"""
+                        In Kaltura, scheduled recordings of course {scheduled.section_id} will be added to
+                        Canvas course site {c['courseSiteId']} (Kaltura category {category_object['id']}).
+                    """)
+                    Kaltura().add_scheduled_event_to_category(scheduled.kaltura_schedule_id, category_object)

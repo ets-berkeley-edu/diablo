@@ -30,7 +30,7 @@ from diablo.lib.kaltura_util import events_to_api_json, get_first_matching_datet
 from diablo.lib.util import to_isoformat
 from flask import current_app as app
 from KalturaClient import KalturaClient, KalturaConfiguration
-from KalturaClient.Plugins.Core import KalturaFilterPager, KalturaMediaEntryFilter
+from KalturaClient.Plugins.Core import KalturaCategoryFilter, KalturaFilterPager, KalturaMediaEntryFilter
 from KalturaClient.Plugins.Schedule import KalturaRecordScheduleEvent, KalturaScheduleEventClassificationType, \
     KalturaScheduleEventFilter, KalturaScheduleEventRecurrence, KalturaScheduleEventRecurrenceFrequency, \
     KalturaScheduleEventRecurrenceType, KalturaScheduleEventResource, KalturaScheduleEventStatus, \
@@ -44,10 +44,6 @@ class Kaltura:
         if app.config['DIABLO_ENV'] == 'test':
             return
 
-    def __del__(self):
-        # TODO: Close Kaltura client connection?
-        pass
-
     @skip_when_pytest()
     def delete_scheduled_recordings(self, kaltura_schedule_id):
         return self.kaltura_client.schedule.scheduleEvent.delete(kaltura_schedule_id)
@@ -55,18 +51,37 @@ class Kaltura:
     @cachify('kaltura/get_schedule_event_list', timeout=30)
     def get_schedule_event_list(self, kaltura_resource_id):
         response = self.kaltura_client.schedule.scheduleEvent.list(
-            KalturaScheduleEventFilter(resourceIdsLike=str(kaltura_resource_id)),
-            KalturaFilterPager(),
+            filter=KalturaScheduleEventFilter(resourceIdsLike=str(kaltura_resource_id)),
+            pager=KalturaFilterPager(pageSize=200),
         )
         return events_to_api_json(response.objects)
 
     @cachify('kaltura/get_resource_list', timeout=30)
     def get_resource_list(self):
         response = self.kaltura_client.schedule.scheduleResource.list(
-            KalturaScheduleResourceFilter(),
-            KalturaFilterPager(),
+            filter=KalturaScheduleResourceFilter(),
+            pager=KalturaFilterPager(pageSize=200),
         )
         return [{'id': o.id, 'name': o.name} for o in response.objects]
+
+    @cachify('kaltura/get_canvas_category_object')
+    def get_canvas_category_object(self, canvas_course_site_id):
+        response = self.kaltura_client.category.list(
+            filter=KalturaCategoryFilter(fullNameEqual=f'Canvas>site>channels>{canvas_course_site_id}'),
+            pager=KalturaFilterPager(),
+        )
+        canvas_category_objects = [_category_object_to_json(o) for o in response.objects]
+        return canvas_category_objects[0] if canvas_category_objects else None
+
+    @cachify('kaltura/get_canvas_category_objects', timeout=30)
+    def get_canvas_category_objects(self):
+        # TODO: In the long term, this won't scale well. Can we query by term?
+        full_name_prefix = 'Canvas>site>channels>'
+        response = self.kaltura_client.category.list(
+            filter=KalturaCategoryFilter(fullNameStartsWith=full_name_prefix),
+            pager=KalturaFilterPager(),
+        )
+        return [_category_object_to_json(o) for o in response.objects if o.fullName == f'{full_name_prefix}{o.name}']
 
     @skip_when_pytest(mock_object=int(datetime.now().timestamp()))
     def schedule_recording(
@@ -81,7 +96,67 @@ class Kaltura:
             room,
             term_id,
     ):
-        utc_now_timestamp = int(datetime.utcnow().timestamp())
+        kaltura_schedule = self._schedule_recurring_events_in_kaltura(
+            course_label,
+            instructors,
+            days,
+            start_time,
+            end_time,
+            publish_type,
+            recording_type,
+            room,
+            term_id,
+        )
+        # Link the schedule to the room (ie, capture agent)
+        self._attach_scheduled_recordings_to_room(kaltura_schedule=kaltura_schedule, room=room)
+        return kaltura_schedule.id
+
+    @skip_when_pytest()
+    def add_scheduled_event_to_category(self, kaltura_schedule_id, category_object):
+        # TODO: Kaltura API call to map scheduled recordings to canvas_category_object
+        pass
+
+    def ping(self):
+        filter_ = KalturaMediaEntryFilter()
+        filter_.nameLike = 'Love is the drug I\'m thinking of'
+        result = self.kaltura_client.media.list(
+            filter=filter_,
+            pager=KalturaFilterPager(pageSize=1),
+        )
+        return result.totalCount is not None
+
+    @property
+    def kaltura_client(self):
+        admin_secret = app.config['KALTURA_ADMIN_SECRET']
+        unique_user_id = app.config['KALTURA_UNIQUE_USER_ID']
+        partner_id = self.kaltura_partner_id
+        expiry = app.config['KALTURA_EXPIRY']
+
+        config = KalturaConfiguration()
+        client = KalturaClient(config)
+        ks = client.session.start(
+            admin_secret,
+            unique_user_id,
+            KalturaSessionType.ADMIN,
+            partner_id,
+            expiry,
+            'appId:appName-appDomain',
+        )
+        client.setKs(ks)
+        return client
+
+    def _schedule_recurring_events_in_kaltura(
+            self,
+            course_label,
+            instructors,
+            days,
+            start_time,
+            end_time,
+            publish_type,
+            recording_type,
+            room,
+            term_id,
+    ):
         term_name = term_name_for_sis_id(term_id)
         term_end = datetime.strptime(app.config['CURRENT_TERM_END'], '%Y-%m-%d')
 
@@ -148,9 +223,10 @@ class Kaltura:
             tags=None,
             templateEntryId=app.config['KALTURA_TEMPLATE_ENTRY_ID'],
         )
-        kaltura_schedule = self.kaltura_client.schedule.scheduleEvent.add(recurring_event)
+        return self.kaltura_client.schedule.scheduleEvent.add(recurring_event)
 
-        # Link the schedule to the room (ie, capture agent)
+    def _attach_scheduled_recordings_to_room(self, kaltura_schedule, room):
+        utc_now_timestamp = int(datetime.utcnow().timestamp())
         event_resource = self.kaltura_client.schedule.scheduleEventResource.add(
             KalturaScheduleEventResource(
                 eventId=kaltura_schedule.id,
@@ -161,30 +237,10 @@ class Kaltura:
             ),
         )
         app.logger.info(f'Kaltura schedule {kaltura_schedule.id} attached to {room.location}: {event_resource}')
-        return kaltura_schedule.id
 
-    def ping(self):
-        filter_ = KalturaMediaEntryFilter()
-        filter_.nameLike = 'Love is the drug I\'m thinking of'
-        result = self.kaltura_client.media.list(filter_, KalturaFilterPager(pageSize=1))
-        return result.totalCount is not None
 
-    @property
-    def kaltura_client(self):
-        admin_secret = app.config['KALTURA_ADMIN_SECRET']
-        unique_user_id = app.config['KALTURA_UNIQUE_USER_ID']
-        partner_id = self.kaltura_partner_id
-        expiry = app.config['KALTURA_EXPIRY']
-
-        config = KalturaConfiguration()
-        client = KalturaClient(config)
-        ks = client.session.start(
-            admin_secret,
-            unique_user_id,
-            KalturaSessionType.ADMIN,
-            partner_id,
-            expiry,
-            'appId:appName-appDomain',
-        )
-        client.setKs(ks)
-        return client
+def _category_object_to_json(obj):
+    return {
+        'id': obj.id,
+        'courseSiteId': obj.name,
+    }
