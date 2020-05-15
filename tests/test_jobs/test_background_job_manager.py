@@ -27,70 +27,21 @@ import time
 from diablo.jobs.background_job_manager import BackgroundJobManager
 from diablo.models.job_history import JobHistory
 from flask import current_app as app
-from tests.test_jobs.sample_jobs import DoomedToFailure, HelloWorld, LightSwitch, Volume, VolumeSubClass
-from tests.util import override_config
 
 
 class TestBackgroundJobManager:
 
     def test_start_mock_jobs(self):
         """Runs jobs as scheduled and skips disabled jobs."""
-        with override_config(app, 'JOB_MANAGER', _job_manager_config()):
-            job_manager = BackgroundJobManager(
-                available_job_classes=[
-                    DoomedToFailure,
-                    HelloWorld,
-                    LightSwitch,
-                    Volume,
-                    VolumeSubClass,
-                ],
-            )
-            try:
-                def _get_job_history_ids():
-                    return [item.id for item in JobHistory.get_job_history_in_past_days(day_count=1)]
+        job_manager = BackgroundJobManager()
+        try:
+            def _get_job_history_ids():
+                return [item.id for item in JobHistory.get_job_history_in_past_days(day_count=1)]
 
-                original_job_history_ids = _get_job_history_ids()
-                job_manager.start(app)
-                time.sleep(2)
-                assert len(_get_job_history_ids()) == len(original_job_history_ids) + 2
+            original_job_history_ids = _get_job_history_ids()
+            job_manager.start(app)
+            time.sleep(2)
+            assert len(_get_job_history_ids()) == len(original_job_history_ids) + 2
 
-            finally:
-                job_manager.stop()
-
-
-def _job_manager_config():
-    return {
-        'auto_start': False,
-        'seconds_between_pending_jobs_check': 0.5,
-        'jobs': [
-            {
-                'key': 'volume',
-                'schedule': {
-                    'type': 'seconds',
-                    'value': 1,
-                },
-            },
-            {
-                'key': 'volume_sub_class',
-                'schedule': {
-                    'type': 'day_at',
-                    'value': '04:30',
-                },
-            },
-            {
-                'key': 'hello_world',
-                'disabled': True,
-                'schedule': {
-                    'type': 'seconds',
-                    'value': 1,
-                },
-            },
-            {
-                'key': 'light_switch',
-                'schedule': {
-                    'type': 'seconds',
-                    'value': 1,
-                },
-            },
-        ],
-    }
+        finally:
+            job_manager.stop()

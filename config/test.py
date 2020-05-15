@@ -34,27 +34,8 @@ CURRENT_TERM_ID = 2202
 CURRENT_TERM_BEGIN = '2020-01-21'
 CURRENT_TERM_END = '2020-05-08'
 
-JOB_MANAGER = {
-    'auto_start': False,
-    'seconds_between_pending_jobs_check': 60,
-    'jobs': [
-        {
-            'key': 'hello_world',
-            'schedule': {
-                'type': 'seconds',
-                'value': 300,
-            },
-        },
-        {
-            'key': 'light_switch',
-            'disabled': True,
-            'schedule': {
-                'type': 'day_at',
-                'value': '06:00',
-            },
-        },
-    ],
-}
+JOBS_AUTO_START = False
+JOBS_SECONDS_BETWEEN_PENDING_CHECK = 0.5
 
 INDEX_HTML = f'{BASE_DIR}/tests/static/test-index.html'
 

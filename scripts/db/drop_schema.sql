@@ -49,6 +49,8 @@ ALTER TABLE IF EXISTS ONLY public.cross_listings DROP CONSTRAINT IF EXISTS cross
 ALTER TABLE IF EXISTS ONLY public.email_templates DROP CONSTRAINT IF EXISTS email_templates_name_unique_constraint;
 ALTER TABLE IF EXISTS ONLY public.email_templates DROP CONSTRAINT IF EXISTS email_templates_pkey;
 ALTER TABLE IF EXISTS ONLY public.instructors DROP CONSTRAINT IF EXISTS instructors_pkey;
+ALTER TABLE IF EXISTS ONLY public.jobs DROP CONSTRAINT IF EXISTS jobs_key_unique_constraint;
+ALTER TABLE IF EXISTS ONLY public.jobs DROP CONSTRAINT IF EXISTS jobs_pkey;
 ALTER TABLE IF EXISTS ONLY public.queued_emails DROP CONSTRAINT IF EXISTS queued_emails_pkey;
 ALTER TABLE IF EXISTS ONLY public.queued_emails DROP CONSTRAINT IF EXISTS queued_emails_section_id_template_type_unique_constraint;
 ALTER TABLE IF EXISTS ONLY public.rooms DROP CONSTRAINT IF EXISTS rooms_location_unique_constraint;
@@ -78,6 +80,8 @@ DROP SEQUENCE IF EXISTS public.email_templates_id_seq;
 DROP TABLE IF EXISTS public.instructors;
 DROP TABLE IF EXISTS public.job_history;
 DROP SEQUENCE IF EXISTS job_history_id_seq;
+DROP TABLE IF EXISTS public.jobs;
+DROP SEQUENCE IF EXISTS jobs_id_seq;
 DROP TABLE IF EXISTS public.queued_emails;
 DROP SEQUENCE IF EXISTS public.queued_emails_id_seq;
 DROP TABLE IF EXISTS public.rooms;
@@ -92,6 +96,7 @@ DROP SEQUENCE IF EXISTS public.sis_sections_id_seq;
 
 DROP TYPE IF EXISTS public.approver_types;
 DROP TYPE IF EXISTS public.email_template_types;
+DROP TYPE IF EXISTS public.job_schedule_types;
 DROP TYPE IF EXISTS public.publish_types;
 DROP TYPE IF EXISTS public.recording_types;
 DROP TYPE IF EXISTS public.room_capability_types;
