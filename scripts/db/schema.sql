@@ -112,6 +112,7 @@ ALTER TABLE ONLY admin_users
 --
 
 CREATE TABLE approvals (
+    id SERIAL PRIMARY KEY,
     approved_by_uid VARCHAR(80) NOT NULL,
     section_id INTEGER NOT NULL,
     term_id INTEGER NOT NULL,
@@ -119,10 +120,11 @@ CREATE TABLE approvals (
     publish_type publish_types NOT NULL,
     recording_type recording_types NOT NULL,
     room_id INTEGER NOT NULL,
-    created_at timestamp with time zone NOT NULL
+    created_at timestamp with time zone NOT NULL,
+    deleted_at timestamp with time zone
 );
 ALTER TABLE approvals OWNER TO diablo;
-ALTER TABLE approvals ADD CONSTRAINT approvals_pkey PRIMARY KEY (approved_by_uid, section_id, term_id);
+CREATE UNIQUE INDEX approvals_unique_idx ON approvals (approved_by_uid, section_id, term_id) WHERE deleted_at IS NULL;
 
 --
 
@@ -300,6 +302,7 @@ CREATE INDEX rooms_location_idx ON rooms USING btree (location);
 --
 
 CREATE TABLE scheduled (
+    id SERIAL PRIMARY KEY,
     section_id INTEGER NOT NULL,
     term_id INTEGER NOT NULL,
     instructor_uids VARCHAR(80)[] NOT NULL,
@@ -310,10 +313,11 @@ CREATE TABLE scheduled (
     publish_type publish_types NOT NULL,
     recording_type recording_types NOT NULL,
     room_id INTEGER NOT NULL,
-    created_at timestamp with time zone NOT NULL
+    created_at timestamp with time zone NOT NULL,
+    deleted_at timestamp with time zone
 );
 ALTER TABLE scheduled OWNER TO diablo;
-ALTER TABLE scheduled ADD CONSTRAINT scheduled_pkey PRIMARY KEY (section_id, term_id);
+CREATE UNIQUE INDEX scheduled_unique_idx ON scheduled (section_id, term_id) WHERE deleted_at IS NULL;
 
 --
 
