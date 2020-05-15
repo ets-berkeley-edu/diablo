@@ -70,9 +70,10 @@ NAMES_PER_RECORDING_TYPE = {
 class Approval(db.Model):
     __tablename__ = 'approvals'
 
-    term_id = db.Column(db.Integer, nullable=False, primary_key=True)
-    section_id = db.Column(db.Integer, nullable=False, primary_key=True)
-    approved_by_uid = db.Column(db.String, nullable=False, primary_key=True)
+    id = db.Column(db.Integer, nullable=False, primary_key=True)  # noqa: A003
+    term_id = db.Column(db.Integer, nullable=False)
+    section_id = db.Column(db.Integer, nullable=False)
+    approved_by_uid = db.Column(db.String, nullable=False)
     approver_type = db.Column(approver_type, nullable=False)
     room_id = db.Column(db.Integer, db.ForeignKey('rooms.id'), nullable=False)
     publish_type = db.Column(publish_type, nullable=False)
@@ -100,6 +101,7 @@ class Approval(db.Model):
 
     def __repr__(self):
         return f"""<Approval
+                    id={self.id},
                     term_id={self.term_id},
                     section_id={self.section_id},
                     approved_by_uid={self.approved_by_uid},
