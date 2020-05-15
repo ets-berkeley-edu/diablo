@@ -35,8 +35,9 @@ from sqlalchemy.dialects.postgresql import ARRAY
 class Scheduled(db.Model):
     __tablename__ = 'scheduled'
 
-    section_id = db.Column(db.Integer, nullable=False, primary_key=True)
-    term_id = db.Column(db.Integer, nullable=False, primary_key=True)
+    id = db.Column(db.Integer, nullable=False, primary_key=True)  # noqa: A003
+    section_id = db.Column(db.Integer, nullable=False)
+    term_id = db.Column(db.Integer, nullable=False)
     instructor_uids = db.Column(ARRAY(db.String(80)), nullable=False)
     kaltura_schedule_id = db.Column(db.Integer, nullable=False)
     meeting_days = db.Column(db.String, nullable=False)
@@ -74,6 +75,7 @@ class Scheduled(db.Model):
 
     def __repr__(self):
         return f"""<Scheduled
+                    id={self.id},
                     section_id={self.section_id},
                     term_id={self.term_id},
                     instructor_uids={', '.join(self.instructor_uids)},
