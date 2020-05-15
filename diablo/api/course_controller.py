@@ -22,7 +22,6 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from diablo import db
 from diablo.api.errors import BadRequestError, ForbiddenRequestError, ResourceNotFoundError
 from diablo.api.util import admin_required, get_search_filter_options
 from diablo.externals.kaltura import Kaltura
@@ -38,7 +37,6 @@ from diablo.models.sis_section import SisSection
 from flask import current_app as app, request
 from flask_login import current_user, login_required
 from KalturaClient.exceptions import KalturaClientException, KalturaException
-from sqlalchemy import and_
 
 
 @app.route('/api/course/approve', methods=['POST'])
@@ -145,12 +143,8 @@ def unschedule():
     if not scheduled:
         raise BadRequestError(f'Section id {section_id}, term id {term_id} is not currently scheduled')
 
-    db.session.execute(
-        Approval.__table__.delete().where(and_(Approval.term_id == term_id, Approval.section_id == section_id)),
-    )
-    db.session.execute(
-        Scheduled.__table__.delete().where(and_(Scheduled.term_id == term_id, Scheduled.section_id == section_id)),
-    )
+    Approval.delete(term_id=term_id, section_id=section_id)
+    Scheduled.delete(term_id=term_id, section_id=section_id)
 
     kaltura_schedule_id = scheduled['kalturaScheduleId']
     try:

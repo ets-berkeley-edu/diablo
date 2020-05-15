@@ -29,7 +29,7 @@ from diablo.lib.util import to_isoformat
 from diablo.merged.calnet import get_calnet_user_for_uid
 from diablo.models.room import Room
 from flask import current_app as app
-from sqlalchemy import and_
+from sqlalchemy import and_, text
 from sqlalchemy.dialects.postgresql import ENUM
 
 
@@ -78,6 +78,7 @@ class Approval(db.Model):
     publish_type = db.Column(publish_type, nullable=False)
     recording_type = db.Column(recording_type, nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.now)
+    deleted_at = db.Column(db.DateTime, nullable=True)
 
     def __init__(
             self,
@@ -135,20 +136,32 @@ class Approval(db.Model):
 
     @classmethod
     def get_approval(cls, approved_by_uid, section_id, term_id):
-        return cls.query.filter_by(approved_by_uid=approved_by_uid, section_id=section_id, term_id=term_id).first()
+        return cls.query.filter_by(approved_by_uid=approved_by_uid, section_id=section_id, term_id=term_id, deleted_at=None).first()
 
     @classmethod
     def get_approvals(cls, section_id, term_id):
-        return cls.query.filter_by(section_id=section_id, term_id=term_id).all()
+        return cls.query.filter_by(section_id=section_id, term_id=term_id, deleted_at=None).all()
 
     @classmethod
     def get_approvals_per_section_ids(cls, section_ids, term_id):
-        criteria = and_(cls.section_id.in_(section_ids), cls.term_id == term_id)
+        criteria = and_(cls.section_id.in_(section_ids), cls.term_id == term_id, cls.deleted_at == None)  # noqa: E711
         return cls.query.filter(criteria).order_by(cls.created_at).all()
 
     @classmethod
     def get_approvals_per_term(cls, term_id):
-        return cls.query.filter_by(term_id=int(term_id)).order_by(cls.section_id, cls.created_at).all()
+        return cls.query.filter_by(term_id=int(term_id), deleted_at=None).order_by(cls.section_id, cls.created_at).all()
+
+    @classmethod
+    def delete(cls, section_id, term_id):
+        sql = """UPDATE approvals SET deleted_at = now()
+            WHERE term_id = :term_id AND section_id = :section_id AND deleted_at IS NULL"""
+        db.session.execute(
+            text(sql),
+            {
+                'section_id': section_id,
+                'term_id': term_id,
+            },
+        )
 
     def to_api_json(self):
         return {

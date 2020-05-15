@@ -28,7 +28,7 @@ from diablo import db, std_commit
 from diablo.lib.util import format_days, format_time, to_isoformat
 from diablo.models.approval import NAMES_PER_PUBLISH_TYPE, NAMES_PER_RECORDING_TYPE, publish_type, recording_type
 from diablo.models.room import Room
-from sqlalchemy import and_
+from sqlalchemy import and_, text
 from sqlalchemy.dialects.postgresql import ARRAY
 
 
@@ -46,6 +46,7 @@ class Scheduled(db.Model):
     recording_type = db.Column(recording_type, nullable=False)
     room_id = db.Column(db.Integer, db.ForeignKey('rooms.id'), nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.now)
+    deleted_at = db.Column(db.DateTime, nullable=True)
 
     def __init__(
             self,
@@ -118,16 +119,28 @@ class Scheduled(db.Model):
 
     @classmethod
     def get_all_scheduled(cls, term_id):
-        return cls.query.filter_by(term_id=term_id).all()
+        return cls.query.filter_by(term_id=term_id, deleted_at=None).all()
 
     @classmethod
     def get_scheduled_per_section_ids(cls, section_ids, term_id):
-        criteria = and_(cls.section_id.in_(section_ids), cls.term_id == term_id)
+        criteria = and_(cls.section_id.in_(section_ids), cls.term_id == term_id, cls.deleted_at == None)  # noqa: E711
         return cls.query.filter(criteria).order_by(cls.created_at).all()
 
     @classmethod
     def get_scheduled(cls, section_id, term_id):
-        return cls.query.filter_by(section_id=section_id, term_id=term_id).first()
+        return cls.query.filter_by(section_id=section_id, term_id=term_id, deleted_at=None).first()
+
+    @classmethod
+    def delete(cls, section_id, term_id):
+        sql = """UPDATE scheduled SET deleted_at = now()
+            WHERE term_id = :term_id AND section_id = :section_id AND deleted_at IS NULL"""
+        db.session.execute(
+            text(sql),
+            {
+                'section_id': section_id,
+                'term_id': term_id,
+            },
+        )
 
     def to_api_json(self):
         return {
