@@ -23,6 +23,8 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
+import time
+
 from flask import current_app as app
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
@@ -90,6 +92,11 @@ class DiabloPages(Page):
         app.logger.info('Logging out')
         self.open_menu()
         self.wait_for_element_and_click(DiabloPages.LOG_OUT_LINK)
+        # Logging out is not working the first time in some cases, retry for now
+        time.sleep(2)
+        if self.is_present(DiabloPages.LOG_OUT_LINK):
+            self.open_menu()
+            self.wait_for_element_and_click(DiabloPages.LOG_OUT_LINK)
 
     def click_menu_option(self, option_text):
         app.logger.info(f'Clicking the option \'{option_text}\'')

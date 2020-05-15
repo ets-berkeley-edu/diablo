@@ -23,32 +23,14 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-import logging
-import os
+from enum import Enum
 
-ADMIN_UID = '1049291'
 
-# Base directory for the application (one level up from this config file).
-BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+class AsyncJob(Enum):
 
-BASE_URL = 'https://manage-dev.coursecapture.berkeley.edu'
-
-CLICK_SLEEP = 0.5
-
-CURRENT_TERM_NAME = 'Fall 2020'
-
-INDEX_HTML = f'{BASE_DIR}/tests/static/test-index.html'
-
-LOGGING_LEVEL = logging.INFO
-
-TESTING = True
-
-TEST_DATA_ROOMS = f'{BASE_DIR}/xena/fixtures/test-rooms.json'
-
-# The test-courses.json file is intended as an example of required structure of the test data
-TEST_DATA_SIGNUP = f'{BASE_DIR}/xena/fixtures/test-courses-local.json'
-
-TIMEOUT_SHORT = 8
-TIMEOUT_LONG = 30
-
-XENA_BROWSER = 'chrome'
+    ADMIN_EMAILS = 'admin_emails'
+    CANVAS = 'canvas'
+    INSTRUCTOR_EMAILS = 'instructor_emails'
+    KALTURA = 'kaltura'
+    QUEUED_EMAILS = 'queued_emails'
+    SIS_DATA_REFRESH = 'sis_data_refresh'

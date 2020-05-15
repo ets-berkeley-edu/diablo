@@ -23,7 +23,6 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-from config import xena
 import pytest
 from xena.models.publish_type import PublishType
 from xena.models.recording_schedule import RecordingSchedule
@@ -39,14 +38,22 @@ SCENARIO:
 - Instructor 2 approves
 """
 
-test_data = util.parse_sign_up_test_data()[3]
-util.reset_test_data(test_data)
-
 
 @pytest.mark.usefixtures('page_objects')
 class TestSignUp3:
+
+    test_data = util.parse_sign_up_test_data()[3]
     section = Section(test_data)
     recording_schedule = RecordingSchedule(section)
+
+    # DELETE PRE-EXISTING DATA
+
+    def test_delete_old_kaltura_series(self):
+        self.kaltura_page.log_in()
+        self.kaltura_page.reset_test_data(self.term, self.recording_schedule)
+
+    def test_delete_old_diablo_data(self):
+        util.reset_test_data(self.test_data)
 
     # INSTRUCTOR 1 LOGS IN
 
@@ -56,7 +63,7 @@ class TestSignUp3:
         self.ouija_page.wait_for_diablo_title('Home')
 
     def test_current_term_inst_1(self):
-        assert self.ouija_page.visible_heading() == f'Your {xena.CURRENT_TERM_NAME} Courses Eligible for Capture'
+        assert self.ouija_page.visible_heading() == f'Your {self.term.name} Courses Eligible for Capture'
 
     def test_sign_up_link_inst_1(self):
         self.ouija_page.click_sign_up_page_link(self.section)
@@ -143,19 +150,85 @@ class TestSignUp3:
     def test_confirmation_admin(self):
         self.sign_up_page.wait_for_approval_confirmation()
 
-    # TODO VERIFY THE APPROVAL IN DB
-    # TODO RUN SCHEDULING JOB
-    # TODO VERIFY KALTURA RECORDINGS
+    # RUN KALTURA SCHEDULING JOB AND OBTAIN SERIES ID
+
+    def test_run_kaltura_job(self):
+        self.sign_up_page.log_out()
+        self.login_page.dev_auth()
+        self.ouija_page.click_jobs_link()
+        self.jobs_page.run_kaltura_job()
+
+    def test_kaltura_schedule_success(self):
+        util.wait_for_kaltura_id(self.recording_schedule, self.term)
+
+    # VERIFY SERIES IN KALTURA
+
+    def test_load_series(self):
+        self.kaltura_page.load_event_edit_page(self.recording_schedule)
+
+    def test_series_title(self):
+        expected = f'{self.section.code}, {self.section.number} ({self.term.name})'
+        assert self.kaltura_page.visible_series_title() == expected
+
+    def test_start_date(self):
+        start = util.get_kaltura_term_date_str(self.term.start_date)
+        assert f'effective {start}' in self.kaltura_page.visible_recurrence_desc()
+
+    def test_end_date(self):
+        end = util.get_kaltura_term_date_str(self.term.end_date)
+        assert f'until {end}' in self.kaltura_page.visible_recurrence_desc()
+
+    def test_recur_weekly(self):
+        self.kaltura_page.open_recurrence_modal()
+        assert self.kaltura_page.is_weekly_checked()
+
+    def test_recur_frequency(self):
+        assert self.kaltura_page.visible_weekly_frequency() == '1'
+
+    def test_recur_monday(self):
+        checked = self.kaltura_page.is_mon_checked()
+        assert checked if 'MO' in self.section.days else not checked
+
+    def test_recur_tuesday(self):
+        checked = self.kaltura_page.is_tue_checked()
+        assert checked if 'TU' in self.section.days else not checked
+
+    def test_recur_wednesday(self):
+        checked = self.kaltura_page.is_wed_checked()
+        assert checked if 'WE' in self.section.days else not checked
+
+    def test_recur_thursday(self):
+        checked = self.kaltura_page.is_thu_checked()
+        assert checked if 'TH' in self.section.days else not checked
+
+    def test_recur_friday(self):
+        checked = self.kaltura_page.is_fri_checked()
+        assert checked if 'FR' in self.section.days else not checked
+
+    def test_recur_saturday(self):
+        assert not self.kaltura_page.is_sat_checked()
+
+    def test_recur_sunday(self):
+        assert not self.kaltura_page.is_sun_checked()
+
+    def test_start_time(self):
+        start = self.section.get_berkeley_start_time_str()
+        assert self.kaltura_page.visible_start_time() == start
+
+    def test_end_time(self):
+        end = self.section.get_berkeley_end_time_str()
+        assert self.kaltura_page.visible_end_time() == end
 
     # INSTRUCTOR 2 LOGS IN
 
     def test_home_page_inst_2(self):
+        self.sign_up_page.load_page(self.section)
         self.sign_up_page.log_out()
         self.login_page.dev_auth(self.section.instructors[1].uid)
         self.ouija_page.wait_for_diablo_title('Home')
 
     def test_current_term_inst_2(self):
-        assert self.ouija_page.visible_heading() == f'Your {xena.CURRENT_TERM_NAME} Courses Eligible for Capture'
+        assert self.ouija_page.visible_heading() == f'Your {self.term.name} Courses Eligible for Capture'
 
     def test_sign_up_link_inst_2(self):
         self.ouija_page.click_sign_up_page_link(self.section)

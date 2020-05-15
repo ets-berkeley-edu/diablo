@@ -82,7 +82,7 @@ class Section(object):
     @staticmethod
     def add_minutes(section_time_str, minutes):
         parsed = datetime.strptime(section_time_str, '%I:%M %p') + timedelta(minutes=minutes)
-        datetime.strftime(parsed, '%I:%M %p').lower()
+        return datetime.strftime(parsed, '%I:%M %p').lower()
 
     def get_berkeley_start_time_str(self):
         return Section.add_minutes(self.start_time, 7)

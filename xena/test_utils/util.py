@@ -25,9 +25,11 @@ ENHANCEMENTS, OR MODIFICATIONS.
 
 from datetime import datetime
 import json
+import time
 
 from config import xena
 from diablo import db, std_commit
+from diablo.models.scheduled import Scheduled
 from flask import current_app as app
 from sqlalchemy import text
 from xena.models.room import Room
@@ -74,15 +76,36 @@ def parse_sign_up_test_data():
         return parsed['courses']
 
 
+def wait_for_kaltura_id(recording_schedule, term):
+    section = recording_schedule.section
+    app.logger.info(f'Term {term.id} section {section.ccn}')
+    tries = 0
+    retries = 10
+    while tries <= retries:
+        tries += 1
+        try:
+            result = Scheduled.get_scheduled(section.ccn, term.id)
+            app.logger.info(f'Result is {result}')
+            app.logger.info(f'ID is {result.kaltura_schedule_id}')
+            assert result
+            recording_schedule.series_id = result.kaltura_schedule_id
+            break
+        except Exception:
+            if tries == retries:
+                raise
+            else:
+                time.sleep(get_short_timeout())
+
+
 def reset_test_data(course_data):
     ccn = course_data['ccn']
-    term = app.config['CURRENT_TERM_ID']
-    sql = f'DELETE FROM approvals WHERE section_id = {ccn} AND term_id = {term}'
+    term_id = app.config['CURRENT_TERM_ID']
+    sql = f'DELETE FROM approvals WHERE section_id = {ccn} AND term_id = {term_id}'
     db.session.execute(text(sql))
-    sql = f'DELETE FROM scheduled WHERE section_id = {ccn} AND term_id = {term}'
+    sql = f'DELETE FROM scheduled WHERE section_id = {ccn} AND term_id = {term_id}'
     db.session.execute(text(sql))
-    sql = f'DELETE FROM sent_emails WHERE section_id = {ccn} AND term_id = {term}'
+    sql = f'DELETE FROM sent_emails WHERE section_id = {ccn} AND term_id = {term_id}'
     db.session.execute(text(sql))
-    sql = f'DELETE FROM course_preferences WHERE section_id = {ccn} AND term_id = {term}'
+    sql = f'DELETE FROM course_preferences WHERE section_id = {ccn} AND term_id = {term_id}'
     db.session.execute(text(sql))
     std_commit(allow_test_environment=True)

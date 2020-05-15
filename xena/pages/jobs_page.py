@@ -37,6 +37,8 @@ class JobsPage(DiabloPages):
     RUN_QUEUED_EMAILS_JOB_BUTTON = (By.ID, 'run-job-queued_emails')
     RUN_SIS_DATA_REFRESH_JOB_BUTTON = (By.ID, 'run-job-sis_data_refresh')
 
+    SEARCH_HISTORY_INPUT = (By.XPATH, '//label[text()="Search History"]/following-sibling::input')
+
     def run_admin_emails_job(self):
         app.logger.info('Running the admin emails job')
         self.wait_for_element_and_click(JobsPage.RUN_ADMIN_EMAILS_JOB_BUTTON)
@@ -60,3 +62,7 @@ class JobsPage(DiabloPages):
     def run_sis_data_refresh_job(self):
         app.logger.info('Running SIS data refresh job')
         self.wait_for_element_and_click(JobsPage.RUN_SIS_DATA_REFRESH_JOB_BUTTON)
+
+    def search_job_history(self, async_job):
+        app.loggerinfo(f'Searching for {async_job.value}')
+        self.wait_for_element_and_type(async_job.value)
