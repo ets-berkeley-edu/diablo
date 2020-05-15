@@ -40,14 +40,14 @@ CREATE TABLE jobs (
     created_at timestamp with time zone NOT NULL,
     updated_at timestamp with time zone NOT NULL
 );
-ALTER TABLE jobs OWNER TO diablo;
+ALTER TABLE jobs OWNER TO app_diablo;
 CREATE SEQUENCE jobs_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
     NO MAXVALUE
     CACHE 1;
-ALTER TABLE jobs_id_seq OWNER TO diablo;
+ALTER TABLE jobs_id_seq OWNER TO app_diablo;
 ALTER SEQUENCE jobs_id_seq OWNED BY jobs.id;
 ALTER TABLE ONLY jobs ALTER COLUMN id SET DEFAULT nextval('jobs_id_seq'::regclass);
 ALTER TABLE ONLY jobs
