@@ -1,120 +1,66 @@
 <template>
-  <div v-if="!loading">
-    <div class="pb-8">
-      <v-card outlined class="elevation-1">
-        <v-card-title class="align-start">
-          <div class="pt-2">
-            <h1><v-icon class="pb-3" large>mdi-wrench-outline</v-icon> Jobs</h1>
-          </div>
-          <v-spacer></v-spacer>
-          <v-dialog v-model="jobScheduleDialog">
-            <template v-slot:activator="{ on }">
-              <v-btn color="accent" dark v-on="on">
-                Job Schedule
-              </v-btn>
-            </template>
-            <v-card>
-              <v-card-title class="headline grey lighten-2" primary-title>
-                Job Schedule
-              </v-card-title>
-              <v-card-text>
-                <div class="body-2 ma-3">
-                  <div>
-                    <span class="font-weight-bold">Auto-start:</span> {{ jobSchedule.autoStart }}
-                  </div>
-                  <div>
-                    <span class="font-weight-bold">Seconds between jobs check:</span> {{ jobSchedule.secondsBetweenJobsCheck }}
-                  </div>
-                </div>
-                <v-simple-table>
-                  <template v-slot:default>
-                    <thead>
-                      <tr>
-                        <th>Job Name</th>
-                        <th>Description</th>
-                        <th>Schedule</th>
-                      </tr>
-                    </thead>
-                    <tbody v-if="jobSchedule.jobs.length">
-                      <template v-for="(job, index) in jobSchedule.jobs">
-                        <tr :key="job.name">
-                          <td :id="`job-name-${index}`" class="text-no-wrap">
-                            {{ job.name }}
-                          </td>
-                          <td :id="`job-description-${index}`">
-                            {{ job.description }}
-                          </td>
-                          <td :id="`job-schedule-${index}`" class="text-no-wrap">
-                            {{ job.schedule.type }}: {{ job.schedule.value }}
-                          </td>
-                        </tr>
-                      </template>
-                    </tbody>
-                    <tbody v-if="!jobSchedule.jobs.length">
-                      <tr>
-                        <td>
-                          No scheduled jobs
-                        </td>
-                      </tr>
-                    </tbody>
-                  </template>
-                </v-simple-table>
-              </v-card-text>
-              <v-divider></v-divider>
-              <v-card-actions>
-                <v-spacer></v-spacer>
+  <div v-if="!loading" class="pt-3">
+    <h1 class="sr-only">Jobs</h1>
+    <v-card outlined class="elevation-1 mb-6">
+      <v-card-title class="align-start">
+        <div class="pt-2">
+          <h2><v-icon class="pb-1" large>mdi-timer-sand</v-icon> Job Schedule</h2>
+        </div>
+      </v-card-title>
+      <v-data-table
+        :headers="headers"
+        hide-default-footer
+        :items="jobSchedule.jobs"
+        dense
+      >
+        <template v-slot:body="{ items }">
+          <tbody>
+            <tr v-if="!items.length">
+              <td id="message-when-zero-jobs" class="pa-4 text-no-wrap title" :colspan="headers.length">
+                No jobs
+              </td>
+            </tr>
+            <tr v-for="job in items" :key="job.key">
+              <td class="pa-2 w-auto">
                 <v-btn
-                  color="primary"
-                  text
-                  @click="jobScheduleDialog = false"
+                  :id="`run-job-${job.key}`"
+                  :aria-label="`Run job ${job.key}`"
+                  fab
+                  x-small
+                  @click="start(job.key)"
                 >
-                  Close
+                  <v-icon small>mdi-run-fast</v-icon>
                 </v-btn>
-              </v-card-actions>
-            </v-card>
-          </v-dialog>
-        </v-card-title>
-        <v-data-table
-          :headers="headers"
-          hide-default-footer
-          :items="jobs"
-          dense
-        >
-          <template v-slot:body="{ items }">
-            <tbody>
-              <tr v-if="!items.length">
-                <td id="message-when-zero-jobs" class="pa-4 text-no-wrap title" :colspan="headers.length">
-                  No jobs
-                </td>
-              </tr>
-              <tr v-for="job in items" :key="job.key">
-                <td class="w-auto">
-                  <v-btn
-                    :id="`run-job-${job.key}`"
-                    :aria-label="`Run job ${job.key}`"
-                    fab
-                    small
-                    @click="start(job.key)"
-                  >
-                    <v-icon>mdi-run-fast</v-icon>
-                  </v-btn>
-                </td>
-                <td class="pr-4 text-no-wrap">
-                  {{ job.key }}
-                </td>
-                <td>
-                  {{ job.description }}
-                </td>
-              </tr>
-            </tbody>
-          </template>
-        </v-data-table>
-      </v-card>
-    </div>
+              </td>
+              <td class="pr-4 text-no-wrap">
+                {{ $_.replace(job.name, 'Job', '') }}
+              </td>
+              <td>
+                {{ job.description }}
+              </td>
+              <td :id="`job-schedule-${job.key}`" class="text-no-wrap">
+                <span v-if="job.schedule.type === 'day_at'">Daily at {{ job.schedule.value }}</span>
+                <span v-if="job.schedule.type !== 'day_at'">Every {{ job.schedule.value }} {{ job.schedule.type }}</span>
+              </td>
+              <td>
+                <v-switch
+                  :id="`job-${job.key}-disabled`"
+                  v-model="job.disabled"
+                  :color="job.disabled ? 'red': 'green'"
+                  :aria-label="`Job ${job.name} is ${job.disabled ? 'disabled' : 'enabled'}`"
+                  @change="toggleDisabled(job)"
+                >
+                </v-switch>
+              </td>
+            </tr>
+          </tbody>
+        </template>
+      </v-data-table>
+    </v-card>
     <v-card outlined class="elevation-1">
       <v-card-title class="align-start">
         <div class="pt-2">
-          <h2><v-icon class="pb-1" large>mdi-history</v-icon> Job History</h2>
+          <h2><v-icon class="pb-1" large>mdi-history</v-icon> History</h2>
         </div>
         <v-spacer></v-spacer>
         <v-text-field
@@ -187,7 +133,7 @@
 <script>
   import Context from '@/mixins/Context'
   import Utils from '@/mixins/Utils'
-  import {getAvailableJobs, getJobHistory, getJobSchedule, startJob} from '@/api/job'
+  import {getJobHistory, getJobSchedule, setJobDisabled, startJob, updateJobSchedule} from '@/api/job'
 
   export default {
     name: 'Attic',
@@ -196,9 +142,11 @@
       dateFormat: 'dddd, MMMM Do, h:mm:ss a',
       daysCount: 3,
       headers: [
-        {text: 'Job', class: 'w-10', sortable: false},
-        {text: 'Key', value: 'key', sortable: false},
-        {text: 'Description', value: 'description'}
+        {sortable: false},
+        {text: 'Name', value: 'name', sortable: false},
+        {text: 'Description', value: 'description', sortable: false},
+        {text: 'Schedule', value: 'schedule', sortable: false},
+        {text: 'Disable', value: 'disabled'}
       ],
       jobHistoryHeaders: [
         {text: 'Key', value: 'jobKey'},
@@ -207,9 +155,7 @@
         {text: 'Finished', value: 'finishedAt'}
       ],
       jobHistory: undefined,
-      jobs: undefined,
       jobSchedule: undefined,
-      jobScheduleDialog: false,
       options: {
         page: 1,
         itemsPerPage: 50
@@ -227,16 +173,13 @@
     },
     created() {
       this.$loading()
-      getAvailableJobs().then(data => {
-        this.jobs = data
-        getJobHistory(this.daysCount).then(data => {
-          this.jobHistory = data
-          this.scheduleRefresh()
-          getJobSchedule().then(data => {
-            this.jobSchedule = data
-            this.$ready()
-          })
-        }).catch(this.$ready)
+      getJobHistory(this.daysCount).then(data => {
+        this.jobHistory = data
+        this.scheduleRefresh()
+        getJobSchedule().then(data => {
+          this.jobSchedule = data
+          this.$ready()
+        })
       }).catch(this.$ready)
     },
     destroyed() {
@@ -260,6 +203,12 @@
         startJob(jobKey).then(() => {
           this.refresh()
         })
+      },
+      toggleDisabled(job) {
+        setJobDisabled(job.id, job.disabled).then(data => job.disabled = data.disabled)
+      },
+      updateSchedule(job) {
+        updateJobSchedule(job.id, job.schedule.type, job.schedule.value).then(data => job.schedule = data.schedule)
       }
     }
   }

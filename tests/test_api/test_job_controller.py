@@ -22,6 +22,10 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
+import json
+
+from diablo import std_commit
+from diablo.models.job import Job
 from flask import current_app as app
 import pytest
 
@@ -106,29 +110,93 @@ class TestJobHistory:
             assert event['finishedAt']
 
 
-class TestJobsAvailable:
+class TestDisableJob:
 
     @staticmethod
-    def _api_jobs_available(client, expected_status_code=200):
-        response = client.get('/api/jobs/available')
+    def _api_job_disable(client, job_id, disable, expected_status_code=200):
+        response = client.post(
+            '/api/job/disable',
+            data=json.dumps({
+                'jobId': job_id,
+                'disable': disable,
+            }),
+            content_type='application/json',
+        )
         assert response.status_code == expected_status_code
         return response.json
 
     def test_anonymous(self, client):
         """Denies anonymous access."""
-        self._api_jobs_available(client, expected_status_code=401)
+        self._api_job_disable(client, job_id=1, disable=True, expected_status_code=401)
 
     def test_unauthorized(self, client, instructor_session):
         """Denies access if user is not an admin."""
-        self._api_jobs_available(client, expected_status_code=401)
+        self._api_job_disable(client, job_id=1, disable=True, expected_status_code=401)
 
     def test_authorized(self, client, admin_session):
         """Admin can access available jobs."""
-        available_jobs = self._api_jobs_available(client)
-        assert len(available_jobs) > 1
-        for available_job in available_jobs:
-            assert available_job['key']
-            assert len(available_job['description'])
+        job = Job.get_job_by_key('admin_emails')
+        expected_value = not job.disabled
+        api_json = self._api_job_disable(client, job_id=job.id, disable=expected_value)
+        assert api_json['disabled'] is expected_value
+        std_commit(allow_test_environment=True)
+
+        # Reset the value
+        expected_value = not expected_value
+        api_json = self._api_job_disable(client, job_id=job.id, disable=expected_value)
+        assert api_json['disabled'] is expected_value
+        std_commit(allow_test_environment=True)
+
+
+class TestUpdateJobSchedule:
+
+    @staticmethod
+    def _api_job_update_schedule(client, job_id, schedule_type, schedule_value, expected_status_code=200):
+        response = client.post(
+            '/api/job/schedule/update',
+            data=json.dumps({
+                'jobId': job_id,
+                'type': schedule_type,
+                'value': schedule_value,
+            }),
+            content_type='application/json',
+        )
+        assert response.status_code == expected_status_code
+        return response.json
+
+    def test_anonymous(self, client):
+        """Denies anonymous access."""
+        self._api_job_update_schedule(
+            client,
+            job_id=1,
+            schedule_type='minutes',
+            schedule_value=3,
+            expected_status_code=401,
+        )
+
+    def test_unauthorized(self, client, instructor_session):
+        """Denies access if user is not an admin."""
+        self._api_job_update_schedule(
+            client,
+            job_id=1,
+            schedule_type='minutes',
+            schedule_value=3,
+            expected_status_code=401,
+        )
+
+    def test_authorized(self, client, admin_session):
+        """Admin can access available jobs."""
+        job = Job.get_job_by_key('admin_emails')
+        api_json = self._api_job_update_schedule(
+            client,
+            job_id=job.id,
+            schedule_type='minutes',
+            schedule_value=3,
+        )
+        assert api_json['schedule'] == {
+            'type': 'minutes',
+            'value': 3,
+        }
 
 
 class TestJobSchedule:

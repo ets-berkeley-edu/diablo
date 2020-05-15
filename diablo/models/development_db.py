@@ -168,6 +168,7 @@ def _set_up_and_run_jobs():
     Job.create(job_schedule_type='seconds', job_schedule_value='1', key='instructor_emails')
     Job.create(disabled=True, job_schedule_type='seconds', job_schedule_value='1', key='admin_emails')
     Job.create(job_schedule_type='seconds', job_schedule_value='1', key='canvas')
+    Job.create(disabled=True, job_schedule_type='minutes', job_schedule_value='5', key='doomed_to_fail')
 
     CanvasJob(app_context=app.app_context).run_with_app_context()
     std_commit(allow_test_environment=True)

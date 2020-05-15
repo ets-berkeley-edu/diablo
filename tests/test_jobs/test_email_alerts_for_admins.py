@@ -29,6 +29,7 @@ from diablo.jobs.admin_emails_job import AdminEmailsJob
 from diablo.jobs.canvas_job import CanvasJob
 from diablo.jobs.doomed_to_failure import DoomedToFailure
 from diablo.models.approval import Approval
+from diablo.models.job import Job
 from diablo.models.room import Room
 from diablo.models.scheduled import Scheduled
 from diablo.models.sent_email import SentEmail
@@ -126,6 +127,12 @@ class TestEmailAlertsForAdmins:
         CanvasJob(app.app_context).run_with_app_context()
         assert _get_email_count(admin_uid) == email_count
         # Alert on sad job.
+        all_jobs = Job.get_all(include_disabled=True)
+        doomed_job = next((j for j in all_jobs if j.key == DoomedToFailure.key()))
+
+        # Make sure job is enabled
+        Job.update_disabled(job_id=doomed_job.id, disable=False)
+        std_commit(allow_test_environment=True)
         DoomedToFailure(app.app_context).run_with_app_context()
         assert _get_email_count(admin_uid) == email_count + 1
 

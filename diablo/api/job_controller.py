@@ -28,7 +28,7 @@ from diablo.jobs.background_job_manager import BackgroundJobManager
 from diablo.lib.http import tolerant_jsonify
 from diablo.models.job import Job
 from diablo.models.job_history import JobHistory
-from flask import current_app as app
+from flask import current_app as app, request
 
 
 @app.route('/api/job/<job_key>/start')
@@ -40,6 +40,33 @@ def start_job(job_key):
         return tolerant_jsonify(_job_class_to_json(job_class))
     else:
         raise ResourceNotFoundError(f'Invalid job_key: {job_key}')
+
+
+@app.route('/api/job/disable', methods=['POST'])
+@admin_required
+def job_disable():
+    params = request.get_json()
+    job_id = params.get('jobId')
+    disable = params.get('disable')
+
+    if not job_id or disable is None:
+        raise BadRequestError('Required parameters are missing.')
+    job = Job.update_disabled(job_id=job_id, disable=disable)
+    return tolerant_jsonify(job.to_api_json())
+
+
+@app.route('/api/job/schedule/update', methods=['POST'])
+@admin_required
+def update_schedule():
+    params = request.get_json()
+    job_id = params.get('jobId')
+    schedule_type = params.get('type')
+    schedule_value = params.get('value')
+
+    if not job_id or not schedule_type or not schedule_value:
+        raise BadRequestError('Required parameters are missing.')
+    job = Job.update_schedule(job_id=job_id, schedule_type=schedule_type, schedule_value=schedule_value)
+    return tolerant_jsonify(job.to_api_json())
 
 
 @app.route('/api/job/history/<day_count>')
@@ -75,13 +102,6 @@ def job_schedule():
                 },
             })
     return tolerant_jsonify(api_json)
-
-
-@app.route('/api/jobs/available')
-@admin_required
-def available():
-    job_classes = BackgroundJobManager.available_job_classes()
-    return tolerant_jsonify([_job_class_to_json(job_class=job_class) for job_class in job_classes])
 
 
 def _job_class_to_json(job_class):
