@@ -26,15 +26,15 @@ import threading
 import time
 
 from diablo.jobs.errors import BackgroundJobError
+from diablo.models.job import Job
 import schedule
 
 
 class BackgroundJobManager:
 
-    def __init__(self, available_job_classes):
+    def __init__(self):
         self.cease_continuous_run = threading.Event()
         self.continuous_thread = None
-        self._job_classes = available_job_classes
 
     def start(self, app):
         """Continuously run, executing pending jobs per time interval.
@@ -59,20 +59,39 @@ class BackgroundJobManager:
         if JobRunnerThread.active:
             return
 
-        scheduler_config = app.config['JOB_MANAGER']
-        interval = scheduler_config['seconds_between_pending_jobs_check']
-        job_configs = scheduler_config['jobs']
+        interval = app.config['JOBS_SECONDS_BETWEEN_PENDING_CHECK']
+        job_configs = Job.get_all()
         app.logger.info(f"""
 
             Starting background job manager.
             Seconds between pending jobs check = {interval}
             Jobs:
-                {job_configs}
+                {[job_config.to_api_json() for job_config in job_configs]}
 
             """)
         if job_configs:
             for job_config in job_configs:
-                self._add_job_to_schedule(app=app, job_config=job_config)
+                job_key = job_config.key
+                job_class = next(
+                    (job for job in self.available_job_classes() if job.key() == job_key),
+                    None,
+                )
+                if job_class:
+                    job = job_class(app.app_context)
+                else:
+                    raise BackgroundJobError(f'Failed to find job with key {job_key}')
+
+                type_ = job_config.job_schedule_type
+                value = job_config.job_schedule_value
+                run_with_context = job.run_with_app_context
+                if type_ == 'minutes':
+                    schedule.every(int(value)).minutes.do(run_with_context)
+                elif type_ == 'seconds':
+                    schedule.every(int(value)).seconds.do(run_with_context)
+                elif type_ == 'day_at':
+                    schedule.every().day.at(value).do(run_with_context)
+                else:
+                    raise BackgroundJobError(f'Unrecognized schedule type: {type_}')
 
             self.continuous_thread = JobRunnerThread(daemon=True)
             self.continuous_thread.start()
@@ -86,27 +105,20 @@ class BackgroundJobManager:
         app.logger.info('Stopping job-runner thread')
         self.cease_continuous_run.set()
 
-    def _add_job_to_schedule(self, app, job_config):
-        if job_config.get('disabled', False) is True:
-            return
+    @classmethod
+    def available_job_classes(cls):
+        from diablo.jobs.admin_emails_job import AdminEmailsJob
+        from diablo.jobs.canvas_job import CanvasJob
+        from diablo.jobs.instructor_emails_job import InstructorEmailsJob
+        from diablo.jobs.kaltura_job import KalturaJob
+        from diablo.jobs.queued_emails_job import QueuedEmailsJob
+        from diablo.jobs.sis_data_refresh_job import SisDataRefreshJob
 
-        job_key = job_config['key']
-        job_class = next((job for job in self._job_classes if job.key() == job_key), None)
-
-        if job_class:
-            job = job_class(app.app_context)
-        else:
-            raise BackgroundJobError(f'Failed to find job with key {job_key}')
-
-        type_ = job_config['schedule']['type']
-        value = job_config['schedule']['value']
-
-        run_with_context = job.run_with_app_context
-        if type_ == 'minutes':
-            schedule.every(value).minutes.do(run_with_context)
-        elif type_ == 'seconds':
-            schedule.every(value).seconds.do(run_with_context)
-        elif type_ == 'day_at':
-            schedule.every().day.at(value).do(run_with_context)
-        else:
-            raise BackgroundJobError(f'Unrecognized schedule type: {type_}')
+        return [
+            AdminEmailsJob,
+            CanvasJob,
+            InstructorEmailsJob,
+            KalturaJob,
+            QueuedEmailsJob,
+            SisDataRefreshJob,
+        ]

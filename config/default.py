@@ -71,29 +71,9 @@ FEATURE_FLAG_SCHEDULE_RECORDINGS_SYNCHRONOUSLY = False
 # Directory to search for mock fixtures, if running in "test" or "demo" mode.
 FIXTURES_PATH = None
 
-# All jobs are disabled below. Use the following as an example when configuring jobs in the real world.
-JOB_MANAGER = {
-    'auto_start': False,
-    'seconds_between_pending_jobs_check': 60,
-    'jobs': [
-        {
-            'key': 'sis_data_refresh',
-            'disabled': True,
-            'schedule': {
-                'type': 'day_at',
-                'value': '06:00',
-            },
-        },
-        {
-            'key': 'admin_emails',
-            'disabled': True,
-            'schedule': {
-                'type': 'minutes',
-                'value': 60,
-            },
-        },
-    ],
-}
+# background_job_manager configs.
+JOBS_AUTO_START = False
+JOBS_SECONDS_BETWEEN_PENDING_CHECK = 60
 
 # Minutes of inactivity before session cookie is destroyed
 INACTIVE_SESSION_LIFETIME = 20

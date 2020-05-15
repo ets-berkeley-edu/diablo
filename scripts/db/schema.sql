@@ -57,6 +57,14 @@ CREATE TYPE email_template_types AS ENUM (
 
 --
 
+CREATE TYPE job_schedule_types AS ENUM (
+    'day_at',
+    'minutes',
+    'seconds'
+);
+
+--
+
 CREATE TYPE publish_types AS ENUM (
     'canvas',
     'kaltura_media_gallery'
@@ -212,6 +220,32 @@ ALTER SEQUENCE job_history_id_seq OWNED BY job_history.id;
 ALTER TABLE ONLY job_history ALTER COLUMN id SET DEFAULT nextval('job_history_id_seq'::regclass);
 ALTER TABLE ONLY job_history
     ADD CONSTRAINT job_history_pkey PRIMARY KEY (id);
+
+--
+
+CREATE TABLE jobs (
+    id INTEGER NOT NULL,
+    disabled BOOLEAN NOT NULL,
+    job_schedule_type job_schedule_types NOT NULL,
+    job_schedule_value VARCHAR(80) NOT NULL,
+    key VARCHAR(80) NOT NULL,
+    created_at timestamp with time zone NOT NULL,
+    updated_at timestamp with time zone NOT NULL
+);
+ALTER TABLE jobs OWNER TO diablo;
+CREATE SEQUENCE jobs_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+ALTER TABLE jobs_id_seq OWNER TO diablo;
+ALTER SEQUENCE jobs_id_seq OWNED BY jobs.id;
+ALTER TABLE ONLY jobs ALTER COLUMN id SET DEFAULT nextval('jobs_id_seq'::regclass);
+ALTER TABLE ONLY jobs
+    ADD CONSTRAINT jobs_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY jobs
+    ADD CONSTRAINT jobs_key_unique_constraint UNIQUE (key);
 
 --
 

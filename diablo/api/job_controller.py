@@ -24,30 +24,17 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 from diablo.api.errors import BadRequestError, ResourceNotFoundError
 from diablo.api.util import admin_required
-from diablo.jobs.admin_emails_job import AdminEmailsJob
-from diablo.jobs.canvas_job import CanvasJob
-from diablo.jobs.instructor_emails_job import InstructorEmailsJob
-from diablo.jobs.kaltura_job import KalturaJob
-from diablo.jobs.queued_emails_job import QueuedEmailsJob
-from diablo.jobs.sis_data_refresh_job import SisDataRefreshJob
+from diablo.jobs.background_job_manager import BackgroundJobManager
 from diablo.lib.http import tolerant_jsonify
+from diablo.models.job import Job
 from diablo.models.job_history import JobHistory
 from flask import current_app as app
-
-available_jobs = [
-    AdminEmailsJob,
-    CanvasJob,
-    InstructorEmailsJob,
-    KalturaJob,
-    QueuedEmailsJob,
-    SisDataRefreshJob,
-]
 
 
 @app.route('/api/job/<job_key>/start')
 @admin_required
 def start_job(job_key):
-    job_class = next((job for job in available_jobs if job.key() == job_key), None)
+    job_class = next((job for job in BackgroundJobManager.available_job_classes() if job.key() == job_key), None)
     if job_class:
         job_class(app.app_context).run_with_app_context()
         return tolerant_jsonify(_job_class_to_json(job_class))
@@ -72,27 +59,29 @@ def job_history(day_count):
 @app.route('/api/job/schedule')
 @admin_required
 def job_schedule():
-    config = app.config['JOB_MANAGER']
-    schedule = {
-        'autoStart': config['auto_start'],
+    api_json = {
+        'autoStart': app.config['JOBS_AUTO_START'],
         'jobs': [],
-        'secondsBetweenJobsCheck': config['seconds_between_pending_jobs_check'],
+        'secondsBetweenJobsCheck': app.config['JOBS_SECONDS_BETWEEN_PENDING_CHECK'],
     }
-    for entry in config['jobs']:
-        job_class = next((job for job in available_jobs if job.key() == entry['key']), None)
+    for job in Job.get_all(include_disabled=True):
+        job_class = next((j for j in BackgroundJobManager.available_job_classes() if j.key() == job.key), None)
         if job_class:
-            schedule['jobs'].append({
-                'name': job_class.__name__,
-                'description': job_class.description(),
-                'schedule': entry['schedule'],
+            api_json['jobs'].append({
+                **job.to_api_json(),
+                **{
+                    'name': job_class.__name__,
+                    'description': job_class.description(),
+                },
             })
-    return tolerant_jsonify(schedule)
+    return tolerant_jsonify(api_json)
 
 
 @app.route('/api/jobs/available')
 @admin_required
 def available():
-    return tolerant_jsonify([_job_class_to_json(job_class=job_class) for job_class in available_jobs])
+    job_classes = BackgroundJobManager.available_job_classes()
+    return tolerant_jsonify([_job_class_to_json(job_class=job_class) for job_class in job_classes])
 
 
 def _job_class_to_json(job_class):

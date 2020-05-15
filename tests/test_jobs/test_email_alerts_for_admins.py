@@ -26,6 +26,8 @@ import random
 
 from diablo import std_commit
 from diablo.jobs.admin_emails_job import AdminEmailsJob
+from diablo.jobs.canvas_job import CanvasJob
+from diablo.jobs.doomed_to_failure import DoomedToFailure
 from diablo.models.approval import Approval
 from diablo.models.room import Room
 from diablo.models.scheduled import Scheduled
@@ -33,7 +35,6 @@ from diablo.models.sent_email import SentEmail
 from diablo.models.sis_section import SisSection
 from flask import current_app as app
 from tests.test_api.api_test_utils import get_instructor_uids
-from tests.test_jobs.sample_jobs import DoomedToFailure, LightSwitch
 from tests.util import test_approvals_workflow
 
 
@@ -122,7 +123,7 @@ class TestEmailAlertsForAdmins:
         admin_uid = app.config['EMAIL_DIABLO_ADMIN_UID']
         email_count = _get_email_count(admin_uid)
         # No alert on happy job.
-        LightSwitch(app.app_context).run_with_app_context()
+        CanvasJob(app.app_context).run_with_app_context()
         assert _get_email_count(admin_uid) == email_count
         # Alert on sad job.
         DoomedToFailure(app.app_context).run_with_app_context()

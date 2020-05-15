@@ -24,7 +24,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 import traceback
 
-from diablo.jobs.background_job_manager import BackgroundJobError
+from diablo.jobs.errors import BackgroundJobError
 from diablo.merged.emailer import send_system_error_email
 from diablo.models.job_history import JobHistory
 from flask import current_app as app

@@ -149,7 +149,23 @@ class TestJobSchedule:
 
     def test_authorized(self, client, admin_session):
         """Admin can access job_history."""
-        config = app.config['JOB_MANAGER']
         api_json = self._api_job_schedule(client)
-        assert api_json['autoStart'] is config['auto_start']
-        assert api_json['secondsBetweenJobsCheck'] == config['seconds_between_pending_jobs_check']
+        assert api_json['autoStart'] is app.config['JOBS_AUTO_START']
+        assert api_json['secondsBetweenJobsCheck'] == app.config['JOBS_SECONDS_BETWEEN_PENDING_CHECK']
+
+        first_job = api_json['jobs'][0]
+        assert first_job['key'] == 'admin_emails'
+        assert first_job['name'] == 'AdminEmailsJob'
+        assert first_job['disabled'] is True
+        assert first_job['schedule'] == {
+            'type': 'seconds',
+            'value': 1,
+        }
+
+        last_job = api_json['jobs'][-1]
+        assert last_job['key'] == 'queued_emails'
+        assert last_job['disabled'] is False
+        assert last_job['schedule'] == {
+            'type': 'day_at',
+            'value': '04:30',
+        }
