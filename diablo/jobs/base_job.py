@@ -26,6 +26,7 @@ import traceback
 
 from diablo.jobs.errors import BackgroundJobError
 from diablo.merged.emailer import send_system_error_email
+from diablo.models.job import Job
 from diablo.models.job_history import JobHistory
 from flask import current_app as app
 
@@ -39,6 +40,9 @@ class BaseJob:
         with self.app_context():
             if JobHistory.is_job_running(job_key=self.key()):
                 app.logger.warn(f'Skipping job {self.key()} because an older instance is still running')
+
+            elif Job.get_job_by_key(self.key()).disabled:
+                app.logger.warn(f'Job {self.key()} is disabled. It will not run.')
 
             else:
                 app.logger.info(f'Job {self.key()} is starting.')

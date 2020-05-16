@@ -73,11 +73,32 @@ class Job(Base):
         return job
 
     @classmethod
+    def update_disabled(cls, job_id, disable):
+        job = cls.query.filter_by(id=job_id).first()
+        job.disabled = disable
+        db.session.add(job)
+        std_commit()
+        return job
+
+    @classmethod
+    def update_schedule(cls, job_id, schedule_type, schedule_value):
+        job = cls.query.filter_by(id=job_id).first()
+        job.job_schedule_type = schedule_type
+        job.job_schedule_value = schedule_value
+        db.session.add(job)
+        std_commit()
+        return job
+
+    @classmethod
     def get_all(cls, include_disabled=False):
         if include_disabled:
             return cls.query.order_by(cls.key).all()
         else:
             return cls.query.filter_by(disabled=False).order_by(cls.key).all()
+
+    @classmethod
+    def get_job_by_key(cls, key):
+        return cls.query.filter_by(key=key).first()
 
     def to_api_json(self):
         return {
