@@ -29,6 +29,8 @@ from diablo.logger import initialize_logger
 from diablo.routes import register_routes
 from flask import Flask
 
+background_job_manager = BackgroundJobManager()
+
 
 def create_app():
     """Initialize app with configs."""
@@ -42,6 +44,6 @@ def create_app():
     with app.app_context():
         register_routes(app)
         if app.config['JOBS_AUTO_START']:
-            BackgroundJobManager().start(app)
+            background_job_manager.start(app)
 
     return app

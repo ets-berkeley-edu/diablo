@@ -21,7 +21,7 @@
               </td>
             </tr>
             <tr v-for="job in items" :key="job.key">
-              <td class="pa-2 w-auto">
+              <td class="pb-2 pl-5 pt-2">
                 <v-btn
                   :id="`run-job-${job.key}`"
                   :aria-label="`Run job ${job.key}`"
@@ -33,14 +33,34 @@
                 </v-btn>
               </td>
               <td class="pr-4 text-no-wrap">
-                {{ $_.replace(job.name, 'Job', '') }}
+                {{ job.name }}
               </td>
               <td>
                 {{ job.description }}
               </td>
               <td :id="`job-schedule-${job.key}`" class="text-no-wrap">
-                <span v-if="job.schedule.type === 'day_at'">Daily at {{ job.schedule.value }}</span>
-                <span v-if="job.schedule.type !== 'day_at'">Every {{ job.schedule.value }} {{ job.schedule.type }}</span>
+                <div class="d-flex align-center">
+                  <div>
+                    <v-btn
+                      :id="`edit-job-schedule-${job.key}`"
+                      :aria-label="`Edit job schedule ${job.key}`"
+                      class="pr-2"
+                      small
+                      text
+                      @click.stop="scheduleEditOpen(job)"
+                    >
+                      <v-icon>mdi-playlist-edit</v-icon>
+                    </v-btn>
+                  </div>
+                  <div>
+                    <span v-if="job.schedule.type === 'day_at'" :for="`edit-job-schedule-${job.key}`">
+                      Daily at {{ job.schedule.value }}
+                    </span>
+                    <span v-if="job.schedule.type !== 'day_at'" :for="`edit-job-schedule-${job.key}`">
+                      Every {{ job.schedule.value }} {{ job.schedule.type }}
+                    </span>
+                  </div>
+                </div>
               </td>
               <td>
                 <v-switch
@@ -127,6 +147,48 @@
         </div>
       </v-sheet>
     </v-bottom-sheet>
+    <v-dialog v-model="editJobDialog" max-width="400px" persistent>
+      <v-card>
+        <v-card-title>
+          <span class="headline">{{ $_.get(editJob, 'name') }} Schedule</span>
+        </v-card-title>
+        <v-card-text>
+          <v-container v-if="editJob">
+            <v-row>
+              <v-col cols="12" sm="6">
+                <v-select
+                  v-model="editJob.schedule.type"
+                  :items="['day_at', 'minutes', 'seconds']"
+                  label="Type"
+                  required
+                  @change="editJob.schedule.value = ''"
+                ></v-select>
+              </v-col>
+              <v-col cols="12" sm="6">
+                <v-text-field
+                  v-model="editJob.schedule.value"
+                  required
+                  :suffix="editJob.schedule.type === 'day_at' ? 'PST': ''"
+                  :type="editJob.schedule.type === 'day_at' ? 'time': 'number'"
+                ></v-text-field>
+              </v-col>
+            </v-row>
+          </v-container>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="blue darken-1" text @click="scheduleEditCancel()">Close</v-btn>
+          <v-btn
+            color="blue darken-1"
+            :disabled="disableScheduleSave"
+            text
+            @click="scheduleEditSave()"
+          >
+            Save
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
@@ -136,11 +198,14 @@
   import {getJobHistory, getJobSchedule, setJobDisabled, startJob, updateJobSchedule} from '@/api/job'
 
   export default {
-    name: 'Attic',
+    name: 'Jobs',
     mixins: [Context, Utils],
     data: () => ({
       dateFormat: 'dddd, MMMM Do, h:mm:ss a',
       daysCount: 3,
+      disableScheduleSave: false,
+      editJob: undefined,
+      editJobDialog: false,
       headers: [
         {sortable: false},
         {text: 'Name', value: 'name', sortable: false},
@@ -167,20 +232,22 @@
       search: undefined
     }),
     watch: {
+      editJob: {
+        deep: true,
+        handler(job) {
+          this.disableScheduleSave = !this.$_.get(job, 'schedule.value') || parseInt(job.schedule.value) < 0
+        }
+      },
       search(value) {
         this.richardPryor = value && value.toLowerCase() === 'the bed is on my foot'
       }
     },
     created() {
       this.$loading()
-      getJobHistory(this.daysCount).then(data => {
-        this.jobHistory = data
-        this.scheduleRefresh()
-        getJobSchedule().then(data => {
-          this.jobSchedule = data
-          this.$ready()
-        })
-      }).catch(this.$ready)
+      getJobSchedule().then(data => {
+        this.jobSchedule = data
+        this.refresh()
+      })
     },
     destroyed() {
       clearTimeout(this.refresher)
@@ -191,7 +258,28 @@
         getJobHistory(this.daysCount).then(data => {
           this.jobHistory = data
           this.refreshing = false
+          this.$ready()
           this.scheduleRefresh()
+        })
+      },
+      scheduleEditCancel() {
+        this.editJob = undefined
+        this.editJobDialog = false
+      },
+      scheduleEditOpen(job) {
+        this.editJob = this.$_.cloneDeep(job)
+        this.editJobDialog = true
+      },
+      scheduleEditSave() {
+        updateJobSchedule(
+          this.editJob.id,
+          this.editJob.schedule.type,
+          this.editJob.schedule.value
+        ).then(() => {
+          const match = this.$_.find(this.jobSchedule.jobs, ['id', this.editJob.id])
+          match.schedule = this.editJob.schedule
+          this.editJob = undefined
+          this.editJobDialog = false
         })
       },
       scheduleRefresh() {
@@ -206,9 +294,6 @@
       },
       toggleDisabled(job) {
         setJobDisabled(job.id, job.disabled).then(data => job.disabled = data.disabled)
-      },
-      updateSchedule(job) {
-        updateJobSchedule(job.id, job.schedule.type, job.schedule.value).then(data => job.schedule = data.schedule)
       }
     }
   }

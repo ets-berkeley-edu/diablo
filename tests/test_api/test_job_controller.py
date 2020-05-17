@@ -184,8 +184,28 @@ class TestUpdateJobSchedule:
             expected_status_code=401,
         )
 
+    def test_invalid_schedule_type(self, client, instructor_session):
+        """Error when invalid schedule_type."""
+        self._api_job_update_schedule(
+            client,
+            job_id=1,
+            schedule_type='this_is_not_a_type',
+            schedule_value=3,
+            expected_status_code=401,
+        )
+
+    def test_invalid_schedule_value(self, client, instructor_session):
+        """Error when invalid schedule_value."""
+        self._api_job_update_schedule(
+            client,
+            job_id=1,
+            schedule_type='minutes',
+            schedule_value=-30,
+            expected_status_code=401,
+        )
+
     def test_authorized(self, client, admin_session):
-        """Admin can access available jobs."""
+        """Admin can edit job schedule."""
         job = Job.get_job_by_key('admin_emails')
         api_json = self._api_job_update_schedule(
             client,
@@ -196,6 +216,16 @@ class TestUpdateJobSchedule:
         assert api_json['schedule'] == {
             'type': 'minutes',
             'value': 3,
+        }
+        api_json = self._api_job_update_schedule(
+            client,
+            job_id=job.id,
+            schedule_type='day_at',
+            schedule_value='15:30',
+        )
+        assert api_json['schedule'] == {
+            'type': 'day_at',
+            'value': '15:30',
         }
 
 
@@ -223,7 +253,7 @@ class TestJobSchedule:
 
         first_job = api_json['jobs'][0]
         assert first_job['key'] == 'admin_emails'
-        assert first_job['name'] == 'AdminEmailsJob'
+        assert first_job['name'] == 'Admin Emails'
         assert first_job['disabled'] is True
         assert first_job['schedule'] == {
             'type': 'seconds',

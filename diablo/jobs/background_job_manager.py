@@ -36,6 +36,9 @@ class BackgroundJobManager:
         self.cease_continuous_run = threading.Event()
         self.continuous_thread = None
 
+    def is_running(self):
+        return not self.cease_continuous_run.is_set()
+
     def start(self, app):
         """Continuously run, executing pending jobs per time interval.
 
