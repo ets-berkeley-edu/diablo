@@ -22,9 +22,8 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
+from diablo.externals.b_connected import BConnected
 from diablo.jobs.base_job import BaseJob
-from diablo.jobs.errors import BackgroundJobError
-from diablo.merged.emailer import get_admin_alert_recipients, send_course_related_email
 from diablo.models.queued_email import QueuedEmail
 from diablo.models.sis_section import SisSection
 from flask import current_app as app
@@ -35,38 +34,28 @@ class QueuedEmailsJob(BaseJob):
     def run(self, args=None):
         term_id = app.config['CURRENT_TERM_ID']
         for queued_email in QueuedEmail.get_all(term_id):
-            template_type = queued_email.template_type
             course = SisSection.get_course(term_id, queued_email.section_id)
-            if course:
-                if course['hasOptedOut']:
-                    # Do not send email; delete the item from queue.
-                    QueuedEmail.delete(queued_email)
-                else:
-                    if template_type in [
-                        'invitation',
-                        'notify_instructor_of_changes',
-                        'recordings_scheduled',
-                        'room_change_no_longer_eligible',
-                        'waiting_for_approval',
-                    ]:
-                        recipients = course['instructors']
-                    elif template_type in ['admin_alert_instructor_change', 'admin_alert_room_change']:
-                        recipients = get_admin_alert_recipients()
-                    else:
-                        raise BackgroundJobError(f'Email template type not supported: {template_type}')
-
-                    # If send() returns False then report the error and DO NOT delete the queued item.
-                    if send_course_related_email(
-                        course=course,
-                        recipients=recipients,
-                        template_type=template_type,
-                        term_id=term_id,
-                    ):
-                        QueuedEmail.delete(queued_email)
-                    else:
-                        app.logger.error(f'Failed to send email: {queued_email}')
+            if not course:
+                app.logger.warn(f'Email will remain queued until course data is present: {queued_email}')
+                return
+            if course['hasOptedOut']:
+                QueuedEmail.delete(queued_email)
+                return
+            if not queued_email.is_interpolated():
+                if not queued_email.interpolate(course):
+                    app.logger.warn(f'Failed to interpolate course data, email will remain in queue: {queued_email}')
+            if BConnected().send(
+                message=queued_email.message,
+                recipients=queued_email.recipients,
+                section_id=queued_email.section_id,
+                subject_line=queued_email.subject_line,
+                template_type=queued_email.template_type,
+                term_id=term_id,
+            ):
+                QueuedEmail.delete(queued_email)
             else:
-                app.logger.warn(f'Email will remain queued until course gets proper instructor: {queued_email}')
+                # If send() fails then report the error and DO NOT delete the queued item.
+                app.logger.error(f'Failed to send email: {queued_email}')
 
     @classmethod
     def description(cls):

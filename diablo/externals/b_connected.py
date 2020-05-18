@@ -106,6 +106,7 @@ class BConnected:
             template_type=template_type,
             term_id=term_id or app.config['CURRENT_TERM_ID'],
         )
+        return True
 
     def ping(self):
         with SMTP(self.bcop_smtp_server, port=self.bcop_smtp_port) as smtp:
