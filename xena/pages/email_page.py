@@ -43,10 +43,11 @@ class EmailPage(Page):
     SELECT_ALL_CBX = (By.XPATH, '//button[@data-test-id="checkbox"]')
     DELETE_BUTTON = (By.XPATH, '//button[@data-test-id="toolbar-delete"]')
     MESSAGE_ROW = (By.XPATH, '//a[@data-test-id="message-list-item"]')
+    EMPTY_FOLDER = (By.XPATH, '//span[contains(., " folder is empty")]')
 
     @staticmethod
     def message_locator(message):
-        return By.XPATH, f'//span[@data-test-id="message-subject"][text()="{message.subject}"]/ancestor::a'
+        return By.XPATH, f'//span[contains(@title, "{message.subject}")]/ancestor::a'
 
     def message_row(self, message):
         return self.element(EmailPage.message_locator(message))
@@ -99,5 +100,7 @@ class EmailPage(Page):
             self.wait_for_page_and_click_js(EmailPage.SELECT_ALL_CBX, 2)
             self.wait_for_page_and_click_js(EmailPage.DELETE_BUTTON, 2)
             Wait(self.driver, util.get_long_timeout()).until(ec.invisibility_of_element_located(EmailPage.MESSAGE_ROW))
-        else:
+        elif self.is_present(EmailPage.EMPTY_FOLDER):
             app.logger.info('There are no messages to delete')
+        else:
+            app.logger.warning('Unable to tell if there are messages in the inbox')

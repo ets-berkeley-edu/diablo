@@ -131,7 +131,7 @@ class KalturaPage(Page):
         old_schedule = Scheduled.get_scheduled(recording_schedule.section.ccn, term.id)
         if old_schedule:
             recording_schedule.series_id = old_schedule.kaltura_schedule_id
-            app.logger.info(f'Deleting an existing Kaltura series id {recording_schedule.series.id}')
+            app.logger.info(f'Deleting an existing Kaltura series id {recording_schedule.series_id}')
             self.delete_series(recording_schedule)
         else:
             app.logger.info('Cannot find any existing Kaltura series')

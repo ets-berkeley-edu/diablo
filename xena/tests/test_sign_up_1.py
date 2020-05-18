@@ -24,6 +24,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 
 import pytest
+from xena.models.email import Email
 from xena.models.publish_type import PublishType
 from xena.models.recording_schedule import RecordingSchedule
 from xena.models.recording_type import RecordingType
@@ -55,6 +56,10 @@ class TestSignUp1:
 
     def test_delete_old_diablo_data(self):
         util.reset_test_data(self.test_data)
+
+    def test_delete_old_email(self):
+        self.email_page.log_in()
+        self.email_page.delete_all_messages()
 
     # ADMIN LOGS IN
 
@@ -193,6 +198,13 @@ class TestSignUp1:
         self.sign_up_page.load_page(self.section)
         self.sign_up_page.log_out()
         self.login_page.wait_for_diablo_title('Welcome')
+
+    # VERIFY EMAIL
+
+    def test_schedule_conf_email(self):
+        subj = f'Your course, {self.section.code}, has been scheduled for Course Capture'
+        expected_message = Email(msg_type=None, sender=None, subject=subj)
+        assert self.email_page.is_message_delivered(expected_message)
 
     # INSTRUCTOR VISITS SIGN-UP PAGE AND APPROVES
 
