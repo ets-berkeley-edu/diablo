@@ -77,13 +77,16 @@
           </span>
         </template>
         <template v-slot:item.endDate="{ item }">
-          <span v-if="item.endDate" class="text-no-wrap">
-            {{ item.endDate | moment('ddd, MMM D, YYYY') }}
+          <span v-if="$_.get(item, 'recurrence.until')" class="text-no-wrap">
+            {{ item.recurrence.until | moment('ddd, MMM D, YYYY') }}
+          </span>
+          <span v-if="!$_.get(item, 'recurrence.until')">
+            &mdash;
           </span>
         </template>
         <template v-slot:item.duration="{ item }">
-          <span v-if="item.duration" class="text-no-wrap">
-            {{ [item.duration, 'seconds'] | duration('as', 'hours') }} hours
+          <span v-if="item.durationFormatted" class="text-no-wrap">
+            {{ item.durationFormatted }}
           </span>
         </template>
         <template v-slot:item.days="{ item }">

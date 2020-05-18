@@ -45,6 +45,7 @@ def events_to_api_json(scheduled_events):
             'createdAt': epoch_time_to_isoformat(event.createdAt),
             'description': event.description,
             'duration': event.duration,
+            'durationFormatted': str(timedelta(seconds=event.duration)) if event.duration else None,
             'endDate': epoch_time_to_isoformat(event.endDate),
             'entryIds': event.entryIds,
             'geoLatitude': event.geoLatitude,

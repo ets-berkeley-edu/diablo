@@ -13,7 +13,7 @@
       <v-row>
         <v-col lg="3" md="3" sm="3">
           <v-card class="pa-6" outlined tile>
-            <v-row id="instructors">
+            <v-row v-if="course.instructors.length" id="instructors">
               <v-col md="auto">
                 <v-icon>mdi-school-outline</v-icon>
               </v-col>
@@ -144,7 +144,7 @@
         </v-col>
         <v-col>
           <v-card class="pa-6" outlined>
-            <v-container>
+            <v-container v-if="course.room.capability">
               <v-row v-if="scheduled">
                 <v-col>
                   <v-card tile>
@@ -325,6 +325,12 @@
                     Approve
                   </v-btn>
                 </v-col>
+              </v-row>
+            </v-container>
+            <v-container v-if="!course.room.capability">
+              <v-row>
+                <v-icon class="pr-2" color="red">mdi-alert</v-icon>
+                This course is not eligible for Course Capture because {{ course.room.location }} is not capture-enabled.
               </v-row>
             </v-container>
           </v-card>

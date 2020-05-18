@@ -22,8 +22,11 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
+import re
+
 from diablo.api.errors import BadRequestError, ResourceNotFoundError
 from diablo.api.util import admin_required
+from diablo.factory import background_job_manager
 from diablo.jobs.background_job_manager import BackgroundJobManager
 from diablo.lib.http import tolerant_jsonify
 from diablo.models.job import Job
@@ -52,6 +55,11 @@ def job_disable():
     if not job_id or disable is None:
         raise BadRequestError('Required parameters are missing.')
     job = Job.update_disabled(job_id=job_id, disable=disable)
+
+    if background_job_manager.is_running():
+        background_job_manager.stop()
+        background_job_manager.start(app)
+
     return tolerant_jsonify(job.to_api_json())
 
 
@@ -66,6 +74,11 @@ def update_schedule():
     if not job_id or not schedule_type or not schedule_value:
         raise BadRequestError('Required parameters are missing.')
     job = Job.update_schedule(job_id=job_id, schedule_type=schedule_type, schedule_value=schedule_value)
+
+    if not job.disabled and background_job_manager.is_running():
+        background_job_manager.stop()
+        background_job_manager.start(app)
+
     return tolerant_jsonify(job.to_api_json())
 
 
@@ -96,17 +109,18 @@ def job_schedule():
         if job_class:
             api_json['jobs'].append({
                 **job.to_api_json(),
-                **{
-                    'name': job_class.__name__,
-                    'description': job_class.description(),
-                },
+                **_job_class_to_json(job_class),
             })
     return tolerant_jsonify(api_json)
 
 
 def _job_class_to_json(job_class):
+    def camel_case_split(s):
+        return [m.group(0) for m in re.finditer('.+?(?:(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])|$)', s)]
+
     return {
-        'key': job_class.key(),
         'class': job_class.__name__,
         'description': job_class.description(),
+        'key': job_class.key(),
+        'name': ' '.join(camel_case_split(job_class.__name__.replace('Job', ''))),
     }
