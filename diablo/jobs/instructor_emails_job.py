@@ -42,19 +42,18 @@ class InstructorEmailsJob(BaseJob):
 
     def email_new_invites(self):
         for course in SisSection.get_courses(term_id=self.term_id):
-            if course['hasOptedOut']:
-                next
-            new_instructors = [i for i in course['instructors'] if not i['wasSentInvite']]
-            if new_instructors:
-                if not send_course_related_email(
-                    course=course,
-                    recipients=new_instructors,
-                    template_type='invitation',
-                    term_id=self.term_id,
-                ):
-                    app.logger.error(f"""
-                        Failed to invite {len(new_instructors)} new instructors to section ID {course['sectionId']}).
-                        Instructors: {new_instructors}""")
+            if not course['hasOptedOut']:
+                new_instructors = [i for i in course['instructors'] if not i['wasSentInvite']]
+                if new_instructors:
+                    if not send_course_related_email(
+                        course=course,
+                        recipients=new_instructors,
+                        template_type='invitation',
+                        term_id=self.term_id,
+                    ):
+                        app.logger.error(f"""
+                            Failed to invite {len(new_instructors)} new instructors to section ID {course['sectionId']}).
+                            Instructors: {new_instructors}""")
 
     def email_scheduled_courses(self):
         all_scheduled = Scheduled.get_all_scheduled(term_id=self.term_id)
