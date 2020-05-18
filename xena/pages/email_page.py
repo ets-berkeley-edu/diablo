@@ -70,6 +70,9 @@ class EmailPage(Page):
         Wait(self.driver, util.get_short_timeout()).until(ec.presence_of_element_located(EmailPage.LOG_OUT_LINK))
         time.sleep(1)
 
+    def is_message_present(self, message):
+        return self.is_present(EmailPage.message_locator(message))
+
     def is_message_delivered(self, message):
         app.logger.info(f'Waiting for email subject {message.subject}')
         self.load_page()
@@ -79,7 +82,7 @@ class EmailPage(Page):
             tries += 1
             try:
                 app.logger.info(f'Attempt {tries}')
-                assert self.is_present(EmailPage.message_locator(message))
+                assert self.is_message_present(message)
                 return True
             except Exception as e:
                 app.logger.info(f'Error: {e}, scrolling down')
