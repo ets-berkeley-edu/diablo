@@ -60,6 +60,8 @@ class TestSignUp2:
         self.email_page.log_in()
         self.email_page.delete_all_messages()
 
+    # TODO - configure email template subjects prior to verifying emails
+
     # INSTRUCTOR 1 LOGS IN
 
     def test_home_page_inst_1(self):
@@ -136,9 +138,22 @@ class TestSignUp2:
     def test_log_out_inst_1(self):
         self.sign_up_page.log_out()
 
+    # VERIFY 'WAITING FOR APPROVAL' EMAIL IS SENT TO INSTRUCTOR 1 ONLY
+
+    def test_wait_for_approval_email_inst_1(self):
+        subj = f'Your fellow instructors need to approve (To: {self.section.instructors[0].email})'
+        expected_message = Email(msg_type=None, sender=None, subject=subj)
+        assert self.email_page.is_message_delivered(expected_message)
+
+    def test_no_wait_for_approval_email_inst_2(self):
+        subj = f'Your fellow instructors need to approve (To: {self.section.instructors[1].email})'
+        expected_message = Email(msg_type=None, sender=None, subject=subj)
+        assert not self.email_page.is_message_present(expected_message)
+
     # INSTRUCTOR 2 LOGS IN
 
     def test_home_page_inst_2(self):
+        self.login_page.load_page()
         self.login_page.dev_auth(self.section.instructors[1].uid)
         self.ouija_page.wait_for_diablo_title('Home')
 
@@ -186,9 +201,22 @@ class TestSignUp2:
         self.sign_up_page.wait_for_approval_confirmation()
         self.recording_schedule.status = RecordingScheduleStatus.APPROVED
 
+    # VERIFY 'NOTIFY INSTRUCTOR OF CHANGES' EMAIL IS SENT TO INSTRUCTOR 1 ONLY
+
+    def test_notify_of_changes_email_inst_1(self):
+        subj = f'Changes to your Course Capture settings for {self.section.code} (To: {self.section.instructors[0].email})'
+        expected_message = Email(msg_type=None, sender=None, subject=subj)
+        self.email_page.is_message_delivered(expected_message)
+
+    def test_no_notify_of_changes_email_inst_2(self):
+        subj = f'Changes to your Course Capture settings for {self.section.code} (To: {self.section.instructors[1].email})'
+        expected_message = Email(msg_type=None, sender=None, subject=subj)
+        assert not self.email_page.is_message_present(expected_message)
+
     # RUN KALTURA SCHEDULING JOB AND OBTAIN SERIES ID
 
     def test_run_kaltura_job(self):
+        self.sign_up_page.load_page(self.section)
         self.sign_up_page.log_out()
         self.login_page.dev_auth()
         self.ouija_page.click_jobs_link()
@@ -257,8 +285,13 @@ class TestSignUp2:
 
     # VERIFY EMAIL
 
-    def test_schedule_conf_email(self):
-        subj = f'Your course, {self.section.code}, has been scheduled for Course Capture'
+    def test_schedule_conf_email_inst_1(self):
+        subj = f'Your course, {self.section.code}, has been scheduled for Course Capture (To: {self.section.instructors[0].email})'
+        expected_message = Email(msg_type=None, sender=None, subject=subj)
+        assert self.email_page.is_message_delivered(expected_message)
+
+    def test_schedule_conf_email_inst_2(self):
+        subj = f'Your course, {self.section.code}, has been scheduled for Course Capture (To: {self.section.instructors[1].email})'
         expected_message = Email(msg_type=None, sender=None, subject=subj)
         assert self.email_page.is_message_delivered(expected_message)
 

@@ -61,6 +61,8 @@ class TestSignUp1:
         self.email_page.log_in()
         self.email_page.delete_all_messages()
 
+    # TODO - configure email template subjects prior to verifying emails
+
     # ADMIN LOGS IN
 
     def test_admin_login(self):

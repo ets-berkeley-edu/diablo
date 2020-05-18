@@ -60,6 +60,8 @@ class TestSignUp0:
         self.email_page.log_in()
         self.email_page.delete_all_messages()
 
+    # TODO - configure email template subjects prior to verifying emails
+
     # INSTRUCTOR LOGS IN
 
     def test_home_page(self):
