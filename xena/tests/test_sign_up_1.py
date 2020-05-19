@@ -138,6 +138,34 @@ class TestSignUp1:
     def test_kaltura_schedule_id(self):
         util.wait_for_kaltura_id(self.recording_schedule, self.term)
 
+    # VERIFY SERIES IN DIABLO
+
+    def test_room_series(self):
+        self.rooms_page.load_page()
+        self.rooms_page.find_room(self.section.room)
+        self.rooms_page.click_room_link(self.section.room)
+        self.room_page.wait_for_series_row(self.recording_schedule)
+
+    def test_room_series_link(self):
+        expected = f'{self.section.code}, {self.section.number} ({self.term.name})'
+        assert self.room_page.series_row_kaltura_link_text(self.recording_schedule) == expected
+
+    def test_room_series_start(self):
+        start = util.get_first_recording_date(self.recording_schedule)
+        assert self.room_page.series_row_start_date(self.recording_schedule) == start
+
+    def test_room_series_end(self):
+        assert self.room_page.series_row_end_date(self.recording_schedule) == self.term.end_date
+
+    def test_room_series_days(self):
+        assert self.room_page.series_row_days(self.recording_schedule) == self.section.days.replace(' ', '')
+
+    def test_series_recordings(self):
+        self.room_page.expand_series_row(self.recording_schedule)
+        assert len(self.room_page.series_recording_rows(self.recording_schedule)) > 0
+
+    # TODO - verify individual recordings
+
     # VERIFY SERIES IN KALTURA
 
     def test_click_series_link(self):
@@ -216,6 +244,7 @@ class TestSignUp1:
     # INSTRUCTOR VISITS SIGN-UP PAGE AND APPROVES
 
     def test_instructor_login(self):
+        self.login_page.load_page()
         self.login_page.dev_auth(self.section.instructors[0].uid)
         self.ouija_page.wait_for_diablo_title('Home')
 

@@ -24,11 +24,15 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 
 import time
+from datetime import datetime
 
 from flask import current_app as app
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as ec
+from selenium.webdriver.support.wait import WebDriverWait as Wait
 from xena.models.capability import Capability
 from xena.pages.diablo_pages import DiabloPages
+from xena.test_utils import util
 
 
 class RoomPage(DiabloPages):
@@ -51,3 +55,57 @@ class RoomPage(DiabloPages):
         self.wait_for_element_and_click(RoomPage.SELECT_CAPABILITY_INPUT)
         self.click_menu_option(capability.value)
         time.sleep(1)
+
+    @staticmethod
+    def series_row_xpath(recording_sched):
+        return f'//div[@id="kaltura-event-list"]//tr[contains(., "{recording_sched.series_id}")]'
+
+    def wait_for_series_row(self, recording_sched):
+        xpath = RoomPage.series_row_xpath(recording_sched)
+        Wait(self.driver, util.get_short_timeout()).until(ec.presence_of_element_located((By.XPATH, xpath)))
+
+    def series_row_kaltura_link_text(self, recording_sched):
+        return self.element((By.XPATH, f'{RoomPage.series_row_xpath(recording_sched)}//a')).text.strip()
+
+    def series_row_start_date(self, recording_sched):
+        text = self.element((By.XPATH, f'{RoomPage.series_row_xpath(recording_sched)}/td[4]/span')).text.strip()
+        return datetime.strptime(text, '%a, %b %d, %Y')
+
+    def series_row_end_date(self, recording_sched):
+        text = self.element((By.XPATH, f'{RoomPage.series_row_xpath(recording_sched)}/td[5]/span')).text.strip()
+        return datetime.strptime(text, '%a, %b %d, %Y')
+
+    def series_row_duration(self, recording_sched):
+        return self.element((By.XPATH, f'{RoomPage.series_row_xpath(recording_sched)}/td[6]/span')).text.strip()
+
+    def series_row_days(self, recording_sched):
+        return self.element((By.XPATH, f'{RoomPage.series_row_xpath(recording_sched)}/td[7]')).text.strip()
+
+    def expand_series_row(self, recording_sched):
+        app.logger.info(f'Expanding series recordings for Kaltura series ID {recording_sched.series_id}')
+        self.scroll_to_bottom()
+        self.wait_for_element_and_click((By.XPATH, f'{RoomPage.series_row_xpath(recording_sched)}//button'))
+
+    @staticmethod
+    def series_recording_xpath(recording_sched):
+        return f'{RoomPage.series_row_xpath(recording_sched)}/following-sibling::tr//tbody/tr'
+
+    def series_recording_rows(self, recording_sched):
+        return self.elements((By.XPATH, f'{RoomPage.series_recording_xpath(recording_sched)}'))
+
+    def series_recording_cell_values(self, recording_sched, cell_node):
+        values = []
+        current_year = app.config['CURRENT_TERM_BEGIN'].split('-')[0]
+        els = self.series_recording_rows(recording_sched)
+        for el in els:
+            index = els.index(el)
+            cell = self.element((By.XPATH, f'{RoomPage.series_recording_xpath(recording_sched)}[{index + 1}]/td[{cell_node}]'))
+            recording_time = datetime.strptime(f'{cell.text}, {current_year}', '%I:%M%p, %a, %b %d, %Y')
+            values.append(recording_time)
+        return values
+
+    def series_recording_start_times(self, recording_sched):
+        return self.series_recording_cell_values(recording_sched, '3')
+
+    def series_recording_end_times(self, recording_sched):
+        return self.series_recording_cell_values(recording_sched, '4')
