@@ -52,10 +52,13 @@ class QueuedEmail(db.Model):
         name='queued_emails_section_id_template_type_unique_constraint',
     ),)
 
-    def __init__(self, section_id, template_type, term_id):
+    def __init__(self, section_id, template_type, term_id, recipients=None, message=None, subject_line=None):
         self.template_type = template_type
         self.section_id = section_id
         self.term_id = term_id
+        self.recipients = recipients
+        self.message = message
+        self.subject_line = subject_line
 
     def __repr__(self):
         return f"""<QueuedEmail
@@ -63,18 +66,24 @@ class QueuedEmail(db.Model):
                     section_id={self.section_id},
                     template_type={self.template_type}
                     term_id={self.term_id},
+                    recipients={self.recipients},
+                    message={self.message},
+                    subject_line={self.subject_line},
                     created_at={self.created_at}
                 """
 
     @classmethod
-    def create(cls, section_id, template_type, term_id):
+    def create(cls, section_id, template_type, term_id, recipients=None, message=None, subject_line=None):
         queued_email = cls(
             section_id=section_id,
             template_type=template_type,
             term_id=term_id,
+            recipients=recipients,
+            message=message,
+            subject_line=subject_line,
         )
         course = SisSection.get_course(term_id, queued_email.section_id)
-        if course:
+        if course and not queued_email.is_interpolated():
             queued_email.interpolate(course)
         db.session.add(queued_email)
         std_commit()
@@ -98,10 +107,11 @@ class QueuedEmail(db.Model):
 
     def interpolate(self, course):
         template, recipients = _evaluate_template_type(course, self.template_type)
-        if template and recipients:
+        if template:
             self.subject_line = interpolate_email_content(course=course, templated_string=template.subject_line)
             self.message = interpolate_email_content(course=course, templated_string=template.message)
-            self.recipients = recipients
+            if recipients and not self.recipients:
+                self.recipients = recipients
             db.session.add(self)
             std_commit()
             return True

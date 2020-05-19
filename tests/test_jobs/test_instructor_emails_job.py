@@ -24,6 +24,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 from diablo import std_commit
 from diablo.jobs.instructor_emails_job import InstructorEmailsJob
+from diablo.jobs.queued_emails_job import QueuedEmailsJob
 from diablo.lib.util import utc_now
 from diablo.models.course_preference import CoursePreference
 from diablo.models.sent_email import SentEmail
@@ -40,7 +41,11 @@ class TestInstructorEmailsJob:
         with test_approvals_workflow(app):
             # The job creates many new invitations.
             timestamp = utc_now()
+            # Emails are queued but not sent.
             InstructorEmailsJob(app.app_context).run()
+            assert len(_get_invitations_since(term_id, timestamp)) == 0
+            # Emails are sent.
+            QueuedEmailsJob(app.app_context).run()
             invitations = _get_invitations_since(term_id, timestamp)
             assert len(invitations) == 8
 
@@ -70,6 +75,7 @@ class TestInstructorEmailsJob:
             # Re-run the job. An email is sent to the new instructor only.
             timestamp = utc_now()
             InstructorEmailsJob(app.app_context).run()
+            QueuedEmailsJob(app.app_context).run()
             invitations = _get_invitations_since(term_id, timestamp)
             assert len(invitations) == 1
             invitation = invitations[0].to_api_json()
@@ -85,7 +91,11 @@ class TestInstructorEmailsJob:
             std_commit(allow_test_environment=True)
 
             timestamp = utc_now()
+            # Emails are queued but not sent.
             InstructorEmailsJob(app.app_context).run()
+            assert len(_get_invitations_since(term_id, timestamp)) == 0
+            # Emails are sent.
+            QueuedEmailsJob(app.app_context).run()
             invitations = _get_invitations_since(term_id, timestamp)
             assert len(invitations) == 8
             assert not next((e for e in invitations if e.section_id == section_id), None)
