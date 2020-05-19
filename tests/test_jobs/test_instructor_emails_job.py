@@ -30,7 +30,7 @@ from diablo.models.course_preference import CoursePreference
 from diablo.models.sent_email import SentEmail
 from diablo.models.sis_section import SisSection
 from sqlalchemy.orm.session import make_transient
-from tests.util import test_approvals_workflow
+from tests.util import simply_yield, test_approvals_workflow
 
 
 class TestInstructorEmailsJob:
@@ -42,10 +42,10 @@ class TestInstructorEmailsJob:
             # The job creates many new invitations.
             timestamp = utc_now()
             # Emails are queued but not sent.
-            InstructorEmailsJob(app.app_context).run()
+            InstructorEmailsJob(simply_yield).run()
             assert len(_get_invitations_since(term_id, timestamp)) == 0
             # Emails are sent.
-            QueuedEmailsJob(app.app_context).run()
+            QueuedEmailsJob(simply_yield).run()
             invitations = _get_invitations_since(term_id, timestamp)
             assert len(invitations) == 8
 
@@ -74,8 +74,8 @@ class TestInstructorEmailsJob:
 
             # Re-run the job. An email is sent to the new instructor only.
             timestamp = utc_now()
-            InstructorEmailsJob(app.app_context).run()
-            QueuedEmailsJob(app.app_context).run()
+            InstructorEmailsJob(simply_yield).run()
+            QueuedEmailsJob(simply_yield).run()
             invitations = _get_invitations_since(term_id, timestamp)
             assert len(invitations) == 1
             invitation = invitations[0].to_api_json()
@@ -92,10 +92,10 @@ class TestInstructorEmailsJob:
 
             timestamp = utc_now()
             # Emails are queued but not sent.
-            InstructorEmailsJob(app.app_context).run()
+            InstructorEmailsJob(simply_yield).run()
             assert len(_get_invitations_since(term_id, timestamp)) == 0
             # Emails are sent.
-            QueuedEmailsJob(app.app_context).run()
+            QueuedEmailsJob(simply_yield).run()
             invitations = _get_invitations_since(term_id, timestamp)
             assert len(invitations) == 8
             assert not next((e for e in invitations if e.section_id == section_id), None)

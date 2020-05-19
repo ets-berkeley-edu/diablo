@@ -37,7 +37,7 @@ from diablo.models.sent_email import SentEmail
 from diablo.models.sis_section import SisSection
 from flask import current_app as app
 from tests.test_api.api_test_utils import get_instructor_uids
-from tests.util import test_approvals_workflow
+from tests.util import simply_yield, test_approvals_workflow
 
 
 class TestEmailAlertsForAdmins:
@@ -79,10 +79,10 @@ class TestEmailAlertsForAdmins:
             admin_uid = app.config['EMAIL_DIABLO_ADMIN_UID']
             email_count = _get_email_count(admin_uid)
             # Message queued but not sent.
-            AdminEmailsJob(app.app_context).run()
+            AdminEmailsJob(simply_yield).run()
             assert _get_email_count(admin_uid) == email_count
             # Message sent.
-            QueuedEmailsJob(app.app_context).run()
+            QueuedEmailsJob(simply_yield).run()
             assert _get_email_count(admin_uid) == email_count + 1
 
     def test_alert_admin_of_instructor_change(self):
@@ -121,17 +121,17 @@ class TestEmailAlertsForAdmins:
             admin_uid = app.config['EMAIL_DIABLO_ADMIN_UID']
             email_count = _get_email_count(admin_uid)
             # Message queued but not sent.
-            AdminEmailsJob(app.app_context).run()
+            AdminEmailsJob(simply_yield).run()
             assert _get_email_count(admin_uid) == email_count
             # Message sent.
-            QueuedEmailsJob(app.app_context).run()
+            QueuedEmailsJob(simply_yield).run()
             assert _get_email_count(admin_uid) == email_count + 1
 
     def test_alert_on_job_failure(self):
         admin_uid = app.config['EMAIL_DIABLO_ADMIN_UID']
         email_count = _get_email_count(admin_uid)
         # No alert on happy job.
-        CanvasJob(app.app_context).run_with_app_context()
+        CanvasJob(simply_yield).run()
         assert _get_email_count(admin_uid) == email_count
         # Alert on sad job.
         all_jobs = Job.get_all(include_disabled=True)
@@ -140,7 +140,7 @@ class TestEmailAlertsForAdmins:
         # Make sure job is enabled
         Job.update_disabled(job_id=doomed_job.id, disable=False)
         std_commit(allow_test_environment=True)
-        DoomedToFailure(app.app_context).run_with_app_context()
+        DoomedToFailure(simply_yield).run()
         # Failure alerts do not go through the queue.
         assert _get_email_count(admin_uid) == email_count + 1
 

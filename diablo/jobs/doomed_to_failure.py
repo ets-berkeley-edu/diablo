@@ -27,7 +27,7 @@ from diablo.jobs.base_job import BaseJob
 
 class DoomedToFailure(BaseJob):
 
-    def run(self):
+    def _run(self):
         secret_of_life = 1 / 0
         return secret_of_life
 

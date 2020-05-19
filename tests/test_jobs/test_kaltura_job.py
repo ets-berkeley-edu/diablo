@@ -31,7 +31,7 @@ from diablo.models.scheduled import Scheduled
 from diablo.models.sent_email import SentEmail
 from diablo.models.sis_section import SisSection
 from flask import current_app as app
-from tests.util import test_approvals_workflow
+from tests.util import simply_yield, test_approvals_workflow
 
 admin_uid = '90001'
 
@@ -53,7 +53,7 @@ class TestKalturaJob:
                 )
 
             emails_sent = _get_emails_sent()
-            KalturaJob(app.app_context).run()
+            KalturaJob(simply_yield).run()
             std_commit(allow_test_environment=True)
             # Expect no emails sent during action above
             assert _get_emails_sent() == emails_sent
@@ -82,7 +82,7 @@ class TestKalturaJob:
             ]
             """If we have insufficient approvals then do nothing."""
             email_count = _get_emails_sent()
-            KalturaJob(app.app_context).run()
+            KalturaJob(simply_yield).run()
             std_commit(allow_test_environment=True)
             assert _get_emails_sent() == email_count
 
@@ -100,7 +100,7 @@ class TestKalturaJob:
 
             """If a course is scheduled for recording then email is sent to its instructor(s)."""
             email_count = len(_get_emails_sent())
-            KalturaJob(app.app_context).run()
+            KalturaJob(simply_yield).run()
             std_commit(allow_test_environment=True)
 
             # Verify publish and recording types
@@ -122,7 +122,7 @@ class TestKalturaJob:
 
             """If recordings were already scheduled then do nothing, send no email."""
             email_count = len(_get_emails_sent())
-            KalturaJob(app.app_context).run()
+            KalturaJob(simply_yield).run()
             assert len(_get_emails_sent()) == email_count
 
     def test_admin_approval(self):
@@ -146,7 +146,7 @@ class TestKalturaJob:
                 section_id=section_id,
                 term_id=term_id,
             )
-            KalturaJob(app.app_context).run()
+            KalturaJob(simply_yield).run()
             std_commit(allow_test_environment=True)
             # Admin approval is all we need.
             assert Scheduled.get_scheduled(section_id=section_id, term_id=term_id)

@@ -25,6 +25,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 from contextlib import contextmanager
 
 from diablo import db
+from diablo.jobs.doomed_to_failure import DoomedToFailure  # noqa
 from sqlalchemy import text
 
 
@@ -37,6 +38,11 @@ def override_config(app, key, value):
         yield
     finally:
         app.config[key] = old_value
+
+
+@contextmanager
+def simply_yield():
+    yield
 
 
 @contextmanager

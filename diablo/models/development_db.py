@@ -26,12 +26,8 @@ import glob
 import json
 
 from diablo import BASE_DIR, cache, db, std_commit
-from diablo.jobs.admin_emails_job import AdminEmailsJob  # noqa
+from diablo.factory import background_job_manager
 from diablo.jobs.canvas_job import CanvasJob
-from diablo.jobs.doomed_to_failure import DoomedToFailure  # noqa
-from diablo.jobs.instructor_emails_job import InstructorEmailsJob  # noqa
-from diablo.jobs.kaltura_job import KalturaJob  # noqa
-from diablo.jobs.queued_emails_job import QueuedEmailsJob  # noqa
 from diablo.jobs.sis_data_refresh_job import SisDataRefreshJob
 from diablo.lib.util import utc_now
 from diablo.models.admin_user import AdminUser
@@ -42,7 +38,7 @@ from diablo.models.sent_email import SentEmail
 from diablo.models.sis_section import SisSection
 from flask import current_app as app
 from sqlalchemy.sql import text
-
+from tests.util import simply_yield
 
 _test_users = [
     {
@@ -164,13 +160,15 @@ def _create_users():
 
 
 def _set_up_and_run_jobs():
+    Job.create(job_schedule_type='day_at', job_schedule_value='15:00', key='kaltura')
     Job.create(job_schedule_type='day_at', job_schedule_value='04:30', key='queued_emails')
-    Job.create(job_schedule_type='seconds', job_schedule_value='1', key='instructor_emails')
-    Job.create(disabled=True, job_schedule_type='seconds', job_schedule_value='1', key='admin_emails')
-    Job.create(job_schedule_type='seconds', job_schedule_value='1', key='canvas')
+    Job.create(job_schedule_type='minutes', job_schedule_value='120', key='instructor_emails')
+    Job.create(job_schedule_type='minutes', job_schedule_value='120', key='admin_emails')
+    Job.create(job_schedule_type='day_at', job_schedule_value='16:00', key='canvas')
     Job.create(disabled=True, job_schedule_type='minutes', job_schedule_value='5', key='doomed_to_fail')
 
-    CanvasJob(app_context=app.app_context).run_with_app_context()
+    background_job_manager.start(app)
+    CanvasJob(app_context=simply_yield).run()
     std_commit(allow_test_environment=True)
 
 

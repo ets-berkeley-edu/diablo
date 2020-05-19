@@ -26,6 +26,7 @@ import json
 import random
 
 from diablo import std_commit
+from diablo.jobs.canvas_job import CanvasJob
 from diablo.jobs.queued_emails_job import QueuedEmailsJob
 from diablo.models.approval import Approval
 from diablo.models.course_preference import CoursePreference
@@ -36,7 +37,7 @@ from diablo.models.sis_section import SisSection
 from flask import current_app as app
 import pytest
 from tests.test_api.api_test_utils import api_approve, api_get_course, get_instructor_uids
-from tests.util import test_approvals_workflow
+from tests.util import simply_yield, test_approvals_workflow
 
 admin_uid = '90001'
 deleted_admin_user_uid = '910001'
@@ -299,6 +300,7 @@ class TestGetCourse:
 
     def test_section_with_canvas_course_sites(self, client, admin_session):
         """Canvas course site information is included in the API."""
+        CanvasJob(simply_yield).run()
         api_json = api_get_course(
             client,
             term_id=self.term_id,

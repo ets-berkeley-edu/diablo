@@ -36,34 +36,38 @@ class BaseJob:
     def __init__(self, app_context):
         self.app_context = app_context
 
-    def run_with_app_context(self):
-        with self.app_context():
-            if JobHistory.is_job_running(job_key=self.key()):
-                app.logger.warn(f'Skipping job {self.key()} because an older instance is still running')
-
-            elif Job.get_job_by_key(self.key()).disabled:
-                app.logger.warn(f'Job {self.key()} is disabled. It will not run.')
-
-            else:
-                app.logger.info(f'Job {self.key()} is starting.')
-                job_tracker = JobHistory.job_started(job_key=self.key())
-                try:
-                    self.run()
-                    JobHistory.job_finished(id_=job_tracker.id)
-                    app.logger.info(f'Job {self.key()} finished successfully.')
-
-                except Exception as e:
-                    trace = traceback.format_exc()
-                    summary = f'Job {self.key()} failed'
-                    app.logger.error(summary)
-                    app.logger.exception(e)
-                    send_system_error_email(
-                        message=f'{summary}. Detailed error information appears below.\n\n{trace}',
-                        subject=summary,
-                    )
-                    JobHistory.job_finished(id_=job_tracker.id, failed=True)
-
     def run(self):
+        with self.app_context():
+            job = Job.get_job_by_key(self.key())
+            if job:
+                if JobHistory.is_job_running(job_key=self.key()):
+                    app.logger.warn(f'Skipping job {self.key()} because an older instance is still running')
+
+                elif job.disabled:
+                    app.logger.warn(f'Job {self.key()} is disabled. It will not run.')
+
+                else:
+                    app.logger.info(f'Job {self.key()} is starting.')
+                    job_tracker = JobHistory.job_started(job_key=self.key())
+                    try:
+                        self._run()
+                        JobHistory.job_finished(id_=job_tracker.id)
+                        app.logger.info(f'Job {self.key()} finished successfully.')
+
+                    except Exception as e:
+                        trace = traceback.format_exc()
+                        summary = f'Job {self.key()} failed'
+                        app.logger.error(summary)
+                        app.logger.exception(e)
+                        send_system_error_email(
+                            message=f'{summary}. Detailed error information appears below.\n\n{trace}',
+                            subject=summary,
+                        )
+                        JobHistory.job_finished(id_=job_tracker.id, failed=True)
+            else:
+                raise BackgroundJobError(f'Job {self.key()} is not registered in the database')
+
+    def _run(self):
         raise BackgroundJobError('Implement this method in Job sub-class')
 
     @classmethod

@@ -36,7 +36,7 @@ from flask import current_app as app
 
 class KalturaJob(BaseJob):
 
-    def run(self, args=None):
+    def _run(self):
         term_id = app.config['CURRENT_TERM_ID']
         approvals = Approval.get_approvals_per_term(term_id=term_id)
         if approvals:
