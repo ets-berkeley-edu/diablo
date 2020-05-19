@@ -29,9 +29,10 @@ from diablo import db, std_commit
 from diablo.externals.kaltura import Kaltura
 from diablo.lib.util import format_days
 from diablo.merged.calnet import get_calnet_users_for_uids
-from diablo.merged.emailer import notify_instructors_recordings_scheduled, send_system_error_email
+from diablo.merged.emailer import send_system_error_email
 from diablo.models.cross_listing import CrossListing
 from diablo.models.instructor import Instructor
+from diablo.models.queued_email import notify_instructors_recordings_scheduled
 from diablo.models.room import Room
 from diablo.models.scheduled import Scheduled
 from diablo.models.sis_section import SisSection

@@ -26,6 +26,7 @@ import json
 import random
 
 from diablo import std_commit
+from diablo.jobs.queued_emails_job import QueuedEmailsJob
 from diablo.models.approval import Approval
 from diablo.models.course_preference import CoursePreference
 from diablo.models.room import Room
@@ -108,7 +109,7 @@ class TestApprove:
                     expected_status_code=expected_status_code,
                 )
 
-    def test_approval_by_instructors(self, client, fake_auth):
+    def test_approval_by_instructors(self, app, client, fake_auth):
         """Instructor can submit approval if s/he is teaching the requested course."""
         with test_approvals_workflow(app):
             instructor_uids = get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
@@ -129,6 +130,8 @@ class TestApprove:
                 section_id=section_1_id,
             )
             std_commit(allow_test_environment=True)
+
+            QueuedEmailsJob(app.app_context).run()
 
             for uid in ('10001', '10002'):
                 emails_sent = SentEmail.get_emails_sent_to(uid)

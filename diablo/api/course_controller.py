@@ -28,9 +28,9 @@ from diablo.externals.kaltura import Kaltura
 from diablo.jobs.util import schedule_recordings
 from diablo.lib.berkeley import term_name_for_sis_id
 from diablo.lib.http import tolerant_jsonify
-from diablo.merged.emailer import notify_instructors_of_approval
 from diablo.models.approval import Approval, get_all_publish_types, get_all_recording_types
 from diablo.models.course_preference import CoursePreference
+from diablo.models.queued_email import notify_instructors_of_approval
 from diablo.models.room import Room
 from diablo.models.scheduled import Scheduled
 from diablo.models.sis_section import SisSection

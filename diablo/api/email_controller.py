@@ -27,7 +27,7 @@ from diablo.api.errors import BadRequestError, ResourceNotFoundError
 from diablo.api.util import admin_required
 from diablo.externals.b_connected import BConnected
 from diablo.lib.http import tolerant_jsonify
-from diablo.merged.emailer import get_email_template_codes, interpolate_email_content
+from diablo.lib.interpolator import get_template_substitutions, interpolate_content
 from diablo.models.email_template import EmailTemplate
 from diablo.models.queued_email import QueuedEmail
 from diablo.models.sent_email import SentEmail
@@ -68,7 +68,8 @@ def delete_email_template(template_id):
 @app.route('/api/email/template/codes')
 @admin_required
 def get_template_codes():
-    return tolerant_jsonify(get_email_template_codes())
+    template_codes = list(get_template_substitutions().keys())
+    return tolerant_jsonify(template_codes)
 
 
 @app.route('/api/email/template/create', methods=['POST'])
@@ -99,12 +100,12 @@ def test_email_template(template_id):
     if email_template:
         course = SisSection.get_course(term_id=app.config['CURRENT_TERM_ID'], section_id='12597')
         template = EmailTemplate.get_template(template_id)
-        subject_line = interpolate_email_content(
+        subject_line = interpolate_content(
             course=course,
             recipient_name=current_user.name,
             templated_string=template.subject_line,
         )
-        message = interpolate_email_content(
+        message = interpolate_content(
             course=course,
             recipient_name=current_user.name,
             templated_string=template.message,

@@ -24,7 +24,8 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 from diablo.jobs.base_job import BaseJob
 from diablo.jobs.errors import BackgroundJobError
-from diablo.merged.emailer import get_admin_alert_recipients, interpolate_email_content
+from diablo.lib.interpolator import interpolate_content
+from diablo.merged.emailer import get_admin_alert_recipients
 from diablo.models.approval import Approval
 from diablo.models.email_template import EmailTemplate
 from diablo.models.queued_email import QueuedEmail
@@ -89,11 +90,11 @@ class AdminEmailsJob(BaseJob):
     def _notify(self, course, template_type):
         email_template = EmailTemplate.get_template_by_type(template_type)
         if email_template:
-            message = interpolate_email_content(
+            message = interpolate_content(
                 templated_string=email_template.message,
                 course=course,
             )
-            subject_line = interpolate_email_content(
+            subject_line = interpolate_content(
                 templated_string=email_template.subject_line,
                 course=course,
             )

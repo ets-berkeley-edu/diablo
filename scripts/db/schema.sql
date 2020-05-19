@@ -273,8 +273,6 @@ ALTER SEQUENCE queued_emails_id_seq OWNED BY queued_emails.id;
 ALTER TABLE ONLY queued_emails ALTER COLUMN id SET DEFAULT nextval('queued_emails_id_seq'::regclass);
 ALTER TABLE ONLY queued_emails
     ADD CONSTRAINT queued_emails_pkey PRIMARY KEY (id);
-ALTER TABLE ONLY queued_emails
-    ADD CONSTRAINT queued_emails_section_id_template_type_unique_constraint UNIQUE (section_id, template_type, term_id);
 
 --
 

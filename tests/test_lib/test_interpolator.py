@@ -25,19 +25,19 @@ ENHANCEMENTS, OR MODIFICATIONS.
 import re
 
 from diablo.externals.b_connected import BConnected
+from diablo.lib.interpolator import interpolate_content
 from diablo.merged.calnet import get_calnet_user_for_uid
-from diablo.merged.emailer import interpolate_email_content
 from diablo.models.sis_section import SisSection
 from flask import current_app as app
 from tests.util import override_config
 
 
-class TestInterpolation:
+class TestInterpolator:
 
     def test_interpolate_email_content(self):
         user = get_calnet_user_for_uid(app, '10001')
         course = SisSection.get_course(app.config['CURRENT_TERM_ID'], '50001')
-        interpolated = interpolate_email_content(
+        interpolated = interpolate_content(
             course=course,
             recipient_name=user['name'],
             templated_string=_get_email_template(),
