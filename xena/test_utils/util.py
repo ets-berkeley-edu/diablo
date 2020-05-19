@@ -60,9 +60,8 @@ def get_kaltura_password():
     return xena.KALTURA_PASSWORD
 
 
-def get_kaltura_term_date_str(date_str):
-    parsed = datetime.strptime(date_str, '%Y-%m-%d')
-    return datetime.strftime(parsed, '%m/%d/%Y')
+def get_kaltura_term_date_str(date):
+    return datetime.strftime(date, '%m/%d/%Y')
 
 
 def parse_rooms_data():
@@ -126,4 +125,4 @@ def get_first_recording_date(recording_schedule):
     schedule_days_ind = [day_to_index[day] for day in schedule_days_str]
     next_dates = [get_next_date(term_start_date, index) for index in schedule_days_ind]
     next_dates.sort()
-    return datetime.strftime(next_dates[0], '%Y-%m-%d')
+    return next_dates[0]

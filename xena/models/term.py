@@ -23,6 +23,8 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
+from datetime import datetime
+
 from flask import current_app as app
 
 
@@ -31,5 +33,5 @@ class Term(object):
     def __init__(self):
         self.id = app.config['CURRENT_TERM_ID']
         self.name = app.config['CURRENT_TERM_NAME']
-        self.start_date = app.config['CURRENT_TERM_BEGIN']
-        self.end_date = app.config['CURRENT_TERM_END']
+        self.start_date = datetime.strptime(app.config['CURRENT_TERM_BEGIN'], '%Y-%m-%d')
+        self.end_date = datetime.strptime(app.config['CURRENT_TERM_END'], '%Y-%m-%d')
