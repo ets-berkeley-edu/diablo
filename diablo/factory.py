@@ -22,6 +22,8 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
+import os
+
 from diablo import cache, db
 from diablo.configs import load_configs
 from diablo.jobs.background_job_manager import BackgroundJobManager
@@ -43,7 +45,7 @@ def create_app():
 
     with app.app_context():
         register_routes(app)
-        if app.config['JOBS_AUTO_START']:
+        if app.config['JOBS_AUTO_START'] and (not app.debug or os.environ.get('WERKZEUG_RUN_MAIN') == 'true'):
             background_job_manager.start(app)
 
     return app
