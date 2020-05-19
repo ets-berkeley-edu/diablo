@@ -22,26 +22,41 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-import time
-
-from diablo.jobs.background_job_manager import BackgroundJobManager
-from diablo.models.job_history import JobHistory
+from diablo.factory import background_job_manager
 from flask import current_app as app
 
 
 class TestBackgroundJobManager:
 
-    def test_start_mock_jobs(self):
-        """Runs jobs as scheduled and skips disabled jobs."""
-        job_manager = BackgroundJobManager()
-        try:
-            def _get_job_history_ids():
-                return [item.id for item in JobHistory.get_job_history_in_past_days(day_count=1)]
+    def test_started_at_property(self):
+        """The started_at property is only defined when background_job_manager is running."""
+        assert background_job_manager.is_running()
+        assert background_job_manager.get_started_at()
 
-            original_job_history_ids = _get_job_history_ids()
-            job_manager.start(app)
-            time.sleep(2)
-            assert len(_get_job_history_ids()) == len(original_job_history_ids) + 2
+        background_job_manager.stop()
+        assert not background_job_manager.get_started_at()
 
-        finally:
-            job_manager.stop()
+        background_job_manager.start(app)
+        assert background_job_manager.get_started_at()
+        assert background_job_manager.is_running()
+
+    def test_stop(self):
+        """Stops background_job_manager."""
+        original_started_at = background_job_manager.get_started_at()
+        assert original_started_at
+        assert background_job_manager.is_running()
+
+        background_job_manager.stop()
+        assert not background_job_manager.get_started_at()
+
+        # The following will have no effect because background_job_manager is NOT running.
+        background_job_manager.restart(app)
+        assert background_job_manager.get_started_at()
+
+    def test_restart(self):
+        """Restarts background_job_manager if it is running."""
+        original_started_at = background_job_manager.get_started_at()
+        assert original_started_at
+
+        background_job_manager.restart(app)
+        assert original_started_at != background_job_manager.get_started_at()

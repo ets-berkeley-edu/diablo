@@ -33,7 +33,7 @@ from flask import current_app as app
 
 class SisDataRefreshJob(BaseJob):
 
-    def run(self, args=None):
+    def _run(self, args=None):
         resolved_ddl_rds = resolve_sql_template('update_rds_sis_sections.template.sql')
         if execute(resolved_ddl_rds):
             term_id = app.config['CURRENT_TERM_ID']

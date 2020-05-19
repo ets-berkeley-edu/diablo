@@ -25,9 +25,11 @@ ENHANCEMENTS, OR MODIFICATIONS.
 import json
 
 from diablo import std_commit
+from diablo.jobs.canvas_job import CanvasJob
 from diablo.models.job import Job
 from flask import current_app as app
 import pytest
+from tests.util import simply_yield
 
 admin_uid = '90001'
 instructor_uid = '10001'
@@ -53,11 +55,11 @@ class TestStartJob:
 
     def test_anonymous(self, client):
         """Denies anonymous access."""
-        self._api_start_job(client, job_key='queued_emails_job', expected_status_code=401)
+        self._api_start_job(client, job_key='queued_emails', expected_status_code=401)
 
     def test_unauthorized(self, client, instructor_session):
         """Denies access if user is not an admin."""
-        self._api_start_job(client, job_key='queued_emails_job', expected_status_code=401)
+        self._api_start_job(client, job_key='queued_emails', expected_status_code=401)
 
     def test_job_not_found(self, client, admin_session):
         """404 if job key is unrecognized."""
@@ -102,12 +104,15 @@ class TestJobHistory:
 
     def test_authorized(self, client, admin_session):
         """Admin can access job_history."""
+        CanvasJob(simply_yield).run()
+        CanvasJob(simply_yield).run()
+
         job_history = self._api_job_history(client, day_count=2)
         assert len(job_history) > 1
         for event in job_history:
             assert event['failed'] is False
             assert event['startedAt']
-            assert event['finishedAt']
+            assert 'finishedAt' in event
 
 
 class TestDisableJob:
@@ -254,10 +259,10 @@ class TestJobSchedule:
         first_job = api_json['jobs'][0]
         assert first_job['key'] == 'admin_emails'
         assert first_job['name'] == 'Admin Emails'
-        assert first_job['disabled'] is True
+        assert first_job['disabled'] is False
         assert first_job['schedule'] == {
-            'type': 'seconds',
-            'value': 1,
+            'type': 'minutes',
+            'value': 120,
         }
 
         last_job = api_json['jobs'][-1]

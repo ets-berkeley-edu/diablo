@@ -30,7 +30,7 @@ from flask import current_app as app
 
 class CanvasJob(BaseJob):
 
-    def run(self, args=None):
+    def _run(self):
         CanvasCourseSite.refresh_term_data(
             term_id=app.config['CURRENT_TERM_ID'],
             canvas_course_sites=get_canvas_course_sites(),

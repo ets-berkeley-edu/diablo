@@ -24,16 +24,16 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 from diablo import std_commit
 from diablo.jobs.canvas_job import CanvasJob
-from flask import current_app as app
+from tests.util import simply_yield
 
 
 class TestCanvasJob:
 
     def test_refresh_term_data(self):
         """Refreshes term data without duplicate key violation in db."""
-        CanvasJob(app.app_context).run()
+        CanvasJob(simply_yield).run()
         std_commit(allow_test_environment=True)
 
-        CanvasJob(app.app_context).run()
+        CanvasJob(simply_yield).run()
         std_commit(allow_test_environment=True)
         # If we reach this point then no error occurred.

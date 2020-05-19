@@ -22,9 +22,11 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
+from datetime import datetime
 import threading
 import time
 
+from diablo.jobs.base_job import BaseJob
 from diablo.jobs.errors import BackgroundJobError
 from diablo.models.job import Job
 import schedule
@@ -33,11 +35,12 @@ import schedule
 class BackgroundJobManager:
 
     def __init__(self):
-        self.cease_continuous_run = threading.Event()
         self.continuous_thread = None
+        self.monitor = _Monitor()
+        self.started_at = None
 
     def is_running(self):
-        return not self.cease_continuous_run.is_set()
+        return self.monitor.is_running()
 
     def start(self, app):
         """Continuously run, executing pending jobs per time interval.
@@ -46,6 +49,12 @@ class BackgroundJobManager:
         should run every minute and yet SCHEDULER_INTERVAL is set to one hour, then your job won't run 60 times at
         each interval. It will run once.
         """
+        if self.is_running():
+            return
+        else:
+            self.monitor.notify(is_running=True)
+            self.started_at = datetime.now()
+
         class JobRunnerThread(threading.Thread):
 
             active = False
@@ -53,14 +62,11 @@ class BackgroundJobManager:
             @classmethod
             def run(cls):
                 cls.active = True
-                while not self.cease_continuous_run.is_set():
+                while self.monitor.is_running():
                     schedule.run_pending()
                     time.sleep(interval)
                 schedule.clear()
                 cls.active = False
-
-        if JobRunnerThread.active:
-            return
 
         interval = app.config['JOBS_SECONDS_BETWEEN_PENDING_CHECK']
         job_configs = Job.get_all()
@@ -86,13 +92,12 @@ class BackgroundJobManager:
 
                 type_ = job_config.job_schedule_type
                 value = job_config.job_schedule_value
-                run_with_context = job.run_with_app_context
                 if type_ == 'minutes':
-                    schedule.every(int(value)).minutes.do(run_with_context)
+                    schedule.every(int(value)).minutes.do(job.run)
                 elif type_ == 'seconds':
-                    schedule.every(int(value)).seconds.do(run_with_context)
+                    schedule.every(int(value)).seconds.do(job.run)
                 elif type_ == 'day_at':
-                    schedule.every().day.at(value).do(run_with_context)
+                    schedule.every().day.at(value).do(job.run)
                 else:
                     raise BackgroundJobError(f'Unrecognized schedule type: {type_}')
 
@@ -106,22 +111,38 @@ class BackgroundJobManager:
         from flask import current_app as app
 
         app.logger.info('Stopping job-runner thread')
-        self.cease_continuous_run.set()
+        self.monitor.notify(is_running=False)
+        self.started_at = None
+
+    def restart(self, app):
+        if self.is_running():
+            self.stop()
+        self.start(app)
+
+    def get_started_at(self):
+        return self.started_at
 
     @classmethod
     def available_job_classes(cls):
-        from diablo.jobs.admin_emails_job import AdminEmailsJob
-        from diablo.jobs.canvas_job import CanvasJob
-        from diablo.jobs.instructor_emails_job import InstructorEmailsJob
-        from diablo.jobs.kaltura_job import KalturaJob
-        from diablo.jobs.queued_emails_job import QueuedEmailsJob
-        from diablo.jobs.sis_data_refresh_job import SisDataRefreshJob
+        return BaseJob.__subclasses__()
 
-        return [
-            AdminEmailsJob,
-            CanvasJob,
-            InstructorEmailsJob,
-            KalturaJob,
-            QueuedEmailsJob,
-            SisDataRefreshJob,
-        ]
+
+class _Monitor:
+
+    __is_running = None
+
+    def __init__(self):
+        if _Monitor.__is_running is not None:
+            raise Exception('In singleton pattern, there can only be one instance.')
+
+    @classmethod
+    def notify(cls, is_running):
+        if _Monitor.__is_running is None:
+            _Monitor()
+        _Monitor.__is_running = is_running
+
+    @classmethod
+    def is_running(cls):
+        if _Monitor.__is_running is None:
+            _Monitor()
+        return _Monitor.__is_running is True

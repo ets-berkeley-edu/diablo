@@ -36,7 +36,7 @@ from flask import current_app as app
 
 class InstructorEmailsJob(BaseJob):
 
-    def run(self):
+    def _run(self):
         self.term_id = app.config['CURRENT_TERM_ID']
         self.email_new_invites()
         self.email_scheduled_courses()

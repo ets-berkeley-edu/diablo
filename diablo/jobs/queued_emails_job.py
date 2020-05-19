@@ -31,7 +31,7 @@ from flask import current_app as app
 
 class QueuedEmailsJob(BaseJob):
 
-    def run(self, args=None):
+    def _run(self, args=None):
         term_id = app.config['CURRENT_TERM_ID']
         for queued_email in QueuedEmail.get_all(term_id):
             course = SisSection.get_course(term_id, queued_email.section_id)

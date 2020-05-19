@@ -37,7 +37,7 @@ from flask import current_app as app
 
 class AdminEmailsJob(BaseJob):
 
-    def run(self):
+    def _run(self):
         self.term_id = app.config['CURRENT_TERM_ID']
         self.all_scheduled = Scheduled.get_all_scheduled(term_id=self.term_id)
         if self.all_scheduled:
