@@ -73,4 +73,4 @@ class OuijaBoardPage(DiabloPages):
 
     def click_sign_up_page_link(self, section):
         app.logger.info(f'Clicking the link to the sign up page for {section.code}')
-        self.wait_for_element_and_click((By.ID, f'link-course-{section.ccn}'))
+        self.wait_for_page_and_click((By.ID, f'link-course-{section.ccn}'))
