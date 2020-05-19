@@ -150,33 +150,6 @@ def notify_instructors_recordings_scheduled(course, scheduled):
         """)
 
 
-def send_course_related_email(
-        course,
-        recipients,
-        template_type,
-        term_id,
-):
-    template = EmailTemplate.get_template_by_type(template_type)
-    if template:
-        def _interpolate(templated_string):
-            return interpolate_email_content(
-                course=course,
-                templated_string=templated_string,
-            )
-        BConnected().send(
-            message=_interpolate(template.message),
-            recipients=recipients,
-            section_id=course['sectionId'],
-            subject_line=_interpolate(template.subject_line),
-            template_type=template_type,
-            term_id=term_id,
-        )
-        return True
-    else:
-        send_system_error_email(f'Unable to send email of type {template_type} because no template is available.')
-        return False
-
-
 def send_system_error_email(message, subject=None):
     if subject is None:
         subject = f'{message[:50]}...' if len(message) > 50 else message

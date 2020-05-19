@@ -23,11 +23,11 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-from diablo.externals.b_connected import BConnected
 from diablo.jobs.base_job import BaseJob
 from diablo.jobs.errors import BackgroundJobError
-from diablo.merged.emailer import interpolate_email_content, send_course_related_email, send_system_error_email
+from diablo.merged.emailer import interpolate_email_content, send_system_error_email
 from diablo.models.email_template import EmailTemplate
+from diablo.models.queued_email import QueuedEmail
 from diablo.models.scheduled import Scheduled
 from diablo.models.sis_section import SisSection
 from flask import current_app as app
@@ -45,15 +45,12 @@ class InstructorEmailsJob(BaseJob):
             if not course['hasOptedOut']:
                 new_instructors = [i for i in course['instructors'] if not i['wasSentInvite']]
                 if new_instructors:
-                    if not send_course_related_email(
-                        course=course,
+                    QueuedEmail.create(
                         recipients=new_instructors,
+                        section_id=course['sectionId'],
                         template_type='invitation',
                         term_id=self.term_id,
-                    ):
-                        app.logger.error(f"""
-                            Failed to invite {len(new_instructors)} new instructors to section ID {course['sectionId']}).
-                            Instructors: {new_instructors}""")
+                    )
 
     def email_scheduled_courses(self):
         all_scheduled = Scheduled.get_all_scheduled(term_id=self.term_id)
@@ -69,22 +66,28 @@ class InstructorEmailsJob(BaseJob):
                     email_template = EmailTemplate.get_template_by_type(template_type)
                     if email_template:
                         for instructor in course['instructors']:
-                            BConnected().send(
-                                message=interpolate_email_content(
-                                    templated_string=email_template.message,
-                                    course=course,
-                                    instructor_name=instructor['name'],
-                                    recipient_name=instructor['name'],
-                                    recording_type_name=scheduled.recording_type,
-                                ),
-                                recipients=course['instructors'],
-                                subject_line=interpolate_email_content(
-                                    templated_string=email_template.subject_line,
-                                    course=course,
-                                    instructor_name=instructor['name'],
-                                    recipient_name=instructor['name'],
-                                    recording_type_name=scheduled.recording_type,
-                                ),
+                            message = interpolate_email_content(
+                                templated_string=email_template.message,
+                                course=course,
+                                instructor_name=instructor['name'],
+                                recipient_name=instructor['name'],
+                                recording_type_name=scheduled.recording_type,
+                            )
+                            recipients = [instructor]
+                            subject_line = interpolate_email_content(
+                                templated_string=email_template.subject_line,
+                                course=course,
+                                instructor_name=instructor['name'],
+                                recipient_name=instructor['name'],
+                                recording_type_name=scheduled.recording_type,
+                            )
+                            QueuedEmail.create(
+                                message=message,
+                                subject_line=subject_line,
+                                recipients=recipients,
+                                section_id=course['sectionId'],
+                                template_type='invitation',
+                                term_id=self.term_id,
                             )
                     else:
                         raise BackgroundJobError(f"""
