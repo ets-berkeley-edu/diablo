@@ -29,4 +29,7 @@ ALTER TABLE queued_emails ADD COLUMN subject_line VARCHAR(255);
 ALTER TABLE queued_emails ADD COLUMN message TEXT;
 ALTER TABLE queued_emails ADD COLUMN recipients JSONB;
 
+ALTER TABLE queued_emails
+    DROP CONSTRAINT IF EXISTS queued_emails_section_id_template_type_unique_constraint;
+
 COMMIT;

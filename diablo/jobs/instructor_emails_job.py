@@ -25,7 +25,8 @@ ENHANCEMENTS, OR MODIFICATIONS.
 
 from diablo.jobs.base_job import BaseJob
 from diablo.jobs.errors import BackgroundJobError
-from diablo.merged.emailer import interpolate_email_content, send_system_error_email
+from diablo.lib.interpolator import interpolate_content
+from diablo.merged.emailer import send_system_error_email
 from diablo.models.email_template import EmailTemplate
 from diablo.models.queued_email import QueuedEmail
 from diablo.models.scheduled import Scheduled
@@ -66,7 +67,7 @@ class InstructorEmailsJob(BaseJob):
                     email_template = EmailTemplate.get_template_by_type(template_type)
                     if email_template:
                         for instructor in course['instructors']:
-                            message = interpolate_email_content(
+                            message = interpolate_content(
                                 templated_string=email_template.message,
                                 course=course,
                                 instructor_name=instructor['name'],
@@ -74,7 +75,7 @@ class InstructorEmailsJob(BaseJob):
                                 recording_type_name=scheduled.recording_type,
                             )
                             recipients = [instructor]
-                            subject_line = interpolate_email_content(
+                            subject_line = interpolate_content(
                                 templated_string=email_template.subject_line,
                                 course=course,
                                 instructor_name=instructor['name'],
