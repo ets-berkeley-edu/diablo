@@ -66,6 +66,10 @@ class SignUpPage(DiabloPages):
     def room_link_locator(room):
         return By.LINK_TEXT, room.name
 
+    @staticmethod
+    def kaltura_series_link(recording_schedule):
+        return By.PARTIAL_LINK_TEXT, f'Kaltura event {recording_schedule.series_id}'
+
     def load_page(self, section):
         app.logger.info(f'Loading sign-up page for term {section.term} section ID {section.ccn}')
         self.driver.get(f'{app.config["BASE_URL"]}/course/{section.term}/{section.ccn}')
@@ -167,3 +171,8 @@ class SignUpPage(DiabloPages):
 
     def scheduled_publish_type(self):
         return self.element(SignUpPage.PUBLISH_TYPE_SCHEDULED).text.strip()
+
+    def click_kaltura_series_link(self, recording_schedule):
+        app.logger.info(f'Clicking the link to Kaltura series ID {recording_schedule.series_id}')
+        self.wait_for_page_and_click(SignUpPage.kaltura_series_link(recording_schedule))
+        self.switch_to_last_window(self.window_handles())

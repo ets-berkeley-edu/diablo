@@ -170,20 +170,14 @@ class TestSignUp3:
 
     # VERIFY SERIES IN KALTURA
 
-    def test_load_series(self):
-        self.kaltura_page.load_event_edit_page(self.recording_schedule)
+    def test_click_series_link(self):
+        self.sign_up_page.load_page(self.section)
+        self.sign_up_page.click_kaltura_series_link(self.recording_schedule)
+        self.kaltura_page.wait_for_delete_button()
 
     def test_series_title(self):
         expected = f'{self.section.code}, {self.section.number} ({self.term.name})'
         assert self.kaltura_page.visible_series_title() == expected
-
-    def test_start_date(self):
-        start = util.get_kaltura_term_date_str(self.term.start_date)
-        assert f'effective {start}' in self.kaltura_page.visible_recurrence_desc()
-
-    def test_end_date(self):
-        end = util.get_kaltura_term_date_str(self.term.end_date)
-        assert f'until {end}' in self.kaltura_page.visible_recurrence_desc()
 
     def test_recur_weekly(self):
         self.kaltura_page.open_recurrence_modal()
@@ -218,6 +212,14 @@ class TestSignUp3:
     def test_recur_sunday(self):
         assert not self.kaltura_page.is_sun_checked()
 
+    def test_start_date(self):
+        start = util.get_kaltura_term_date_str(util.get_first_recording_date(self.recording_schedule))
+        assert self.kaltura_page.visible_start_date() == start
+
+    def test_end_date(self):
+        end = util.get_kaltura_term_date_str(self.term.end_date)
+        assert self.kaltura_page.visible_end_date() == end
+
     def test_start_time(self):
         start = self.section.get_berkeley_start_time_str()
         assert self.kaltura_page.visible_start_time() == start
@@ -225,6 +227,9 @@ class TestSignUp3:
     def test_end_time(self):
         end = self.section.get_berkeley_end_time_str()
         assert self.kaltura_page.visible_end_time() == end
+
+    def test_close_kaltura_window(self):
+        self.kaltura_page.close_window_and_switch()
 
     # VERIFY EMAIL
 
