@@ -28,6 +28,7 @@ from diablo import std_commit
 from diablo.jobs.admin_emails_job import AdminEmailsJob
 from diablo.jobs.canvas_job import CanvasJob
 from diablo.jobs.doomed_to_failure import DoomedToFailure
+from diablo.jobs.queued_emails_job import QueuedEmailsJob
 from diablo.models.approval import Approval
 from diablo.models.job import Job
 from diablo.models.room import Room
@@ -77,7 +78,11 @@ class TestEmailAlertsForAdmins:
 
             admin_uid = app.config['EMAIL_DIABLO_ADMIN_UID']
             email_count = _get_email_count(admin_uid)
+            # Message queued but not sent.
             AdminEmailsJob(app.app_context).run()
+            assert _get_email_count(admin_uid) == email_count
+            # Message sent.
+            QueuedEmailsJob(app.app_context).run()
             assert _get_email_count(admin_uid) == email_count + 1
 
     def test_alert_admin_of_instructor_change(self):
@@ -115,10 +120,12 @@ class TestEmailAlertsForAdmins:
 
             admin_uid = app.config['EMAIL_DIABLO_ADMIN_UID']
             email_count = _get_email_count(admin_uid)
-            std_commit(allow_test_environment=True)
+            # Message queued but not sent.
             AdminEmailsJob(app.app_context).run()
-            std_commit(allow_test_environment=True)
-            assert _get_email_count(admin_uid) > email_count
+            assert _get_email_count(admin_uid) == email_count
+            # Message sent.
+            QueuedEmailsJob(app.app_context).run()
+            assert _get_email_count(admin_uid) == email_count + 1
 
     def test_alert_on_job_failure(self):
         admin_uid = app.config['EMAIL_DIABLO_ADMIN_UID']
@@ -134,6 +141,7 @@ class TestEmailAlertsForAdmins:
         Job.update_disabled(job_id=doomed_job.id, disable=False)
         std_commit(allow_test_environment=True)
         DoomedToFailure(app.app_context).run_with_app_context()
+        # Failure alerts do not go through the queue.
         assert _get_email_count(admin_uid) == email_count + 1
 
 
