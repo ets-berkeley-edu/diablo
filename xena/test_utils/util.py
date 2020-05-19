@@ -24,6 +24,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 
 from datetime import datetime
+from datetime import timedelta
 import json
 import time
 
@@ -109,3 +110,20 @@ def reset_test_data(course_data):
     sql = f'DELETE FROM course_preferences WHERE section_id = {ccn} AND term_id = {term_id}'
     db.session.execute(text(sql))
     std_commit(allow_test_environment=True)
+
+
+def get_next_date(start_date, day_index):
+    days_ahead = day_index - start_date.weekday()
+    if days_ahead < 0:
+        days_ahead += 7
+    return start_date + timedelta(days_ahead)
+
+
+def get_first_recording_date(recording_schedule):
+    term_start_date = datetime.strptime(app.config['CURRENT_TERM_BEGIN'], '%Y-%m-%d')
+    day_to_index = {'MO': 0, 'TU': 1, 'WE': 2, 'TH': 3, 'FR': 4}
+    schedule_days_str = recording_schedule.section.days.replace(' ', '').split(',')
+    schedule_days_ind = [day_to_index[day] for day in schedule_days_str]
+    next_dates = [get_next_date(term_start_date, index) for index in schedule_days_ind]
+    next_dates.sort()
+    return datetime.strftime(next_dates[0], '%Y-%m-%d')

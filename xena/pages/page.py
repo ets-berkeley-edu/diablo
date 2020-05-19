@@ -56,6 +56,8 @@ class Page(object):
             return self.driver.find_element_by_class_name(target)
         elif strategy == 'link text':
             return self.driver.find_element_by_link_text(target)
+        elif strategy == 'partial link text':
+            return self.driver.find_element_by_partial_link_text(target)
         elif strategy == 'xpath':
             return self.driver.find_element_by_xpath(target)
 
@@ -70,6 +72,8 @@ class Page(object):
             return self.driver.find_elements_by_class_name(target)
         elif strategy == 'link text':
             return self.driver.find_elements_by_link_text(target)
+        elif strategy == 'partial link text':
+            return self.driver.find_elements_by_partial_link_text(target)
         elif strategy == 'xpath':
             return self.driver.find_elements_by_xpath(target)
 
@@ -160,14 +164,23 @@ class Page(object):
 
     # EXTERNAL LINK VALIDATOR
 
+    def window_handles(self):
+        return self.driver.window_handles
+
+    def switch_to_last_window(self, windows):
+        self.driver.switch_to.window(windows[-1])
+
+    def close_window_and_switch(self):
+        self.driver.close()
+        self.driver.switch_to.window(self.window_handles()[0])
+
     def external_link_valid(self, locator, expected_page_title):
-        orig_window = self.driver.current_window_handle
         self.wait_for_element_and_click(locator)
         time.sleep(1)
         try:
-            windows = self.driver.window_handles
+            windows = self.window_handles()
             if len(windows) > 1:
-                self.driver.switch_to.window(windows[-1])
+                self.switch_to_last_window(windows)
                 self.wait_for_title(expected_page_title)
                 app.logger.info(f'Found new window with title "{expected_page_title}"')
                 return True
@@ -177,6 +190,5 @@ class Page(object):
                     f'Expecting page title {expected_page_title}, but visible page title is {self.driver.title()}')
                 return False
         finally:
-            if len(self.driver.window_handles) > 1:
-                self.driver.close()
-                self.driver.switch_to.window(orig_window)
+            if len(self.window_handles()) > 1:
+                self.close_window_and_switch()

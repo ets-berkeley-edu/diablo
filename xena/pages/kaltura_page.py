@@ -73,6 +73,8 @@ class KalturaPage(Page):
 
     def load_event_edit_page(self, recording_schedule):
         self.driver.get(f'{app.config["KALTURA_MEDIA_SPACE_URL"]}/recscheduling/index/edit-event/eventid/{recording_schedule.series_id}')
+
+    def wait_for_delete_button(self):
         self.wait_for_element(KalturaPage.SERIES_DELETE_BUTTON, util.get_short_timeout())
 
     def selected_resource_el(self, room):
@@ -118,6 +120,12 @@ class KalturaPage(Page):
 
     def is_sun_checked(self):
         return self.element(KalturaPage.RECUR_WEEKLY_SUN_CBX).is_selected()
+
+    def visible_start_date(self):
+        return self.element(KalturaPage.RECUR_DATE_START).get_attribute('value')
+
+    def visible_end_date(self):
+        return self.element(KalturaPage.RECUR_DATE_END).get_attribute('value')
 
     def visible_start_time(self):
         return self.element(KalturaPage.RECUR_TIME_START).get_attribute('value')
