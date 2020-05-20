@@ -26,10 +26,10 @@ export function getEmailTemplateCodes() {
   return axios.get(`${utils.apiBaseUrl()}/api/email/template/codes`)
 }
 
-export function queueEmails(emailTemplateType, sectionIds, termId) {
+export function queueEmail(emailTemplateType, sectionId, termId) {
   return axios.post(`${utils.apiBaseUrl()}/api/emails/queue`, {
     emailTemplateType,
-    sectionIds,
+    sectionId,
     termId
   })
 }

@@ -345,7 +345,7 @@
   import OxfordJoin from '@/components/util/OxfordJoin'
   import Utils from '@/mixins/Utils'
   import {approve, getCourse, unschedule} from '@/api/course'
-  import {queueEmails} from '@/api/email'
+  import {queueEmail} from '@/api/email'
 
   export default {
     name: 'Course',
@@ -416,7 +416,7 @@
         this.$ready()
       },
       sendInvite() {
-        queueEmails('invitation', [this.course.sectionId], this.course.termId).then(data => {
+        queueEmail('invitation', this.course.sectionId, this.course.termId).then(data => {
           this.snackbarOpen(data.message)
         })
       }

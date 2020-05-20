@@ -148,58 +148,6 @@ class TestQueuedEmailsJob:
         assert email_json['termId'] == term_id
         assert email_json['sentAt']
 
-    def test_currently_no_person_teaching_course(self):
-        """If course does not have a proper instructor then the email remains queued."""
-        def _emails_sent():
-            return _get_emails_sent(email_template_type=email_template_type, section_id=section_id, term_id=term_id)
-
-        term_id = app.config['CURRENT_TERM_ID']
-        section_id = 50006
-        email_template_type = 'invitation'
-        # Courses with no proper instructor are excluded from query results.
-        assert not SisSection.get_course(term_id=term_id, section_id=section_id)
-
-        queued_email = QueuedEmail.create(section_id, email_template_type, term_id)
-        std_commit(allow_test_environment=True)
-
-        emails_sent_before = _emails_sent()
-        # Run the job
-        QueuedEmailsJob(simply_yield).run()
-        std_commit(allow_test_environment=True)
-
-        # Expect no email sent
-        emails_sent_after = _emails_sent()
-        assert len(emails_sent_after) == len(emails_sent_before)
-        # Assert that email is still queued
-        assert section_id in QueuedEmail.get_all_section_ids(template_type=email_template_type, term_id=term_id)
-        # Clean up
-        QueuedEmail.delete(queued_email)
-
-    def test_no_email_template_available(self):
-        """If email_template is not available then keep related emails in the queue."""
-        def _emails_sent():
-            return _get_emails_sent(email_template_type=email_template_type, section_id=section_id, term_id=term_id)
-
-        term_id = app.config['CURRENT_TERM_ID']
-        section_id = 50005
-        email_template_type = 'waiting_for_approval'
-
-        queued_email = QueuedEmail.create(section_id, email_template_type, term_id)
-        std_commit(allow_test_environment=True)
-
-        emails_sent_before = _emails_sent()
-        # Run the job
-        QueuedEmailsJob(simply_yield).run()
-        std_commit(allow_test_environment=True)
-
-        # Expect no email sent
-        emails_sent_after = _emails_sent()
-        assert len(emails_sent_after) == len(emails_sent_before)
-        # Assert that email is still queued
-        assert section_id in QueuedEmail.get_all_section_ids(template_type=email_template_type, term_id=term_id)
-        # Clean up
-        QueuedEmail.delete(queued_email)
-
 
 def _get_emails_sent(email_template_type, section_id, term_id):
     return SentEmail.get_emails_of_type(
