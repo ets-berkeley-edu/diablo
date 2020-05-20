@@ -30,11 +30,13 @@ from diablo.lib.kaltura_util import events_to_api_json, get_first_matching_datet
 from diablo.lib.util import to_isoformat
 from flask import current_app as app
 from KalturaClient import KalturaClient, KalturaConfiguration
+from KalturaClient.exceptions import KalturaException
 from KalturaClient.Plugins.Core import KalturaCategoryFilter, KalturaFilterPager, KalturaMediaEntryFilter
-from KalturaClient.Plugins.Schedule import KalturaRecordScheduleEvent, KalturaScheduleEventClassificationType, \
-    KalturaScheduleEventFilter, KalturaScheduleEventRecurrence, KalturaScheduleEventRecurrenceFrequency, \
-    KalturaScheduleEventRecurrenceType, KalturaScheduleEventResource, KalturaScheduleEventStatus, \
-    KalturaScheduleResourceFilter, KalturaSessionType
+from KalturaClient.Plugins.Schedule import KalturaBlackoutScheduleEvent, KalturaRecordScheduleEvent, \
+    KalturaScheduleEventClassificationType, KalturaScheduleEventFilter, KalturaScheduleEventRecurrence, \
+    KalturaScheduleEventRecurrenceFrequency, KalturaScheduleEventRecurrenceType, KalturaScheduleEventResource, \
+    KalturaScheduleEventStatus, KalturaScheduleResourceFilter, KalturaSessionType
+import pytz
 
 CREATED_BY_DIABLO_TAG = 'created_by_diablo'
 
@@ -48,6 +50,33 @@ class Kaltura:
         self.kaltura_partner_id = app.config['KALTURA_PARTNER_ID']
         if app.config['DIABLO_ENV'] == 'test':
             return
+
+    def create_blackout_dates(self, blackout_dates):
+        events = []
+        for blackout_date in blackout_dates:
+            try:
+                timezone = pytz.timezone(app.config['TIMEZONE'])
+                start_time = datetime.strptime(f'{blackout_date} 00:00', '%Y-%m-%d %H:%M').replace(tzinfo=timezone)
+                end_time = datetime.strptime(f'{blackout_date} 23:59', '%Y-%m-%d %H:%M').replace(tzinfo=timezone)
+                summary = f'Academic and Administrative Holiday: {blackout_date}'
+                event = KalturaBlackoutScheduleEvent(
+                    # https://developer.kaltura.com/api-docs/General_Objects/Objects/KalturaScheduleEvent
+                    classificationType=KalturaScheduleEventClassificationType.PUBLIC_EVENT,
+                    duration=None,  # (end_time - start_time).seconds,
+                    endDate=int(end_time.timestamp()),
+                    startDate=int(start_time.timestamp()),
+                    ownerId=app.config['KALTURA_KMS_OWNER_ID'],
+                    recurrenceType=KalturaScheduleEventRecurrenceType.NONE,
+                    status=KalturaScheduleEventStatus.ACTIVE,
+                    summary=summary,
+                    tags=CREATED_BY_DIABLO_TAG,
+                )
+                events.append(self.kaltura_client.schedule.scheduleEvent.add(event))
+
+            except KalturaException as e:
+                app.logger.error(f'Failed to schedule blackout date {blackout_date} in Kaltura')
+                app.logger.exception(e)
+        return events
 
     @skip_when_pytest()
     def delete_event(self, kaltura_schedule_id):

@@ -82,6 +82,8 @@ INACTIVE_SESSION_LIFETIME = 20
 INDEX_HTML = 'dist/static/index.html'
 
 KALTURA_ADMIN_SECRET = 'secret'
+# For example, Thanksgiving 2020
+KALTURA_BLACKOUT_DATES = ['2020-11-26', '2020-11-27']
 KALTURA_EVENT_ORGANIZER = '____at_berkeley.edu'
 KALTURA_EXPIRY = 0
 KALTURA_KMS_OWNER_ID = 'owner_id'
