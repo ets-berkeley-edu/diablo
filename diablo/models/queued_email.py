@@ -32,6 +32,7 @@ from diablo.merged.emailer import get_admin_alert_recipients, send_system_error_
 from diablo.models.approval import NAMES_PER_PUBLISH_TYPE, NAMES_PER_RECORDING_TYPE
 from diablo.models.email_template import email_template_type, EmailTemplate
 from diablo.models.sis_section import SisSection
+from flask import current_app as app
 from sqlalchemy.dialects.postgresql import JSONB
 
 
@@ -76,6 +77,13 @@ class QueuedEmail(db.Model):
 
     @classmethod
     def create(cls, section_id, template_type, term_id, recipients=None, message=None, subject_line=None):
+        course = SisSection.get_course(term_id, section_id)
+        if not course:
+            app.logger.error(f'Attempt to queue email for unknown course (term_id={term_id}, section_id={section_id})')
+            return
+        if not course['instructors']:
+            app.logger.error(f'Attempt to queue email for course without instructors (term_id={term_id}, section_id={section_id})')
+            return
         queued_email = cls(
             section_id=section_id,
             template_type=template_type,
@@ -85,8 +93,9 @@ class QueuedEmail(db.Model):
             subject_line=subject_line,
         )
         course = SisSection.get_course(term_id, queued_email.section_id)
-        if course and not queued_email.is_interpolated():
-            queued_email.interpolate(course)
+        if not queued_email.is_interpolated() and not queued_email.interpolate(course):
+            app.logger.error(f'Failed to interpolate all required values for queued email ({queued_email})')
+            return
         db.session.add(queued_email)
         std_commit()
         return queued_email
