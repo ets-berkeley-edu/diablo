@@ -49,6 +49,12 @@ class BConnected:
             section_id=None,
             template_type=None,
     ):
+        if not message or not subject_line or not recipients:
+            app.logger.error(
+                'Attempted to send a message without required fields: '
+                f'(recipients={recipients}, subject_line={subject_line}, message={message}')
+            return False
+
         @skip_when_pytest()
         def _send():
             # Connect to SMTP server
