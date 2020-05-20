@@ -23,41 +23,37 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 import os
+import sys
+import time
 
-from diablo import cache, db
-from diablo.configs import load_configs
-from diablo.jobs.background_job_manager import BackgroundJobManager
-from diablo.logger import initialize_logger
-from diablo.routes import register_routes
-from flask import Flask
+abspath = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.append(abspath)
 
-background_job_manager = BackgroundJobManager()
+from diablo.factory import create_app  # noqa
 
-
-def create_app(standalone=False):
-    """Initialize app with configs."""
-    app = Flask(__name__.split('.')[0])
-    load_configs(app)
-    initialize_logger(app)
-    cache.init_app(app)
-    cache.clear()
-    db.init_app(app)
-
-    if not standalone:
-        with app.app_context():
-            register_routes(app)
-            _register_jobs(app)
-
-    return app
+application = create_app(standalone=True)
 
 
-def _register_jobs(app):
-    from diablo.jobs.admin_emails_job import AdminEmailsJob  # noqa
-    from diablo.jobs.canvas_job import CanvasJob  # noqa
-    from diablo.jobs.instructor_emails_job import InstructorEmailsJob  # noqa
-    from diablo.jobs.kaltura_job import KalturaJob  # noqa
-    from diablo.jobs.queued_emails_job import QueuedEmailsJob  # noqa
-    from diablo.jobs.sis_data_refresh_job import SisDataRefreshJob  # noqa
+@application.cli.command('delete_scheduled_events_from_kaltura')
+def delete_kaltura_events():
+    """Delete Kaltura events created by Diablo."""
+    with application.app_context():
+        from diablo.externals.kaltura import CREATED_BY_DIABLO_TAG, Kaltura
 
-    if app.config['JOBS_AUTO_START'] and (not app.debug or os.environ.get('WERKZEUG_RUN_MAIN') == 'true'):
-        background_job_manager.start(app)
+        def _print(message):
+            print(f"""
+                {message}
+            """)
+        _print('Time for some Kaltura housekeeping...')
+        kaltura = Kaltura()
+        kaltura_events = kaltura.get_events_by_tag(tags_like=CREATED_BY_DIABLO_TAG)
+        if kaltura_events:
+            _print(f'In two seconds we will delete {len(kaltura_events)} event(s) in Kaltura. Use control-C to abort.')
+            time.sleep(2)
+
+            for event in kaltura_events:
+                kaltura.delete_event(kaltura_schedule_id=event['id'])
+                _print(f'Deleted --> {event["description"]}')
+        else:
+            _print(f'No events found with tag {CREATED_BY_DIABLO_TAG}')
+        _print('Have a nice day!')

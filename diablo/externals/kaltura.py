@@ -36,6 +36,11 @@ from KalturaClient.Plugins.Schedule import KalturaRecordScheduleEvent, KalturaSc
     KalturaScheduleEventRecurrenceType, KalturaScheduleEventResource, KalturaScheduleEventStatus, \
     KalturaScheduleResourceFilter, KalturaSessionType
 
+CREATED_BY_DIABLO_TAG = 'created_by_diablo'
+
+# Avoid infinite loop when paging through Kaltura results
+MAX_PAGE = 100
+
 
 class Kaltura:
 
@@ -45,24 +50,32 @@ class Kaltura:
             return
 
     @skip_when_pytest()
-    def delete_scheduled_recordings(self, kaltura_schedule_id):
+    def delete_event(self, kaltura_schedule_id):
         return self.kaltura_client.schedule.scheduleEvent.delete(kaltura_schedule_id)
 
-    @cachify('kaltura/get_schedule_event_list', timeout=30)
-    def get_schedule_event_list(self, kaltura_resource_id):
-        response = self.kaltura_client.schedule.scheduleEvent.list(
-            filter=KalturaScheduleEventFilter(resourceIdsLike=str(kaltura_resource_id)),
-            pager=KalturaFilterPager(pageSize=200),
-        )
-        return events_to_api_json(response.objects)
+    @cachify('kaltura/events_by_location', timeout=30)
+    def get_events_by_location(self, kaltura_resource_id):
+        return self._get_events(KalturaScheduleEventFilter(resourceIdsLike=str(kaltura_resource_id)))
+
+    @cachify('kaltura/events_by_tag')
+    def get_events_by_tag(self, tags_like):
+        return self._get_events(KalturaScheduleEventFilter(tagsLike=tags_like))
 
     @cachify('kaltura/get_resource_list', timeout=30)
     def get_resource_list(self):
-        response = self.kaltura_client.schedule.scheduleResource.list(
-            filter=KalturaScheduleResourceFilter(),
-            pager=KalturaFilterPager(pageSize=200),
-        )
-        return [{'id': o.id, 'name': o.name} for o in response.objects]
+        objects = []
+        page_index, page_size = 1, 200
+        while page_index < MAX_PAGE:
+            response = self.kaltura_client.schedule.scheduleResource.list(
+                filter=KalturaScheduleResourceFilter(),
+                pager=KalturaFilterPager(pageIndex=page_index, pageSize=page_size),
+            )
+            objects += response.objects
+            if len(response.objects) < page_size:
+                break
+            page_size += 1
+
+        return [{'id': o.id, 'name': o.name} for o in objects]
 
     @cachify('kaltura/get_canvas_category_object')
     def get_canvas_category_object(self, canvas_course_site_id):
@@ -71,17 +84,25 @@ class Kaltura:
             pager=KalturaFilterPager(),
         )
         canvas_category_objects = [_category_object_to_json(o) for o in response.objects]
-        return canvas_category_objects[0] if canvas_category_objects else None
+        return _category_object_to_json(canvas_category_objects[0]) if canvas_category_objects else None
 
     @cachify('kaltura/get_canvas_category_objects', timeout=30)
     def get_canvas_category_objects(self):
-        # TODO: In the long term, this won't scale well. Can we query by term?
-        full_name_prefix = 'Canvas>site>channels>'
-        response = self.kaltura_client.category.list(
-            filter=KalturaCategoryFilter(fullNameStartsWith=full_name_prefix),
-            pager=KalturaFilterPager(),
-        )
-        return [_category_object_to_json(o) for o in response.objects if o.fullName == f'{full_name_prefix}{o.name}']
+        objects = []
+        page_index, page_size = 1, 200
+        while page_index < MAX_PAGE:
+            # TODO: In the long term, this won't scale well. Can we query by term?
+            full_name_prefix = 'Canvas>site>channels>'
+            response = self.kaltura_client.category.list(
+                filter=KalturaCategoryFilter(fullNameStartsWith=full_name_prefix),
+                pager=KalturaFilterPager(pageIndex=page_index, pageSize=page_size),
+            )
+            objects += response.objects
+            if len(response.objects) < page_size:
+                break
+            page_size += 1
+
+        return [_category_object_to_json(o) for o in objects if o.fullName == f'{full_name_prefix}{o.name}']
 
     @skip_when_pytest(mock_object=int(datetime.now().timestamp()))
     def schedule_recording(
@@ -144,6 +165,21 @@ class Kaltura:
         )
         client.setKs(ks)
         return client
+
+    def _get_events(self, kaltura_event_filter):
+        objects = []
+        page_index, page_size = 1, 200
+        while page_index < MAX_PAGE:
+            response = self.kaltura_client.schedule.scheduleEvent.list(
+                filter=kaltura_event_filter,
+                pager=KalturaFilterPager(pageIndex=page_index, pageSize=page_size),
+            )
+            objects += response.objects
+            if len(response.objects) < page_size:
+                break
+            page_size += 1
+
+        return events_to_api_json(objects)
 
     def _schedule_recurring_events_in_kaltura(
             self,
@@ -220,7 +256,7 @@ class Kaltura:
             startDate=first_day_start.timestamp(),
             status=KalturaScheduleEventStatus.ACTIVE,
             summary=summary,
-            tags=None,
+            tags=CREATED_BY_DIABLO_TAG,
             templateEntryId=app.config['KALTURA_TEMPLATE_ENTRY_ID'],
         )
         return self.kaltura_client.schedule.scheduleEvent.add(recurring_event)

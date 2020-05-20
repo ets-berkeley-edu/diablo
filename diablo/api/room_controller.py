@@ -49,7 +49,7 @@ def kaltura_resource_list():
 def kaltura_event_list(room_id):
     room = Room.get_room(room_id)
     if room and room.kaltura_resource_id:
-        return tolerant_jsonify(Kaltura().get_schedule_event_list(kaltura_resource_id=room.kaltura_resource_id))
+        return tolerant_jsonify(Kaltura().get_events_by_location(kaltura_resource_id=room.kaltura_resource_id))
     else:
         raise ResourceNotFoundError('No such room')
 
