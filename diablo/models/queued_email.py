@@ -116,7 +116,8 @@ class QueuedEmail(db.Model):
                 self.recipients = recipients
             db.session.add(self)
             std_commit()
-            return True
+            # Return True only if all required data has been set.
+            return self.is_interpolated
 
     def to_api_json(self):
         return {
