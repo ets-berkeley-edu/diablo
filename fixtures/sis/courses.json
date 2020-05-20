@@ -161,6 +161,17 @@
     },
     {
       "allowed_units": "3.0",
+      "instructor_uid": "10008",
+      "meeting_days": "MOWEFR",
+      "meeting_end_time": "08:59",
+      "meeting_location": "Barrows 106",
+      "meeting_start_time": "08:00",
+      "course_name": "MATH C51",
+      "course_title": "Linear algebra and differential calculus",
+      "section_id": 50010
+    },
+    {
+      "allowed_units": "3.0",
       "instructor_uid": "10009",
       "meeting_days": "MOWEFR",
       "meeting_end_time": "08:59",

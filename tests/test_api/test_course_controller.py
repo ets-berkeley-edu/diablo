@@ -47,6 +47,7 @@ section_3_id = 50002
 section_4_id = 50004
 section_5_id = 50003
 section_6_id = 50005
+section_7_id = 50010
 
 section_in_ineligible_room = section_2_id
 section_with_canvas_course_sites = section_6_id
@@ -485,23 +486,22 @@ class TestCoursesFilter:
     def test_partially_approved_filter(self, client, admin_session):
         """Partially approved: Eligible, invited course with 1+ approvals, but not ALL instructors have approved."""
         with test_approvals_workflow(app):
-            # Assert multiple instructors
-            section_1_instructor_uids = get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
-            section_6_instructor_uids = get_instructor_uids(section_id=section_6_id, term_id=self.term_id)
-            assert len(section_1_instructor_uids) > 1
-            assert len(section_6_instructor_uids) > 1
-
-            for section_id in [section_1_id, section_6_id]:
+            for section_id in [section_1_id, section_6_id, section_7_id]:
+                # Assert multiple instructors
+                assert len(get_instructor_uids(section_id=section_id, term_id=self.term_id)) > 1
                 # Send invites
                 self._send_invitation_email(section_id)
                 # Approval by first instructor only
                 self._create_approval(section_id)
 
             # Feed will include both scheduled and not scheduled.
-            _schedule_recordings(
-                section_id=section_1_id,
-                term_id=self.term_id,
-            )
+            for section_id in [section_1_id, section_7_id]:
+                _schedule_recordings(section_id=section_id, term_id=self.term_id)
+
+            # Unschedule one of them
+            Approval.delete(section_id=section_7_id, term_id=self.term_id)
+            Scheduled.delete(section_id=section_7_id, term_id=self.term_id)
+
             std_commit(allow_test_environment=True)
             api_json = self._api_courses(client, term_id=self.term_id, filter_='Partially Approved')
             assert len(api_json) == 2
@@ -523,6 +523,12 @@ class TestCoursesFilter:
                 section_id=section_1_id,
                 term_id=self.term_id,
             )
+            # Deleted records will be ignored
+            _schedule_recordings(
+                section_id=section_2_id,
+                term_id=self.term_id,
+            )
+            Scheduled.delete(section_id=section_2_id, term_id=self.term_id)
             std_commit(allow_test_environment=True)
             api_json = self._api_courses(client, term_id=self.term_id, filter_='Scheduled')
             assert len(api_json) == 1
@@ -667,7 +673,11 @@ class TestCrossListedNameGeneration:
 
     def test_different_course_names(self, admin_session, client):
         """Departments sharing catalog id and section code."""
-        self._verify_name_generation(client=client, section_id=50010, expected_name='MATH C51 | STAT C51, LEC 001/003')
+        self._verify_name_generation(
+            client=client,
+            section_id=section_7_id,
+            expected_name='MATH C51 | STAT C51, LEC 001/003',
+        )
 
     def test_different_instruction_format(self, admin_session, client):
         """Departments share catalog id but not section code."""
