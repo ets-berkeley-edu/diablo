@@ -85,8 +85,7 @@ class EmailPage(Page):
                 assert self.is_message_present(message)
                 return True
             except Exception as e:
-                app.logger.info(f'Error: {e}, scrolling down')
-                self.scroll_to_bottom()
+                app.logger.info(f'Error: {e}')
                 time.sleep(util.get_short_timeout())
                 if tries == retries:
                     return False
