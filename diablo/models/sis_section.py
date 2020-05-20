@@ -356,7 +356,7 @@ class SisSection(db.Model):
             FROM sis_sections s
             JOIN instructors i ON i.uid = s.instructor_uid
             JOIN rooms r ON r.location = s.meeting_location
-            JOIN scheduled d ON d.section_id = s.section_id AND d.term_id = :term_id
+            JOIN scheduled d ON d.section_id = s.section_id AND d.term_id = :term_id AND d.deleted_at IS NULL
             WHERE
                 s.term_id = :term_id
                 AND s.deleted_at IS NULL
@@ -420,7 +420,7 @@ class SisSection(db.Model):
                 r.id AS room_id,
                 r.location AS room_location
             FROM sis_sections s
-            JOIN approvals a ON a.section_id = s.section_id AND a.term_id = :term_id
+            JOIN approvals a ON a.section_id = s.section_id AND a.term_id = :term_id AND a.deleted_at IS NULL
             JOIN instructors i ON i.uid = s.instructor_uid
             JOIN sent_emails e ON e.section_id = s.section_id
             JOIN rooms r ON r.location = s.meeting_location
@@ -492,7 +492,7 @@ class SisSection(db.Model):
             FROM sis_sections s
             JOIN instructors i ON i.uid = s.instructor_uid
             JOIN rooms r ON r.location = s.meeting_location
-            JOIN scheduled d ON d.section_id = s.section_id AND d.term_id = :term_id
+            JOIN scheduled d ON d.section_id = s.section_id AND d.term_id = :term_id AND d.deleted_at IS NULL
             WHERE
                 s.term_id = :term_id
                 AND s.deleted_at IS NULL
