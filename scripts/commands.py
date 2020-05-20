@@ -53,7 +53,34 @@ def delete_kaltura_events():
 
             for event in kaltura_events:
                 kaltura.delete_event(kaltura_schedule_id=event['id'])
-                _print(f'Deleted --> {event["description"]}')
+                _print(f'Deleted --> {event["description"] or event["summary"]}')
         else:
             _print(f'No events found with tag {CREATED_BY_DIABLO_TAG}')
+        _print('Have a nice day!')
+
+
+@application.cli.command('assign_kaltura_blackout_dates')
+def assign_blackout_dates():
+    """Prevent other events from being scheduled in these dates."""
+    with application.app_context():
+        from diablo.externals.kaltura import Kaltura
+
+        def _print(message):
+            print(f"""
+                {message}
+            """)
+        blackout_dates = application.config['KALTURA_BLACKOUT_DATES']
+        if blackout_dates:
+            _print(f'Create blackout date(s) in Kaltura: {",".join(blackout_dates)}')
+            _print('Use control-C to abort.')
+            time.sleep(2)
+
+            kaltura_events = Kaltura().create_blackout_dates(blackout_dates=blackout_dates)
+            if kaltura_events:
+                _print('Blackout events created:')
+                for event in kaltura_events:
+                    _print(event.summary)
+        else:
+            _print('Empty list of blackout_dates in Diablo config file.')
+
         _print('Have a nice day!')
