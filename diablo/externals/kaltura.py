@@ -36,6 +36,9 @@ from KalturaClient.Plugins.Schedule import KalturaRecordScheduleEvent, KalturaSc
     KalturaScheduleEventRecurrenceType, KalturaScheduleEventResource, KalturaScheduleEventStatus, \
     KalturaScheduleResourceFilter, KalturaSessionType
 
+# Avoid infinite loop when paging through Kaltura results
+MAX_PAGE = 100
+
 
 class Kaltura:
 
@@ -50,19 +53,43 @@ class Kaltura:
 
     @cachify('kaltura/get_schedule_event_list', timeout=30)
     def get_schedule_event_list(self, kaltura_resource_id):
-        response = self.kaltura_client.schedule.scheduleEvent.list(
-            filter=KalturaScheduleEventFilter(resourceIdsLike=str(kaltura_resource_id)),
-            pager=KalturaFilterPager(pageSize=200),
-        )
-        return events_to_api_json(response.objects)
+        objects = []
+        page_index, page_size = 1, 200
+        while page_index < MAX_PAGE:
+            response = self.kaltura_client.schedule.scheduleEvent.list(
+                filter=KalturaScheduleEventFilter(resourceIdsLike=str(kaltura_resource_id)),
+                pager=KalturaFilterPager(pageIndex=page_index, pageSize=page_size),
+            )
+            objects += response.objects
+            if len(response.objects) < page_size:
+                break
+            page_size += 1
+
+        return events_to_api_json(objects)
+
+    @cachify('kaltura/kaltura_schedule_event')
+    def get_schedule_event(self, kaltura_schedule_id):
+        event = self.kaltura_client.schedule.scheduleEvent.get(scheduleEventId=kaltura_schedule_id)
+        return None if event is None else {
+            'id': event.id,
+            'description': event.description,
+        }
 
     @cachify('kaltura/get_resource_list', timeout=30)
     def get_resource_list(self):
-        response = self.kaltura_client.schedule.scheduleResource.list(
-            filter=KalturaScheduleResourceFilter(),
-            pager=KalturaFilterPager(pageSize=200),
-        )
-        return [{'id': o.id, 'name': o.name} for o in response.objects]
+        objects = []
+        page_index, page_size = 1, 200
+        while page_index < MAX_PAGE:
+            response = self.kaltura_client.schedule.scheduleResource.list(
+                filter=KalturaScheduleResourceFilter(),
+                pager=KalturaFilterPager(pageIndex=page_index, pageSize=page_size),
+            )
+            objects += response.objects
+            if len(response.objects) < page_size:
+                break
+            page_size += 1
+
+        return [{'id': o.id, 'name': o.name} for o in objects]
 
     @cachify('kaltura/get_canvas_category_object')
     def get_canvas_category_object(self, canvas_course_site_id):
@@ -75,13 +102,21 @@ class Kaltura:
 
     @cachify('kaltura/get_canvas_category_objects', timeout=30)
     def get_canvas_category_objects(self):
-        # TODO: In the long term, this won't scale well. Can we query by term?
-        full_name_prefix = 'Canvas>site>channels>'
-        response = self.kaltura_client.category.list(
-            filter=KalturaCategoryFilter(fullNameStartsWith=full_name_prefix),
-            pager=KalturaFilterPager(),
-        )
-        return [_category_object_to_json(o) for o in response.objects if o.fullName == f'{full_name_prefix}{o.name}']
+        objects = []
+        page_index, page_size = 1, 200
+        while page_index < MAX_PAGE:
+            # TODO: In the long term, this won't scale well. Can we query by term?
+            full_name_prefix = 'Canvas>site>channels>'
+            response = self.kaltura_client.category.list(
+                filter=KalturaCategoryFilter(fullNameStartsWith=full_name_prefix),
+                pager=KalturaFilterPager(pageIndex=page_index, pageSize=page_size),
+            )
+            objects += response.objects
+            if len(response.objects) < page_size:
+                break
+            page_size += 1
+
+        return [_category_object_to_json(o) for o in objects if o.fullName == f'{full_name_prefix}{o.name}']
 
     @skip_when_pytest(mock_object=int(datetime.now().timestamp()))
     def schedule_recording(

@@ -23,41 +23,32 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 import os
+import sys
 
-from diablo import cache, db
-from diablo.configs import load_configs
-from diablo.jobs.background_job_manager import BackgroundJobManager
-from diablo.logger import initialize_logger
-from diablo.routes import register_routes
-from flask import Flask
+abspath = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.append(abspath)
 
-background_job_manager = BackgroundJobManager()
+from diablo.factory import create_app  # noqa
 
-
-def create_app(standalone=False):
-    """Initialize app with configs."""
-    app = Flask(__name__.split('.')[0])
-    load_configs(app)
-    initialize_logger(app)
-    cache.init_app(app)
-    cache.clear()
-    db.init_app(app)
-
-    if not standalone:
-        with app.app_context():
-            register_routes(app)
-            _register_jobs(app)
-
-    return app
+application = create_app(standalone=True)
 
 
-def _register_jobs(app):
-    from diablo.jobs.admin_emails_job import AdminEmailsJob  # noqa
-    from diablo.jobs.canvas_job import CanvasJob  # noqa
-    from diablo.jobs.instructor_emails_job import InstructorEmailsJob  # noqa
-    from diablo.jobs.kaltura_job import KalturaJob  # noqa
-    from diablo.jobs.queued_emails_job import QueuedEmailsJob  # noqa
-    from diablo.jobs.sis_data_refresh_job import SisDataRefreshJob  # noqa
+@application.cli.command('delete_scheduled_events_from_kaltura')
+def delete_scheduled_events_from_kaltura():
+    """Delete Kaltura events created by Diablo."""
+    with application.app_context():
+        from diablo.models.scheduled import Scheduled
+        from diablo.externals.kaltura import Kaltura
 
-    if app.config['JOBS_AUTO_START'] and (not app.debug or os.environ.get('WERKZEUG_RUN_MAIN') == 'true'):
-        background_job_manager.start(app)
+        print("""
+
+            *** THIS IS A PROTOTYPE AND WILL NOT DELETE EVENTS IN KALTURA ***
+
+        """)
+        for scheduled in Scheduled.get_all_scheduled(application.config['CURRENT_TERM_ID']):
+            kaltura_schedule_id = scheduled.kaltura_schedule_id
+            print(f"""
+
+                Delete Kaltura series {kaltura_schedule_id}, scheduled for course {scheduled.section_id}
+                {Kaltura().get_schedule_event(kaltura_schedule_id=kaltura_schedule_id)}
+            """)
