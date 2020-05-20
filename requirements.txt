@@ -1,4 +1,5 @@
 canvasapi==0.15.0
+click==7.1.2
 decorator==4.4.2
 Flask-Caching==1.8.0
 Flask-Cors==3.0.8

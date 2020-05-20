@@ -32,10 +32,10 @@ from flask import current_app as app
 from KalturaClient import KalturaClient, KalturaConfiguration
 from KalturaClient.exceptions import KalturaException
 from KalturaClient.Plugins.Core import KalturaCategoryFilter, KalturaFilterPager, KalturaMediaEntryFilter
-from KalturaClient.Plugins.Schedule import KalturaBlackoutScheduleEvent, KalturaRecordScheduleEvent, \
-    KalturaScheduleEventClassificationType, KalturaScheduleEventFilter, KalturaScheduleEventRecurrence, \
-    KalturaScheduleEventRecurrenceFrequency, KalturaScheduleEventRecurrenceType, KalturaScheduleEventResource, \
-    KalturaScheduleEventStatus, KalturaScheduleResourceFilter, KalturaSessionType
+from KalturaClient.Plugins.Schedule import KalturaBlackoutScheduleEvent, KalturaBlackoutScheduleEventFilter, \
+    KalturaRecordScheduleEvent, KalturaScheduleEventClassificationType, KalturaScheduleEventFilter, \
+    KalturaScheduleEventRecurrence, KalturaScheduleEventRecurrenceFrequency, KalturaScheduleEventRecurrenceType, \
+    KalturaScheduleEventResource, KalturaScheduleEventStatus, KalturaScheduleResourceFilter, KalturaSessionType
 import pytz
 
 CREATED_BY_DIABLO_TAG = 'created_by_diablo'
@@ -78,6 +78,10 @@ class Kaltura:
                 app.logger.exception(e)
         return events
 
+    @cachify('kaltura/blackout_dates')
+    def get_blackout_dates(self, tags_like=CREATED_BY_DIABLO_TAG):
+        return self._get_events(KalturaBlackoutScheduleEventFilter(tagsLike=tags_like))
+
     @skip_when_pytest()
     def delete_event(self, kaltura_schedule_id):
         return self.kaltura_client.schedule.scheduleEvent.delete(kaltura_schedule_id)
@@ -87,10 +91,10 @@ class Kaltura:
         return self._get_events(KalturaScheduleEventFilter(resourceIdsLike=str(kaltura_resource_id)))
 
     @cachify('kaltura/events_by_tag')
-    def get_events_by_tag(self, tags_like):
+    def get_events_by_tag(self, tags_like=CREATED_BY_DIABLO_TAG):
         return self._get_events(KalturaScheduleEventFilter(tagsLike=tags_like))
 
-    @cachify('kaltura/get_resource_list', timeout=30)
+    @cachify('kaltura/resource_list', timeout=30)
     def get_resource_list(self):
         objects = []
         page_index, page_size = 1, 200
