@@ -148,7 +148,7 @@ def unschedule():
 
     kaltura_schedule_id = scheduled['kalturaScheduleId']
     try:
-        Kaltura().delete_scheduled_recordings(kaltura_schedule_id)
+        Kaltura().delete_event(kaltura_schedule_id)
     except (KalturaClientException, KalturaException) as e:
         app.logger.error(f'Failed to delete Kaltura schedule: {kaltura_schedule_id}')
         app.logger.exception(e)
