@@ -37,13 +37,13 @@ class QueuedEmailsJob(BaseJob):
             course = SisSection.get_course(term_id, queued_email.section_id)
             if not course:
                 app.logger.warn(f'Email will remain queued until course data is present: {queued_email}')
-                return
+                continue
             if course['hasOptedOut']:
                 QueuedEmail.delete(queued_email)
-                return
+                continue
             if not queued_email.is_interpolated() and not queued_email.interpolate(course):
                 app.logger.warn(f'Failed to interpolate course data, email will remain in queue: {queued_email}')
-                return
+                continue
             if BConnected().send(
                 message=queued_email.message,
                 recipients=queued_email.recipients,
