@@ -137,18 +137,25 @@ def get_recurrence_name(recurrence_type):
 
 
 def get_first_matching_datetime_of_term(meeting_days, time_hours, time_minutes):
-    timezone = pytz.timezone(app.config['TIMEZONE'])
-    start_date = datetime.strptime(app.config['CURRENT_TERM_BEGIN'], '%Y-%m-%d').replace(tzinfo=timezone)
-    first_day = None
+    start_date = datetime.strptime(app.config['CURRENT_TERM_BEGIN'], '%Y-%m-%d')
+    first_meeting = None
     meeting_day_indices = [DAYS.index(day) for day in meeting_days]
     for index in range(7):
         # Monday is 0 and Sunday is 6
         day_index = (start_date.weekday() + index) % 7
         if day_index in meeting_day_indices:
             first_day = start_date + timedelta(days=index)
-            first_day = first_day.replace(hour=time_hours, minute=time_minutes)
+            first_meeting = pytz.timezone(app.config['TIMEZONE']).localize(
+                datetime(
+                    first_day.year,
+                    first_day.month,
+                    first_day.day,
+                    time_hours,
+                    time_minutes,
+                ),
+            )
             break
-    return first_day
+    return first_meeting
 
 
 def get_status_name(status_type):
