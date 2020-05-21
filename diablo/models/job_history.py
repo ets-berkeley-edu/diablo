@@ -26,6 +26,7 @@ from datetime import datetime, timedelta
 
 from diablo import db, std_commit
 from diablo.lib.util import to_isoformat
+from sqlalchemy import text
 from sqlalchemy.sql import desc
 
 
@@ -76,6 +77,14 @@ class JobHistory(db.Model):
     def get_job_history_in_past_days(cls, day_count=1):
         days_ago = datetime.now() - timedelta(days=day_count)
         return cls.query.filter(cls.started_at >= days_ago).order_by(desc(cls.started_at)).all()
+
+    @staticmethod
+    def fail_orphans():
+        sql = """
+            UPDATE job_history
+            SET failed = TRUE, finished_at = now()
+            WHERE finished_at IS NULL"""
+        db.session.execute(text(sql))
 
     def to_api_json(self):
         return {

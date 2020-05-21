@@ -29,6 +29,7 @@ import time
 from diablo.jobs.base_job import BaseJob
 from diablo.jobs.errors import BackgroundJobError
 from diablo.models.job import Job
+from diablo.models.job_history import JobHistory
 import schedule
 
 
@@ -78,6 +79,10 @@ class BackgroundJobManager:
                 {[job_config.to_api_json() for job_config in job_configs]}
 
             """)
+
+        # Clean up history for any older jobs that got lost.
+        JobHistory.fail_orphans()
+
         if job_configs:
             for job_config in job_configs:
                 job_key = job_config.key
