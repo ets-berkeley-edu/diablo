@@ -117,7 +117,7 @@ class Kaltura:
             pager=KalturaFilterPager(),
         )
         canvas_category_objects = [_category_object_to_json(o) for o in response.objects]
-        return _category_object_to_json(canvas_category_objects[0]) if canvas_category_objects else None
+        return canvas_category_objects[0] if canvas_category_objects else None
 
     @cachify('kaltura/get_canvas_category_objects', timeout=30)
     def get_canvas_category_objects(self):
@@ -140,6 +140,7 @@ class Kaltura:
     @skip_when_pytest(mock_object=int(datetime.now().timestamp()))
     def schedule_recording(
             self,
+            category_ids,
             course_label,
             instructors,
             days,
@@ -151,15 +152,16 @@ class Kaltura:
             term_id,
     ):
         kaltura_schedule = self._schedule_recurring_events_in_kaltura(
-            course_label,
-            instructors,
-            days,
-            start_time,
-            end_time,
-            publish_type,
-            recording_type,
-            room,
-            term_id,
+            category_ids=category_ids,
+            course_label=course_label,
+            instructors=instructors,
+            days=days,
+            start_time=start_time,
+            end_time=end_time,
+            publish_type=publish_type,
+            recording_type=recording_type,
+            room=room,
+            term_id=term_id,
         )
         # Link the schedule to the room (ie, capture agent)
         self._attach_scheduled_recordings_to_room(kaltura_schedule=kaltura_schedule, room=room)
@@ -216,6 +218,7 @@ class Kaltura:
 
     def _schedule_recurring_events_in_kaltura(
             self,
+            category_ids,
             course_label,
             instructors,
             days,
@@ -249,6 +252,7 @@ class Kaltura:
         )
         recurring_event = KalturaRecordScheduleEvent(
             # https://developer.kaltura.com/api-docs/General_Objects/Objects/KalturaScheduleEvent
+            categoryIds=category_ids,
             classificationType=KalturaScheduleEventClassificationType.PUBLIC_EVENT,
             comment=f'{summary} recordings scheduled by Diablo on {to_isoformat(datetime.now())}',
             contact=','.join(instructor['uid'] for instructor in instructors),
