@@ -22,8 +22,6 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from datetime import datetime
-
 from diablo.lib.kaltura_util import get_first_matching_datetime_of_term
 from flask import current_app as app
 import pytz
@@ -40,7 +38,7 @@ class TestFirstDayRecording:
                 time_hours=13,
                 time_minutes=30,
             )
-            assert first_day_start == datetime(2020, 8, 26, 13, 30, tzinfo=_timezone())
+            assert first_day_start.day == 26
 
     def test_first_meeting_is_day_after_term_begin(self):
         """First meeting is the day after start of term."""
@@ -50,7 +48,7 @@ class TestFirstDayRecording:
                 time_hours=13,
                 time_minutes=30,
             )
-            assert first_day_start == datetime(2020, 8, 27, 13, 30, tzinfo=_timezone())
+            assert first_day_start.day == 27
 
     def test_first_meeting_is_week_after_term_begin(self):
         """First meeting is the Monday following first week of term."""
@@ -60,7 +58,7 @@ class TestFirstDayRecording:
                 time_hours=8,
                 time_minutes=45,
             )
-            assert first_day_start == datetime(2020, 8, 31, 8, 45, tzinfo=_timezone())
+            assert first_day_start.day == 31
 
     def test_first_meeting_is_different_month(self):
         """First meeting is in week after start of term, in a new month."""
@@ -70,7 +68,18 @@ class TestFirstDayRecording:
                 time_hours=9,
                 time_minutes=15,
             )
-            assert first_day_start == datetime(2020, 9, 1, 9, 15, tzinfo=_timezone())
+            assert first_day_start.month == 9
+            assert first_day_start.day == 1
+
+    def test_timestamps(self):
+        """Epoch timestamp in PST timezone."""
+        with override_config(app, 'CURRENT_TERM_BEGIN', _get_wednesday_august_26()):
+            first_day_start = get_first_matching_datetime_of_term(
+                meeting_days=['TU', 'TH'],
+                time_hours=9,
+                time_minutes=37,
+            )
+            assert first_day_start.timestamp() == 1598546220.0
 
 
 def _get_wednesday_august_26():
