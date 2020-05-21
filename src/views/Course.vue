@@ -71,7 +71,7 @@
                 <v-icon>mdi-bookmark-outline</v-icon>
               </v-col>
               <v-col>
-                <span v-for="canvasCourseSite in course.canvasCourseSites" :key="canvasCourseSite.courseSiteId">
+                <span v-for="(canvasCourseSite, index) in course.canvasCourseSites" :key="canvasCourseSite.courseSiteId">
                   <a
                     :id="`canvas-course-site-${canvasCourseSite.courseSiteId}`"
                     :href="`${$config.canvasBaseUrl}/courses/${canvasCourseSite.courseSiteId}`"
