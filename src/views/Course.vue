@@ -90,7 +90,7 @@
               </v-col>
             </v-row>
             <v-row
-              v-if="$currentUser.isAdmin && course.room && course.room.capability"
+              v-if="$currentUser.isAdmin && course.room && course.room.capability && course.instructors.length"
               id="send-invite"
               justify="center"
               class="mt-2"
