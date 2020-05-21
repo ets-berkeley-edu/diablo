@@ -102,7 +102,6 @@
                 <template v-slot:default>
                   <thead>
                     <tr>
-                      <th class="text-left">Parent Id</th>
                       <th class="text-left">Id</th>
                       <th class="text-left">Start</th>
                       <th class="text-left">End</th>
@@ -110,8 +109,31 @@
                   </thead>
                   <tbody>
                     <tr v-for="event in item.children" :key="event.id">
-                      <td>{{ event.parentId }}</td>
-                      <td>{{ event.id }}</td>
+                      <td>
+                        <v-tooltip v-if="$_.size(event.blackoutConflicts)" :id="`blackout-conflicts-${event.id}`" top>
+                          <template v-slot:activator="{ on }">
+                            <v-icon
+                              color="red"
+                              class="pa-0"
+                              v-on="on"
+                            >
+                              mdi-alert
+                            </v-icon>
+                          </template>
+                          Event has blackout-conflict:
+                          <pre>
+                            {{ event.blackoutConflicts }}
+                          </pre>
+                        </v-tooltip>
+                        <a
+                          :id="`kaltura-recurrence-${event.id}`"
+                          :href="`${$config.kalturaMediaSpaceUrl}/recscheduling/index/edit-event/eventid/${event.id}`"
+                          target="_blank"
+                          :aria-label="`Open Kaltura MediaSpace in a new window (event ${event.id})`"
+                        >
+                          {{ event.id }} <v-icon small class="pl-2">mdi-open-in-new</v-icon>
+                        </a>
+                      </td>
                       <td>{{ event.startDate | moment('h:mma, ddd, MMM D') }}</td>
                       <td>{{ event.endDate | moment('h:mma, ddd, MMM D') }}</td>
                     </tr>
