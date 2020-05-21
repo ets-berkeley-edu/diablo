@@ -185,7 +185,7 @@ def schedule_recordings(all_approvals, course):
         """)
         try:
             kaltura_schedule_id = Kaltura().schedule_recording(
-                category_ids=[c['courseSiteId'] for c in course['canvasCourseSites']],
+                canvas_course_site_ids=[c['courseSiteId'] for c in course['canvasCourseSites']],
                 course_label=course['label'],
                 instructors=course['instructors'],
                 days=days,
