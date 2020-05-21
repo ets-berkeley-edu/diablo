@@ -140,7 +140,7 @@ class Kaltura:
     @skip_when_pytest(mock_object=int(datetime.now().timestamp()))
     def schedule_recording(
             self,
-            category_ids,
+            canvas_course_site_ids,
             course_label,
             instructors,
             days,
@@ -151,6 +151,11 @@ class Kaltura:
             room,
             term_id,
     ):
+        category_ids = []
+        for canvas_course_site_id in canvas_course_site_ids:
+            category = self.get_canvas_category_object(canvas_course_site_id=canvas_course_site_id)
+            if category:
+                category_ids.append(category['id'])
         kaltura_schedule = self._schedule_recurring_events_in_kaltura(
             category_ids=category_ids,
             course_label=course_label,
