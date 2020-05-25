@@ -123,6 +123,7 @@
       navItems: undefined,
     }),
     created() {
+      this.prefersColorScheme()
       if (this.$currentUser.isAdmin) {
         this.navItems = [
           { title: 'Rooms', icon: 'mdi-domain', path: '/rooms' },
@@ -143,6 +144,11 @@
     },
     methods: {
       logOut: () => getCasLogoutUrl().then(data => window.location.href = data.casLogoutUrl),
+      prefersColorScheme() {
+        const mq = window.matchMedia('(prefers-color-scheme: dark)')
+        this.$vuetify.theme.dark = mq.matches
+        mq.addEventListener('change', e => this.$vuetify.theme.dark = e.matches)
+      },
       toRoute(path) {
         this.$router.push({ path }, this.$_.noop)
       }

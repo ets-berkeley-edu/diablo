@@ -91,7 +91,6 @@ KALTURA_MEDIA_SPACE_URL = 'https://____.mediaspace.kaltura.com'
 KALTURA_PARTNER_ID = '0000000'
 KALTURA_RECORDING_OFFSET_END = 2
 KALTURA_RECORDING_OFFSET_START = 7
-KALTURA_TEMPLATE_ENTRY_ID = 'template_entry_id'
 KALTURA_UNIQUE_USER_ID = 'user_id'
 
 LDAP_HOST = 'ldap-test.berkeley.edu'

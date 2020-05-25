@@ -220,8 +220,8 @@ def schedule_recordings(all_approvals, course):
             send_system_error_email(message=str(e), subject=error)
 
     else:
-        app.logger.error(f"""
-            FAILED to schedule recordings because room has no 'kaltura_resource_id'.
+        app.logger.warn(f"""
+            SKIP schedule recordings because room has no 'kaltura_resource_id'.
             Course: {course['label']}
             Room: {room.location}
             Latest approved_by_uid: {approval.approved_by_uid}

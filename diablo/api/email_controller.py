@@ -164,9 +164,9 @@ def queue_emails():
     if not (term_id and section_id and template_type):
         raise BadRequestError('Required parameters are missing.')
     if not QueuedEmail.create(section_id=section_id, template_type=template_type, term_id=term_id):
-        raise BadRequestError(f'Failed to queue email of type \'{template_type}\'.')
+        raise BadRequestError(f"Failed to queue email of type '{template_type}'.")
     return tolerant_jsonify({
-        'message': f'An email of type \'{template_type}\' has been queued.',
+        'message': f"An email of type '{template_type}' has been queued.",
     })
 
 

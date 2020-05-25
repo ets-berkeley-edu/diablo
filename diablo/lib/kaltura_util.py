@@ -23,6 +23,7 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 from datetime import datetime, timedelta
+import json
 
 from diablo.lib.util import epoch_time_to_isoformat
 from flask import current_app as app
@@ -42,7 +43,7 @@ def events_to_api_json(scheduled_events):
             conflicts = [_blackout_to_json(e) for e in event.blackoutConflicts] if event.blackoutConflicts else None
             return {
                 'blackoutConflicts': conflicts,
-                'categoryIds': event.categoryIds,
+                'categoryIds': json.loads(event.categoryIds) if event.categoryIds else [],
                 'classificationType': get_classification_name(event.classificationType),
                 'comment': event.comment,
                 'contact': event.contact,

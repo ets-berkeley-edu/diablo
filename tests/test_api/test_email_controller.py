@@ -130,7 +130,7 @@ class TestUpdateEmailTemplate:
             template_type='notify_instructor_of_changes',
             name='Captain who?',
             subject_line='Captain Howdy.',
-            message='Who\'s Captain Howdy?',
+            message="Who's Captain Howdy?",
             expected_status_code=401,
         )
 
@@ -142,7 +142,7 @@ class TestUpdateEmailTemplate:
             template_type='notify_instructor_of_changes',
             name='Captain who?',
             subject_line='Captain Howdy.',
-            message='Who\'s Captain Howdy?',
+            message="Who's Captain Howdy?",
             expected_status_code=401,
         )
 
@@ -207,7 +207,7 @@ class TestCreateEmailTemplate:
             template_type='notify_instructor_of_changes',
             name='Captain who?',
             subject_line='Captain Howdy.',
-            message='Who\'s Captain Howdy?',
+            message="Who's Captain Howdy?",
             expected_status_code=401,
         )
 
@@ -218,7 +218,7 @@ class TestCreateEmailTemplate:
             template_type='notify_instructor_of_changes',
             name='Captain who?',
             subject_line='Captain Howdy.',
-            message='Who\'s Captain Howdy?',
+            message="Who's Captain Howdy?",
             expected_status_code=401,
         )
 
@@ -229,7 +229,7 @@ class TestCreateEmailTemplate:
             template_type='notify_instructor_of_changes',
             name='Captain who?',
             subject_line='Captain Howdy.',
-            message='Who\'s Captain Howdy?',
+            message="Who's Captain Howdy?",
         )
         assert 'id' in email_template
         assert email_template['subjectLine'] == 'Captain Howdy.'

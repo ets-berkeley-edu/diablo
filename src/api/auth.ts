@@ -1,4 +1,3 @@
-import _ from 'lodash'
 import axios from 'axios'
 import utils from '@/api/api-utils'
 import Vue from 'vue'
@@ -11,7 +10,6 @@ export function devAuthLogIn(uid: string, password: string) {
     })
     .then(data => {
       Vue.prototype.$currentUser = data
-      Vue.prototype.$core.initializeCurrentUser().then(_.noop)
       return Vue.prototype.$currentUser
     }).catch(error => {
       return error

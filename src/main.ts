@@ -3,7 +3,6 @@ import 'vuetify/dist/vuetify.min.css'
 import _ from 'lodash'
 import App from './App.vue'
 import axios from 'axios'
-import core from './core'
 import moment from 'moment-timezone'
 import router from './router'
 import store from './store'
@@ -80,8 +79,5 @@ axios.get(`${apiBaseUrl}/api/user/my_profile`).then(data => {
       vuetify,
       render: h => h(App),
     }).$mount('#app')
-
-    Vue.prototype.$core = core
-    Vue.prototype.$core.initializeCurrentUser().then(_.noop)
   })
 })

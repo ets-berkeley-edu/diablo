@@ -99,7 +99,7 @@ class DiabloPages(Page):
             self.wait_for_element_and_click(DiabloPages.LOG_OUT_LINK)
 
     def click_menu_option(self, option_text):
-        app.logger.info(f'Clicking the option \'{option_text}\'')
+        app.logger.info(f"Clicking the option '{option_text}'")
         self.wait_for_element_and_click(DiabloPages.menu_option_locator(option_text))
 
     def visible_menu_options(self):
