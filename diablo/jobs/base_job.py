@@ -36,15 +36,15 @@ class BaseJob:
     def __init__(self, app_context):
         self.app_context = app_context
 
-    def run(self):
+    def run(self, force_run=False):
         with self.app_context():
             job = Job.get_job_by_key(self.key())
             if job:
-                if JobHistory.is_job_running(job_key=self.key()):
-                    app.logger.warn(f'Skipping job {self.key()} because an older instance is still running')
-
-                elif job.disabled:
+                if job.disabled and not force_run:
                     app.logger.warn(f'Job {self.key()} is disabled. It will not run.')
+
+                elif JobHistory.is_job_running(job_key=self.key()):
+                    app.logger.warn(f'Skipping job {self.key()} because an older instance is still running')
 
                 else:
                     app.logger.info(f'Job {self.key()} is starting.')
