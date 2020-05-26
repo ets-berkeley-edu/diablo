@@ -41,12 +41,9 @@ class QueuedEmailsJob(BaseJob):
             if course['hasOptedOut']:
                 QueuedEmail.delete(queued_email)
                 continue
-            if not queued_email.is_interpolated() and not queued_email.interpolate(course):
-                app.logger.warn(f'Failed to interpolate course data, email will remain in queue: {queued_email}')
-                continue
             if BConnected().send(
                 message=queued_email.message,
-                recipients=queued_email.recipients,
+                recipients=[queued_email.recipient],
                 section_id=queued_email.section_id,
                 subject_line=queued_email.subject_line,
                 template_type=queued_email.template_type,

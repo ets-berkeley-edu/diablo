@@ -90,22 +90,25 @@ class AdminEmailsJob(BaseJob):
     def _notify(self, course, template_type):
         email_template = EmailTemplate.get_template_by_type(template_type)
         if email_template:
-            message = interpolate_content(
-                templated_string=email_template.message,
-                course=course,
-            )
-            subject_line = interpolate_content(
-                templated_string=email_template.subject_line,
-                course=course,
-            )
-            QueuedEmail.create(
-                message=message,
-                subject_line=subject_line,
-                recipients=get_admin_alert_recipients(),
-                section_id=course['sectionId'],
-                template_type=template_type,
-                term_id=self.term_id,
-            )
+            for recipient in get_admin_alert_recipients():
+                message = interpolate_content(
+                    templated_string=email_template.message,
+                    course=course,
+                    recipient_name=recipient['name'],
+                )
+                subject_line = interpolate_content(
+                    templated_string=email_template.subject_line,
+                    course=course,
+                    recipient_name=recipient['name'],
+                )
+                QueuedEmail.create(
+                    message=message,
+                    subject_line=subject_line,
+                    recipient=recipient,
+                    section_id=course['sectionId'],
+                    template_type=template_type,
+                    term_id=self.term_id,
+                )
         else:
             raise BackgroundJobError(f"""
                 No email template of type {template_type} is available.

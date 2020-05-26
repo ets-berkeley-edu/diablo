@@ -38,7 +38,7 @@ class TestQueuedEmail:
         assert not SisSection.get_course(term_id=term_id, section_id=section_id)
 
         # Queued email creation fails.
-        assert not QueuedEmail.create(section_id, email_template_type, term_id)
+        assert not QueuedEmail.create(section_id, email_template_type, term_id, recipient=None)
         assert section_id not in QueuedEmail.get_all_section_ids(template_type=email_template_type, term_id=term_id)
 
     def test_no_email_template_available(self):
@@ -46,7 +46,10 @@ class TestQueuedEmail:
         term_id = app.config['CURRENT_TERM_ID']
         section_id = 50005
         email_template_type = 'waiting_for_approval'
-
+        recipient = {
+            'name': 'Regan MacNeil',
+            'uid': '10006',
+        }
         # Queued email creation fails.
-        assert not QueuedEmail.create(section_id, email_template_type, term_id)
+        assert not QueuedEmail.create(section_id, email_template_type, term_id, recipient=recipient)
         assert section_id not in QueuedEmail.get_all_section_ids(template_type=email_template_type, term_id=term_id)

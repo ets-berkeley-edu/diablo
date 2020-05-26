@@ -54,7 +54,8 @@ class TestQueuedEmailsJob:
         email_template_type = 'invitation'
 
         for course in courses:
-            QueuedEmail.create(course['sectionId'], email_template_type, term_id)
+            for instructor in course['instructors']:
+                QueuedEmail.create(course['sectionId'], email_template_type, term_id, recipient=instructor)
             std_commit(allow_test_environment=True)
 
         def _get_emails_to_courses():
@@ -77,21 +78,21 @@ class TestQueuedEmailsJob:
 
         # Expect one email per instructor
         emails_sent_after = _get_emails_to_courses()
-        assert len(emails_sent_after) == len(emails_sent_before) + 2
+        assert len(emails_sent_after) == len(emails_sent_before) + 3
 
-        def _find_email(section_id):
-            return next((e for e in emails_sent_after if e.section_id == section_id and e.sent_at > before), None)
+        def _find_email(section_id, uid):
+            return next((e for e in emails_sent_after if e.section_id == section_id and e.sent_at > before and uid in e.recipient_uids), None)
 
         for course in courses:
-            sent_email = _find_email(section_id=course['sectionId'])
-            assert sent_email
-            email_json = sent_email.to_api_json()
-            assert len(email_json['recipientUids'])
-            assert set(email_json['recipientUids']) == set([i['uid'] for i in course['instructors']])
-            assert email_json['sectionId'] == course['sectionId']
-            assert email_json['templateType'] == email_template_type
-            assert email_json['termId'] == term_id
-            assert email_json['sentAt']
+            for instructor in course['instructors']:
+                sent_email = _find_email(section_id=course['sectionId'], uid=instructor['uid'])
+                assert sent_email
+                email_json = sent_email.to_api_json()
+                assert email_json['recipientUids'] == [instructor['uid']]
+                assert email_json['sectionId'] == course['sectionId']
+                assert email_json['templateType'] == email_template_type
+                assert email_json['termId'] == term_id
+                assert email_json['sentAt']
 
     def test_course_has_opted_out(self):
         """Do not send email to courses that have opted out."""
@@ -102,8 +103,11 @@ class TestQueuedEmailsJob:
         section_id = 50000
         CoursePreference.update_opt_out(term_id=term_id, section_id=section_id, opt_out=True)
         email_template_type = 'invitation'
-
-        QueuedEmail.create(section_id, email_template_type, term_id)
+        recipient = {
+            'name': 'William Peter Blatty',
+            'uid': '10001',
+        }
+        QueuedEmail.create(section_id, email_template_type, term_id, recipient=recipient)
         std_commit(allow_test_environment=True)
 
         before = utc_now()
@@ -125,8 +129,11 @@ class TestQueuedEmailsJob:
         term_id = app.config['CURRENT_TERM_ID']
         section_id = 50005
         email_template_type = 'admin_alert_room_change'
-
-        QueuedEmail.create(section_id, email_template_type, term_id)
+        recipient = {
+            'name': 'Course Capture Admin',
+            'uid': app.config['EMAIL_DIABLO_ADMIN_UID'],
+        }
+        QueuedEmail.create(section_id, email_template_type, term_id, recipient=recipient)
         std_commit(allow_test_environment=True)
 
         before = utc_now()

@@ -44,24 +44,24 @@ class TestInstructorEmailsJob:
             # Emails are queued but not sent.
             InstructorEmailsJob(simply_yield).run()
             assert len(_get_invitations_since(term_id, timestamp)) == 0
-            # Emails are sent.
+            # Emails are sent. We have more emails than courses since some courses have multiple instructors.
             QueuedEmailsJob(simply_yield).run()
             invitations = _get_invitations_since(term_id, timestamp)
-            assert len(invitations) == 8
+            assert len(invitations) == 12
 
             # Each eligible course has an invitation.
             eligible_courses = SisSection.get_courses(term_id=term_id)
             assert len(eligible_courses) == 8
             for course in eligible_courses:
-                sent_email = next((e for e in invitations if e.section_id == course['sectionId']), None)
-                assert sent_email
-                email_json = sent_email.to_api_json()
-                assert len(email_json['recipientUids'])
-                assert set(email_json['recipientUids']) == set([i['uid'] for i in course['instructors']])
-                assert email_json['sectionId'] == course['sectionId']
-                assert email_json['templateType'] == 'invitation'
-                assert email_json['termId'] == term_id
-                assert email_json['sentAt']
+                for i in course['instructors']:
+                    sent_email = next((e for e in invitations if e.section_id == course['sectionId'] and i['uid'] in e.recipient_uids), None)
+                    assert sent_email
+                    email_json = sent_email.to_api_json()
+                    assert email_json['recipientUids'] == [i['uid']]
+                    assert email_json['sectionId'] == course['sectionId']
+                    assert email_json['templateType'] == 'invitation'
+                    assert email_json['termId'] == term_id
+                    assert email_json['sentAt']
 
             # Add an instructor.
             section = SisSection.query.filter_by(term_id=term_id, section_id=50002).first()
@@ -97,7 +97,7 @@ class TestInstructorEmailsJob:
             # Emails are sent.
             QueuedEmailsJob(simply_yield).run()
             invitations = _get_invitations_since(term_id, timestamp)
-            assert len(invitations) == 8
+            assert len(invitations) == 13
             assert not next((e for e in invitations if e.section_id == section_id), None)
 
 

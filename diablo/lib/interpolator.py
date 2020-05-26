@@ -31,24 +31,22 @@ from flask import current_app as app
 
 def interpolate_content(
     templated_string,
-    course=None,
-    instructor_name=None,
+    course,
+    recipient_name,
     pending_instructors=None,
     previous_publish_type_name=None,
     previous_recording_type_name=None,
     publish_type_name=None,
-    recipient_name=None,
     recording_type_name=None,
 ):
     interpolated = templated_string
     substitutions = get_template_substitutions(
         course=course,
-        instructor_name=instructor_name,
+        recipient_name=recipient_name,
         pending_instructors=pending_instructors,
         previous_publish_type_name=previous_publish_type_name,
         previous_recording_type_name=previous_recording_type_name,
         publish_type_name=publish_type_name,
-        recipient_name=recipient_name,
         recording_type_name=recording_type_name,
     )
     for token, value in substitutions.items():
@@ -59,16 +57,16 @@ def interpolate_content(
 
 
 def get_template_substitutions(
-        course=None,
-        instructor_name=None,
+        course,
+        recipient_name,
         pending_instructors=None,
         previous_publish_type_name=None,
         previous_recording_type_name=None,
         publish_type_name=None,
-        recipient_name=None,
         recording_type_name=None,
 ):
     term_id = (course and course['termId']) or app.config['CURRENT_TERM_ID']
+
     return {
         'course.days': course and course['meetingDays'],
         'course.format': course and course['instructionFormat'],
@@ -78,15 +76,15 @@ def get_template_substitutions(
         'course.time.end': course and course['meetingEndTime'],
         'course.time.start': course and course['meetingStartTime'],
         'course.title': course and course['courseTitle'],
-        'instructor.name': instructor_name,
-        'instructors.pending': pending_instructors and [p['name'] for p in pending_instructors],
+        'instructors.all': course and course['instructors'] and ', '.join(p['name'] for p in course['instructors'] if p['name']),
+        'instructors.pending': pending_instructors and ', '.join(p['name'] for p in pending_instructors),
         'publish.type': publish_type_name,
         'publish.type.previous': previous_publish_type_name,
+        'recipient.name': recipient_name,
         'recording.type': recording_type_name,
         'recording.type.previous': previous_recording_type_name,
         'signup.url': course and _get_sign_up_url(term_id, course['sectionId']),
         'term.name': term_name_for_sis_id(term_id),
-        'user.name': recipient_name,
     }
 
 

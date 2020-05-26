@@ -35,11 +35,11 @@ from tests.util import override_config
 class TestInterpolator:
 
     def test_interpolate_email_content(self):
-        user = get_calnet_user_for_uid(app, '10001')
+        instructor = get_calnet_user_for_uid(app, '10001')
         course = SisSection.get_course(app.config['CURRENT_TERM_ID'], '50001')
         interpolated = interpolate_content(
             course=course,
-            recipient_name=user['name'],
+            recipient_name=instructor['name'],
             templated_string=_get_email_template(),
         )
         actual = _normalize(interpolated)
@@ -75,7 +75,7 @@ def _get_expected_email():
 
 
 def _get_email_template():
-    return """Hello <code> user.name </code>,
+    return """Hello <code> recipient.name </code>,
 
     Your <code>term.name</code> course <code>course.name</code>, "<code>course.title</code>", is eligible
     for Course Capture. This course meets <code>course.days</code> from <code>course.time.start</code> to <code>

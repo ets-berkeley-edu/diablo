@@ -44,14 +44,14 @@ class InstructorEmailsJob(BaseJob):
     def email_new_invites(self):
         for course in SisSection.get_courses(term_id=self.term_id):
             if not course['hasOptedOut']:
-                new_instructors = [i for i in course['instructors'] if not i['wasSentInvite']]
-                if new_instructors:
-                    QueuedEmail.create(
-                        recipients=new_instructors,
-                        section_id=course['sectionId'],
-                        template_type='invitation',
-                        term_id=self.term_id,
-                    )
+                for i in course['instructors']:
+                    if not i['wasSentInvite']:
+                        QueuedEmail.create(
+                            recipient=i,
+                            section_id=course['sectionId'],
+                            template_type='invitation',
+                            term_id=self.term_id,
+                        )
 
     def email_scheduled_courses(self):
         all_scheduled = Scheduled.get_all_scheduled(term_id=self.term_id)
@@ -70,22 +70,19 @@ class InstructorEmailsJob(BaseJob):
                             message = interpolate_content(
                                 templated_string=email_template.message,
                                 course=course,
-                                instructor_name=instructor['name'],
                                 recipient_name=instructor['name'],
                                 recording_type_name=scheduled.recording_type,
                             )
-                            recipients = [instructor]
                             subject_line = interpolate_content(
                                 templated_string=email_template.subject_line,
                                 course=course,
-                                instructor_name=instructor['name'],
                                 recipient_name=instructor['name'],
                                 recording_type_name=scheduled.recording_type,
                             )
                             QueuedEmail.create(
                                 message=message,
                                 subject_line=subject_line,
-                                recipients=recipients,
+                                recipient=instructor,
                                 section_id=course['sectionId'],
                                 template_type='invitation',
                                 term_id=self.term_id,

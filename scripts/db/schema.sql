@@ -255,7 +255,7 @@ CREATE TABLE queued_emails (
     id INTEGER NOT NULL,
     subject_line VARCHAR(255),
     message TEXT,
-    recipients JSONB,
+    recipient JSONB,
     section_id INTEGER NOT NULL,
     template_type email_template_types,
     term_id INTEGER NOT NULL,
