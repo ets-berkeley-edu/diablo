@@ -34,8 +34,8 @@ from sqlalchemy.dialects.postgresql import ENUM
 
 
 publish_type = ENUM(
-    'canvas',
     'kaltura_media_gallery',
+    'kaltura_my_media',
     name='publish_types',
     create_type=False,
 )
@@ -56,8 +56,8 @@ approver_type = ENUM(
 )
 
 NAMES_PER_PUBLISH_TYPE = {
-    'canvas': 'bCourses',
-    'kaltura_media_gallery': 'My Media (Kaltura)',
+    'kaltura_media_gallery': 'Media Gallery',
+    'kaltura_my_media': 'My Media',
 }
 
 NAMES_PER_RECORDING_TYPE = {

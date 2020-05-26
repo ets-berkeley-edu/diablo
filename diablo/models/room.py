@@ -104,6 +104,10 @@ class Room(db.Model):
         return cls.query.order_by(cls.capability, cls.location).all()
 
     @classmethod
+    def auditoriums(cls):
+        return cls.query.filter_by(is_auditorium=True).order_by(cls.capability, cls.location).all()
+
+    @classmethod
     def total_room_count(cls):
         return db.session.query(func.count(cls.id)).scalar()
 

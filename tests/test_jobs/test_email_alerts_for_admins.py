@@ -95,7 +95,7 @@ class TestEmailAlertsForAdmins:
             approval = Approval.create(
                 approved_by_uid=approved_by_uid,
                 approver_type_='instructor',
-                publish_type_='canvas',
+                publish_type_='kaltura_my_media',
                 recording_type_='presenter_audio',
                 room_id=room_id,
                 section_id=section_id,

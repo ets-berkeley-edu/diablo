@@ -159,10 +159,16 @@ class Kaltura:
             term_id,
     ):
         category_ids = []
-        for canvas_course_site_id in canvas_course_site_ids:
-            category = self.get_canvas_category_object(canvas_course_site_id=canvas_course_site_id)
-            if category:
-                category_ids.append(category['id'])
+
+        if publish_type == 'kaltura_media_gallery':
+            for canvas_course_site_id in canvas_course_site_ids:
+                category = self.get_canvas_category_object(canvas_course_site_id=canvas_course_site_id)
+                if category:
+                    category_ids.append(category['id'])
+        elif publish_type == 'kaltura_my_media':
+            # TODO: Category entry per instructor?!
+            pass
+
         kaltura_schedule = self._schedule_recurring_events_in_kaltura(
             category_ids=category_ids,
             course_label=course_label,
@@ -270,7 +276,6 @@ class Kaltura:
             time_minutes=end_time.minute,
         )
         media_entry = self._create_media_template(
-            category_ids=category_ids,
             description=f'Media_entry: {description}',
             name=f'Media_entry: {summary} recordings scheduled by Diablo on {to_isoformat(datetime.now())}',
         )
@@ -324,7 +329,7 @@ class Kaltura:
         )
         return self.kaltura_client.schedule.scheduleEvent.add(recurring_event)
 
-    def _create_media_template(self, category_ids, description, name):
+    def _create_media_template(self, description, name):
         media_entry = KalturaMediaEntry(
             accessControlId=3034871,  # TODO: Can we create a single access-control for all media entries?
             capabilities=NotImplemented,

@@ -42,6 +42,7 @@ def app_config():
         'canvasBaseUrl': app.config['CANVAS_BASE_URL'],
         'courseCaptureExplainedUrl': app.config['COURSE_CAPTURE_EXPLAINED_URL'],
         'courseCapturePoliciesUrl': app.config['COURSE_CAPTURE_POLICIES_URL'],
+        'courseCapturePremiumCost': app.config['COURSE_CAPTURE_PREMIUM_COST'],
         'currentTermId': term_id,
         'currentTermName': term_name_for_sis_id(term_id),
         'devAuthEnabled': app.config['DEVELOPER_AUTH_ENABLED'],

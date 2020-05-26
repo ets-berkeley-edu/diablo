@@ -38,6 +38,12 @@ def get_all_rooms():
     return tolerant_jsonify([room.to_api_json() for room in Room.all_rooms()])
 
 
+@app.route('/api/rooms/auditoriums')
+@admin_required
+def get_auditoriums():
+    return tolerant_jsonify([room.to_api_json() for room in Room.auditoriums()])
+
+
 @app.route('/api/rooms/kaltura_resources')
 @admin_required
 def kaltura_resource_list():

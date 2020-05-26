@@ -64,6 +64,30 @@ class TestGetAllRooms:
             assert key in rooms[0]
 
 
+class TestGetAuditoriums:
+    """Only Admins can get list of auditoriums."""
+
+    @staticmethod
+    def _api_auditoriums(client, expected_status_code=200):
+        response = client.get('/api/rooms/auditoriums')
+        assert response.status_code == expected_status_code
+        return response.json
+
+    def test_anonymous(self, client):
+        """Denies anonymous access."""
+        self._api_auditoriums(client, expected_status_code=401)
+
+    def test_unauthorized(self, client, instructor_session):
+        """Denies access if user is not an admin."""
+        self._api_auditoriums(client, expected_status_code=401)
+
+    def test_authorized(self, client, admin_session):
+        """Admin user has access."""
+        rooms = self._api_auditoriums(client)
+        assert len(rooms) == 1
+        assert rooms[0]['location'] == 'Li Ka Shing 145'
+
+
 class TestGetRoom:
     """Only Admin users can get room info."""
 

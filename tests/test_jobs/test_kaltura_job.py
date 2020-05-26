@@ -73,7 +73,7 @@ class TestKalturaJob:
                 Approval.create(
                     approved_by_uid=instructors[0]['uid'],
                     approver_type_='instructor',
-                    publish_type_='canvas',
+                    publish_type_='kaltura_my_media',
                     recording_type_='presentation_audio',
                     room_id=room_id,
                     section_id=section_id,
@@ -140,7 +140,7 @@ class TestKalturaJob:
             Approval.create(
                 approved_by_uid=admin_uid,
                 approver_type_='admin',
-                publish_type_='canvas',
+                publish_type_='kaltura_my_media',
                 recording_type_='presentation_audio',
                 room_id=Room.find_room('Barker 101').id,
                 section_id=section_id,
