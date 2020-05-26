@@ -22,7 +22,6 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-
 from diablo.api.errors import BadRequestError, ResourceNotFoundError
 from diablo.api.util import admin_required
 from diablo.externals.kaltura import Kaltura
@@ -30,6 +29,7 @@ from diablo.lib.http import tolerant_jsonify
 from diablo.models.room import Room
 from diablo.models.sis_section import SisSection
 from flask import current_app as app, request
+from flask_login import login_required
 
 
 @app.route('/api/rooms/all')
@@ -39,7 +39,7 @@ def get_all_rooms():
 
 
 @app.route('/api/rooms/auditoriums')
-@admin_required
+@login_required
 def get_auditoriums():
     return tolerant_jsonify([room.to_api_json() for room in Room.auditoriums()])
 

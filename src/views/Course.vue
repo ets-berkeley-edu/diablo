@@ -257,7 +257,7 @@
                       </template>
                       <div>
                         'Presentation and Audio' recordings are free.
-                        There will be a ${{ $config.courseCapturePremiumCost }} operator fee, per semester, for
+                        There will be a \${{ $config.courseCapturePremiumCost }} operator fee, per semester, for
                         'Presenter' recordings in ${oxfordJoin(auditoriumNames)}.
                       </div>
                     </v-tooltip>
