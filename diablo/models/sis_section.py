@@ -174,6 +174,7 @@ class SisSection(db.Model):
             JOIN rooms r ON r.location = s.meeting_location
             WHERE
                 s.term_id = :term_id
+                AND s.is_primary IS TRUE
                 AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
                 AND s.meeting_location = :location
                 AND s.deleted_at IS NULL
@@ -205,6 +206,7 @@ class SisSection(db.Model):
             JOIN sent_emails e ON e.section_id = s.section_id
             WHERE
                 s.term_id = :term_id
+                AND s.is_primary IS TRUE
                 AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
                 AND e.template_type = 'invitation'
                 AND r.capability IS NOT NULL
@@ -248,6 +250,7 @@ class SisSection(db.Model):
             JOIN course_preferences c ON c.section_id = s.section_id AND c.term_id = :term_id
             WHERE
                 s.term_id = :term_id
+                AND s.is_primary IS TRUE
                 AND c.has_opted_out IS TRUE
                 AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
                 AND r.capability IS NOT NULL
@@ -282,6 +285,7 @@ class SisSection(db.Model):
             JOIN rooms r ON r.location = s.meeting_location
             WHERE
                 s.term_id = :term_id
+                AND s.is_primary IS TRUE
                 AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
                 AND r.capability IS NOT NULL
                 AND NOT EXISTS (
@@ -327,6 +331,7 @@ class SisSection(db.Model):
             JOIN rooms r ON r.location = s.meeting_location
             WHERE
                 s.term_id = :term_id
+                AND s.is_primary IS TRUE
                 AND s.section_id = :section_id
                 AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
                 AND s.deleted_at IS NULL
@@ -359,6 +364,7 @@ class SisSection(db.Model):
             JOIN scheduled d ON d.section_id = s.section_id AND d.term_id = :term_id AND d.deleted_at IS NULL
             WHERE
                 s.term_id = :term_id
+                AND s.is_primary IS TRUE
                 AND s.deleted_at IS NULL
             ORDER BY s.course_title, s.section_id, s.instructor_uid
         """
@@ -400,6 +406,7 @@ class SisSection(db.Model):
             JOIN rooms r ON r.location = s.meeting_location
             WHERE
                 s.term_id = :term_id
+                AND s.is_primary IS TRUE
                 {course_filter}
                 AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
                 AND s.deleted_at IS NULL
@@ -426,6 +433,7 @@ class SisSection(db.Model):
             JOIN rooms r ON r.location = s.meeting_location
             WHERE
                 s.term_id = :term_id
+                AND s.is_primary IS TRUE
                 AND e.template_type = 'invitation'
                 AND r.capability IS NOT NULL
                 AND i.uid NOT IN (
@@ -453,6 +461,7 @@ class SisSection(db.Model):
             JOIN instructors i ON i.uid = s.instructor_uid
             WHERE
                 s.term_id = :term_id
+                AND s.is_primary IS TRUE
                 AND s.instructor_uid = :instructor_uid
                 AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
         """
@@ -495,6 +504,7 @@ class SisSection(db.Model):
             JOIN scheduled d ON d.section_id = s.section_id AND d.term_id = :term_id AND d.deleted_at IS NULL
             WHERE
                 s.term_id = :term_id
+                AND s.is_primary IS TRUE
                 AND s.deleted_at IS NULL
             ORDER BY s.course_title, s.section_id, s.instructor_uid
         """
@@ -699,6 +709,7 @@ def _get_cross_listed_courses(section_ids, term_id, approvals, invited_uids):
         JOIN instructors i ON i.uid = s.instructor_uid
         WHERE
             s.term_id = :term_id
+            AND s.is_primary IS TRUE
             AND section_id = ANY(:all_cross_listing_ids)
         ORDER BY course_title, section_id
     """
