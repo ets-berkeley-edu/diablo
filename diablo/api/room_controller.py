@@ -78,7 +78,7 @@ def auditorium():
     if room:
         is_auditorium = params.get('isAuditorium')
         if not room_id or is_auditorium is None:
-            raise BadRequestError('\'roomId\' and \'isAuditorium\' are required.')
+            raise BadRequestError("'roomId' and 'isAuditorium' are required.")
         room = Room.set_auditorium(room_id, is_auditorium)
         return tolerant_jsonify(room.to_api_json())
     else:

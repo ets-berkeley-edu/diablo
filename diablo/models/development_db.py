@@ -120,9 +120,9 @@ def _create_email_templates():
     )
     EmailTemplate.create(
         template_type='notify_instructor_of_changes',
-        name='I\'m the Devil. Now kindly undo these straps.',
-        subject_line='If you\'re the Devil, why not make the straps disappear?',
-        message='That\'s much too vulgar a display of power.',
+        name="I'm the Devil. Now kindly undo these straps.",
+        subject_line="If you're the Devil, why not make the straps disappear?",
+        message="That's much too vulgar a display of power.",
     )
     EmailTemplate.create(
         template_type='invitation',

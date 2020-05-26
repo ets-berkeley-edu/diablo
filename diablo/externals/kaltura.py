@@ -31,7 +31,9 @@ from diablo.lib.util import to_isoformat
 from flask import current_app as app
 from KalturaClient import KalturaClient, KalturaConfiguration
 from KalturaClient.exceptions import KalturaException
-from KalturaClient.Plugins.Core import KalturaCategoryFilter, KalturaFilterPager, KalturaMediaEntryFilter
+from KalturaClient.Plugins.Core import KalturaCategoryEntry, KalturaCategoryEntryStatus, KalturaCategoryFilter, \
+    KalturaEntryDisplayInSearchType, KalturaEntryModerationStatus, KalturaEntryStatus, KalturaEntryType, \
+    KalturaFilterPager, KalturaMediaEntry, KalturaMediaEntryFilter, KalturaMediaType, KalturaSourceType
 from KalturaClient.Plugins.Schedule import KalturaBlackoutScheduleEvent, KalturaBlackoutScheduleEventFilter, \
     KalturaRecordScheduleEvent, KalturaScheduleEventClassificationType, KalturaScheduleEventFilter, \
     KalturaScheduleEventRecurrence, KalturaScheduleEventRecurrenceFrequency, KalturaScheduleEventRecurrenceType, \
@@ -51,6 +53,18 @@ class Kaltura:
         if app.config['DIABLO_ENV'] == 'test':
             return
 
+    @skip_when_pytest()
+    def add_to_kaltura_category(self, category_id, entry_id):
+        category_entry_user_id = 'RecordScheduleGroup'  # TODO: Does this need to be be configurable? Probably.
+        category_entry = KalturaCategoryEntry(
+            categoryId=category_id,
+            entryId=entry_id,
+            status=KalturaCategoryEntryStatus.ACTIVE,
+            creatorUserId=category_entry_user_id,
+        )
+        self.kaltura_client.categoryEntry.add(category_entry)
+
+    @skip_when_pytest()
     def create_blackout_dates(self, blackout_dates):
         events = []
         for blackout_date in blackout_dates:
@@ -62,7 +76,7 @@ class Kaltura:
                 event = KalturaBlackoutScheduleEvent(
                     # https://developer.kaltura.com/api-docs/General_Objects/Objects/KalturaScheduleEvent
                     classificationType=KalturaScheduleEventClassificationType.PUBLIC_EVENT,
-                    duration=None,  # (end_time - start_time).seconds,
+                    duration=None,
                     endDate=int(end_time.timestamp()),
                     startDate=int(start_time.timestamp()),
                     ownerId=app.config['KALTURA_KMS_OWNER_ID'],
@@ -78,7 +92,7 @@ class Kaltura:
                 app.logger.exception(e)
         return events
 
-    @cachify('kaltura/blackout_dates')
+    @skip_when_pytest()
     def get_blackout_dates(self, tags_like=CREATED_BY_DIABLO_TAG):
         return self._get_events(KalturaBlackoutScheduleEventFilter(tagsLike=tags_like))
 
@@ -86,13 +100,24 @@ class Kaltura:
     def delete_event(self, kaltura_schedule_id):
         return self.kaltura_client.schedule.scheduleEvent.delete(kaltura_schedule_id)
 
-    @cachify('kaltura/events_by_location', timeout=30)
+    @skip_when_pytest()
+    def get_categories(self, category_ids):
+        return self._get_categories(
+            kaltura_category_filter=KalturaCategoryFilter(idIn=','.join(str(id_) for id_ in category_ids)),
+        )
+
+    @skip_when_pytest()
     def get_events_by_location(self, kaltura_resource_id):
         return self._get_events(KalturaScheduleEventFilter(resourceIdsLike=str(kaltura_resource_id)))
 
-    @cachify('kaltura/events_by_tag')
+    @skip_when_pytest()
     def get_events_by_tag(self, tags_like=CREATED_BY_DIABLO_TAG):
         return self._get_events(KalturaScheduleEventFilter(tagsLike=tags_like))
+
+    @skip_when_pytest()
+    def get_schedule_event(self, kaltura_schedule_id):
+        events = self._get_events(KalturaScheduleEventFilter(idEqual=kaltura_schedule_id))
+        return events[0] if events else None
 
     @cachify('kaltura/resource_list', timeout=30)
     def get_resource_list(self):
@@ -110,7 +135,7 @@ class Kaltura:
 
         return [{'id': o.id, 'name': o.name} for o in objects]
 
-    @cachify('kaltura/get_canvas_category_object')
+    @skip_when_pytest()
     def get_canvas_category_object(self, canvas_course_site_id):
         response = self.kaltura_client.category.list(
             filter=KalturaCategoryFilter(fullNameEqual=f'Canvas>site>channels>{canvas_course_site_id}'),
@@ -118,24 +143,6 @@ class Kaltura:
         )
         canvas_category_objects = [_category_object_to_json(o) for o in response.objects]
         return canvas_category_objects[0] if canvas_category_objects else None
-
-    @cachify('kaltura/get_canvas_category_objects', timeout=30)
-    def get_canvas_category_objects(self):
-        objects = []
-        page_index, page_size = 1, 200
-        while page_index < MAX_PAGE:
-            # TODO: In the long term, this won't scale well. Can we query by term?
-            full_name_prefix = 'Canvas>site>channels>'
-            response = self.kaltura_client.category.list(
-                filter=KalturaCategoryFilter(fullNameStartsWith=full_name_prefix),
-                pager=KalturaFilterPager(pageIndex=page_index, pageSize=page_size),
-            )
-            objects += response.objects
-            if len(response.objects) < page_size:
-                break
-            page_size += 1
-
-        return [_category_object_to_json(o) for o in objects if o.fullName == f'{full_name_prefix}{o.name}']
 
     @skip_when_pytest(mock_object=int(datetime.now().timestamp()))
     def schedule_recording(
@@ -172,14 +179,9 @@ class Kaltura:
         self._attach_scheduled_recordings_to_room(kaltura_schedule=kaltura_schedule, room=room)
         return kaltura_schedule.id
 
-    @skip_when_pytest()
-    def add_scheduled_event_to_category(self, kaltura_schedule_id, category_object):
-        # TODO: Kaltura API call to map scheduled recordings to canvas_category_object
-        pass
-
     def ping(self):
         filter_ = KalturaMediaEntryFilter()
-        filter_.nameLike = 'Love is the drug I\'m thinking of'
+        filter_.nameLike = "Love is the drug I'm thinking of"
         result = self.kaltura_client.media.list(
             filter=filter_,
             pager=KalturaFilterPager(pageSize=1),
@@ -221,6 +223,20 @@ class Kaltura:
 
         return events_to_api_json(objects)
 
+    def _get_categories(self, kaltura_category_filter):
+        categories = []
+        page_index, page_size = 1, 200
+        while page_index < MAX_PAGE:
+            response = self.kaltura_client.category.list(
+                filter=kaltura_category_filter,
+                pager=KalturaFilterPager(pageIndex=page_index, pageSize=page_size),
+            )
+            categories += response.objects
+            if len(response.objects) < page_size:
+                break
+            page_size += 1
+        return [_category_object_to_json(category) for category in categories]
+
     def _schedule_recurring_events_in_kaltura(
             self,
             category_ids,
@@ -238,11 +254,9 @@ class Kaltura:
         term_end = datetime.strptime(app.config['CURRENT_TERM_END'], '%Y-%m-%d')
 
         summary = f'{course_label} ({term_name})'
-        description = f"""
-            {course_label} ({term_name}) meets in {room.location},
+        description = f"""{course_label} ({term_name}) meets in {room.location},
             between {start_time.strftime('%H:%M')} and {end_time.strftime('%H:%M')}, on {days}.
-            Recordings of type {recording_type} will be published to {publish_type}.
-        """
+            Recordings of type {recording_type} will be published to {publish_type}."""
         app.logger.info(description)
 
         first_day_start = get_first_matching_datetime_of_term(
@@ -255,13 +269,20 @@ class Kaltura:
             time_hours=end_time.hour,
             time_minutes=end_time.minute,
         )
+        media_entry = self._create_media_template(
+            category_ids=category_ids,
+            description=f'Media_entry: {description}',
+            name=f'Media_entry: {summary} recordings scheduled by Diablo on {to_isoformat(datetime.now())}',
+        )
+        for category_id in category_ids or []:
+            self.add_to_kaltura_category(category_id=category_id, entry_id=media_entry.id)
+
         recurring_event = KalturaRecordScheduleEvent(
             # https://developer.kaltura.com/api-docs/General_Objects/Objects/KalturaScheduleEvent
-            categoryIds=category_ids,
             classificationType=KalturaScheduleEventClassificationType.PUBLIC_EVENT,
             comment=f'{summary} recordings scheduled by Diablo on {to_isoformat(datetime.now())}',
             contact=','.join(instructor['uid'] for instructor in instructors),
-            description=description.strip(),
+            description=description,
             duration=(end_time - start_time).seconds,
             endDate=first_day_end.timestamp(),
             geoLatitude=None,  # TODO: Kaltura API did not like: 37.871853,
@@ -290,7 +311,7 @@ class Kaltura:
                 name=summary,
                 timeZone='US/Pacific',
                 until=term_end.replace(hour=23, minute=59).timestamp(),
-                weekStartDay=days[0],  # See KalturaScheduleEventRecurrenceDay enum
+                weekStartDay=days[0],
             ),
             recurrenceType=KalturaScheduleEventRecurrenceType.RECURRING,
             referenceId=None,
@@ -299,9 +320,37 @@ class Kaltura:
             status=KalturaScheduleEventStatus.ACTIVE,
             summary=summary,
             tags=CREATED_BY_DIABLO_TAG,
-            templateEntryId=app.config['KALTURA_TEMPLATE_ENTRY_ID'],
+            templateEntryId=media_entry.id,
         )
         return self.kaltura_client.schedule.scheduleEvent.add(recurring_event)
+
+    def _create_media_template(self, category_ids, description, name):
+        media_entry = KalturaMediaEntry(
+            accessControlId=3034871,  # TODO: Can we create a single access-control for all media entries?
+            capabilities=NotImplemented,
+            categories=NotImplemented,
+            categoriesIds=NotImplemented,
+            creatorId=NotImplemented,
+            description=description,
+            displayInSearch=KalturaEntryDisplayInSearchType.PARTNER_ONLY,
+            duration=NotImplemented,
+            durationType=NotImplemented,
+            endDate=NotImplemented,
+            groupId=NotImplemented,
+            licenseType=NotImplemented,
+            mediaType=KalturaMediaType.VIDEO,
+            moderationStatus=KalturaEntryModerationStatus.AUTO_APPROVED,
+            name=name,
+            partnerId=self.kaltura_partner_id,
+            referenceId=NotImplemented,
+            sourceType=KalturaSourceType.LECTURE_CAPTURE,
+            startDate=NotImplemented,
+            status=KalturaEntryStatus.NO_CONTENT,
+            tags=CREATED_BY_DIABLO_TAG,
+            type=KalturaEntryType.MEDIA_CLIP,
+            userId='RecordScheduleGroup',
+        )
+        return self.kaltura_client.media.add(media_entry)
 
     def _attach_scheduled_recordings_to_room(self, kaltura_schedule, room):
         utc_now_timestamp = int(datetime.utcnow().timestamp())

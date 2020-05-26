@@ -131,7 +131,7 @@ class Page(object):
 
     def wait_for_element_and_type_js(self, element_id, string, addl_pause=0):
         self.wait_for_page_and_click_js((By.ID, element_id), addl_pause)
-        self.driver.execute_script(f'document.getElementById(\'{element_id}\').value=\'{string}\'')
+        self.driver.execute_script(f"document.getElementById('{element_id}').value='{string}'")
 
     # PAGE TITLE AND HEADING
 
@@ -139,7 +139,7 @@ class Page(object):
         return self.driver.title
 
     def wait_for_title(self, string):
-        app.logger.info(f'Waiting for page title \'{string}\'')
+        app.logger.info(f"'Waiting for page title '{string}'")
         Wait(self.driver, util.get_long_timeout()).until(
             method=(ec.title_is(string)),
             message=f'Failed wait_for_title: {string}',

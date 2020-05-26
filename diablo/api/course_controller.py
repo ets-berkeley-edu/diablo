@@ -95,9 +95,14 @@ def get_course(term_id, section_id):
     course = SisSection.get_course(term_id, section_id)
     if not course:
         raise ResourceNotFoundError(f'No section for term_id = {term_id} and section_id = {section_id}')
-
     if not current_user.is_admin and current_user.uid not in [i['uid'] for i in course['instructors']]:
         raise ForbiddenRequestError(f'Sorry, you are unauthorized to view the course {course["label"]}.')
+
+    if current_user.is_admin and course['scheduled']:
+        # When debugging, the raw Kaltura-provided JSON is useful.
+        kaltura_schedule_id = course['scheduled'].get('kalturaScheduleId')
+        course['scheduled']['kalturaSchedule'] = Kaltura().get_schedule_event(kaltura_schedule_id)
+
     return tolerant_jsonify(course)
 
 
@@ -223,16 +228,7 @@ def _schedule_if_has_necessary_approvals(course):
 
     all_approvals = Approval.get_approvals(section_id=course['sectionId'], term_id=course['termId'])
     if current_user.is_admin or _has_necessary_approvals():
-        scheduled = schedule_recordings(
+        schedule_recordings(
             all_approvals=all_approvals,
             course=course,
         )
-        if scheduled:
-            for c in course['canvasCourseSites']:
-                category_object = Kaltura().get_canvas_category_object(canvas_course_site_id=c['courseSiteId'])
-                if category_object:
-                    app.logger.info(f"""
-                        In Kaltura, scheduled recordings of course {scheduled.section_id} will be added to
-                        Canvas course site {c['courseSiteId']} (Kaltura category {category_object['id']}).
-                    """)
-                    Kaltura().add_scheduled_event_to_category(scheduled.kaltura_schedule_id, category_object)
