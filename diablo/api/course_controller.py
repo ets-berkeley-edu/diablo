@@ -195,29 +195,24 @@ def _notify_instructors_of_approval(approval, course, previous_approvals):
         previous_publish_type = previous_approval.publish_type
         previous_recording_type = previous_approval.recording_type
         if approval.publish_type != previous_publish_type or approval.recording_type != previous_recording_type:
-            type_of_sent_email = 'notify_instructor_of_changes'
             notify_instructors_of_approval(
                 course=course,
                 latest_approval=approval,
-                name_of_latest_approver=current_user.name,
                 previous_publish_type=previous_publish_type,
                 previous_recording_type=previous_recording_type,
-                template_type=type_of_sent_email,
+                template_type='notify_instructor_of_changes',
                 term_id=course['termId'],
             )
     all_approvals = previous_approvals + [approval]
     if not type_of_sent_email and len(course['instructors']) > len(all_approvals):
         approval_uids = [a.approved_by_uid for a in all_approvals]
-        type_of_sent_email = 'waiting_for_approval'
         notify_instructors_of_approval(
             pending_instructors=[i for i in course['instructors'] if i['uid'] not in approval_uids],
             course=course,
             latest_approval=approval,
-            name_of_latest_approver=current_user.name,
-            template_type=type_of_sent_email,
+            template_type='waiting_for_approval',
             term_id=course['termId'],
         )
-    return type_of_sent_email
 
 
 def _schedule_if_has_necessary_approvals(course):

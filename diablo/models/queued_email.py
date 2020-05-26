@@ -28,7 +28,7 @@ from datetime import datetime
 from diablo import db, std_commit
 from diablo.lib.interpolator import interpolate_content
 from diablo.lib.util import to_isoformat
-from diablo.merged.emailer import get_admin_alert_recipients, send_system_error_email
+from diablo.merged.emailer import send_system_error_email
 from diablo.models.approval import NAMES_PER_PUBLISH_TYPE, NAMES_PER_RECORDING_TYPE
 from diablo.models.email_template import email_template_type, EmailTemplate
 from diablo.models.sis_section import SisSection
@@ -42,7 +42,7 @@ class QueuedEmail(db.Model):
     id = db.Column(db.Integer, nullable=False, primary_key=True)  # noqa: A003
     subject_line = db.Column(db.String(255))
     message = db.Column(db.Text)
-    recipients = db.Column(JSONB)
+    recipient = db.Column(JSONB)
     section_id = db.Column(db.Integer, nullable=False)
     template_type = db.Column(email_template_type, nullable=False)
     term_id = db.Column(db.Integer, nullable=False)
@@ -55,11 +55,11 @@ class QueuedEmail(db.Model):
         name='queued_emails_section_id_template_type_unique_constraint',
     ),)
 
-    def __init__(self, section_id, template_type, term_id, recipients=None, message=None, subject_line=None):
+    def __init__(self, section_id, template_type, term_id, recipient, message=None, subject_line=None):
         self.template_type = template_type
         self.section_id = section_id
         self.term_id = term_id
-        self.recipients = recipients
+        self.recipient = recipient
         self.message = message
         self.subject_line = subject_line
 
@@ -69,14 +69,14 @@ class QueuedEmail(db.Model):
                     section_id={self.section_id},
                     template_type={self.template_type}
                     term_id={self.term_id},
-                    recipients={self.recipients},
+                    recipient={self.recipient},
                     message={self.message},
                     subject_line={self.subject_line},
                     created_at={self.created_at}
                 """
 
     @classmethod
-    def create(cls, section_id, template_type, term_id, recipients=None, message=None, subject_line=None):
+    def create(cls, section_id, template_type, term_id, recipient, message=None, subject_line=None):
         course = SisSection.get_course(term_id, section_id)
         if not course:
             app.logger.error(f'Attempt to queue email for unknown course (term_id={term_id}, section_id={section_id})')
@@ -88,7 +88,7 @@ class QueuedEmail(db.Model):
             section_id=section_id,
             template_type=template_type,
             term_id=term_id,
-            recipients=recipients,
+            recipient=recipient,
             message=message,
             subject_line=subject_line,
         )
@@ -114,15 +114,21 @@ class QueuedEmail(db.Model):
         return [row.section_id for row in cls.query.filter_by(template_type=template_type, term_id=term_id).all()]
 
     def is_interpolated(self):
-        return not(self.subject_line is None or self.message is None or self.recipients is None)
+        return not(self.subject_line is None or self.message is None or self.recipient is None)
 
     def interpolate(self, course):
-        template, recipients = _evaluate_template_type(course, self.template_type)
+        template = _evaluate_template_type(course, self.template_type)
         if template:
-            self.subject_line = interpolate_content(course=course, templated_string=template.subject_line)
-            self.message = interpolate_content(course=course, templated_string=template.message)
-            if recipients and not self.recipients:
-                self.recipients = recipients
+            self.subject_line = interpolate_content(
+                course=course,
+                templated_string=template.subject_line,
+                recipient_name=self.recipient['name'],
+            )
+            self.message = interpolate_content(
+                course=course,
+                templated_string=template.message,
+                recipient_name=self.recipient['name'],
+            )
             db.session.add(self)
             std_commit()
             # Return True only if all required data has been set.
@@ -143,59 +149,40 @@ def _evaluate_template_type(course, template_type):
     template = EmailTemplate.get_template_by_type(template_type)
     if not template:
         send_system_error_email(f'Unable to queue email of type {template_type} because no template is available.')
-        return None, None
-    if template_type in [
-        'invitation',
-        'notify_instructor_of_changes',
-        'recordings_scheduled',
-        'room_change_no_longer_eligible',
-        'waiting_for_approval',
-    ]:
-        recipients = course['instructors']
-    elif template_type in ['admin_alert_instructor_change', 'admin_alert_room_change']:
-        recipients = get_admin_alert_recipients()
-    else:
-        send_system_error_email(f'Unable to queue email of type {template_type} because no template is available.')
-        return None, None
-    return template, recipients
+    return template
 
 
 def notify_instructors_of_approval(
     course,
     latest_approval,
-    name_of_latest_approver,
     template_type,
     term_id,
     pending_instructors=None,
-    notify_only_latest_instructor=False,
     previous_publish_type=None,
     previous_recording_type=None,
 ):
     template = EmailTemplate.get_template_by_type(template_type)
     if template:
-        def _interpolate(templated_string):
+        def _interpolate(templated_string, instructor):
             return interpolate_content(
                 course=course,
-                instructor_name=name_of_latest_approver,
+                templated_string=templated_string,
+                recipient_name=instructor['name'],
                 pending_instructors=pending_instructors,
                 previous_publish_type_name=NAMES_PER_PUBLISH_TYPE.get(previous_publish_type),
                 previous_recording_type_name=NAMES_PER_RECORDING_TYPE.get(previous_recording_type),
                 publish_type_name=NAMES_PER_PUBLISH_TYPE.get(latest_approval.publish_type),
                 recording_type_name=NAMES_PER_RECORDING_TYPE.get(latest_approval.recording_type),
-                templated_string=templated_string,
             )
-        if notify_only_latest_instructor:
-            recipients = [next((i for i in course['instructors'] if i['uid'] == latest_approval.uid))]
-        else:
-            recipients = course['instructors']
-        QueuedEmail.create(
-            message=_interpolate(template.message),
-            recipients=recipients,
-            section_id=course['sectionId'],
-            subject_line=_interpolate(template.subject_line),
-            template_type=template_type,
-            term_id=term_id,
-        )
+        for instructor in course['instructors']:
+            QueuedEmail.create(
+                message=_interpolate(template.message, instructor),
+                recipient=instructor,
+                section_id=course['sectionId'],
+                subject_line=_interpolate(template.subject_line, instructor),
+                template_type=template_type,
+                term_id=term_id,
+            )
         return True
     else:
         send_system_error_email(f'Unable to send email of type {template_type} because no template is available.')
@@ -211,22 +198,22 @@ def notify_instructors_recordings_scheduled(course, scheduled):
         for instructor in course['instructors']:
             message = interpolate_content(
                 course=course,
-                instructor_name=instructor['name'],
                 publish_type_name=publish_type_name,
+                recipient_name=instructor['name'],
                 recording_type_name=recording_type_name,
                 templated_string=email_template.message,
             )
             subject_line = interpolate_content(
                 course=course,
-                instructor_name=instructor['name'],
                 publish_type_name=publish_type_name,
+                recipient_name=instructor['name'],
                 recording_type_name=recording_type_name,
                 templated_string=email_template.subject_line,
             )
             QueuedEmail.create(
                 message=message,
                 subject_line=subject_line,
-                recipients=[instructor],
+                recipient=instructor,
                 section_id=course['sectionId'],
                 template_type=email_template.template_type,
                 term_id=course['termId'],
