@@ -68,7 +68,7 @@ def delete_email_template(template_id):
 @app.route('/api/email/template/codes')
 @admin_required
 def get_template_codes():
-    template_codes = list(get_template_substitutions().keys())
+    template_codes = list(get_template_substitutions(course=None, recipient_name=None).keys())
     return tolerant_jsonify(template_codes)
 
 
@@ -163,8 +163,10 @@ def queue_emails():
 
     if not (term_id and section_id and template_type):
         raise BadRequestError('Required parameters are missing.')
-    if not QueuedEmail.create(section_id=section_id, template_type=template_type, term_id=term_id):
-        raise BadRequestError(f"Failed to queue email of type '{template_type}'.")
+    course = SisSection.get_course(term_id=term_id, section_id=section_id)
+    for instructor in course['instructors']:
+        if not QueuedEmail.create(section_id=section_id, recipient=instructor, template_type=template_type, term_id=term_id):
+            raise BadRequestError(f"Failed to queue email of type '{template_type}'.")
     return tolerant_jsonify({
         'message': f"An email of type '{template_type}' has been queued.",
     })
