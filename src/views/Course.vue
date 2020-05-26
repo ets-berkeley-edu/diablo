@@ -256,7 +256,9 @@
                         </v-icon>
                       </template>
                       <div>
-                        Foo
+                        'Presentation and Audio' recordings are free.
+                        There will be a ${{ $config.courseCapturePremiumCost }} operator fee, per semester, for
+                        'Presenter' recordings in ${oxfordJoin(auditoriumNames)}.
                       </div>
                     </v-tooltip>
                   </h4>
@@ -303,9 +305,8 @@
                         </v-icon>
                       </template>
                       <div>
-                        You can publish into bCourses, under Media Gallery [link to KB article: Media Gallery] Publish
-                        under all instructors' My Media. Instructor will need to publish to Media Gallery on their own
-                        (link to KB article: publishing from my media)
+                        Choosing 'Media Gallery' will auto-publish recordings to students in bCourses.
+                        Choosing 'My Media' will allow instructors to review/edit prior to publishing to students.
                       </div>
                     </v-tooltip>
                   </h4>
@@ -381,6 +382,7 @@
   import Utils from '@/mixins/Utils'
   import {approve, getCourse, unschedule} from '@/api/course'
   import {queueEmail} from '@/api/email'
+  import {getAuditoriums} from '@/api/room'
 
   export default {
     name: 'Course',
@@ -388,6 +390,7 @@
     mixins: [Context, Utils],
     data: () => ({
       agreedToTerms: false,
+      auditoriumNames: undefined,
       course: undefined,
       kalturaScheduleDialogJSON: false,
       publishType: undefined,
@@ -414,6 +417,9 @@
         this.publishTypeOptions = []
         this.$_.each(this.$config.publishTypeOptions, (text, value) => {
           this.publishTypeOptions.push({text, value})
+        })
+        getAuditoriums().then(data => {
+          this.auditoriumNames = this.$_.map(data, 'name')
         })
       }).catch(this.$ready)
     },

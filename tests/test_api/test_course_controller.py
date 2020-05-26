@@ -69,7 +69,7 @@ class TestApprove:
         """Deny anonymous access."""
         api_approve(
             client,
-            publish_type='canvas',
+            publish_type='kaltura_my_media',
             recording_type='presentation_audio',
             section_id=section_1_id,
             expected_status_code=401,
@@ -90,7 +90,7 @@ class TestApprove:
         fake_auth.login('10006')
         api_approve(
             client,
-            publish_type='canvas',
+            publish_type='kaltura_my_media',
             recording_type='presentation_audio',
             section_id=section_2_id,
             expected_status_code=403,
@@ -105,7 +105,7 @@ class TestApprove:
             for expected_status_code in [200, 403]:
                 api_approve(
                     client,
-                    publish_type='canvas',
+                    publish_type='kaltura_my_media',
                     recording_type='presentation_audio',
                     section_id=section_1_id,
                     expected_status_code=expected_status_code,
@@ -118,7 +118,7 @@ class TestApprove:
             fake_auth.login(instructor_uids[0])
             api_approve(
                 client,
-                publish_type='canvas',
+                publish_type='kaltura_my_media',
                 recording_type='presentation_audio',
                 section_id=section_1_id,
             )
@@ -156,7 +156,7 @@ class TestApprove:
             assert len(approvals_) == 2
 
             assert approvals_[0]['approvedBy']['uid'] == instructor_uids[0]
-            assert approvals_[0]['publishType'] == 'canvas'
+            assert approvals_[0]['publishType'] == 'kaltura_my_media'
 
             assert approvals_[1]['approvedBy']['uid'] == instructor_uids[1]
             assert approvals_[1]['publishType'] == 'kaltura_media_gallery'
@@ -171,7 +171,7 @@ class TestApprove:
         with test_approvals_workflow(app):
             api_json = api_approve(
                 client,
-                publish_type='canvas',
+                publish_type='kaltura_my_media',
                 recording_type='presentation_audio',
                 section_id=section_1_id,
             )
@@ -186,7 +186,7 @@ class TestApprove:
                 fake_auth.login(instructor_uid)
                 api_json = api_approve(
                     client,
-                    publish_type='canvas',
+                    publish_type='kaltura_my_media',
                     recording_type='presentation_audio',
                     section_id=50012,
                 )
@@ -254,7 +254,7 @@ class TestGetCourse:
             Approval.create(
                 approved_by_uid=approved_by_uid,
                 approver_type_='instructor',
-                publish_type_='canvas',
+                publish_type_='kaltura_my_media',
                 recording_type_='presentation_audio',
                 room_id=room_id,
                 section_id=section_1_id,
@@ -391,7 +391,7 @@ class TestCoursesFilter:
         Approval.create(
             approved_by_uid=get_instructor_uids(section_id=section_id, term_id=self.term_id)[0],
             approver_type_='instructor',
-            publish_type_='canvas',
+            publish_type_='kaltura_my_media',
             recording_type_='presentation_audio',
             room_id=Room.get_room_id(section_id=section_id, term_id=self.term_id),
             section_id=section_id,
@@ -619,7 +619,7 @@ class TestCoursesChanges:
                 meeting_days=obsolete_meeting_days,
                 meeting_start_time=meeting_start_time,
                 meeting_end_time=meeting_end_time,
-                publish_type_='canvas',
+                publish_type_='kaltura_my_media',
                 recording_type_='presentation_audio',
                 room_id=Room.get_room_id(section_id=section_1_id, term_id=self.term_id),
                 section_id=section_1_id,
@@ -648,7 +648,7 @@ class TestCoursesChanges:
                 meeting_days=meeting_days,
                 meeting_start_time=meeting_start_time,
                 meeting_end_time=meeting_end_time,
-                publish_type_='canvas',
+                publish_type_='kaltura_my_media',
                 recording_type_='presenter_audio',
                 room_id=Room.get_room_id(section_id=section_3_id, term_id=self.term_id),
                 section_id=section_3_id,
@@ -842,7 +842,7 @@ class TestUnscheduleCourse:
         with test_approvals_workflow(app):
             api_approve(
                 client,
-                publish_type='canvas',
+                publish_type='kaltura_my_media',
                 recording_type='presentation_audio',
                 section_id=section_1_id,
             )
