@@ -26,7 +26,7 @@ from datetime import datetime
 
 from diablo import cachify, skip_when_pytest
 from diablo.lib.berkeley import term_name_for_sis_id
-from diablo.lib.kaltura_util import events_to_api_json, get_first_matching_datetime_of_term, to_normalized_set
+from diablo.lib.kaltura_util import events_to_api_json, get_first_matching_datetime_of_term
 from diablo.lib.util import to_isoformat
 from flask import current_app as app
 from KalturaClient import KalturaClient, KalturaConfiguration
@@ -218,7 +218,7 @@ class Kaltura:
     def update_base_entry(self, entitled_users, entry_id):
         self.kaltura_client.baseEntry.update(
             entryId=entry_id,
-            baseEntry=KalturaBaseEntry(entitledUsersEdit=','.join(to_normalized_set(entitled_users))),
+            baseEntry=KalturaBaseEntry(entitledUsersEdit=','.join(_to_normalized_set(entitled_users))),
         )
 
     @property
@@ -368,7 +368,7 @@ class Kaltura:
         entitled_users = []
         if publish_type == 'kaltura_my_media':
             email_addresses = [instructor['email'] for instructor in instructors]
-            entitled_users = ','.join(to_normalized_set(email_addresses))
+            entitled_users = ','.join(_to_normalized_set(email_addresses))
 
         base_entry = KalturaBaseEntry(
             accessControlId=3034871,  # TODO: Can we create a single access-control for all media entries?
@@ -413,3 +413,7 @@ def _category_object_to_json(obj):
         'id': obj.id,
         'courseSiteId': obj.name,
     }
+
+
+def _to_normalized_set(strings):
+    return set([s.strip().lower() for s in strings])
