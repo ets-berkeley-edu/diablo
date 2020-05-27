@@ -216,14 +216,9 @@ class Kaltura:
         return result.totalCount is not None
 
     def update_base_entry(self, entitled_users, entry_id):
-        normalized = ','.join(to_normalized_set(entitled_users))
         self.kaltura_client.baseEntry.update(
             entryId=entry_id,
-            baseEntry=KalturaBaseEntry(
-                entitledUsersEdit=normalized,
-                entitledUsersPublish=normalized,
-                entitledUsersView=normalized,
-            ),
+            baseEntry=KalturaBaseEntry(entitledUsersEdit=','.join(to_normalized_set(entitled_users))),
         )
 
     @property
@@ -385,8 +380,6 @@ class Kaltura:
             displayInSearch=KalturaEntryDisplayInSearchType.PARTNER_ONLY,
             endDate=NotImplemented,
             entitledUsersEdit=entitled_users,
-            entitledUsersPublish=entitled_users,
-            entitledUsersView=entitled_users,
             groupId=NotImplemented,
             licenseType=NotImplemented,
             moderationStatus=KalturaEntryModerationStatus.AUTO_APPROVED,
