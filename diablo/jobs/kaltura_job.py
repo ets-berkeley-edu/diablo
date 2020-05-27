@@ -24,7 +24,9 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 from diablo.externals.kaltura import Kaltura
 from diablo.jobs.base_job import BaseJob
+from diablo.jobs.errors import BackgroundJobError
 from diablo.jobs.util import schedule_recordings
+from diablo.lib.kaltura_util import to_normalized_set
 from diablo.lib.util import objects_to_dict_organized_by_section_id
 from diablo.models.admin_user import AdminUser
 from diablo.models.approval import Approval
@@ -49,24 +51,53 @@ class KalturaJob(BaseJob):
 
 
 def _update_already_scheduled_events():
-    term_id = app.config['CURRENT_TERM_ID']
-    # Get scheduled courses that have canvas_course_sites
-    courses = list(filter(lambda c: c['canvasCourseSites'], SisSection.get_courses_scheduled(term_id=term_id)))
-    for course in courses:
-        kaltura = Kaltura()
-        schedule = kaltura.get_schedule_event(course['scheduled']['kalturaScheduleId'])
-        if schedule:
-            # From Kaltura, get Canvas course sites (categories) currently mapped to the course.
-            existing_categories = kaltura.get_categories(schedule['categoryIds']) if schedule['categoryIds'] else []
-            for s in course['canvasCourseSites']:
-                canvas_course_site_id = str(s['courseSiteId'])
-                if canvas_course_site_id not in [c['courseSiteId'] for c in existing_categories]:
-                    category = kaltura.get_canvas_category_object(canvas_course_site_id=canvas_course_site_id)
-                    if category:
-                        kaltura.add_to_kaltura_category(
-                            category_id=category['id'],
-                            entry_id=schedule['templateEntryId'],
+    kaltura = Kaltura()
+    for course in SisSection.get_courses_scheduled(term_id=app.config['CURRENT_TERM_ID']):
+        course_name = course['label']
+        scheduled = course['scheduled']
+        kaltura_schedule = kaltura.get_schedule_event(scheduled['kalturaScheduleId'])
+        if kaltura_schedule:
+            publish_type = scheduled['publishType']
+            template_entry_id = kaltura_schedule['templateEntryId']
+            if publish_type == 'kaltura_media_gallery':
+                if course['canvasCourseSites']:
+                    # From Kaltura, get Canvas course sites (categories) currently mapped to the course.
+                    category_ids = kaltura_schedule['categoryIds']
+                    existing_categories = kaltura.get_categories(category_ids) if category_ids else []
+                    for s in course['canvasCourseSites']:
+                        canvas_course_site_id = str(s['courseSiteId'])
+                        if canvas_course_site_id not in [c['courseSiteId'] for c in existing_categories]:
+                            _update_kaltura_category(canvas_course_site_id, course_name, kaltura, template_entry_id)
+            elif publish_type == 'kaltura_my_media':
+                base_entry = kaltura.get_base_entry(template_entry_id)
+                if base_entry:
+                    instructor_emails = [i['email'] for i in course['instructors']]
+                    if to_normalized_set(_get_entitled_users(base_entry)) != to_normalized_set(instructor_emails):
+                        kaltura.update_base_entry(
+                            entitled_users=instructor_emails,
+                            entry_id=template_entry_id,
                         )
+                else:
+                    app.logger.warn(f'{course_name}: No base_entry found with template_entry_id: {template_entry_id}')
+            else:
+                raise BackgroundJobError(f'{course_name} has an unrecognized publish_type: {publish_type}')
+        else:
+            app.logger.warn(f'The previously scheduled {course_name} has no schedule_event in Kaltura.')
+
+
+def _get_entitled_users(kaltura_base_entry):
+    entitled_users = kaltura_base_entry['entitledUsersPublish']
+    return entitled_users.split(',') if entitled_users else []
+
+
+def _update_kaltura_category(canvas_course_site_id, course_name, kaltura, template_entry_id):
+    category = kaltura.get_canvas_category_object(canvas_course_site_id=canvas_course_site_id)
+    if category:
+        app.logger.info(f'{course_name}: add Kaltura category for canvas_course_site {canvas_course_site_id}')
+        kaltura.add_to_kaltura_category(
+            category_id=category['id'],
+            entry_id=template_entry_id,
+        )
 
 
 def _schedule_the_ready_to_schedule():
