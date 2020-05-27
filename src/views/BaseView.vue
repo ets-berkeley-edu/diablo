@@ -147,7 +147,9 @@
       prefersColorScheme() {
         const mq = window.matchMedia('(prefers-color-scheme: dark)')
         this.$vuetify.theme.dark = mq.matches
-        mq.addEventListener('change', e => this.$vuetify.theme.dark = e.matches)
+        if (typeof mq.addEventListener === 'function') {
+          mq.addEventListener('change', e => this.$vuetify.theme.dark = e.matches)
+        }
       },
       toRoute(path) {
         this.$router.push({ path }, this.$_.noop)
