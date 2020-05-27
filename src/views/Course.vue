@@ -215,14 +215,16 @@
               </v-row>
               <v-row no-gutters class="mb-6">
                 <v-col>
-                  <div v-if="!scheduled && course.approvals.length" class="font-weight-bold pb-5 pink--text">
-                    <span v-if="mostRecentApproval.approvedBy.uid === $currentUser.uid">
-                      You submitted the preferences below.
-                    </span>
-                    <div v-if="mostRecentApproval.approvedBy.uid !== $currentUser.uid">
-                      {{ mostRecentApproval.approvedBy.name }}
-                      <span v-if="mostRecentApproval.wasApprovedByAdmin">(Course Capture administrator)</span>
-                      approved.
+                  <div v-if="!scheduled && course.approvals.length">
+                    <div v-for="approval in course.approvals" :key="approval.approvedBy.uid" class="font-weight-bold pb-5 pink--text">
+                      <span v-if="approval.approvedBy.uid === $currentUser.uid">
+                        You submitted the preferences below.
+                      </span>
+                      <div v-if="approval.approvedBy.uid !== $currentUser.uid">
+                        {{ approval.approvedBy.name }}
+                        <span v-if="approval.wasApprovedByAdmin">(Course Capture administrator)</span>
+                        approved.
+                      </div>
                     </div>
                   </div>
                   <div>
