@@ -82,7 +82,6 @@ class BConnected:
                     msg = MIMEMultipart('alternative')
                     msg['From'] = from_address
                     msg['To'] = to_address
-                    msg['Bcc'] = app.config['EMAIL_DIABLO_ADMIN']
 
                     if app.config['EMAIL_TEST_MODE']:
                         # Append intended recipient email address to verify when testing.
