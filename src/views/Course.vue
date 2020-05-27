@@ -244,7 +244,7 @@
                 <v-col md="3" class="mb-6">
                   <h4>
                     <label id="select-recording-type-label" for="select-recording-type">Recording Type</label>
-                    <v-tooltip id="tooltip-recording-type" bottom>
+                    <v-tooltip id="tooltip-recording-type" bottom max-width="300px">
                       <template v-slot:activator="{ on }">
                         <v-icon
                           color="primary"
@@ -257,8 +257,8 @@
                       </template>
                       <div>
                         'Presentation and Audio' recordings are free.
-                        There will be a \${{ $config.courseCapturePremiumCost }} operator fee, per semester, for
-                        'Presenter' recordings in ${oxfordJoin(auditoriumNames)}.
+                        There will be a &#36;{{ $config.courseCapturePremiumCost }} operator fee, per semester, for
+                        'Presenter' recordings in {{ oxfordJoin($_.map(auditoriums, 'location')) }}.
                       </div>
                     </v-tooltip>
                   </h4>
@@ -293,7 +293,7 @@
                 <v-col md="3" class="mb-6">
                   <h4>
                     <label id="select-publish-type-label" for="select-publish-type">Publish</label>
-                    <v-tooltip id="tooltip-publish" bottom>
+                    <v-tooltip id="tooltip-publish" bottom max-width="300px">
                       <template v-slot:activator="{ on }">
                         <v-icon
                           color="primary"
@@ -390,7 +390,7 @@
     mixins: [Context, Utils],
     data: () => ({
       agreedToTerms: false,
-      auditoriumNames: undefined,
+      auditoriums: undefined,
       course: undefined,
       kalturaScheduleDialogJSON: false,
       publishType: undefined,
@@ -419,7 +419,7 @@
           this.publishTypeOptions.push({text, value})
         })
         getAuditoriums().then(data => {
-          this.auditoriumNames = this.$_.map(data, 'name')
+          this.auditoriums = data
         })
       }).catch(this.$ready)
     },

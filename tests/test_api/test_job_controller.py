@@ -79,6 +79,17 @@ class TestStartJob:
         assert job_history[0]['startedAt']
         assert 'finishedAt' in job_history[0]
 
+    def test_force_run_of_disabled_job(self, client, admin_session):
+        """Disabled job will run if run on-demand."""
+        job_key = 'admin_emails'
+        self._api_start_job(client, job_key=job_key)
+        # Now verify
+        response = client.get('/api/job/history/1')
+        assert response.status_code == 200
+        job_history = response.json
+        assert len(job_history)
+        assert job_history[0]['jobKey'] == job_key
+
 
 class TestJobHistory:
 
@@ -259,7 +270,7 @@ class TestJobSchedule:
         first_job = api_json['jobs'][0]
         assert first_job['key'] == 'admin_emails'
         assert first_job['name'] == 'Admin Emails'
-        assert first_job['disabled'] is False
+        assert first_job['disabled'] is True
         assert first_job['schedule'] == {
             'type': 'minutes',
             'value': 120,

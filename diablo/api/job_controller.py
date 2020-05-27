@@ -40,7 +40,7 @@ from flask import current_app as app, request
 def start_job(job_key):
     job_class = next((job for job in BackgroundJobManager.available_job_classes() if job.key() == job_key), None)
     if job_class:
-        job_class(app.app_context).run()
+        job_class(app.app_context).run(force_run=True)
         return tolerant_jsonify(_job_class_to_json(job_class))
     else:
         raise ResourceNotFoundError(f'Invalid job_key: {job_key}')
