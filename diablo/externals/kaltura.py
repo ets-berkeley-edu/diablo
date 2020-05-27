@@ -165,9 +165,6 @@ class Kaltura:
                 category = self.get_canvas_category_object(canvas_course_site_id=canvas_course_site_id)
                 if category:
                     category_ids.append(category['id'])
-        elif publish_type == 'kaltura_my_media':
-            # TODO: Category entry per instructor?!
-            pass
 
         kaltura_schedule = self._schedule_recurring_events_in_kaltura(
             category_ids=category_ids,
@@ -277,7 +274,9 @@ class Kaltura:
         )
         media_entry = self._create_media_template(
             description=f'Media_entry: {description}',
+            instructors=instructors,
             name=f'Media_entry: {summary} recordings scheduled by Diablo on {to_isoformat(datetime.now())}',
+            publish_type=publish_type,
         )
         for category_id in category_ids or []:
             self.add_to_kaltura_category(category_id=category_id, entry_id=media_entry.id)
@@ -329,7 +328,17 @@ class Kaltura:
         )
         return self.kaltura_client.schedule.scheduleEvent.add(recurring_event)
 
-    def _create_media_template(self, description, name):
+    def _create_media_template(
+            self,
+            description,
+            name,
+            instructors,
+            publish_type,
+    ):
+        entitled_users = []
+        if publish_type == 'kaltura_my_media':
+            entitled_users = ','.join([instructor['email'] for instructor in instructors])
+
         media_entry = KalturaMediaEntry(
             accessControlId=3034871,  # TODO: Can we create a single access-control for all media entries?
             capabilities=NotImplemented,
@@ -341,6 +350,9 @@ class Kaltura:
             duration=NotImplemented,
             durationType=NotImplemented,
             endDate=NotImplemented,
+            entitledUsersEdit=entitled_users,
+            entitledUsersPublish=entitled_users,
+            entitledUsersView=entitled_users,
             groupId=NotImplemented,
             licenseType=NotImplemented,
             mediaType=KalturaMediaType.VIDEO,
