@@ -135,7 +135,6 @@ class JobsPage(DiabloPages):
         app.logger.info(f'Waiting for {async_job} to succeed')
         wait = util.get_short_timeout()
         locator = JobsPage.job_most_recent_locator(async_job)
-        app.logger.info(f'Checking locator "{locator}"')
         tries = 0
         retries = 1
         while tries <= retries:
@@ -143,7 +142,6 @@ class JobsPage(DiabloPages):
             try:
                 Wait(self.driver, wait).until(ec.visibility_of_element_located(locator))
                 xpath = f'{JobsPage.job_most_recent_locator(async_job)[1]}//i[contains(@class, "light-green--text")]'
-                app.logger.info(f'Checking XPath "{xpath}"')
                 Wait(self.driver, wait).until(ec.presence_of_element_located((By.XPATH, xpath)))
                 break
             except StaleElementReferenceException:

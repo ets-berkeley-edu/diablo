@@ -39,3 +39,7 @@ class CalNetPage(Page):
         self.wait_for_element_and_type(CalNetPage.USERNAME_INPUT, username)
         self.wait_for_element_and_type(CalNetPage.PASSWORD_INPUT, password)
         self.wait_for_element_and_click(CalNetPage.SUBMIT_BUTTON)
+
+    def wait_for_manual_login(self):
+        app.logger.info('Waiting for manual login')
+        self.wait_for_element_and_type(CalNetPage.USERNAME_INPUT, 'PLEASE LOG IN MANUALLY')
