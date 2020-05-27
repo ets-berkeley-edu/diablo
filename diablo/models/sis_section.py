@@ -348,6 +348,22 @@ class SisSection(db.Model):
         return api_json[0] if api_json else None
 
     @classmethod
+    def get_random_co_taught_course(cls, term_id):
+        sql = """
+            SELECT section_id FROM (
+                SELECT section_id, instructor_uid from sis_sections
+                WHERE term_id = :term_id
+                AND deleted_at IS NULL
+                GROUP BY section_id, instructor_uid
+            ) sections_by_instructor
+            GROUP BY section_id
+            HAVING COUNT(*) > 2
+            LIMIT 1
+        """
+        section_id = db.session.execute(text(sql), {'term_id': term_id}).scalar()
+        return cls.get_course(term_id, section_id)
+
+    @classmethod
     def get_course_changes(cls, term_id):
         sql = """
             SELECT

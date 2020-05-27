@@ -98,7 +98,7 @@ def create():
 def test_email_template(template_id):
     email_template = EmailTemplate.get_template(template_id)
     if email_template:
-        course = SisSection.get_course(term_id=app.config['CURRENT_TERM_ID'], section_id='12597')
+        course = SisSection.get_random_co_taught_course(app.config['CURRENT_TERM_ID'])
         template = EmailTemplate.get_template(template_id)
         subject_line = interpolate_content(
             course=course,

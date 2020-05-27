@@ -50,9 +50,11 @@ def interpolate_content(
         recording_type_name=recording_type_name,
     )
     for token, value in substitutions.items():
-        if value is not None:
-            value = ','.join(value) if type(value) == list else value
-            interpolated = re.sub(f'<code>[ \n\t]*{token}[ \n\t]*</code>', value, interpolated)
+        if value is None:
+            value = 'None'
+        elif type(value) == list:
+            value = ','.join(value)
+        interpolated = re.sub(f'<code>[ \n\t]*{token}[ \n\t]*</code>', value, interpolated)
     return interpolated
 
 
