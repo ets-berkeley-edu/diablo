@@ -133,16 +133,17 @@ def reset_invite_test_data(term, section, instructor=None):
     if instructor:
         sql = f"""UPDATE sent_emails
                   SET recipient_uids = array_remove(recipient_uids, '{instructor.uid}')
-                  WHERE term_id = \'{term.id}\'
-                    AND section_id = \'{section.ccn}\'
-                    AND template_type = \'invitation\'"""
-        app.logger.info(f'{sql}')
-        db.session.execute(text(sql))
+                  WHERE term_id = {term.id}
+                    AND section_id = {section.ccn}
+                    AND template_type = 'invitation'
+        """
     # So that invitations will be sent to all instructors on a course
     else:
         sql = f"""DELETE FROM sent_emails
-                  WHERE term_id = \'{term.id}\'
-                    AND section_id = \'{section.ccn}\'
-                    AND template_type = \'invitation\'"""
-        app.logger.info(f'{sql}')
-        db.session.execute(text(sql))
+                  WHERE term_id = {term.id}
+                    AND section_id = {section.ccn}
+                    AND template_type = 'invitation'
+        """
+    app.logger.info(sql)
+    db.session.execute(text(sql))
+    std_commit(allow_test_environment=True)
