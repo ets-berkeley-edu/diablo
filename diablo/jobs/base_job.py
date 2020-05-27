@@ -55,6 +55,7 @@ class BaseJob:
                         app.logger.info(f'Job {self.key()} finished successfully.')
 
                     except Exception as e:
+                        JobHistory.job_finished(id_=job_tracker.id, failed=True)
                         trace = traceback.format_exc()
                         summary = f'Job {self.key()} failed'
                         app.logger.error(summary)
@@ -63,7 +64,6 @@ class BaseJob:
                             message=f'{summary}. Detailed error information appears below.\n\n{trace}',
                             subject=summary,
                         )
-                        JobHistory.job_finished(id_=job_tracker.id, failed=True)
             else:
                 raise BackgroundJobError(f'Job {self.key()} is not registered in the database')
 

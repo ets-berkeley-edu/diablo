@@ -151,6 +151,10 @@ def get_recurrence_frequency_name(recurrence):
     return recurrence and recurrence.frequency.value.capitalize()
 
 
+def to_normalized_set(strings):
+    return set([s.strip().lower() for s in strings])
+
+
 def _blackout_to_json(event):
     return {
         'classificationType': get_classification_name(event.classificationType),
