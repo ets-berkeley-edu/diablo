@@ -51,10 +51,10 @@ class TestSignUp0:
 
     def test_delete_old_kaltura_series(self):
         self.kaltura_page.log_in()
-        self.kaltura_page.reset_test_data(self.term, self.recording_schedule)
+        self.kaltura_page.reset_sign_up_test_data(self.term, self.recording_schedule)
 
     def test_delete_old_diablo_data(self):
-        util.reset_test_data(self.test_data)
+        util.reset_sign_up_test_data(self.test_data)
 
     def test_delete_old_email(self):
         self.email_page.log_in()

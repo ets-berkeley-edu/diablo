@@ -97,7 +97,7 @@ def wait_for_kaltura_id(recording_schedule, term):
                 time.sleep(get_short_timeout())
 
 
-def reset_test_data(course_data):
+def reset_sign_up_test_data(course_data):
     ccn = course_data['ccn']
     term_id = app.config['CURRENT_TERM_ID']
     sql = f'DELETE FROM approvals WHERE section_id = {ccn} AND term_id = {term_id}'
@@ -126,3 +126,23 @@ def get_first_recording_date(recording_schedule):
     next_dates = [get_next_date(term_start_date, index) for index in schedule_days_ind]
     next_dates.sort()
     return next_dates[0]
+
+
+def reset_invite_test_data(term, section, instructor=None):
+    # So that invitation will be sent to one instructor on a course
+    if instructor:
+        sql = f"""UPDATE sent_emails
+                  SET recipient_uids = array_remove(recipient_uids, '{instructor.uid}')
+                  WHERE term_id = \'{term.id}\'
+                    AND section_id = \'{section.ccn}\'
+                    AND template_type = \'invitation\'"""
+        app.logger.info(f'{sql}')
+        db.session.execute(text(sql))
+    # So that invitations will be sent to all instructors on a course
+    else:
+        sql = f"""DELETE FROM sent_emails
+                  WHERE term_id = \'{term.id}\'
+                    AND section_id = \'{section.ccn}\'
+                    AND template_type = \'invitation\'"""
+        app.logger.info(f'{sql}')
+        db.session.execute(text(sql))

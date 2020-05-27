@@ -44,6 +44,7 @@ class DiabloPages(Page):
     JOB_HISTORY_LINK = (By.ID, 'menu-item-job-history')
     LOG_OUT_LINK = (By.ID, 'menu-item-log-out')
 
+    ALERT_MSG = (By.ID, 'alert-text')
     VISIBLE_MENU_OPTION = (By.XPATH, '//div[contains(@class, "menuable__content__active")]//span[contains(@id, "-option-")]')
 
     @staticmethod

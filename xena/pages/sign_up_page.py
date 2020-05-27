@@ -28,6 +28,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.wait import WebDriverWait as Wait
 from xena.pages.diablo_pages import DiabloPages
+from xena.test_utils import util
 
 
 class SignUpPage(DiabloPages):
@@ -40,6 +41,7 @@ class SignUpPage(DiabloPages):
     MEETING_TIMES = (By.ID, 'meeting-times')
     ROOMS = (By.ID, 'rooms')
     CROSS_LISTING = (By.XPATH, '//span[contains(@id, "cross-listing")]')
+    SEND_INVITE_BUTTON = (By.ID, 'send-invite-btn')
     CC_EXPLAINED_LINK = (By.ID, 'link-to-course-capture-overview')
     RECORDING_TYPE_TOOLTIP_BUTTON = (By.XPATH, '//span[@id="tooltip-recording-type"]/following-sibling::i')
     PUBLISH_TOOLTIP_BUTTON = (By.XPATH, '//span[@id="tooltip-publish"]/following-sibling::i')
@@ -102,6 +104,11 @@ class SignUpPage(DiabloPages):
     def visible_cross_listing_ccns(self):
         return [el.get_attribute('id').split('-')[2] for el in self.elements(SignUpPage.CROSS_LISTING)]
 
+    def click_send_invite_button(self):
+        app.logger.info('Clicking the Send Invite button')
+        self.wait_for_element_and_click(SignUpPage.SEND_INVITE_BUTTON)
+        Wait(self.driver, util.get_short_timeout()).until(ec.visibility_of_element_located(SignUpPage.ALERT_MSG))
+
     # CAPTURE + APPROVAL SETTINGS
 
     def instructor_approval_present(self, instructor):
@@ -115,12 +122,12 @@ class SignUpPage(DiabloPages):
     def open_rec_type_tooltip(self):
         app.logger.info('Hovering over recording type tooltip')
         self.mouseover(self.element(SignUpPage.RECORDING_TYPE_TOOLTIP_BUTTON))
-        self.wait_for_element(SignUpPage.VISIBLE_TOOLTIP, app.config['TIMEOUT_SHORT'])
+        self.wait_for_element(SignUpPage.VISIBLE_TOOLTIP, util.get_short_timeout())
 
     def open_publish_tooltip(self):
         app.logger.info('Hovering over publish tooltip')
         self.mouseover(self.element(SignUpPage.PUBLISH_TOOLTIP_BUTTON))
-        self.wait_for_element(SignUpPage.VISIBLE_TOOLTIP, app.config['TIMEOUT_SHORT'])
+        self.wait_for_element(SignUpPage.VISIBLE_TOOLTIP, util.get_short_timeout())
 
     def visible_tooltip(self):
         return self.element(SignUpPage.VISIBLE_TOOLTIP).get_attribute('innerText').strip()
@@ -152,7 +159,7 @@ class SignUpPage(DiabloPages):
         self.wait_for_element_and_click(SignUpPage.APPROVE_BUTTON)
 
     def wait_for_approval_confirmation(self):
-        Wait(self.driver, app.config['TIMEOUT_SHORT']).until(
+        Wait(self.driver, util.get_short_timeout()).until(
             method=ec.visibility_of_element_located(SignUpPage.CONFIRMATION_MSG),
             message=f'Failed wait_for_approval_confirmation: {SignUpPage.CONFIRMATION_MSG}',
         )
