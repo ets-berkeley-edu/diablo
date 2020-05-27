@@ -640,7 +640,7 @@ def _to_api_json(term_id, rows, include_rooms=True):
             if scheduled:
                 course['status'] = 'Scheduled'
             elif approvals:
-                course['status'] = 'Partially Approved'
+                course['status'] = 'Approved'
             else:
                 course['status'] = 'Invited' if course['invitees'] else 'Not Invited'
 
@@ -673,6 +673,8 @@ def _to_api_json(term_id, rows, include_rooms=True):
 def _decorate_course(course):
     room_id = course.get('room', {}).get('id')
     course['hasNecessaryApprovals'] = _has_necessary_approvals(course)
+    if course['status'] == 'Approved' and not course['hasNecessaryApprovals']:
+        course['status'] = 'Partially Approved'
     # Check for course changes w.r.t. room, meeting times, and instructors.
     if course['scheduled']:
         def _meeting(obj):
