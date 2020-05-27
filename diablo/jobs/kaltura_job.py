@@ -24,7 +24,6 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 from diablo.externals.kaltura import Kaltura
 from diablo.jobs.base_job import BaseJob
-from diablo.jobs.errors import BackgroundJobError
 from diablo.jobs.util import schedule_recordings
 from diablo.lib.kaltura_util import to_normalized_set
 from diablo.lib.util import objects_to_dict_organized_by_section_id
@@ -57,36 +56,34 @@ def _update_already_scheduled_events():
         scheduled = course['scheduled']
         kaltura_schedule = kaltura.get_schedule_event(scheduled['kalturaScheduleId'])
         if kaltura_schedule:
-            publish_type = scheduled['publishType']
             template_entry_id = kaltura_schedule['templateEntryId']
-            if publish_type == 'kaltura_media_gallery':
-                if course['canvasCourseSites']:
-                    # From Kaltura, get Canvas course sites (categories) currently mapped to the course.
-                    category_ids = kaltura_schedule['categoryIds']
-                    existing_categories = kaltura.get_categories(category_ids) if category_ids else []
-                    for s in course['canvasCourseSites']:
-                        canvas_course_site_id = str(s['courseSiteId'])
-                        if canvas_course_site_id not in [c['courseSiteId'] for c in existing_categories]:
-                            _update_kaltura_category(canvas_course_site_id, course_name, kaltura, template_entry_id)
-            elif publish_type == 'kaltura_my_media':
-                base_entry = kaltura.get_base_entry(template_entry_id)
-                if base_entry:
-                    instructor_emails = [i['email'] for i in course['instructors']]
-                    if to_normalized_set(_get_entitled_users(base_entry)) != to_normalized_set(instructor_emails):
-                        kaltura.update_base_entry(
-                            entitled_users=instructor_emails,
-                            entry_id=template_entry_id,
-                        )
-                else:
-                    app.logger.warn(f'{course_name}: No base_entry found with template_entry_id: {template_entry_id}')
+            base_entry = kaltura.get_base_entry(template_entry_id)
+            if base_entry:
+                instructor_emails = [i['email'] for i in course['instructors']]
+                if to_normalized_set(_get_entitled_users(base_entry)) != to_normalized_set(instructor_emails):
+                    # Add collaborators, no matter the publish_type
+                    kaltura.update_base_entry(
+                        entitled_users=instructor_emails,
+                        entry_id=template_entry_id,
+                    )
+
+                if scheduled['publishType'] == 'kaltura_media_gallery':
+                    if course['canvasCourseSites']:
+                        # From Kaltura, get Canvas course sites (categories) currently mapped to the course.
+                        category_ids = kaltura_schedule['categoryIds']
+                        existing_categories = kaltura.get_categories(category_ids) if category_ids else []
+                        for s in course['canvasCourseSites']:
+                            canvas_course_site_id = str(s['courseSiteId'])
+                            if canvas_course_site_id not in [c['courseSiteId'] for c in existing_categories]:
+                                _update_kaltura_category(canvas_course_site_id, course_name, kaltura, template_entry_id)
             else:
-                raise BackgroundJobError(f'{course_name} has an unrecognized publish_type: {publish_type}')
+                app.logger.error(f'{course_name}: No base_entry found with template_entry_id: {template_entry_id}')
         else:
             app.logger.warn(f'The previously scheduled {course_name} has no schedule_event in Kaltura.')
 
 
 def _get_entitled_users(kaltura_base_entry):
-    entitled_users = kaltura_base_entry['entitledUsersPublish']
+    entitled_users = kaltura_base_entry['entitledUsersEdit']
     return entitled_users.split(',') if entitled_users else []
 
 
