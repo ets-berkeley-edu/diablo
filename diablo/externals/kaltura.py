@@ -303,9 +303,9 @@ class Kaltura:
             time_minutes=end_time.minute,
         )
         base_entry = self._create_kaltura_base_entry(
-            description=f'[base_entry] {description}',
+            description=description,
             instructors=instructors,
-            name=f'[base_entry] {summary} recordings scheduled by Diablo on {to_isoformat(datetime.now())}',
+            name=f'{summary} recordings scheduled by Diablo on {to_isoformat(datetime.now())}',
             publish_type=publish_type,
         )
         for category_id in category_ids or []:
