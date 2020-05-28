@@ -666,6 +666,12 @@ class TestCoursesChanges:
             assert course['scheduled']['hasObsoleteRoom'] is False
             assert course['scheduled']['hasObsoleteMeetingTimes'] is False
             assert course['scheduled']['hasObsoleteInstructors'] is True
+            assert len(course['instructors']) == 1
+            assert course['instructors'][0]['name'] == 'Terry Lewis'
+            assert course['instructors'][0]['uid'] == '10003'
+            assert len(course['scheduled']['instructors']) == 2
+            assert {'name': 'Terry Lewis', 'uid': '10003'} in course['scheduled']['instructors']
+            assert {'name': '', 'uid': '100099'} in course['scheduled']['instructors']
 
 
 class TestCrossListedNameGeneration:

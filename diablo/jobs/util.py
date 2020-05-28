@@ -48,8 +48,8 @@ def insert_or_update_instructors(instructor_uids):
         instructors.append({
             'dept_code': instructor.get('deptCode'),
             'email': instructor.get('campusEmail') or instructor.get('email'),
-            'first_name': instructor.get('firstName'),
-            'last_name': instructor.get('lastName'),
+            'first_name': instructor.get('firstName') or '',
+            'last_name': instructor.get('lastName') or '',
             'uid': instructor['uid'],
         })
 
