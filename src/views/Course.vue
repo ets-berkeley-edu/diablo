@@ -17,77 +17,14 @@
         <v-col>
           <v-card class="pa-6" outlined>
             <v-container v-if="course.room.capability">
-              <v-row v-if="scheduled">
+              <v-row v-if="course.scheduled">
                 <v-col>
-                  <v-card tile>
-                    <v-list-item-title class="pl-4 pt-4">
-                      <h4 class="title">Recordings scheduled</h4>
-                      <div v-if="$currentUser.isAdmin" class="d-flex align-bottom">
-                        <v-dialog v-if="$currentUser.isAdmin && scheduled.kalturaSchedule" v-model="kalturaScheduleDialogJSON">
-                          <template v-slot:activator="{ on }">
-                            <v-btn
-                              class="pa-0"
-                              text
-                              x-small
-                              v-on="on"
-                            >
-                              <v-icon id="kaltura-schedule-dialog" class="pb-2" v-on="on">
-                                mdi-code-json
-                              </v-icon>
-                            </v-btn>
-                          </template>
-                          <v-card>
-                            <v-card-title primary-title>
-                              Raw JSON of Kaltura schedule
-                            </v-card-title>
-                            <v-card-text>
-                              <pre>{{ scheduled.kalturaSchedule }}</pre>
-                            </v-card-text>
-                            <v-divider></v-divider>
-                            <v-card-actions>
-                              <v-spacer></v-spacer>
-                              <v-btn
-                                color="primary"
-                                text
-                                @click="kalturaScheduleDialogJSON = false"
-                              >
-                                Close
-                              </v-btn>
-                            </v-card-actions>
-                          </v-card>
-                        </v-dialog>
-                        <div>
-                          <a
-                            id="link-to-edit-kaltura-event"
-                            :href="`${$config.kalturaMediaSpaceUrl}/recscheduling/index/edit-event/eventid/${scheduled.kalturaScheduleId}`"
-                            target="_blank"
-                            aria-label="Open Kaltura MediaSpace in a new window"
-                          >
-                            Kaltura event {{ scheduled.kalturaScheduleId }} <v-icon small class="pb-1">mdi-open-in-new</v-icon>
-                          </a>
-                        </div>
-                      </div>
-                    </v-list-item-title>
-                    <v-list-item two-line class="pb-3">
-                      <v-list-item-content>
-                        <v-list-item-title>Scheduled on</v-list-item-title>
-                        <v-list-item-subtitle>{{ scheduled.createdAt | moment('MMM DD, YYYY') }}</v-list-item-subtitle>
-                      </v-list-item-content>
-                      <v-list-item-content>
-                        <v-list-item-title>Recording Type</v-list-item-title>
-                        <v-list-item-subtitle>{{ scheduled.recordingTypeName }}</v-list-item-subtitle>
-                      </v-list-item-content>
-                      <v-list-item-content>
-                        <v-list-item-title>Publish Type</v-list-item-title>
-                        <v-list-item-subtitle>{{ scheduled.publishTypeName }}</v-list-item-subtitle>
-                      </v-list-item-content>
-                    </v-list-item>
-                  </v-card>
+                  <ScheduledCourse :course="course" />
                 </v-col>
               </v-row>
-              <v-row no-gutters class="mb-6">
+              <v-row v-if="!course.scheduled" no-gutters class="mb-6">
                 <v-col>
-                  <div v-if="!scheduled && course.approvals.length">
+                  <div v-if="course.approvals.length">
                     <div v-for="approval in course.approvals" :key="approval.approvedBy.uid" class="font-weight-bold pb-5 pink--text">
                       <span v-if="approval.approvedBy.uid === $currentUser.uid">
                         You submitted the preferences below.
@@ -99,22 +36,10 @@
                       </div>
                     </div>
                   </div>
-                  <div>
-                    The Course Capture program is the campus service for recording and publishing classroom activity. If you
-                    sign up using this form, recordings of every class session will be automatically recorded. (For details,
-                    please read
-                    <a
-                      id="link-to-course-capture-overview"
-                      :href="$config.courseCaptureExplainedUrl"
-                      target="_blank"
-                      aria-label="Open URL to Course Capture service overview in a new window"
-                    >
-                      Course Capture Services Explained <v-icon>mdi-open-in-new</v-icon>
-                    </a>.
-                  </div>
+                  <CourseCaptureExplained />
                 </v-col>
               </v-row>
-              <v-row v-if="!scheduled" justify="start" align="center">
+              <v-row v-if="!course.scheduled" justify="start" align="center">
                 <v-col md="3" class="mb-6">
                   <h4>
                     <label id="select-recording-type-label" for="select-recording-type">Recording Type</label>
@@ -163,7 +88,7 @@
                   </div>
                 </v-col>
               </v-row>
-              <v-row v-if="!scheduled" justify="start" align="center">
+              <v-row v-if="!course.scheduled" justify="start" align="center">
                 <v-col md="3" class="mb-6">
                   <h4>
                     <label id="select-publish-type-label" for="select-publish-type">Publish</label>
@@ -208,31 +133,27 @@
                   <v-checkbox id="agree-to-terms-checkbox" v-model="agreedToTerms" class="mt-0"></v-checkbox>
                 </v-col>
                 <v-col>
-                  <div class="pt-1">
-                    <label for="agree-to-terms-checkbox">
-                      I have read the Audio and Video Recording Permission Agreement and I agree to the terms stated within.
-                      <a
-                        id="link-to-course-capture-policies"
-                        :href="$config.courseCapturePoliciesUrl"
-                        target="_blank"
-                        aria-label="Open URL to Course Capture policies in a new window"
-                      >
-                        Audio and Video Recording Permission Agreement <v-icon>mdi-open-in-new</v-icon>
-                      </a>.
-                    </label>
-                  </div>
+                  <TermsAgreementText class="pt-1" />
                 </v-col>
               </v-row>
-              <v-row v-if="!course.hasNecessaryApprovals" lg="2" class="pr-6 pt-4">
-                <v-spacer />
-                <v-col md="2">
+              <v-row v-if="!course.hasNecessaryApprovals" lg="2" class="pt-4">
+                <v-col>
                   <v-btn
                     id="btn-approve"
+                    class="float-right"
                     color="success"
-                    :disabled="disableSubmit"
+                    :disabled="disableSubmit || isApproving"
                     @click="approve"
                   >
-                    Approve
+                    <v-progress-circular
+                      v-if="isApproving"
+                      class="mr-2"
+                      color="primary"
+                      indeterminate
+                      size="18"
+                      width="3"
+                    ></v-progress-circular>
+                    {{ isApproving ? 'Approving' : 'Approve' }}
                   </v-btn>
                 </v-col>
               </v-row>
@@ -252,25 +173,27 @@
 
 <script>
   import Context from '@/mixins/Context'
+  import CourseCaptureExplained from '@/components/util/CourseCaptureExplained'
   import CoursePageSidebar from '@/components/course/CoursePageSidebar'
+  import ScheduledCourse from '@/components/course/ScheduledCourse'
+  import TermsAgreementText from '@/components/util/TermsAgreementText'
   import Utils from '@/mixins/Utils'
   import {approve, getCourse} from '@/api/course'
   import {getAuditoriums} from '@/api/room'
 
   export default {
     name: 'Course',
-    components: {CoursePageSidebar},
+    components: {CourseCaptureExplained, CoursePageSidebar, ScheduledCourse, TermsAgreementText},
     mixins: [Context, Utils],
     data: () => ({
       agreedToTerms: false,
       auditoriums: undefined,
       course: undefined,
-      kalturaScheduleDialogJSON: false,
+      isApproving: false,
       publishType: undefined,
       publishTypeOptions: undefined,
       recordingType: undefined,
-      recordingTypeOptions: undefined,
-      scheduled: undefined
+      recordingTypeOptions: undefined
     }),
     computed: {
       disableSubmit() {
@@ -297,8 +220,10 @@
     },
     methods: {
       approve() {
+        this.isApproving = true
         approve(this.publishType, this.recordingType, this.course.sectionId).then(data => {
           this.render(data)
+          this.isApproving = false
         }).catch(this.$ready)
       },
       render(data) {
@@ -318,7 +243,6 @@
             this.recordingType = this.recordingTypeOptions[0].value
           }
         }
-        this.scheduled = this.course.scheduled
         this.setPageTitle(this.course.label)
         this.$ready()
       }
