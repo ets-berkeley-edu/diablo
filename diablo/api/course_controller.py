@@ -30,7 +30,7 @@ from diablo.lib.berkeley import term_name_for_sis_id
 from diablo.lib.http import tolerant_jsonify
 from diablo.models.approval import Approval, get_all_publish_types, get_all_recording_types
 from diablo.models.course_preference import CoursePreference
-from diablo.models.queued_email import notify_instructors_of_approval
+from diablo.models.queued_email import notify_instructor_waiting_for_approval, notify_instructors_of_changes
 from diablo.models.room import Room
 from diablo.models.scheduled import Scheduled
 from diablo.models.sis_section import SisSection
@@ -76,11 +76,20 @@ def approve():
         section_id=section_id,
         term_id=term_id,
     )
-    _notify_instructors_of_approval(
-        approval=approval,
-        course=course,
-        previous_approvals=previous_approvals,
-    )
+
+    if previous_approvals:
+        # Compare the current approval with preferences submitted in previous approval
+        previous_approval = previous_approvals[-1]
+        if (approval.publish_type, approval.recording_type) != (previous_approval.publish_type, previous_approval.recording_type):
+            notify_instructors_of_changes(course, approval, previous_approvals)
+
+    all_approvals = previous_approvals + [approval]
+    if len(course['instructors']) > len(all_approvals):
+        approval_uids = [a.approved_by_uid for a in all_approvals]
+        pending_instructors = [i for i in course['instructors'] if i['uid'] not in approval_uids]
+        last_approver = next((i for i in course['instructors'] if i['uid'] == approval.approved_by_uid), None)
+        if last_approver:
+            notify_instructor_waiting_for_approval(course, last_approver, pending_instructors)
 
     if app.config['FEATURE_FLAG_SCHEDULE_RECORDINGS_SYNCHRONOUSLY']:
         # This feature-flag is intended for developer workstation ONLY. Do not enable in diablo-dev|qa|prod.
@@ -185,34 +194,6 @@ def update_opt_out():
         opt_out=opt_out,
     )
     return tolerant_jsonify(preferences.to_api_json())
-
-
-def _notify_instructors_of_approval(approval, course, previous_approvals):
-    type_of_sent_email = None
-    if previous_approvals:
-        # Compare the current approval with preferences submitted in previous approval
-        previous_approval = previous_approvals[-1]
-        previous_publish_type = previous_approval.publish_type
-        previous_recording_type = previous_approval.recording_type
-        if approval.publish_type != previous_publish_type or approval.recording_type != previous_recording_type:
-            notify_instructors_of_approval(
-                course=course,
-                latest_approval=approval,
-                previous_publish_type=previous_publish_type,
-                previous_recording_type=previous_recording_type,
-                template_type='notify_instructor_of_changes',
-                term_id=course['termId'],
-            )
-    all_approvals = previous_approvals + [approval]
-    if not type_of_sent_email and len(course['instructors']) > len(all_approvals):
-        approval_uids = [a.approved_by_uid for a in all_approvals]
-        notify_instructors_of_approval(
-            pending_instructors=[i for i in course['instructors'] if i['uid'] not in approval_uids],
-            course=course,
-            latest_approval=approval,
-            template_type='waiting_for_approval',
-            term_id=course['termId'],
-        )
 
 
 def _schedule_if_has_necessary_approvals(course):

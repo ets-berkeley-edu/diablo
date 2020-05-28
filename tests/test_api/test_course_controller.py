@@ -135,13 +135,17 @@ class TestApprove:
 
             QueuedEmailsJob(app.app_context).run()
 
-            for uid in ('10001', '10002'):
-                emails_sent = SentEmail.get_emails_sent_to(uid)
-                assert len(emails_sent) > 0
-                most_recent = emails_sent[-1]
-                assert most_recent.section_id == section_1_id
-                assert most_recent.template_type == 'notify_instructor_of_changes'
-                assert most_recent.term_id == self.term_id
+            # First instructor was notified 1) that second instructor needed to approve; 2) that second instructor made changes.
+            emails_sent = SentEmail.get_emails_sent_to(instructor_uids[0])
+            assert len(emails_sent) == 2
+            for email in emails_sent:
+                assert email.section_id == section_1_id
+                assert email.term_id == self.term_id
+            assert emails_sent[0].template_type == 'waiting_for_approval'
+            assert emails_sent[1].template_type == 'notify_instructor_of_changes'
+
+            # Second instructor received no notifications.
+            assert len(SentEmail.get_emails_sent_to(instructor_uids[1])) == 0
 
             fake_auth.login(admin_uid)
             api_json = api_get_course(

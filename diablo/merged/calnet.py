@@ -23,6 +23,9 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
+import json
+from os import path
+
 from diablo import cachify
 from diablo.api.errors import InternalServerError
 from diablo.externals import calnet
@@ -42,7 +45,12 @@ def _get_calnet_users(app, id_type, ids):
     users_by_id = {}
     if app.config['DIABLO_ENV'] == 'test':
         for id_ in ids:
-            users_by_id[id_] = {id_type: id_}
+            fixture_path = f"{app.config['FIXTURES_PATH']}/calnet/user_for_uid_{id_}.json"
+            if path.isfile(fixture_path):
+                with open(fixture_path) as f:
+                    users_by_id[id_] = json.load(f)
+            else:
+                users_by_id[id_] = {id_type: id_}
     else:
         calnet_client = calnet.client(app)
         if id_type == 'uid':
