@@ -25,7 +25,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 import glob
 import json
 
-from diablo import BASE_DIR, cache, db, std_commit
+from diablo import cache, db, std_commit
 from diablo.factory import background_job_manager
 from diablo.jobs.canvas_job import CanvasJob
 from diablo.jobs.sis_data_refresh_job import SisDataRefreshJob
@@ -74,7 +74,7 @@ def load(create_test_data=True):
 
 def _cache_externals():
     for external in ('calnet', 'canvas', 'kaltura'):
-        for path in glob.glob(f'{BASE_DIR}/fixtures/{external}/*.json'):
+        for path in glob.glob(f"{app.config['FIXTURES_PATH']}/{external}/*.json"):
             with open(path, 'r') as file:
                 key = path.split('/')[-1].split('.')[0]
                 cache.set(f'{external}/{key}', json.loads(file.read()))
@@ -89,7 +89,7 @@ def _load_schemas():
 
 def _load_courses():
     term_id = app.config['CURRENT_TERM_ID']
-    with open(f"{app.config['BASE_DIR']}/fixtures/sis/courses.json", 'r') as file:
+    with open(f"{app.config['FIXTURES_PATH']}/sis/courses.json", 'r') as file:
         courses = []
         json_ = json.loads(file.read())
         defaults = json_['defaults']
@@ -103,6 +103,7 @@ def _load_courses():
         SisSection.refresh(sis_sections=courses, term_id=term_id)
         std_commit(allow_test_environment=True)
     SisDataRefreshJob.after_sis_data_refresh(term_id=term_id)
+    std_commit(allow_test_environment=True)
 
 
 def _create_email_templates():
@@ -135,6 +136,12 @@ def _create_email_templates():
         name='Recordings scheduled',
         subject_line='Course scheduled for Course Capture',
         message='Recordings of type <code>recording.type</code> will be published to <code>publish.type</code>.',
+    )
+    EmailTemplate.create(
+        template_type='waiting_for_approval',
+        name='Waiting for approval',
+        subject_line="Who's Captain Howdy?",
+        message='You know, I make the questions and he does the answers.',
     )
     std_commit(allow_test_environment=True)
 

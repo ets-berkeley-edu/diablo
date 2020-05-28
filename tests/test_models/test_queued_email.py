@@ -45,7 +45,7 @@ class TestQueuedEmail:
         """Refuse to queue emails if no template is available."""
         term_id = app.config['CURRENT_TERM_ID']
         section_id = 50005
-        email_template_type = 'waiting_for_approval'
+        email_template_type = 'room_change_no_longer_eligible'
         recipient = {
             'name': 'Regan MacNeil',
             'uid': '10006',
