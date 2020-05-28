@@ -391,12 +391,32 @@ class SisSection(db.Model):
             },
         )
         courses = []
+        obsolete_instructor_uids = set()
+
         for course in _to_api_json(term_id=term_id, rows=rows):
             scheduled = course['scheduled']
             if scheduled['hasObsoleteRoom'] \
                     or scheduled['hasObsoleteInstructors'] \
                     or scheduled['hasObsoleteMeetingTimes']:
                 courses.append(course)
+            if scheduled['hasObsoleteInstructors']:
+                obsolete_instructor_uids.update(scheduled['instructorUids'])
+                scheduled['instructors'] = []
+
+        if obsolete_instructor_uids:
+            obsolete_instructors = {}
+            instructor_query = 'SELECT uid, first_name, last_name from instructors where uid = any(:uids)'
+            for row in db.session.execute(text(instructor_query), {'uids': list(obsolete_instructor_uids)}):
+                obsolete_instructors[row['uid']] = {
+                    'name': ' '.join([row['first_name'], row['last_name']]),
+                    'uid': row['uid'],
+                }
+            for course in courses:
+                if course['scheduled']['hasObsoleteInstructors']:
+                    course['scheduled']['instructors'] = []
+                    for uid in course['scheduled']['instructorUids']:
+                        course['scheduled']['instructors'].append(obsolete_instructors.get(uid, {'name': '', 'uid': uid}))
+
         return courses
 
     @classmethod

@@ -44,11 +44,17 @@
               <div>
                 {{ course.sectionId }}
               </div>
-              <div>
-                {{ course.meetingDays.join(',') }}
+              <div v-if="course.scheduled.hasObsoleteMeetingTimes">
+                <div>
+                  {{ course.scheduled.meetingDays.join(',') }} {{ course.scheduled.meetingStartTime }} - {{ course.scheduled.meetingEndTime }}
+                </div>
+                <div class="primary--text">
+                  <v-icon small color="primary">mdi-arrow-down-bold</v-icon>
+                  changed to
+                </div>           
               </div>
               <div>
-                {{ course.meetingStartTime }} - {{ course.meetingEndTime }}
+                {{ course.meetingDays.join(',') }} {{ course.meetingStartTime }} - {{ course.meetingEndTime }}
               </div>
               <div>
                 {{ course.publishTypeNames }}
@@ -64,8 +70,8 @@
                     {{ roomBefore.location }}
                   </router-link>
                 </div>
-                <div>
-                  <v-icon small>mdi-arrow-down-bold</v-icon>
+                <div class="primary--text">
+                  <v-icon small color="primary">mdi-arrow-down-bold</v-icon>
                   changed to
                 </div>
               </div>
@@ -79,6 +85,17 @@
               <span v-if="!course.room">&mdash;</span>
             </td>
             <td>
+              <div v-if="course.scheduled.hasObsoleteInstructors">
+                <div v-for="instructor in course.scheduled.instructors" :key="instructor.uid">
+                  <router-link :id="`instructor-${instructor.uid}-mailto`" :to="`/user/${instructor.uid}`">
+                    {{ instructor.name }}
+                  </router-link> ({{ instructor.uid }})
+                </div>
+              </div>
+              <div class="primary--text">
+                <v-icon small color="primary">mdi-arrow-down-bold</v-icon>
+                changed to
+              </div>
               <div v-for="instructor in course.instructors" :key="instructor.uid">
                 <v-tooltip v-if="!instructor.wasSentInvite" bottom>
                   <template v-slot:activator="{ on }">
