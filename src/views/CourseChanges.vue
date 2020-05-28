@@ -91,10 +91,10 @@
                     {{ instructor.name }}
                   </router-link> ({{ instructor.uid }})
                 </div>
-              </div>
-              <div class="primary--text">
-                <v-icon small color="primary">mdi-arrow-down-bold</v-icon>
-                changed to
+                <div class="primary--text">
+                  <v-icon small color="primary">mdi-arrow-down-bold</v-icon>
+                  changed to
+                </div>
               </div>
               <div v-for="instructor in course.instructors" :key="instructor.uid">
                 <v-tooltip v-if="!instructor.wasSentInvite" bottom>
