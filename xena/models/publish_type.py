@@ -28,5 +28,5 @@ from enum import Enum
 
 class PublishType(Enum):
 
-    BCOURSES = 'bCourses'
-    KALTURA = 'My Media (Kaltura)'
+    BCOURSES = 'Media Gallery'
+    KALTURA = 'My Media'

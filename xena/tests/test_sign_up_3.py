@@ -23,13 +23,17 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
+from datetime import datetime
+
 import pytest
+from xena.models.async_job import AsyncJob
 from xena.models.email import Email
 from xena.models.publish_type import PublishType
 from xena.models.recording_schedule import RecordingSchedule
 from xena.models.recording_schedule_status import RecordingScheduleStatus
 from xena.models.recording_type import RecordingType
 from xena.models.section import Section
+from xena.pages.sign_up_page import SignUpPage
 from xena.test_utils import util
 
 """
@@ -49,9 +53,17 @@ class TestSignUp3:
 
     # DELETE PRE-EXISTING DATA
 
+    def test_disable_jobs(self):
+        self.login_page.load_page()
+        self.login_page.dev_auth()
+        self.ouija_page.click_jobs_link()
+        self.jobs_page.run_queued_emails_job()
+        self.jobs_page.wait_for_most_recent_job_success(AsyncJob.QUEUED_EMAILS)
+        self.jobs_page.disable_all_jobs()
+
     def test_delete_old_kaltura_series(self):
-        self.kaltura_page.log_in()
-        self.kaltura_page.reset_sign_up_test_data(self.term, self.recording_schedule)
+        self.kaltura_page.log_in_via_calnet()
+        self.kaltura_page.reset_test_data(self.term, self.recording_schedule)
 
     def test_delete_old_diablo_data(self):
         util.reset_sign_up_test_data(self.test_data)
@@ -65,7 +77,8 @@ class TestSignUp3:
     # INSTRUCTOR 1 LOGS IN
 
     def test_home_page_inst_1(self):
-        self.login_page.load_page()
+        self.jobs_page.load_page()
+        self.jobs_page.log_out()
         self.login_page.dev_auth(self.section.instructors[0].uid)
         self.ouija_page.wait_for_diablo_title('Home')
 
@@ -141,15 +154,14 @@ class TestSignUp3:
     # ADMIN LOGS IN AND APPROVES
 
     def test_admin_login(self):
-        self.login_page.load_page()
-        self.login_page.dev_auth(util.get_admin_uid())
+        self.login_page.dev_auth()
         self.ouija_page.wait_for_diablo_title('The Ouija Board')
 
     def test_load_sign_up_page_admin(self):
         self.sign_up_page.load_page(self.section)
 
-    def test_agree_terms_admin(self):
-        self.sign_up_page.click_agree_checkbox()
+    def test_no_agree_terms_admin(self):
+        assert self.sign_up_page.is_present(SignUpPage.AGREE_TO_TERMS_CBX) is False
 
     def test_approve_admin(self):
         self.sign_up_page.click_approve_button()
@@ -160,8 +172,6 @@ class TestSignUp3:
     # RUN KALTURA SCHEDULING JOB AND OBTAIN SERIES ID
 
     def test_run_kaltura_job(self):
-        self.sign_up_page.log_out()
-        self.login_page.dev_auth()
         self.ouija_page.click_jobs_link()
         self.jobs_page.run_kaltura_job()
 
@@ -249,17 +259,26 @@ class TestSignUp3:
         assert self.kaltura_page.visible_end_date() == end
 
     def test_start_time(self):
-        start = self.section.get_berkeley_start_time_str()
-        assert self.kaltura_page.visible_start_time() == start
+        start = self.section.get_berkeley_start_time()
+        visible_start = datetime.strptime(self.kaltura_page.visible_start_time(), '%I:%M %p')
+        assert visible_start == start
 
     def test_end_time(self):
-        end = self.section.get_berkeley_end_time_str()
-        assert self.kaltura_page.visible_end_time() == end
+        end = self.section.get_berkeley_end_time()
+        visible_end = datetime.strptime(self.kaltura_page.visible_end_time(), '%I:%M %p')
+        assert visible_end == end
 
     def test_close_kaltura_window(self):
         self.kaltura_page.close_window_and_switch()
 
     # VERIFY EMAIL
+
+    def test_run_instructor_email_jobs(self):
+        self.jobs_page.load_page()
+        self.jobs_page.run_instructor_emails_job()
+        self.jobs_page.wait_for_most_recent_job_success(AsyncJob.INSTRUCTOR_EMAILS)
+        self.jobs_page.run_queued_emails_job()
+        self.jobs_page.wait_for_most_recent_job_success(AsyncJob.QUEUED_EMAILS)
 
     def test_schedule_conf_email(self):
         subj = f'Your course, {self.section.code}, has been scheduled for Course Capture'
