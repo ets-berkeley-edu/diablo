@@ -156,7 +156,6 @@ def notify_instructors_of_changes(course, approval, previous_approvals):
     template = _evaluate_template_type('notify_instructor_of_changes')
     if not template:
         return
-    # TODO course instructors who have approvals who aren't the latest approver
     for previous_approval in previous_approvals:
         instructor = next((i for i in course['instructors'] if i['uid'] == previous_approval.approved_by_uid), None)
         if not instructor:
