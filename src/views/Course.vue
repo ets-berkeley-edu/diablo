@@ -17,25 +17,18 @@
         <v-col>
           <v-card class="pa-6" outlined>
             <v-container v-if="course.room.capability">
-              <v-row v-if="course.scheduled">
+              <v-row v-if="course.approvals.length" no-gutters>
                 <v-col>
-                  <ScheduledCourse :course="course" />
+                  Approved by {{ oxfordJoin(approvedByNames) }}.
                 </v-col>
               </v-row>
-              <v-row v-if="!course.scheduled" no-gutters class="mb-6">
+              <v-row v-if="course.scheduled">
                 <v-col>
-                  <div v-if="course.approvals.length">
-                    <div v-for="approval in course.approvals" :key="approval.approvedBy.uid" class="font-weight-bold pb-5 pink--text">
-                      <span v-if="approval.approvedBy.uid === $currentUser.uid">
-                        You submitted the preferences below.
-                      </span>
-                      <div v-if="approval.approvedBy.uid !== $currentUser.uid">
-                        {{ approval.approvedBy.name }}
-                        <span v-if="approval.wasApprovedByAdmin">(Course Capture administrator)</span>
-                        approved.
-                      </div>
-                    </div>
-                  </div>
+                  <ScheduledCourse :after-approve="render" :course="course" />
+                </v-col>
+              </v-row>
+              <v-row no-gutters class="mb-6">
+                <v-col>
                   <CourseCaptureExplained />
                 </v-col>
               </v-row>
@@ -187,6 +180,7 @@
     mixins: [Context, Utils],
     data: () => ({
       agreedToTerms: false,
+      approvedByNames: undefined,
       auditoriums: undefined,
       course: undefined,
       isApproving: false,
@@ -229,6 +223,7 @@
       render(data) {
         this.$loading()
         this.agreedToTerms = this.$currentUser.isAdmin
+        this.approvedByNames = []
         this.course = data
         this.recordingTypeOptions = []
         this.$_.each(this.course.room.recordingTypeOptions, (text, value) => {
@@ -238,6 +233,10 @@
           const mostRecent = this.$_.last(this.course.approvals)
           this.publishType = mostRecent.publishType
           this.recordingType = mostRecent.recordingType
+          this.$_.each(this.course.approvals, approval => {
+            const name = approval.approvedBy.uid === this.$currentUser.uid ? 'you' : approval.approvedBy.name
+            this.approvedByNames.push(name + (approval.wasApprovedByAdmin ? ' (Course Capture admin)' : ''))
+          })
         } else {
           if (this.recordingTypeOptions.length === 1) {
             this.recordingType = this.recordingTypeOptions[0].value

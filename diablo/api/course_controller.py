@@ -203,7 +203,7 @@ def _schedule_if_has_necessary_approvals(course):
         return all(uid in approval_uids for uid in necessary_approval_uids)
 
     all_approvals = Approval.get_approvals(section_id=course['sectionId'], term_id=course['termId'])
-    if current_user.is_admin or _has_necessary_approvals():
+    if not course['scheduled'] and (current_user.is_admin or _has_necessary_approvals()):
         schedule_recordings(
             all_approvals=all_approvals,
             course=course,
