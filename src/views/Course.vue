@@ -27,32 +27,28 @@
                   <ScheduledCourse :after-approve="render" :course="course" />
                 </v-col>
               </v-row>
-              <v-row no-gutters class="mb-6">
+              <v-row no-gutters class="mb-4">
                 <v-col>
                   <CourseCaptureExplained />
+                  <div class="font-italic font-weight-light pl-2 pt-4">
+                    <div v-if="course.room.isAuditorium">
+                      <v-icon class="pr-1">mdi-information-outline</v-icon>
+                      <strong>Note:</strong> 'Presentation and Audio' recordings are free.
+                      There will be a &#36;{{ $config.courseCapturePremiumCost }} operator fee, per semester, for
+                      'Presenter' recordings in {{ oxfordJoin($_.map(auditoriums, 'location')) }}.
+                    </div>
+                    <div :class="{'pt-2': course.room.isAuditorium}">
+                      <v-icon v-if="!course.room.isAuditorium">mdi-information-outline</v-icon>
+                      Choosing 'Media Gallery' will auto-publish recordings to students in bCourses.
+                      Choosing 'My Media' will allow instructors to review/edit prior to publishing to students.
+                    </div>
+                  </div>
                 </v-col>
               </v-row>
               <v-row v-if="!course.scheduled" justify="start" align="center">
                 <v-col md="3" class="mb-6">
                   <h4>
                     <label id="select-recording-type-label" for="select-recording-type">Recording Type</label>
-                    <v-tooltip id="tooltip-recording-type" bottom max-width="300px">
-                      <template v-slot:activator="{ on }">
-                        <v-icon
-                          color="primary"
-                          class="pl-1"
-                          dark
-                          v-on="on"
-                        >
-                          mdi-information-outline
-                        </v-icon>
-                      </template>
-                      <div>
-                        'Presentation and Audio' recordings are free.
-                        There will be a &#36;{{ $config.courseCapturePremiumCost }} operator fee, per semester, for
-                        'Presenter' recordings in {{ oxfordJoin($_.map(auditoriums, 'location')) }}.
-                      </div>
-                    </v-tooltip>
                   </h4>
                 </v-col>
                 <v-col md="6">
@@ -81,26 +77,15 @@
                   </div>
                 </v-col>
               </v-row>
-              <v-row v-if="!course.scheduled" justify="start" align="center">
+              <v-row
+                v-if="!course.scheduled"
+                align="center"
+                justify="start"
+                no-gutters
+              >
                 <v-col md="3" class="mb-6">
                   <h4>
                     <label id="select-publish-type-label" for="select-publish-type">Publish</label>
-                    <v-tooltip id="tooltip-publish" bottom max-width="300px">
-                      <template v-slot:activator="{ on }">
-                        <v-icon
-                          color="primary"
-                          class="pl-1"
-                          dark
-                          v-on="on"
-                        >
-                          mdi-information-outline
-                        </v-icon>
-                      </template>
-                      <div>
-                        Choosing 'Media Gallery' will auto-publish recordings to students in bCourses.
-                        Choosing 'My Media' will allow instructors to review/edit prior to publishing to students.
-                      </div>
-                    </v-tooltip>
                   </h4>
                 </v-col>
                 <v-col md="6">
@@ -129,7 +114,7 @@
                   <TermsAgreementText class="pt-1" />
                 </v-col>
               </v-row>
-              <v-row v-if="!course.hasNecessaryApprovals" lg="2" class="pt-4">
+              <v-row v-if="!course.hasNecessaryApprovals" lg="2">
                 <v-col>
                   <v-btn
                     id="btn-approve"
