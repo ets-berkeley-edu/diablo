@@ -306,7 +306,6 @@ class Kaltura:
             description=description,
             instructors=instructors,
             name=f'{summary} recordings scheduled by Diablo on {to_isoformat(datetime.now())}',
-            publish_type=publish_type,
         )
         for category_id in category_ids or []:
             self.add_to_kaltura_category(category_id=category_id, entry_id=base_entry.id)
@@ -363,13 +362,8 @@ class Kaltura:
             description,
             name,
             instructors,
-            publish_type,
     ):
-        entitled_users = []
-        if publish_type == 'kaltura_my_media':
-            email_addresses = [instructor['email'] for instructor in instructors]
-            entitled_users = ','.join(_to_normalized_set(email_addresses))
-
+        email_addresses = [instructor['email'] for instructor in instructors if instructor['email']]
         base_entry = KalturaBaseEntry(
             accessControlId=3034871,  # TODO: Can we create a single access-control for all media entries?
             capabilities=NotImplemented,
@@ -379,7 +373,7 @@ class Kaltura:
             description=description,
             displayInSearch=KalturaEntryDisplayInSearchType.PARTNER_ONLY,
             endDate=NotImplemented,
-            entitledUsersEdit=entitled_users,
+            entitledUsersEdit=','.join(_to_normalized_set(email_addresses)) if email_addresses else None,
             groupId=NotImplemented,
             licenseType=NotImplemented,
             moderationStatus=KalturaEntryModerationStatus.AUTO_APPROVED,
