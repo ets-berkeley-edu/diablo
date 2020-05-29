@@ -27,6 +27,7 @@ from datetime import datetime
 from datetime import timedelta
 
 from xena.models.room import Room
+from xena.models.term import Term
 from xena.models.user import User
 
 
@@ -37,7 +38,7 @@ class Section(object):
 
     @property
     def term(self):
-        return self.data['term']
+        return Term()
 
     @property
     def ccn(self):

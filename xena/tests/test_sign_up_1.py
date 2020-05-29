@@ -30,6 +30,7 @@ from xena.models.async_job import AsyncJob
 from xena.models.email import Email
 from xena.models.publish_type import PublishType
 from xena.models.recording_schedule import RecordingSchedule
+from xena.models.recording_schedule_status import RecordingScheduleStatus
 from xena.models.recording_type import RecordingType
 from xena.models.section import Section
 from xena.pages.sign_up_page import SignUpPage
@@ -74,6 +75,83 @@ class TestSignUp1:
 
     # TODO - configure email template subjects prior to verifying emails
 
+    # CHECK FILTERS - NOT INVITED
+
+    def test_not_invited_filter_all(self):
+        self.ouija_page.load_page()
+        self.ouija_page.search_for_course_code(self.section)
+        self.ouija_page.filter_for_all()
+        assert self.ouija_page.is_course_in_results(self.section) is True
+
+    def test_not_invited_status(self):
+        assert self.ouija_page.course_row_status_el(self.section).text.strip() == self.recording_schedule.status.value
+
+    def test_not_invited_filter_no_email(self):
+        self.ouija_page.filter_for_do_not_email()
+        assert self.ouija_page.is_course_in_results(self.section) is False
+
+    def test_not_invited_filter_not_invited(self):
+        self.ouija_page.filter_for_not_invited()
+        assert self.ouija_page.is_course_in_results(self.section) is True
+
+    def test_not_invited_filter_invited(self):
+        self.ouija_page.filter_for_invited()
+        assert self.ouija_page.is_course_in_results(self.section) is False
+
+    def test_not_invited_filter_partial_approve(self):
+        self.ouija_page.filter_for_partially_approved()
+        assert self.ouija_page.is_course_in_results(self.section) is False
+
+    def test_not_invited_filter_scheduled(self):
+        self.ouija_page.filter_for_scheduled()
+        assert self.ouija_page.is_course_in_results(self.section) is False
+
+    # RUN JOBS AND VERIFY INVITE
+
+    def test_send_invite_email(self):
+        self.jobs_page.load_page()
+        self.jobs_page.run_instructor_emails_job()
+        self.jobs_page.wait_for_most_recent_job_success(AsyncJob.INSTRUCTOR_EMAILS)
+        self.jobs_page.run_queued_emails_job()
+        self.jobs_page.wait_for_most_recent_job_success(AsyncJob.QUEUED_EMAILS)
+
+    def test_receive_invite_email(self):
+        self.recording_schedule.status = RecordingScheduleStatus.INVITED
+        subj = f'{self.section.term.name} Course Capture - {self.section.code} (To: {self.section.instructors[0].email})'
+        expected_message = Email(msg_type=None, sender=None, subject=subj)
+        assert self.email_page.is_message_delivered(expected_message)
+
+    # CHECK FILTERS - INVITED
+
+    def test_invited_filter_all(self):
+        self.ouija_page.load_page()
+        self.ouija_page.search_for_course_code(self.section)
+        self.ouija_page.filter_for_all()
+        assert self.ouija_page.is_course_in_results(self.section) is True
+
+    def test_invited_status(self):
+        assert self.ouija_page.course_row_status_el(self.section).text.strip() == self.recording_schedule.status.value
+
+    def test_invited_filter_no_email(self):
+        self.ouija_page.filter_for_do_not_email()
+        assert self.ouija_page.is_course_in_results(self.section) is False
+
+    def test_invited_filter_not_invited(self):
+        self.ouija_page.filter_for_not_invited()
+        assert self.ouija_page.is_course_in_results(self.section) is False
+
+    def test_invited_filter_invited(self):
+        self.ouija_page.filter_for_invited()
+        assert self.ouija_page.is_course_in_results(self.section) is True
+
+    def test_invited_filter_partial_approve(self):
+        self.ouija_page.filter_for_partially_approved()
+        assert self.ouija_page.is_course_in_results(self.section) is False
+
+    def test_invited_filter_scheduled(self):
+        self.ouija_page.filter_for_scheduled()
+        assert self.ouija_page.is_course_in_results(self.section) is False
+
     # ADMIN HITS SIGN UP PAGE
 
     def test_load_sign_up_page(self):
@@ -106,6 +184,12 @@ class TestSignUp1:
 
     # VERIFY AVAILABLE OPTIONS AND DISABLED APPROVE BUTTON
 
+    def test_rec_type_text(self):
+        assert self.sign_up_page.is_present(SignUpPage.RECORDING_TYPE_TEXT) is False
+
+    def test_publish_type_text(self):
+        assert self.sign_up_page.is_present(SignUpPage.PUBLISH_TYPE_TEXT) is True
+
     def test_rec_type_pre_selected(self):
         self.recording_schedule.recording_type = RecordingType.SCREENCAST
         assert self.sign_up_page.default_rec_type() == self.recording_schedule.recording_type.value['option']
@@ -131,9 +215,42 @@ class TestSignUp1:
 
     def test_approve(self):
         self.sign_up_page.click_approve_button()
+        self.recording_schedule.status = RecordingScheduleStatus.APPROVED
 
     def test_confirmation(self):
         self.sign_up_page.wait_for_approval_confirmation()
+
+    # VERIFY OUIJA FILTER
+
+    def test_approved_filter_all(self):
+        self.sign_up_page.log_out()
+        self.login_page.dev_auth()
+        self.ouija_page.search_for_course_code(self.section)
+        self.ouija_page.filter_for_all()
+        assert self.ouija_page.is_course_in_results(self.section) is True
+
+    def test_approved_status(self):
+        assert self.ouija_page.course_row_status_el(self.section).text.strip() == self.recording_schedule.status.value
+
+    def test_approved_filter_no_email(self):
+        self.ouija_page.filter_for_do_not_email()
+        assert self.ouija_page.is_course_in_results(self.section) is False
+
+    def test_approved_filter_not_invited(self):
+        self.ouija_page.filter_for_not_invited()
+        assert self.ouija_page.is_course_in_results(self.section) is False
+
+    def test_approved_filter_invited(self):
+        self.ouija_page.filter_for_invited()
+        assert self.ouija_page.is_course_in_results(self.section) is False
+
+    def test_approved_filter_partial_approve(self):
+        self.ouija_page.filter_for_partially_approved()
+        assert self.ouija_page.is_course_in_results(self.section) is False
+
+    def test_approved_filter_scheduled(self):
+        self.ouija_page.filter_for_scheduled()
+        assert self.ouija_page.is_course_in_results(self.section) is False
 
     # RUN KALTURA SCHEDULING JOB AND OBTAIN SERIES ID
 
@@ -239,14 +356,14 @@ class TestSignUp1:
 
     # VERIFY EMAIL
 
-    def test_run_instructor_email_jobs(self):
+    def test_send_schedule_conf_email(self):
         self.jobs_page.load_page()
         self.jobs_page.run_instructor_emails_job()
         self.jobs_page.wait_for_most_recent_job_success(AsyncJob.INSTRUCTOR_EMAILS)
         self.jobs_page.run_queued_emails_job()
         self.jobs_page.wait_for_most_recent_job_success(AsyncJob.QUEUED_EMAILS)
 
-    def test_schedule_conf_email(self):
+    def test_receive_schedule_conf_email(self):
         subj = f'Your course, {self.section.code}, has been scheduled for Course Capture'
         expected_message = Email(msg_type=None, sender=None, subject=subj)
         assert self.email_page.is_message_delivered(expected_message)
@@ -263,6 +380,9 @@ class TestSignUp1:
     def test_sign_up_link(self):
         self.ouija_page.click_sign_up_page_link(self.section)
         self.sign_up_page.wait_for_diablo_title(f'{self.section.code}, {self.section.number}')
+
+    def test_scheduled_status(self):
+        assert self.sign_up_page.visible_h4_heading == 'Recordings Scheduled'
 
     def test_selected_rec_type(self):
         self.sign_up_page.wait_for_element(SignUpPage.RECORDING_TYPE_SCHEDULED, util.get_short_timeout())
