@@ -43,9 +43,8 @@ class SignUpPage(DiabloPages):
     CROSS_LISTING = (By.XPATH, '//span[contains(@id, "cross-listing")]')
     SEND_INVITE_BUTTON = (By.ID, 'send-invite-btn')
     CC_EXPLAINED_LINK = (By.ID, 'link-to-course-capture-overview')
-    RECORDING_TYPE_TOOLTIP_BUTTON = (By.XPATH, '//span[@id="tooltip-recording-type"]/following-sibling::i')
-    PUBLISH_TOOLTIP_BUTTON = (By.XPATH, '//span[@id="tooltip-publish"]/following-sibling::i')
-    VISIBLE_TOOLTIP = (By.XPATH, '//div[@class="v-tooltip__content menuable__content__active"]')
+    RECORDING_TYPE_TEXT = (By.XPATH, '//div[contains(text(), "\'Presentation and Audio\' recordings are free")]')
+    PUBLISH_TYPE_TEXT = (By.XPATH, '//div[contains(text(), "Choosing \'Media Gallery\'")]')
     RECORDING_TYPE_STATIC = (By.XPATH, '//input[@name="recordingType"]/..')
     SELECT_RECORDING_TYPE_INPUT = (By.XPATH, '//label[@id="select-recording-type-label"]')
     SELECT_PUBLISH_TYPE_INPUT = (By.XPATH, '//input[@id="select-publish-type"]/..')
@@ -70,11 +69,11 @@ class SignUpPage(DiabloPages):
 
     @staticmethod
     def kaltura_series_link(recording_schedule):
-        return By.PARTIAL_LINK_TEXT, f'Kaltura event {recording_schedule.series_id}'
+        return By.PARTIAL_LINK_TEXT, f'Kaltura series {recording_schedule.series_id}'
 
     def load_page(self, section):
-        app.logger.info(f'Loading sign-up page for term {section.term} section ID {section.ccn}')
-        self.driver.get(f'{app.config["BASE_URL"]}/course/{section.term}/{section.ccn}')
+        app.logger.info(f'Loading sign-up page for term {section.term.id} section ID {section.ccn}')
+        self.driver.get(f'{app.config["BASE_URL"]}/course/{section.term.id}/{section.ccn}')
         self.wait_for_diablo_title(f'{section.code}, {section.number}')
 
     # SIS DATA
@@ -119,19 +118,6 @@ class SignUpPage(DiabloPages):
         locator = (By.XPATH, '//span[text()="(Course Capture administrator)"]/..[contains(., "approved.")]')
         return self.is_present(locator)
 
-    def open_rec_type_tooltip(self):
-        app.logger.info('Hovering over recording type tooltip')
-        self.mouseover(self.element(SignUpPage.RECORDING_TYPE_TOOLTIP_BUTTON))
-        self.wait_for_element(SignUpPage.VISIBLE_TOOLTIP, util.get_short_timeout())
-
-    def open_publish_tooltip(self):
-        app.logger.info('Hovering over publish tooltip')
-        self.mouseover(self.element(SignUpPage.PUBLISH_TOOLTIP_BUTTON))
-        self.wait_for_element(SignUpPage.VISIBLE_TOOLTIP, util.get_short_timeout())
-
-    def visible_tooltip(self):
-        return self.element(SignUpPage.VISIBLE_TOOLTIP).get_attribute('innerText').strip()
-
     def click_rec_type_input(self):
         app.logger.info('Clicking the recording type input')
         self.wait_for_element_and_click(SignUpPage.SELECT_RECORDING_TYPE_INPUT)
@@ -159,10 +145,7 @@ class SignUpPage(DiabloPages):
         self.wait_for_element_and_click(SignUpPage.APPROVE_BUTTON)
 
     def wait_for_approval_confirmation(self):
-        Wait(self.driver, util.get_short_timeout()).until(
-            method=ec.visibility_of_element_located(SignUpPage.CONFIRMATION_MSG),
-            message=f'Failed wait_for_approval_confirmation: {SignUpPage.CONFIRMATION_MSG}',
-        )
+        Wait(self.driver, util.get_short_timeout()).until(ec.visibility_of_element_located(SignUpPage.CONFIRMATION_MSG))
 
     def default_rec_type(self):
         return self.element(SignUpPage.RECORDING_TYPE_STATIC).text.strip()

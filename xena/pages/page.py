@@ -42,6 +42,7 @@ class Page(object):
         self.driver = driver
 
     PAGE_HEADING = (By.XPATH, '//h1')
+    H4_HEADING = (By.XPATH, '//h4')
 
     # METHODS TO RETURN SELENIUM ELEMENTS USING A LOCATOR
 
@@ -147,6 +148,9 @@ class Page(object):
 
     def visible_heading(self):
         return self.element(Page.PAGE_HEADING).text
+
+    def visible_h4_heading(self):
+        return self.driver(Page.H4_HEADING).text
 
     # NAVIGATION AND KEYSTROKES
 

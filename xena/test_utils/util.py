@@ -33,6 +33,7 @@ from diablo import db, std_commit
 from diablo.models.scheduled import Scheduled
 from flask import current_app as app
 from sqlalchemy import text
+from xena.models.recording_schedule_status import RecordingScheduleStatus
 from xena.models.room import Room
 
 
@@ -89,6 +90,7 @@ def wait_for_kaltura_id(recording_schedule, term):
             app.logger.info(f'ID is {result.kaltura_schedule_id}')
             assert result
             recording_schedule.series_id = result.kaltura_schedule_id
+            recording_schedule.status = RecordingScheduleStatus.SCHEDULED
             break
         except Exception:
             if tries == retries:

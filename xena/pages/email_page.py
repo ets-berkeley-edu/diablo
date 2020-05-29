@@ -67,7 +67,7 @@ class EmailPage(Page):
         self.click_element_js(EmailPage.NEXT_BUTTON, 2)
         self.wait_for_element_and_type_js('login-passwd', app.config['XENA_EMAIL_PASSWORD'])
         self.click_element_js(EmailPage.NEXT_BUTTON, 2)
-        Wait(self.driver, util.get_short_timeout()).until(ec.presence_of_element_located(EmailPage.LOG_OUT_LINK))
+        Wait(self.driver, util.get_long_timeout()).until(ec.presence_of_element_located(EmailPage.LOG_OUT_LINK))
         time.sleep(1)
 
     def is_message_present(self, message):
