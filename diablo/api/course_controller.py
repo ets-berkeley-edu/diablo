@@ -134,6 +134,8 @@ def find_courses():
         courses = SisSection.get_eligible_courses_not_invited(term_id)
     elif filter_ == 'Partially Approved':
         courses = SisSection.get_courses_partially_approved(term_id)
+    elif filter_ == 'Queued for Scheduling':
+        courses = SisSection.get_courses_queued_for_scheduling(term_id)
     elif filter_ == 'Scheduled':
         courses = SisSection.get_courses_scheduled(term_id)
     else:

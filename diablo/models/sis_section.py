@@ -159,163 +159,6 @@ class SisSection(db.Model):
         return [row['instructor_uid'] for row in db.session.execute(text(sql))]
 
     @classmethod
-    def get_courses_per_location(cls, term_id, location):
-        sql = """
-            SELECT
-                s.*,
-                i.dept_code AS instructor_dept_code,
-                i.email AS instructor_email,
-                i.first_name || ' ' || i.last_name AS instructor_name,
-                i.uid AS instructor_uid,
-                r.id AS room_id,
-                r.location AS room_location
-            FROM sis_sections s
-            JOIN instructors i ON i.uid = s.instructor_uid
-            JOIN rooms r ON r.location = s.meeting_location
-            WHERE
-                s.term_id = :term_id
-                AND s.is_primary IS TRUE
-                AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
-                AND s.meeting_location = :location
-                AND s.deleted_at IS NULL
-            ORDER BY s.course_title, s.section_id, s.instructor_uid
-        """
-        rows = db.session.execute(
-            text(sql),
-            {
-                'location': location,
-                'term_id': term_id,
-            },
-        )
-        return _to_api_json(term_id=term_id, rows=rows, include_rooms=False)
-
-    @classmethod
-    def get_courses_invited(cls, term_id):
-        sql = """
-            SELECT
-                s.*,
-                i.dept_code AS instructor_dept_code,
-                i.email AS instructor_email,
-                i.first_name || ' ' || i.last_name AS instructor_name,
-                i.uid AS instructor_uid,
-                r.id AS room_id,
-                r.location AS room_location
-            FROM sis_sections s
-            JOIN instructors i ON i.uid = s.instructor_uid
-            JOIN rooms r ON r.location = s.meeting_location
-            JOIN sent_emails e ON e.section_id = s.section_id
-            WHERE
-                s.term_id = :term_id
-                AND s.is_primary IS TRUE
-                AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
-                AND e.template_type = 'invitation'
-                AND r.capability IS NOT NULL
-                AND NOT EXISTS (
-                    SELECT FROM approvals
-                    WHERE section_id = s.section_id AND term_id = s.term_id
-                )
-                AND NOT EXISTS (
-                    SELECT FROM scheduled
-                    WHERE section_id = s.section_id AND term_id = s.term_id
-                )
-                AND NOT EXISTS (
-                    SELECT FROM course_preferences
-                    WHERE section_id = s.section_id AND term_id = s.term_id AND has_opted_out IS TRUE
-                )
-                AND s.deleted_at IS NULL
-            ORDER BY s.course_title, s.section_id, s.instructor_uid
-        """
-        rows = db.session.execute(
-            text(sql),
-            {
-                'term_id': term_id,
-            },
-        )
-        return _to_api_json(term_id=term_id, rows=rows)
-
-    @classmethod
-    def get_courses_opted_out(cls, term_id):
-        sql = """
-            SELECT
-                s.*,
-                i.dept_code AS instructor_dept_code,
-                i.email AS instructor_email,
-                i.first_name || ' ' || i.last_name AS instructor_name,
-                i.uid AS instructor_uid,
-                r.id AS room_id,
-                r.location AS room_location
-            FROM sis_sections s
-            JOIN instructors i ON i.uid = s.instructor_uid
-            JOIN rooms r ON r.location = s.meeting_location
-            JOIN course_preferences c ON c.section_id = s.section_id AND c.term_id = :term_id
-            WHERE
-                s.term_id = :term_id
-                AND s.is_primary IS TRUE
-                AND c.has_opted_out IS TRUE
-                AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
-                AND r.capability IS NOT NULL
-                AND NOT EXISTS (
-                    SELECT FROM scheduled
-                    WHERE section_id = s.section_id AND term_id = s.term_id
-                )
-                AND s.deleted_at IS NULL
-            ORDER BY s.course_title, s.section_id, s.instructor_uid
-        """
-        rows = db.session.execute(
-            text(sql),
-            {
-                'term_id': term_id,
-            },
-        )
-        return _to_api_json(term_id=term_id, rows=rows)
-
-    @classmethod
-    def get_eligible_courses_not_invited(cls, term_id):
-        sql = """
-            SELECT
-                s.*,
-                i.dept_code AS instructor_dept_code,
-                i.email AS instructor_email,
-                i.first_name || ' ' || i.last_name AS instructor_name,
-                i.uid AS instructor_uid,
-                r.id AS room_id,
-                r.location AS room_location
-            FROM sis_sections s
-            JOIN instructors i ON i.uid = s.instructor_uid
-            JOIN rooms r ON r.location = s.meeting_location
-            WHERE
-                s.term_id = :term_id
-                AND s.is_primary IS TRUE
-                AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
-                AND r.capability IS NOT NULL
-                AND NOT EXISTS (
-                    SELECT FROM sent_emails
-                    WHERE template_type = 'invitation' AND section_id = s.section_id
-                )
-                AND NOT EXISTS (
-                    SELECT FROM approvals
-                    WHERE section_id = s.section_id AND term_id = s.term_id
-                )
-                AND NOT EXISTS (
-                    SELECT FROM scheduled
-                    WHERE section_id = s.section_id AND term_id = s.term_id
-                )
-                AND NOT EXISTS (
-                    SELECT FROM course_preferences
-                    WHERE section_id = s.section_id AND term_id = s.term_id AND has_opted_out IS TRUE
-                )
-                AND s.deleted_at IS NULL
-            ORDER BY s.course_title, s.section_id, s.instructor_uid
-        """
-        rows = db.session.execute(
-            text(sql),
-            {
-                'term_id': term_id,
-            },
-        )
-        return _to_api_json(term_id=term_id, rows=rows)
-
-    @classmethod
     def get_course(cls, term_id, section_id):
         sql = """
             SELECT
@@ -335,7 +178,7 @@ class SisSection(db.Model):
                 AND s.section_id = :section_id
                 AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
                 AND s.deleted_at IS NULL
-            ORDER BY s.course_title, s.section_id, s.instructor_uid
+            ORDER BY s.course_name, s.section_id, s.instructor_uid
         """
         rows = db.session.execute(
             text(sql),
@@ -346,22 +189,6 @@ class SisSection(db.Model):
         )
         api_json = _to_api_json(term_id=term_id, rows=rows)
         return api_json[0] if api_json else None
-
-    @classmethod
-    def get_random_co_taught_course(cls, term_id):
-        sql = """
-            SELECT section_id FROM (
-                SELECT section_id, instructor_uid from sis_sections
-                WHERE term_id = :term_id
-                AND deleted_at IS NULL
-                GROUP BY section_id, instructor_uid
-            ) sections_by_instructor
-            GROUP BY section_id
-            HAVING COUNT(*) > 2
-            LIMIT 1
-        """
-        section_id = db.session.execute(text(sql), {'term_id': term_id}).scalar()
-        return cls.get_course(term_id, section_id)
 
     @classmethod
     def get_course_changes(cls, term_id):
@@ -381,8 +208,9 @@ class SisSection(db.Model):
             WHERE
                 s.term_id = :term_id
                 AND s.is_primary IS TRUE
+                AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
                 AND s.deleted_at IS NULL
-            ORDER BY s.course_title, s.section_id, s.instructor_uid
+            ORDER BY s.course_name, s.section_id, s.instructor_uid
         """
         rows = db.session.execute(
             text(sql),
@@ -424,9 +252,9 @@ class SisSection(db.Model):
         params = {'term_id': term_id}
         if section_ids is None:
             # If no section IDs are specified, return everything with an eligible room.
-            course_filter = 'AND r.capability IS NOT NULL'
+            course_filter = 'r.capability IS NOT NULL'
         else:
-            course_filter = 'AND s.section_id = ANY(:section_ids)'
+            course_filter = 's.section_id = ANY(:section_ids)'
             params['section_ids'] = section_ids
         sql = f"""
             SELECT
@@ -438,21 +266,20 @@ class SisSection(db.Model):
                 r.id AS room_id,
                 r.location AS room_location
             FROM sis_sections s
-            JOIN instructors i ON i.uid = s.instructor_uid
             JOIN rooms r ON r.location = s.meeting_location
-            WHERE
-                s.term_id = :term_id
+                AND {course_filter}
+            JOIN instructors i ON i.uid = s.instructor_uid
+                AND s.term_id = :term_id
                 AND s.is_primary IS TRUE
-                {course_filter}
                 AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
                 AND s.deleted_at IS NULL
-            ORDER BY s.course_title, s.section_id, s.instructor_uid
+            ORDER BY s.course_name, s.section_id, s.instructor_uid
         """
         rows = db.session.execute(text(sql), params)
         return _to_api_json(term_id=term_id, rows=rows)
 
     @classmethod
-    def get_courses_partially_approved(cls, term_id):
+    def get_courses_invited(cls, term_id):
         sql = """
             SELECT
                 s.*,
@@ -463,22 +290,167 @@ class SisSection(db.Model):
                 r.id AS room_id,
                 r.location AS room_location
             FROM sis_sections s
-            JOIN approvals a ON a.section_id = s.section_id AND a.term_id = :term_id AND a.deleted_at IS NULL
-            JOIN instructors i ON i.uid = s.instructor_uid
-            JOIN sent_emails e ON e.section_id = s.section_id
-            JOIN rooms r ON r.location = s.meeting_location
-            WHERE
-                s.term_id = :term_id
+            JOIN instructors i
+                ON i.uid = s.instructor_uid
+                AND s.term_id = :term_id AND s.is_primary IS TRUE AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC') AND s.deleted_at IS NULL
+            JOIN rooms r ON r.location = s.meeting_location AND r.capability IS NOT NULL
+            JOIN sent_emails e ON e.section_id = s.section_id AND e.template_type = 'invitation'
+            -- Omit approved courses, scheduled courses and opt-outs.
+            LEFT JOIN approvals a ON a.section_id = s.section_id AND a.term_id = s.term_id AND a.deleted_at IS NULL
+            LEFT JOIN scheduled d ON d.section_id = s.section_id AND d.term_id = s.term_id AND d.deleted_at IS NULL
+            LEFT JOIN course_preferences cp ON cp.section_id = s.section_id AND cp.term_id = s.term_id AND cp.has_opted_out IS TRUE
+            WHERE a.section_id IS NULL AND d.section_id IS NULL and cp.section_id IS NULL
+            ORDER BY s.course_name, s.section_id, s.instructor_uid
+        """
+        rows = db.session.execute(
+            text(sql),
+            {
+                'term_id': term_id,
+            },
+        )
+        return _to_api_json(term_id=term_id, rows=rows)
+
+    @classmethod
+    def get_eligible_courses_not_invited(cls, term_id):
+        sql = """
+            SELECT
+                s.*,
+                i.dept_code AS instructor_dept_code,
+                i.email AS instructor_email,
+                i.first_name || ' ' || i.last_name AS instructor_name,
+                i.uid AS instructor_uid,
+                r.id AS room_id,
+                r.location AS room_location
+            FROM sis_sections s
+            JOIN instructors i
+                ON i.uid = s.instructor_uid
+                AND s.term_id = :term_id AND s.is_primary IS TRUE AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC') AND s.deleted_at IS NULL
+            JOIN rooms r ON r.location = s.meeting_location AND r.capability IS NOT NULL
+            -- Omit sent invitations, approved courses, scheduled courses and opt-outs.
+            LEFT JOIN approvals a ON a.section_id = s.section_id AND a.term_id = s.term_id AND a.deleted_at IS NULL
+            LEFT JOIN scheduled d ON d.section_id = s.section_id AND d.term_id = s.term_id AND d.deleted_at IS NULL
+            LEFT JOIN sent_emails e on e.section_id = s.section_id AND e.term_id = s.term_id AND e.template_type = 'invitation'
+            LEFT JOIN course_preferences cp ON cp.section_id = s.section_id AND cp.term_id = s.term_id AND cp.has_opted_out IS TRUE
+            WHERE a.section_id IS NULL AND d.section_id IS NULL AND e.section_id IS NULL AND cp.section_id IS NULL
+            ORDER BY s.course_name, s.section_id, s.instructor_uid
+        """
+        rows = db.session.execute(
+            text(sql),
+            {
+                'term_id': term_id,
+            },
+        )
+        return _to_api_json(term_id=term_id, rows=rows)
+
+    @classmethod
+    def get_courses_opted_out(cls, term_id):
+        sql = """
+            SELECT
+                s.*,
+                i.dept_code AS instructor_dept_code,
+                i.email AS instructor_email,
+                i.first_name || ' ' || i.last_name AS instructor_name,
+                i.uid AS instructor_uid,
+                r.id AS room_id,
+                r.location AS room_location
+            FROM sis_sections s
+            JOIN instructors i
+                ON i.uid = s.instructor_uid
+                AND s.term_id = :term_id
+                AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
                 AND s.is_primary IS TRUE
-                AND e.template_type = 'invitation'
-                AND r.capability IS NOT NULL
-                AND i.uid NOT IN (
+                AND s.deleted_at IS NULL
+            JOIN rooms r ON r.location = s.meeting_location AND r.capability IS NOT NULL
+            JOIN course_preferences c ON c.section_id = s.section_id AND c.term_id = :term_id AND c.has_opted_out IS TRUE
+            -- Omit scheduled courses.
+            LEFT JOIN scheduled d ON d.section_id = s.section_id AND d.term_id = :term_id AND d.deleted_at IS NULL
+            WHERE d.section_id IS NULL
+            ORDER BY s.course_name, s.section_id, s.instructor_uid
+        """
+        rows = db.session.execute(
+            text(sql),
+            {
+                'term_id': term_id,
+            },
+        )
+        return _to_api_json(term_id=term_id, rows=rows)
+
+    @classmethod
+    def get_courses_partially_approved(cls, term_id):
+        sql = """
+            SELECT DISTINCT
+                s.*,
+                i.dept_code AS instructor_dept_code,
+                i.email AS instructor_email,
+                i.first_name || ' ' || i.last_name AS instructor_name,
+                i.uid AS instructor_uid,
+                r.id AS room_id,
+                r.location AS room_location
+            FROM sis_sections s
+            JOIN approvals a
+                ON s.term_id = :term_id AND s.is_primary IS TRUE AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC') AND s.deleted_at IS NULL
+                AND a.section_id = s.section_id AND a.term_id = :term_id AND a.deleted_at IS NULL
+            JOIN instructors i ON i.uid = s.instructor_uid
+            -- This second course/instructor join is not for data display purposes, but to screen for the existence of any instructor who has
+            -- not approved.
+            JOIN sis_sections s2 ON s.term_id = s2.term_id AND s.section_id = s2.section_id
+            JOIN instructors i2 ON
+                i2.uid = s2.instructor_uid
+                AND i2.uid NOT IN (
                     SELECT approved_by_uid
                     FROM approvals
                     WHERE section_id = s.section_id AND term_id = :term_id
                 )
-                AND s.deleted_at IS NULL
-            ORDER BY s.course_title, s.section_id, s.instructor_uid
+            JOIN rooms r ON r.location = s.meeting_location AND r.capability IS NOT NULL
+            ORDER BY s.course_name, s.section_id, s.instructor_uid
+        """
+        rows = db.session.execute(
+            text(sql),
+            {
+                'term_id': term_id,
+            },
+        )
+        return _to_api_json(term_id=term_id, rows=rows)
+
+    @classmethod
+    def get_courses_queued_for_scheduling(cls, term_id):
+        sql = """
+            SELECT
+                s.*,
+                i.dept_code AS instructor_dept_code,
+                i.email AS instructor_email,
+                i.first_name || ' ' || i.last_name AS instructor_name,
+                i.uid AS instructor_uid,
+                r.id AS room_id,
+                r.location AS room_location
+            FROM sis_sections s
+            JOIN approvals a
+                ON s.term_id = :term_id AND s.is_primary IS TRUE AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC') AND s.deleted_at IS NULL
+                AND a.section_id = s.section_id AND a.term_id = :term_id AND a.deleted_at IS NULL
+                AND (
+                    -- If approved by an admin, the course is considered queued.
+                    s.section_id IN (
+                        SELECT DISTINCT s.section_id
+                        FROM sis_sections s
+                        JOIN approvals a ON a.section_id = s.section_id AND a.term_id = :term_id AND s.term_id = :term_id AND a.deleted_at IS NULL
+                        JOIN admin_users au ON a.approved_by_uid = au.uid
+                    )
+                    -- If not approved by an admin, we must screen out any courses with an instructor who has not approved.
+                    OR s.section_id NOT IN (
+                        SELECT DISTINCT s.section_id
+                        FROM sis_sections s
+                        LEFT JOIN approvals a
+                            ON a.section_id = s.section_id AND a.term_id = :term_id AND a.approved_by_uid = s.instructor_uid AND a.deleted_at IS NULL
+                        WHERE s.is_primary IS TRUE AND s.term_id = :term_id AND s.deleted_at IS NULL
+                        AND a.section_id IS NULL
+                    )
+                )
+            JOIN instructors i ON i.uid = s.instructor_uid
+            JOIN rooms r ON r.location = s.meeting_location AND r.capability IS NOT NULL
+            -- Omit scheduled courses.
+            LEFT JOIN scheduled d ON d.section_id = s.section_id AND d.term_id = :term_id AND d.deleted_at IS NULL
+            WHERE d.section_id IS NULL
+            ORDER BY s.course_name, s.section_id, s.instructor_uid
         """
         rows = db.session.execute(
             text(sql),
@@ -494,9 +466,9 @@ class SisSection(db.Model):
         sql = """
             SELECT s.section_id, s.deleted_at
             FROM sis_sections s
-            JOIN instructors i ON i.uid = s.instructor_uid
-            WHERE
-                s.term_id = :term_id
+            JOIN instructors i
+                ON i.uid = s.instructor_uid
+                AND s.term_id = :term_id
                 AND s.is_primary IS TRUE
                 AND s.instructor_uid = :instructor_uid
                 AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
@@ -524,6 +496,37 @@ class SisSection(db.Model):
         return cls.get_courses(term_id=term_id, section_ids=section_ids)
 
     @classmethod
+    def get_courses_per_location(cls, term_id, location):
+        sql = """
+            SELECT
+                s.*,
+                i.dept_code AS instructor_dept_code,
+                i.email AS instructor_email,
+                i.first_name || ' ' || i.last_name AS instructor_name,
+                i.uid AS instructor_uid,
+                r.id AS room_id,
+                r.location AS room_location
+            FROM sis_sections s
+            JOIN instructors i
+                ON i.uid = s.instructor_uid
+                AND s.term_id = :term_id
+                AND s.is_primary IS TRUE
+                AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
+                AND s.meeting_location = :location
+                AND s.deleted_at IS NULL
+            JOIN rooms r ON r.location = s.meeting_location
+            ORDER BY s.course_name, s.section_id, s.instructor_uid
+        """
+        rows = db.session.execute(
+            text(sql),
+            {
+                'location': location,
+                'term_id': term_id,
+            },
+        )
+        return _to_api_json(term_id=term_id, rows=rows, include_rooms=False)
+
+    @classmethod
     def get_courses_scheduled(cls, term_id):
         sql = """
             SELECT
@@ -535,14 +538,14 @@ class SisSection(db.Model):
                 r.id AS room_id,
                 r.location AS room_location
             FROM sis_sections s
-            JOIN instructors i ON i.uid = s.instructor_uid
-            JOIN rooms r ON r.location = s.meeting_location
-            JOIN scheduled d ON d.section_id = s.section_id AND d.term_id = :term_id AND d.deleted_at IS NULL
-            WHERE
-                s.term_id = :term_id
+            JOIN instructors i
+                ON i.uid = s.instructor_uid
+                AND s.term_id = :term_id
                 AND s.is_primary IS TRUE
                 AND s.deleted_at IS NULL
-            ORDER BY s.course_title, s.section_id, s.instructor_uid
+            JOIN rooms r ON r.location = s.meeting_location
+            JOIN scheduled d ON d.section_id = s.section_id AND d.term_id = :term_id AND d.deleted_at IS NULL
+            ORDER BY s.course_name, s.section_id, s.instructor_uid
         """
         rows = db.session.execute(
             text(sql),
@@ -554,6 +557,22 @@ class SisSection(db.Model):
         for row in rows:
             section_ids.append(row['section_id'])
         return cls.get_courses(term_id, section_ids)
+
+    @classmethod
+    def get_random_co_taught_course(cls, term_id):
+        sql = """
+            SELECT section_id FROM (
+                SELECT section_id, instructor_uid from sis_sections
+                WHERE term_id = :term_id
+                AND deleted_at IS NULL
+                GROUP BY section_id, instructor_uid
+            ) sections_by_instructor
+            GROUP BY section_id
+            HAVING COUNT(*) > 2
+            LIMIT 1
+        """
+        section_id = db.session.execute(text(sql), {'term_id': term_id}).scalar()
+        return cls.get_course(term_id, section_id)
 
     @classmethod
     def refresh(cls, sis_sections, term_id):
@@ -749,7 +768,7 @@ def _get_cross_listed_courses(section_ids, term_id, approvals, invited_uids):
             s.term_id = :term_id
             AND s.is_primary IS TRUE
             AND section_id = ANY(:all_cross_listing_ids)
-        ORDER BY course_title, section_id
+        ORDER BY course_name, section_id
     """
     rows = db.session.execute(
         text(sql),

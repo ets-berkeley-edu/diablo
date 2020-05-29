@@ -47,5 +47,6 @@ def get_search_filter_options():
         'Invited': 'Courses in eligible rooms that received invitation. No approvals. Not scheduled.',
         'Not Invited': 'Courses in eligible rooms, never sent an invitation. No approval. Not scheduled.',
         'Partially Approved': 'Eligible courses (received invitation) with some but not all necessary approvals.',
+        'Queued for Scheduling': 'Courses with all necessary approvals but recordings not yet scheduled.',
         'Scheduled': 'Courses with scheduled recordings.',
     }
