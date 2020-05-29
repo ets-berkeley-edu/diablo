@@ -4,7 +4,7 @@ decorator==4.4.2
 Flask-Caching==1.8.0
 Flask-Cors==3.0.8
 Flask-Login==0.5.0
-Flask-SQLAlchemy==2.4.1
+Flask-SQLAlchemy==2.4.3
 Flask==1.1.2
 KalturaApiClient==16.2.0
 ldap3==2.7
