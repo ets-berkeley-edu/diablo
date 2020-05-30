@@ -41,6 +41,14 @@ class InstructorEmailsJob(BaseJob):
         self.email_new_invites()
         self.email_scheduled_courses()
 
+    @classmethod
+    def description(cls):
+        return 'Queues up (1) Course Capture invitations and (2) course-scheduled notifications, sent to instructors.'
+
+    @classmethod
+    def key(cls):
+        return 'instructor_emails'
+
     def email_new_invites(self):
         for course in SisSection.get_courses(term_id=self.term_id):
             if not course['hasOptedOut']:
@@ -96,11 +104,3 @@ class InstructorEmailsJob(BaseJob):
                 error = f'section_id of scheduled recordings was not found in SIS data: {scheduled}'
                 app.logger.error(error)
                 send_system_error_email(message=error)
-
-    @classmethod
-    def description(cls):
-        return 'Notify instructors of room changes and similar.'
-
-    @classmethod
-    def key(cls):
-        return 'instructor_emails'

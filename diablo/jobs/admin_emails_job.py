@@ -47,7 +47,10 @@ class AdminEmailsJob(BaseJob):
 
     @classmethod
     def description(cls):
-        return 'Notify admins of relevant room and instructor changes.'
+        return """
+            Queues up admin notifications. Admins are notified when courses, with scheduled recordings, are moved to a
+            new room or get new instructors.
+        """
 
     @classmethod
     def key(cls):

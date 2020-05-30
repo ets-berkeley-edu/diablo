@@ -19,16 +19,16 @@
             <v-container v-if="course.room.capability">
               <v-row v-if="course.approvals.length" no-gutters>
                 <v-col class="font-weight-medium red--text">
-                  <span v-if="queuedForScheduling">This course is currently queued for scheduling. This process can take up to an hour. </span>
+                  <span v-if="queuedForScheduling">This course is currently queued for scheduling. Recordings will be scheduled in an hour or less. </span>
                   <span v-if="approvedByInstructorNames.length">Approved by {{ oxfordJoin(approvedByInstructorNames) }}. </span>
                   <span v-if="approvalNeededNames.length">
                     <span v-if="!course.scheduled && !queuedForScheduling">Recordings will be scheduled when we have</span>
                     <span v-if="course.scheduled">Recordings have been scheduled but we need</span>
-                    <span v-if="queuedForScheduling"> but we need</span>
+                    <span v-if="queuedForScheduling">We need</span>
                     approvals from {{ oxfordJoin(approvalNeededNames) }}.
                   </span>
-                  <span v-if="approvedByAdmins.length && !approvedByInstructorNames.length">
-                    <span v-if="course.scheduled">Your course has been scheduled.</span>
+                  <span v-if="approvedByAdmins.length && !approvalNeededNames.length && !approvedByInstructorNames.length">
+                    <span v-if="course.scheduled">{{ $currentUser.isAdmin ? 'The' : 'Your' }} course has been scheduled.</span>
                   </span>
                 </v-col>
               </v-row>
@@ -37,7 +37,7 @@
                   <ScheduledCourse :after-approve="render" :course="course" />
                 </v-col>
               </v-row>
-              <v-row v-if="hasCurrentUserApproved">
+              <v-row v-if="hasCurrentUserApproved && !course.scheduled">
                 <v-col>
                   <v-card tile>
                     <v-list-item two-line class="pb-3">
