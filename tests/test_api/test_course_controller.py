@@ -495,8 +495,20 @@ class TestCoursesFilter:
                 assert len(get_instructor_uids(section_id=section_id, term_id=self.term_id)) > 1
                 # Send invites
                 self._send_invitation_email(section_id)
-                # Approval by first instructor only
-                self._create_approval(section_id)
+                if section_id == section_1_id:
+                    # If course is "approved" by admin only then it will NOT show up on the partially-approval list.
+                    Approval.create(
+                        approved_by_uid=admin_uid,
+                        approver_type_='admin',
+                        publish_type_='kaltura_my_media',
+                        recording_type_='presentation_audio',
+                        room_id=Room.get_room_id(section_id=section_id, term_id=self.term_id),
+                        section_id=section_id,
+                        term_id=self.term_id,
+                    )
+                else:
+                    # Approval by first instructor only
+                    self._create_approval(section_id)
 
             # Feed will include both scheduled and not scheduled.
             for section_id in [section_1_id, section_7_id]:
@@ -508,8 +520,7 @@ class TestCoursesFilter:
 
             std_commit(allow_test_environment=True)
             api_json = self._api_courses(client, term_id=self.term_id, filter_='Partially Approved')
-            assert len(api_json) == 2
-            assert _find_course(api_json=api_json, section_id=section_1_id)
+            assert len(api_json) == 1
             course = _find_course(api_json=api_json, section_id=section_6_id)
             assert course
             assert course['label'] == 'LAW 23, LEC 002'
