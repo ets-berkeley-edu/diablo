@@ -18,8 +18,18 @@
           <v-card class="pa-6" outlined>
             <v-container v-if="course.room.capability">
               <v-row v-if="course.approvals.length" no-gutters>
-                <v-col>
-                  Approved by {{ oxfordJoin(approvedByNames) }}.
+                <v-col class="font-weight-medium red--text">
+                  <span v-if="queuedForScheduling">This course is currently queued for scheduling. This process can take up to an hour. </span>
+                  <span v-if="approvedByInstructorNames.length">Approved by {{ oxfordJoin(approvedByInstructorNames) }}. </span>
+                  <span v-if="approvalNeededNames.length">
+                    <span v-if="!course.scheduled && !queuedForScheduling">Recordings will be scheduled when we have</span>
+                    <span v-if="course.scheduled">Recordings have been scheduled but we need</span>
+                    <span v-if="queuedForScheduling"> but we need</span>
+                    approvals from {{ oxfordJoin(approvalNeededNames) }}.
+                  </span>
+                  <span v-if="approvedByAdmins.length && !approvedByInstructorNames.length">
+                    <span v-if="course.scheduled">Your course has been scheduled.</span>
+                  </span>
                 </v-col>
               </v-row>
               <v-row v-if="course.scheduled">
@@ -27,9 +37,25 @@
                   <ScheduledCourse :after-approve="render" :course="course" />
                 </v-col>
               </v-row>
-              <v-row no-gutters class="mb-4">
+              <v-row v-if="hasCurrentUserApproved">
                 <v-col>
-                  <CourseCaptureExplained />
+                  <v-card tile>
+                    <v-list-item two-line class="pb-3">
+                      <v-list-item-content>
+                        <v-list-item-title>Recording Type</v-list-item-title>
+                        <v-list-item-subtitle>{{ mostRecentApproval.recordingTypeName }}</v-list-item-subtitle>
+                      </v-list-item-content>
+                      <v-list-item-content>
+                        <v-list-item-title>Publish Type</v-list-item-title>
+                        <v-list-item-subtitle>{{ mostRecentApproval.publishTypeName }}</v-list-item-subtitle>
+                      </v-list-item-content>
+                    </v-list-item>
+                  </v-card>
+                </v-col>
+              </v-row>
+              <v-row no-gutters class="mb-4 mt-2">
+                <v-col>
+                  <CourseCaptureExplained v-if="!hasCurrentUserApproved" />
                   <div class="font-italic font-weight-light pl-2 pt-4">
                     <div v-if="course.room.isAuditorium">
                       <v-icon class="pr-1">mdi-information-outline</v-icon>
@@ -45,7 +71,7 @@
                   </div>
                 </v-col>
               </v-row>
-              <v-row v-if="!course.scheduled" justify="start" align="center">
+              <v-row v-if="showSignUpForm" justify="start" align="center">
                 <v-col md="3" class="mb-6">
                   <h4>
                     <label id="select-recording-type-label" for="select-recording-type">Recording Type</label>
@@ -78,7 +104,7 @@
                 </v-col>
               </v-row>
               <v-row
-                v-if="!course.scheduled"
+                v-if="showSignUpForm"
                 align="center"
                 justify="start"
                 no-gutters
@@ -106,7 +132,7 @@
                   </v-select>
                 </v-col>
               </v-row>
-              <v-row v-if="!course.hasNecessaryApprovals && !$currentUser.isAdmin" no-gutters align="start">
+              <v-row v-if="showSignUpForm && !$currentUser.isAdmin" no-gutters align="start">
                 <v-col md="auto">
                   <v-checkbox id="agree-to-terms-checkbox" v-model="agreedToTerms" class="mt-0"></v-checkbox>
                 </v-col>
@@ -114,7 +140,7 @@
                   <TermsAgreementText class="pt-1" />
                 </v-col>
               </v-row>
-              <v-row v-if="!course.hasNecessaryApprovals" lg="2">
+              <v-row v-if="showSignUpForm" lg="2">
                 <v-col>
                   <v-btn
                     id="btn-approve"
@@ -165,9 +191,12 @@
     mixins: [Context, Utils],
     data: () => ({
       agreedToTerms: false,
-      approvedByNames: undefined,
+      approvalNeededNames: undefined,
+      approvedByAdmins: undefined,
+      approvedByInstructorNames: undefined,
       auditoriums: undefined,
       course: undefined,
+      hasCurrentUserApproved: undefined,
       isApproving: false,
       publishType: undefined,
       publishTypeOptions: undefined,
@@ -180,6 +209,12 @@
       },
       mostRecentApproval() {
         return this.$_.last(this.course.approvals)
+      },
+      queuedForScheduling() {
+        return this.course.hasNecessaryApprovals && !this.course.scheduled
+      },
+      showSignUpForm() {
+        return !this.course.scheduled && !this.hasCurrentUserApproved
       }
     },
     created() {
@@ -203,25 +238,36 @@
         approve(this.publishType, this.recordingType, this.course.sectionId).then(data => {
           this.render(data)
           this.isApproving = false
+          this.alertScreenReader(`You have approved ${this.course.label} for Course Capture.`)
         }).catch(this.$ready)
+      },
+      getApproverName(approval) {
+        return approval.approvedBy.uid === this.$currentUser.uid ? 'you' : approval.approvedBy.name
       },
       render(data) {
         this.$loading()
         this.agreedToTerms = this.$currentUser.isAdmin
-        this.approvedByNames = []
         this.course = data
-        this.recordingTypeOptions = []
-        this.$_.each(this.course.room.recordingTypeOptions, (text, value) => {
-          this.recordingTypeOptions.push({text, value})
+
+        const approvedByInstructors = this.$_.filter(this.course.approvals, a => !a.wasApprovedByAdmin)
+        const approvedByUIDs = this.$_.map(this.course.approvals, 'approvedBy.uid')
+        const approvedByInstructorUIDs = this.$_.map(approvedByInstructors, 'approvedBy.uid')
+        this.approvedByAdmins = this.$_.filter(this.course.approvals, a => a.wasApprovedByAdmin)
+        this.approvalNeededNames = []
+        this.$_.each(this.course.instructors, instructor => {
+          if (!this.$_.includes(approvedByInstructorUIDs, instructor.uid)) {
+            this.approvalNeededNames.push(instructor.uid === this.$currentUser.uid ? 'you' : instructor.name)
+          }
+        })
+        this.approvedByInstructorNames = this.$_.map(approvedByInstructors, approval => this.getApproverName(approval))
+        this.hasCurrentUserApproved = this.$_.includes(approvedByUIDs, this.$currentUser.uid)
+        this.recordingTypeOptions = this.$_.map(this.course.room.recordingTypeOptions, (text, value) => {
+          return {text, value}
         })
         if (this.course.approvals.length) {
           const mostRecent = this.$_.last(this.course.approvals)
           this.publishType = mostRecent.publishType
           this.recordingType = mostRecent.recordingType
-          this.$_.each(this.course.approvals, approval => {
-            const name = approval.approvedBy.uid === this.$currentUser.uid ? 'you' : approval.approvedBy.name
-            this.approvedByNames.push(name + (approval.wasApprovedByAdmin ? ' (Course Capture admin)' : ''))
-          })
         } else {
           if (this.recordingTypeOptions.length === 1) {
             this.recordingType = this.recordingTypeOptions[0].value

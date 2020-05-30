@@ -97,7 +97,6 @@ class Kaltura:
         entry = self.kaltura_client.baseEntry.get(entryId=entry_id)
         if entry:
             return {
-                'accessControlId': entry.accessControlId,
                 'createdAt': entry.createdAt,
                 'creatorId': entry.creatorId,
                 'description': entry.description,
@@ -365,7 +364,6 @@ class Kaltura:
     ):
         email_addresses = [instructor['email'] for instructor in instructors if instructor['email']]
         base_entry = KalturaBaseEntry(
-            accessControlId=3034871,  # TODO: Can we create a single access-control for all media entries?
             capabilities=NotImplemented,
             categories=NotImplemented,
             categoriesIds=NotImplemented,

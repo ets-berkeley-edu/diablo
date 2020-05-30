@@ -39,12 +39,12 @@ const mutations = {
 }
 
 const actions = {
-  loadingComplete: ({ commit }) => commit('loadingComplete'),
-  loadingStart: ({ commit }) => commit('loadingStart'),
-  setScreenReaderAlert: ({ commit }, alert) => {
+  alertScreenReader: ({ commit }, alert) => {
     commit('setScreenReaderAlert', '')
     Vue.nextTick(() => commit('setScreenReaderAlert', alert))
   },
+  loadingComplete: ({ commit }) => commit('loadingComplete'),
+  loadingStart: ({ commit }) => commit('loadingStart'),
   snackbarClose: ({ commit }) => commit('snackbarClose'),
   snackbarOpen: ({ commit }, text) => commit('snackbarOpen', text),
   snackbarReportError: ({ commit }, text) => commit('snackbarReportError', text)
