@@ -377,6 +377,7 @@ class SisSection(db.Model):
 
     @classmethod
     def get_courses_partially_approved(cls, term_id):
+        # Courses, including scheduled, that have some instructor approvals but not all. Admin approvals are ignored.
         sql = """
             SELECT DISTINCT
                 s.*,
@@ -388,11 +389,12 @@ class SisSection(db.Model):
                 r.location AS room_location
             FROM sis_sections s
             JOIN approvals a
-                ON s.term_id = :term_id AND s.is_primary IS TRUE AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC') AND s.deleted_at IS NULL
-                AND a.section_id = s.section_id AND a.term_id = :term_id AND a.deleted_at IS NULL
+                ON s.term_id = :term_id AND s.is_primary IS TRUE AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
+                AND s.deleted_at IS NULL AND a.section_id = s.section_id AND a.term_id = :term_id
+                AND a.approver_type != 'admin' AND a.deleted_at IS NULL
             JOIN instructors i ON i.uid = s.instructor_uid
-            -- This second course/instructor join is not for data display purposes, but to screen for the existence of any instructor who has
-            -- not approved.
+            -- This second course/instructor join is not for data display purposes, but to screen for the existence of
+            -- any instructor who has not approved.
             JOIN sis_sections s2 ON s.term_id = s2.term_id AND s.section_id = s2.section_id
             JOIN instructors i2 ON
                 i2.uid = s2.instructor_uid
