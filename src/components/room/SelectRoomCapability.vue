@@ -15,15 +15,13 @@
 </template>
 
 <script>
+  import Context from '@/mixins/Context'
   import {updateRoomCapability} from '@/api/room'
 
   export default {
     name: 'SelectRoomCapability',
+    mixins: [Context],
     props: {
-      options: {
-        required: true,
-        type: Object
-      },
       isAuditorium: {
         required: true,
         type: Boolean
@@ -31,6 +29,10 @@
       onUpdate: {
         required: true,
         type: Function
+      },
+      options: {
+        required: true,
+        type: Object
       },
       room: {
         required: true,
@@ -63,7 +65,10 @@
         return capability.value === 'screencast_and_video' && !this.isAuditorium
       },
       updateCapability() {
-        updateRoomCapability(this.room.id, this.capability).then(this.onUpdate(this.capability))
+        updateRoomCapability(this.room.id, this.capability).then(() => {
+          this.onUpdate(this.capability)
+          this.alertScreenReader(`${this.room.location} capability set to ${this.capability || 'none'}.`)
+        })
       }
     }
   }

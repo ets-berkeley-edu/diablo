@@ -143,7 +143,10 @@
       }
     },
     methods: {
-      logOut: () => getCasLogoutUrl().then(data => window.location.href = data.casLogoutUrl),
+      logOut() {
+        this.alertScreenReader('Logging out')
+        getCasLogoutUrl().then(data => window.location.href = data.casLogoutUrl)
+      },
       prefersColorScheme() {
         const mq = window.matchMedia('(prefers-color-scheme: dark)')
         this.$vuetify.theme.dark = mq.matches

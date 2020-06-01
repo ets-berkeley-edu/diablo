@@ -246,7 +246,7 @@
       this.$loading()
       getJobSchedule().then(data => {
         this.jobSchedule = data
-        this.refresh()
+        this.refresh().then(() => this.$ready('Jobs'))
       })
     },
     destroyed() {
@@ -255,20 +255,24 @@
     methods: {
       refresh() {
         this.refreshing = true
-        getJobHistory(this.daysCount).then(data => {
+        return getJobHistory(this.daysCount).then(data => {
           this.jobHistory = data
           this.refreshing = false
-          this.$ready()
+          if (!this.loading) {
+            this.alertScreenReader('Job History refreshed')
+          }
           this.scheduleRefresh()
         })
       },
       scheduleEditCancel() {
         this.editJob = undefined
         this.editJobDialog = false
+        this.alertScreenReader('Cancelled')
       },
       scheduleEditOpen(job) {
         this.editJob = this.$_.cloneDeep(job)
         this.editJobDialog = true
+        this.alertScreenReader(`Opened dialog to edit job ${job.name}`)
       },
       scheduleEditSave() {
         updateJobSchedule(
@@ -280,6 +284,7 @@
           match.schedule = this.editJob.schedule
           this.editJob = undefined
           this.editJobDialog = false
+          this.alertScreenReader(`Job '${match.name}' was updated.`)
         })
       },
       scheduleRefresh() {
@@ -289,11 +294,15 @@
       },
       start(jobKey) {
         startJob(jobKey).then(() => {
+          this.alertScreenReader(`Job ${jobKey} started`)
           this.refresh()
         })
       },
       toggleDisabled(job) {
-        setJobDisabled(job.id, job.disabled).then(data => job.disabled = data.disabled)
+        setJobDisabled(job.id, job.disabled).then(data => {
+          job.disabled = data.disabled
+          this.alertScreenReader(`Job '${job.name}' ${job.disabled ? 'disabled' : 'enabled'}`)
+        })
       }
     }
   }

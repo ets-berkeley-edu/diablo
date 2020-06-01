@@ -93,8 +93,7 @@
       getRoom(id).then(room => {
         this.room = room
         this.courses = this.$_.filter(this.room.courses, 'scheduled')
-        this.setPageTitle(this.room.location)
-        this.$ready()
+        this.$ready(`${this.room.location} printable`)
       }).catch(this.$ready)
     }
   }

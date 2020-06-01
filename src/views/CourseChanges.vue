@@ -51,7 +51,7 @@
                 <div class="primary--text">
                   <v-icon small color="primary">mdi-arrow-down-bold</v-icon>
                   changed to
-                </div>           
+                </div>
               </div>
               <div>
                 {{ course.meetingDays.join(',') }} {{ course.meetingStartTime }} - {{ course.meetingEndTime }}
@@ -159,7 +159,7 @@
             h.sortable = false
           })
         }
-        this.$ready()
+        this.$ready('Course Changes')
       })
     }
   }

@@ -32,8 +32,7 @@
             el && el.focus()
             return !!el
         })
-      },
-      setPageTitle: phrase => (document.title = `${phrase ? phrase : 'UC Berkeley'} | Course Capture`)
+      }
     }
   }
 </script>
