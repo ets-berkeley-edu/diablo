@@ -38,6 +38,12 @@ room_capability_type = ENUM(
     create_type=False,
 )
 
+ALL_RECORDING_TYPES = {
+    'presentation_audio': 'Presentation + Audio',
+    'presenter_audio': 'Presenter + Audio',
+    'presenter_presentation_audio': 'Presenter + Presentation + Audio',
+}
+
 
 class Room(db.Model):
     __tablename__ = 'rooms'
@@ -170,12 +176,10 @@ class Room(db.Model):
         }
 
     def to_api_json(self):
-        recording_type_options = {
-            'presentation_audio': 'Presentation + Audio',
-        }
-        if self.is_auditorium:
-            recording_type_options['presenter_audio'] = 'Presenter + Audio'
-            recording_type_options['presenter_presentation_audio'] = 'Presenter + Presentation + Audio'
+        if self.capability == 'screencast':
+            recording_types = ['presentation_audio']
+        else:
+            recording_types = ALL_RECORDING_TYPES.keys() if self.is_auditorium else ['presenter_presentation_audio']
         return {
             'id': self.id,
             'location': self.location,
@@ -184,5 +188,5 @@ class Room(db.Model):
             'createdAt': to_isoformat(self.created_at),
             'isAuditorium': self.is_auditorium,
             'kalturaResourceId': self.kaltura_resource_id,
-            'recordingTypeOptions': recording_type_options,
+            'recordingTypeOptions': {type_: ALL_RECORDING_TYPES[type_] for type_ in recording_types},
         }
