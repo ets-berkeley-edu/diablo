@@ -11,7 +11,6 @@
         :headers="headers"
         hide-default-footer
         :items="jobSchedule.jobs"
-        dense
       >
         <template v-slot:body="{ items }">
           <tbody>
@@ -35,8 +34,8 @@
               <td class="pr-4 text-no-wrap">
                 {{ job.name }}
               </td>
-              <td>
-                {{ job.description }}
+              <td class="pb-2 pt-2">
+                <span v-html="job.description"></span>
               </td>
               <td :id="`job-schedule-${job.key}`" class="text-no-wrap">
                 <div class="d-flex align-center">

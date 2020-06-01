@@ -47,9 +47,13 @@ class AdminEmailsJob(BaseJob):
 
     @classmethod
     def description(cls):
-        return """
-            Queues up admin notifications. Admins are notified when courses, with scheduled recordings, are moved to a
-            new room or get new instructors.
+        names_by_type = EmailTemplate.get_template_type_options()
+        template_types = ['admin_alert_instructor_change', 'admin_alert_room_change']
+        return f"""
+            Queues up admin notifications. Email templates used:
+            <ul>
+                {''.join(f'<li>{names_by_type.get(template_type)}</li>' for template_type in template_types)}
+            </ul>
         """
 
     @classmethod

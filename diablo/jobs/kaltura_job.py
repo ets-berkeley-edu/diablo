@@ -28,6 +28,7 @@ from diablo.jobs.util import schedule_recordings
 from diablo.lib.util import objects_to_dict_organized_by_section_id
 from diablo.models.admin_user import AdminUser
 from diablo.models.approval import Approval
+from diablo.models.email_template import EmailTemplate
 from diablo.models.scheduled import Scheduled
 from diablo.models.sis_section import SisSection
 from flask import current_app as app
@@ -41,7 +42,14 @@ class KalturaJob(BaseJob):
 
     @classmethod
     def description(cls):
-        return 'With Kaltura API, schedule recordings and link them to Canvas sites.'
+        return f"""
+            This job:
+            <ul>
+                <li>Schedules recordings via Kaltura API</li>
+                <li>Queues up '{EmailTemplate.get_template_type_options()['recordings_scheduled']}' emails</li>
+                <li>Updates existing schedules in Kaltura</li>
+            </ul>
+        """
 
     @classmethod
     def key(cls):
