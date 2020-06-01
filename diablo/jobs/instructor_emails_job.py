@@ -43,7 +43,16 @@ class InstructorEmailsJob(BaseJob):
 
     @classmethod
     def description(cls):
-        return 'Queues up (1) Course Capture invitations and (2) course-scheduled notifications, sent to instructors.'
+        names_by_type = EmailTemplate.get_template_type_options()
+        template_types = ['invitation', 'room_change_no_longer_eligible']
+        return f"""
+            Queues up instructor notifications. Email templates used:
+            <ul>
+                {''.join(f'<li>{names_by_type.get(template_type)}</li>' for template_type in template_types)}
+            </ul>
+            NOTE: The '{names_by_type['recordings_scheduled']}' email is queued by the Kaltura job, when recordings are
+            scheduled, and sent by the Queued Emails job.
+        """
 
     @classmethod
     def key(cls):
