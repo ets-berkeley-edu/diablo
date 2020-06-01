@@ -103,6 +103,9 @@ class DiabloPages(Page):
         app.logger.info(f"Clicking the option '{option_text}'")
         self.wait_for_element_and_click(DiabloPages.menu_option_locator(option_text))
 
+    def is_menu_option_disabled(self, option_text):
+        return self.element(DiabloPages.menu_option_locator(option_text)).get_attribute('aria-disabled') == 'true'
+
     def visible_menu_options(self):
         Wait(self.driver, app.config['TIMEOUT_SHORT']).until(
             method=ec.visibility_of_any_elements_located(DiabloPages.VISIBLE_MENU_OPTION),
