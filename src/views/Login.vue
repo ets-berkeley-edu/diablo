@@ -93,6 +93,9 @@
       devAuthUid: undefined,
       devAuthPassword: undefined
     }),
+    created() {
+      this.alertScreenReader('Welcome to Course Capture. Please log in.')
+    },
     methods: {
       devAuth() {
         let uid = this.$_.trim(this.devAuthUid)
@@ -102,6 +105,7 @@
               if (data.isAuthenticated) {
                 const redirect = this.$_.get(this.$router, 'currentRoute.query.redirect')
                 this.$router.push({ path: redirect || '/home' }, this.$_.noop)
+                this.alertScreenReader('Welcome to Course Capture')
               } else if (data.message) {
                 this.reportError(data.message)
               } else {
@@ -122,9 +126,6 @@
       },
       logIn() {
         getCasLoginURL().then(data => window.location.href = data.casLoginUrl)
-      },
-      reportError(msg) {
-        this.snackbarReportError(msg)
       }
     }
   }

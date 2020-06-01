@@ -1,4 +1,3 @@
-import Vue from 'vue'
 
 const state = {
   loading: undefined,
@@ -19,12 +18,19 @@ const getters = {
 }
 
 const mutations = {
-  loadingComplete: (state: any) => (state.loading = false),
+  loadingComplete: (state: any, pageTitle: string) => {
+    document.title = `${pageTitle || 'UC Berkeley'} | Course Capture`
+    state.loading = false
+    if (pageTitle) {
+      state.screenReaderAlert = `${pageTitle} page is ready`
+    }
+  },
   loadingStart: (state: any) => (state.loading = true),
-  setScreenReaderAlert: (state: any, alert: any) => (state.screenReaderAlert = alert),
+  setScreenReaderAlert: (state: any, alert: string) => (state.screenReaderAlert = alert),
   snackbarClose: (state: any) => {
     state.snackbarShow = false
     state.snackbar.text = undefined
+    state.screenReaderAlert = 'Message closed'
   },
   snackbarOpen: (state: any, text) => {
     state.snackbar.text = text
@@ -39,11 +45,8 @@ const mutations = {
 }
 
 const actions = {
-  alertScreenReader: ({ commit }, alert) => {
-    commit('setScreenReaderAlert', '')
-    Vue.nextTick(() => commit('setScreenReaderAlert', alert))
-  },
-  loadingComplete: ({ commit }) => commit('loadingComplete'),
+  alertScreenReader: ({ commit }, alert) => commit('setScreenReaderAlert', alert),
+  loadingComplete: ({ commit }, pageTitle) => commit('loadingComplete', pageTitle),
   loadingStart: ({ commit }) => commit('loadingStart'),
   snackbarClose: ({ commit }) => commit('snackbarClose'),
   snackbarOpen: ({ commit }, text) => commit('snackbarOpen', text),

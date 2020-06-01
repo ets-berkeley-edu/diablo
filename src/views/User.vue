@@ -34,8 +34,7 @@
       let uid = this.$_.get(this.$route, 'params.uid')
       getUser(uid).then(user => {
         this.user = user
-        this.setPageTitle(this.user.name)
-        this.$ready()
+        this.$ready(this.user.name)
       }).catch(this.$ready)
     },
     methods: {

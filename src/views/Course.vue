@@ -5,7 +5,7 @@
         <h1>{{ course.label }}</h1>
       </v-row>
       <v-row class="pl-3">
-        Section ID: {{ course.sectionId }}
+        Section ID: <span id="section-id">{{ course.sectionId }}</span>
       </v-row>
       <v-row class="pl-3">
         <h2 id="course-title">{{ course.courseTitle }}</h2>
@@ -18,7 +18,7 @@
           <v-card class="pa-6" outlined>
             <v-container v-if="course.room.capability">
               <v-row v-if="course.approvals.length" no-gutters>
-                <v-col class="font-weight-medium red--text">
+                <v-col id="approvals-described" class="font-weight-medium red--text">
                   <span v-if="queuedForScheduling">This course is currently queued for scheduling. Recordings will be scheduled in an hour or less. </span>
                   <span v-if="approvedByInstructorNames.length">Approved by {{ oxfordJoin(approvedByInstructorNames) }}. </span>
                   <span v-if="approvalNeededNames.length">
@@ -43,11 +43,11 @@
                     <v-list-item two-line class="pb-3">
                       <v-list-item-content>
                         <v-list-item-title>Recording Type</v-list-item-title>
-                        <v-list-item-subtitle>{{ mostRecentApproval.recordingTypeName }}</v-list-item-subtitle>
+                        <v-list-item-subtitle id="recording-type-name">{{ mostRecentApproval.recordingTypeName }}</v-list-item-subtitle>
                       </v-list-item-content>
                       <v-list-item-content>
                         <v-list-item-title>Publish Type</v-list-item-title>
-                        <v-list-item-subtitle>{{ mostRecentApproval.publishTypeName }}</v-list-item-subtitle>
+                        <v-list-item-subtitle id="publish-type-name">{{ mostRecentApproval.publishTypeName }}</v-list-item-subtitle>
                       </v-list-item-content>
                     </v-list-item>
                   </v-card>
@@ -78,11 +78,11 @@
                   </h4>
                 </v-col>
                 <v-col md="6">
-                  <div v-if="course.hasNecessaryApprovals" class="mb-5">
+                  <div v-if="course.hasNecessaryApprovals" id="approved-recording-type" class="mb-5">
                     {{ mostRecentApproval.recordingTypeName }}
                   </div>
                   <div v-if="!course.hasNecessaryApprovals">
-                    <div v-if="recordingTypeOptions.length === 1" class="mb-5">
+                    <div v-if="recordingTypeOptions.length === 1" id="recording-type" class="mb-5">
                       {{ recordingTypeOptions[0].text }}
                       <input type="hidden" name="recordingType" :value="recordingTypeOptions[0].value">
                     </div>
@@ -163,7 +163,7 @@
               </v-row>
             </v-container>
             <v-container v-if="!course.room.capability">
-              <v-row>
+              <v-row id="course-not-eligible">
                 <v-icon class="pr-2" color="red">mdi-alert</v-icon>
                 This course is not eligible for Course Capture because {{ course.room.location }} is not capture-enabled.
               </v-row>
@@ -273,8 +273,7 @@
             this.recordingType = this.recordingTypeOptions[0].value
           }
         }
-        this.setPageTitle(this.course.label)
-        this.$ready()
+        this.$ready(this.course.label)
       }
     }
   }

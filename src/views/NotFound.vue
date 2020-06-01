@@ -1,7 +1,7 @@
 <template>
   <div v-if="!loading">
     <h1>Uh oh!</h1>
-    <div>
+    <div id="page-not-found" aria-live="polite" role="alert">
       Page not found.
     </div>
   </div>

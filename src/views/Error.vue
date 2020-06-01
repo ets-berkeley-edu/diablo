@@ -10,7 +10,7 @@
     <div>
       <div class="pb-2">
         <h1 class="sr-only">Error</h1>
-        {{ message || 'Uh oh, there was a problem.' }}
+        <span id="error-message" aria-live="polite" role="alert">{{ message || 'Uh oh, there was a problem.' }}</span>
       </div>
       <div>
         Problem? Question?
@@ -28,7 +28,7 @@
     }),
     mounted() {
       this.message = this.$route.query.m
-      this.$ready()
+      this.$ready('Error')
     }
   }
 </script>

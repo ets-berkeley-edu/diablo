@@ -8,10 +8,12 @@
 </template>
 
 <script>
+  import Context from '@/mixins/Context'
   import {updateOptOut} from '@/api/course'
 
   export default {
     name: 'ToggleOptOut',
+    mixins: [Context],
     props: {
       course: {
         required: true,
@@ -33,6 +35,7 @@
       toggleOptOut() {
         updateOptOut(this.course.termId, this.course.sectionId, this.optOut).then(data => {
           this.course.hasOptedOut = data.hasOptedOut
+          this.alertScreenReader(`Opted ${data.hasOptedOut ? 'out' : 'in'}`)
           this.onToggle(this.course)
         })
       }

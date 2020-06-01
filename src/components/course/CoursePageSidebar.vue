@@ -163,8 +163,9 @@
         this.$loading()
         this.showUnscheduleModal = false
         unschedule(this.course.termId, this.course.sectionId).then(data => {
+          this.alertScreenReader(`${this.course.label} unscheduled.`)
           this.afterUnschedule(data)
-        }).catch(this.$ready)
+        })
       }
     }
   }

@@ -102,12 +102,14 @@
 </template>
 
 <script>
+  import Context from '@/mixins/Context'
   import TermsAgreementText from '@/components/util/TermsAgreementText'
   import {approve} from '@/api/course'
 
   export default {
     name: 'ScheduledCourse',
     components: {TermsAgreementText},
+    mixins: [Context],
     props: {
       afterApprove: {
         required: true,
@@ -133,6 +135,7 @@
         approve(this.course.scheduled.publishType, this.course.scheduled.recordingType, this.course.sectionId).then(data => {
           this.isApproving = this.currentUserMustApprove = false
           this.afterApprove(data)
+          this.alertScreenReader('Approval received.')
         }).catch(this.$ready)
       }
     }

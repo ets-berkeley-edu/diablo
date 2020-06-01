@@ -88,7 +88,6 @@
     name: 'EmailTemplates',
     mixins: [Context, Utils],
     data: () => ({
-      alert: undefined,
       headers: [
         {text: 'Name', value: 'name'},
         {text: 'Subject Line', value: 'subjectLine'},
@@ -108,7 +107,7 @@
     }),
     mounted() {
       this.$loading()
-      this.loadAllEmailTemplates(this.$ready)
+      this.loadAllEmailTemplates(() => this.$ready('Email Templates'))
     },
     methods: {
       createNewTemplate(type) {
@@ -117,6 +116,7 @@
       deleteEmailTemplate(templateId) {
         this.refreshing = true
         deleteTemplate(templateId).then(() => {
+          this.alertScreenReader('Email template deleted.')
           this.loadAllEmailTemplates(() => {
             this.refreshing = false
           })
@@ -136,7 +136,7 @@
       },
       sendTestEmail(templateId) {
         sendTestEmail(templateId).then(() => {
-          this.alert = 'Email sent'
+          this.snackbarOpen('Test email sent. Check your inbox.')
         })
       }
     }

@@ -88,7 +88,7 @@
       refresh() {
         const done = () => {
           this.refreshing = false
-          this.$ready()
+          this.$ready('Ouija Board')
         }
         this.refreshing = true
         getCourses(this.selectedFilter, this.$config.currentTermId).then(data => {

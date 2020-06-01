@@ -1,26 +1,25 @@
 <script>
 import store from '@/store'
-import { mapActions, mapGetters } from 'vuex'
+import Vue from 'vue'
+import {mapActions, mapGetters} from 'vuex'
 
 export default {
   name: 'Context',
   computed: {
-    ...mapGetters('context', ['loading', 'snackbar']),
+    ...mapGetters('context', ['loading', 'screenReaderAlert', 'snackbar']),
     snackbarShow: {
       get: () => store.getters['context/snackbarShow'],
       set: show => store.dispatch(show ? 'context/snackbarOpen' : 'context/snackbarClose')
     }
   },
   methods: {
-    ...mapGetters('context', [
-      'screenReaderAlert'
-    ]),
-    ...mapActions('context', [
-      'alertScreenReader',
-      'snackbarClose',
-      'snackbarOpen',
-      'snackbarReportError'
-    ]),
+    ...mapActions('context', ['snackbarClose']),
+    alertScreenReader(message) {
+      store.dispatch('context/alertScreenReader', '')
+      Vue.nextTick(() => store.dispatch('context/alertScreenReader', message))
+    },
+    reportError: message => store.dispatch('context/snackbarReportError', message),
+    snackbarOpen: message => store.dispatch('context/snackbarOpen', message),
     summarize(courses) {
       let message = undefined
       if (courses.length) {

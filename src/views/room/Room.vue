@@ -223,14 +223,13 @@
         this.room = data
         this.isAuditorium = data.isAuditorium
         this.scheduledCourses = this.$_.filter(data.courses, 'scheduled')
-        this.setPageTitle(data.location)
         if (this.room.kalturaResourceId) {
           getKalturaEventList(this.room.id).then(data => {
             this.kalturaEventList = data
-            this.$ready()
+            this.$ready(data.location)
           })
         } else {
-          this.$ready()
+          this.$ready(data.location)
         }
       }).catch(this.$ready)
     },
@@ -240,9 +239,11 @@
       },
       onUpdateRoomCapability(capability) {
         this.room.capability = capability
+        this.alertScreenReader(capability ? `'${capability}' selected` : 'Room capability removed.')
       },
       scrollToKalturaEvents() {
         this.$vuetify.goTo('#kaltura-event-list', {duration: 300, offset: 100, easing: 'easeInOutCubic'})
+        this.alertScreenReader('Scrolled to Kaltura events.')
       },
       tdClass(course) {
         return course.approvals.length ? 'border-bottom-zero text-no-wrap' : 'text-no-wrap'

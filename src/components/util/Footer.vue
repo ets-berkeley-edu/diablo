@@ -15,8 +15,13 @@
         </v-col>
         <v-col>
           <div class="float-right">
-            <v-icon small>mdi-copyright</v-icon> {{ new Date().getFullYear() }}
-            The Regents of the University of California
+            <span v-if="$config.isVueAppDebugMode && screenReaderAlert">
+              {{ screenReaderAlert }}
+            </span>
+            <span v-if="!$config.isVueAppDebugMode || !screenReaderAlert">
+              <v-icon small>mdi-copyright</v-icon> {{ new Date().getFullYear() }}
+              The Regents of the University of California
+            </span>
           </div>
         </v-col>
       </v-row>
@@ -25,7 +30,10 @@
 </template>
 
 <script>
+  import Context from '@/mixins/Context'
+
   export default {
-    name: 'Footer'
+    name: 'Footer',
+    mixins: [Context]
   }
 </script>

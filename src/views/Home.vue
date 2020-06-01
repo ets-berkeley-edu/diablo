@@ -1,7 +1,7 @@
 <template>
   <div v-if="!loading">
     <div class="pb-3">
-      <h1>Your {{ $config.currentTermName }} Courses Eligible for Capture</h1>
+      <h1>{{ pageTitle }}</h1>
     </div>
     <v-data-table
       disable-pagination
@@ -55,10 +55,12 @@
         {text: 'Room', value: 'room'},
         {text: 'Days', value: 'days', sortable: false},
         {text: 'Time', value: 'time', sortable: false}
-      ]
+      ],
+      pageTitle: undefined
     }),
     created() {
       this.$loading()
+      this.pageTitle = `Your ${this.$config.currentTermName} Courses Eligible for Capture`
       this.courses = []
       this.$_.each(this.$currentUser.courses, c => {
         if (c.room && c.room.capability) {
@@ -73,7 +75,7 @@
           })
         }
       })
-      this.$ready()
+      this.$ready(this.pageTitle)
     }
   }
 </script>

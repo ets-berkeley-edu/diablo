@@ -2,7 +2,7 @@
   <v-form>
     <v-container v-if="!loading" fluid>
       <v-row no-gutters class="d-flex justify-space-between pr-4">
-        <h1><v-icon class="pb-2" large>mdi-file-document-outline</v-icon> {{ templateId ? 'Edit' : 'Create' }} Email Template</h1>
+        <h1><v-icon class="pb-2" large>mdi-file-document-outline</v-icon> {{ pageTitle }}</h1>
         <h2 class="title">
           <span class="font-weight-bold">Type:</span>&nbsp;&nbsp;
           <span id="template-type-name" class="font-italic">{{ typeName }}</span>
@@ -89,6 +89,7 @@
       latest: false,
       message: undefined,
       name: undefined,
+      pageTitle: undefined,
       subjectLine: undefined,
       templateId: undefined,
       templateType: undefined,
@@ -98,9 +99,9 @@
       this.$loading()
       this.templateType = this.$_.get(this.$route, 'params.type')
       this.typeName = this.$_.get(this.$config.emailTemplateTypes, this.templateType)
+      this.pageTitle = `${this.templateId ? 'Edit' : 'Create'} Email Template`
       if (this.typeName) {
-        this.setPageTitle(this.typeName)
-        this.$ready()
+        this.$ready(`${this.pageTitle} '${this.typeName}'`)
       } else {
         this.templateId = this.$_.get(this.$route, 'params.id')
         getEmailTemplate(this.templateId).then(data => {
@@ -109,22 +110,24 @@
           this.message = data.message
           this.templateType = data.templateType
           this.typeName = this.$_.get(this.$config.emailTemplateTypes, data.templateType)
-          this.$ready()
+          this.$ready(`${this.pageTitle} '${this.typeName}'`)
         })
       }
     },
     methods: {
       cancel() {
+        this.alertScreenReader('Cancelled.')
         this.$router.push({ path: '/email/templates' })
       },
       createTemplate() {
-        const done = () => {
+        const done = action => {
+          this.alertScreenReader(`Email template '${this.templateType}' ${action}.`)
           this.$router.push({ path: '/email/templates' })
         }
         if (this.templateId) {
-          updateEmailTemplate(this.templateId, this.templateType, this.name, this.subjectLine, this.message).then(done)
+          updateEmailTemplate(this.templateId, this.templateType, this.name, this.subjectLine, this.message).then(() => done('updated'))
         } else {
-          createEmailTemplate(this.templateType, this.name, this.subjectLine, this.message).then(done)
+          createEmailTemplate(this.templateType, this.name, this.subjectLine, this.message).then(() => done('created'))
         }
       }
     }
