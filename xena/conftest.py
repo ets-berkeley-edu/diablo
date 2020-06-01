@@ -41,7 +41,7 @@ from xena.test_utils.webdriver_manager import WebDriverManager
 
 os.environ['DIABLO_ENV'] = 'xena'  # noqa
 
-_app = create_app()
+_app = create_app(standalone=True)
 
 # Create app context before running tests.
 ctx = _app.app_context()
