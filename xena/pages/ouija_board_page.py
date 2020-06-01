@@ -53,7 +53,10 @@ class OuijaBoardPage(DiabloPages):
     def load_page(self):
         app.logger.info('Loading the Ouija Board')
         self.driver.get(f'{app.config["BASE_URL"]}/ouija')
-        self.wait_for_diablo_title('The Ouija Board')
+        self.wait_for_ouija_title()
+
+    def wait_for_ouija_title(self):
+        self.wait_for_diablo_title('Ouija Board')
 
     # SEARCH AND FILTER
 

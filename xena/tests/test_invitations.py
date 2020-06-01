@@ -27,22 +27,22 @@ import pytest
 from xena.models.async_job import AsyncJob
 from xena.models.email import Email
 from xena.models.section import Section
+from xena.pages.sign_up_page import SignUpPage
 from xena.test_utils import util
 
 
 @pytest.mark.usefixtures('page_objects')
 class TestInvitations:
 
-    test_data = util.parse_sign_up_test_data()[2]
-    section = Section(test_data)
+    section_1 = Section(util.parse_sign_up_test_data()[4])
+    section_2 = Section(util.parse_sign_up_test_data()[5])
 
     def test_log_in_admin(self):
         self.login_page.load_page()
         self.login_page.dev_auth()
-        self.ouija_page.wait_for_diablo_title('The Ouija Board')
+        self.ouija_page.wait_for_ouija_title()
 
     def test_disable_jobs(self):
-        # Clear the queued_emails queue and then shut off all jobs to prevent unexpected additions to the queue
         self.ouija_page.click_jobs_link()
         self.jobs_page.run_queued_emails_job()
         self.jobs_page.wait_for_most_recent_job_success(AsyncJob.QUEUED_EMAILS)
@@ -52,8 +52,16 @@ class TestInvitations:
         self.email_page.log_in()
         self.email_page.delete_all_messages()
 
+    def test_course_opt_out(self):
+        self.ouija_page.load_page()
+        self.ouija_page.search_for_course_code(self.section_2)
+        self.ouija_page.filter_for_all()
+        self.ouija_page.wait_for_course_result(self.section_2)
+        self.ouija_page.set_course_opt_out(self.section_2)
+
     def test_course_auto_invites_run_jobs(self):
-        util.reset_invite_test_data(self.term, self.section)
+        util.reset_invite_test_data(self.term, self.section_1)
+        util.reset_invite_test_data(self.term, self.section_2)
         self.jobs_page.load_page()
         self.jobs_page.run_instructor_emails_job()
         self.jobs_page.wait_for_most_recent_job_success(AsyncJob.INSTRUCTOR_EMAILS)
@@ -61,13 +69,17 @@ class TestInvitations:
         self.jobs_page.wait_for_most_recent_job_success(AsyncJob.QUEUED_EMAILS)
 
     def test_course_auto_invites_delivered(self):
-        # TODO - check for all instructors
-        subject = f'{self.term.name} Course Capture - {self.section.code} (To: {self.section.instructors[0].email})'
+        subject = f'{self.term.name} Course Capture - {self.section_1.code} (To: {self.section_1.instructors[0].email})'
         email = Email(msg_type=None, sender=None, subject=subject)
-        assert self.email_page.is_message_delivered(email)
+        assert self.email_page.is_message_delivered(email) is True
+
+    def test_course_auto_invites_not_delivered(self):
+        subject = f'{self.term.name} Course Capture - {self.section_2.code} (To: {self.section_2.instructors[0].email})'
+        email = Email(msg_type=None, sender=None, subject=subject)
+        assert self.email_page.is_message_present(email) is False
 
     def test_inst_auto_invite_run_jobs(self):
-        util.reset_invite_test_data(self.term, self.section, self.section.instructors[0])
+        util.reset_invite_test_data(self.term, self.section_1, self.section_1.instructors[0])
         self.email_page.delete_all_messages()
         self.jobs_page.load_page()
         self.jobs_page.run_instructor_emails_job()
@@ -76,14 +88,34 @@ class TestInvitations:
         self.jobs_page.wait_for_most_recent_job_success(AsyncJob.QUEUED_EMAILS)
 
     def test_inst_auto_invite_delivered(self):
-        subject = f'{self.term.name} Course Capture - {self.section.code} (To: {self.section.instructors[0].email})'
+        subject = f'{self.term.name} Course Capture - {self.section_1.code} (To: {self.section_1.instructors[0].email})'
         email = Email(msg_type=None, sender=None, subject=subject)
         assert self.email_page.is_message_delivered(email)
 
-    def test_course_manual_invite_run_jobs(self):
+    def test_course_manual_invite_send(self):
         self.email_page.delete_all_messages()
-        self.sign_up_page.load_page(self.section)
+        self.sign_up_page.load_page(self.section_1)
         self.sign_up_page.click_send_invite_button()
+
+    def test_course_opt_out_no_invite_button(self):
+        self.sign_up_page.load_page(self.section_2)
+        self.sign_up_page.wait_for_element(SignUpPage.OPTED_OUT, util.get_short_timeout())
+        assert self.sign_up_page.visible_opt_out() == 'Opted out'
+        assert self.sign_up_page.is_present(SignUpPage.SEND_INVITE_BUTTON) is False
+
+    def test_course_opt_in(self):
+        self.ouija_page.load_page()
+        self.ouija_page.search_for_course_code(self.section_2)
+        self.ouija_page.filter_for_all()
+        self.ouija_page.wait_for_course_result(self.section_2)
+        self.ouija_page.set_course_opt_in(self.section_2)
+
+    def test_course_opt_in_invite_button(self):
+        self.sign_up_page.load_page(self.section_2)
+        self.sign_up_page.wait_for_element(SignUpPage.SEND_INVITE_BUTTON, util.get_short_timeout())
+        assert self.sign_up_page.is_present(SignUpPage.OPTED_OUT) is False
+
+    def test_course_manual_invite_run_jobs(self):
         self.jobs_page.load_page()
         self.jobs_page.run_instructor_emails_job()
         self.jobs_page.wait_for_most_recent_job_success(AsyncJob.INSTRUCTOR_EMAILS)
@@ -91,6 +123,6 @@ class TestInvitations:
         self.jobs_page.wait_for_most_recent_job_success(AsyncJob.QUEUED_EMAILS)
 
     def test_course_manual_invite_delivered(self):
-        subject = f'{self.term.name} Course Capture - {self.section.code} (To: {self.section.instructors[0].email})'
+        subject = f'{self.term.name} Course Capture - {self.section_1.code} (To: {self.section_1.instructors[0].email})'
         email = Email(msg_type=None, sender=None, subject=subject)
-        assert self.email_page.is_message_delivered(email)
+        assert self.email_page.is_message_delivered(email) is True

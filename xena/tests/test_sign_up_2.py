@@ -276,8 +276,6 @@ class TestSignUp2:
     def test_send_awaiting_approval_email(self):
         self.login_page.dev_auth()
         self.ouija_page.click_jobs_link()
-        self.jobs_page.run_instructor_emails_job()
-        self.jobs_page.wait_for_most_recent_job_success(AsyncJob.INSTRUCTOR_EMAILS)
         self.jobs_page.run_queued_emails_job()
         self.jobs_page.wait_for_most_recent_job_success(AsyncJob.QUEUED_EMAILS)
 
@@ -380,8 +378,6 @@ class TestSignUp2:
         self.sign_up_page.log_out()
         self.login_page.dev_auth()
         self.ouija_page.click_jobs_link()
-        self.jobs_page.run_instructor_emails_job()
-        self.jobs_page.wait_for_most_recent_job_success(AsyncJob.INSTRUCTOR_EMAILS)
         self.jobs_page.run_queued_emails_job()
         self.jobs_page.wait_for_most_recent_job_success(AsyncJob.QUEUED_EMAILS)
 
@@ -532,8 +528,6 @@ class TestSignUp2:
 
     def test_send_schedule_conf_email(self):
         self.jobs_page.load_page()
-        self.jobs_page.run_instructor_emails_job()
-        self.jobs_page.wait_for_most_recent_job_success(AsyncJob.INSTRUCTOR_EMAILS)
         self.jobs_page.run_queued_emails_job()
         self.jobs_page.wait_for_most_recent_job_success(AsyncJob.QUEUED_EMAILS)
 

@@ -41,6 +41,7 @@ class SignUpPage(DiabloPages):
     MEETING_TIMES = (By.ID, 'meeting-times')
     ROOMS = (By.ID, 'rooms')
     CROSS_LISTING = (By.XPATH, '//span[contains(@id, "cross-listing")]')
+    OPTED_OUT = (By.ID, 'opted-out')
     SEND_INVITE_BUTTON = (By.ID, 'send-invite-btn')
     CC_EXPLAINED_LINK = (By.ID, 'link-to-course-capture-overview')
     RECORDING_TYPE_TEXT = (By.XPATH, '//div[contains(text(), "\'Presentation and Audio\' recordings are free")]')
@@ -102,6 +103,9 @@ class SignUpPage(DiabloPages):
 
     def visible_cross_listing_ccns(self):
         return [el.get_attribute('id').split('-')[2] for el in self.elements(SignUpPage.CROSS_LISTING)]
+
+    def visible_opt_out(self):
+        return self.element(SignUpPage.OPTED_OUT).get_attribute('innerText').strip()
 
     def click_send_invite_button(self):
         app.logger.info('Clicking the Send Invite button')
