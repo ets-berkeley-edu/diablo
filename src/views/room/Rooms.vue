@@ -5,13 +5,18 @@
         <h1><v-icon large>mdi-domain</v-icon> {{ $_.size(rooms) }} Rooms</h1>
       </div>
       <v-spacer></v-spacer>
-      <v-text-field
-        v-model="search"
-        append-icon="mdi-magnify"
-        label="Search"
-        single-line
-        hide-details
-      ></v-text-field>
+      <v-tooltip v-model="adviseAgainstRoom237" bottom color="pink">
+        <template v-slot:activator="{}">
+          <v-text-field
+            v-model="search"
+            append-icon="mdi-magnify"
+            label="Search"
+            single-line
+            hide-details
+          ></v-text-field>
+        </template>
+        Nothing. There ain't nothing in Room 237. But you ain't got no business going in there anyway. So stay out!
+      </v-tooltip>
     </v-card-title>
     <v-data-table
       :headers="headers"
@@ -69,6 +74,11 @@
       rooms: undefined,
       search: undefined
     }),
+    computed: {
+      adviseAgainstRoom237() {
+        return this.$_.startsWith(this.search, '237 ') && this.$_.size(this.search) < 6
+      }
+    },
     mounted() {
       this.$loading()
       getAllRooms().then(data => {

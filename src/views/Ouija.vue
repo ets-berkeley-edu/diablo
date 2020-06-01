@@ -10,6 +10,7 @@
           id="input-search"
           v-model="searchText"
           append-icon="mdi-magnify"
+          clearable
           label="Search"
           single-line
           hide-details

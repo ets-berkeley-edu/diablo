@@ -35,7 +35,7 @@
       toggleOptOut() {
         updateOptOut(this.course.termId, this.course.sectionId, this.optOut).then(data => {
           this.course.hasOptedOut = data.hasOptedOut
-          this.alertScreenReader(`Opted ${data.hasOptedOut ? 'out' : 'in'}`)
+          this.alertScreenReader(`${this.course.label} has opted ${data.hasOptedOut ? 'out' : 'in'}`)
           this.onToggle(this.course)
         })
       }
