@@ -75,7 +75,8 @@
                   submitted approval on
                   {{ $_.last(course.approvals).createdAt | moment('MMM D, YYYY') }}.
                 </v-tooltip>
-                {{ course.status || '&mdash;' }}
+                <div :id="`course-${course.sectionId}-approval-status`">{{ course.approvalStatus || '&mdash;' }}</div>
+                <div :id="`course-${course.sectionId}-scheduling-status`">{{ course.schedulingStatus || '&mdash;' }}</div>
               </td>
               <td :class="tdClass(course)">
                 <div v-for="instructor in course.instructors" :key="instructor.uid" class="mb-1 mt-1">
@@ -185,7 +186,7 @@
         {text: 'Room', value: 'room.location'},
         {text: 'Days', sortable: false},
         {text: 'Time', sortable: false},
-        {text: 'Status', value: 'status', class: 'w-10'},
+        {text: 'Status', class: 'w-10', sortable: false},
         {text: 'Instructor(s)', value: 'instructorNames'},
         {text: 'Publish', value: 'publishTypeNames', class: 'w-10'},
         {text: 'Opt out', value: 'hasOptedOut', sortable: false}
