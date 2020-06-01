@@ -377,7 +377,8 @@ class SisSection(db.Model):
 
     @classmethod
     def get_courses_partially_approved(cls, term_id):
-        # Courses, including scheduled, that have some instructor approvals but not all. Admin approvals are ignored.
+        # Courses, including scheduled, that have at least one current instructor who has approved, and at least one
+        # current instructor who has not approved. Admins and previous instructors are ignored.
         sql = """
             SELECT DISTINCT
                 s.*,
@@ -390,12 +391,15 @@ class SisSection(db.Model):
             FROM sis_sections s
             JOIN approvals a
                 ON s.term_id = :term_id AND s.is_primary IS TRUE AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
-                AND s.deleted_at IS NULL AND a.section_id = s.section_id AND a.term_id = :term_id
-                AND a.approver_type != 'admin' AND a.deleted_at IS NULL
+                AND s.deleted_at IS NULL
+                AND a.section_id = s.section_id AND a.term_id = :term_id
+                AND a.deleted_at IS NULL
             JOIN instructors i ON i.uid = s.instructor_uid
-            -- This second course/instructor join is not for data display purposes, but to screen for the existence of
-            -- any instructor who has not approved.
-            JOIN sis_sections s2 ON s.term_id = s2.term_id AND s.section_id = s2.section_id
+            -- This second course/instructor join is not for data display purposes, but to screen for the existence
+            -- of any current instructor who has not approved.
+            JOIN sis_sections s2
+                ON s.term_id = s2.term_id AND s.section_id = s2.section_id
+                AND s2.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
             JOIN instructors i2 ON
                 i2.uid = s2.instructor_uid
                 AND i2.uid NOT IN (
@@ -403,6 +407,10 @@ class SisSection(db.Model):
                     FROM approvals
                     WHERE section_id = s.section_id AND term_id = :term_id
                 )
+            -- And a final join to ensure that at least one current instructor has approved.
+            JOIN sis_sections s3 ON
+                s3.term_id = s2.term_id AND s3.section_id = s2.section_id
+                AND s3.instructor_uid = a.approved_by_uid
             JOIN rooms r ON r.location = s.meeting_location AND r.capability IS NOT NULL
             ORDER BY s.course_name, s.section_id, s.instructor_uid
         """
