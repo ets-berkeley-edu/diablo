@@ -702,12 +702,6 @@ def _to_api_json(term_id, rows, include_rooms=True):
                 'scheduled': scheduled,
                 'termId': row['term_id'],
             }
-            if scheduled:
-                course['status'] = 'Scheduled'
-            elif approvals:
-                course['status'] = 'Approved'
-            else:
-                course['status'] = 'Invited' if course['invitees'] else 'Not Invited'
 
             if include_rooms:
                 room = rooms_by_id.get(row['room_id']) if 'room_id' in row else None
@@ -736,11 +730,30 @@ def _to_api_json(term_id, rows, include_rooms=True):
 
 
 def _decorate_course(course):
+    course['hasNecessaryApprovals'] = False
+    if any(a['wasApprovedByAdmin'] for a in course['approvals']):
+        course['hasNecessaryApprovals'] = True
+
+    course['approvalStatus'] = 'Not Invited'
+    if course['instructors']:
+        approval_uids = [a['approvedBy']['uid'] for a in course['approvals']]
+        necessary_approval_uids = [i['uid'] for i in course['instructors']]
+        if all(uid in approval_uids for uid in necessary_approval_uids):
+            course['approvalStatus'] = 'Approved'
+            course['hasNecessaryApprovals'] = True
+        elif any(uid in approval_uids for uid in necessary_approval_uids):
+            course['approvalStatus'] = 'Partially Approved'
+        elif course['invitees']:
+            course['approvalStatus'] = 'Invited'
+
+    course['schedulingStatus'] = 'Not Scheduled'
+    if course['scheduled']:
+        course['schedulingStatus'] = 'Scheduled'
+    elif course['hasNecessaryApprovals']:
+        course['schedulingStatus'] = 'Queued for Scheduling'
+
     room_id = course.get('room', {}).get('id')
-    course['hasNecessaryApprovals'] = _has_necessary_approvals(course)
-    if course['status'] == 'Approved' and not course['hasNecessaryApprovals']:
-        course['status'] = 'Partially Approved'
-    # Check for course changes w.r.t. room, meeting times, and instructors.
+
     if course['scheduled']:
         def _meeting(obj):
             return f'{obj["meetingDays"]}-{obj["meetingStartTime"]}-{obj["meetingEndTime"]}'
@@ -877,14 +890,3 @@ def _construct_course_label(course_name, instruction_format, section_num, cross_
             return f'{" | ".join(distinct_course_names)}, {instruction_format} {"/".join(distinct_section_nums)}'
     else:
         return _label(course_name, instruction_format, section_num)
-
-
-def _has_necessary_approvals(course):
-    if any(a['wasApprovedByAdmin'] for a in course['approvals']):
-        return True
-    elif course['instructors']:
-        approval_uids = [a['approvedBy']['uid'] for a in course['approvals']]
-        necessary_approval_uids = [i['uid'] for i in course['instructors']]
-        return all(uid in approval_uids for uid in necessary_approval_uids)
-    else:
-        return False
