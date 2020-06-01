@@ -417,8 +417,6 @@ class TestSignUp0:
 
     def test_send_schedule_conf_email(self):
         self.jobs_page.load_page()
-        self.jobs_page.run_instructor_emails_job()
-        self.jobs_page.wait_for_most_recent_job_success(AsyncJob.INSTRUCTOR_EMAILS)
         self.jobs_page.run_queued_emails_job()
         self.jobs_page.wait_for_most_recent_job_success(AsyncJob.QUEUED_EMAILS)
 
