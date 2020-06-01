@@ -181,10 +181,12 @@ def _set_up_and_run_jobs():
 
 def _set_room_capability():
     for room in Room.all_rooms():
-        if room.location in ['Barrows 106', 'Barker 101']:
-            Room.update_capability(room.id, 'screencast')
-        elif room.location in ['Li Ka Shing 145']:
+        if room.location in ['Barrows 106', 'Li Ka Shing 145']:
             Room.set_auditorium(room.id, True)
+
+        if room.location == 'Barrows 106':
+            Room.update_capability(room.id, 'screencast')
+        elif room.location in ['Li Ka Shing 145', 'Barker 101']:
             Room.update_capability(room.id, 'screencast_and_video')
     std_commit(allow_test_environment=True)
 

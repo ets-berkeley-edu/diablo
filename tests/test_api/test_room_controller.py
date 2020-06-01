@@ -22,10 +22,9 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-
 import json
 
-from diablo.models.room import Room
+from diablo.models.room import ALL_RECORDING_TYPES, Room
 import pytest
 
 
@@ -80,8 +79,7 @@ class TestGetAuditoriums:
     def test_authorized(self, client, instructor_session):
         """Instructors and admins have access."""
         rooms = self._api_auditoriums(client)
-        assert len(rooms) == 1
-        assert rooms[0]['location'] == 'Li Ka Shing 145'
+        assert [room['location'] for room in rooms] == ['Barrows 106', 'Li Ka Shing 145']
 
 
 class TestGetRoom:
@@ -112,25 +110,39 @@ class TestGetRoom:
         assert room
         api_json = self._api_room(client, room.id)
         assert api_json['id'] == room.id
-        assert api_json['isAuditorium'] is False
+        assert api_json['isAuditorium'] is True
         assert api_json['location'] == location
         assert api_json['kalturaResourceId'] == 890
         assert len(api_json['recordingTypeOptions']) == 1
 
-    def test_get_auditorium(self, client, admin_session):
-        """Admin user has access to auditorium metadata."""
+    def test_screencast_and_video_auditorium(self, client, admin_session):
+        """All recording types are available for Auditorium with 'screencast_and_video' capability."""
         location = 'Li Ka Shing 145'
-        room = next((r for r in Room.all_rooms() if r.location == location), None)
+        room = Room.find_room(location=location)
         assert room
         api_json = self._api_room(client, room.id)
         assert api_json['id'] == room.id
+        assert api_json['capabilityName'] == 'Screencast + Video'
         assert api_json['isAuditorium'] is True
         assert api_json['kalturaResourceId'] == 678
         assert api_json['location'] == location
-        assert len(api_json['recordingTypeOptions']) == 3
+        assert api_json['recordingTypeOptions'] == ALL_RECORDING_TYPES
         # Feed includes courses but room-per-course would be redundant
         assert len(api_json['courses']) > 0
         assert 'room' not in api_json['courses'][0]
+
+    def test_recording_type_options(self, client, admin_session):
+        """Available recording types determined by values of capability and is_auditorium."""
+        expected = {
+            'Barker 101': ['presenter_presentation_audio'],
+            'Barrows 106': ['presentation_audio'],
+            'Li Ka Shing 145': ALL_RECORDING_TYPES.keys(),
+        }
+        for location, expected_types in expected.items():
+            room = Room.find_room(location=location)
+            api_json = self._api_room(client, room.id)
+            actual_types = api_json['recordingTypeOptions'].keys()
+            assert list(actual_types) == list(expected_types)
 
 
 class TestUpdateRoomCapability:
