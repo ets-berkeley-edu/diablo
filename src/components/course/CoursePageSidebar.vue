@@ -77,7 +77,7 @@
       </v-col>
     </v-row>
     <v-row
-      v-if="$currentUser.isAdmin && course.room && course.room.capability && course.instructors.length"
+      v-if="$currentUser.isAdmin && isCurrentTerm && course.room && course.room.capability && course.instructors.length"
       id="send-invite"
       justify="center"
       class="mt-2"
@@ -89,7 +89,7 @@
         Send Invite
       </v-btn>
     </v-row>
-    <v-row v-if="$currentUser.isAdmin && course.scheduled" id="unschedule" justify="center">
+    <v-row v-if="$currentUser.isAdmin && isCurrentTerm && course.scheduled" id="unschedule" justify="center">
       <v-col md="auto">
         <v-dialog v-model="showUnscheduleModal" persistent max-width="400">
           <template v-slot:activator="{ on }">
@@ -153,6 +153,11 @@
     data: () => ({
       showUnscheduleModal: false
     }),
+    computed: {
+      isCurrentTerm() {
+        return this.course.termId === this.$config.currentTermId
+      }
+    },
     methods: {
       sendInvite() {
         queueEmail('invitation', this.course.sectionId, this.course.termId).then(data => {

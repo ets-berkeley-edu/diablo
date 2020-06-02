@@ -16,7 +16,7 @@
         </v-col>
         <v-col>
           <v-card class="pa-6" outlined>
-            <v-container v-if="course.room.capability">
+            <v-container v-if="isCurrentTerm && course.room.capability">
               <v-row v-if="course.approvals.length" no-gutters>
                 <v-col id="approvals-described" class="font-weight-medium red--text">
                   <span v-if="queuedForScheduling">This course is currently queued for scheduling. Recordings will be scheduled in an hour or less. </span>
@@ -170,6 +170,12 @@
                 This course is not eligible for Course Capture because {{ course.room.location }} is not capture-enabled.
               </v-row>
             </v-container>
+            <v-container v-if="!isCurrentTerm">
+              <v-row id="course-not-current">
+                <v-icon class="pr-2" color="red">mdi-alert</v-icon>
+                This course is not currently eligible for Course Capture.
+              </v-row>
+            </v-container>
           </v-card>
         </v-col>
       </v-row>
@@ -208,6 +214,9 @@
     computed: {
       disableSubmit() {
         return !this.agreedToTerms || !this.publishType || !this.recordingType
+      },
+      isCurrentTerm() {
+        return this.course.termId === this.$config.currentTermId
       },
       mostRecentApproval() {
         return this.$_.last(this.course.approvals)
