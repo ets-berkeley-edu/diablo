@@ -22,10 +22,11 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from diablo.api.errors import BadRequestError, ResourceNotFoundError
+from diablo.api.errors import BadRequestError, InternalServerError, ResourceNotFoundError
 from diablo.api.util import admin_required
 from diablo.externals.kaltura import Kaltura
 from diablo.lib.http import tolerant_jsonify
+from diablo.lib.util import DEFAULT_KALTURA_PAGE_SIZE
 from diablo.models.room import Room
 from diablo.models.sis_section import SisSection
 from flask import current_app as app, request
@@ -44,20 +45,20 @@ def get_auditoriums():
     return tolerant_jsonify([room.to_api_json() for room in Room.auditoriums()])
 
 
-@app.route('/api/rooms/kaltura_resources')
+@app.route('/api/room/<kaltura_resource_id>/kaltura_events')
 @admin_required
-def kaltura_resource_list():
-    return tolerant_jsonify(Kaltura().get_resource_list())
-
-
-@app.route('/api/room/<room_id>/kaltura_event_list')
-@admin_required
-def kaltura_event_list(room_id):
-    room = Room.get_room(room_id)
-    if room and room.kaltura_resource_id:
-        return tolerant_jsonify(Kaltura().get_events_by_location(kaltura_resource_id=room.kaltura_resource_id))
-    else:
-        raise ResourceNotFoundError('No such room')
+def get_kaltura_events(kaltura_resource_id):
+    max_pages = 20
+    kaltura_events = []
+    kaltura = Kaltura()
+    for page in range(1, max_pages + 1):
+        events = kaltura.get_events_by_location(kaltura_resource_id=kaltura_resource_id, page=page)
+        kaltura_events += events
+        if len(events) < DEFAULT_KALTURA_PAGE_SIZE:
+            break
+        if page == max_pages:
+            raise InternalServerError(f'Kaltura result count exceeds {DEFAULT_KALTURA_PAGE_SIZE * max_pages}. Abort!')
+    return tolerant_jsonify(kaltura_events)
 
 
 @app.route('/api/room/<room_id>')

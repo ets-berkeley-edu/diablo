@@ -27,7 +27,7 @@ from itertools import islice
 
 from diablo import db, std_commit
 from diablo.externals.kaltura import Kaltura
-from diablo.lib.util import format_days
+from diablo.lib.util import DEFAULT_KALTURA_PAGE_SIZE, format_days
 from diablo.merged.calnet import get_calnet_users_for_uids
 from diablo.merged.emailer import send_system_error_email
 from diablo.models.course_preference import CoursePreference
@@ -66,12 +66,16 @@ def refresh_rooms():
         for location in new_locations:
             Room.create(location=location)
 
-    rooms = Room.all_rooms()
+    kaltura = Kaltura()
     kaltura_resource_ids_per_room = {}
-    for resource in Kaltura().get_resource_list():
-        room = next((r for r in rooms if r.location == resource['name']), None)
-        if room:
-            kaltura_resource_ids_per_room[room.id] = resource['id']
+    for page in range(1, 101):
+        resources = kaltura.get_schedule_resources(page=page)
+        for resource in resources:
+            room = Room.find_room(location=resource['name'])
+            if room:
+                kaltura_resource_ids_per_room[room.id] = resource['id']
+        if len(resources) < DEFAULT_KALTURA_PAGE_SIZE:
+            break
 
     if kaltura_resource_ids_per_room:
         Room.update_kaltura_resource_mappings(kaltura_resource_ids_per_room)
