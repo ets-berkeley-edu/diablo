@@ -27,7 +27,7 @@ from datetime import datetime
 from diablo import cachify, skip_when_pytest
 from diablo.lib.berkeley import term_name_for_sis_id
 from diablo.lib.kaltura_util import events_to_api_json, get_first_matching_datetime_of_term
-from diablo.lib.util import DEFAULT_KALTURA_PAGE_SIZE, to_isoformat
+from diablo.lib.util import to_isoformat
 from flask import current_app as app
 from KalturaClient import KalturaClient, KalturaConfiguration
 from KalturaClient.exceptions import KalturaException
@@ -41,6 +41,8 @@ from KalturaClient.Plugins.Schedule import KalturaBlackoutScheduleEvent, Kaltura
 import pytz
 
 CREATED_BY_DIABLO_TAG = 'created_by_diablo'
+
+DEFAULT_KALTURA_PAGE_SIZE = 200
 
 
 class Kaltura:
@@ -113,57 +115,40 @@ class Kaltura:
             return None
 
     @skip_when_pytest()
-    def get_blackout_dates(self, page, results_per_page=DEFAULT_KALTURA_PAGE_SIZE, tags_like=CREATED_BY_DIABLO_TAG):
-        return self._get_events(
-            kaltura_event_filter=KalturaBlackoutScheduleEventFilter(tagsLike=tags_like),
-            page=page,
-            results_per_page=results_per_page,
-        )
+    def get_blackout_dates(self, tags_like=CREATED_BY_DIABLO_TAG):
+        return self._get_events(kaltura_event_filter=KalturaBlackoutScheduleEventFilter(tagsLike=tags_like))
 
     @skip_when_pytest()
     def delete_event(self, kaltura_schedule_id):
         return self.kaltura_client.schedule.scheduleEvent.delete(kaltura_schedule_id)
 
     @skip_when_pytest()
-    def get_categories(self, category_ids, page, results_per_page=DEFAULT_KALTURA_PAGE_SIZE):
-        return self._get_categories(
-            kaltura_category_filter=KalturaCategoryFilter(idIn=','.join(str(id_) for id_ in category_ids)),
-            page=page,
-            results_per_page=results_per_page,
-        )
+    def get_categories(self, category_ids):
+        category_filter = KalturaCategoryFilter(idIn=','.join(str(id_) for id_ in category_ids))
+        return self._get_categories(kaltura_category_filter=category_filter)
 
     @skip_when_pytest()
-    def get_events_by_location(self, kaltura_resource_id, page, results_per_page=DEFAULT_KALTURA_PAGE_SIZE):
-        return self._get_events(
-            kaltura_event_filter=KalturaScheduleEventFilter(resourceIdsLike=str(kaltura_resource_id)),
-            page=page,
-            results_per_page=results_per_page,
-        )
+    def get_events_by_location(self, kaltura_resource_id):
+        event_filter = KalturaScheduleEventFilter(resourceIdEqual=str(kaltura_resource_id))
+        return self._get_events(kaltura_event_filter=event_filter)
 
     @skip_when_pytest()
-    def get_events_by_tag(self, page, results_per_page=DEFAULT_KALTURA_PAGE_SIZE, tags_like=CREATED_BY_DIABLO_TAG):
-        return self._get_events(
-            kaltura_event_filter=KalturaScheduleEventFilter(tagsLike=tags_like),
-            page=page,
-            results_per_page=results_per_page,
-        )
+    def get_events_by_tag(self, tags_like=CREATED_BY_DIABLO_TAG):
+        return self._get_events(kaltura_event_filter=KalturaScheduleEventFilter(tagsLike=tags_like))
 
     @skip_when_pytest()
     def get_schedule_event(self, kaltura_schedule_id):
-        events = self._get_events(
-            kaltura_event_filter=KalturaScheduleEventFilter(idEqual=kaltura_schedule_id),
-            page=1,
-            results_per_page=1,
-        )
+        events = self._get_events(kaltura_event_filter=KalturaScheduleEventFilter(idEqual=kaltura_schedule_id))
         return events[0] if events else None
 
     @cachify('kaltura/schedule_resources', timeout=30)
-    def get_schedule_resources(self, page, results_per_page=DEFAULT_KALTURA_PAGE_SIZE):
-        response = self.kaltura_client.schedule.scheduleResource.list(
-            filter=KalturaScheduleResourceFilter(),
-            pager=KalturaFilterPager(pageIndex=page, pageSize=results_per_page),
-        )
-        return [{'id': o.id, 'name': o.name} for o in response.objects]
+    def get_schedule_resources(self):
+        def _fetch(page_index):
+            return self.kaltura_client.schedule.scheduleResource.list(
+                filter=KalturaScheduleResourceFilter(),
+                pager=KalturaFilterPager(pageIndex=page_index, pageSize=DEFAULT_KALTURA_PAGE_SIZE),
+            )
+        return [{'id': o.id, 'name': o.name} for o in _get_kaltura_objects(_fetch)]
 
     @skip_when_pytest()
     def get_canvas_category_object(self, canvas_course_site_id):
@@ -247,19 +232,21 @@ class Kaltura:
         client.setKs(ks)
         return client
 
-    def _get_events(self, kaltura_event_filter, page, results_per_page):
-        response = self.kaltura_client.schedule.scheduleEvent.list(
-            filter=kaltura_event_filter,
-            pager=KalturaFilterPager(pageIndex=page, pageSize=results_per_page),
-        )
-        return events_to_api_json(response.objects)
+    def _get_events(self, kaltura_event_filter):
+        def _fetch(page_index):
+            return self.kaltura_client.schedule.scheduleEvent.list(
+                filter=kaltura_event_filter,
+                pager=KalturaFilterPager(pageIndex=page_index, pageSize=DEFAULT_KALTURA_PAGE_SIZE),
+            )
+        return events_to_api_json(_get_kaltura_objects(_fetch))
 
-    def _get_categories(self, kaltura_category_filter, page, results_per_page):
-        response = self.kaltura_client.category.list(
-            filter=kaltura_category_filter,
-            pager=KalturaFilterPager(pageIndex=page, pageSize=results_per_page),
-        )
-        return [_category_object_to_json(obj) for obj in response.objects]
+    def _get_categories(self, kaltura_category_filter):
+        def _fetch(page_index):
+            return self.kaltura_client.category.list(
+                filter=kaltura_category_filter,
+                pager=KalturaFilterPager(pageIndex=page_index, pageSize=DEFAULT_KALTURA_PAGE_SIZE),
+            )
+        return [_category_object_to_json(obj) for obj in _get_kaltura_objects(_fetch)]
 
     def _schedule_recurring_events_in_kaltura(
             self,
@@ -397,6 +384,15 @@ def _category_object_to_json(obj):
         'id': obj.id,
         'courseSiteId': obj.name,
     }
+
+
+def _get_kaltura_objects(_fetch):
+    response = _fetch(1)
+    total_count = response.totalCount
+    objects = response.objects
+    for page in range(2, int(total_count / DEFAULT_KALTURA_PAGE_SIZE) + 2):
+        objects += _fetch(page).objects
+    return objects
 
 
 def _to_normalized_set(strings):

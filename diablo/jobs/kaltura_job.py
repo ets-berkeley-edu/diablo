@@ -25,7 +25,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 from diablo.externals.kaltura import Kaltura
 from diablo.jobs.base_job import BaseJob
 from diablo.jobs.util import schedule_recordings
-from diablo.lib.util import DEFAULT_KALTURA_PAGE_SIZE, objects_to_dict_organized_by_section_id
+from diablo.lib.util import objects_to_dict_organized_by_section_id
 from diablo.models.admin_user import AdminUser
 from diablo.models.approval import Approval
 from diablo.models.email_template import EmailTemplate
@@ -65,18 +65,12 @@ def _update_already_scheduled_events():
         if kaltura_schedule and course['canvasCourseSites'] and scheduled['publishType'] == 'kaltura_media_gallery':
             # From Kaltura, get Canvas course sites (categories) currently mapped to the course.
             category_ids = kaltura_schedule['categoryIds']
-            existing_categories = []
-            if category_ids:
-                for page in range(1, 101):
-                    categories = kaltura.get_categories(category_ids, page=page)
-                    existing_categories += categories
-                    if len(categories) < DEFAULT_KALTURA_PAGE_SIZE:
-                        break
+            categories = kaltura.get_categories(category_ids) if category_ids else []
             template_entry_id = kaltura_schedule['templateEntryId']
 
             for s in course['canvasCourseSites']:
                 canvas_course_site_id = str(s['courseSiteId'])
-                if canvas_course_site_id not in [c['courseSiteId'] for c in existing_categories]:
+                if canvas_course_site_id not in [c['courseSiteId'] for c in categories]:
                     _update_kaltura_category(canvas_course_site_id, course_name, kaltura, template_entry_id)
         else:
             app.logger.warn(f'The previously scheduled {course_name} has no schedule_event in Kaltura.')
