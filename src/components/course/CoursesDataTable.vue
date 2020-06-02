@@ -102,7 +102,12 @@
                 {{ course.publishTypeNames || '&mdash;' }}
               </td>
               <td :class="tdClass(course)">
-                <ToggleOptOut :key="course.sectionId" :course="course" :on-toggle="onToggleOptOut" />
+                <ToggleOptOut
+                  v-if="!course.hasNecessaryApprovals && !course.scheduled"
+                  :key="course.sectionId"
+                  :course="course"
+                  :on-toggle="onToggleOptOut"
+                />
               </td>
             </tr>
             <tr v-if="course.approvals.length" :key="`approvals-${course.sectionId}`">
