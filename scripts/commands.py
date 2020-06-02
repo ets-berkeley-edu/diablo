@@ -30,7 +30,9 @@ abspath = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(abspath)
 
 import click  # noqa
+from diablo.api.errors import InternalServerError  # noqa
 from diablo.factory import create_app  # noqa
+from diablo.lib.util import DEFAULT_KALTURA_PAGE_SIZE  # noqa
 
 application = create_app(standalone=True)
 
@@ -48,7 +50,15 @@ def delete_kaltura_events(rehearsal):
             """)
         _print('Time for some Kaltura housekeeping...')
         kaltura = Kaltura()
-        kaltura_events = kaltura.get_events_by_tag(tags_like=CREATED_BY_DIABLO_TAG)
+        kaltura_events = []
+        max_page = 1000
+        for page in range(1, max_page + 1):
+            events = kaltura.get_events_by_tag(page=page, tags_like=CREATED_BY_DIABLO_TAG)
+            kaltura_events += events
+            if len(events) < DEFAULT_KALTURA_PAGE_SIZE:
+                break
+            if page == max_page:
+                raise InternalServerError(f'Kaltura result count exceeds {DEFAULT_KALTURA_PAGE_SIZE * max_page}. Abort!')
         if kaltura_events:
             _print(f'In two seconds we will delete {len(kaltura_events)} event(s) in Kaltura. Use control-C to abort.')
             time.sleep(2)
@@ -80,12 +90,18 @@ def assign_blackout_dates(rehearsal):
             time.sleep(2)
 
             kaltura = Kaltura()
-            for existing_blackout_date in kaltura.get_blackout_dates():
-                for blackout_date in blackout_dates:
-                    if blackout_date in existing_blackout_date['startDate']:
-                        _print(f'[ERROR] Kaltura already has blackout_date {blackout_date}:\n{existing_blackout_date}')
-                        _print('Either delete existing blackout dates in Kaltura or change Diablo configs.')
-                        return
+            for page in range(1, 101):
+                existing_blackout_dates = kaltura.get_blackout_dates(page=page)
+                for existing_blackout_date in existing_blackout_dates:
+                    for blackout_date in blackout_dates:
+                        print(f'blackout_date: {blackout_date}')
+                        print(f'existing_blackout_date: {existing_blackout_date}')
+                        if blackout_date in existing_blackout_date['startDate']:
+                            _print(f'[ERROR] Kaltura already has blackout_date {blackout_date}:\n{existing_blackout_date}')
+                            _print('Either delete existing blackout dates in Kaltura or change Diablo configs.')
+                            return
+                if len(existing_blackout_dates) < DEFAULT_KALTURA_PAGE_SIZE:
+                    break
 
             if rehearsal:
                 _print(f'kaltura.create_blackout_dates(blackout_dates=[{", ".join(blackout_dates)}])')

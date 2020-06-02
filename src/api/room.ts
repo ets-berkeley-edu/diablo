@@ -9,8 +9,8 @@ export function getAuditoriums() {
   return axios.get(`${utils.apiBaseUrl()}/api/rooms/auditoriums`)
 }
 
-export function getKalturaEventList(roomId) {
-  return axios.get(`${utils.apiBaseUrl()}/api/room/${roomId}/kaltura_event_list`)
+export function getKalturaEventList(kalturaResourceId) {
+  return axios.get(`${utils.apiBaseUrl()}/api/room/${kalturaResourceId}/kaltura_events`)
 }
 
 export function getRoom(id) {

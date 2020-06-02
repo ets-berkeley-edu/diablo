@@ -223,13 +223,12 @@
         this.room = data
         this.isAuditorium = data.isAuditorium
         this.scheduledCourses = this.$_.filter(data.courses, 'scheduled')
+        this.$ready(data.location)
+        // The page is ready; Kaltura events will pop up in a sec.
         if (this.room.kalturaResourceId) {
-          getKalturaEventList(this.room.id).then(data => {
+          getKalturaEventList(this.room.kalturaResourceId).then(data => {
             this.kalturaEventList = data
-            this.$ready(data.location)
           })
-        } else {
-          this.$ready(data.location)
         }
       }).catch(this.$ready)
     },

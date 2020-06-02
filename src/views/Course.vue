@@ -90,6 +90,7 @@
                       <v-select
                         id="select-recording-type"
                         v-model="recordingType"
+                        :disabled="isApproving"
                         item-text="text"
                         item-value="value"
                         :full-width="true"
@@ -122,6 +123,7 @@
                     v-if="!course.hasNecessaryApprovals"
                     id="select-publish-type"
                     v-model="publishType"
+                    :disabled="isApproving"
                     item-text="text"
                     item-value="value"
                     :items="publishTypeOptions"
