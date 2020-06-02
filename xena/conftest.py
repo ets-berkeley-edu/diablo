@@ -29,6 +29,7 @@ from diablo.factory import create_app
 import pytest
 from xena.models.term import Term
 from xena.pages.email_page import EmailPage
+from xena.pages.email_templates_page import EmailTemplatesPage
 from xena.pages.jobs_page import JobsPage
 from xena.pages.kaltura_page import KalturaPage
 from xena.pages.login_page import LoginPage
@@ -61,6 +62,7 @@ def page_objects(request):
     room_page = RoomPage(driver)
     rooms_page = RoomsPage(driver)
     sign_up_page = SignUpPage(driver)
+    templates_page = EmailTemplatesPage(driver)
     kaltura_page = KalturaPage(driver)
 
     session = request.node
@@ -76,6 +78,7 @@ def page_objects(request):
             setattr(cls.obj, 'room_page', room_page)
             setattr(cls.obj, 'rooms_page', rooms_page)
             setattr(cls.obj, 'sign_up_page', sign_up_page)
+            setattr(cls.obj, 'templates_page', templates_page)
             setattr(cls.obj, 'kaltura_page', kaltura_page)
         yield
     finally:

@@ -99,6 +99,12 @@ def wait_for_kaltura_id(recording_schedule, term):
                 time.sleep(get_short_timeout())
 
 
+def reset_email_template_test_data(template_type):
+    sql = f"DELETE FROM email_templates WHERE template_type = '{template_type}'"
+    db.session.execute(text(sql))
+    std_commit(allow_test_environment=True)
+
+
 def reset_sign_up_test_data(course_data):
     ccn = course_data['ccn']
     term_id = app.config['CURRENT_TERM_ID']
