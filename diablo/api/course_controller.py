@@ -91,9 +91,7 @@ def approve():
         if last_approver:
             notify_instructor_waiting_for_approval(course, last_approver, pending_instructors)
 
-    if app.config['FEATURE_FLAG_SCHEDULE_RECORDINGS_SYNCHRONOUSLY']:
-        # This feature-flag is intended for developer workstation ONLY. Do not enable in diablo-dev|qa|prod.
-        _schedule_if_has_necessary_approvals(course)
+    _update_scheduling(course)
 
     return tolerant_jsonify(SisSection.get_course(term_id, section_id))
 
@@ -189,7 +187,14 @@ def update_opt_out():
     params = request.get_json()
     term_id = params.get('termId')
     section_id = params.get('sectionId')
+
+    course = SisSection.get_course(term_id, section_id) if (term_id and section_id) else None
     opt_out = params.get('optOut')
+    if not course or opt_out is None:
+        raise BadRequestError('Required params missing or invalid')
+    if course['scheduled']:
+        raise BadRequestError('Cannot update opt-out on scheduled course')
+
     preferences = CoursePreference.update_opt_out(
         term_id=term_id,
         section_id=section_id,
@@ -198,7 +203,7 @@ def update_opt_out():
     return tolerant_jsonify(preferences.to_api_json())
 
 
-def _schedule_if_has_necessary_approvals(course):
+def _update_scheduling(course):
     def _has_necessary_approvals():
         approval_uids = [a.approved_by_uid for a in all_approvals]
         necessary_approval_uids = [i['uid'] for i in course['instructors']]
@@ -206,7 +211,16 @@ def _schedule_if_has_necessary_approvals(course):
 
     all_approvals = Approval.get_approvals(section_id=course['sectionId'], term_id=course['termId'])
     if not course['scheduled'] and (current_user.is_admin or _has_necessary_approvals()):
-        schedule_recordings(
-            all_approvals=all_approvals,
-            course=course,
-        )
+        # Queuing a course for scheduling wipes any opt-out preference.
+        if course['hasOptedOut']:
+            CoursePreference.update_opt_out(
+                term_id=course['termId'],
+                section_id=course['sectionId'],
+                opt_out=False,
+            )
+        # This feature flag is intended for developer workstation ONLY. Do not enable in diablo-dev|qa|prod.
+        if app.config['FEATURE_FLAG_SCHEDULE_RECORDINGS_SYNCHRONOUSLY']:
+            schedule_recordings(
+                all_approvals=all_approvals,
+                course=course,
+            )

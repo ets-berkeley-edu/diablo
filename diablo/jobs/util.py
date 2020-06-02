@@ -30,6 +30,7 @@ from diablo.externals.kaltura import Kaltura
 from diablo.lib.util import format_days
 from diablo.merged.calnet import get_calnet_users_for_uids
 from diablo.merged.emailer import send_system_error_email
+from diablo.models.course_preference import CoursePreference
 from diablo.models.cross_listing import CrossListing
 from diablo.models.instructor import Instructor
 from diablo.models.queued_email import notify_instructors_recordings_scheduled
@@ -164,6 +165,7 @@ def schedule_recordings(all_approvals, course):
     approval = all_approvals[-1]
     room = Room.get_room(approval.room_id)
     scheduled = None
+    section_ids_opted_out = CoursePreference.get_section_ids_opted_out(term_id=term_id)
 
     if room.kaltura_resource_id:
         # Query for date objects.
@@ -208,6 +210,13 @@ def schedule_recordings(all_approvals, course):
                 section_id=section_id,
                 term_id=term_id,
             )
+            # Turn off opt-out setting if present.
+            if section_id in section_ids_opted_out:
+                CoursePreference.update_opt_out(
+                    term_id=term_id,
+                    section_id=section_id,
+                    opt_out=False,
+                )
             notify_instructors_recordings_scheduled(course=course, scheduled=scheduled)
             uids = [approval.approved_by_uid for approval in all_approvals]
             app.logger.info(f'Recordings scheduled for course {section_id} per approvals: {", ".join(uids)}')

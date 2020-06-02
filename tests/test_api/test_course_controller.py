@@ -429,7 +429,7 @@ class TestCoursesFilter:
                     self._send_invitation_email(section_id)
 
             # If course has approvals but not scheduled then it will show up in the feed.
-            self._create_approval(section_id)
+            self._create_approval(section_4_id)
             # Feed will exclude scheduled.
             _schedule_recordings(
                 section_id=section_3_id,
@@ -792,22 +792,45 @@ class TestUpdatePreferences:
 
     def test_authorized(self, client, admin_session):
         """Only admins can toggle the do-not-email preference of any given course."""
-        section_ids_opted_out = CoursePreference.get_section_ids_opted_out(term_id=self.term_id)
-        previously_opted_out = section_1_id not in section_ids_opted_out
-        opt_out = not previously_opted_out
-        self._api_opt_out_update(
-            client,
-            term_id=self.term_id,
-            section_id=section_1_id,
-            opt_out=opt_out,
-        )
-        std_commit(allow_test_environment=True)
+        with test_approvals_workflow(app):
+            section_ids_opted_out = CoursePreference.get_section_ids_opted_out(term_id=self.term_id)
+            previously_opted_out = section_1_id not in section_ids_opted_out
+            opt_out = not previously_opted_out
+            self._api_opt_out_update(
+                client,
+                term_id=self.term_id,
+                section_id=section_1_id,
+                opt_out=opt_out,
+            )
+            std_commit(allow_test_environment=True)
 
-        section_ids_opted_out = CoursePreference.get_section_ids_opted_out(term_id=self.term_id)
-        if opt_out:
-            assert section_1_id in section_ids_opted_out
-        else:
-            assert section_1_id not in section_ids_opted_out
+            section_ids_opted_out = CoursePreference.get_section_ids_opted_out(term_id=self.term_id)
+            if opt_out:
+                assert section_1_id in section_ids_opted_out
+            else:
+                assert section_1_id not in section_ids_opted_out
+
+    def test_scheduling_removes_opt_out(self, client, admin_session):
+        with test_approvals_workflow(app):
+            self._api_opt_out_update(
+                client,
+                term_id=self.term_id,
+                section_id=section_1_id,
+                opt_out=True,
+            )
+            api_json = api_get_course(client, section_id=section_1_id, term_id=self.term_id)
+            assert api_json['schedulingStatus'] == 'Not Scheduled'
+            assert api_json['hasOptedOut'] is True
+
+            api_approve(
+                client,
+                publish_type='kaltura_my_media',
+                recording_type='presentation_audio',
+                section_id=section_1_id,
+            )
+            api_json = api_get_course(client, section_id=section_1_id, term_id=self.term_id)
+            assert api_json['schedulingStatus'] == 'Queued for Scheduling'
+            assert api_json['hasOptedOut'] is False
 
 
 class TestUnscheduleCourse:
