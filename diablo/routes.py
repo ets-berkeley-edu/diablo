@@ -22,11 +22,13 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-
 import datetime
+import traceback
 
+from diablo.merged.emailer import send_system_error_email
 from flask import jsonify, make_response, redirect, request, session
 from flask_login import LoginManager
+from werkzeug.exceptions import HTTPException
 
 
 def register_routes(app):
@@ -71,6 +73,17 @@ def register_routes(app):
     def front_end_route(**kwargs):
         vue_base_url = app.config['VUE_LOCALHOST_BASE_URL']
         return redirect(vue_base_url + request.full_path) if vue_base_url else make_response(index_html)
+
+    @app.errorhandler(Exception)
+    def handle_exception(e):
+        subject = str(e)
+        if isinstance(e, HTTPException):
+            # No Ops notification when HTTP error
+            app.logger.exception(e)
+        else:
+            # Notify Diablo Ops teams
+            send_system_error_email(message=f'{subject}\n\n{traceback.format_exc()}', subject=f'{subject[:20]}...')
+        return {'message': subject}, 500
 
     @app.before_request
     def before_request():

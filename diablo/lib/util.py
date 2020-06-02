@@ -30,8 +30,6 @@ import pytz
 
 """Generic utilities."""
 
-DEFAULT_KALTURA_PAGE_SIZE = 100
-
 
 def get_args_dict(func, *args, **kw):
     arg_names = inspect.getfullargspec(func)[0]

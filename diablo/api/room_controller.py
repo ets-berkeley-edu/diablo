@@ -22,11 +22,10 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from diablo.api.errors import BadRequestError, InternalServerError, ResourceNotFoundError
+from diablo.api.errors import BadRequestError, ResourceNotFoundError
 from diablo.api.util import admin_required
 from diablo.externals.kaltura import Kaltura
 from diablo.lib.http import tolerant_jsonify
-from diablo.lib.util import DEFAULT_KALTURA_PAGE_SIZE
 from diablo.models.room import Room
 from diablo.models.sis_section import SisSection
 from flask import current_app as app, request
@@ -48,17 +47,7 @@ def get_auditoriums():
 @app.route('/api/room/<kaltura_resource_id>/kaltura_events')
 @admin_required
 def get_kaltura_events(kaltura_resource_id):
-    max_pages = 20
-    kaltura_events = []
-    kaltura = Kaltura()
-    for page in range(1, max_pages + 1):
-        events = kaltura.get_events_by_location(kaltura_resource_id=kaltura_resource_id, page=page)
-        kaltura_events += events
-        if len(events) < DEFAULT_KALTURA_PAGE_SIZE:
-            break
-        if page == max_pages:
-            raise InternalServerError(f'Kaltura result count exceeds {DEFAULT_KALTURA_PAGE_SIZE * max_pages}. Abort!')
-    return tolerant_jsonify(kaltura_events)
+    return tolerant_jsonify(Kaltura().get_events_by_location(kaltura_resource_id=kaltura_resource_id))
 
 
 @app.route('/api/room/<room_id>')
