@@ -109,9 +109,9 @@ def _load_courses():
 def _create_email_templates():
     EmailTemplate.create(
         template_type='admin_alert_instructor_change',
-        name='Alert admin instructor approval needed',
-        subject_line='Instructor approval needed',
-        message='<code>course.name</code> has new instructor(s).',
+        name='Alert admin instructors change',
+        subject_line='Instructors have changed',
+        message='<code>course.name</code>: old instructor(s) <code>instructors.previous</code>, new instructor(s) <code>instructors.all</code>.',
     )
     EmailTemplate.create(
         template_type='admin_alert_room_change',

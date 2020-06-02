@@ -31,18 +31,28 @@ from diablo.jobs.doomed_to_failure import DoomedToFailure
 from diablo.jobs.queued_emails_job import QueuedEmailsJob
 from diablo.models.approval import Approval
 from diablo.models.job import Job
+from diablo.models.queued_email import QueuedEmail
 from diablo.models.room import Room
 from diablo.models.scheduled import Scheduled
 from diablo.models.sent_email import SentEmail
 from diablo.models.sis_section import SisSection
 from flask import current_app as app
+import pytest
 from tests.test_api.api_test_utils import get_instructor_uids
 from tests.util import simply_yield, test_approvals_workflow
 
 
+@pytest.fixture()
+def enable_admin_emails():
+    all_jobs = Job.get_all(include_disabled=True)
+    admin_emails_job = next((j for j in all_jobs if j.key == AdminEmailsJob.key()))
+    Job.update_disabled(job_id=admin_emails_job.id, disable=False)
+    std_commit(allow_test_environment=True)
+
+
 class TestEmailAlertsForAdmins:
 
-    def test_alert_admin_of_room_change(self):
+    def test_alert_admin_of_room_change(self, db_session, enable_admin_emails):
         """Emails admin when a scheduled course gets a room change."""
         with test_approvals_workflow(app):
             term_id = app.config['CURRENT_TERM_ID']
@@ -85,15 +95,20 @@ class TestEmailAlertsForAdmins:
             QueuedEmailsJob(simply_yield).run()
             assert _get_email_count(admin_uid) == email_count + 1
 
-    def test_alert_admin_of_instructor_change(self):
+    def test_alert_admin_of_instructor_change(self, enable_admin_emails):
         """Emails admin when a scheduled course gets a new instructor."""
         with test_approvals_workflow(app):
             term_id = app.config['CURRENT_TERM_ID']
             section_id = 50005
-            approved_by_uid = '10001'
             room_id = Room.find_room('Barker 101').id
+            meeting_days, meeting_start_time, meeting_end_time = SisSection.get_meeting_times(
+                term_id=term_id,
+                section_id=section_id,
+            )
+            # The course has two instructors.
+            instructor_1_uid, instructor_2_uid = get_instructor_uids(section_id=section_id, term_id=term_id)
             approval = Approval.create(
-                approved_by_uid=approved_by_uid,
+                approved_by_uid=instructor_1_uid,
                 approver_type_='instructor',
                 publish_type_='kaltura_my_media',
                 recording_type_='presenter_audio',
@@ -101,12 +116,9 @@ class TestEmailAlertsForAdmins:
                 section_id=section_id,
                 term_id=term_id,
             )
-            meeting_days, meeting_start_time, meeting_end_time = SisSection.get_meeting_times(
-                term_id=term_id,
-                section_id=section_id,
-            )
+            # Uh oh! Only one of them has been scheduled.
             Scheduled.create(
-                instructor_uids=get_instructor_uids(section_id=section_id, term_id=term_id),
+                instructor_uids=[instructor_1_uid],
                 kaltura_schedule_id=random.randint(1, 10),
                 meeting_days=meeting_days,
                 meeting_start_time=meeting_start_time,
@@ -117,12 +129,15 @@ class TestEmailAlertsForAdmins:
                 section_id=section_id,
                 term_id=term_id,
             )
-
             admin_uid = app.config['EMAIL_DIABLO_ADMIN_UID']
             email_count = _get_email_count(admin_uid)
             # Message queued but not sent.
             AdminEmailsJob(simply_yield).run()
             assert _get_email_count(admin_uid) == email_count
+            queued_messages = QueuedEmail.query.filter_by(template_type='admin_alert_instructor_change').all()
+            assert len(queued_messages) == 1
+            assert queued_messages[0].message ==\
+                'LAW 23: old instructor(s) Regan MacNeil, new instructor(s) Regan MacNeil, Burke Dennings.'
             # Message sent.
             QueuedEmailsJob(simply_yield).run()
             assert _get_email_count(admin_uid) == email_count + 1

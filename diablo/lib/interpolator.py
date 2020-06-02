@@ -69,6 +69,11 @@ def get_template_substitutions(
 ):
     term_id = (course and course['termId']) or app.config['CURRENT_TERM_ID']
 
+    def _join_names(_dict):
+        if not _dict:
+            return None
+        return ', '.join(i['name'] for i in _dict if i['name'])
+
     return {
         'course.days': course and course['meetingDays'],
         'course.format': course and course['instructionFormat'],
@@ -78,8 +83,9 @@ def get_template_substitutions(
         'course.time.end': course and course['meetingEndTime'],
         'course.time.start': course and course['meetingStartTime'],
         'course.title': course and course['courseTitle'],
-        'instructors.all': course and course['instructors'] and ', '.join(p['name'] for p in course['instructors'] if p['name']),
-        'instructors.pending': pending_instructors and ', '.join(p['name'] for p in pending_instructors),
+        'instructors.all': course and _join_names(course.get('instructors')),
+        'instructors.pending': _join_names(pending_instructors),
+        'instructors.previous': course and course.get('scheduled') and _join_names(course['scheduled'].get('instructors')),
         'publish.type': publish_type_name,
         'publish.type.previous': previous_publish_type_name,
         'recipient.name': recipient_name,
