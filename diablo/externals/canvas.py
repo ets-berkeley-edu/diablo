@@ -22,7 +22,6 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-
 import re
 
 from canvasapi import Canvas
@@ -31,12 +30,12 @@ from flask import current_app as app
 
 
 @cachify('canvas/canvas_course_sites')
-def get_canvas_course_sites():
+def get_canvas_course_sites(canvas_enrollment_term_id):
     canvas_courses = _get_canvas().get_courses(
-        enrollment_term_id=app.config['CANVAS_ENROLLMENT_TERM_ID'],
-        search_term='CHEM',
+        enrollment_term_id=canvas_enrollment_term_id,
         with_enrollments=True,
     )
+    app.logger.info(f'{len(canvas_courses)} courses in Canvas where enrollment_term_id={canvas_enrollment_term_id}')
     canvas_course_sites = {}
     # Sample formats: 'SEC:2020-B-21662', 'SEC:2020-B-21662-9F6ED069'
     sis_section_regex = re.compile(r'SEC:\d+-\D-(\d+).*')
