@@ -35,7 +35,6 @@ def get_canvas_course_sites(canvas_enrollment_term_id):
         enrollment_term_id=canvas_enrollment_term_id,
         with_enrollments=True,
     )
-    app.logger.info(f'{len(canvas_courses)} courses in Canvas where enrollment_term_id={canvas_enrollment_term_id}')
     canvas_course_sites = {}
     # Sample formats: 'SEC:2020-B-21662', 'SEC:2020-B-21662-9F6ED069'
     sis_section_regex = re.compile(r'SEC:\d+-\D-(\d+).*')
