@@ -77,7 +77,7 @@
       </v-col>
     </v-row>
     <v-row
-      v-if="$currentUser.isAdmin && isCurrentTerm && course.room && course.room.capability && course.instructors.length"
+      v-if="$currentUser.isAdmin && isCurrentTerm && sendInviteAvailable"
       id="send-invite"
       justify="center"
       class="mt-2"
@@ -156,6 +156,9 @@
     computed: {
       isCurrentTerm() {
         return this.course.termId === this.$config.currentTermId
+      },
+      sendInviteAvailable() {
+        return this.$_.get(this.course, 'room.capability') && this.course.instructors.length && !this.course.hasOptedOut
       }
     },
     methods: {
