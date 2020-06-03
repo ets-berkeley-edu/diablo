@@ -27,7 +27,7 @@ from itertools import islice
 
 from diablo import db, std_commit
 from diablo.externals.kaltura import Kaltura
-from diablo.lib.util import format_days
+from diablo.lib.util import default_timezone, format_days
 from diablo.merged.calnet import get_calnet_users_for_uids
 from diablo.merged.emailer import send_system_error_email
 from diablo.models.course_preference import CoursePreference
@@ -39,7 +39,6 @@ from diablo.models.scheduled import Scheduled
 from diablo.models.sis_section import SisSection
 from flask import current_app as app
 from KalturaClient.exceptions import KalturaClientException, KalturaException
-import pytz
 from sqlalchemy import text
 
 
@@ -242,8 +241,11 @@ def _adjust_time(military_time, offset_minutes):
     hour_and_minutes = military_time.split(':')
     hour = int(hour_and_minutes[0])
     minutes = int(hour_and_minutes[1])
-    timezone = pytz.timezone(app.config['TIMEZONE'])
-    return datetime.combine(date.today(), time(hour, minutes), tzinfo=timezone) + timedelta(minutes=offset_minutes)
+    return datetime.combine(
+        date.today(),
+        time(hour, minutes),
+        tzinfo=default_timezone(),
+    ) + timedelta(minutes=offset_minutes)
 
 
 def _join(items, separator=', '):
