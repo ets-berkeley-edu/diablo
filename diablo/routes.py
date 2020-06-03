@@ -82,7 +82,10 @@ def register_routes(app):
             app.logger.exception(e)
         else:
             # Notify Diablo Ops teams
-            send_system_error_email(message=f'{subject}\n\n{traceback.format_exc()}', subject=f'{subject[:20]}...')
+            send_system_error_email(
+                message=f'{subject}\n\n<pre>{traceback.format_exc()}</pre>',
+                subject=f'{subject[:50]}...' if len(subject) > 50 else subject,
+            )
         return {'message': subject}, 500
 
     @app.before_request
