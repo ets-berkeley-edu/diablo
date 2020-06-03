@@ -27,7 +27,7 @@ from datetime import datetime
 from diablo import cachify, skip_when_pytest
 from diablo.lib.berkeley import term_name_for_sis_id
 from diablo.lib.kaltura_util import events_to_api_json, get_first_matching_datetime_of_term
-from diablo.lib.util import to_isoformat
+from diablo.lib.util import default_timezone, to_isoformat
 from flask import current_app as app
 from KalturaClient import KalturaClient, KalturaConfiguration
 from KalturaClient.exceptions import KalturaException
@@ -38,7 +38,6 @@ from KalturaClient.Plugins.Schedule import KalturaBlackoutScheduleEvent, Kaltura
     KalturaRecordScheduleEvent, KalturaScheduleEventClassificationType, KalturaScheduleEventFilter, \
     KalturaScheduleEventRecurrence, KalturaScheduleEventRecurrenceFrequency, KalturaScheduleEventRecurrenceType, \
     KalturaScheduleEventResource, KalturaScheduleEventStatus, KalturaScheduleResourceFilter, KalturaSessionType
-import pytz
 
 CREATED_BY_DIABLO_TAG = 'created_by_diablo'
 
@@ -68,9 +67,9 @@ class Kaltura:
         events = []
         for blackout_date in blackout_dates:
             try:
-                timezone = pytz.timezone(app.config['TIMEZONE'])
-                start_time = datetime.strptime(f'{blackout_date} 00:00', '%Y-%m-%d %H:%M').replace(tzinfo=timezone)
-                end_time = datetime.strptime(f'{blackout_date} 23:59', '%Y-%m-%d %H:%M').replace(tzinfo=timezone)
+                date_format = '%Y-%m-%d %H:%M'
+                start_time = datetime.strptime(f'{blackout_date} 00:00', date_format).replace(tzinfo=default_timezone())
+                end_time = datetime.strptime(f'{blackout_date} 23:59', date_format).replace(tzinfo=default_timezone())
                 summary = f'Academic and Administrative Holiday: {blackout_date}'
                 event = KalturaBlackoutScheduleEvent(
                     # https://developer.kaltura.com/api-docs/General_Objects/Objects/KalturaScheduleEvent

@@ -25,11 +25,10 @@ ENHANCEMENTS, OR MODIFICATIONS.
 from datetime import datetime, timedelta
 import json
 
-from diablo.lib.util import epoch_time_to_isoformat
+from diablo.lib.util import default_timezone, epoch_time_to_isoformat
 from flask import current_app as app
 from KalturaClient.Plugins.Schedule import KalturaBlackoutScheduleEvent, KalturaScheduleEventClassificationType, \
     KalturaScheduleEventRecurrenceType, KalturaScheduleEventStatus
-import pytz
 
 # This order of days is aligned with datetime module: https://pythontic.com/datetime/date/weekday
 DAYS = ('MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU')
@@ -126,7 +125,7 @@ def get_first_matching_datetime_of_term(meeting_days, time_hours, time_minutes):
         day_index = (start_date.weekday() + index) % 7
         if day_index in meeting_day_indices:
             first_day = start_date + timedelta(days=index)
-            first_meeting = pytz.timezone(app.config['TIMEZONE']).localize(
+            first_meeting = default_timezone().localize(
                 datetime(
                     first_day.year,
                     first_day.month,
