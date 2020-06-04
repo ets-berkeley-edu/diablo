@@ -25,14 +25,16 @@ ENHANCEMENTS, OR MODIFICATIONS.
 import re
 
 from canvasapi import Canvas
-from diablo import cachify
+from diablo import skip_when_pytest
 from flask import current_app as app
 
 
-@cachify('canvas/canvas_course_sites')
+@skip_when_pytest(mock_object='canvas/canvas_course_sites.json', is_fixture_json_file=True)
 def get_canvas_course_sites(canvas_enrollment_term_id):
     canvas_courses = _get_canvas().get_courses(
+        by_subaccounts=app.config['CANVAS_BERKELEY_SUB_ACCOUNTS'],
         enrollment_term_id=canvas_enrollment_term_id,
+        published=True,
         with_enrollments=True,
     )
     canvas_course_sites = {}
@@ -54,11 +56,7 @@ def get_canvas_course_sites(canvas_enrollment_term_id):
 
 
 def ping_canvas():
-    return _get_canvas().get_courses(
-        enrollment_term_id=app.config['CANVAS_ENROLLMENT_TERM_ID'],
-        search_term='Scandinavian',
-        with_enrollments=True,
-    ) is not None
+    return _get_canvas() is not None
 
 
 def _get_canvas():
