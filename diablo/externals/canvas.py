@@ -37,7 +37,7 @@ def get_canvas_course_sites(canvas_enrollment_term_id):
         published=True,
         with_enrollments=True,
     )
-    canvas_course_sites = {}
+    course_sites_by_id = {}
     # Sample formats: 'SEC:2020-B-21662', 'SEC:2020-B-21662-9F6ED069'
     sis_section_regex = re.compile(r'SEC:\d+-\D-(\d+).*')
     for canvas_course in canvas_courses:
@@ -46,13 +46,14 @@ def get_canvas_course_sites(canvas_enrollment_term_id):
             sis_section_id = section.sis_section_id
             section_id = sis_section_regex.search(sis_section_id).group(1) if sis_section_id else None
             if section_id:
-                if course_site_id not in canvas_course_sites:
-                    canvas_course_sites[course_site_id] = {
-                        'section_ids': [],
-                        'canvas_course_site_name': canvas_course.name,
+                if course_site_id not in course_sites_by_id:
+                    course_sites_by_id[course_site_id] = {
+                        'id': course_site_id,
+                        'name': canvas_course.name,
+                        'section_ids': set(),
                     }
-                canvas_course_sites[course_site_id]['section_ids'].append(section_id)
-    return canvas_course_sites
+                course_sites_by_id[course_site_id]['section_ids'].add(section_id)
+    return list(course_sites_by_id.values())
 
 
 def ping_canvas():
