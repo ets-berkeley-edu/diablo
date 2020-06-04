@@ -65,15 +65,14 @@ class CanvasCourseSite(db.Model):
     @classmethod
     def refresh_term_data(cls, term_id, canvas_course_sites):
         db.session.execute(cls.__table__.delete().where(cls.term_id == term_id))
-        for course_site_id, summary in canvas_course_sites.items():
-            canvas_course_site_name = summary['canvas_course_site_name']
-            for section_id in summary['section_ids']:
+        for canvas_course_site in canvas_course_sites:
+            for section_id in canvas_course_site['section_ids']:
                 db.session.add(
                     cls(
-                        canvas_course_site_id=course_site_id,
+                        canvas_course_site_id=canvas_course_site['id'],
                         section_id=section_id,
                         term_id=term_id,
-                        canvas_course_site_name=canvas_course_site_name,
+                        canvas_course_site_name=canvas_course_site['name'],
                     ),
                 )
         std_commit()
