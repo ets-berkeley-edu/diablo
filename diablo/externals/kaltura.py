@@ -74,7 +74,6 @@ class Kaltura:
                 event = KalturaBlackoutScheduleEvent(
                     # https://developer.kaltura.com/api-docs/General_Objects/Objects/KalturaScheduleEvent
                     classificationType=KalturaScheduleEventClassificationType.PUBLIC_EVENT,
-                    duration=None,
                     endDate=int(end_time.timestamp()),
                     startDate=int(start_time.timestamp()),
                     ownerId=app.config['KALTURA_KMS_OWNER_ID'],
@@ -295,26 +294,12 @@ class Kaltura:
             description=description,
             duration=(end_time - start_time).seconds,
             endDate=first_day_end.timestamp(),
-            geoLatitude=None,  # TODO: Kaltura API did not like: 37.871853,
-            geoLongitude=None,  # TODO: Kaltura API did not like: -122.258423,
-            location=None,  # Room is assigned below with 'scheduleEventResource.add'.
             organizer=app.config['KALTURA_EVENT_ORGANIZER'],
             ownerId=app.config['KALTURA_KMS_OWNER_ID'],
-            parentId=None,
             partnerId=self.kaltura_partner_id,
-            priority=None,
             recurrence=KalturaScheduleEventRecurrence(
                 # https://developer.kaltura.com/api-docs/General_Objects/Objects/KalturaScheduleEventRecurrence
                 byDay=','.join(days),
-                byHour=None,
-                byMinute=None,
-                byMonth=None,
-                byMonthDay=None,
-                byOffset=None,
-                bySecond=None,
-                byWeekNumber=None,
-                byYearDay=None,
-                count=None,
                 frequency=KalturaScheduleEventRecurrenceFrequency.WEEKLY,
                 # 'interval' is not documented. When scheduling manually, the value was 1 in each individual event.
                 interval=1,
@@ -324,8 +309,6 @@ class Kaltura:
                 weekStartDay=days[0],
             ),
             recurrenceType=KalturaScheduleEventRecurrenceType.RECURRING,
-            referenceId=None,
-            sequence=None,
             startDate=first_day_start.timestamp(),
             status=KalturaScheduleEventStatus.ACTIVE,
             summary=summary,
@@ -340,23 +323,14 @@ class Kaltura:
             name,
             instructors,
     ):
-        email_addresses = [instructor['email'] for instructor in instructors if instructor['email']]
+        instructor_uids = [instructor['uid'] for instructor in instructors]
         base_entry = KalturaBaseEntry(
-            capabilities=NotImplemented,
-            categories=NotImplemented,
-            categoriesIds=NotImplemented,
-            creatorId=NotImplemented,
             description=description,
             displayInSearch=KalturaEntryDisplayInSearchType.PARTNER_ONLY,
-            endDate=NotImplemented,
-            entitledUsersEdit=','.join(_to_normalized_set(email_addresses)) if email_addresses else None,
-            groupId=NotImplemented,
-            licenseType=NotImplemented,
+            entitledUsersEdit=','.join(_to_normalized_set(instructor_uids)) if instructor_uids else None,
             moderationStatus=KalturaEntryModerationStatus.AUTO_APPROVED,
             name=name,
             partnerId=self.kaltura_partner_id,
-            referenceId=NotImplemented,
-            startDate=NotImplemented,
             status=KalturaEntryStatus.NO_CONTENT,
             tags=CREATED_BY_DIABLO_TAG,
             type=KalturaEntryType.MEDIA_CLIP,
