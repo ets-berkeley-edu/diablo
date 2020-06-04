@@ -38,37 +38,24 @@ class InstructorEmailsJob(BaseJob):
 
     def _run(self):
         self.term_id = app.config['CURRENT_TERM_ID']
-        self.email_new_invites()
         self.email_scheduled_courses()
 
     @classmethod
     def description(cls):
         names_by_type = EmailTemplate.get_template_type_options()
-        template_types = ['invitation', 'room_change_no_longer_eligible']
+        template_types = ['room_change_no_longer_eligible']
         return f"""
             Queues up instructor notifications. Email templates used:
             <ul>
                 {''.join(f'<li>{names_by_type.get(template_type)}</li>' for template_type in template_types)}
             </ul>
-            NOTE: The '{names_by_type['recordings_scheduled']}' email is queued by the Kaltura job, when recordings are
+            NOTE: The '{names_by_type['room_change_no_longer_eligible']}' email is queued by the Kaltura job, when recordings are
             scheduled, and sent by the Queued Emails job.
         """
 
     @classmethod
     def key(cls):
         return 'instructor_emails'
-
-    def email_new_invites(self):
-        for course in SisSection.get_courses(term_id=self.term_id):
-            if not course['hasOptedOut']:
-                for i in course['instructors']:
-                    if not i['wasSentInvite']:
-                        QueuedEmail.create(
-                            recipient=i,
-                            section_id=course['sectionId'],
-                            template_type='invitation',
-                            term_id=self.term_id,
-                        )
 
     def email_scheduled_courses(self):
         all_scheduled = Scheduled.get_all_scheduled(term_id=self.term_id)

@@ -55,6 +55,7 @@ def _register_jobs(app):
     from diablo.jobs.admin_emails_job import AdminEmailsJob  # noqa
     from diablo.jobs.canvas_job import CanvasJob  # noqa
     from diablo.jobs.instructor_emails_job import InstructorEmailsJob  # noqa
+    from diablo.jobs.invitation_job import InvitationJob  # noqa
     from diablo.jobs.kaltura_job import KalturaJob  # noqa
     from diablo.jobs.queued_emails_job import QueuedEmailsJob  # noqa
     from diablo.jobs.sis_data_refresh_job import SisDataRefreshJob  # noqa

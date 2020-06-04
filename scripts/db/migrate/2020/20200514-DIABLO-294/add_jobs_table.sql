@@ -64,6 +64,7 @@ VALUES
     (False, 'day_at', '06:00', 'canvas', now(), now()),
     (False, 'day_at', '09:00', 'sis_data_refresh', now(), now()),
     (False, 'minutes', '60', 'instructor_emails', now(), now()),
+    (False, 'minutes', '60', 'invitations', now(), now()),
     (False, 'minutes', '120', 'kaltura', now(), now()),
     (False, 'minutes', '15', 'queued_emails', now(), now());
 

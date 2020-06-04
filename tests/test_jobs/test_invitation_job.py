@@ -23,7 +23,7 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 from diablo import std_commit
-from diablo.jobs.instructor_emails_job import InstructorEmailsJob
+from diablo.jobs.invitation_job import InvitationJob
 from diablo.jobs.queued_emails_job import QueuedEmailsJob
 from diablo.lib.util import utc_now
 from diablo.models.course_preference import CoursePreference
@@ -33,7 +33,7 @@ from sqlalchemy.orm.session import make_transient
 from tests.util import simply_yield, test_approvals_workflow
 
 
-class TestInstructorEmailsJob:
+class TestInvitationJob:
 
     def test_invite_new_instructors(self, app, db_session):
         """Invite all assigned instructors who haven't yet received an invitation."""
@@ -42,7 +42,7 @@ class TestInstructorEmailsJob:
             # The job creates many new invitations.
             timestamp = utc_now()
             # Emails are queued but not sent.
-            InstructorEmailsJob(simply_yield).run()
+            InvitationJob(simply_yield).run()
             assert len(_get_invitations_since(term_id, timestamp)) == 0
             # Emails are sent. We have more emails than courses since some courses have multiple instructors.
             QueuedEmailsJob(simply_yield).run()
@@ -74,7 +74,7 @@ class TestInstructorEmailsJob:
 
             # Re-run the job. An email is sent to the new instructor only.
             timestamp = utc_now()
-            InstructorEmailsJob(simply_yield).run()
+            InvitationJob(simply_yield).run()
             QueuedEmailsJob(simply_yield).run()
             invitations = _get_invitations_since(term_id, timestamp)
             assert len(invitations) == 1
@@ -92,7 +92,7 @@ class TestInstructorEmailsJob:
 
             timestamp = utc_now()
             # Emails are queued but not sent.
-            InstructorEmailsJob(simply_yield).run()
+            InvitationJob(simply_yield).run()
             assert len(_get_invitations_since(term_id, timestamp)) == 0
             # Emails are sent.
             QueuedEmailsJob(simply_yield).run()
