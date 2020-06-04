@@ -22,7 +22,7 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-
+import json
 from os.path import dirname
 
 from decorator import decorator
@@ -80,8 +80,15 @@ def cachify(key_pattern, timeout=1440):
     return _cachify
 
 
-def skip_when_pytest(mock_object=None):
+def skip_when_pytest(mock_object=None, is_fixture_json_file=False):
     @decorator
     def _skip_when_pytest(func, *args, **kw):
-        return mock_object if app.config['DIABLO_ENV'] == 'test' else func(*args, **kw)
+        if app.config['DIABLO_ENV'] == 'test':
+            if mock_object and is_fixture_json_file:
+                with open(f"{app.config['FIXTURES_PATH']}/{mock_object}", 'r') as file:
+                    return json.loads(file.read())
+            else:
+                return mock_object
+        else:
+            return func(*args, **kw)
     return _skip_when_pytest
