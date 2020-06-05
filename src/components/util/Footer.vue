@@ -1,5 +1,10 @@
 <template>
-  <v-footer app dark color="secondary">
+  <v-footer
+    id="footer"
+    app
+    dark
+    color="secondary"
+  >
     <v-container fluid class="pa-1">
       <v-row no-gutters justify="space-between">
         <v-col>
