@@ -34,8 +34,6 @@ def get_canvas_course_sites(canvas_enrollment_term_id):
     canvas_courses = _get_canvas().get_courses(
         by_subaccounts=app.config['CANVAS_BERKELEY_SUB_ACCOUNTS'],
         enrollment_term_id=canvas_enrollment_term_id,
-        published=True,
-        with_enrollments=True,
     )
     course_sites_by_id = {}
     # Sample formats: 'SEC:2020-B-21662', 'SEC:2020-B-21662-9F6ED069'
