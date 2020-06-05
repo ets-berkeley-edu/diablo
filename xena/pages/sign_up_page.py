@@ -33,7 +33,7 @@ from xena.test_utils import util
 
 class SignUpPage(DiabloPages):
 
-    SECTION_ID = (By.XPATH, '//div[contains(text(), "Section ID:")]')
+    SECTION_ID = (By.ID, 'section-id')
     COURSE_TITLE = (By.ID, 'course-title')
     INSTRUCTORS = (By.ID, 'instructors')
     INSTRUCTOR = (By.XPATH, '//*[contains(@id, "instructor-")]')
@@ -52,6 +52,8 @@ class SignUpPage(DiabloPages):
     AGREE_TO_TERMS_CBX = (By.XPATH, '//input[@id="agree-to-terms-checkbox"]/..')
     CC_POLICIES_LINK = (By.ID, 'link-to-course-capture-policies')
     APPROVE_BUTTON = (By.ID, 'btn-approve')
+    QUEUED_MSG = (By.XPATH, '//span[contains(text(), "This course is currently queued for scheduling")]')
+    APPROVALS_MSG = (By.ID, 'approvals-described')
     CONFIRMATION_MSG = (By.XPATH, '//span[contains(text(), "You submitted the preferences below.")]')
 
     RECORDING_TYPE_APPROVED = (By.XPATH, '//h4[contains(., "Recording Type")]/../following-sibling::div/div')
@@ -80,7 +82,7 @@ class SignUpPage(DiabloPages):
     # SIS DATA
 
     def visible_ccn(self):
-        return self.element(SignUpPage.SECTION_ID).text.strip().split(' ')[2]
+        return self.element(SignUpPage.SECTION_ID).text
 
     def visible_course_title(self):
         return self.element(SignUpPage.COURSE_TITLE).text
@@ -147,6 +149,15 @@ class SignUpPage(DiabloPages):
     def click_approve_button(self):
         app.logger.info('Clicking the approve button')
         self.wait_for_element_and_click(SignUpPage.APPROVE_BUTTON)
+
+    def wait_for_queued_confirmation(self):
+        Wait(self.driver, util.get_short_timeout()).until(ec.visibility_of_element_located(SignUpPage.QUEUED_MSG))
+
+    def wait_for_approvals_msg(self, string=None):
+        Wait(self.driver, util.get_short_timeout()).until(ec.visibility_of_element_located(SignUpPage.APPROVALS_MSG))
+        if string:
+            app.logger.info(f'Visible: {self.element(SignUpPage.APPROVALS_MSG).get_attribute("innerText")}')
+            self.wait_for_text_in_element(SignUpPage.APPROVALS_MSG, string)
 
     def wait_for_approval_confirmation(self):
         Wait(self.driver, util.get_short_timeout()).until(ec.visibility_of_element_located(SignUpPage.CONFIRMATION_MSG))

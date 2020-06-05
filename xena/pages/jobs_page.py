@@ -39,6 +39,7 @@ class JobsPage(DiabloPages):
     RUN_ADMIN_EMAILS_JOB_BUTTON = (By.ID, 'run-job-admin_emails')
     RUN_CANVAS_JOB_BUTTON = (By.ID, 'run-job-canvas')
     RUN_INSTRUCTOR_EMAILS_JOB_BUTTON = (By.ID, 'run-job-instructor_emails')
+    RUN_INVITATIONS_JOB = (By.ID, 'run-job-invitations')
     RUN_KALTURA_JOB_BUTTON = (By.ID, 'run-job-kaltura')
     RUN_QUEUED_EMAILS_JOB_BUTTON = (By.ID, 'run-job-queued_emails')
     RUN_SIS_DATA_REFRESH_JOB_BUTTON = (By.ID, 'run-job-sis_data_refresh')
@@ -61,6 +62,10 @@ class JobsPage(DiabloPages):
     def run_instructor_emails_job(self):
         app.logger.info('Running instructor emails job')
         self.wait_for_element_and_click(JobsPage.RUN_INSTRUCTOR_EMAILS_JOB_BUTTON)
+
+    def run_invitations_job(self):
+        app.logger.info('Running invitations job')
+        self.wait_for_element_and_click(JobsPage.RUN_INVITATIONS_JOB)
 
     def run_kaltura_job(self):
         app.logger.info('Running Kaltura job')
@@ -99,7 +104,7 @@ class JobsPage(DiabloPages):
         self.wait_for_jobs_table()
         if self.is_present(JobsPage.enabled_job_locator(async_job)):
             app.logger.info('Disabling job')
-            self.element(JobsPage.enabled_job_locator(async_job)).click()
+            self.click_element_js(JobsPage.enabled_job_locator(async_job))
             Wait(self.driver, 2).until(ec.presence_of_element_located(JobsPage.disabled_job_locator(async_job)))
         else:
             app.logger.info('Job is already disabled')

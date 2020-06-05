@@ -31,6 +31,7 @@ class AsyncJob(Enum):
     ADMIN_EMAILS = 'admin_emails'
     CANVAS = 'canvas'
     INSTRUCTOR_EMAILS = 'instructor_emails'
+    INVITATIONS = 'invitations'
     KALTURA = 'kaltura'
     QUEUED_EMAILS = 'queued_emails'
     SIS_DATA_REFRESH = 'sis_data_refresh'
