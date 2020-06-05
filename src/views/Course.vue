@@ -17,7 +17,7 @@
         <v-col>
           <v-card class="pa-6" outlined>
             <v-container v-if="isCurrentTerm && course.room.capability">
-              <v-row v-if="course.approvals.length" no-gutters>
+              <v-row no-gutters>
                 <v-col id="approvals-described" class="font-weight-medium red--text">
                   <span v-if="queuedForScheduling">This course is currently queued for scheduling. Recordings will be scheduled in an hour or less. </span>
                   <span v-if="approvedByInstructorNames.length">Approved by {{ oxfordJoin(approvedByInstructorNames) }}. </span>
