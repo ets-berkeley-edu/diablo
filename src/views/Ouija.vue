@@ -45,7 +45,7 @@
     </v-card-title>
     <CoursesDataTable
       :courses="courses"
-      :message-for-courses="getMessageForCourses()"
+      :message-for-courses="courses.length ? (courses.length === 1 ? '' : `${courses.length} courses`) : 'No courses'"
       :on-toggle-opt-out="onToggleOptOut"
       :refreshing="refreshing"
       :search-text="searchText"
@@ -56,13 +56,12 @@
 <script>
   import CoursesDataTable from '@/components/course/CoursesDataTable'
   import Context from '@/mixins/Context'
-  import Utils from '@/mixins/Utils'
   import {getCourses} from '@/api/course'
 
   export default {
     name: 'Ouija',
     components: {CoursesDataTable},
-    mixins: [Context, Utils],
+    mixins: [Context],
     data: () => ({
       courses: undefined,
       refreshing: undefined,
@@ -74,9 +73,6 @@
       this.refresh()
     },
     methods: {
-      getMessageForCourses() {
-        return this.summarize(this.courses)
-      },
       onToggleOptOut(course) {
         if (!course.hasOptedOut && this.selectedFilter === 'Do Not Email') {
           let indexOf = this.courses.findIndex(c => c.sectionId === course.sectionId)

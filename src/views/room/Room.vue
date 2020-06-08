@@ -43,7 +43,7 @@
       <CoursesDataTable
         :courses="room.courses"
         :include-room-column="false"
-        :message-for-courses="getMessageForCourses()"
+        :message-for-courses="summarize(room.courses)"
         :on-toggle-opt-out="() => {}"
         :refreshing="false"
       />
@@ -99,9 +99,6 @@
       }).catch(this.$ready)
     },
     methods: {
-      getMessageForCourses() {
-        return this.summarize(this.room.courses)
-      },
       onUpdateRoomCapability(capability) {
         this.room.capability = capability
         this.alertScreenReader(capability ? `'${capability}' selected` : 'Room capability removed.')
