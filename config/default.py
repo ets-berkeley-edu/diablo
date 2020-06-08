@@ -34,12 +34,6 @@ BCOP_SMTP_PORT = 587
 BCOP_SMTP_SERVER = 'bcop.berkeley.edu'
 BCOP_SMTP_USERNAME = None
 
-CAS_SERVER = 'https://auth-test.berkeley.edu/cas/'
-
-COURSE_CAPTURE_EXPLAINED_URL = 'https://www.ets.berkeley.edu/services-facilities/course-capture'
-COURSE_CAPTURE_POLICIES_URL = 'https://www.ets.berkeley.edu/services-facilities/course-capture/course-capture-instructors-getting-started/policies'
-COURSE_CAPTURE_PREMIUM_COST = 2000
-
 CACHE_DEFAULT_TIMEOUT = 86400
 CACHE_DIR = f'{BASE_DIR}/.flask_cache'
 CACHE_THRESHOLD = 300
@@ -52,10 +46,17 @@ CANVAS_BERKELEY_ACCOUNT_ID = 00000
 CANVAS_BERKELEY_SUB_ACCOUNTS = [00000]
 CANVAS_ENROLLMENT_TERM_ID = 0000
 
-CURRENT_TERM_ID = None
+CAS_SERVER = 'https://auth-test.berkeley.edu/cas/'
+
+COURSE_CAPTURE_EXPLAINED_URL = 'https://www.ets.berkeley.edu/services-facilities/course-capture'
+COURSE_CAPTURE_POLICIES_URL = 'https://www.ets.berkeley.edu/services-facilities/course-capture/course-capture-instructors-getting-started/policies'
+COURSE_CAPTURE_PILOT_JSON = f'{BASE_DIR}/config/course_capture_pilot.json'
+COURSE_CAPTURE_PREMIUM_COST = 2000
+
 # YYYY-MM-DD is expected date format. For example, '2020-01-21'
 CURRENT_TERM_BEGIN = None
 CURRENT_TERM_END = None
+CURRENT_TERM_ID = None
 
 DEVELOPER_AUTH_ENABLED = False
 DEVELOPER_AUTH_PASSWORD = 'another secret'

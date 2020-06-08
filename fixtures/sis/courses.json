@@ -4,10 +4,7 @@
     "instruction_format": "LEC",
     "instructor_role_code": "PI",
     "is_primary": true,
-    "meeting_end_date": "2020-05-08 00:00:00 UTC",
-    "meeting_start_date": "2020-01-21 00:00:00 UTC",
-    "section_num": "001",
-    "term_id": 2202
+    "section_num": "001"
   },
   "instructors": {
     "10000": "Father Karras",

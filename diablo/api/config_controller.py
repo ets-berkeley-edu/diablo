@@ -22,12 +22,13 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-
 import json
 
 from diablo import __version__ as version
-from diablo.api.util import get_search_filter_options
+from diablo.api.util import admin_required, get_search_filter_options
+from diablo.jobs.sis_data_refresh_job import SisDataRefreshJob
 from diablo.lib.berkeley import term_name_for_sis_id
+from diablo.lib.development_db_utils import load_mock_courses
 from diablo.lib.http import tolerant_jsonify
 from diablo.models.approval import NAMES_PER_PUBLISH_TYPE
 from diablo.models.email_template import EmailTemplate
@@ -72,6 +73,14 @@ def app_version():
             'build': None,
         })
     return tolerant_jsonify(v)
+
+
+@app.route('/api/config/start_course_capture_pilot')
+@admin_required
+def course_capture_pilot():
+    load_mock_courses(app.config['COURSE_CAPTURE_PILOT_JSON'])
+    SisDataRefreshJob.after_sis_data_refresh(term_id=app.config['CURRENT_TERM_ID'])
+    return tolerant_jsonify({'message': 'Success'}), 200
 
 
 def load_json(relative_path):

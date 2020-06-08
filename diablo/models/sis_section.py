@@ -23,10 +23,9 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 from datetime import datetime
-import json
 
 from diablo import db
-from diablo.lib.util import format_days, format_time, utc_now
+from diablo.lib.util import format_days, format_time
 from diablo.models.approval import Approval
 from diablo.models.canvas_course_site import CanvasCourseSite
 from diablo.models.course_preference import CoursePreference
@@ -583,49 +582,6 @@ class SisSection(db.Model):
         """
         section_id = db.session.execute(text(sql), {'term_id': term_id}).scalar()
         return cls.get_course(term_id, section_id)
-
-    @classmethod
-    def refresh(cls, sis_sections, term_id):
-        db.session.execute(cls.__table__.delete().where(cls.term_id == term_id))
-        now = utc_now().strftime('%Y-%m-%dT%H:%M:%S+00')
-        count_per_chunk = 10000
-        for chunk in range(0, len(sis_sections), count_per_chunk):
-            rows_subset = sis_sections[chunk:chunk + count_per_chunk]
-            query = """
-                INSERT INTO sis_sections (
-                    allowed_units, course_name, course_title, created_at, instruction_format, instructor_name,
-                    instructor_role_code, instructor_uid, is_primary, meeting_days, meeting_end_date, meeting_end_time,
-                    meeting_location, meeting_start_date, meeting_start_time, section_id, section_num, term_id
-                )
-                SELECT
-                    allowed_units, course_name, course_title, created_at, instruction_format, instructor_name,
-                    instructor_role_code, instructor_uid, is_primary, meeting_days, meeting_end_date, meeting_end_time,
-                    meeting_location, meeting_start_date, meeting_start_time, section_id, section_num, term_id
-                FROM json_populate_recordset(null::sis_sections, :json_dumps)
-            """
-            data = [
-                {
-                    'allowed_units': row['allowed_units'],
-                    'course_name': row['course_name'],
-                    'course_title': row['course_title'],
-                    'created_at': now,
-                    'instruction_format': row['instruction_format'],
-                    'instructor_name': row['instructor_name'],
-                    'instructor_role_code': row['instructor_role_code'],
-                    'instructor_uid': row['instructor_uid'],
-                    'is_primary': row['is_primary'],
-                    'meeting_days': row['meeting_days'],
-                    'meeting_end_date': row['meeting_end_date'],
-                    'meeting_end_time': row['meeting_end_time'],
-                    'meeting_location': row['meeting_location'],
-                    'meeting_start_date': row['meeting_start_date'],
-                    'meeting_start_time': row['meeting_start_time'],
-                    'section_id': int(row['section_id']),
-                    'section_num': row['section_num'],
-                    'term_id': int(row['term_id']),
-                } for row in rows_subset
-            ]
-            db.session.execute(query, {'json_dumps': json.dumps(data)})
 
 
 def _to_api_json(term_id, rows, include_rooms=True):

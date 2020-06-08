@@ -1,0 +1,45 @@
+{
+  "defaults": {
+    "allowed_units": "4.0",
+    "instruction_format": "LEC",
+    "instructor_role_code": "PI",
+    "is_primary": true,
+    "section_num": "001"
+  },
+  "instructors": {
+    "1001": "Alexie Grady",
+    "1002": "Alexa Grady"
+  },
+  "courses": [
+    {
+      "instructor_uid": "1001",
+      "meeting_days": "MOWEFR",
+      "meeting_end_time": "14:59",
+      "meeting_location": "Cory 277",
+      "meeting_start_time": "14:00",
+      "course_name": "COMPSCI C8",
+      "course_title": "Foundations of Data Science",
+      "section_id": 60000
+    },
+    {
+      "instructor_uid": "1002",
+      "meeting_days": "MOWEFR",
+      "meeting_end_time": "14:59",
+      "meeting_location": "Cory 277",
+      "meeting_start_time": "14:00",
+      "course_name": "COMPSCI C8",
+      "course_title": "Foundations of Data Science",
+      "section_id": 60000
+    },
+    {
+      "instructor_uid": "1002",
+      "meeting_days": "TUTH",
+      "meeting_end_time": "8:59",
+      "meeting_location": "Evans 60",
+      "meeting_start_time": "8:00",
+      "course_name": "COMPSCI 61B",
+      "course_title": "Data Structures",
+      "section_id": 60001
+    }
+  ]
+}
