@@ -25,7 +25,8 @@
                     <span v-if="!course.scheduled && !queuedForScheduling">Recordings will be scheduled when we have</span>
                     <span v-if="course.scheduled">Recordings have been scheduled but we need</span>
                     <span v-if="queuedForScheduling">We need</span>
-                    approvals from {{ oxfordJoin(approvalNeededNames) }}.
+                    {{ approvalNeededNames.length > 1 ? 'approvals' : 'approval' }}
+                    from {{ oxfordJoin(approvalNeededNames) }}.
                   </span>
                   <span v-if="approvedByAdmins.length && !approvalNeededNames.length && !approvedByInstructorNames.length">
                     <span v-if="course.scheduled">{{ $currentUser.isAdmin ? 'The' : 'Your' }} course has been scheduled.</span>
