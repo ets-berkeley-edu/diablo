@@ -8,7 +8,7 @@
       <CoursesDataTable
         class="pt-5"
         :courses="user.courses"
-        :message-for-courses="getMessageForCourses()"
+        :message-for-courses="summarize(user.courses)"
         :on-toggle-opt-out="() => {}"
         :refreshing="false"
       />
@@ -36,11 +36,6 @@
         this.user = user
         this.$ready(this.user.name)
       }).catch(this.$ready)
-    },
-    methods: {
-      getMessageForCourses() {
-        return this.summarize(this.user.courses)
-      }
     }
   }
 </script>
