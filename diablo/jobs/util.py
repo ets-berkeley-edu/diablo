@@ -120,7 +120,7 @@ def refresh_cross_listings(term_id):
             if schedule != previous_schedule:
                 primary_section_id = section_id
                 cross_listings[primary_section_id] = []
-            else:
+            elif section_id not in cross_listings[primary_section_id]:
                 cross_listings[primary_section_id].append(section_id)
         previous_schedule = schedule
 
