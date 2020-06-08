@@ -29,6 +29,7 @@ from diablo import cache, db, std_commit
 from diablo.factory import background_job_manager
 from diablo.jobs.canvas_job import CanvasJob
 from diablo.jobs.sis_data_refresh_job import SisDataRefreshJob
+from diablo.lib.development_db_utils import load_mock_courses
 from diablo.lib.util import utc_now
 from diablo.models.admin_user import AdminUser
 from diablo.models.email_template import EmailTemplate
@@ -89,19 +90,8 @@ def _load_schemas():
 
 def _load_courses():
     term_id = app.config['CURRENT_TERM_ID']
-    with open(f"{app.config['FIXTURES_PATH']}/sis/courses.json", 'r') as file:
-        courses = []
-        json_ = json.loads(file.read())
-        defaults = json_['defaults']
-        instructors = json_['instructors']
-        for c in json_['courses']:
-            c['instructor_name'] = instructors[c['instructor_uid']]
-            for key, value in defaults.items():
-                if key not in c:
-                    c[key] = value
-            courses.append(c)
-        SisSection.refresh(sis_sections=courses, term_id=term_id)
-        std_commit(allow_test_environment=True)
+    db.session.execute(SisSection.__table__.delete().where(SisSection.term_id == term_id))
+    load_mock_courses(f"{app.config['FIXTURES_PATH']}/sis/courses.json")
     SisDataRefreshJob.after_sis_data_refresh(term_id=term_id)
     std_commit(allow_test_environment=True)
 
