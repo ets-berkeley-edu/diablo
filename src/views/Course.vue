@@ -54,9 +54,9 @@
                   </v-card>
                 </v-col>
               </v-row>
-              <v-row no-gutters class="mb-4 mt-2">
+              <v-row v-if="!hasCurrentUserApproved" no-gutters class="mb-4 mt-2">
                 <v-col>
-                  <CourseCaptureExplained v-if="!hasCurrentUserApproved" />
+                  <CourseCaptureExplained />
                   <div class="font-italic font-weight-light pl-2 pt-4">
                     <div v-if="course.room.isAuditorium">
                       <v-icon class="pr-1">mdi-information-outline</v-icon>
