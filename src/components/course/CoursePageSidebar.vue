@@ -89,7 +89,7 @@
         Send Invite
       </v-btn>
     </v-row>
-    <v-row v-if="$currentUser.isAdmin && isCurrentTerm && course.scheduled" id="unschedule" justify="center">
+    <v-row v-if="$currentUser.isAdmin && isCurrentTerm && (course.scheduled || course.hasNecessaryApprovals)" id="unschedule" justify="center">
       <v-col md="auto">
         <v-dialog v-model="showUnscheduleModal" persistent max-width="400">
           <template v-slot:activator="{ on }">
