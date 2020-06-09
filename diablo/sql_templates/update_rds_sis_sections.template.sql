@@ -59,3 +59,6 @@ INSERT INTO sis_sections (allowed_units, course_name, course_title, instruction_
     term_id INTEGER
   )
 );
+
+-- Our source data may use blank spaces for UIDs that should be null.
+UPDATE sis_sections SET instructor_uid = NULL WHERE instructor_uid = '';
