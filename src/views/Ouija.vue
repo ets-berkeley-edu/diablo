@@ -3,6 +3,23 @@
     <v-card-title class="align-start p-3">
       <div class="pt-2">
         <h1><v-icon class="pb-2" large>mdi-auto-fix</v-icon> The Ouija Board</h1>
+        <v-btn
+          v-if="courses.length"
+          class="ml-8"
+          :disabled="isDownloading || refreshing"
+          text
+          @click="downloadCSV"
+        >
+          <v-progress-circular
+            v-if="isDownloading"
+            class="mr-2"
+            color="primary"
+            indeterminate
+            size="18"
+            width="3"
+          ></v-progress-circular>
+          {{ isDownloading ? 'Downloading' : 'Download CSV' }}
+        </v-btn>
       </div>
       <v-spacer></v-spacer>
       <div class="float-right w-50">
@@ -11,6 +28,7 @@
           v-model="searchText"
           append-icon="mdi-magnify"
           clearable
+          :disabled="isDownloading"
           label="Search"
           single-line
           hide-details
@@ -20,6 +38,7 @@
             id="ouija-filter-options"
             v-model="selectedFilter"
             color="secondary"
+            :disabled="isDownloading"
             :items="$_.keys($config.searchFilterOptions)"
             @change="refresh"
           >
@@ -56,7 +75,7 @@
 <script>
   import CoursesDataTable from '@/components/course/CoursesDataTable'
   import Context from '@/mixins/Context'
-  import {getCourses} from '@/api/course'
+  import {downloadCSV, getCourses} from '@/api/course'
 
   export default {
     name: 'Ouija',
@@ -64,6 +83,7 @@
     mixins: [Context],
     data: () => ({
       courses: undefined,
+      isDownloading: false,
       refreshing: undefined,
       searchText: '',
       selectedFilter: 'Not Invited'
@@ -73,6 +93,13 @@
       this.refresh()
     },
     methods: {
+      downloadCSV() {
+        this.isDownloading = true
+        downloadCSV(this.selectedFilter, this.$config.currentTermId).then(() => {
+          this.snackbarOpen('The CSV file has been downloaded.')
+          this.isDownloading = false
+        })
+      },
       onToggleOptOut(course) {
         if (!course.hasOptedOut && this.selectedFilter === 'Do Not Email') {
           let indexOf = this.courses.findIndex(c => c.sectionId === course.sectionId)

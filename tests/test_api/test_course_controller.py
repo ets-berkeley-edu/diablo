@@ -22,6 +22,8 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
+import csv
+from io import StringIO
 import json
 import random
 
@@ -365,7 +367,7 @@ class TestGetCourse:
         assert len(api_json['crossListings']) == 0
 
 
-class TestCoursesFilter:
+class TestGetCourses:
     """Only admins can see who has been invited, who has signed up, etc."""
 
     @property
@@ -582,6 +584,54 @@ class TestCoursesFilter:
             for section_id in [section_1_id, section_3_id, section_4_id, section_5_id, section_6_id]:
                 assert _find_course(api_json=api_json, section_id=section_id)
             assert not _find_course(api_json=api_json, section_id=section_in_ineligible_room)
+
+
+class TestDownloadCoursesCsv:
+    """Only admins download courses CSV."""
+
+    @staticmethod
+    def _api_courses_csv(client, expected_status_code=200):
+        response = client.post(
+            '/api/courses/csv',
+            data=json.dumps({
+                'termId': app.config['CURRENT_TERM_ID'],
+                'filter': 'All',
+            }),
+            content_type='application/json',
+        )
+        assert response.status_code == expected_status_code
+        return response.data
+
+    def test_not_authenticated(self, client):
+        """Deny anonymous access."""
+        self._api_courses_csv(client, expected_status_code=401)
+
+    def test_not_authorized(self, client, fake_auth):
+        """Deny access if user is not an admin."""
+        instructor_uids = get_instructor_uids(section_id=section_1_id, term_id=app.config['CURRENT_TERM_ID'])
+        fake_auth.login(instructor_uids[0])
+        self._api_courses_csv(client, expected_status_code=401)
+
+    def test_download_csv(self, client, admin_session):
+        """Admin users can download courses CSV file."""
+        term_id = app.config['CURRENT_TERM_ID']
+        csv_string = self._api_courses_csv(client).decode('utf-8')
+        reader = csv.reader(StringIO(csv_string), delimiter=',')
+        for index, row in enumerate(reader):
+            section_id = row[1]
+            sign_up_url = row[8]
+            instructors = row[-1]
+            if index == 0:
+                assert section_id == 'Section Id'
+                assert sign_up_url == 'Sign-up URL'
+                assert instructors == 'Instructors'
+            else:
+                assert section_id.isnumeric()
+                for snippet in [app.config['DIABLO_BASE_URL'], section_id, str(term_id)]:
+                    assert snippet in sign_up_url
+                actual_uids = instructors.split(',')
+                expected_uids = get_instructor_uids(section_id=section_id, term_id=term_id)
+                assert set(actual_uids) == set(expected_uids)
 
 
 class TestCoursesChanges:

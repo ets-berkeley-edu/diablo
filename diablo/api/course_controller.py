@@ -22,12 +22,15 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
+from datetime import datetime
+
 from diablo.api.errors import BadRequestError, ForbiddenRequestError, ResourceNotFoundError
-from diablo.api.util import admin_required, get_search_filter_options
+from diablo.api.util import admin_required, csv_download_response, get_search_filter_options
 from diablo.externals.kaltura import Kaltura
 from diablo.jobs.util import schedule_recordings
 from diablo.lib.berkeley import term_name_for_sis_id
 from diablo.lib.http import tolerant_jsonify
+from diablo.lib.interpolator import get_sign_up_url
 from diablo.models.approval import Approval, get_all_publish_types, get_all_recording_types
 from diablo.models.course_preference import CoursePreference
 from diablo.models.queued_email import notify_instructor_waiting_for_approval, notify_instructors_of_changes
@@ -119,27 +122,38 @@ def find_courses():
     params = request.get_json()
     term_id = params.get('termId')
     filter_ = params.get('filter', 'Not Invited')
-    if filter_ not in get_search_filter_options() or not term_id:
-        raise BadRequestError('One or more required params are missing or invalid')
+    return tolerant_jsonify(_get_courses_per_filter(filter_=filter_, term_id=term_id))
 
-    if filter_ == 'All':
-        courses = SisSection.get_courses(term_id)
-    elif filter_ == 'Do Not Email':
-        courses = SisSection.get_courses_opted_out(term_id)
-    elif filter_ == 'Invited':
-        courses = SisSection.get_courses_invited(term_id)
-    elif filter_ == 'Not Invited':
-        courses = SisSection.get_eligible_courses_not_invited(term_id)
-    elif filter_ == 'Partially Approved':
-        courses = SisSection.get_courses_partially_approved(term_id)
-    elif filter_ == 'Queued for Scheduling':
-        courses = SisSection.get_courses_queued_for_scheduling(term_id)
-    elif filter_ == 'Scheduled':
-        courses = SisSection.get_courses_scheduled(term_id)
-    else:
-        raise BadRequestError(f'Invalid filter: {filter_}')
 
-    return tolerant_jsonify(courses)
+@app.route('/api/courses/csv', methods=['POST'])
+@admin_required
+def download_courses_csv():
+    def _course_csv_row(c):
+        section_id = c.get('sectionId')
+        scheduled = c.get('scheduled') or {}
+        return {
+            'Course Name': c.get('courseName'),
+            'Section Id': section_id,
+            'Room': c.get('meetingLocation'),
+            'Days': ','.join(c.get('meetingDays') or []),
+            'Start Time': c.get('meetingStartTime'),
+            'End Time': c.get('meetingEndTime'),
+            'Publish Type': scheduled.get('publishTypeName'),
+            'Recording Type': scheduled.get('recordingTypeName'),
+            'Sign-up URL': get_sign_up_url(section_id=section_id, term_id=c.get('termId')),
+            'Canvas URLs': [f"{app.config['CANVAS_BASE_URL']}/courses/{s['courseSiteId']}" for s in c.get('canvasCourseSites') or []],
+            'Instructors': ','.join([instructor.get('uid') for instructor in c.get('instructors') or []]),
+        }
+
+    params = request.get_json()
+    term_id = params.get('termId')
+    filter_ = params.get('filter', 'Not Invited')
+    now = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+    return csv_download_response(
+        rows=[_course_csv_row(c) for c in _get_courses_per_filter(filter_=filter_, term_id=term_id)],
+        filename=f"courses-{filter_.lower().replace(' ', '_')}-{term_id}_{now}.csv",
+        fieldnames=list(_course_csv_row({}).keys()),
+    )
 
 
 @app.route('/api/course/unschedule', methods=['POST'])
@@ -201,6 +215,29 @@ def update_opt_out():
         opt_out=opt_out,
     )
     return tolerant_jsonify(preferences.to_api_json())
+
+
+def _get_courses_per_filter(filter_, term_id):
+    if filter_ not in get_search_filter_options() or not term_id:
+        raise BadRequestError('One or more required params are missing or invalid')
+
+    if filter_ == 'All':
+        courses = SisSection.get_courses(term_id)
+    elif filter_ == 'Do Not Email':
+        courses = SisSection.get_courses_opted_out(term_id)
+    elif filter_ == 'Invited':
+        courses = SisSection.get_courses_invited(term_id)
+    elif filter_ == 'Not Invited':
+        courses = SisSection.get_eligible_courses_not_invited(term_id)
+    elif filter_ == 'Partially Approved':
+        courses = SisSection.get_courses_partially_approved(term_id)
+    elif filter_ == 'Queued for Scheduling':
+        courses = SisSection.get_courses_queued_for_scheduling(term_id)
+    elif filter_ == 'Scheduled':
+        courses = SisSection.get_courses_scheduled(term_id)
+    else:
+        raise BadRequestError(f'Invalid filter: {filter_}')
+    return courses
 
 
 def _update_scheduling(course):

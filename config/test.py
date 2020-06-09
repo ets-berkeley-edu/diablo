@@ -36,6 +36,8 @@ CURRENT_TERM_ID = 2202
 CURRENT_TERM_BEGIN = '2020-01-21'
 CURRENT_TERM_END = '2020-05-08'
 
+DIABLO_BASE_URL = 'https://manage-test.coursecapture.berkeley.edu'
+
 FIXTURES_PATH = f'{BASE_DIR}/fixtures'
 
 JOBS_AUTO_START = False
