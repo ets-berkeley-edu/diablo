@@ -173,19 +173,19 @@ def unschedule():
     if not course:
         raise BadRequestError('Required params missing or invalid')
 
-    scheduled = course['scheduled']
-    if not scheduled:
-        raise BadRequestError(f'Section id {section_id}, term id {term_id} is not currently scheduled')
+    if not (course['scheduled'] or course['hasNecessaryApprovals']):
+        raise BadRequestError(f'Section id {section_id}, term id {term_id} is not currently scheduled or queued for scheduling')
 
+    kaltura_schedule_id = (course.get('scheduled') or {}).get('kalturaScheduleId')
     Approval.delete(term_id=term_id, section_id=section_id)
     Scheduled.delete(term_id=term_id, section_id=section_id)
 
-    kaltura_schedule_id = scheduled['kalturaScheduleId']
-    try:
-        Kaltura().delete_event(kaltura_schedule_id)
-    except (KalturaClientException, KalturaException) as e:
-        app.logger.error(f'Failed to delete Kaltura schedule: {kaltura_schedule_id}')
-        app.logger.exception(e)
+    if kaltura_schedule_id:
+        try:
+            Kaltura().delete_event(kaltura_schedule_id)
+        except (KalturaClientException, KalturaException) as e:
+            app.logger.error(f'Failed to delete Kaltura schedule: {kaltura_schedule_id}')
+            app.logger.exception(e)
 
     CoursePreference.update_opt_out(
         term_id=term_id,

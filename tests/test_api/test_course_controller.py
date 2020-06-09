@@ -944,7 +944,7 @@ class TestUnscheduleCourse:
         )
 
     def test_not_scheduled(self, client, admin_session):
-        """A course cannot be unscheduled if it hasn't been scheduled first."""
+        """A course cannot be unscheduled if it hasn't been scheduled or queued first."""
         self._api_unschedule(
             client,
             term_id=self.term_id,
@@ -952,7 +952,7 @@ class TestUnscheduleCourse:
             expected_status_code=400,
         )
 
-    def test_authorized_unschedule(self, client, admin_session):
+    def test_authorized_unschedule_scheduled(self, client, admin_session):
         with test_approvals_workflow(app):
             api_approve(
                 client,
@@ -970,6 +970,7 @@ class TestUnscheduleCourse:
             assert course['scheduled'] is not None
             assert course['hasNecessaryApprovals'] is True
             assert course['hasOptedOut'] is False
+            assert course['schedulingStatus'] == 'Scheduled'
 
             response = self._api_unschedule(
                 client,
@@ -978,6 +979,31 @@ class TestUnscheduleCourse:
             )
             assert len(response['approvals']) == 0
             assert response['scheduled'] is None
+            assert response['hasNecessaryApprovals'] is False
+            assert response['hasOptedOut'] is True
+            assert response['schedulingStatus'] == 'Not Scheduled'
+
+    def test_authorized_unschedule_queued(self, client, admin_session):
+        with test_approvals_workflow(app):
+            api_approve(
+                client,
+                publish_type='kaltura_my_media',
+                recording_type='presentation_audio',
+                section_id=section_1_id,
+            )
+
+            course = api_get_course(client, term_id=self.term_id, section_id=section_1_id)
+            assert len(course['approvals']) == 1
+            assert course['hasNecessaryApprovals'] is True
+            assert course['schedulingStatus'] == 'Queued for Scheduling'
+
+            response = self._api_unschedule(
+                client,
+                term_id=self.term_id,
+                section_id=section_1_id,
+            )
+            assert len(response['approvals']) == 0
+            assert response['schedulingStatus'] == 'Not Scheduled'
             assert response['hasNecessaryApprovals'] is False
             assert response['hasOptedOut'] is True
 
