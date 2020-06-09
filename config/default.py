@@ -61,6 +61,8 @@ CURRENT_TERM_ID = None
 DEVELOPER_AUTH_ENABLED = False
 DEVELOPER_AUTH_PASSWORD = 'another secret'
 
+DIABLO_BASE_URL = 'https://manage-foo.coursecapture.berkeley.edu'
+
 EMAIL_DIABLO_ADMIN = '__EMAIL_DIABLO_ADMIN__at_berkeley.edu'
 EMAIL_DIABLO_ADMIN_UID = '0'
 EMAIL_DIABLO_SUPPORT = '__EMAIL_DIABLO_SUPPORT__at_berkeley.edu'

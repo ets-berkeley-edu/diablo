@@ -1,4 +1,6 @@
+import _ from 'lodash'
 import axios from 'axios'
+import moment from 'moment-timezone'
 import utils from '@/api/api-utils'
 
 export function approve(
@@ -12,6 +14,16 @@ export function approve(
       recordingType,
       sectionId
     })
+}
+
+export function downloadCSV(filter, termId) {
+  const fileDownload = require('js-file-download')
+  const now = moment().format('YYYY-MM-DD_HH-mm-ss')
+  const filename = `courses-${_.snakeCase(filter)}-${termId}_${now}.csv`
+  return axios.post(`${utils.apiBaseUrl()}/api/courses/csv`, {
+    filter,
+    termId
+  }).then(response => fileDownload(response.data, filename), () => null)
 }
 
 export function getCourse(termId: number, sectionId: number) {

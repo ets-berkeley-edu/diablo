@@ -58,6 +58,11 @@ def interpolate_content(
     return interpolated
 
 
+def get_sign_up_url(term_id, section_id):
+    base_url = app.config['DIABLO_BASE_URL']
+    return f'{base_url}/course/{term_id}/{section_id}'
+
+
 def get_template_substitutions(
         course,
         recipient_name,
@@ -91,12 +96,6 @@ def get_template_substitutions(
         'recipient.name': recipient_name,
         'recording.type': recording_type_name,
         'recording.type.previous': previous_recording_type_name,
-        'signup.url': course and _get_sign_up_url(term_id, course['sectionId']),
+        'signup.url': course and get_sign_up_url(term_id, course['sectionId']),
         'term.name': term_name_for_sis_id(term_id),
     }
-
-
-def _get_sign_up_url(term_id, section_id):
-    diablo_env = app.config['DIABLO_ENV']
-    sub_domain = 'manage' if diablo_env == 'production' else f'manage-{diablo_env}'
-    return f'https://{sub_domain}.coursecapture.berkeley.edu/course/{term_id}/{section_id}'

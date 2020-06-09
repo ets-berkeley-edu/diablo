@@ -22,11 +22,12 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-
+import csv
 from functools import wraps
 
-from flask import current_app as app, request
+from flask import current_app as app, request, Response
 from flask_login import current_user
+from werkzeug.wrappers import ResponseStream
 
 
 def admin_required(func):
@@ -50,3 +51,16 @@ def get_search_filter_options():
         'Queued for Scheduling': 'Courses with all necessary approvals but recordings not yet scheduled.',
         'Scheduled': 'Courses with scheduled recordings.',
     }
+
+
+def csv_download_response(rows, filename, fieldnames=None):
+    response = Response(
+        content_type='text/csv',
+        headers={
+            'Content-disposition': f'attachment; filename="{filename}"',
+        },
+    )
+    csv_writer = csv.DictWriter(ResponseStream(response), fieldnames=fieldnames)
+    csv_writer.writeheader()
+    csv_writer.writerows(rows)
+    return response

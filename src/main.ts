@@ -23,9 +23,7 @@ const isDebugMode = _.trim(process.env.VUE_APP_DEBUG).toLowerCase() === 'true'
 // Axios
 axios.defaults.withCredentials = true
 axios.interceptors.response.use(
-    response => {
-      return response.data
-    },
+    response => response.headers['content-type'] === 'application/json' ? response.data : response,
     error => {
       const errorStatus = _.get(error, 'response.status')
       if (_.get(Vue.prototype.$currentUser, 'isAuthenticated')) {
