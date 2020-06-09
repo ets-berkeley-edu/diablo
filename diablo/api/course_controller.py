@@ -128,6 +128,11 @@ def find_courses():
 @app.route('/api/courses/csv', methods=['POST'])
 @admin_required
 def download_courses_csv():
+    def _get_email_with_label(instructor):
+        email = instructor.get('email')
+        name = instructor.get('name') or instructor.get('uid')
+        return f'{name} <{email}>' if email else name
+
     def _course_csv_row(c):
         section_id = c.get('sectionId')
         scheduled = c.get('scheduled') or {}
@@ -135,14 +140,15 @@ def download_courses_csv():
             'Course Name': c.get('courseName'),
             'Section Id': section_id,
             'Room': c.get('meetingLocation'),
-            'Days': ','.join(c.get('meetingDays') or []),
+            'Days': ', '.join(c.get('meetingDays') or []),
             'Start Time': c.get('meetingStartTime'),
             'End Time': c.get('meetingEndTime'),
             'Publish Type': scheduled.get('publishTypeName'),
             'Recording Type': scheduled.get('recordingTypeName'),
             'Sign-up URL': get_sign_up_url(section_id=section_id, term_id=c.get('termId')),
             'Canvas URLs': [f"{app.config['CANVAS_BASE_URL']}/courses/{s['courseSiteId']}" for s in c.get('canvasCourseSites') or []],
-            'Instructors': ','.join([instructor.get('uid') for instructor in c.get('instructors') or []]),
+            'Instructors': ', '.join([_get_email_with_label(instructor) for instructor in c.get('instructors') or []]),
+            'Instructor UIDs': ', '.join([instructor.get('uid') for instructor in c.get('instructors') or []]),
         }
 
     params = request.get_json()
