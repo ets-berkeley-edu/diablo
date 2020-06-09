@@ -22,6 +22,7 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
+from canvasapi.exceptions import CanvasException
 from diablo import db
 from diablo.externals.b_connected import BConnected
 from diablo.externals.canvas import ping_canvas
@@ -35,23 +36,33 @@ from sqlalchemy.exc import SQLAlchemyError
 
 @app.route('/api/ping')
 def ping():
-    def db_status():
-        sql = 'SELECT 1'
-        try:
-            db.session.execute(sql)
-            return True
-        except psycopg2.Error as e:
-            log_db_error(e, sql)
-            return False
-        except SQLAlchemyError as e:
-            app.logger.exception('Database connection error')
-            app.logger.exception(e)
-            return False
-
     return tolerant_jsonify({
         'app': True,
-        'canvas': ping_canvas(),
+        'canvas': _ping_canvas(),
         'bConnected': BConnected().ping(),
-        'db': db_status(),
+        'db': _db_status(),
         'kaltura': Kaltura().ping(),
     })
+
+
+def _db_status():
+    sql = 'SELECT 1'
+    try:
+        db.session.execute(sql)
+        return True
+    except psycopg2.Error as e:
+        log_db_error(e, sql)
+        return False
+    except SQLAlchemyError as e:
+        app.logger.error('Database connection error during /api/ping')
+        app.logger.exception(e)
+        return False
+
+
+def _ping_canvas():
+    try:
+        return ping_canvas()
+    except CanvasException as e:
+        app.logger.error('Canvas error during /api/ping')
+        app.logger.exception(e)
+        return False
