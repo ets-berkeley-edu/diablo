@@ -42,9 +42,10 @@
                   class="subtitle-1"
                   :to="`/course/${$config.currentTermId}/${course.sectionId}`"
                 >
-                  {{ course.label }}
+                  <div v-for="courseCode in sortCodes(course)" :key="courseCode">
+                    {{ courseCode }}
+                  </div>
                 </router-link>
-                <CrossListingTooltip v-if="course.crossListings.length" icon-class="pb-1 pl-1" :course="course" />
               </td>
               <td :id="`section-id-${course.sectionId}`" :class="tdClass(course)">{{ course.sectionId }}</td>
               <td v-if="includeRoomColumn" :class="tdClass(course)">
@@ -150,13 +151,12 @@
 
 <script>
   import Context from '@/mixins/Context'
-  import CrossListingTooltip from '@/components/course/CrossListingTooltip'
   import ToggleOptOut from '@/components/course/ToggleOptOut'
   import Utils from '@/mixins/Utils'
 
   export default {
     name: 'CoursesDataTable',
-    components: {CrossListingTooltip, ToggleOptOut},
+    components: {ToggleOptOut},
     mixins: [Context, Utils],
     props: {
       courses: {
@@ -218,6 +218,9 @@
       })
     },
     methods: {
+      sortCodes(course) {
+        return course.label.split('|')
+      },
       tdClass(course) {
         return course.approvals.length ? 'border-bottom-zero' : ''
       }
