@@ -118,13 +118,15 @@ def _get_courses_ready_to_schedule(approvals, term_id):
         admin_user_uids = set([user.uid for user in AdminUser.all_admin_users(include_deleted=True)])
 
         for section_id, uids in _get_uids_per_section_id(approvals=unscheduled_approvals).items():
+            course = courses_per_section_id.get(section_id)
+            if not course:
+                continue
             if admin_user_uids.intersection(set(uids)):
-                ready_to_schedule.append(courses_per_section_id[section_id])
+                ready_to_schedule.append(course)
             else:
-                course = courses_per_section_id[section_id]
                 necessary_uids = [i['uid'] for i in course['instructors']]
                 if all(uid in uids for uid in necessary_uids):
-                    ready_to_schedule.append(courses_per_section_id[section_id])
+                    ready_to_schedule.append(course)
     return ready_to_schedule
 
 
