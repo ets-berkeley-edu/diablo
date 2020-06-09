@@ -39,7 +39,7 @@ from KalturaClient.Plugins.Schedule import KalturaBlackoutScheduleEvent, Kaltura
     KalturaScheduleEventRecurrence, KalturaScheduleEventRecurrenceFrequency, KalturaScheduleEventRecurrenceType, \
     KalturaScheduleEventResource, KalturaScheduleEventStatus, KalturaScheduleResourceFilter, KalturaSessionType
 
-CREATED_BY_DIABLO_TAG = 'created_by_diablo'
+CREATED_BY_DIABLO_TAG = 'ets_course_capture'
 
 DEFAULT_KALTURA_PAGE_SIZE = 200
 
