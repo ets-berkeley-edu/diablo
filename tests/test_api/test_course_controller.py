@@ -620,18 +620,24 @@ class TestDownloadCoursesCsv:
         for index, row in enumerate(reader):
             section_id = row[1]
             sign_up_url = row[8]
-            instructors = row[-1]
+            instructors = row[-2]
+            instructor_uids = row[-1]
             if index == 0:
                 assert section_id == 'Section Id'
                 assert sign_up_url == 'Sign-up URL'
                 assert instructors == 'Instructors'
+                assert instructor_uids == 'Instructor UIDs'
             else:
-                assert section_id.isnumeric()
+                course = SisSection.get_course(section_id=section_id, term_id=term_id)
+                assert int(section_id) == course['sectionId']
                 for snippet in [app.config['DIABLO_BASE_URL'], section_id, str(term_id)]:
                     assert snippet in sign_up_url
-                actual_uids = instructors.split(',')
-                expected_uids = get_instructor_uids(section_id=section_id, term_id=term_id)
-                assert set(actual_uids) == set(expected_uids)
+
+                expected_uids = [instructor['uid'] for instructor in course['instructors']]
+                assert set(instructor_uids.split(', ')) == set(expected_uids)
+                for instructor in course['instructors']:
+                    assert instructor['email'] in instructors
+                    assert instructor['name'] in instructors
 
 
 class TestCoursesChanges:
