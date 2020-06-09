@@ -27,6 +27,7 @@ from flask import current_app as app
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.wait import WebDriverWait as Wait
+from xena.models.recording_scheduling_status import RecordingSchedulingStatus
 from xena.pages.diablo_pages import DiabloPages
 from xena.test_utils import util
 
@@ -43,6 +44,10 @@ class SignUpPage(DiabloPages):
     CROSS_LISTING = (By.XPATH, '//span[contains(@id, "cross-listing")]')
     OPTED_OUT = (By.ID, 'opted-out')
     SEND_INVITE_BUTTON = (By.ID, 'send-invite-btn')
+    UNSCHEDULE_BUTTON = (By.ID, 'unschedule-course-btn')
+    UNSCHEDULE_CONFIRM_BUTTON = (By.ID, 'confirm-unschedule-course-btn')
+    UNSCHEDULE_CANCEL_BUTTON = (By.ID, 'cancel-unschedule-course-btn')
+
     CC_EXPLAINED_LINK = (By.ID, 'link-to-course-capture-overview')
     RECORDING_TYPE_TEXT = (By.XPATH, '//div[contains(text(), "\'Presentation and Audio\' recordings are free")]')
     PUBLISH_TYPE_TEXT = (By.XPATH, '//div[contains(text(), "Choosing \'Media Gallery\'")]')
@@ -109,10 +114,30 @@ class SignUpPage(DiabloPages):
     def visible_opt_out(self):
         return self.element(SignUpPage.OPTED_OUT).get_attribute('innerText').strip()
 
+    # INVITES, UN-SCHEDULING, OPTED-OUT
+
     def click_send_invite_button(self):
         app.logger.info('Clicking the Send Invite button')
         self.wait_for_element_and_click(SignUpPage.SEND_INVITE_BUTTON)
         Wait(self.driver, util.get_short_timeout()).until(ec.visibility_of_element_located(SignUpPage.ALERT_MSG))
+
+    def click_unschedule_button(self):
+        app.logger.info('Clicking the Unschedule button')
+        self.wait_for_element_and_click(SignUpPage.UNSCHEDULE_BUTTON)
+
+    def confirm_unscheduling(self, recording_schedule):
+        self.click_unschedule_button()
+        self.wait_for_element_and_click(SignUpPage.UNSCHEDULE_CONFIRM_BUTTON)
+        Wait(self.driver, util.get_long_timeout()).until(ec.visibility_of_element_located(SignUpPage.APPROVE_BUTTON))
+        recording_schedule.scheduling_status = RecordingSchedulingStatus.NOT_SCHEDULED
+
+    def cancel_unscheduling(self):
+        self.click_unschedule_button()
+        self.wait_for_element_and_click(SignUpPage.UNSCHEDULE_CANCEL_BUTTON)
+        Wait(self.driver, 1).until(ec.invisibility_of_element_located(SignUpPage.UNSCHEDULE_CANCEL_BUTTON))
+
+    def is_opted_out(self):
+        return self.is_present(SignUpPage.OPTED_OUT)
 
     # CAPTURE + APPROVAL SETTINGS
 
