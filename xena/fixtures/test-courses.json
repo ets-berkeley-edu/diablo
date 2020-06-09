@@ -1,140 +1,172 @@
 {
   "courses": [
     {
-      "courseName": "A Course With a Single Instructor and a Single Listing",
-      "courseOfferingId": "Testing",
-      "instructorNum": "1",
+      "ccn": "123456",
+      "code": "TEST 0",
+      "title": "test_sign_up_0",
       "instructors": [
         {
-          "name": "Testing",
-          "role": "Faculty",
           "uid": "1234567",
-          "email": "testingmw@berkeley.edu"
+          "first_name": "Test",
+          "last_name": "Instructor",
+          "email": "test_0@berkeley.edu",
+          "role": "PI"
         }
       ],
-      "scheduleDays": "Tuesday, Thursday",
-      "startTime": "12:30pm",
-      "endTime": "01:59pm",
+      "days": "Tuesday, Thursday",
+      "start_time": "12:30pm",
+      "end_time": "01:59pm",
       "room": {
-        "locationName": "Testing",
-        "building": "Testing",
-        "roomNumber": "Testing",
-        "capabilities": "Screencast"
+        "name": "Pimentel 1",
+        "capabilities": "Screencast + Video"
       },
-      "ccn": "Testing",
-      "section": "001",
-      "semester": "Spring 2020",
-      "courseTitle": "Testing"
+      "listings": []
     },
     {
-      "courseName": "A Course With Multiple Instructors and a Single Listing",
-      "courseOfferingId": "Testing",
-      "instructorNum": "1",
+      "ccn": "123456",
+      "code": "TEST 1",
+      "title": "test_sign_up_1",
       "instructors": [
         {
-          "name": "Testing",
-          "role": "Faculty",
           "uid": "1234567",
-          "email": "testingmw@berkeley.edu"
+          "first_name": "Test",
+          "last_name": "Instructor",
+          "email": "test_0@berkeley.edu",
+          "role": "PI"
+        }
+      ],
+      "days": "Tuesday, Thursday",
+      "start_time": "12:30pm",
+      "end_time": "01:59pm",
+      "room": {
+        "name": "Cory 277",
+        "capabilities": "Screencast"
+      },
+      "listings": []
+    },
+    {
+      "ccn": "123456",
+      "code": "TEST 2",
+      "title": "test_sign_up_2",
+      "instructors": [
+        {
+          "uid": "1234567",
+          "first_name": "Test",
+          "last_name": "Instructor",
+          "email": "test_0@berkeley.edu",
+          "role": "PI"
         },
         {
-          "name": "Testing",
-          "role": "Faculty",
           "uid": "1234567",
-          "email": "testingmw@berkeley.edu"
+          "first_name": "Test",
+          "last_name": "Instructor",
+          "email": "test_0@berkeley.edu",
+          "role": "PI"
         }
       ],
-      "scheduleDays": "Tuesday, Thursday",
-      "startTime": "12:30pm",
-      "endTime": "01:59pm",
+      "days": "Tuesday, Thursday",
+      "start_time": "12:30pm",
+      "end_time": "01:59pm",
       "room": {
-        "locationName": "Testing",
-        "building": "Testing",
-        "roomNumber": "Testing",
-        "capabilities": "Screencast"
+        "name": "Pimentel 1",
+        "capabilities": "Screencast + Video"
       },
-      "ccn": "Testing",
-      "section": "001",
-      "semester": "Spring 2020",
-      "courseTitle": "Testing"
+      "listings": []
     },
     {
-      "courseName": "A Course With a Single Instructor and Multiple Listings",
-      "courseOfferingId": "Testing",
-      "instructorNum": "1",
+      "ccn": "123456",
+      "code": "TEST 3",
+      "title": "test_sign_up_3",
       "instructors": [
         {
-          "name": "Testing",
-          "role": "Faculty",
           "uid": "1234567",
-          "email": "testingmw@berkeley.edu"
+          "first_name": "Test",
+          "last_name": "Instructor",
+          "email": "test_0@berkeley.edu",
+          "role": "PI"
+        },
+        {
+          "uid": "1234567",
+          "first_name": "Test",
+          "last_name": "Instructor",
+          "email": "test_0@berkeley.edu",
+          "role": "PI"
         }
       ],
-      "scheduleDays": "Tuesday, Thursday",
-      "startTime": "12:30pm",
-      "endTime": "01:59pm",
+      "days": "Tuesday, Thursday",
+      "start_time": "12:30pm",
+      "end_time": "01:59pm",
       "room": {
-        "locationName": "Testing",
-        "building": "Testing",
-        "roomNumber": "Testing",
-        "capabilities": "Screencast"
+        "name": "Pimentel 1",
+        "capabilities": "Screencast + Video"
       },
-      "ccn": "Testing",
-      "section": "001",
-      "semester": "Spring 2020",
-      "courseTitle": "Testing"
+      "listings": []
     },
     {
-      "courseName": "A Course With an Instructor and a Proxy and a Single Listing",
-      "courseOfferingId": "Testing",
-      "instructorNum": "1",
+      "ccn": "123456",
+      "code": "TEST 4A",
+      "title": "test_invitations",
       "instructors": [
         {
-          "name": "Testing",
-          "role": "Faculty",
           "uid": "1234567",
-          "email": "testingmw@berkeley.edu"
+          "first_name": "Test",
+          "last_name": "Instructor",
+          "email": "test_0@berkeley.edu",
+          "role": "PI"
         }
       ],
-      "scheduleDays": "Tuesday, Thursday",
-      "startTime": "12:30pm",
-      "endTime": "01:59pm",
+      "days": "Tuesday, Thursday",
+      "start_time": "12:30pm",
+      "end_time": "01:59pm",
       "room": {
-        "locationName": "Testing",
-        "building": "Testing",
-        "roomNumber": "Testing",
-        "capabilities": "Screencast"
+        "name": "Pimentel 1",
+        "capabilities": "Screencast + Video"
       },
-      "ccn": "Testing",
-      "section": "001",
-      "semester": "Spring 2020",
-      "courseTitle": "Testing"
+      "listings": []
     },
     {
-      "courseName": "A Course With an Instructor and Multiple Listings, Undergrad and Grad",
-      "courseOfferingId": "Testing",
-      "instructorNum": "1",
+      "ccn": "123456",
+      "code": "TEST 4B",
+      "title": "test_invitations",
       "instructors": [
         {
-          "name": "Testing",
-          "role": "Faculty",
           "uid": "1234567",
-          "email": "testingmw@berkeley.edu"
+          "first_name": "Test",
+          "last_name": "Instructor",
+          "email": "test_0@berkeley.edu",
+          "role": "PI"
         }
       ],
-      "scheduleDays": "Tuesday, Thursday",
-      "startTime": "12:30pm",
-      "endTime": "01:59pm",
+      "days": "Tuesday, Thursday",
+      "start_time": "12:30pm",
+      "end_time": "01:59pm",
       "room": {
-        "locationName": "Testing",
-        "building": "Testing",
-        "roomNumber": "Testing",
-        "capabilities": "Screencast"
+        "name": "Pimentel 1",
+        "capabilities": "Screencast + Video"
       },
-      "ccn": "Testing",
-      "section": "001",
-      "semester": "Spring 2020",
-      "courseTitle": "Testing"
+      "listings": []
+    },
+    {
+      "ccn": "123456",
+      "code": "TEST 6",
+      "title": "test_unschedule",
+      "instructors": [
+        {
+          "uid": "1234567",
+          "first_name": "Test",
+          "last_name": "Instructor",
+          "email": "test_0@berkeley.edu",
+          "role": "PI"
+        }
+      ],
+      "days": "Tuesday, Thursday",
+      "start_time": "12:30pm",
+      "end_time": "01:59pm",
+      "room": {
+        "name": "Pimentel 1",
+        "capabilities": "Screencast + Video"
+      },
+      "listings": []
     }
   ]
 }
