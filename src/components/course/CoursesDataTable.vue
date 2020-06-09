@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div v-if="courses.length && !refreshing" id="courses-data-table-message" class="pb-1 pl-5">
+    <div v-if="courses.length && !searchText && !refreshing" id="courses-data-table-message" class="pb-1 pl-5">
       {{ messageForCourses }}
     </div>
     <v-data-table
@@ -131,7 +131,7 @@
         <tbody v-if="!refreshing && !items.length">
           <tr>
             <td id="message-when-zero-courses" class="ma-4 text-no-wrap title" :colspan="headers.length">
-              <span v-if="!refreshing">{{ messageForCourses }}</span>
+              <span v-if="!refreshing">No courses.</span>
             </td>
           </tr>
         </tbody>
