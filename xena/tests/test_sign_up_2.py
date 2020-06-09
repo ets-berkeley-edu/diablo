@@ -29,8 +29,9 @@ import pytest
 from xena.models.async_job import AsyncJob
 from xena.models.email import Email
 from xena.models.publish_type import PublishType
+from xena.models.recording_approval_status import RecordingApprovalStatus
 from xena.models.recording_schedule import RecordingSchedule
-from xena.models.recording_schedule_status import RecordingScheduleStatus
+from xena.models.recording_scheduling_status import RecordingSchedulingStatus
 from xena.models.recording_type import RecordingType
 from xena.models.section import Section
 from xena.pages.sign_up_page import SignUpPage
@@ -67,7 +68,8 @@ class TestSignUp2:
 
     def test_delete_old_diablo_data(self):
         util.reset_sign_up_test_data(self.test_data)
-        self.recording_schedule.status = RecordingScheduleStatus.NOT_INVITED
+        self.recording_schedule.approval_status = RecordingApprovalStatus.NOT_INVITED
+        self.recording_schedule.scheduling_status = RecordingSchedulingStatus.NOT_SCHEDULED
 
     def test_delete_old_email(self):
         self.email_page.log_in()
@@ -83,8 +85,13 @@ class TestSignUp2:
         self.ouija_page.filter_for_all()
         assert self.ouija_page.is_course_in_results(self.section) is True
 
-    def test_not_invited_status(self):
-        assert self.ouija_page.course_row_status_el(self.section).text.strip() == self.recording_schedule.status.value
+    def test_not_invited_approval_status(self):
+        visible_status = self.ouija_page.course_row_approval_status_el(self.section).text.strip()
+        assert visible_status == self.recording_schedule.approval_status.value
+
+    def test_not_invited_sched_status(self):
+        visible_status = self.ouija_page.course_row_sched_status_el(self.section).text.strip()
+        assert visible_status == self.recording_schedule.scheduling_status.value
 
     def test_not_invited_filter_no_email(self):
         self.ouija_page.filter_for_do_not_email()
@@ -102,6 +109,10 @@ class TestSignUp2:
         self.ouija_page.filter_for_partially_approved()
         assert self.ouija_page.is_course_in_results(self.section) is False
 
+    def test_not_invited_filter_queued(self):
+        self.ouija_page.filter_for_queued_for_scheduling()
+        assert self.ouija_page.is_course_in_results(self.section) is False
+
     def test_not_invited_filter_scheduled(self):
         self.ouija_page.filter_for_scheduled()
         assert self.ouija_page.is_course_in_results(self.section) is False
@@ -110,19 +121,19 @@ class TestSignUp2:
 
     def test_send_invite_email(self):
         self.jobs_page.load_page()
-        self.jobs_page.run_instructor_emails_job()
-        self.jobs_page.wait_for_most_recent_job_success(AsyncJob.INSTRUCTOR_EMAILS)
+        self.jobs_page.run_invitations_job()
+        self.jobs_page.wait_for_most_recent_job_success(AsyncJob.INVITATIONS)
         self.jobs_page.run_queued_emails_job()
         self.jobs_page.wait_for_most_recent_job_success(AsyncJob.QUEUED_EMAILS)
 
     def test_receive_invite_email_1(self):
-        self.recording_schedule.status = RecordingScheduleStatus.INVITED
-        subj = f'{self.section.term.name} Course Capture - {self.section.code} (To: {self.section.instructors[0].email})'
+        self.recording_schedule.approval_status = RecordingApprovalStatus.INVITED
+        subj = f'Invitation {self.section.term.name} {self.section.code} (To: {self.section.instructors[0].email})'
         expected_message = Email(msg_type=None, sender=None, subject=subj)
         assert self.email_page.is_message_delivered(expected_message)
 
     def test_receive_invite_email_2(self):
-        subj = f'{self.section.term.name} Course Capture - {self.section.code} (To: {self.section.instructors[1].email})'
+        subj = f'Invitation {self.section.term.name} {self.section.code} (To: {self.section.instructors[1].email})'
         expected_message = Email(msg_type=None, sender=None, subject=subj)
         assert self.email_page.is_message_delivered(expected_message)
 
@@ -134,8 +145,13 @@ class TestSignUp2:
         self.ouija_page.filter_for_all()
         assert self.ouija_page.is_course_in_results(self.section) is True
 
-    def test_invited_status(self):
-        assert self.ouija_page.course_row_status_el(self.section).text.strip() == self.recording_schedule.status.value
+    def test_invited_approval_status(self):
+        visible_status = self.ouija_page.course_row_approval_status_el(self.section).text.strip()
+        assert visible_status == self.recording_schedule.approval_status.value
+
+    def test_invited_sched_status(self):
+        visible_status = self.ouija_page.course_row_sched_status_el(self.section).text.strip()
+        assert visible_status == self.recording_schedule.scheduling_status.value
 
     def test_invited_filter_no_email(self):
         self.ouija_page.filter_for_do_not_email()
@@ -153,6 +169,10 @@ class TestSignUp2:
         self.ouija_page.filter_for_partially_approved()
         assert self.ouija_page.is_course_in_results(self.section) is False
 
+    def test_invited_filter_queued(self):
+        self.ouija_page.filter_for_queued_for_scheduling()
+        assert self.ouija_page.is_course_in_results(self.section) is False
+
     def test_invited_filter_scheduled(self):
         self.ouija_page.filter_for_scheduled()
         assert self.ouija_page.is_course_in_results(self.section) is False
@@ -163,7 +183,7 @@ class TestSignUp2:
         self.jobs_page.load_page()
         self.jobs_page.log_out()
         self.login_page.dev_auth(self.section.instructors[0].uid)
-        self.ouija_page.wait_for_diablo_title('Home')
+        self.ouija_page.wait_for_diablo_title(f'Your {self.term.name} Courses Eligible for Capture')
 
     def test_current_term_inst_1(self):
         assert self.ouija_page.visible_heading() == f'Your {self.term.name} Courses Eligible for Capture'
@@ -219,6 +239,11 @@ class TestSignUp2:
 
     # SELECT OPTIONS, APPROVE
 
+    def test_pre_approval_msg(self):
+        name = f'{self.section.instructors[1].first_name} {self.section.instructors[1].last_name}'
+        msg = f'Recordings will be scheduled when we have approvals from you and {name}.'
+        self.sign_up_page.wait_for_approvals_msg(msg)
+
     def test_choose_rec_type_inst_1(self):
         self.sign_up_page.select_rec_type(RecordingType.SCREENCAST.value['option'])
         self.recording_schedule.recording_type = RecordingType.SCREENCAST
@@ -232,10 +257,12 @@ class TestSignUp2:
 
     def test_approve_inst_1(self):
         self.sign_up_page.click_approve_button()
-        self.recording_schedule.status = RecordingScheduleStatus.PARTIALLY_APPROVED
+        self.recording_schedule.approval_status = RecordingApprovalStatus.PARTIALLY_APPROVED
 
     def test_confirmation_inst_1(self):
-        self.sign_up_page.wait_for_approval_confirmation()
+        name = f'{self.section.instructors[1].first_name} {self.section.instructors[1].last_name}'
+        msg = f'Approved by you. Recordings will be scheduled when we have approval from {name}.'
+        self.sign_up_page.wait_for_approvals_msg(msg)
 
     def test_log_out_inst_1(self):
         self.sign_up_page.log_out()
@@ -248,8 +275,13 @@ class TestSignUp2:
         self.ouija_page.filter_for_all()
         assert self.ouija_page.is_course_in_results(self.section) is True
 
-    def test_part_approved_status(self):
-        assert self.ouija_page.course_row_status_el(self.section).text.strip() == self.recording_schedule.status.value
+    def test_queued_approval_status(self):
+        visible_status = self.ouija_page.course_row_approval_status_el(self.section).text.strip()
+        assert visible_status == self.recording_schedule.approval_status.value
+
+    def test_queued_sched_status(self):
+        visible_status = self.ouija_page.course_row_sched_status_el(self.section).text.strip()
+        assert visible_status == self.recording_schedule.scheduling_status.value
 
     def test_part_approved_filter_no_email(self):
         self.ouija_page.filter_for_do_not_email()
@@ -267,6 +299,10 @@ class TestSignUp2:
         self.ouija_page.filter_for_partially_approved()
         assert self.ouija_page.is_course_in_results(self.section) is True
 
+    def test_part_approved_filter_queued(self):
+        self.ouija_page.filter_for_queued_for_scheduling()
+        assert self.ouija_page.is_course_in_results(self.section) is False
+
     def test_part_approved_filter_scheduled(self):
         self.ouija_page.filter_for_scheduled()
         assert self.ouija_page.is_course_in_results(self.section) is False
@@ -274,7 +310,6 @@ class TestSignUp2:
     # VERIFY 'WAITING FOR APPROVAL' EMAIL IS SENT TO INSTRUCTOR 1 ONLY
 
     def test_send_awaiting_approval_email(self):
-        self.login_page.dev_auth()
         self.ouija_page.click_jobs_link()
         self.jobs_page.run_queued_emails_job()
         self.jobs_page.wait_for_most_recent_job_success(AsyncJob.QUEUED_EMAILS)
@@ -295,7 +330,7 @@ class TestSignUp2:
         self.jobs_page.load_page()
         self.jobs_page.log_out()
         self.login_page.dev_auth(self.section.instructors[1].uid)
-        self.ouija_page.wait_for_diablo_title('Home')
+        self.ouija_page.wait_for_diablo_title(f'Your {self.term.name} Courses Eligible for Capture')
 
     def test_current_term_inst_2(self):
         assert self.ouija_page.visible_heading() == f'Your {self.term.name} Courses Eligible for Capture'
@@ -304,8 +339,10 @@ class TestSignUp2:
         self.ouija_page.click_sign_up_page_link(self.section)
         self.sign_up_page.wait_for_diablo_title(f'{self.section.code}, {self.section.number}')
 
-    def test_inst_1_approved(self):
-        assert self.sign_up_page.instructor_approval_present(self.section.instructors[0]) is True
+    def test_partial_approval_msg(self):
+        name = f'{self.section.instructors[0].first_name} {self.section.instructors[0].last_name}'
+        msg = f'Approved by {name}. Recordings will be scheduled when we have approval from you.'
+        self.sign_up_page.wait_for_approvals_msg(msg)
 
     # VERIFY AVAILABLE OPTIONS
 
@@ -336,21 +373,30 @@ class TestSignUp2:
 
     def test_approve_inst_2(self):
         self.sign_up_page.click_approve_button()
-        self.recording_schedule.status = RecordingScheduleStatus.APPROVED
+        self.recording_schedule.approval_status = RecordingApprovalStatus.APPROVED
+        self.recording_schedule.scheduling_status = RecordingSchedulingStatus.QUEUED_FOR_SCHEDULING
 
     def test_confirmation_inst_2(self):
-        self.sign_up_page.wait_for_approval_confirmation()
+        name = f'{self.section.instructors[0].first_name} {self.section.instructors[0].last_name}'
+        msg = f'This course is currently queued for scheduling. Recordings will be scheduled in an hour or less. Approved by {name} and you.'
+        self.sign_up_page.wait_for_approvals_msg(msg)
 
     # VERIFY OUIJA FILTER
 
     def test_approved_filter_all(self):
+        self.sign_up_page.log_out()
         self.login_page.dev_auth()
         self.ouija_page.search_for_course_code(self.section)
         self.ouija_page.filter_for_all()
         assert self.ouija_page.is_course_in_results(self.section) is True
 
-    def test_approved_status(self):
-        assert self.ouija_page.course_row_status_el(self.section).text.strip() == self.recording_schedule.status.value
+    def test_approved_approval_status(self):
+        visible_status = self.ouija_page.course_row_approval_status_el(self.section).text.strip()
+        assert visible_status == self.recording_schedule.approval_status.value
+
+    def test_approved_sched_status(self):
+        visible_status = self.ouija_page.course_row_sched_status_el(self.section).text.strip()
+        assert visible_status == self.recording_schedule.scheduling_status.value
 
     def test_approved_filter_no_email(self):
         self.ouija_page.filter_for_do_not_email()
@@ -367,6 +413,10 @@ class TestSignUp2:
     def test_approved_filter_partial_approve(self):
         self.ouija_page.filter_for_partially_approved()
         assert self.ouija_page.is_course_in_results(self.section) is False
+
+    def test_approved_filter_queued(self):
+        self.ouija_page.filter_for_queued_for_scheduling()
+        assert self.ouija_page.is_course_in_results(self.section) is True
 
     def test_approved_filter_scheduled(self):
         self.ouija_page.filter_for_scheduled()
@@ -436,8 +486,13 @@ class TestSignUp2:
         self.ouija_page.filter_for_all()
         assert self.ouija_page.is_course_in_results(self.section) is True
 
-    def test_scheduled_status(self):
-        assert self.ouija_page.course_row_status_el(self.section).text.strip() == self.recording_schedule.status.value
+    def test_scheduled_approval_status(self):
+        visible_status = self.ouija_page.course_row_approval_status_el(self.section).text.strip()
+        assert visible_status == self.recording_schedule.approval_status.value
+
+    def test_scheduled_sched_status(self):
+        visible_status = self.ouija_page.course_row_sched_status_el(self.section).text.strip()
+        assert visible_status == self.recording_schedule.scheduling_status.value
 
     def test_scheduled_filter_no_email(self):
         self.ouija_page.filter_for_do_not_email()
@@ -453,6 +508,10 @@ class TestSignUp2:
 
     def test_scheduled_filter_partial_approve(self):
         self.ouija_page.filter_for_partially_approved()
+        assert self.ouija_page.is_course_in_results(self.section) is False
+
+    def test_scheduled_filter_queued(self):
+        self.ouija_page.filter_for_queued_for_scheduling()
         assert self.ouija_page.is_course_in_results(self.section) is False
 
     def test_scheduled_filter_scheduled(self):
@@ -549,5 +608,8 @@ class TestSignUp2:
         self.login_page.dev_auth(self.section.instructors[0].uid)
         self.ouija_page.click_sign_up_page_link(self.section)
         self.sign_up_page.wait_for_diablo_title(f'{self.section.code}, {self.section.number}')
-        assert self.sign_up_page.instructor_approval_present(self.section.instructors[0]) is True
-        assert self.sign_up_page.instructor_approval_present(self.section.instructors[1]) is True
+        name = f'{self.section.instructors[1].first_name} {self.section.instructors[1].last_name}'
+        self.sign_up_page.wait_for_approvals_msg(f'Approved by you and {name}.')
+
+    def test_view_scheduled_inst_1(self):
+        assert self.sign_up_page.element(SignUpPage.H4_HEADING).text == 'Recordings scheduled'

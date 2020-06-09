@@ -78,9 +78,9 @@ class EmailTemplatesPage(DiabloPages):
         app.logger.info('Expanding template options')
         self.wait_for_page_and_click(EmailTemplatesPage.TEMPLATE_TYPE_SELECT)
 
-    def enter_template_name(self, template):
-        app.logger.info(f'Entering template name "{template.template_type.value}"')
-        self.wait_for_element_and_type(EmailTemplatesPage.TEMPLATE_NAME_INPUT, template.template_type.value)
+    def enter_template_name(self, name):
+        app.logger.info(f'Entering template name "{name}"')
+        self.wait_for_element_and_type(EmailTemplatesPage.TEMPLATE_NAME_INPUT, name)
 
     def enter_subject(self, subject):
         app.logger.info(f'Entering template subject "{subject}"')
@@ -92,11 +92,11 @@ class EmailTemplatesPage(DiabloPages):
 
     def enter_body_code(self, code):
         time.sleep(0.25)
-        self.wait_for_element_and_click(EmailTemplatesPage.CODE_BUTTON)
+        self.click_element_js(EmailTemplatesPage.CODE_BUTTON)
         time.sleep(0.25)
         self.element(EmailTemplatesPage.TEMPLATE_BODY_INPUT).send_keys(code)
         time.sleep(0.25)
-        self.wait_for_element_and_click(EmailTemplatesPage.CODE_BUTTON)
+        self.click_element_js(EmailTemplatesPage.CODE_BUTTON)
         time.sleep(0.25)
         self.element(EmailTemplatesPage.TEMPLATE_BODY_INPUT).send_keys('\n')
 
@@ -131,13 +131,23 @@ class EmailTemplatesPage(DiabloPages):
 
     def click_edit_template_link(self, template):
         app.logger.info(f'Clicking link to edit template type "{template.template_type.value}"')
-        self.wait_for_element_and_click(EmailTemplatesPage.edit_template_link_locator(template))
+        self.wait_for_page_and_click_js(EmailTemplatesPage.edit_template_link_locator(template), util.get_short_timeout())
 
     def click_send_test_email(self, template):
         app.logger.info(f'Clicking test email button for template type "{template.template_type.value}"')
-        self.wait_for_element_and_click(EmailTemplatesPage.test_email_button_locator(template))
+        self.wait_for_page_and_click_js(EmailTemplatesPage.test_email_button_locator(template))
 
     def click_delete_template_button(self, template):
         app.logger.info(f'Clicking delete button for template type "{template.template_type.value}"')
-        self.wait_for_element_and_click(EmailTemplatesPage.delete_email_button_locator(template))
+        self.wait_for_page_and_click_js(EmailTemplatesPage.delete_email_button_locator(template))
         time.sleep(1)
+
+    def create_template(self, template):
+        app.logger.info(f'Creating a template of type "{template.template_type.value}"')
+        self.load_page()
+        self.click_template_select()
+        self.click_menu_option(template.template_type.value)
+        self.enter_template_name(template.template_type.value)
+        self.enter_subject(template.subject)
+        self.enter_all_codes_in_body()
+        self.click_save()

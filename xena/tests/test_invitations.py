@@ -63,18 +63,18 @@ class TestInvitations:
         util.reset_invite_test_data(self.term, self.section_1)
         util.reset_invite_test_data(self.term, self.section_2)
         self.jobs_page.load_page()
-        self.jobs_page.run_instructor_emails_job()
-        self.jobs_page.wait_for_most_recent_job_success(AsyncJob.INSTRUCTOR_EMAILS)
+        self.jobs_page.run_invitations_job()
+        self.jobs_page.wait_for_most_recent_job_success(AsyncJob.INVITATIONS)
         self.jobs_page.run_queued_emails_job()
         self.jobs_page.wait_for_most_recent_job_success(AsyncJob.QUEUED_EMAILS)
 
     def test_course_auto_invites_delivered(self):
-        subject = f'{self.term.name} Course Capture - {self.section_1.code} (To: {self.section_1.instructors[0].email})'
+        subject = f'Invitation {self.section.term.name} {self.section.code} (To: {self.section_1.instructors[0].email})'
         email = Email(msg_type=None, sender=None, subject=subject)
         assert self.email_page.is_message_delivered(email) is True
 
     def test_course_auto_invites_not_delivered(self):
-        subject = f'{self.term.name} Course Capture - {self.section_2.code} (To: {self.section_2.instructors[0].email})'
+        subject = f'Invitation {self.section.term.name} {self.section.code} (To: {self.section_2.instructors[0].email})'
         email = Email(msg_type=None, sender=None, subject=subject)
         assert self.email_page.is_message_present(email) is False
 
@@ -82,13 +82,13 @@ class TestInvitations:
         util.reset_invite_test_data(self.term, self.section_1, self.section_1.instructors[0])
         self.email_page.delete_all_messages()
         self.jobs_page.load_page()
-        self.jobs_page.run_instructor_emails_job()
-        self.jobs_page.wait_for_most_recent_job_success(AsyncJob.INSTRUCTOR_EMAILS)
+        self.jobs_page.run_invitations_job()
+        self.jobs_page.wait_for_most_recent_job_success(AsyncJob.INVITATIONS)
         self.jobs_page.run_queued_emails_job()
         self.jobs_page.wait_for_most_recent_job_success(AsyncJob.QUEUED_EMAILS)
 
     def test_inst_auto_invite_delivered(self):
-        subject = f'{self.term.name} Course Capture - {self.section_1.code} (To: {self.section_1.instructors[0].email})'
+        subject = f'Invitation {self.section.term.name} {self.section.code} (To: {self.section_1.instructors[0].email})'
         email = Email(msg_type=None, sender=None, subject=subject)
         assert self.email_page.is_message_delivered(email)
 
@@ -117,12 +117,12 @@ class TestInvitations:
 
     def test_course_manual_invite_run_jobs(self):
         self.jobs_page.load_page()
-        self.jobs_page.run_instructor_emails_job()
-        self.jobs_page.wait_for_most_recent_job_success(AsyncJob.INSTRUCTOR_EMAILS)
+        self.jobs_page.run_invitations_job()
+        self.jobs_page.wait_for_most_recent_job_success(AsyncJob.INVITATIONS)
         self.jobs_page.run_queued_emails_job()
         self.jobs_page.wait_for_most_recent_job_success(AsyncJob.QUEUED_EMAILS)
 
     def test_course_manual_invite_delivered(self):
-        subject = f'{self.term.name} Course Capture - {self.section_1.code} (To: {self.section_1.instructors[0].email})'
+        subject = f'Invitation {self.section.term.name} {self.section.code} (To: {self.section_1.instructors[0].email})'
         email = Email(msg_type=None, sender=None, subject=subject)
         assert self.email_page.is_message_delivered(email) is True

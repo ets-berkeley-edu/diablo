@@ -23,21 +23,11 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
+from enum import Enum
 
-class RecordingSchedule(object):
 
-    def __init__(
-            self,
-            section,
-            recording_type=None,
-            publish_type=None,
-            approval_status=None,
-            scheduling_status=None,
-            series_id=None,
-    ):
-        self.section = section
-        self.recording_type = recording_type
-        self.publish_type = publish_type
-        self.approval_status = approval_status
-        self.scheduling_status = scheduling_status
-        self.series_id = series_id
+class RecordingSchedulingStatus(Enum):
+
+    NOT_SCHEDULED = 'Not Scheduled'
+    QUEUED_FOR_SCHEDULING = 'Queued for Scheduling'
+    SCHEDULED = 'Scheduled'

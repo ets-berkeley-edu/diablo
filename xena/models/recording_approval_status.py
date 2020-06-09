@@ -26,11 +26,9 @@ ENHANCEMENTS, OR MODIFICATIONS.
 from enum import Enum
 
 
-class RecordingScheduleStatus(Enum):
+class RecordingApprovalStatus(Enum):
 
-    DO_NOT_EMAIL = 'Do Not Email'
     NOT_INVITED = 'Not Invited'
     INVITED = 'Invited'
     PARTIALLY_APPROVED = 'Partially Approved'
     APPROVED = 'Approved'
-    SCHEDULED = 'Scheduled'

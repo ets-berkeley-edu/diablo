@@ -26,6 +26,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 import time
 
 from flask import current_app as app
+from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.wait import WebDriverWait as Wait
@@ -44,11 +45,12 @@ class OuijaBoardPage(DiabloPages):
     FILTER_INVITED_OPTION = (By.XPATH, '//div[@role="option"][contains(., "Invited")]')
     FILTER_NOT_INVITED_OPTION = (By.XPATH, '//div[@role="option"][contains(., "Not Invited")]')
     FILTER_PARTIALLY_APPROVED_OPTION = (By.XPATH, '//div[@role="option"][contains(., "Partially Approved")]')
+    FILTER_QUEUED_FOR_SCHEDULING_OPTION = (By.XPATH, '//div[@role="option"][contains(., "Queued for Scheduling")]')
     FILTER_SCHEDULED_OPTION = (By.XPATH, '//div[@role="option"][contains(., "Scheduled")]')
 
     NO_RESULTS_MSG = (By.ID, 'message-when-zero-courses')
 
-    COURSE_ROW = (By.XPATH, '//div[@id="courses-data-table"]//tbody/tr')
+    COURSE_ROW = (By.XPATH, '//div[@id="courses-data-table"]//tbody/tr/td[contains(@id, "course-name")]')
 
     def load_page(self):
         app.logger.info('Loading the Ouija Board')
@@ -83,12 +85,24 @@ class OuijaBoardPage(DiabloPages):
         self.wait_for_filter_search()
 
     def wait_for_filter_search(self):
-        results = OuijaBoardPage.COURSE_ROW
-        no_results = OuijaBoardPage.NO_RESULTS_MSG
-        Wait(self.driver, util.get_long_timeout()).until(
-            ec.visibility_of_any_elements_located(results) or ec.visibility_of_element_located(no_results),
-        )
-        time.sleep(2)
+        tries = 0
+        retries = 30
+        while tries <= retries:
+            tries += 1
+            try:
+                if self.is_present(OuijaBoardPage.COURSE_ROW):
+                    app.logger.info('Found course results')
+                    break
+                else:
+                    app.logger.info('Found no course results, checking for the no-results message')
+                    Wait(self.driver, 1).until(ec.visibility_of_element_located(OuijaBoardPage.NO_RESULTS_MSG))
+                    break
+            except TimeoutException:
+                if tries == retries:
+                    raise
+                else:
+                    time.sleep(1)
+        time.sleep(1)
 
     def is_course_in_results(self, section):
         return self.is_present(OuijaBoardPage.course_row_locator(section))
@@ -112,6 +126,10 @@ class OuijaBoardPage(DiabloPages):
     def filter_for_partially_approved(self):
         app.logger.info('Filtering by option Partially Approved')
         self.filter_for_option(OuijaBoardPage.FILTER_PARTIALLY_APPROVED_OPTION)
+
+    def filter_for_queued_for_scheduling(self):
+        app.logger.info('Filtering by option Queued for Scheduling')
+        self.filter_for_option(OuijaBoardPage.FILTER_QUEUED_FOR_SCHEDULING_OPTION)
 
     def filter_for_scheduled(self):
         app.logger.info('Filtering by option Scheduled')
@@ -154,8 +172,11 @@ class OuijaBoardPage(DiabloPages):
     def course_row_time_el(self, section):
         return self.element((By.XPATH, f'//tr[@id="{section.ccn}"]/td[7]'))
 
-    def course_row_status_el(self, section):
-        return self.element((By.ID, f'course-{section.ccn}-status'))
+    def course_row_approval_status_el(self, section):
+        return self.element((By.ID, f'course-{section.ccn}-approval-status'))
+
+    def course_row_sched_status_el(self, section):
+        return self.element((By.ID, f'course-{section.ccn}-scheduling-status'))
 
     def click_sign_up_page_link(self, section):
         app.logger.info(f'Clicking the link to the sign up page for {section.code}')

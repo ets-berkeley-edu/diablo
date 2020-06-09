@@ -42,7 +42,7 @@ class TestEmailTemplates:
     term = Term()
     template = EmailTemplate(
         template_type=EmailTemplateType.INSTR_INVITATION,
-        subject='Invitation ',
+        subject='Invitation <code>term.name</code>',
         body='',
     )
 
@@ -63,18 +63,17 @@ class TestEmailTemplates:
         assert options == types
 
     def test_create_template_cancel(self):
-        self.templates_page.click_menu_option(EmailTemplateType.INSTR_INVITATION.value)
+        self.templates_page.click_menu_option(self.template.template_type.value)
         self.templates_page.click_cancel()
 
     def test_create_template_name_input(self):
         self.templates_page.click_template_select()
-        self.templates_page.click_menu_option(EmailTemplateType.INSTR_INVITATION.value)
-        self.templates_page.enter_template_name(self.template)
+        self.templates_page.click_menu_option(self.template.template_type.value)
+        self.templates_page.enter_template_name('Invitation')
 
     def test_create_template_subj_input(self):
         self.templates_page.enter_subject(self.template.subject)
-        self.templates_page.element(EmailTemplatesPage.TEMPLATE_SUBJECT_INPUT).send_keys('<code>term.name</code>')
-        self.template.subject = f'{self.template.subject}{self.term.name}'
+        self.template.subject = f'Invitation {self.term.name}'
 
     def test_create_template_show_codes(self):
         self.templates_page.click_template_codes_button()
@@ -111,3 +110,11 @@ class TestEmailTemplates:
         self.templates_page.load_page()
         self.templates_page.click_delete_template_button(self.template)
         assert not self.templates_page.is_present((By.XPATH, EmailTemplatesPage.template_row_xpath(self.template)))
+
+    def test_restore_template(self):
+        template = EmailTemplate(
+            template_type=EmailTemplateType.INSTR_INVITATION,
+            subject='Invitation <code>term.name</code> <code>course.name</code>',
+            body='',
+        )
+        self.templates_page.create_template(template)

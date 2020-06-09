@@ -43,6 +43,7 @@ class Page(object):
 
     PAGE_HEADING = (By.XPATH, '//h1')
     H4_HEADING = (By.XPATH, '//h4')
+    DIABLO_FOOTER = (By.ID, 'footer')
 
     # METHODS TO RETURN SELENIUM ELEMENTS USING A LOCATOR
 
@@ -100,7 +101,26 @@ class Page(object):
             message=f'Failed wait for visibility_of_element_located: {str(locator)}',
         )
 
+    def wait_for_text_in_element(self, locator, string):
+        tries = 0
+        retries = util.get_short_timeout()
+        while tries <= retries:
+            tries += 1
+            try:
+                assert string in self.element(locator).get_attribute('innerText')
+                break
+            except AssertionError:
+                if tries == retries:
+                    raise
+                else:
+                    time.sleep(1)
+
+    def hide_diablo_footer(self):
+        if self.is_present(Page.DIABLO_FOOTER) and self.element(Page.DIABLO_FOOTER).is_displayed():
+            self.driver.execute_script('document.getElementById("footer").style.display="none";')
+
     def click_element(self, locator, addl_pause=xena.CLICK_SLEEP):
+        self.hide_diablo_footer()
         time.sleep(addl_pause)
         Wait(driver=self.driver, timeout=util.get_short_timeout()).until(
             method=ec.element_to_be_clickable(locator),
