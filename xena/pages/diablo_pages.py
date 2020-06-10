@@ -30,6 +30,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.wait import WebDriverWait as Wait
 from xena.pages.page import Page
+from xena.test_utils import util
 
 
 class DiabloPages(Page):
@@ -144,3 +145,8 @@ class DiabloPages(Page):
             self.toggle_course_opt_out(section)
         else:
             app.logger.info('Course is already opted in')
+
+    # 404 PAGE
+
+    def wait_for_404(self):
+        Wait(self.driver, util.get_long_timeout()).until(ec.url_contains('404'))
