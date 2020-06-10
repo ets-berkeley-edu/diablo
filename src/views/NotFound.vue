@@ -12,6 +12,9 @@
 
   export default {
     name: 'NotFound',
-    mixins: [Context]
+    mixins: [Context],
+    mounted() {
+      this.$ready('Page not found')
+    }
   }
 </script>

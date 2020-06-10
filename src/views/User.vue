@@ -35,7 +35,7 @@
       getUser(uid).then(user => {
         this.user = user
         this.$ready(this.user.name)
-      }).catch(this.$ready)
+      })
     }
   }
 </script>

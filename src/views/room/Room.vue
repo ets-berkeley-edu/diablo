@@ -96,7 +96,7 @@
             this.kalturaEventList = data
           })
         }
-      }).catch(this.$ready)
+      })
     },
     methods: {
       onUpdateRoomCapability(capability) {

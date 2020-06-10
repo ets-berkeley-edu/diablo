@@ -136,7 +136,7 @@
           this.isApproving = this.currentUserMustApprove = false
           this.afterApprove(data)
           this.alertScreenReader('Approval received.')
-        }).catch(this.$ready)
+        })
       }
     }
   }

@@ -84,7 +84,7 @@
       getAllRooms().then(data => {
         this.rooms = data
         this.$ready('Rooms')
-      }).catch(this.$ready)
+      })
     }
   }
 </script>
