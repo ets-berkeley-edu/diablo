@@ -10,13 +10,29 @@
       </v-row>
       <v-row no-gutters>
         <v-col cols="8">
-          <v-text-field id="input-template-name" v-model="name" label="Template Name"></v-text-field>
+          <v-text-field
+            id="input-template-name"
+            v-model="name"
+            aria-required="true"
+            label="Template Name"
+            maxlength="255"
+            :rules="[s => !!s || 'Required']"
+          >
+          </v-text-field>
         </v-col>
         <v-spacer></v-spacer>
       </v-row>
       <v-row no-gutters>
         <v-col cols="8">
-          <v-text-field id="input-template-subject-line" v-model="subjectLine" label="Subject"></v-text-field>
+          <v-text-field
+            id="input-template-subject-line"
+            v-model="subjectLine"
+            aria-required="true"
+            label="Subject"
+            maxlength="255"
+            :rules="[s => !!s || 'Required']"
+          >
+          </v-text-field>
         </v-col>
         <v-spacer></v-spacer>
       </v-row>
@@ -37,7 +53,14 @@
         </v-col>
         <v-col cols="3">
           <div class="d-flex">
-            <v-btn id="save-email-template" color="primary" @click="createTemplate">{{ templateId ? 'Save' : 'Create' }}</v-btn>
+            <v-btn
+              id="save-email-template"
+              color="primary"
+              :disabled="disableSave"
+              @click="createTemplate"
+            >
+              {{ templateId ? 'Save' : 'Create' }}
+            </v-btn>
             <v-btn
               id="cancel-edit-of-email-template"
               text
@@ -95,6 +118,11 @@
       templateType: undefined,
       typeName: undefined
     }),
+    computed: {
+      disableSave() {
+        return !this.$_.trim(this.subjectLine) || !this.$_.trim(this.name) || !this.stripHtmlAndTrim(this.message)
+      }
+    },
     created() {
       this.$loading()
       this.templateType = this.$_.get(this.$route, 'params.type')
@@ -124,7 +152,9 @@
           this.alertScreenReader(`Email template '${this.templateType}' ${action}.`)
           this.$router.push({ path: '/email/templates' })
         }
-        if (this.templateId) {
+        if (this.disableSave) {
+          this.reportError('You must complete the required form fields.')
+        } else if (this.templateId) {
           updateEmailTemplate(this.templateId, this.templateType, this.name, this.subjectLine, this.message).then(() => done('updated'))
         } else {
           createEmailTemplate(this.templateType, this.name, this.subjectLine, this.message).then(() => done('created'))
