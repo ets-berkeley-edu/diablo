@@ -88,6 +88,9 @@
       getRoom(id).then(data => {
         this.room = data
         this.isAuditorium = data.isAuditorium
+        this.$_.each(this.room.courses, course => {
+          course.courseCodes = this.getCourseCodes(course)
+        })
         this.scheduledCourses = this.$_.filter(data.courses, 'scheduled')
         this.$ready(data.location)
         // The page is ready; Kaltura events will pop up in a sec.

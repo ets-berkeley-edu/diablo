@@ -214,7 +214,6 @@
       this.headers = this.includeRoomColumn ? this.headers : this.$_.filter(this.headers, h => h.text !== 'Room')
       this.$_.each(this.courses, course => {
         // In support of search, we index nested course data
-        course.courseCodes = this.getCourseCodes(course)
         course.instructorNames = this.$_.map(course.instructors, 'name')
         course.publishTypeNames = course.approvals.length ? this.$_.last(course.approvals).publishTypeName : null
         course.isSelectable = !course.hasOptedOut
