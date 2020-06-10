@@ -94,7 +94,7 @@
         this.room = room
         this.courses = this.$_.filter(this.room.courses, 'scheduled')
         this.$ready(`${this.room.location} printable`)
-      }).catch(this.$ready)
+      })
     }
   }
 </script>

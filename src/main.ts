@@ -43,6 +43,7 @@ axios.interceptors.response.use(
         // Raise error and let /login page display the message
         throw _.get(error, 'response.data.message') || `Error: Server responded with status ${errorStatus}`
       }
+      return Promise.reject(error)
     })
 
 // Vue config

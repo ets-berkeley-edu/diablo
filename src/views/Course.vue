@@ -243,7 +243,7 @@
         getAuditoriums().then(data => {
           this.auditoriums = data
         })
-      }).catch(this.$ready)
+      })
     },
     methods: {
       approve() {
@@ -252,7 +252,7 @@
           this.render(data)
           this.isApproving = false
           this.alertScreenReader(`You have approved ${this.courseDisplayTitle} for Course Capture.`)
-        }).catch(this.$ready)
+        })
       },
       getApproverName(approval) {
         return approval.approvedBy.uid === this.$currentUser.uid ? 'you' : approval.approvedBy.name
