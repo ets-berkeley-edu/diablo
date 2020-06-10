@@ -169,15 +169,15 @@ class SisSection(db.Model):
                 r.id AS room_id,
                 r.location AS room_location
             FROM sis_sections s
-            JOIN instructors i ON i.uid = s.instructor_uid
             JOIN rooms r ON r.location = s.meeting_location
+            LEFT JOIN instructors i ON i.uid = s.instructor_uid
             WHERE
                 s.term_id = :term_id
                 AND s.is_primary IS TRUE
                 AND s.section_id = :section_id
                 AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
                 AND s.deleted_at IS NULL
-            ORDER BY s.course_name, s.section_id, s.instructor_uid
+            ORDER BY s.course_name, s.section_id, s.instructor_uid, r.capability NULLS LAST
         """
         rows = db.session.execute(
             text(sql),
@@ -201,15 +201,15 @@ class SisSection(db.Model):
                 r.id AS room_id,
                 r.location AS room_location
             FROM sis_sections s
-            JOIN instructors i ON i.uid = s.instructor_uid
             JOIN rooms r ON r.location = s.meeting_location
             JOIN scheduled d ON d.section_id = s.section_id AND d.term_id = :term_id AND d.deleted_at IS NULL
+            LEFT JOIN instructors i ON i.uid = s.instructor_uid
             WHERE
                 s.term_id = :term_id
                 AND s.is_primary IS TRUE
                 AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
                 AND s.deleted_at IS NULL
-            ORDER BY s.course_name, s.section_id, s.instructor_uid
+            ORDER BY s.course_name, s.section_id, s.instructor_uid, r.capability NULLS LAST
         """
         rows = db.session.execute(
             text(sql),
@@ -267,12 +267,12 @@ class SisSection(db.Model):
             FROM sis_sections s
             JOIN rooms r ON r.location = s.meeting_location
                 AND {course_filter}
-            JOIN instructors i ON i.uid = s.instructor_uid
                 AND s.term_id = :term_id
                 AND s.is_primary IS TRUE
                 AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
                 AND s.deleted_at IS NULL
-            ORDER BY s.course_name, s.section_id, s.instructor_uid
+            LEFT JOIN instructors i ON i.uid = s.instructor_uid
+            ORDER BY s.course_name, s.section_id, s.instructor_uid, r.capability NULLS LAST
         """
         rows = db.session.execute(text(sql), params)
         return _to_api_json(term_id=term_id, rows=rows)
@@ -289,11 +289,10 @@ class SisSection(db.Model):
                 r.id AS room_id,
                 r.location AS room_location
             FROM sis_sections s
-            JOIN instructors i
-                ON i.uid = s.instructor_uid
-                AND s.term_id = :term_id AND s.is_primary IS TRUE AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC') AND s.deleted_at IS NULL
             JOIN rooms r ON r.location = s.meeting_location AND r.capability IS NOT NULL
+                AND s.term_id = :term_id AND s.is_primary IS TRUE AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC') AND s.deleted_at IS NULL
             JOIN sent_emails e ON e.section_id = s.section_id AND e.template_type = 'invitation'
+            LEFT JOIN instructors i ON i.uid = s.instructor_uid
             -- Omit approved courses, scheduled courses and opt-outs.
             LEFT JOIN approvals a ON a.section_id = s.section_id AND a.term_id = s.term_id AND a.deleted_at IS NULL
             LEFT JOIN scheduled d ON d.section_id = s.section_id AND d.term_id = s.term_id AND d.deleted_at IS NULL
@@ -321,10 +320,9 @@ class SisSection(db.Model):
                 r.id AS room_id,
                 r.location AS room_location
             FROM sis_sections s
-            JOIN instructors i
-                ON i.uid = s.instructor_uid
-                AND s.term_id = :term_id AND s.is_primary IS TRUE AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC') AND s.deleted_at IS NULL
             JOIN rooms r ON r.location = s.meeting_location AND r.capability IS NOT NULL
+                AND s.term_id = :term_id AND s.is_primary IS TRUE AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC') AND s.deleted_at IS NULL
+            LEFT JOIN instructors i ON i.uid = s.instructor_uid
             -- Omit sent invitations, approved courses, scheduled courses and opt-outs.
             LEFT JOIN approvals a ON a.section_id = s.section_id AND a.term_id = s.term_id AND a.deleted_at IS NULL
             LEFT JOIN scheduled d ON d.section_id = s.section_id AND d.term_id = s.term_id AND d.deleted_at IS NULL
@@ -353,14 +351,13 @@ class SisSection(db.Model):
                 r.id AS room_id,
                 r.location AS room_location
             FROM sis_sections s
-            JOIN instructors i
-                ON i.uid = s.instructor_uid
+            JOIN rooms r ON r.location = s.meeting_location AND r.capability IS NOT NULL
                 AND s.term_id = :term_id
                 AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
                 AND s.is_primary IS TRUE
                 AND s.deleted_at IS NULL
-            JOIN rooms r ON r.location = s.meeting_location AND r.capability IS NOT NULL
             JOIN course_preferences c ON c.section_id = s.section_id AND c.term_id = :term_id AND c.has_opted_out IS TRUE
+            LEFT JOIN instructors i ON i.uid = s.instructor_uid
             -- Omit scheduled courses.
             LEFT JOIN scheduled d ON d.section_id = s.section_id AND d.term_id = :term_id AND d.deleted_at IS NULL
             WHERE d.section_id IS NULL
@@ -455,8 +452,8 @@ class SisSection(db.Model):
                             AND a.section_id IS NULL
                     )
                 )
-            JOIN instructors i ON i.uid = s.instructor_uid
             JOIN rooms r ON r.location = s.meeting_location AND r.capability IS NOT NULL
+            LEFT JOIN instructors i ON i.uid = s.instructor_uid
             -- Omit scheduled courses.
             LEFT JOIN scheduled d ON d.section_id = s.section_id AND d.term_id = :term_id AND d.deleted_at IS NULL
             WHERE d.section_id IS NULL
@@ -517,14 +514,13 @@ class SisSection(db.Model):
                 r.id AS room_id,
                 r.location AS room_location
             FROM sis_sections s
-            JOIN instructors i
-                ON i.uid = s.instructor_uid
+            JOIN rooms r ON r.location = s.meeting_location
                 AND s.term_id = :term_id
                 AND s.is_primary IS TRUE
                 AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
                 AND s.meeting_location = :location
                 AND s.deleted_at IS NULL
-            JOIN rooms r ON r.location = s.meeting_location
+            LEFT JOIN instructors i ON i.uid = s.instructor_uid
             ORDER BY s.course_name, s.section_id, s.instructor_uid
         """
         rows = db.session.execute(
@@ -548,14 +544,13 @@ class SisSection(db.Model):
                 r.id AS room_id,
                 r.location AS room_location
             FROM sis_sections s
-            JOIN instructors i
-                ON i.uid = s.instructor_uid
+            JOIN rooms r ON r.location = s.meeting_location
                 AND s.term_id = :term_id
                 AND s.is_primary IS TRUE
                 AND s.deleted_at IS NULL
-            JOIN rooms r ON r.location = s.meeting_location
             JOIN scheduled d ON d.section_id = s.section_id AND d.term_id = :term_id AND d.deleted_at IS NULL
-            ORDER BY s.course_name, s.section_id, s.instructor_uid
+            LEFT JOIN instructors i ON i.uid = s.instructor_uid
+            ORDER BY s.course_name, s.section_id, s.instructor_uid, r.capability NULLS LAST
         """
         rows = db.session.execute(
             text(sql),
@@ -616,7 +611,9 @@ def _to_api_json(term_id, rows, include_rooms=True):
     rooms_by_id = {room.id: room for room in rooms}
 
     # Construct course objects.
-    # If course has multiple instructors then the section_id will be represented across multiple rows.
+    # If course has multiple instructors or multiple rooms then the section_id will be represented across multiple rows.
+    # Multiple rooms are rare, but a course is sometimes associated with both an eligible and an ineligible room. We
+    # order rooms in SQL by capability, NULLS LAST, and use scheduling data from the first row available.
     for row in rows:
         section_id = int(row['section_id'])
         if section_id in courses_per_id:
