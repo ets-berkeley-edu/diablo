@@ -33,10 +33,6 @@ from werkzeug.exceptions import HTTPException
 
 def register_routes(app):
     """Register app routes."""
-    def _user_loader(user_id=None):
-        from diablo.models.user import User
-        return User(user_id)
-
     login_manager = LoginManager()
     login_manager.init_app(app)
     login_manager.user_loader(_user_loader)
@@ -116,3 +112,8 @@ def register_routes(app):
             else:
                 app.logger.debug(log_message)
         return response
+
+
+def _user_loader(user_id=None):
+    from diablo.models.user import User
+    return User(user_id)
