@@ -34,6 +34,9 @@
       let uid = this.$_.get(this.$route, 'params.uid')
       getUser(uid).then(user => {
         this.user = user
+        this.$_.each(this.user.courses, course => {
+          course.courseCodes = this.getCourseCodes(course)
+        })
         this.$ready(this.user.name)
       })
     }

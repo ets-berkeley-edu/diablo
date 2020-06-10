@@ -76,11 +76,12 @@
   import CoursesDataTable from '@/components/course/CoursesDataTable'
   import Context from '@/mixins/Context'
   import {downloadCSV, getCourses} from '@/api/course'
+  import Utils from '@/mixins/Utils'
 
   export default {
     name: 'Ouija',
     components: {CoursesDataTable},
-    mixins: [Context],
+    mixins: [Context, Utils],
     data: () => ({
       courses: undefined,
       isDownloading: false,
@@ -119,6 +120,7 @@
           this.courses = data
           this.$_.each(this.courses, course => {
             // In support of search, we index nested course data
+            course.courseCodes = this.getCourseCodes(course)
             course.instructorNames = this.$_.map(course.instructors, 'name')
             course.publishTypeNames = course.approvals.length ? this.$_.last(course.approvals).publishTypeName : null
             course.isSelectable = !course.hasOptedOut

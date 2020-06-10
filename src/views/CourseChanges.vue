@@ -24,7 +24,12 @@
           <tr v-for="course in items" :key="course.sectionId">
             <td class="pa-3 text-no-wrap">
               <div class="font-weight-black">
-                {{ course.label }}
+                <router-link
+                  :id="`link-course-${course.sectionId}`"
+                  :to="`/course/${$config.currentTermId}/${course.sectionId}`"
+                >
+                  {{ course.label }}
+                </router-link>
                 <v-tooltip v-if="course.wasApprovedByAdmin" bottom nudge-right="200px">
                   <template v-slot:activator="{ on }">
                     <v-icon
@@ -87,6 +92,19 @@
             <td>
               <div v-if="course.scheduled.hasObsoleteInstructors">
                 <div v-for="instructor in course.scheduled.instructors" :key="instructor.uid">
+                  <v-tooltip v-if="instructor.approval" :id="`tooltip-approval-${course.sectionId}-by-${instructor.uid}`" bottom>
+                    <template v-slot:activator="{ on }">
+                      <v-icon
+                        :color="instructor.approval ? 'green' : 'yellow darken-2'"
+                        class="pa-0"
+                        dark
+                        v-on="on"
+                      >
+                        mdi-check
+                      </v-icon>
+                    </template>
+                    Approval submitted on {{ instructor.approval.createdAt | moment('MMM D, YYYY') }}.
+                  </v-tooltip>
                   <router-link :id="`instructor-${instructor.uid}-mailto`" :to="`/user/${instructor.uid}`">
                     {{ instructor.name }}
                   </router-link> ({{ instructor.uid }})
@@ -97,6 +115,19 @@
                 </div>
               </div>
               <div v-for="instructor in course.instructors" :key="instructor.uid">
+                <v-tooltip v-if="instructor.approval" :id="`tooltip-approval-${course.sectionId}-by-${instructor.uid}`" bottom>
+                  <template v-slot:activator="{ on }">
+                    <v-icon
+                      :color="instructor.approval ? 'green' : 'yellow darken-2'"
+                      class="pa-0"
+                      dark
+                      v-on="on"
+                    >
+                      mdi-check
+                    </v-icon>
+                  </template>
+                  Approval submitted on {{ instructor.approval.createdAt | moment('MMM D, YYYY') }}.
+                </v-tooltip>
                 <v-tooltip v-if="!instructor.wasSentInvite" bottom>
                   <template v-slot:activator="{ on }">
                     <v-icon
