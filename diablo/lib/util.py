@@ -82,3 +82,20 @@ def format_days(days):
 
 def format_time(military_time):
     return datetime.strptime(military_time, '%H:%M').strftime('%I:%M %p').lower().lstrip('0') if military_time else None
+
+
+def get_names_of_days(day_codes):
+    names_by_code = {
+        'mo': 'Monday',
+        'tu': 'Tuesday',
+        'we': 'Wednesday',
+        'th': 'Thursday',
+        'fr': 'Friday',
+        'sa': 'Saturday',
+        'su': 'Sunday',
+    }
+    return [names_by_code.get(day_code[:2].lower()) for day_code in day_codes]
+
+
+def readable_join(items):
+    return (f"{', '.join(items[:-1])} and {items[-1]}" if len(items) > 1 else items[0]) if len(items or []) else ''

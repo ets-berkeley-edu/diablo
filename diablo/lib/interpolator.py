@@ -26,6 +26,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 import re
 
 from diablo.lib.berkeley import term_name_for_sis_id
+from diablo.lib.util import get_names_of_days, readable_join
 from flask import current_app as app
 
 
@@ -79,8 +80,9 @@ def get_template_substitutions(
             return None
         return ', '.join(i['name'] for i in _dict if i['name'])
 
+    days = course and get_names_of_days(course['meetingDays'])
     return {
-        'course.days': course and course['meetingDays'],
+        'course.days': readable_join(days),
         'course.format': course and course['instructionFormat'],
         'course.name': course and course['courseName'],
         'course.room': course and course['meetingLocation'],
