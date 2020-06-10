@@ -37,15 +37,17 @@
           <template v-for="course in items">
             <tr :key="course.sectionId">
               <td :id="`course-name-${course.sectionId}`" :class="tdClass(course)">
-                <router-link
-                  :id="`link-course-${course.sectionId}`"
-                  class="subtitle-1"
-                  :to="`/course/${$config.currentTermId}/${course.sectionId}`"
-                >
-                  <div v-for="courseCode in sortCodes(course)" :key="courseCode">
+                <div v-for="(courseCode, index) in course.courseCodes" :key="courseCode">
+                  <router-link
+                    v-if="index === 0"
+                    :id="`link-course-${course.sectionId}`"
+                    class="subtitle-1"
+                    :to="`/course/${$config.currentTermId}/${course.sectionId}`"
+                  >
                     {{ courseCode }}
-                  </div>
-                </router-link>
+                  </router-link>
+                  <span v-if="index > 0" class="subtitle-1">{{ courseCode }}</span>
+                </div>
               </td>
               <td :id="`section-id-${course.sectionId}`" :class="tdClass(course)">{{ course.sectionId }}</td>
               <td v-if="includeRoomColumn" :class="tdClass(course)">
@@ -212,17 +214,19 @@
       this.headers = this.includeRoomColumn ? this.headers : this.$_.filter(this.headers, h => h.text !== 'Room')
       this.$_.each(this.courses, course => {
         // In support of search, we index nested course data
+        course.courseCodes = this.getCourseCodes(course)
         course.instructorNames = this.$_.map(course.instructors, 'name')
         course.publishTypeNames = course.approvals.length ? this.$_.last(course.approvals).publishTypeName : null
         course.isSelectable = !course.hasOptedOut
       })
     },
     methods: {
-      sortCodes(course) {
-        return course.label.split('|')
-      },
       tdClass(course) {
-        return course.approvals.length ? 'border-bottom-zero' : ''
+        let classStr = course.approvals.length ? 'border-bottom-zero' : ''
+        if (course.courseCodes && course.courseCodes.length > 1) {
+          classStr += ' pt-3 pb-3'
+        }
+        return classStr
       }
     }
   }
