@@ -324,7 +324,7 @@ CREATE UNIQUE INDEX scheduled_unique_idx ON scheduled (section_id, term_id) WHER
 
 CREATE TABLE sent_emails (
     id INTEGER NOT NULL,
-    recipient_uids VARCHAR(80)[] NOT NULL,
+    recipient_uid VARCHAR(80) NOT NULL,
     section_id INTEGER,
     template_type email_template_types,
     term_id INTEGER NOT NULL,

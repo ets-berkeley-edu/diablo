@@ -139,7 +139,7 @@ def _create_email_templates():
 def _create_emails_sent():
     term_id = app.config['CURRENT_TERM_ID']
     SentEmail.create(
-        recipient_uids=['00001'],
+        recipient_uid='00001',
         section_id='50001',
         template_type='invitation',
         term_id=term_id,

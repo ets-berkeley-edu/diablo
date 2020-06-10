@@ -25,7 +25,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 from diablo.jobs.base_job import BaseJob
 from diablo.jobs.errors import BackgroundJobError
 from diablo.lib.interpolator import interpolate_content
-from diablo.merged.emailer import get_admin_alert_recipients
+from diablo.merged.emailer import get_admin_alert_recipient
 from diablo.models.email_template import EmailTemplate
 from diablo.models.queued_email import QueuedEmail
 from diablo.models.sis_section import SisSection
@@ -68,25 +68,25 @@ class AdminEmailsJob(BaseJob):
     def _notify(self, course, template_type):
         email_template = EmailTemplate.get_template_by_type(template_type)
         if email_template:
-            for recipient in get_admin_alert_recipients():
-                message = interpolate_content(
-                    templated_string=email_template.message,
-                    course=course,
-                    recipient_name=recipient['name'],
-                )
-                subject_line = interpolate_content(
-                    templated_string=email_template.subject_line,
-                    course=course,
-                    recipient_name=recipient['name'],
-                )
-                QueuedEmail.create(
-                    message=message,
-                    subject_line=subject_line,
-                    recipient=recipient,
-                    section_id=course['sectionId'],
-                    template_type=template_type,
-                    term_id=self.term_id,
-                )
+            recipient = get_admin_alert_recipient()
+            message = interpolate_content(
+                templated_string=email_template.message,
+                course=course,
+                recipient_name=recipient['name'],
+            )
+            subject_line = interpolate_content(
+                templated_string=email_template.subject_line,
+                course=course,
+                recipient_name=recipient['name'],
+            )
+            QueuedEmail.create(
+                message=message,
+                subject_line=subject_line,
+                recipient=recipient,
+                section_id=course['sectionId'],
+                template_type=template_type,
+                term_id=self.term_id,
+            )
         else:
             raise BackgroundJobError(f"""
                 No email template of type {template_type} is available.

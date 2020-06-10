@@ -111,13 +111,11 @@ def test_email_template(template_id):
             templated_string=template.message,
         )
         BConnected().send(
-            recipients=[
-                {
-                    'email': current_user.email_address,
-                    'name': current_user.name,
-                    'uid': current_user.uid,
-                },
-            ],
+            recipient={
+                'email': current_user.email_address,
+                'name': current_user.name,
+                'uid': current_user.uid,
+            },
             message=message,
             subject_line=subject_line,
         )
