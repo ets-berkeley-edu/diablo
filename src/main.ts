@@ -59,7 +59,6 @@ Vue.config.errorHandler = function(error, vm, info) {
 
 // Vue prototype
 Vue.prototype.$_ = _
-Vue.prototype.$eventHub = new Vue()
 Vue.prototype.$loading = () => store.dispatch('context/loadingStart')
 Vue.prototype.$ready = label => store.dispatch('context/loadingComplete', label)
 
