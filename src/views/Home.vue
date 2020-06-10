@@ -14,16 +14,18 @@
       <template v-slot:body="{ items }">
         <tbody>
           <tr v-for="course in items" :id="`course-${course.sectionId}`" :key="course.sectionId">
-            <td class="text-no-wrap">
+            <td class="text-no-wrap" :class="{'pt-3 pb-3': course.courseCodes.length > 1}">
               <div v-if="course.room && course.room.capability">
-                <router-link
-                  v-if="course.room && course.room.capability"
-                  :id="`link-course-${course.sectionId}`"
-                  :aria-label="`Go to ${course.label} page`"
-                  :to="`/course/${$config.currentTermId}/${course.sectionId}`"
-                >
-                  {{ course.label }}
-                </router-link>
+                <div v-for="(courseCode, index) in course.courseCodes" :key="courseCode">
+                  <router-link
+                    v-if="course.room && course.room.capability && index === 0"
+                    :id="`link-course-${course.sectionId}`"
+                    :to="`/course/${$config.currentTermId}/${course.sectionId}`"
+                  >
+                    {{ courseCode }}
+                  </router-link>
+                  <span v-if="index > 0 || !course.room || !course.room.capability">{{ courseCode }}</span>
+                </div>
               </div>
               <span v-if="!course.room || !course.room.capability">{{ course.label }}</span>
             </td>
@@ -65,7 +67,7 @@
       this.$_.each(this.$currentUser.courses, c => {
         if (c.room && c.room.capability) {
           this.courses.push({
-            label: c.label,
+            courseCodes: this.getCourseCodes(c),
             days: c.meetingDays ? this.$_.join(c.meetingDays, ', ') : undefined,
             instructors: this.oxfordJoin(this.$_.map(c.instructors, 'name')),
             room: c.room,

@@ -2,7 +2,7 @@
   <div v-if="!loading">
     <v-container fluid>
       <v-row class="pl-3">
-        <h1>{{ course.label }}</h1>
+        <h1>{{ courseDisplayTitle }}</h1>
       </v-row>
       <v-row class="pl-3">
         Section ID: <span id="section-id">{{ course.sectionId }}</span>
@@ -205,6 +205,7 @@
       approvedByInstructorNames: undefined,
       auditoriums: undefined,
       course: undefined,
+      courseDisplayTitle: null,
       hasCurrentUserApproved: undefined,
       isApproving: false,
       publishType: undefined,
@@ -250,7 +251,7 @@
         approve(this.publishType, this.recordingType, this.course.sectionId).then(data => {
           this.render(data)
           this.isApproving = false
-          this.alertScreenReader(`You have approved ${this.course.label} for Course Capture.`)
+          this.alertScreenReader(`You have approved ${this.courseDisplayTitle} for Course Capture.`)
         }).catch(this.$ready)
       },
       getApproverName(approval) {
@@ -272,6 +273,7 @@
           }
         })
         this.approvedByInstructorNames = this.$_.map(approvedByInstructors, approval => this.getApproverName(approval))
+        this.courseDisplayTitle = this.getCourseCodes(this.course)[0]
         this.hasCurrentUserApproved = this.$_.includes(approvedByUIDs, this.$currentUser.uid)
         this.recordingTypeOptions = this.$_.map(this.course.room.recordingTypeOptions, (text, value) => {
           return {text, value}
@@ -285,7 +287,7 @@
             this.recordingType = this.recordingTypeOptions[0].value
           }
         }
-        this.$ready(this.course.label)
+        this.$ready(this.courseDisplayTitle)
       }
     }
   }

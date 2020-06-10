@@ -4,6 +4,9 @@
   export default {
     name: 'Utils',
     methods: {
+      getCourseCodes(course) {
+        return course.label.split('|').map(l => l.trim())
+      },
       getSelectOptionsFromObject(obj, isDisabled=() => false) {
         const options = []
         _.each(obj, (text, value) => options.push({text, value, disabled: isDisabled(value)}))
