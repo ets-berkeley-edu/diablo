@@ -450,8 +450,9 @@ class SisSection(db.Model):
                         FROM sis_sections s
                         LEFT JOIN approvals a
                             ON a.section_id = s.section_id AND a.term_id = :term_id AND a.approved_by_uid = s.instructor_uid AND a.deleted_at IS NULL
-                        WHERE s.is_primary IS TRUE AND s.term_id = :term_id AND s.deleted_at IS NULL
-                        AND a.section_id IS NULL
+                        WHERE s.is_primary IS TRUE AND s.term_id = :term_id
+                            AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC') AND s.deleted_at IS NULL
+                            AND a.section_id IS NULL
                     )
                 )
             JOIN instructors i ON i.uid = s.instructor_uid
