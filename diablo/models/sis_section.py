@@ -521,7 +521,7 @@ class SisSection(db.Model):
                 AND s.meeting_location = :location
                 AND s.deleted_at IS NULL
             LEFT JOIN instructors i ON i.uid = s.instructor_uid
-            ORDER BY s.course_name, s.section_id, s.instructor_uid
+            ORDER BY s.meeting_days, s.meeting_start_time, s.section_id
         """
         rows = db.session.execute(
             text(sql),
