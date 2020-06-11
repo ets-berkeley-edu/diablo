@@ -48,6 +48,7 @@ class SisSection(db.Model):
     instructor_role_code = db.Column(db.String)
     instructor_uid = db.Column(db.String)
     is_primary = db.Column(db.Boolean)
+    is_principal_listing = db.Column(db.Boolean, nullable=False, default=True)
     meeting_days = db.Column(db.String)
     meeting_end_date = db.Column(db.String)
     meeting_end_time = db.Column(db.String)
@@ -58,7 +59,6 @@ class SisSection(db.Model):
     section_num = db.Column(db.String)
     term_id = db.Column(db.Integer, nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.now)
-    deleted_at = db.Column(db.DateTime)
 
     def __init__(
             self,
@@ -122,8 +122,8 @@ class SisSection(db.Model):
                 """
 
     @classmethod
-    def delete_all(cls, section_ids, term_id):
-        sql = 'UPDATE sis_sections SET deleted_at = now() WHERE term_id = :term_id AND section_id  = ANY(:section_ids)'
+    def set_non_principal_listings(cls, section_ids, term_id):
+        sql = 'UPDATE sis_sections SET is_principal_listing = FALSE WHERE term_id = :term_id AND section_id  = ANY(:section_ids)'
         db.session.execute(
             text(sql),
             {
@@ -176,7 +176,7 @@ class SisSection(db.Model):
                 AND s.is_primary IS TRUE
                 AND s.section_id = :section_id
                 AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
-                AND s.deleted_at IS NULL
+                AND s.is_principal_listing IS TRUE
             ORDER BY s.course_name, s.section_id, s.instructor_uid, r.capability NULLS LAST
         """
         rows = db.session.execute(
@@ -208,7 +208,7 @@ class SisSection(db.Model):
                 s.term_id = :term_id
                 AND s.is_primary IS TRUE
                 AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
-                AND s.deleted_at IS NULL
+                AND s.is_principal_listing IS TRUE
             ORDER BY s.course_name, s.section_id, s.instructor_uid, r.capability NULLS LAST
         """
         rows = db.session.execute(
@@ -270,7 +270,7 @@ class SisSection(db.Model):
                 AND s.term_id = :term_id
                 AND s.is_primary IS TRUE
                 AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
-                AND s.deleted_at IS NULL
+                AND s.is_principal_listing IS TRUE
             LEFT JOIN instructors i ON i.uid = s.instructor_uid
             ORDER BY s.course_name, s.section_id, s.instructor_uid, r.capability NULLS LAST
         """
@@ -290,7 +290,8 @@ class SisSection(db.Model):
                 r.location AS room_location
             FROM sis_sections s
             JOIN rooms r ON r.location = s.meeting_location AND r.capability IS NOT NULL
-                AND s.term_id = :term_id AND s.is_primary IS TRUE AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC') AND s.deleted_at IS NULL
+                AND s.term_id = :term_id AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
+                AND s.is_primary IS TRUE AND s.is_principal_listing IS TRUE
             JOIN sent_emails e ON e.section_id = s.section_id AND e.template_type = 'invitation'
             LEFT JOIN instructors i ON i.uid = s.instructor_uid
             -- Omit approved courses, scheduled courses and opt-outs.
@@ -321,7 +322,8 @@ class SisSection(db.Model):
                 r.location AS room_location
             FROM sis_sections s
             JOIN rooms r ON r.location = s.meeting_location AND r.capability IS NOT NULL
-                AND s.term_id = :term_id AND s.is_primary IS TRUE AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC') AND s.deleted_at IS NULL
+                AND s.term_id = :term_id AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
+                AND s.is_primary IS TRUE AND s.is_principal_listing IS TRUE
             LEFT JOIN instructors i ON i.uid = s.instructor_uid
             -- Omit sent invitations, approved courses, scheduled courses and opt-outs.
             LEFT JOIN approvals a ON a.section_id = s.section_id AND a.term_id = s.term_id AND a.deleted_at IS NULL
@@ -355,7 +357,7 @@ class SisSection(db.Model):
                 AND s.term_id = :term_id
                 AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
                 AND s.is_primary IS TRUE
-                AND s.deleted_at IS NULL
+                AND s.is_principal_listing IS TRUE
             JOIN course_preferences c ON c.section_id = s.section_id AND c.term_id = :term_id AND c.has_opted_out IS TRUE
             LEFT JOIN instructors i ON i.uid = s.instructor_uid
             -- Omit scheduled courses.
@@ -386,8 +388,8 @@ class SisSection(db.Model):
                 r.location AS room_location
             FROM sis_sections s
             JOIN approvals a
-                ON s.term_id = :term_id AND s.is_primary IS TRUE AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
-                AND s.deleted_at IS NULL
+                ON s.term_id = :term_id AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
+                AND s.is_primary IS TRUE AND s.is_principal_listing IS TRUE
                 AND a.section_id = s.section_id AND a.term_id = :term_id
                 AND a.deleted_at IS NULL
             JOIN instructors i ON i.uid = s.instructor_uid
@@ -431,7 +433,8 @@ class SisSection(db.Model):
                 r.location AS room_location
             FROM sis_sections s
             JOIN approvals a
-                ON s.term_id = :term_id AND s.is_primary IS TRUE AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC') AND s.deleted_at IS NULL
+                ON s.term_id = :term_id AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
+                AND s.is_primary IS TRUE AND s.is_principal_listing IS TRUE
                 AND a.section_id = s.section_id AND a.term_id = :term_id AND a.deleted_at IS NULL
                 AND (
                     -- If approved by an admin, the course is considered queued.
@@ -447,8 +450,8 @@ class SisSection(db.Model):
                         FROM sis_sections s
                         LEFT JOIN approvals a
                             ON a.section_id = s.section_id AND a.term_id = :term_id AND a.approved_by_uid = s.instructor_uid AND a.deleted_at IS NULL
-                        WHERE s.is_primary IS TRUE AND s.term_id = :term_id
-                            AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC') AND s.deleted_at IS NULL
+                        WHERE s.term_id = :term_id AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
+                            AND s.is_primary IS TRUE AND s.is_principal_listing IS TRUE
                             AND a.section_id IS NULL
                     )
                 )
@@ -469,9 +472,9 @@ class SisSection(db.Model):
 
     @classmethod
     def get_courses_per_instructor_uid(cls, term_id, instructor_uid):
-        # Find all section_ids, including deleted
+        # Find all section_ids, including cross-listings
         sql = """
-            SELECT s.section_id, s.deleted_at
+            SELECT s.section_id, s.is_principal_listing
             FROM sis_sections s
             JOIN instructors i
                 ON i.uid = s.instructor_uid
@@ -480,22 +483,22 @@ class SisSection(db.Model):
                 AND s.instructor_uid = :instructor_uid
                 AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
         """
-        deleted_section_ids = []
+        non_principal_section_ids = []
         section_ids = []
         for row in db.session.execute(text(sql), {'instructor_uid': instructor_uid, 'term_id': term_id}):
-            if row['deleted_at']:
-                deleted_section_ids.append(row['section_id'])
+            if row['is_principal_listing'] is False:
+                non_principal_section_ids.append(row['section_id'])
             else:
                 section_ids.append(row['section_id'])
 
-        if deleted_section_ids:
+        if non_principal_section_ids:
             # Instructor is associated with cross-listed section_ids
             sql = f"""
                 SELECT section_id
                 FROM cross_listings
                 WHERE
                     term_id = :term_id
-                    AND cross_listed_section_ids && ARRAY[{','.join(str(id_) for id_ in deleted_section_ids)}]
+                    AND cross_listed_section_ids && ARRAY[{','.join(str(id_) for id_ in non_principal_section_ids)}]
             """
             for row in db.session.execute(text(sql), {'section_ids': instructor_uid, 'term_id': term_id}):
                 section_ids.append(row['section_id'])
@@ -515,11 +518,9 @@ class SisSection(db.Model):
                 r.location AS room_location
             FROM sis_sections s
             JOIN rooms r ON r.location = s.meeting_location
-                AND s.term_id = :term_id
-                AND s.is_primary IS TRUE
-                AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
+                AND s.term_id = :term_id AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
+                AND s.is_primary IS TRUE AND s.is_principal_listing IS TRUE
                 AND s.meeting_location = :location
-                AND s.deleted_at IS NULL
             LEFT JOIN instructors i ON i.uid = s.instructor_uid
             ORDER BY s.meeting_days, s.meeting_start_time, s.section_id
         """
@@ -545,9 +546,8 @@ class SisSection(db.Model):
                 r.location AS room_location
             FROM sis_sections s
             JOIN rooms r ON r.location = s.meeting_location
-                AND s.term_id = :term_id
-                AND s.is_primary IS TRUE
-                AND s.deleted_at IS NULL
+                AND s.term_id = :term_id AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
+                AND s.is_primary IS TRUE AND s.is_principal_listing IS TRUE
             JOIN scheduled d ON d.section_id = s.section_id AND d.term_id = :term_id AND d.deleted_at IS NULL
             LEFT JOIN instructors i ON i.uid = s.instructor_uid
             ORDER BY s.course_name, s.section_id, s.instructor_uid, r.capability NULLS LAST
@@ -569,7 +569,7 @@ class SisSection(db.Model):
             SELECT section_id FROM (
                 SELECT section_id, instructor_uid from sis_sections
                 WHERE term_id = :term_id
-                AND deleted_at IS NULL
+                AND is_principal_listing IS TRUE
                 GROUP BY section_id, instructor_uid
             ) sections_by_instructor
             GROUP BY section_id
@@ -633,7 +633,6 @@ def _to_api_json(term_id, rows, include_rooms=True):
                 'courseName': row['course_name'],
                 'courseTitle': row['course_title'],
                 'crossListings': cross_listed_courses,
-                'deletedAt': format_time(row['deleted_at']),
                 'hasOptedOut': section_id in section_ids_opted_out,
                 'instructionFormat': row['instruction_format'],
                 'instructors': instructors,
@@ -740,7 +739,7 @@ def _get_cross_listed_courses(section_ids, term_id, approvals, invited_uids):
             i.first_name || ' ' || i.last_name AS instructor_name,
             i.uid AS instructor_uid
         FROM sis_sections s
-        JOIN instructors i ON i.uid = s.instructor_uid
+        LEFT JOIN instructors i ON i.uid = s.instructor_uid
         WHERE
             s.term_id = :term_id
             AND s.is_primary IS TRUE
@@ -831,16 +830,10 @@ def _construct_course_label(course_name, instruction_format, section_num, cross_
         return f'{course_name_}, {instruction_format_} {section_num_}'
 
     if cross_listings:
-        distinct_instruction_format = set([instruction_format] + [c['instructionFormat'] for c in cross_listings])
-        if len(cross_listings) > 1 or len(distinct_instruction_format) > 1:
-            merged = _merge_distinct(
-                _label(course_name, instruction_format, section_num),
-                [_label(c['courseName'], c['instructionFormat'], c['sectionNum']) for c in cross_listings],
-            )
-            return ' | '.join(merged)
-        else:
-            distinct_course_names = _merge_distinct(course_name, [c['courseName'] for c in cross_listings])
-            distinct_section_nums = _merge_distinct(section_num, [c['sectionNum'] for c in cross_listings])
-            return f'{" | ".join(distinct_course_names)}, {instruction_format} {"/".join(distinct_section_nums)}'
+        merged = _merge_distinct(
+            _label(course_name, instruction_format, section_num),
+            [_label(c['courseName'], c['instructionFormat'], c['sectionNum']) for c in cross_listings],
+        )
+        return ' | '.join(merged)
     else:
         return _label(course_name, instruction_format, section_num)

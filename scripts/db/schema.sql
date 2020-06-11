@@ -356,6 +356,7 @@ CREATE TABLE sis_sections (
     instructor_role_code VARCHAR(80),
     instructor_uid VARCHAR(80),
     is_primary BOOLEAN,
+    is_principal_listing BOOLEAN DEFAULT TRUE NOT NULL,
     meeting_days VARCHAR(80),
     meeting_end_date VARCHAR(80),
     meeting_end_time VARCHAR(80),
@@ -365,8 +366,7 @@ CREATE TABLE sis_sections (
     section_id INTEGER NOT NULL,
     section_num VARCHAR(80),
     term_id INTEGER NOT NULL,
-    created_at timestamp with time zone NOT NULL,
-    deleted_at timestamp with time zone
+    created_at timestamp with time zone NOT NULL
 );
 ALTER TABLE sis_sections OWNER TO diablo;
 CREATE SEQUENCE sis_sections_id_seq
