@@ -57,6 +57,10 @@ class OuijaBoardPage(DiabloPages):
         self.driver.get(f'{app.config["BASE_URL"]}/ouija')
         self.wait_for_ouija_title()
 
+    def load_instructor_view(self):
+        app.logger.info('Loading the instructor home page')
+        self.driver.get(f'{app.config["BASE_URL"]}/home')
+
     def wait_for_ouija_title(self):
         self.wait_for_diablo_title('Ouija Board')
 
@@ -155,22 +159,22 @@ class OuijaBoardPage(DiabloPages):
         return self.element((By.ID, f'link-course-{section.ccn}'))
 
     def course_row_code_el(self, section):
-        return self.element((By.XPATH, f'//tr[@id="{section.ccn}"]/td[2]'))
+        return self.element((By.XPATH, f'//tr[@id="course-{section.ccn}"]/td[1]'))
 
     def course_row_title_el(self, section):
-        return self.element((By.XPATH, f'//tr[@id="{section.ccn}"]/td[3]'))
+        return self.element((By.XPATH, f'//tr[@id="course-{section.ccn}"]/td[2]'))
 
     def course_row_instructors_el(self, section):
-        return self.element((By.XPATH, f'//tr[@id="{section.ccn}"]/td[4]'))
+        return self.element((By.XPATH, f'//tr[@id="course-{section.ccn}"]/td[3]'))
 
     def course_row_room_el(self, section):
-        return self.element((By.XPATH, f'//tr[@id="{section.ccn}"]/td[5]'))
+        return self.element((By.XPATH, f'//tr[@id="course-{section.ccn}"]/td[4]'))
 
     def course_row_days_el(self, section):
-        return self.element((By.XPATH, f'//tr[@id="{section.ccn}"]/td[6]'))
+        return self.element((By.XPATH, f'//tr[@id="course-{section.ccn}"]/td[5]'))
 
     def course_row_time_el(self, section):
-        return self.element((By.XPATH, f'//tr[@id="{section.ccn}"]/td[7]'))
+        return self.element((By.XPATH, f'//tr[@id="course-{section.ccn}"]/td[6]'))
 
     def course_row_approval_status_el(self, section):
         return self.element((By.ID, f'course-{section.ccn}-approval-status'))

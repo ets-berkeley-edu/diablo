@@ -85,7 +85,7 @@ class JobsPage(DiabloPages):
 
     @staticmethod
     def job_toggle_id(async_job):
-        return f'job-{async_job.value}-disabled'
+        return f'job-{async_job.value}-enabled'
 
     @staticmethod
     def enabled_job_locator(async_job):
@@ -138,7 +138,7 @@ class JobsPage(DiabloPages):
 
     def wait_for_most_recent_job_success(self, async_job):
         app.logger.info(f'Waiting for {async_job} to succeed')
-        wait = util.get_short_timeout()
+        wait = util.get_long_timeout()
         locator = JobsPage.job_most_recent_locator(async_job)
         tries = 0
         retries = 1

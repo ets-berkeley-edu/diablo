@@ -155,3 +155,10 @@ def reset_invite_test_data(term, section, instructor=None):
     app.logger.info(sql)
     db.session.execute(text(sql))
     std_commit(allow_test_environment=True)
+
+
+def reset_x_listings_test_data(term, section):
+    sql = f"UPDATE sis_sections SET meeting_location = '{section.room.name}' WHERE section_id = {section.ccn} AND term_id = {term.id}"
+    app.logger.info(sql)
+    db.session.execute(text(sql))
+    std_commit(allow_test_environment=True)

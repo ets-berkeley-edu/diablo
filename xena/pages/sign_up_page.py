@@ -41,7 +41,7 @@ class SignUpPage(DiabloPages):
     MEETING_DAYS = (By.ID, 'meeting-days')
     MEETING_TIMES = (By.ID, 'meeting-times')
     ROOMS = (By.ID, 'rooms')
-    CROSS_LISTING = (By.XPATH, '//span[contains(@id, "cross-listing")]')
+    CROSS_LISTING = (By.XPATH, '//div[contains(@id, "cross-listing-")]')
     OPTED_OUT = (By.ID, 'opted-out')
     SEND_INVITE_BUTTON = (By.ID, 'send-invite-btn')
     UNSCHEDULE_BUTTON = (By.ID, 'unschedule-course-btn')
@@ -79,9 +79,12 @@ class SignUpPage(DiabloPages):
     def kaltura_series_link(recording_schedule):
         return By.PARTIAL_LINK_TEXT, f'Kaltura series {recording_schedule.series_id}'
 
+    def hit_url(self, term_id, ccn):
+        self.driver.get(f'{app.config["BASE_URL"]}/course/{term_id}/{ccn}')
+
     def load_page(self, section):
         app.logger.info(f'Loading sign-up page for term {section.term.id} section ID {section.ccn}')
-        self.driver.get(f'{app.config["BASE_URL"]}/course/{section.term.id}/{section.ccn}')
+        self.hit_url(section.term.id, section.ccn)
         self.wait_for_diablo_title(f'{section.code}, {section.number}')
 
     # SIS DATA
