@@ -590,8 +590,8 @@ def _to_api_json(term_id, rows, include_rooms=True):
 
     invited_uids_by_section_id = {section_id: [] for section_id in section_ids}
     for invite in SentEmail.get_emails_of_type(section_ids=section_ids, template_type='invitation', term_id=term_id):
-        for uid in list(filter(lambda u: u not in invited_uids_by_section_id[invite.section_id], invite.recipient_uids)):
-            invited_uids_by_section_id[invite.section_id].append(uid)
+        if invite.recipient_uid not in invited_uids_by_section_id[invite.section_id]:
+            invited_uids_by_section_id[invite.section_id].append(invite.recipient_uid)
 
     approvals_by_section_id = {section_id: [] for section_id in section_ids}
     for approval in Approval.get_approvals_per_section_ids(section_ids=section_ids, term_id=term_id):

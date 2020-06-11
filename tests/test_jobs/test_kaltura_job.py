@@ -114,7 +114,7 @@ class TestKalturaJob:
             QueuedEmailsJob(app.app_context).run()
             emails_sent = _get_emails_sent()
             assert len(emails_sent) == email_count + 2
-            assert emails_sent[-1].recipient_uids + emails_sent[-2].recipient_uids == ['10009', '10010']
+            assert [emails_sent[-1].recipient_uid, emails_sent[-2].recipient_uid] == ['10009', '10010']
             email_sent = emails_sent[-1]
             assert email_sent.section_id == section_id
             assert email_sent.template_type == 'recordings_scheduled'

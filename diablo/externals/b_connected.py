@@ -43,16 +43,16 @@ class BConnected:
     def send(
             self,
             message,
-            recipients,
+            recipient,
             subject_line,
             term_id=None,
             section_id=None,
             template_type=None,
     ):
-        if not message or not subject_line or not recipients:
+        if not message or not subject_line or not recipient:
             app.logger.error(
                 'Attempted to send a message without required fields: '
-                f'(recipients={recipients}, subject_line={subject_line}, message={message}')
+                f'(recipient={recipient}, subject_line={subject_line}, message={message}')
             return False
 
         @skip_when_pytest()
@@ -66,39 +66,38 @@ class BConnected:
 
             emails_sent_to = set()
 
-            for recipient in recipients:
-                mock_message = _get_mock_message(
-                    recipient['name'],
-                    recipient['email'],
-                    subject_line,
-                    message,
-                )
-                if app.config['DIABLO_ENV'] == 'test':
-                    app.logger.info(mock_message)
+            mock_message = _get_mock_message(
+                recipient['name'],
+                recipient['email'],
+                subject_line,
+                message,
+            )
+            if app.config['DIABLO_ENV'] == 'test':
+                app.logger.info(mock_message)
+            else:
+                from_address = f"{app.config['EMAIL_DIABLO_SUPPORT_FRIENDLY']} <{app.config['EMAIL_DIABLO_SUPPORT']}>"
+                to_address = self.get_email_address(user=recipient, subject_line=subject_line)
+
+                msg = MIMEMultipart('alternative')
+                msg['From'] = from_address
+                msg['To'] = to_address
+
+                if app.config['EMAIL_TEST_MODE']:
+                    # Append intended recipient email address to verify when testing.
+                    intended_email = recipient['email']
+                    msg['Subject'] = f'{subject_line} (To: {intended_email})'
                 else:
-                    from_address = f"{app.config['EMAIL_DIABLO_SUPPORT_FRIENDLY']} <{app.config['EMAIL_DIABLO_SUPPORT']}>"
-                    to_address = self.get_email_address(user=recipient, subject_line=subject_line)
+                    msg['Subject'] = subject_line
 
-                    msg = MIMEMultipart('alternative')
-                    msg['From'] = from_address
-                    msg['To'] = to_address
+                # TODO: 'plain' text version of email?
+                msg.attach(MIMEText(message, 'plain'))
+                msg.attach(MIMEText(message, 'html'))
+                # Send
+                smtp.sendmail(from_addr=from_address, to_addrs=to_address, msg=msg.as_string())
 
-                    if app.config['EMAIL_TEST_MODE']:
-                        # Append intended recipient email address to verify when testing.
-                        intended_email = recipient['email']
-                        msg['Subject'] = f'{subject_line} (To: {intended_email})'
-                    else:
-                        msg['Subject'] = subject_line
+                emails_sent_to.add(to_address)
 
-                    # TODO: 'plain' text version of email?
-                    msg.attach(MIMEText(message, 'plain'))
-                    msg.attach(MIMEText(message, 'html'))
-                    # Send
-                    smtp.sendmail(from_addr=from_address, to_addrs=to_address, msg=msg.as_string())
-
-                    emails_sent_to.add(to_address)
-
-            app.logger.info(f'{len(recipients)} \'{template_type}\' emails sent to {", ".join(list(emails_sent_to))}')
+            app.logger.info(f'\'{template_type}\' email sent to {", ".join(list(emails_sent_to))}')
             # Disconnect
             smtp.quit()
 
@@ -106,7 +105,7 @@ class BConnected:
         _send()
 
         SentEmail.create(
-            recipient_uids=[recipient['uid'] for recipient in recipients],
+            recipient_uid=recipient['uid'],
             section_id=section_id,
             template_type=template_type,
             term_id=term_id or app.config['CURRENT_TERM_ID'],

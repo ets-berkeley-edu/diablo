@@ -54,10 +54,10 @@ class TestInvitationJob:
             assert len(eligible_courses) == 8
             for course in eligible_courses:
                 for i in course['instructors']:
-                    sent_email = next((e for e in invitations if e.section_id == course['sectionId'] and i['uid'] in e.recipient_uids), None)
+                    sent_email = next((e for e in invitations if e.section_id == course['sectionId'] and i['uid'] == e.recipient_uid), None)
                     assert sent_email
                     email_json = sent_email.to_api_json()
-                    assert email_json['recipientUids'] == [i['uid']]
+                    assert email_json['recipientUid'] == i['uid']
                     assert email_json['sectionId'] == course['sectionId']
                     assert email_json['templateType'] == 'invitation'
                     assert email_json['termId'] == term_id
@@ -80,7 +80,7 @@ class TestInvitationJob:
             assert len(invitations) == 1
             invitation = invitations[0].to_api_json()
             assert invitation['sectionId'] == 50002
-            assert invitation['recipientUids'] == ['10008']
+            assert invitation['recipientUid'] == '10008'
 
     def test_course_opted_out(self, app):
         """Do not send email to courses that have opted out."""

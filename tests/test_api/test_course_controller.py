@@ -390,7 +390,7 @@ class TestGetCourses:
     def _send_invitation_email(self, section_id):
         SentEmail.create(
             section_id=section_id,
-            recipient_uids=get_instructor_uids(section_id=section_id, term_id=self.term_id),
+            recipient_uid=get_instructor_uids(section_id=section_id, term_id=self.term_id)[0],
             template_type='invitation',
             term_id=self.term_id,
         )

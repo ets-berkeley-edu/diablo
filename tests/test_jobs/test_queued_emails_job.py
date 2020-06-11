@@ -81,14 +81,14 @@ class TestQueuedEmailsJob:
         assert len(emails_sent_after) == len(emails_sent_before) + 3
 
         def _find_email(section_id, uid):
-            return next((e for e in emails_sent_after if e.section_id == section_id and e.sent_at > before and uid in e.recipient_uids), None)
+            return next((e for e in emails_sent_after if e.section_id == section_id and e.sent_at > before and uid == e.recipient_uid), None)
 
         for course in courses:
             for instructor in course['instructors']:
                 sent_email = _find_email(section_id=course['sectionId'], uid=instructor['uid'])
                 assert sent_email
                 email_json = sent_email.to_api_json()
-                assert email_json['recipientUids'] == [instructor['uid']]
+                assert email_json['recipientUid'] == instructor['uid']
                 assert email_json['sectionId'] == course['sectionId']
                 assert email_json['templateType'] == email_template_type
                 assert email_json['termId'] == term_id
@@ -149,7 +149,7 @@ class TestQueuedEmailsJob:
         sent_email = next((e for e in emails_sent_after if e.section_id == section_id and e.sent_at > before), None)
         assert sent_email
         email_json = sent_email.to_api_json()
-        assert email_json['recipientUids'] == [app.config['EMAIL_DIABLO_ADMIN_UID']]
+        assert email_json['recipientUid'] == app.config['EMAIL_DIABLO_ADMIN_UID']
         assert email_json['sectionId'] == section_id
         assert email_json['templateType'] == email_template_type
         assert email_json['termId'] == term_id

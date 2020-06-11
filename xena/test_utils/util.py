@@ -139,10 +139,10 @@ def get_first_recording_date(recording_schedule):
 def reset_invite_test_data(term, section, instructor=None):
     # So that invitation will be sent to one instructor on a course
     if instructor:
-        sql = f"""UPDATE sent_emails
-                  SET recipient_uids = array_remove(recipient_uids, '{instructor.uid}')
+        sql = f"""DELETE FROM sent_emails
                   WHERE term_id = {term.id}
                     AND section_id = {section.ccn}
+                    AND recipient_id = '{instructor.uid}''
                     AND template_type = 'invitation'
         """
     # So that invitations will be sent to all instructors on a course

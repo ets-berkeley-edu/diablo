@@ -27,14 +27,12 @@ from diablo.externals.b_connected import BConnected
 from flask import current_app as app
 
 
-def get_admin_alert_recipients():
-    return [
-        {
-            'email': app.config['EMAIL_DIABLO_ADMIN'],
-            'name': 'Course Capture Admin',
-            'uid': app.config['EMAIL_DIABLO_ADMIN_UID'],
-        },
-    ]
+def get_admin_alert_recipient():
+    return {
+        'email': app.config['EMAIL_DIABLO_ADMIN'],
+        'name': 'Course Capture Admin',
+        'uid': app.config['EMAIL_DIABLO_ADMIN_UID'],
+    }
 
 
 def send_system_error_email(message, subject=None):
@@ -42,13 +40,11 @@ def send_system_error_email(message, subject=None):
         subject = f'{message[:50]}...' if len(message) > 50 else message
     BConnected().send(
         message=message,
-        recipients=[
-            {
-                'email': app.config['EMAIL_SYSTEM_ERRORS'],
-                'name': 'Course Capture Errors',
-                'uid': '0',
-            },
-        ],
+        recipient={
+            'email': app.config['EMAIL_SYSTEM_ERRORS'],
+            'name': 'Course Capture Errors',
+            'uid': '0',
+        },
         subject_line=f'Diablo Alert: {subject}',
     )
     app.logger.error(f'Diablo Alert: {message}')

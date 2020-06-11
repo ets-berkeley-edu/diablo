@@ -43,7 +43,7 @@ class QueuedEmailsJob(BaseJob):
                 continue
             if BConnected().send(
                 message=queued_email.message,
-                recipients=[queued_email.recipient],
+                recipient=queued_email.recipient,
                 section_id=queued_email.section_id,
                 subject_line=queued_email.subject_line,
                 template_type=queued_email.template_type,
