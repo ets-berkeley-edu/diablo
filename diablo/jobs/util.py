@@ -137,7 +137,7 @@ def refresh_cross_listings(term_id):
         for i in range(0, len(data), chunk_size):
             yield {k: data[k] for k in islice(iterator, chunk_size)}
 
-    delete_section_ids = []
+    non_principal_section_ids = []
 
     for cross_listings_chunk in chunks(cross_listings):
         cross_listing_count = len(cross_listings_chunk)
@@ -146,12 +146,11 @@ def refresh_cross_listings(term_id):
             query += f' (:term_id, {section_id}, ' + "'{" + _join(cross_listed_section_ids, ', ') + "}', now())"
             if index < cross_listing_count - 1:
                 query += ','
-            # Cross-referenced section ids will be deleted in  sis_sections table
-            delete_section_ids.extend(cross_listed_section_ids)
+            non_principal_section_ids.extend(cross_listed_section_ids)
         db.session.execute(query, {'term_id': term_id})
 
-    # Cross-listed section_ids are "deleted" in sis_sections, represented in cross_listings table
-    SisSection.delete_all(section_ids=delete_section_ids, term_id=term_id)
+    # Mark cross-listed section_ids as non-principal listings to keep duplicate results out of SisSection queries.
+    SisSection.set_non_principal_listings(section_ids=non_principal_section_ids, term_id=term_id)
 
     std_commit()
 

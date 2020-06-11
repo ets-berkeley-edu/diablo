@@ -767,7 +767,7 @@ class TestCrossListedNameGeneration:
         self._verify_name_generation(
             client=client,
             section_id=section_7_id,
-            expected_name='MATH C51 | STAT C51, LEC 001/003',
+            expected_name='MATH C51, LEC 001 | STAT C51, LEC 003',
         )
 
     def test_different_instruction_format(self, admin_session, client):
