@@ -23,6 +23,7 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 import json
+import time
 
 from diablo import std_commit
 from diablo.jobs.canvas_job import CanvasJob
@@ -83,12 +84,13 @@ class TestStartJob:
         """Disabled job will run if run on-demand."""
         job_key = 'admin_emails'
         self._api_start_job(client, job_key=job_key)
+        time.sleep(0.7)
         # Now verify
         response = client.get('/api/job/history/1')
         assert response.status_code == 200
         job_history = response.json
         assert len(job_history)
-        assert job_history[0]['jobKey'] == job_key
+        assert job_key in [h['jobKey'] for h in job_history]
 
 
 class TestJobHistory:
