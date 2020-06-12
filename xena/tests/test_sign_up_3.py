@@ -47,7 +47,7 @@ SCENARIO:
 
 @pytest.mark.usefixtures('page_objects')
 class TestSignUp3:
-    test_data = util.parse_sign_up_test_data()[3]
+    test_data = util.parse_course_test_data()[3]
     section = Section(test_data)
     recording_schedule = RecordingSchedule(section)
 
@@ -58,7 +58,6 @@ class TestSignUp3:
         self.login_page.dev_auth()
         self.ouija_page.click_jobs_link()
         self.jobs_page.run_queued_emails_job()
-        self.jobs_page.wait_for_most_recent_job_success(AsyncJob.QUEUED_EMAILS)
         self.jobs_page.disable_all_jobs()
 
     def test_delete_old_kaltura_series(self):
@@ -121,9 +120,7 @@ class TestSignUp3:
     def test_send_invite_email(self):
         self.jobs_page.load_page()
         self.jobs_page.run_invitations_job()
-        self.jobs_page.wait_for_most_recent_job_success(AsyncJob.INVITATIONS)
         self.jobs_page.run_queued_emails_job()
-        self.jobs_page.wait_for_most_recent_job_success(AsyncJob.QUEUED_EMAILS)
 
     def test_receive_invite_email_inst_1(self):
         self.recording_schedule.approval_status = RecordingApprovalStatus.INVITED
@@ -521,7 +518,6 @@ class TestSignUp3:
     def test_send_schedule_conf_email(self):
         self.jobs_page.load_page()
         self.jobs_page.run_queued_emails_job()
-        self.jobs_page.wait_for_most_recent_job_success(AsyncJob.QUEUED_EMAILS)
 
     def test_receive_schedule_conf_email_inst_1(self):
         subj = f'Your course, {self.section.code}, has been scheduled for Course Capture (To: {self.section.instructors[0].email})'

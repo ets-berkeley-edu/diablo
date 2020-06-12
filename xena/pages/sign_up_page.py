@@ -131,7 +131,7 @@ class SignUpPage(DiabloPages):
     def confirm_unscheduling(self, recording_schedule):
         self.click_unschedule_button()
         self.wait_for_element_and_click(SignUpPage.UNSCHEDULE_CONFIRM_BUTTON)
-        Wait(self.driver, util.get_long_timeout()).until(ec.visibility_of_element_located(SignUpPage.APPROVE_BUTTON))
+        Wait(self.driver, util.get_medium_timeout()).until(ec.visibility_of_element_located(SignUpPage.APPROVE_BUTTON))
         recording_schedule.scheduling_status = RecordingSchedulingStatus.NOT_SCHEDULED
 
     def cancel_unscheduling(self):

@@ -48,7 +48,7 @@ SCENARIO:
 @pytest.mark.usefixtures('page_objects')
 class TestSignUp2:
 
-    test_data = util.parse_sign_up_test_data()[2]
+    test_data = util.parse_course_test_data()[2]
     section = Section(test_data)
     recording_schedule = RecordingSchedule(section)
 
@@ -59,7 +59,6 @@ class TestSignUp2:
         self.login_page.dev_auth()
         self.ouija_page.click_jobs_link()
         self.jobs_page.run_queued_emails_job()
-        self.jobs_page.wait_for_most_recent_job_success(AsyncJob.QUEUED_EMAILS)
         self.jobs_page.disable_all_jobs()
 
     def test_delete_old_kaltura_series(self):
@@ -122,9 +121,7 @@ class TestSignUp2:
     def test_send_invite_email(self):
         self.jobs_page.load_page()
         self.jobs_page.run_invitations_job()
-        self.jobs_page.wait_for_most_recent_job_success(AsyncJob.INVITATIONS)
         self.jobs_page.run_queued_emails_job()
-        self.jobs_page.wait_for_most_recent_job_success(AsyncJob.QUEUED_EMAILS)
 
     def test_receive_invite_email_1(self):
         self.recording_schedule.approval_status = RecordingApprovalStatus.INVITED
@@ -312,7 +309,6 @@ class TestSignUp2:
     def test_send_awaiting_approval_email(self):
         self.ouija_page.click_jobs_link()
         self.jobs_page.run_queued_emails_job()
-        self.jobs_page.wait_for_most_recent_job_success(AsyncJob.QUEUED_EMAILS)
 
     def test_receive_awaiting_approval_email_inst_1(self):
         subj = f'Course Capture: {self.section.code} waiting on approval (To: {self.section.instructors[0].email})'
@@ -429,7 +425,6 @@ class TestSignUp2:
         self.login_page.dev_auth()
         self.ouija_page.click_jobs_link()
         self.jobs_page.run_queued_emails_job()
-        self.jobs_page.wait_for_most_recent_job_success(AsyncJob.QUEUED_EMAILS)
 
     def test_receive_notify_of_changes_email_inst_1(self):
         subj = f'Changes to your Course Capture settings for {self.section.code} (To: {self.section.instructors[0].email})'
@@ -588,7 +583,6 @@ class TestSignUp2:
     def test_send_schedule_conf_email(self):
         self.jobs_page.load_page()
         self.jobs_page.run_queued_emails_job()
-        self.jobs_page.wait_for_most_recent_job_success(AsyncJob.QUEUED_EMAILS)
 
     def test_receive_schedule_conf_email_inst_1(self):
         subj = f'Your course, {self.section.code}, has been scheduled for Course Capture (To: {self.section.instructors[0].email})'

@@ -76,10 +76,10 @@ class KalturaPage(Page):
         app.logger.info('Logging in to Kaltura')
         self.driver.get(f'{app.config["KALTURA_MEDIA_SPACE_URL"]}/user/login')
         self.wait_for_element_and_type(CalNetPage.USERNAME_INPUT, 'PLEASE LOG IN MANUALLY')
-        Wait(self.driver, util.get_long_timeout()).until(ec.presence_of_element_located(KalturaPage.LOG_OUT_LINK))
+        Wait(self.driver, util.get_medium_timeout()).until(ec.presence_of_element_located(KalturaPage.LOG_OUT_LINK))
 
-    def load_event_edit_page(self, recording_schedule):
-        self.driver.get(f'{app.config["KALTURA_MEDIA_SPACE_URL"]}/recscheduling/index/edit-event/eventid/{recording_schedule.series_id}')
+    def load_event_edit_page(self, series_id):
+        self.driver.get(f'{app.config["KALTURA_MEDIA_SPACE_URL"]}/recscheduling/index/edit-event/eventid/{series_id}')
 
     def wait_for_delete_button(self):
         self.wait_for_element(KalturaPage.SERIES_DELETE_BUTTON, util.get_short_timeout())
@@ -153,7 +153,7 @@ class KalturaPage(Page):
 
     def delete_series(self, recording_schedule):
         app.logger.info('Clicking the delete button')
-        self.load_event_edit_page(recording_schedule)
+        self.load_event_edit_page(recording_schedule.series_id)
         self.wait_for_page_and_click(KalturaPage.SERIES_DELETE_BUTTON)
         self.wait_for_element_and_click(KalturaPage.SERIES_DELETE_CONFIRM_BUTTON)
         redirect_url = f'{app.config["KALTURA_MEDIA_SPACE_URL"]}/calendar/index/calendar/'

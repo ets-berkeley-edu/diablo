@@ -46,9 +46,10 @@ TESTING = True
 TEST_DATA_ROOMS = f'{BASE_DIR}/xena/fixtures/test-rooms.json'
 
 # The test-courses.json file is intended as an example of required structure of the test data
-TEST_DATA_SIGNUP = f'{BASE_DIR}/xena/fixtures/test-courses-local.json'
+TEST_DATA_COURSES = f'{BASE_DIR}/xena/fixtures/test-courses-local.json'
 
-TIMEOUT_SHORT = 8
-TIMEOUT_LONG = 30
+TIMEOUT_SHORT = 10
+TIMEOUT_MEDIUM = 90
+TIMEOUT_LONG = 360
 
 XENA_BROWSER = 'chrome'

@@ -37,7 +37,7 @@ from xena.test_utils import util
 @pytest.mark.usefixtures('page_objects')
 class TestCrossListings:
 
-    test_data = util.parse_sign_up_test_data()[7]
+    test_data = util.parse_course_test_data()[7]
     section = Section(test_data)
     x_listings = section.listings
     recording_schedule = RecordingSchedule(section)
@@ -49,7 +49,6 @@ class TestCrossListings:
         self.login_page.dev_auth()
         self.ouija_page.click_jobs_link()
         self.jobs_page.run_queued_emails_job()
-        self.jobs_page.wait_for_most_recent_job_success(AsyncJob.QUEUED_EMAILS)
         self.jobs_page.disable_all_jobs()
 
     def test_delete_old_kaltura_series(self):
@@ -62,7 +61,7 @@ class TestCrossListings:
         self.recording_schedule.scheduling_status = RecordingSchedulingStatus.NOT_SCHEDULED
 
     def test_move_course_location(self):
-        util.reset_x_listings_test_data(self.section.term, self.section)
+        util.set_course_room(self.section)
 
     def test_delete_old_email(self):
         self.email_page.log_in()
@@ -132,11 +131,8 @@ class TestCrossListings:
     def test_send_emails(self):
         self.jobs_page.load_page()
         self.jobs_page.run_invitations_job()
-        self.jobs_page.wait_for_most_recent_job_success(AsyncJob.INVITATIONS)
         self.jobs_page.run_instructor_emails_job()
-        self.jobs_page.wait_for_most_recent_job_success(AsyncJob.INSTRUCTOR_EMAILS)
         self.jobs_page.run_queued_emails_job()
-        self.jobs_page.wait_for_most_recent_job_success(AsyncJob.QUEUED_EMAILS)
 
     def test_invite_inst_1(self):
         self.recording_schedule.approval_status = RecordingApprovalStatus.INVITED

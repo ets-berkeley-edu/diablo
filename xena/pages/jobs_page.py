@@ -26,7 +26,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 import time
 
 from flask import current_app as app
-from selenium.common.exceptions import StaleElementReferenceException
+from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.wait import WebDriverWait as Wait
@@ -53,31 +53,52 @@ class JobsPage(DiabloPages):
 
     def run_admin_emails_job(self):
         app.logger.info('Running the admin emails job')
-        self.wait_for_element_and_click(JobsPage.RUN_ADMIN_EMAILS_JOB_BUTTON)
+        self.scroll_to_top()
+        time.sleep(1)
+        self.wait_for_page_and_click(JobsPage.RUN_ADMIN_EMAILS_JOB_BUTTON)
+        self.wait_for_most_recent_job_success(AsyncJob.ADMIN_EMAILS)
 
     def run_canvas_job(self):
         app.logger.info('Running the Canvas job')
-        self.wait_for_element_and_click(JobsPage.RUN_CANVAS_JOB_BUTTON)
+        self.scroll_to_top()
+        time.sleep(1)
+        self.wait_for_page_and_click(JobsPage.RUN_CANVAS_JOB_BUTTON)
+        self.wait_for_most_recent_job_success(AsyncJob.CANVAS)
 
     def run_instructor_emails_job(self):
         app.logger.info('Running instructor emails job')
-        self.wait_for_element_and_click(JobsPage.RUN_INSTRUCTOR_EMAILS_JOB_BUTTON)
+        self.scroll_to_top()
+        time.sleep(1)
+        self.wait_for_page_and_click(JobsPage.RUN_INSTRUCTOR_EMAILS_JOB_BUTTON)
+        self.wait_for_most_recent_job_success(AsyncJob.INSTRUCTOR_EMAILS)
 
     def run_invitations_job(self):
         app.logger.info('Running invitations job')
-        self.wait_for_element_and_click(JobsPage.RUN_INVITATIONS_JOB)
+        self.scroll_to_top()
+        time.sleep(1)
+        self.wait_for_page_and_click(JobsPage.RUN_INVITATIONS_JOB)
+        self.wait_for_most_recent_job_success(AsyncJob.INVITATIONS)
 
     def run_kaltura_job(self):
         app.logger.info('Running Kaltura job')
-        self.wait_for_element_and_click(JobsPage.RUN_KALTURA_JOB_BUTTON)
+        self.scroll_to_top()
+        time.sleep(1)
+        self.wait_for_page_and_click(JobsPage.RUN_KALTURA_JOB_BUTTON)
+        self.wait_for_most_recent_job_success(AsyncJob.KALTURA)
 
     def run_queued_emails_job(self):
         app.logger.info('Running queued emails job')
-        self.wait_for_element_and_click(JobsPage.RUN_QUEUED_EMAILS_JOB_BUTTON)
+        self.scroll_to_top()
+        time.sleep(1)
+        self.wait_for_page_and_click(JobsPage.RUN_QUEUED_EMAILS_JOB_BUTTON)
+        self.wait_for_most_recent_job_success(AsyncJob.QUEUED_EMAILS)
 
     def run_sis_data_refresh_job(self):
         app.logger.info('Running SIS data refresh job')
-        self.wait_for_element_and_click(JobsPage.RUN_SIS_DATA_REFRESH_JOB_BUTTON)
+        self.scroll_to_top()
+        time.sleep(1)
+        self.wait_for_page_and_click(JobsPage.RUN_SIS_DATA_REFRESH_JOB_BUTTON)
+        self.wait_for_most_recent_job_success(AsyncJob.SIS_DATA_REFRESH)
 
     def wait_for_jobs_table(self):
         locator = By.XPATH, '//h2[contains(text(), "Job Schedule")]/../../following-sibling::div//table'
@@ -138,19 +159,24 @@ class JobsPage(DiabloPages):
 
     def wait_for_most_recent_job_success(self, async_job):
         app.logger.info(f'Waiting for {async_job} to succeed')
-        wait = util.get_long_timeout()
-        locator = JobsPage.job_most_recent_locator(async_job)
-        tries = 0
-        retries = 1
+        time.sleep(2)
+        tries = 1
+        retries = util.get_long_timeout()
+        success = By.XPATH, f'{JobsPage.job_most_recent_locator(async_job)[1]}//i[contains(@class, "light-green--text")]'
+        failure = By.XPATH, f'{JobsPage.job_most_recent_locator(async_job)[1]}//i[contains(@class, "red--text")]'
         while tries <= retries:
             tries += 1
             try:
-                Wait(self.driver, wait).until(ec.visibility_of_element_located(locator))
-                xpath = f'{JobsPage.job_most_recent_locator(async_job)[1]}//i[contains(@class, "light-green--text")]'
-                Wait(self.driver, wait).until(ec.presence_of_element_located((By.XPATH, xpath)))
-                break
-            except StaleElementReferenceException:
+                if self.is_present(success):
+                    app.logger.info('Job succeeded')
+                    break
+                else:
+                    Wait(self.driver, 1).until(ec.visibility_of_element_located(failure))
+                    app.logger.info('Job failed')
+                    break
+            except TimeoutException:
                 if tries == retries:
                     raise
                 else:
                     time.sleep(1)
+        Wait(self.driver, 1).until(ec.visibility_of_element_located(success))

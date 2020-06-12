@@ -34,8 +34,8 @@ from xena.test_utils import util
 @pytest.mark.usefixtures('page_objects')
 class TestInvitations:
 
-    section_1 = Section(util.parse_sign_up_test_data()[4])
-    section_2 = Section(util.parse_sign_up_test_data()[5])
+    section_1 = Section(util.parse_course_test_data()[4])
+    section_2 = Section(util.parse_course_test_data()[5])
 
     def test_log_in_admin(self):
         self.login_page.load_page()
@@ -45,7 +45,6 @@ class TestInvitations:
     def test_disable_jobs(self):
         self.ouija_page.click_jobs_link()
         self.jobs_page.run_queued_emails_job()
-        self.jobs_page.wait_for_most_recent_job_success(AsyncJob.QUEUED_EMAILS)
         self.jobs_page.disable_all_jobs()
 
     def test_delete_old_email(self):
@@ -64,9 +63,7 @@ class TestInvitations:
         util.reset_invite_test_data(self.term, self.section_2)
         self.jobs_page.load_page()
         self.jobs_page.run_invitations_job()
-        self.jobs_page.wait_for_most_recent_job_success(AsyncJob.INVITATIONS)
         self.jobs_page.run_queued_emails_job()
-        self.jobs_page.wait_for_most_recent_job_success(AsyncJob.QUEUED_EMAILS)
 
     def test_course_auto_invites_delivered(self):
         subject = f'Invitation {self.section.term.name} {self.section.code} (To: {self.section_1.instructors[0].email})'
@@ -83,9 +80,7 @@ class TestInvitations:
         self.email_page.delete_all_messages()
         self.jobs_page.load_page()
         self.jobs_page.run_invitations_job()
-        self.jobs_page.wait_for_most_recent_job_success(AsyncJob.INVITATIONS)
         self.jobs_page.run_queued_emails_job()
-        self.jobs_page.wait_for_most_recent_job_success(AsyncJob.QUEUED_EMAILS)
 
     def test_inst_auto_invite_delivered(self):
         subject = f'Invitation {self.section.term.name} {self.section.code} (To: {self.section_1.instructors[0].email})'
@@ -118,9 +113,7 @@ class TestInvitations:
     def test_course_manual_invite_run_jobs(self):
         self.jobs_page.load_page()
         self.jobs_page.run_invitations_job()
-        self.jobs_page.wait_for_most_recent_job_success(AsyncJob.INVITATIONS)
         self.jobs_page.run_queued_emails_job()
-        self.jobs_page.wait_for_most_recent_job_success(AsyncJob.QUEUED_EMAILS)
 
     def test_course_manual_invite_delivered(self):
         subject = f'Invitation {self.section.term.name} {self.section.code} (To: {self.section_1.instructors[0].email})'

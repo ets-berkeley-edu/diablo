@@ -45,6 +45,10 @@ def get_short_timeout():
     return xena.TIMEOUT_SHORT
 
 
+def get_medium_timeout():
+    return xena.TIMEOUT_MEDIUM
+
+
 def get_long_timeout():
     return xena.TIMEOUT_LONG
 
@@ -71,8 +75,8 @@ def parse_rooms_data():
         return [Room(agent) for agent in parsed['agents']]
 
 
-def parse_sign_up_test_data():
-    with open(xena.TEST_DATA_SIGNUP) as f:
+def parse_course_test_data():
+    with open(xena.TEST_DATA_COURSES) as f:
         parsed = json.load(f)
         return parsed['courses']
 
@@ -157,8 +161,41 @@ def reset_invite_test_data(term, section, instructor=None):
     std_commit(allow_test_environment=True)
 
 
-def reset_x_listings_test_data(term, section):
-    sql = f"UPDATE sis_sections SET meeting_location = '{section.room.name}' WHERE section_id = {section.ccn} AND term_id = {term.id}"
+def set_course_room(section):
+    sql = f"""UPDATE sis_sections
+              SET meeting_location = '{section.room.name}'
+              WHERE section_id = {section.ccn}
+                AND term_id = {section.term.id}
+    """
+    app.logger.info(sql)
+    db.session.execute(text(sql))
+    std_commit(allow_test_environment=True)
+
+
+def set_course_meeting_time(section):
+    start_time = datetime.strptime(section.start_time, '%I:%M%p')
+    start_time_str = start_time.strftime('%H:%M')
+    end_time = datetime.strptime(section.end_time, '%I:%M%p')
+    end_time_str = end_time.strftime('%H:%M')
+    sql = f"""UPDATE sis_sections
+              SET meeting_start_time = '{start_time_str}',
+                  meeting_end_time = '{end_time_str}'
+              WHERE section_id = {section.ccn}
+                  AND term_id = {section.term.id}
+    """
+    app.logger.info(sql)
+    db.session.execute(text(sql))
+    std_commit(allow_test_environment=True)
+
+
+def change_course_instructor(section, old_instructor, new_instructor):
+    sql = f"""UPDATE sis_sections
+              SET instructor_uid = '{new_instructor.uid}',
+                  instructor_name = '{new_instructor.first_name} {new_instructor.last_name}'
+              WHERE section_id = {section.ccn}
+                  AND term_id = {section.term.id}
+                  AND instructor_uid = '{old_instructor.uid}'
+    """
     app.logger.info(sql)
     db.session.execute(text(sql))
     std_commit(allow_test_environment=True)
