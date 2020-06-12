@@ -105,7 +105,9 @@
     }),
     mounted() {
       this.$loading()
-      this.loadAllEmailTemplates(() => this.$ready('Email Templates'))
+      this.loadAllEmailTemplates().then(() => {
+        this.$ready('Email Templates')
+      })
     },
     methods: {
       createNewTemplate(type) {
@@ -115,13 +117,13 @@
         this.refreshing = true
         deleteTemplate(templateId).then(() => {
           this.alertScreenReader('Email template deleted.')
-          this.loadAllEmailTemplates(() => {
+          this.loadAllEmailTemplates().then(() => {
             this.refreshing = false
           })
         })
       },
-      loadAllEmailTemplates(done) {
-        getAllEmailTemplates().then(data => {
+      loadAllEmailTemplates() {
+        return getAllEmailTemplates().then(data => {
           this.emailTemplates = data
           this.emailTemplateTypes = []
           const disableTheseTypes = this.$_.map(this.emailTemplates, 'templateType')
@@ -129,8 +131,7 @@
             return this.$_.includes(disableTheseTypes, type)
           }
           this.emailTemplateTypes = this.getSelectOptionsFromObject(this.$config.emailTemplateTypes, isDisabled)
-          done()
-        }).catch(done)
+        })
       },
       sendTestEmail(templateId) {
         sendTestEmail(templateId).then(() => {
