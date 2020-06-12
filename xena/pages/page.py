@@ -134,11 +134,11 @@ class Page(object):
         self.driver.execute_script('arguments[0].click();', self.element(locator))
 
     def wait_for_page_and_click(self, locator, addl_pause=0):
-        self.wait_for_element(locator, util.get_long_timeout())
+        self.wait_for_element(locator, util.get_medium_timeout())
         self.click_element(locator, addl_pause)
 
     def wait_for_page_and_click_js(self, locator, addl_pause=0):
-        self.wait_for_element(locator, util.get_long_timeout())
+        self.wait_for_element(locator, util.get_medium_timeout())
         self.click_element_js(locator, addl_pause)
 
     def wait_for_element_and_click(self, locator, addl_pause=0):
@@ -161,7 +161,7 @@ class Page(object):
 
     def wait_for_title(self, string):
         app.logger.info(f"'Waiting for page title '{string}'")
-        Wait(self.driver, util.get_long_timeout()).until(
+        Wait(self.driver, util.get_medium_timeout()).until(
             method=(ec.title_is(string)),
             message=f'Failed wait_for_title: {string}',
         )
@@ -173,6 +173,9 @@ class Page(object):
         return self.driver(Page.H4_HEADING).text
 
     # NAVIGATION AND KEYSTROKES
+
+    def scroll_to_top(self):
+        self.driver.execute_script('window.scrollTo(0, 0);')
 
     def scroll_to_bottom(self):
         self.driver.execute_script('window.scrollTo(0, document.body.scrollHeight);')

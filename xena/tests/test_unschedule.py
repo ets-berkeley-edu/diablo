@@ -36,7 +36,7 @@ from xena.test_utils import util
 @pytest.mark.usefixtures('page_objects')
 class TestUnschedule:
 
-    test_data = util.parse_sign_up_test_data()[6]
+    test_data = util.parse_course_test_data()[6]
     section = Section(test_data)
     recording_schedule = RecordingSchedule(section)
 
@@ -170,7 +170,7 @@ class TestUnschedule:
         assert self.sign_up_page.is_opted_out()
 
     def test_series_deleted(self):
-        self.kaltura_page.load_event_edit_page(self.recording_schedule)
+        self.kaltura_page.load_event_edit_page(self.recording_schedule.series_id)
         self.kaltura_page.wait_for_title('Access Denied - UC Berkeley - Test')
 
     # VERIFY FILTERS
