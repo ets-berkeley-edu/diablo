@@ -91,7 +91,9 @@
     }),
     created() {
       this.$loading()
-      this.refresh()
+      this.refresh().then(() => {
+        this.$ready('Ouija Board')
+      })
     },
     methods: {
       downloadCSV() {
@@ -111,12 +113,8 @@
         }
       },
       refresh() {
-        const done = () => {
-          this.refreshing = false
-          this.$ready('Ouija Board')
-        }
         this.refreshing = true
-        getCourses(this.selectedFilter, this.$config.currentTermId).then(data => {
+        return getCourses(this.selectedFilter, this.$config.currentTermId).then(data => {
           this.courses = data
           this.$_.each(this.courses, course => {
             // In support of search, we index nested course data
@@ -125,8 +123,8 @@
             course.publishTypeNames = course.approvals.length ? this.$_.last(course.approvals).publishTypeName : null
             course.isSelectable = !course.hasOptedOut
           })
-          done()
-        }).catch(done)
+          this.refreshing = false
+        })
       }
     }
   }
