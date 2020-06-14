@@ -247,6 +247,27 @@ class TestUpdateJobSchedule:
         }
 
 
+class TestRunningJobs:
+
+    @staticmethod
+    def _api_jobs_running(client, expected_status_code=200):
+        response = client.get('/api/jobs/running')
+        assert response.status_code == expected_status_code
+        return response.json
+
+    def test_anonymous(self, client):
+        """Denies anonymous access."""
+        self._api_jobs_running(client, expected_status_code=401)
+
+    def test_unauthorized(self, client, instructor_session):
+        """Denies access if user is not an admin."""
+        self._api_jobs_running(client, expected_status_code=401)
+
+    def test_authorized(self, client, admin_session):
+        """Admin can see running obs."""
+        self._api_jobs_running(client)
+
+
 class TestJobSchedule:
 
     @staticmethod

@@ -78,12 +78,21 @@ class JobHistory(db.Model):
         days_ago = datetime.now() - timedelta(days=day_count)
         return cls.query.filter(cls.started_at >= days_ago).order_by(desc(cls.started_at)).all()
 
+    @classmethod
+    def get_running_jobs(cls):
+        return cls.query.filter_by(finished_at=None).all()
+
     @staticmethod
     def fail_orphans():
         sql = """
             UPDATE job_history
             SET failed = TRUE, finished_at = now()
             WHERE finished_at IS NULL"""
+        db.session.execute(text(sql))
+
+    @staticmethod
+    def expire_old_rows(days):
+        sql = f"DELETE FROM job_history WHERE started_at < (now() - INTERVAL '{days} DAYS')"
         db.session.execute(text(sql))
 
     def to_api_json(self):
