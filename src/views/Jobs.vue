@@ -20,20 +20,17 @@
               </td>
             </tr>
             <tr v-for="job in items" :key="job.key">
-              <td class="pb-2 pl-5 pt-2">
+              <td class="pb-2 pl-5 pt-2 text-center">
                 <v-btn
                   v-if="!$_.includes(runningJobs, job.key)"
                   :id="`run-job-${job.key}`"
                   :aria-label="`Run job ${job.key}`"
-                  fab
-                  x-small
                   @click="start(job.key)"
                 >
-                  <v-icon small>mdi-run-fast</v-icon>
+                  Run <span class="sr-only">job {{ job.name }}</span><v-icon class="pl-2" small>mdi-run-fast</v-icon>
                 </v-btn>
                 <v-progress-circular
                   v-if="$_.includes(runningJobs, job.key)"
-                  class="ml-1"
                   indeterminate
                   size="24"
                   width="4"
@@ -204,13 +201,15 @@
         this.refresher = setTimeout(this.refresh, 3000)
       },
       start(jobKey) {
-        this.runningJobs.push(jobKey)
-        setTimeout(() => this.pingJobHistory = this.$moment().valueOf(), 1000)
-        startJob(jobKey).then(() => {
-          this.pingJobHistory = this.$moment().valueOf()
-          this.refresh()
-          this.alertScreenReader(`Job ${jobKey} started`)
-        })
+        if (!this.$_.includes(this.runningJobs, jobKey)) {
+          this.runningJobs.push(jobKey)
+          setTimeout(() => this.pingJobHistory = this.$moment().valueOf(), 1000)
+          startJob(jobKey).then(() => {
+            this.pingJobHistory = this.$moment().valueOf()
+            this.refresh()
+            this.alertScreenReader(`Job ${jobKey} started`)
+          })
+        }
       },
       toggleDisabled(job, isDisabled) {
         setJobDisabled(job.id, isDisabled).then(data => {
