@@ -43,6 +43,10 @@ class KalturaPage(Page):
     SERIES_TITLE = (By.ID, 'CreateEvent-eventTitle')
     SERIES_ORGANIZER = (By.ID, 'CreateEvent-eventOrganizer')
     SERIES_RECUR_DESC = (By.ID, 'CreateEvent-RecurrenceDescription')
+    SERIES_COLLABORATOR_ROW = (By.XPATH, '//tr[contains(@id, "collaborator_")]')
+    SERIES_STATUS_PRIVATE_RADIO = (By.ID, 'private')
+    SERIES_STATUS_UNLISTED_RADIO = (By.ID, 'unlisted')
+    SERIES_STATUS_PUBLISHED_RADIO = (By.ID, 'published')
     SERIES_RECUR_BUTTON = (By.ID, 'CreateEvent-recurrenceMain')
     SERIES_DELETE_BUTTON = (By.ID, 'CreateEvent-btnDelete')
     SERIES_DELETE_CONFIRM_BUTTON = (By.XPATH, '//div[@class="modal-footer"]/a[text()="Delete"]')
@@ -86,6 +90,21 @@ class KalturaPage(Page):
 
     def selected_resource_el(self, room):
         return self.element((By.XPATH, f'//span[@id="{room.resource_id}"][text()="{room.name}"]'))
+
+    def collaborator_rows(self):
+        return self.elements(KalturaPage.SERIES_COLLABORATOR_ROW)
+
+    def collaborator_perm(self, user):
+        return self.element((By.XPATH, f'//tr[@id="collaborator_{user.uid}"]/td[3]')).text.strip()
+
+    def is_private(self):
+        return self.element(KalturaPage.SERIES_STATUS_PRIVATE_RADIO).is_selected()
+
+    def is_unlisted(self):
+        return self.element(KalturaPage.SERIES_STATUS_UNLISTED_RADIO).is_selected()
+
+    def is_published(self):
+        return self.element(KalturaPage.SERIES_STATUS_PUBLISHED_RADIO).is_selected()
 
     def open_recurrence_modal(self):
         app.logger.info('Clicking recurrence button')

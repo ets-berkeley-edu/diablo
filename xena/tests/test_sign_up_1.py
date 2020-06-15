@@ -309,9 +309,9 @@ class TestSignUp1:
 
     def test_series_recordings(self):
         self.room_page.expand_series_row(self.recording_schedule)
-        assert len(self.room_page.series_recording_rows(self.recording_schedule)) > 0
-
-    # TODO - verify individual recordings
+        expected = util.expected_recording_dates(self.recording_schedule)
+        visible = self.room_page.series_recording_start_dates(self.recording_schedule)
+        assert visible == expected
 
     # VERIFY OUIJA FILTER
 
@@ -363,6 +363,16 @@ class TestSignUp1:
     def test_series_title(self):
         expected = f'{self.section.code}, {self.section.number} ({self.term.name})'
         assert self.kaltura_page.visible_series_title() == expected
+
+    def test_series_collab_count(self):
+        assert len(self.kaltura_page.collaborator_rows()) == len(self.section.instructors)
+
+    def test_series_collab_rights(self):
+        for instr in self.section.instructors:
+            assert self.kaltura_page.collaborator_perm(instr) == 'Co-Editor'
+
+    def test_series_publish_status(self):
+        assert self.kaltura_page.is_private()
 
     def test_recur_weekly(self):
         self.kaltura_page.open_recurrence_modal()
