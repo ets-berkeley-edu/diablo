@@ -9,6 +9,10 @@ export function getJobSchedule() {
   return axios.get(`${utils.apiBaseUrl()}/api/job/schedule`)
 }
 
+export function getRunningJobs() {
+  return axios.get(`${utils.apiBaseUrl()}/api/jobs/running`)
+}
+
 export function setJobDisabled(jobId, disable) {
   return axios.post(`${utils.apiBaseUrl()}/api/job/disable`, {
     jobId,

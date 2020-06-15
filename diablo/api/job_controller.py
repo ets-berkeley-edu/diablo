@@ -97,6 +97,13 @@ def job_history(day_count):
         _raise_error()
 
 
+@app.route('/api/jobs/running')
+@admin_required
+def get_running_jobs():
+    running_jobs = [job.to_api_json() for job in JobHistory.get_running_jobs()]
+    return tolerant_jsonify(running_jobs)
+
+
 @app.route('/api/job/schedule')
 @admin_required
 def job_schedule():
