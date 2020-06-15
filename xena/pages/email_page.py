@@ -67,7 +67,7 @@ class EmailPage(Page):
         self.click_element_js(EmailPage.NEXT_BUTTON, 2)
         self.wait_for_element_and_type_js('login-passwd', app.config['XENA_EMAIL_PASSWORD'])
         self.click_element_js(EmailPage.NEXT_BUTTON, 2)
-        Wait(self.driver, util.get_long_timeout()).until(ec.presence_of_element_located(EmailPage.LOG_OUT_LINK))
+        Wait(self.driver, util.get_medium_timeout()).until(ec.presence_of_element_located(EmailPage.LOG_OUT_LINK))
         time.sleep(1)
 
     def is_message_present(self, message):
@@ -101,7 +101,7 @@ class EmailPage(Page):
             app.logger.info('Deleting all messages')
             self.wait_for_page_and_click_js(EmailPage.SELECT_ALL_CBX, 2)
             self.wait_for_page_and_click_js(EmailPage.DELETE_BUTTON, 2)
-            Wait(self.driver, util.get_long_timeout()).until(ec.invisibility_of_element_located(EmailPage.MESSAGE_ROW))
+            Wait(self.driver, util.get_medium_timeout()).until(ec.invisibility_of_element_located(EmailPage.MESSAGE_ROW))
         elif self.is_present(EmailPage.EMPTY_FOLDER):
             app.logger.info('There are no messages to delete')
         else:

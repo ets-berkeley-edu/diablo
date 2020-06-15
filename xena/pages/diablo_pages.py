@@ -45,6 +45,7 @@ class DiabloPages(Page):
     JOB_HISTORY_LINK = (By.ID, 'menu-item-job-history')
     LOG_OUT_LINK = (By.ID, 'menu-item-log-out')
 
+    SPINNER = (By.XPATH, '//div[contains(@class, "spinner")]')
     ALERT_MSG = (By.ID, 'alert-text')
     VISIBLE_MENU_OPTION = (By.XPATH, '//div[contains(@class, "menuable__content__active")]//span[contains(@id, "-option-")]')
 
@@ -149,4 +150,4 @@ class DiabloPages(Page):
     # 404 PAGE
 
     def wait_for_404(self):
-        Wait(self.driver, util.get_long_timeout()).until(ec.url_contains('404'))
+        Wait(self.driver, util.get_medium_timeout()).until(ec.url_contains('404'))
