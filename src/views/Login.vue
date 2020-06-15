@@ -2,7 +2,7 @@
   <v-app :id="$vuetify.theme.dark ? 'dark' : 'light'">
     <Snackbar />
     <v-container class="background-splash" fill-height fluid>
-      <v-main>
+      <v-content>
         <v-card
           class="mx-auto opaque-card"
           elevation="24"
@@ -74,7 +74,7 @@
             </v-row>
           </v-container>
         </v-card>
-      </v-main>
+      </v-content>
     </v-container>
   </v-app>
 </template>
