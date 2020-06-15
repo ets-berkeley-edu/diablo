@@ -23,12 +23,12 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-from datetime import datetime
-from datetime import timedelta
+from datetime import datetime, timedelta
 import json
 import time
 
 from config import xena
+import dateutil.parser
 from diablo import db, std_commit
 from diablo.models.scheduled import Scheduled
 from flask import current_app as app
@@ -138,6 +138,31 @@ def get_first_recording_date(recording_schedule):
     next_dates = [get_next_date(term_start_date, index) for index in schedule_days_ind]
     next_dates.sort()
     return next_dates[0]
+
+
+def expected_recording_dates(recording_schedule):
+    weekdays = ['MO', 'TU', 'WE', 'TH', 'FR']
+    weekday_indices = []
+    for day in weekdays:
+        if day in recording_schedule.section.days:
+            weekday_indices.append(weekdays.index(day))
+
+    term_start_date = dateutil.parser.parse(f'{recording_schedule.section.term.start_date}').date()
+    term_end_date = dateutil.parser.parse(f'{recording_schedule.section.term.end_date}').date()
+    delta = term_end_date - term_start_date
+
+    holidays = []
+    for i in app.config['KALTURA_BLACKOUT_DATES']:
+        day = dateutil.parser.parse(i).date()
+        holidays.append(day)
+
+    recording_dates = []
+    for i in range(delta.days + 1):
+        day = term_start_date + timedelta(i)
+        if day.weekday() in weekday_indices and day not in holidays:
+            recording_dates.append(day)
+
+    return recording_dates
 
 
 def reset_invite_test_data(term, section, instructor=None):

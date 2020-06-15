@@ -93,19 +93,16 @@ class RoomPage(DiabloPages):
     def series_recording_rows(self, recording_sched):
         return self.elements((By.XPATH, f'{RoomPage.series_recording_xpath(recording_sched)}'))
 
-    def series_recording_cell_values(self, recording_sched, cell_node):
+    def series_recording_cell_dates(self, recording_sched, cell_node):
         values = []
         current_year = app.config['CURRENT_TERM_BEGIN'].split('-')[0]
         els = self.series_recording_rows(recording_sched)
         for el in els:
             index = els.index(el)
             cell = self.element((By.XPATH, f'{RoomPage.series_recording_xpath(recording_sched)}[{index + 1}]/td[{cell_node}]'))
-            recording_time = datetime.strptime(f'{cell.text}, {current_year}', '%I:%M%p, %a, %b %d, %Y')
-            values.append(recording_time)
+            date = datetime.strptime(f'{cell.text}, {current_year}', '%I:%M%p, %a, %b %d, %Y').date()
+            values.append(date)
         return values
 
-    def series_recording_start_times(self, recording_sched):
-        return self.series_recording_cell_values(recording_sched, '3')
-
-    def series_recording_end_times(self, recording_sched):
-        return self.series_recording_cell_values(recording_sched, '4')
+    def series_recording_start_dates(self, recording_sched):
+        return self.series_recording_cell_dates(recording_sched, '3')
