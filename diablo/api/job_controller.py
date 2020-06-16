@@ -33,7 +33,7 @@ from diablo.lib.util import to_isoformat
 from diablo.models.job import Job
 from diablo.models.job_history import JobHistory
 from flask import current_app as app, request
-import schedule
+from flask_login import current_user
 
 
 @app.route('/api/job/<job_key>/start')
@@ -41,8 +41,8 @@ import schedule
 def start_job(job_key):
     job_class = next((job for job in BackgroundJobManager.available_job_classes() if job.key() == job_key), None)
     if job_class:
-        schedule.every(0.1).seconds.do(job_class(app.app_context, run_once=True).run, force_run=True)
-        schedule.run_pending()
+        app.logger.info(f'Current user ({current_user.uid}) started job {job_class.key()}')
+        job_class(app.app_context).run(force_run=True)
         return tolerant_jsonify(_job_class_to_json(job_class))
     else:
         raise ResourceNotFoundError(f'Invalid job_key: {job_key}')
@@ -95,13 +95,6 @@ def job_history(day_count):
         return tolerant_jsonify([h.to_api_json() for h in JobHistory.get_job_history_in_past_days(day_count=days)])
     except ValueError:
         _raise_error()
-
-
-@app.route('/api/jobs/running')
-@admin_required
-def get_running_jobs():
-    running_jobs = [job.to_api_json() for job in JobHistory.get_running_jobs()]
-    return tolerant_jsonify(running_jobs)
 
 
 @app.route('/api/job/schedule')

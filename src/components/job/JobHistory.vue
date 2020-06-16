@@ -19,6 +19,7 @@
       hide-default-footer
       :items="jobHistory"
       :loading="refreshing"
+      no-data-text="Job history is empty"
       no-results-text="No matching jobs"
       :options="options"
       :page.sync="options.page"
@@ -73,70 +74,39 @@
 
 <script>
   import Context from '@/mixins/Context'
-  import {getJobHistory} from '@/api/job'
 
   export default {
     name: 'JobHistory',
     mixins: [Context],
     props: {
-      ping: {
-        default: undefined,
-        required: false,
-        type: Number
+      jobHistory: {
+        required: true,
+        type: Array
+      },
+      refreshing: {
+        required: true,
+        type: Boolean
       }
     },
     data: () => ({
       dateFormat: 'dddd, MMMM Do, h:mm:ss a',
-      daysCount: 3,
       headers: [
         {text: 'Key', value: 'jobKey'},
         {text: 'Status', value: 'failed'},
         {text: 'Started', value: 'startedAt'},
         {text: 'Finished', value: 'finishedAt'}
       ],
-      jobHistory: undefined,
       options: {
         page: 1,
         itemsPerPage: 50
       },
       pageCount: undefined,
-      refresher: undefined,
-      refreshing: false,
       richardPryor: false,
       search: undefined
     }),
     watch: {
-      ping(value) {
-        if (value && !this.refreshing) {
-          this.refresh()
-        }
-      },
       search(value) {
         this.richardPryor = value && value.toLowerCase() === 'the bed is on my foot'
-      }
-    },
-    created() {
-      this.refresh()
-    },
-    destroyed() {
-      clearTimeout(this.refresher)
-    },
-    methods: {
-      refresh() {
-        this.refreshing = true
-        return getJobHistory(this.daysCount).then(data => {
-          this.jobHistory = data
-          this.refreshing = false
-          if (!this.loading) {
-            this.alertScreenReader('Job History refreshed')
-          }
-          this.scheduleRefresh()
-        })
-      },
-      scheduleRefresh() {
-        // Clear previous job, if pending
-        clearTimeout(this.refresher)
-        this.refresher = setTimeout(this.refresh, 5000)
       }
     }
   }
