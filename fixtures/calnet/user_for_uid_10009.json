@@ -1,10 +1,10 @@
 {
+  "campusEmail": "____________berkeley.edu",
   "deptCode": "EGCEE",
   "email": "____________berkeley.edu",
   "firstName": "Arthur",
   "isExpiredPerLdap": false,
   "lastName": "Storch",
   "name": "Arthur Storch",
-  "title": "Psychiatrist",
   "uid": "10009"
 }
