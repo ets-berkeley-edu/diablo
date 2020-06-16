@@ -22,25 +22,17 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-
 import ssl
 
 import ldap3
 
 SCHEMA_DICT = {
-    'berkeleyEduAffiliations': 'affiliations',
-    'berkeleyEduCSID': 'csid',
     'berkeleyEduOfficialEmail': 'campus_email',
     'berkeleyEduPrimaryDeptUnit': 'primary_dept_code',
-    'berkeleyEduUnitCalNetDeptName': 'calnet_dept_code',
-    'berkeleyEduDeptUnitHierarchyString': 'dept_unit_hierarchy',
-    'cn': 'sortable_name',
     'departmentNumber': 'dept_code',
-    'displayName': 'name',
     'mail': 'email',
     'givenName': 'first_name',
     'sn': 'last_name',
-    'title': 'title',
     'uid': 'uid',
 }
 

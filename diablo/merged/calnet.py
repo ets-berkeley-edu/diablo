@@ -22,52 +22,44 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-
 import json
 from os import path
 
 from diablo import cachify
-from diablo.api.errors import InternalServerError
 from diablo.externals import calnet
 
 
 @cachify('calnet/user_for_uid_{uid}')
 def get_calnet_user_for_uid(app, uid):
-    users = _get_calnet_users(app, 'uid', [uid])
+    users = _get_calnet_users(app, [uid])
     return users[uid] if users else None
 
 
 def get_calnet_users_for_uids(app, uids):
-    return _get_calnet_users(app, 'uid', uids)
+    return _get_calnet_users(app, uids)
 
 
-def _get_calnet_users(app, id_type, ids):
-    users_by_id = {}
+def _get_calnet_users(app, uids):
+    users_by_uid = {}
     if app.config['DIABLO_ENV'] == 'test':
-        for id_ in ids:
-            fixture_path = f"{app.config['FIXTURES_PATH']}/calnet/user_for_uid_{id_}.json"
+        for uid in uids:
+            fixture_path = f"{app.config['FIXTURES_PATH']}/calnet/user_for_uid_{uid}.json"
             if path.isfile(fixture_path):
                 with open(fixture_path) as f:
-                    users_by_id[id_] = json.load(f)
+                    users_by_uid[uid] = json.load(f)
             else:
-                users_by_id[id_] = {id_type: id_}
+                users_by_uid[uid] = {'uid': uid}
     else:
         calnet_client = calnet.client(app)
-        if id_type == 'uid':
-            calnet_results = calnet_client.search_uids(ids)
-        elif id_type == 'csid':
-            calnet_results = calnet_client.search_csids(ids)
-        else:
-            raise InternalServerError(f'get_calnet_users: {id_type} is an invalid id type')
-
-        for id_ in ids:
-            calnet_result = next((r for r in calnet_results if r[id_type] == id_), None)
+        calnet_results = calnet_client.search_uids(uids)
+        for uid in uids:
+            calnet_result = next((r for r in calnet_results if r['uid'] == uid), None)
             feed = {
                 **_calnet_user_api_feed(calnet_result),
-                **{id_type: id_},
+                **{'uid': uid},
             }
-            users_by_id[id_] = feed
-    return users_by_id
+            users_by_uid[uid] = feed
+    return users_by_uid
 
 
 def _calnet_user_api_feed(person):
@@ -75,27 +67,18 @@ def _calnet_user_api_feed(person):
         return _get_attribute(person, key)
 
     uid = _get('uid')
+    first_name = _get('first_name')
+    last_name = _get('last_name')
     return {
         'campusEmail': _get('campus_email'),
-        'deptCode': _get_dept_code(person),
+        'deptCode': _get('primary_dept_code') or _get('dept_code'),
         'email': _get('email'),
-        'firstName': _get('first_name'),
+        'firstName': first_name,
         'isExpiredPerLdap': _get('expired'),
-        'lastName': _get('last_name'),
-        'name': _get('name') or uid,
-        'title': _get('title'),
+        'lastName': last_name,
+        'name': f'{first_name} {last_name}'.strip() if (first_name or last_name) else uid,
         'uid': uid,
     }
-
-
-def _get_dept_code(p):
-    def dept_code_fallback():
-        dept_hierarchy = _get_attribute(p, 'dept_unit_hierarchy')
-        if dept_hierarchy:
-            return dept_hierarchy.rsplit('-', 1)[-1]
-        else:
-            return None
-    return p and (p['primary_dept_code'] or p['dept_code'] or p['calnet_dept_code'] or dept_code_fallback())
 
 
 def _get_attribute(person, key):
