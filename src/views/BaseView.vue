@@ -96,13 +96,13 @@
         </v-list>
       </v-menu>
     </v-app-bar>
-    <v-content>
+    <v-main>
       <div class="ma-3">
         <Snackbar />
         <Spinner v-if="loading" />
         <router-view id="content" :key="$route.fullPath"></router-view>
       </div>
-    </v-content>
+    </v-main>
     <Footer />
   </v-app>
 </template>

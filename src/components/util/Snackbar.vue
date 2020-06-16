@@ -3,22 +3,29 @@
     v-model="snackbarShow"
     :color="snackbar.color"
     :timeout="snackbar.timeout"
+    content-class="align-center"
     :top="true"
   >
-    <span
-      id="alert-text"
-      aria-live="polite"
-      role="alert"
-      class="title"
-    >{{ snackbar.text }}</span>
-    <v-btn
-      id="btn-close-alert"
-      aria-label="Close this dialog box."
-      text
-      @click="snackbarClose"
-    >
-      Close
-    </v-btn>
+    <div class="d-flex align-center justify-space-between">
+      <div
+        id="alert-text"
+        aria-live="polite"
+        class="ml-4 mr-4 title"
+        role="alert"
+      >
+        {{ snackbar.text }}
+      </div>
+      <div>
+        <v-btn
+          id="btn-close-alert"
+          aria-label="Close this dialog box."
+          text
+          @click="snackbarClose"
+        >
+          Close
+        </v-btn>
+      </div>
+    </div>
   </v-snackbar>
 </template>
 

@@ -78,10 +78,6 @@ class JobHistory(db.Model):
         days_ago = datetime.now() - timedelta(days=day_count)
         return cls.query.filter(cls.started_at >= days_ago).order_by(desc(cls.started_at)).all()
 
-    @classmethod
-    def get_running_jobs(cls):
-        return cls.query.filter_by(finished_at=None).all()
-
     @staticmethod
     def fail_orphans():
         sql = """

@@ -4,7 +4,7 @@
     <v-card outlined class="elevation-1 mb-6">
       <v-card-title class="align-start">
         <div class="pt-2">
-          <h2><v-icon class="pb-1" large>mdi-timer-sand</v-icon> Job Schedule</h2>
+          <h2><v-icon class="pb-1" large>mdi-timer-sand</v-icon> Jobs</h2>
         </div>
       </v-card-title>
       <v-data-table
@@ -22,15 +22,15 @@
             <tr v-for="job in items" :key="job.key">
               <td class="pb-2 pl-5 pt-2 text-center">
                 <v-btn
-                  v-if="!$_.includes(runningJobs, job.key)"
+                  v-if="!isRunning(job.key)"
                   :id="`run-job-${job.key}`"
                   :aria-label="`Run job ${job.key}`"
-                  @click="start(job.key)"
+                  @click="runJob(job)"
                 >
                   Run <span class="sr-only">job {{ job.name }}</span><v-icon class="pl-2" small>mdi-run-fast</v-icon>
                 </v-btn>
                 <v-progress-circular
-                  v-if="$_.includes(runningJobs, job.key)"
+                  v-if="isRunning(job.key)"
                   indeterminate
                   size="24"
                   width="4"
@@ -74,7 +74,7 @@
         </template>
       </v-data-table>
     </v-card>
-    <JobHistory :ping="pingJobHistory" />
+    <JobHistory :job-history="jobHistory" :refreshing="refreshing" />
     <v-dialog v-model="editJobDialog" max-width="400px" persistent>
       <v-card>
         <v-card-title>
@@ -125,13 +125,14 @@
   import DisableJobToggle from '@/components/job/DisableJobToggle'
   import JobHistory from '@/components/job/JobHistory'
   import Utils from '@/mixins/Utils'
-  import {getJobSchedule, getRunningJobs, setJobDisabled, startJob, updateJobSchedule} from '@/api/job'
+  import {getJobHistory, getJobSchedule, setJobDisabled, startJob, updateJobSchedule} from '@/api/job'
 
   export default {
     name: 'Jobs',
     components: {DisableJobToggle, JobHistory},
     mixins: [Context, Utils],
     data: () => ({
+      daysCount: 7,
       disableScheduleSave: false,
       editJob: undefined,
       editJobDialog: false,
@@ -142,10 +143,10 @@
         {text: 'Schedule', value: 'schedule', sortable: false},
         {text: 'Enabled', sortable: false}
       ],
+      jobHistory: undefined,
       jobSchedule: undefined,
-      pingJobHistory: undefined,
       refresher: undefined,
-      runningJobs: undefined
+      refreshing: false
     }),
     watch: {
       editJob: {
@@ -159,19 +160,38 @@
       this.$loading()
       getJobSchedule().then(data => {
         this.jobSchedule = data
-        this.$ready('Jobs')
-        this.refresh()
+        this.refresh(true).then(() => {
+          this.$ready('Jobs')
+        })
       })
     },
     destroyed() {
       clearTimeout(this.refresher)
     },
     methods: {
-      refresh() {
-        getRunningJobs().then(data => {
-          this.runningJobs = this.$_.map(data, 'jobKey')
+      isRunning(jobKey) {
+        return !!this.$_.find(this.jobHistory, h => h.jobKey === jobKey && !h.finishedAt)
+      },
+      refresh(quietly) {
+        this.refreshing = true
+        return getJobHistory(this.daysCount).then(data => {
+          this.jobHistory = data
+          this.refreshing = false
+          if (!quietly) {
+            this.alertScreenReader('Job History refreshed')
+          }
           this.scheduleRefresh()
         })
+      },
+      runJob(job) {
+        this.jobHistory.unshift({
+          jobKey: job.key,
+          failed: false,
+          startedAt: this.$moment()
+        })
+        startJob(job.key).then(() => {})
+        const jobName = this.$_.find(this.jobSchedule.jobs, ['key', job.key]).name
+        this.snackbarOpen(`Job ${jobName} started`)
       },
       scheduleEditCancel() {
         this.editJob = undefined
@@ -198,18 +218,7 @@
       },
       scheduleRefresh() {
         clearTimeout(this.refresher)
-        this.refresher = setTimeout(this.refresh, 3000)
-      },
-      start(jobKey) {
-        if (!this.$_.includes(this.runningJobs, jobKey)) {
-          this.runningJobs.push(jobKey)
-          setTimeout(() => this.pingJobHistory = this.$moment().valueOf(), 1000)
-          startJob(jobKey).then(() => {
-            this.pingJobHistory = this.$moment().valueOf()
-            this.refresh()
-            this.alertScreenReader(`Job ${jobKey} started`)
-          })
-        }
+        this.refresher = setTimeout(this.refresh, 5000)
       },
       toggleDisabled(job, isDisabled) {
         setJobDisabled(job.id, isDisabled).then(data => {

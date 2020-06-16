@@ -29,14 +29,12 @@ from diablo.merged.emailer import send_system_error_email
 from diablo.models.job import Job
 from diablo.models.job_history import JobHistory
 from flask import current_app as app
-import schedule
 
 
 class BaseJob:
 
-    def __init__(self, app_context, run_once=False):
+    def __init__(self, app_context):
         self.app_context = app_context
-        self.run_once = run_once
 
     def run(self, force_run=False):
         with self.app_context():
@@ -68,8 +66,6 @@ class BaseJob:
                         )
             else:
                 raise BackgroundJobError(f'Job {self.key()} is not registered in the database')
-        if self.run_once:
-            return schedule.CancelJob
 
     def _run(self):
         raise BackgroundJobError('Implement this method in Job sub-class')
