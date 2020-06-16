@@ -33,11 +33,17 @@ BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
 BASE_URL = 'https://manage-dev.coursecapture.berkeley.edu'
 
+CANVAS_ADMIN_ID = '123456'
+CANVAS_BASE_URL = 'https://ucberkeley.beta.instructure.com'
+CANVAS_SITE_CREATION_TOOL = '654321'
+
 CLICK_SLEEP = 0.5
 
 CURRENT_TERM_NAME = 'Fall 2020'
 
 INDEX_HTML = f'{BASE_DIR}/tests/static/test-index.html'
+
+JUNCTION_BASE_URL = 'https://junction-dev.berkeley.edu'
 
 LOGGING_LEVEL = logging.INFO
 

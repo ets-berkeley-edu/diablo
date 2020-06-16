@@ -28,6 +28,7 @@ import os
 from diablo.factory import create_app
 import pytest
 from xena.models.term import Term
+from xena.pages.canvas_page import CanvasPage
 from xena.pages.course_changes_page import CourseChangesPage
 from xena.pages.email_page import EmailPage
 from xena.pages.email_templates_page import EmailTemplatesPage
@@ -56,6 +57,7 @@ def page_objects(request):
     term = Term()
 
     # Define page objects
+    canvas_page = CanvasPage(driver)
     changes_page = CourseChangesPage(driver)
     email_page = EmailPage(driver)
     jobs_page = JobsPage(driver)
@@ -73,6 +75,7 @@ def page_objects(request):
             cls = item.getparent(pytest.Class)
             setattr(cls.obj, 'driver', driver)
             setattr(cls.obj, 'term', term)
+            setattr(cls.obj, 'canvas_page', canvas_page)
             setattr(cls.obj, 'changes_page', changes_page)
             setattr(cls.obj, 'email_page', email_page)
             setattr(cls.obj, 'jobs_page', jobs_page)

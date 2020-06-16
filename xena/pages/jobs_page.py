@@ -101,7 +101,7 @@ class JobsPage(DiabloPages):
         self.wait_for_most_recent_job_success(AsyncJob.SIS_DATA_REFRESH)
 
     def wait_for_jobs_table(self):
-        locator = By.XPATH, '//h2[contains(text(), "Job Schedule")]/../../following-sibling::div//table'
+        locator = By.XPATH, '//h2[contains(text(), "Jobs")]/../../following-sibling::div//table'
         Wait(self.driver, util.get_short_timeout()).until(ec.visibility_of_element_located(locator))
 
     @staticmethod
@@ -171,6 +171,8 @@ class JobsPage(DiabloPages):
                     app.logger.info('Job succeeded')
                     break
                 else:
+                    if self.is_present(JobsPage.ERROR_REDIRECT):
+                        self.load_page()
                     Wait(self.driver, 1).until(ec.visibility_of_element_located(failure))
                     app.logger.info('Job failed')
                     break

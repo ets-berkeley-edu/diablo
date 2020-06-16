@@ -88,6 +88,19 @@ class Page(object):
         except exceptions.NoSuchElementException:
             return False
 
+    def when_not_present(self, locator, timeout):
+        tries = 0
+        while tries <= timeout:
+            tries += 1
+            try:
+                assert not self.is_present(locator)
+                break
+            except AssertionError:
+                if tries == timeout:
+                    raise
+                else:
+                    time.sleep(1)
+
     def wait_for_element(self, locator, timeout):
         for entry in self.driver.get_log('browser'):
             if xena.BASE_URL in entry:
