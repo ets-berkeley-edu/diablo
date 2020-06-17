@@ -38,6 +38,8 @@ CURRENT_TERM_END = '2020-05-08'
 
 DIABLO_BASE_URL = 'https://manage-test.coursecapture.berkeley.edu'
 
+EB_ENVIRONMENT = 'diablo-test'
+
 FIXTURES_PATH = f'{BASE_DIR}/fixtures'
 
 JOBS_AUTO_START = False

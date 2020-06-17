@@ -28,6 +28,7 @@ import logging
 from smtplib import SMTP
 
 from diablo import skip_when_pytest
+from diablo.lib.util import email_subject_line
 from diablo.models.sent_email import SentEmail
 from flask import current_app as app
 
@@ -54,6 +55,7 @@ class BConnected:
                 'Attempted to send a message without required fields: '
                 f'(recipient={recipient}, subject_line={subject_line}, message={message}')
             return False
+        subject_line = email_subject_line(subject_line)
 
         @skip_when_pytest()
         def _send():

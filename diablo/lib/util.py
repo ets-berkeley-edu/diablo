@@ -67,6 +67,12 @@ def to_isoformat(value):
     return value and value.astimezone(tzutc()).isoformat()
 
 
+def email_subject_line(subject_line):
+    eb_env = get_eb_environment()
+    prefix = '' if 'prod' in (eb_env or '') else f"[{eb_env or 'diablo-local'}] "
+    return f'{prefix}{subject_line}'
+
+
 def epoch_time_to_isoformat(epoch_time):
     return epoch_time and datetime.fromtimestamp(epoch_time, tz=default_timezone()).isoformat()
 
@@ -82,6 +88,10 @@ def format_days(days):
 
 def format_time(military_time):
     return datetime.strptime(military_time, '%H:%M').strftime('%I:%M %p').lower().lstrip('0') if military_time else None
+
+
+def get_eb_environment():
+    return app.config['EB_ENVIRONMENT'] if 'EB_ENVIRONMENT' in app.config else None
 
 
 def get_names_of_days(day_codes):

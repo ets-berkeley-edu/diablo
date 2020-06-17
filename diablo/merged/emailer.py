@@ -22,7 +22,6 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-
 from diablo.externals.b_connected import BConnected
 from flask import current_app as app
 
@@ -45,6 +44,6 @@ def send_system_error_email(message, subject=None):
             'name': 'Course Capture Errors',
             'uid': '0',
         },
-        subject_line=f'Diablo Alert: {subject}',
+        subject_line=f'Alert: {subject}',
     )
-    app.logger.error(f'Diablo Alert: {message}')
+    app.logger.error(f'Alert: {message}')
