@@ -17,7 +17,7 @@
           <tr v-if="!items.length">
             <td colspan="10">
               <div class="ma-4 text-no-wrap title">
-                No changes for courses invited to Course Capture.
+                No changes within scheduled courses.
               </div>
             </td>
           </tr>

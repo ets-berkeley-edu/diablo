@@ -33,7 +33,7 @@ from xena.test_utils import util
 
 class CourseChangesPage(DiabloPages):
 
-    NO_RESULTS_MSG = (By.XPATH, '//div[contains(text(), "No changes for courses invited to Course Capture.")]')
+    NO_RESULTS_MSG = (By.XPATH, '//div[contains(text(), "No changes within scheduled courses.")]')
     COURSE_INFO_HEADER = (By.XPATH, '//th[@aria-label="Course Information"]')
 
     @staticmethod
