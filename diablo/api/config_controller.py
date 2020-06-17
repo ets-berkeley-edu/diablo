@@ -30,6 +30,7 @@ from diablo.jobs.sis_data_refresh_job import SisDataRefreshJob
 from diablo.lib.berkeley import term_name_for_sis_id
 from diablo.lib.development_db_utils import save_mock_courses
 from diablo.lib.http import tolerant_jsonify
+from diablo.lib.util import get_eb_environment
 from diablo.models.approval import NAMES_PER_PUBLISH_TYPE
 from diablo.models.email_template import EmailTemplate
 from diablo.models.room import Room
@@ -48,7 +49,7 @@ def app_config():
         'currentTermName': term_name_for_sis_id(term_id),
         'devAuthEnabled': app.config['DEVELOPER_AUTH_ENABLED'],
         'diabloEnv': app.config['DIABLO_ENV'],
-        'ebEnvironment': app.config['EB_ENVIRONMENT'] if 'EB_ENVIRONMENT' in app.config else None,
+        'ebEnvironment': get_eb_environment(),
         'emailTemplateTypes': EmailTemplate.get_template_type_options(),
         'kalturaMediaSpaceUrl': app.config['KALTURA_MEDIA_SPACE_URL'],
         'publishTypeOptions': NAMES_PER_PUBLISH_TYPE,

@@ -64,7 +64,7 @@ class TestConfigController:
             assert response.status_code == 200
             assert 'diabloEnv' in response.json
             api_json = response.json
-            assert api_json['ebEnvironment'] is None
+            assert api_json['ebEnvironment'] == 'diablo-test'
             assert 'berkeley.edu' in api_json['supportEmailAddress']
             assert api_json['timezone'] == 'America/Los_Angeles'
             assert api_json['currentTermId'] == term_id
