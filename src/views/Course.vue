@@ -66,8 +66,10 @@
                     </div>
                     <div :class="{'pt-2': course.room.isAuditorium}">
                       <v-icon v-if="!course.room.isAuditorium">mdi-information-outline</v-icon>
-                      Choosing 'Media Gallery' will auto-publish recordings to students in bCourses.
-                      Choosing 'My Media' will allow instructors to review/edit prior to publishing to students.
+                      Instructors will now be able to review and edit their Course Capture recordings prior to releasing them to students.
+                      If you choose 'Instructor moderation', only the instructors listed on this page will be able to release lecture capture videos to your students.
+                      If you choose 'GSI/TA moderation', then in addition to instructors, GSI and TA roles will be able to release your lecture capture video to your students.
+                      Only instructors listed will be able to edit Course Capture recordings.
                     </div>
                   </div>
                 </v-col>

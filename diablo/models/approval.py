@@ -56,8 +56,8 @@ approver_type = ENUM(
 )
 
 NAMES_PER_PUBLISH_TYPE = {
-    'kaltura_media_gallery': 'Media Gallery',
-    'kaltura_my_media': 'My Media',
+    'kaltura_media_gallery': 'GSI/TA moderation',
+    'kaltura_my_media': 'Instructor moderation',
 }
 
 NAMES_PER_RECORDING_TYPE = {
