@@ -50,7 +50,7 @@ class SignUpPage(DiabloPages):
 
     CC_EXPLAINED_LINK = (By.ID, 'link-to-course-capture-overview')
     RECORDING_TYPE_TEXT = (By.XPATH, '//div[contains(text(), "\'Presentation and Audio\' recordings are free")]')
-    PUBLISH_TYPE_TEXT = (By.XPATH, '//div[contains(text(), "Choosing \'Media Gallery\'")]')
+    PUBLISH_TYPE_TEXT = (By.XPATH, '//div[contains(text(), "If you choose \'GSI/TA moderation\'")]')
     RECORDING_TYPE_STATIC = (By.XPATH, '//input[@name="recordingType"]/..')
     SELECT_RECORDING_TYPE_INPUT = (By.XPATH, '//label[@id="select-recording-type-label"]')
     SELECT_PUBLISH_TYPE_INPUT = (By.XPATH, '//input[@id="select-publish-type"]/..')
