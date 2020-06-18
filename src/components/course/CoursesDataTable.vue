@@ -51,17 +51,31 @@
               </td>
               <td :id="`section-id-${course.sectionId}`" :class="tdClass(course)">{{ course.sectionId }}</td>
               <td v-if="includeRoomColumn" :class="tdClass(course)">
-                <router-link
-                  v-if="course.room"
-                  :id="`course-${course.sectionId}-room-${course.room.id}`"
-                  :to="`/room/${course.room.id}`"
+                <div 
+                  v-for="(meeting, index) in course.meetings"
+                  :id="`meeting-room-${course.sectionId}-${index}`"
+                  :key="index"
                 >
-                  {{ course.room.location }}
-                </router-link>
-                <span v-if="!course.room">&mdash;</span>
+                  <router-link
+                    v-if="meeting.room"
+                    :id="`course-${course.sectionId}-room-${meeting.room.id}`"
+                    :to="`/room/${meeting.room.id}`"
+                  >
+                    {{ meeting.room.location }}
+                  </router-link>
+                  <span v-if="!meeting.room">&mdash;</span>
+                </div>
               </td>
-              <td :id="`meeting-days-${course.sectionId}`" :class="tdClass(course)">{{ course.meetingDays.join(',') }}</td>
-              <td :id="`meeting-times-${course.sectionId}`" :class="tdClass(course)">{{ course.meetingStartTime }} - {{ course.meetingEndTime }}</td>
+              <td :id="`meeting-days-${course.sectionId}`" :class="tdClass(course)">
+                <div v-for="(meeting, index) in course.meetings" :id="`meeting-days-${course.sectionId}-${index}`" :key="index">
+                  {{ meeting.daysFormatted ? meeting.daysFormatted.join(',') : '-' }}
+                </div>
+              </td>
+              <td :id="`meeting-times-${course.sectionId}`" :class="tdClass(course)">
+                <div v-for="(meeting, index) in course.meetings" :id="`meeting-times-${course.sectionId}-${index}`" :key="index">
+                  {{ meeting.startTimeFormatted }} - {{ meeting.endTimeFormatted }}
+                </div>
+              </td>
               <td :id="`course-${course.sectionId}-status`" :class="tdClass(course)">
                 <v-tooltip v-if="course.wasApprovedByAdmin" :id="`tooltip-admin-approval-${course.sectionId}`" bottom>
                   <template v-slot:activator="{ on }">

@@ -16,7 +16,7 @@
         </v-col>
         <v-col>
           <v-card class="pa-6" outlined>
-            <v-container v-if="isCurrentTerm && course.room.capability">
+            <v-container v-if="isCurrentTerm && meeting.room.capability">
               <v-row no-gutters>
                 <v-col id="approvals-described" class="font-weight-medium red--text">
                   <span v-if="queuedForScheduling">This course is currently queued for scheduling. Recordings will be scheduled in an hour or less. </span>
@@ -58,14 +58,14 @@
                 <v-col>
                   <CourseCaptureExplained />
                   <div class="font-italic font-weight-light pl-2 pt-4">
-                    <div v-if="course.room.isAuditorium">
+                    <div v-if="meeting.room.isAuditorium">
                       <v-icon class="pr-1">mdi-information-outline</v-icon>
                       <strong>Note:</strong> 'Presentation and Audio' recordings are free.
                       There will be a &#36;{{ $config.courseCapturePremiumCost }} operator fee, per semester, for
                       'Presenter' recordings in {{ oxfordJoin($_.map(auditoriums, 'location')) }}.
                     </div>
-                    <div :class="{'pt-2': course.room.isAuditorium}">
-                      <v-icon v-if="!course.room.isAuditorium">mdi-information-outline</v-icon>
+                    <div :class="{'pt-2': meeting.room.isAuditorium}">
+                      <v-icon v-if="!meeting.room.isAuditorium">mdi-information-outline</v-icon>
                       Instructors will now be able to review and edit their Course Capture recordings prior to releasing them to students.
                       If you choose 'Instructor moderation', only the instructors listed on this page will be able to release lecture capture videos to your students.
                       If you choose 'GSI/TA moderation', then in addition to instructors, GSI and TA roles will be able to release your lecture capture video to your students.
@@ -167,10 +167,10 @@
                 </v-col>
               </v-row>
             </v-container>
-            <v-container v-if="!course.room.capability">
+            <v-container v-if="!meeting.room.capability">
               <v-row id="course-not-eligible">
                 <v-icon class="pr-2" color="red">mdi-alert</v-icon>
-                This course is not eligible for Course Capture because {{ course.room.location }} is not capture-enabled.
+                This course is not eligible for Course Capture because {{ meeting.room.location }} is not capture-enabled.
               </v-row>
             </v-container>
             <v-container v-if="!isCurrentTerm">
@@ -263,7 +263,7 @@
         this.$loading()
         this.agreedToTerms = this.$currentUser.isAdmin
         this.course = data
-
+        this.meeting = this.$_.find(this.course.meetings, m => m.eligible) || this.course.meetings[0]
         const approvedByInstructors = this.$_.filter(this.course.approvals, a => !a.wasApprovedByAdmin)
         const approvedByUIDs = this.$_.map(this.course.approvals, 'approvedBy.uid')
         const approvedByInstructorUIDs = this.$_.map(approvedByInstructors, 'approvedBy.uid')
@@ -277,7 +277,7 @@
         this.approvedByInstructorNames = this.$_.map(approvedByInstructors, approval => this.getApproverName(approval))
         this.courseDisplayTitle = this.getCourseCodes(this.course)[0]
         this.hasCurrentUserApproved = this.$_.includes(approvedByUIDs, this.$currentUser.uid)
-        this.recordingTypeOptions = this.$_.map(this.course.room.recordingTypeOptions, (text, value) => {
+        this.recordingTypeOptions = this.$_.map(this.meeting.room.recordingTypeOptions, (text, value) => {
           return {text, value}
         })
         if (this.course.approvals.length) {

@@ -50,7 +50,7 @@
                 {{ course.sectionId }}
               </div>
               <div v-if="course.scheduled.hasObsoleteMeetingTimes">
-                <div>
+                <div :id="`course-${course.sectionId}-meeting-before`">
                   {{ course.scheduled.meetingDays.join(',') }} {{ course.scheduled.meetingStartTime }} - {{ course.scheduled.meetingEndTime }}
                 </div>
                 <div class="primary--text">
@@ -58,8 +58,8 @@
                   changed to
                 </div>
               </div>
-              <div>
-                {{ course.meetingDays.join(',') }} {{ course.meetingStartTime }} - {{ course.meetingEndTime }}
+              <div v-for="(meeting, index) in course.meetings" :id="`course-${course.sectionId}-meeting-new-${index}`" :key="index">
+                {{ meeting.daysFormatted.join(',') }} {{ meeting.startTimeFormatted }} - {{ meeting.endTimeFormatted }}
               </div>
               <div>
                 {{ course.publishTypeNames }}
@@ -80,14 +80,16 @@
                   changed to
                 </div>
               </div>
-              <router-link
-                v-if="course.room"
-                :id="`course-${course.sectionId}-room-${course.room.id}`"
-                :to="`/room/${course.room.id}`"
-              >
-                {{ course.room.location }}
-              </router-link>
-              <span v-if="!course.room">&mdash;</span>
+              <div v-for="(meeting, index) in course.meetings" :key="index">
+                <router-link
+                  v-if="meeting.room"
+                  :id="`course-${course.sectionId}-room-new-${meeting.room.id}-${index}`"
+                  :to="`/room/${meeting.room.id}`"
+                >
+                  {{ meeting.room.location }}
+                </router-link>
+                <span v-if="!meeting.room">&mdash;</span>
+              </div>
             </td>
             <td>
               <div v-if="course.scheduled.hasObsoleteInstructors">
@@ -166,7 +168,7 @@
       courses: undefined,
       headers: [
         {text: 'Course Information', value: 'label'},
-        {text: 'Room', value: 'meetingLocation'},
+        {text: 'Room', sortable: false},
         {text: 'Instructor(s)', value: 'instructorNames', sortable: false}
       ]
     }),

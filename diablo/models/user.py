@@ -25,7 +25,6 @@ ENHANCEMENTS, OR MODIFICATIONS.
 
 from diablo.merged import calnet
 from diablo.models.admin_user import AdminUser
-from diablo.models.room import Room
 from diablo.models.sis_section import SisSection
 from flask import current_app as app
 from flask_login import UserMixin
@@ -98,10 +97,6 @@ class User(UserMixin):
                     term_id=app.config['CURRENT_TERM_ID'],
                     instructor_uid=uid,
                 )
-                for course in courses:
-                    if course['meetingLocation']:
-                        room = Room.find_room(course['meetingLocation'])
-                        course['room'] = room and room.to_api_json()
                 is_active = is_admin or bool(courses)
         return {
             **(calnet_profile or {}),

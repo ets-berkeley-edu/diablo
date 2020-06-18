@@ -41,10 +41,14 @@
                       </div>
                     </td>
                     <td :id="`course-${course.sectionId}-days`" class="text-no-wrap">
-                      {{ course.meetingDays ? course.meetingDays.join(',') : '&mdash;' }}
+                      <div v-for="(meeting, index) in course.meetings" :id="`meeting-days-${index}`" :key="index">
+                        {{ meeting.daysFormatted ? meeting.daysFormatted.join(',') : '&mdash;' }}                        
+                      </div>
                     </td>
                     <td :id="`course-${course.sectionId}-times`" class="text-no-wrap">
-                      {{ course.meetingStartTime ? `${course.meetingStartTime} - ${course.meetingEndTime}` : '&mdash;' }}
+                      <div v-for="(meeting, index) in course.meetings" :id="`meeting-times-${index}`" :key="index">
+                        {{ meeting.startTimeFormatted ? `${meeting.startTimeFormatted} - ${meeting.endTimeFormatted}` : '&mdash;' }}                        
+                      </div>
                     </td>
                     <td :id="`course-${course.sectionId}-recording-type`" class="text-no-wrap">
                       {{ course.scheduled.recordingTypeName }}

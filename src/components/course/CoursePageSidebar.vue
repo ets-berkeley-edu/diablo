@@ -11,33 +11,35 @@
         </OxfordJoin>
       </v-col>
     </v-row>
-    <v-row v-if="course.meetingDays" id="meeting-days">
-      <v-col md="auto">
-        <v-icon>mdi-calendar</v-icon>
-      </v-col>
-      <v-col>
-        {{ $_.join(course.meetingDays, ', ') }}
-      </v-col>
-    </v-row>
-    <v-row v-if="course.meetingStartTime" id="meeting-times">
-      <v-col md="auto">
-        <v-icon>mdi-clock-outline</v-icon>
-      </v-col>
-      <v-col>
-        {{ course.meetingStartTime }} - {{ course.meetingEndTime }}
-      </v-col>
-    </v-row>
-    <v-row v-if="course.room" id="rooms">
-      <v-col md="auto">
-        <v-icon>mdi-map-marker</v-icon>
-      </v-col>
-      <v-col v-if="$currentUser.isAdmin">
-        <router-link id="room" :to="`/room/${course.room.id}`">{{ course.room.location }}</router-link>
-      </v-col>
-      <v-col v-if="!$currentUser.isAdmin">
-        {{ course.room.location }}
-      </v-col>
-    </v-row>
+    <div v-for="(meeting, index) in course.meetings" :key="index">
+      <v-row v-if="meeting.daysFormatted" :id="`meeting-days-${index}`">
+        <v-col md="auto">
+          <v-icon>mdi-calendar</v-icon>
+        </v-col>
+        <v-col>
+          {{ $_.join(meeting.daysFormatted, ', ') }}
+        </v-col>
+      </v-row>
+      <v-row v-if="meeting.startTimeFormatted" :id="`meeting-times-${index}`">
+        <v-col md="auto">
+          <v-icon>mdi-clock-outline</v-icon>
+        </v-col>
+        <v-col>
+          {{ meeting.startTimeFormatted }} - {{ meeting.endTimeFormatted }}
+        </v-col>
+      </v-row>
+      <v-row v-if="meeting.room" :id="`rooms-${index}`">
+        <v-col md="auto">
+          <v-icon>mdi-map-marker</v-icon>
+        </v-col>
+        <v-col v-if="$currentUser.isAdmin">
+          <router-link id="room" :to="`/room/${meeting.room.id}`">{{ meeting.room.location }}</router-link>
+        </v-col>
+        <v-col v-if="!$currentUser.isAdmin">
+          {{ meeting.room.location }}
+        </v-col>
+      </v-row>
+    </div>
     <v-row v-if="course.crossListings.length" id="cross-listings">
       <v-col md="auto">
         <v-icon>mdi-format-line-spacing</v-icon>
