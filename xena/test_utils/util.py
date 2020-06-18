@@ -27,7 +27,6 @@ from datetime import datetime, timedelta
 import json
 import time
 
-from config import xena
 import dateutil.parser
 from diablo import db, std_commit
 from diablo.models.scheduled import Scheduled
@@ -38,31 +37,31 @@ from xena.models.room import Room
 
 
 def get_xena_browser():
-    return xena.XENA_BROWSER
+    return app.config['XENA_BROWSER']
 
 
 def get_short_timeout():
-    return xena.TIMEOUT_SHORT
+    return app.config['TIMEOUT_SHORT']
 
 
 def get_medium_timeout():
-    return xena.TIMEOUT_MEDIUM
+    return app.config['TIMEOUT_MEDIUM']
 
 
 def get_long_timeout():
-    return xena.TIMEOUT_LONG
+    return app.config['TIMEOUT_LONG']
 
 
 def get_admin_uid():
-    return xena.ADMIN_UID
+    return app.config['ADMIN_UID']
 
 
 def get_kaltura_username():
-    return xena.KALTURA_USERNAME
+    return app.config['KALTURA_USERNAME']
 
 
 def get_kaltura_password():
-    return xena.KALTURA_PASSWORD
+    return app.config['KALTURA_PASSWORD']
 
 
 def get_kaltura_term_date_str(date):
@@ -70,13 +69,13 @@ def get_kaltura_term_date_str(date):
 
 
 def parse_rooms_data():
-    with open(xena.TEST_DATA_ROOMS) as f:
+    with open(app.config['TEST_DATA_ROOMS']) as f:
         parsed = json.load(f)
         return [Room(agent) for agent in parsed['agents']]
 
 
 def parse_course_test_data():
-    with open(xena.TEST_DATA_COURSES) as f:
+    with open(app.config['TEST_DATA_COURSES']) as f:
         parsed = json.load(f)
         return parsed['courses']
 
@@ -171,7 +170,7 @@ def reset_invite_test_data(term, section, instructor=None):
         sql = f"""DELETE FROM sent_emails
                   WHERE term_id = {term.id}
                     AND section_id = {section.ccn}
-                    AND recipient_id = '{instructor.uid}''
+                    AND recipient_id = '{instructor.uid}'
                     AND template_type = 'invitation'
         """
     # So that invitations will be sent to all instructors on a course

@@ -16,9 +16,9 @@
             <v-icon color="icon-nav-default">{{ $currentUser.isAdmin ? 'mdi-auto-fix' : 'mdi-home' }}</v-icon>
           </v-list-item-icon>
           <v-list-item-content>
-            <v-list-item-title>
+            <v-list-item-content>
               {{ $currentUser.isAdmin ? 'Ouija Board' : 'Home' }}
-            </v-list-item-title>
+            </v-list-item-content>
           </v-list-item-content>
         </v-list-item>
         <v-list-item
@@ -64,7 +64,7 @@
         </a>
       </div>
       <v-spacer></v-spacer>
-      <v-menu class="mr-2" offset-y>
+      <v-menu offset-y rounded="lg">
         <template v-slot:activator="{ on }">
           <v-btn
             id="btn-main-menu"
@@ -75,23 +75,34 @@
             {{ $currentUser.firstName }}
           </v-btn>
         </template>
-        <v-list class="pr-2">
+        <v-list>
           <v-list-item
             id="menu-item-feedback-and-help"
-            :href="`mailto:${$config.supportEmailAddress}`"
-            target="_blank"
             aria-label="Send email to the Course Capture support team; this link opens a new tab."
+            :href="`mailto:${$config.supportEmailAddress}`"
+            link
+            target="_blank"
           >
-            <v-list-item-title>Feedback/Help</v-list-item-title>
+            <v-list-item-content>Feedback/Help</v-list-item-content>
           </v-list-item>
-          <v-list-item v-if="$currentUser.isAdmin" id="menu-item-email-templates" @click="goToPath('/email/templates')">
-            <v-list-item-title>Email Templates</v-list-item-title>
+          <v-list-item
+            v-if="$currentUser.isAdmin"
+            id="menu-item-email-templates"
+            link
+            @click="goToPath('/email/templates')"
+          >
+            <v-list-item-content>Email Templates</v-list-item-content>
           </v-list-item>
-          <v-list-item v-if="$currentUser.isAdmin" id="menu-item-jobs" @click="goToPath('/jobs')">
-            <v-list-item-title>Jobs</v-list-item-title>
+          <v-list-item
+            v-if="$currentUser.isAdmin"
+            id="menu-item-jobs"
+            link
+            @click="goToPath('/jobs')"
+          >
+            <v-list-item-content>Jobs</v-list-item-content>
           </v-list-item>
-          <v-list-item id="menu-item-log-out" @click="logOut">
-            <v-list-item-title>Log Out</v-list-item-title>
+          <v-list-item id="menu-item-log-out" link @click="logOut">
+            <v-list-item-content>Log Out</v-list-item-content>
           </v-list-item>
         </v-list>
       </v-menu>

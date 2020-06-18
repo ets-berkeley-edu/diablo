@@ -25,7 +25,6 @@ ENHANCEMENTS, OR MODIFICATIONS.
 
 import time
 
-from config import xena
 from flask import current_app as app
 from selenium.common import exceptions
 from selenium.webdriver.common.action_chains import ActionChains
@@ -90,7 +89,7 @@ class Page(object):
 
     def wait_for_element(self, locator, timeout):
         for entry in self.driver.get_log('browser'):
-            if xena.BASE_URL in entry:
+            if app.config['BASE_URL'] in entry:
                 app.logger.warning(f'Console error: {entry}')
         Wait(self.driver, timeout).until(
             method=ec.presence_of_element_located(locator),
@@ -119,14 +118,15 @@ class Page(object):
         if self.is_present(Page.DIABLO_FOOTER) and self.element(Page.DIABLO_FOOTER).is_displayed():
             self.driver.execute_script('document.getElementById("footer").style.display="none";')
 
-    def click_element(self, locator, addl_pause=xena.CLICK_SLEEP):
+    def click_element(self, locator, addl_pause=None):
         self.hide_diablo_footer()
-        time.sleep(addl_pause)
+        sleep_default = app.config['CLICK_SLEEP']
+        time.sleep(addl_pause or sleep_default)
         Wait(driver=self.driver, timeout=util.get_short_timeout()).until(
             method=ec.element_to_be_clickable(locator),
             message=f'Failed to click_element: {str(locator)}',
         )
-        time.sleep(addl_pause)
+        time.sleep(addl_pause or sleep_default)
         self.element(locator).click()
 
     def click_element_js(self, locator, addl_pause=0):
