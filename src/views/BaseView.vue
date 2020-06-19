@@ -16,9 +16,9 @@
             <v-icon color="icon-nav-default">{{ $currentUser.isAdmin ? 'mdi-auto-fix' : 'mdi-home' }}</v-icon>
           </v-list-item-icon>
           <v-list-item-content>
-            <v-list-item-content>
+            <v-list-item-title>
               {{ $currentUser.isAdmin ? 'Ouija Board' : 'Home' }}
-            </v-list-item-content>
+            </v-list-item-title>
           </v-list-item-content>
         </v-list-item>
         <v-list-item
