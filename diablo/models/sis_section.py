@@ -679,6 +679,7 @@ def _to_api_json(term_id, rows, include_rooms=True):
                 meeting['eligible'] = False
             if include_rooms:
                 meeting['room'] = room.to_api_json() if room else None
+        course['meetings'] = sorted(course['meetings'], key=lambda m: f"{m['startDate']} {m['startTime']}")
 
     # Next, construct the feed
     api_json = []

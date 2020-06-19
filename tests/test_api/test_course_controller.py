@@ -366,6 +366,33 @@ class TestGetCourse:
         )
         assert len(api_json['crossListings']) == 0
 
+    def test_dual_mode_instruction(self, client, admin_session):
+        """Course is both online and in a physical location."""
+        api_json = api_get_course(
+            client,
+            term_id=self.term_id,
+            section_id=50014,
+        )
+        meetings = api_json['meetings']
+        assert len(meetings) == 3
+        assert meetings[0]['startDate'] <= meetings[1]['startDate']
+        assert meetings[1]['startDate'] <= meetings[2]['startDate']
+
+    def test_hybrid_instruction(self, client, admin_session):
+        """Course changes location halfway through the semester."""
+        api_json = api_get_course(
+            client,
+            term_id=self.term_id,
+            section_id=50015,
+        )
+        meetings = api_json['meetings']
+        assert len(meetings) == 2
+        assert meetings[0]['startDate'] <= meetings[1]['startDate']
+        assert meetings[0]['location'] == 'Barker 101'
+        assert meetings[0]['eligible'] is True
+        assert meetings[1]['location'] == 'LeConte 1'
+        assert meetings[1]['eligible'] is False
+
 
 class TestGetCourses:
     """Only admins can see who has been invited, who has signed up, etc."""
@@ -580,7 +607,7 @@ class TestGetCourses:
             std_commit(allow_test_environment=True)
             # We gotta catch 'em all.
             api_json = self._api_courses(client, term_id=self.term_id, filter_='All')
-            assert len(api_json) == 8
+            assert len(api_json) == 9
             for section_id in [section_1_id, section_3_id, section_4_id, section_5_id, section_6_id]:
                 assert _find_course(api_json=api_json, section_id=section_id)
             assert not _find_course(api_json=api_json, section_id=section_in_ineligible_room)
