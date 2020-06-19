@@ -66,10 +66,10 @@ def _get_mock_recipient():
 def _get_expected_email():
     return """Hello William Peter Blatty,
 
-    Your Spring 2020 course COMPSCI 61B, "Data Structures", is eligible for Course Capture.
+    Your Fall 2020 course COMPSCI 61B, "Data Structures", is eligible for Course Capture.
     This course meets Monday, Wednesday and Friday from 3:00 pm to 3:59 pm.
 
-    Go to <a href="http://foo.berkeley.edu">https://manage-test.coursecapture.berkeley.edu/course/2202/50001</a> and sign up.
+    Go to <a href="http://foo.berkeley.edu">https://manage-test.coursecapture.berkeley.edu/course/2208/50001</a> and sign up.
 
     Thank you."""
 
