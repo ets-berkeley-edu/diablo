@@ -46,16 +46,12 @@ def load_pilot_courses():
 
 def _load_mock_courses(json_file_path):
     with open(json_file_path, 'r') as file:
-        term_id = app.config['CURRENT_TERM_ID']
         json_ = json.loads(file.read())
         defaults = json_['defaults']
         instructors = json_['instructors']
         courses = []
         for c in json_['courses']:
             c['instructor_name'] = instructors[c['instructor_uid']]
-            c['meeting_end_date'] = app.config['CURRENT_TERM_END']
-            c['meeting_start_date'] = app.config['CURRENT_TERM_BEGIN']
-            c['term_id'] = term_id
             for key, value in defaults.items():
                 if key not in c:
                     c[key] = value
