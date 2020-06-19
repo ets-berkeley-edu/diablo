@@ -133,12 +133,13 @@ class SisSection(db.Model):
         )
 
     @classmethod
-    def get_meeting_times(cls, term_id, section_id):
-        course = cls.query.filter_by(term_id=term_id, section_id=section_id).first()
-        if course:
-            return course.meeting_days, course.meeting_start_time, course.meeting_end_time
-        else:
+    def get_meeting_from_feed(cls, feed):
+        if not feed or not feed.get('meetings'):
             return None
+        meeting = next((m for m in feed['meetings'] if m.get('eligible')), None)
+        if not meeting:
+            meeting = feed['meetings'][0]
+        return meeting
 
     @classmethod
     def get_distinct_meeting_locations(cls):
@@ -250,8 +251,8 @@ class SisSection(db.Model):
     def get_courses(cls, term_id, section_ids=None):
         params = {'term_id': term_id}
         if section_ids is None:
-            # If no section IDs are specified, return everything with an eligible room.
-            course_filter = 'r.capability IS NOT NULL'
+            # If no section IDs are specified, return any section with at least one eligible room.
+            course_filter = f's.section_id IN ({_sections_with_at_least_one_eligible_room()})'
         else:
             course_filter = 's.section_id = ANY(:section_ids)'
             params['section_ids'] = section_ids
@@ -289,7 +290,7 @@ class SisSection(db.Model):
                 r.id AS room_id,
                 r.location AS room_location
             FROM sis_sections s
-            JOIN rooms r ON r.location = s.meeting_location AND r.capability IS NOT NULL
+            JOIN rooms r ON r.location = s.meeting_location
                 AND s.term_id = :term_id AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
                 AND s.is_primary IS TRUE AND s.is_principal_listing IS TRUE
             JOIN sent_emails e ON e.section_id = s.section_id AND e.template_type = 'invitation'
@@ -299,7 +300,7 @@ class SisSection(db.Model):
             LEFT JOIN scheduled d ON d.section_id = s.section_id AND d.term_id = s.term_id AND d.deleted_at IS NULL
             LEFT JOIN course_preferences cp ON cp.section_id = s.section_id AND cp.term_id = s.term_id AND cp.has_opted_out IS TRUE
             WHERE a.section_id IS NULL AND d.section_id IS NULL and cp.section_id IS NULL
-            ORDER BY s.course_name, s.section_id, s.instructor_uid
+            ORDER BY s.course_name, s.section_id, s.instructor_uid, r.capability NULLS LAST
         """
         rows = db.session.execute(
             text(sql),
@@ -311,7 +312,7 @@ class SisSection(db.Model):
 
     @classmethod
     def get_eligible_courses_not_invited(cls, term_id):
-        sql = """
+        sql = f"""
             SELECT
                 s.*,
                 i.dept_code AS instructor_dept_code,
@@ -321,7 +322,8 @@ class SisSection(db.Model):
                 r.id AS room_id,
                 r.location AS room_location
             FROM sis_sections s
-            JOIN rooms r ON r.location = s.meeting_location AND r.capability IS NOT NULL
+            JOIN rooms r ON r.location = s.meeting_location
+                AND s.section_id IN ({_sections_with_at_least_one_eligible_room()})
                 AND s.term_id = :term_id AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
                 AND s.is_primary IS TRUE AND s.is_principal_listing IS TRUE
             LEFT JOIN instructors i ON i.uid = s.instructor_uid
@@ -331,7 +333,7 @@ class SisSection(db.Model):
             LEFT JOIN sent_emails e on e.section_id = s.section_id AND e.term_id = s.term_id AND e.template_type = 'invitation'
             LEFT JOIN course_preferences cp ON cp.section_id = s.section_id AND cp.term_id = s.term_id AND cp.has_opted_out IS TRUE
             WHERE a.section_id IS NULL AND d.section_id IS NULL AND e.section_id IS NULL AND cp.section_id IS NULL
-            ORDER BY s.course_name, s.section_id, s.instructor_uid
+            ORDER BY s.course_name, s.section_id, s.instructor_uid, r.capability NULLS LAST
         """
         rows = db.session.execute(
             text(sql),
@@ -343,7 +345,7 @@ class SisSection(db.Model):
 
     @classmethod
     def get_courses_opted_out(cls, term_id):
-        sql = """
+        sql = f"""
             SELECT
                 s.*,
                 i.dept_code AS instructor_dept_code,
@@ -353,17 +355,18 @@ class SisSection(db.Model):
                 r.id AS room_id,
                 r.location AS room_location
             FROM sis_sections s
-            JOIN rooms r ON r.location = s.meeting_location AND r.capability IS NOT NULL
+            JOIN rooms r ON r.location = s.meeting_location
                 AND s.term_id = :term_id
                 AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
                 AND s.is_primary IS TRUE
                 AND s.is_principal_listing IS TRUE
+                AND s.section_id IN ({_sections_with_at_least_one_eligible_room()})
             JOIN course_preferences c ON c.section_id = s.section_id AND c.term_id = :term_id AND c.has_opted_out IS TRUE
             LEFT JOIN instructors i ON i.uid = s.instructor_uid
             -- Omit scheduled courses.
             LEFT JOIN scheduled d ON d.section_id = s.section_id AND d.term_id = :term_id AND d.deleted_at IS NULL
             WHERE d.section_id IS NULL
-            ORDER BY s.course_name, s.section_id, s.instructor_uid
+            ORDER BY s.course_name, s.section_id, s.instructor_uid, r.capability NULLS LAST
         """
         rows = db.session.execute(
             text(sql),
@@ -385,7 +388,8 @@ class SisSection(db.Model):
                 i.first_name || ' ' || i.last_name AS instructor_name,
                 i.uid AS instructor_uid,
                 r.id AS room_id,
-                r.location AS room_location
+                r.location AS room_location,
+                r.capability AS room_capability
             FROM sis_sections s
             JOIN approvals a
                 ON s.term_id = :term_id AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
@@ -409,8 +413,8 @@ class SisSection(db.Model):
             JOIN sis_sections s3 ON
                 s3.term_id = s2.term_id AND s3.section_id = s2.section_id
                 AND s3.instructor_uid = a.approved_by_uid
-            JOIN rooms r ON r.location = s.meeting_location AND r.capability IS NOT NULL
-            ORDER BY s.course_name, s.section_id, s.instructor_uid
+            JOIN rooms r ON r.location = s.meeting_location
+            ORDER BY s.course_name, s.section_id, s.instructor_uid, r.capability NULLS LAST
         """
         rows = db.session.execute(
             text(sql),
@@ -455,12 +459,12 @@ class SisSection(db.Model):
                             AND a.section_id IS NULL
                     )
                 )
-            JOIN rooms r ON r.location = s.meeting_location AND r.capability IS NOT NULL
+            JOIN rooms r ON r.location = s.meeting_location
             LEFT JOIN instructors i ON i.uid = s.instructor_uid
             -- Omit scheduled courses.
             LEFT JOIN scheduled d ON d.section_id = s.section_id AND d.term_id = :term_id AND d.deleted_at IS NULL
             WHERE d.section_id IS NULL
-            ORDER BY s.course_name, s.section_id, s.instructor_uid
+            ORDER BY s.course_name, s.section_id, s.instructor_uid, r.capability NULLS LAST
         """
         rows = db.session.execute(
             text(sql),
@@ -633,6 +637,7 @@ def _to_api_json(term_id, rows, include_rooms=True):
                 'courseName': row['course_name'],
                 'courseTitle': row['course_title'],
                 'crossListings': cross_listed_courses,
+                'eligibleMeetingCount': 0,
                 'hasOptedOut': section_id in section_ids_opted_out,
                 'instructionFormat': row['instruction_format'],
                 'instructors': instructors,
@@ -644,21 +649,12 @@ def _to_api_json(term_id, rows, include_rooms=True):
                     section_num=row['section_num'],
                     cross_listings=cross_listed_courses,
                 ),
-                'meetingDays': format_days(row['meeting_days']),
-                'meetingEndDate': row['meeting_end_date'],
-                'meetingEndTime': format_time(row['meeting_end_time']),
-                'meetingLocation': row['meeting_location'],
-                'meetingStartDate': row['meeting_start_date'],
-                'meetingStartTime': format_time(row['meeting_start_time']),
+                'meetings': [],
                 'sectionId': section_id,
                 'sectionNum': row['section_num'],
                 'scheduled': scheduled,
                 'termId': row['term_id'],
             }
-
-            if include_rooms:
-                room = rooms_by_id.get(row['room_id']) if 'room_id' in row else None
-                course['room'] = room.to_api_json() if room else None
             courses_per_id[section_id] = course
 
         # Note: Instructors associated with cross-listings are slurped up separately.
@@ -671,6 +667,18 @@ def _to_api_json(term_id, rows, include_rooms=True):
                     invited_uids=course['invitees'],
                 ),
             )
+
+        meeting = _to_meeting_json(row)
+        if not next((m for m in course['meetings'] if meeting.items() <= m.items()), None):
+            course['meetings'].append(meeting)
+            room = rooms_by_id.get(row['room_id']) if 'room_id' in row else None
+            if room and room.capability:
+                meeting['eligible'] = True
+                course['eligibleMeetingCount'] += 1
+            else:
+                meeting['eligible'] = False
+            if include_rooms:
+                meeting['room'] = room.to_api_json() if room else None
 
     # Next, construct the feed
     api_json = []
@@ -705,17 +713,28 @@ def _decorate_course(course):
     elif course['hasNecessaryApprovals']:
         course['schedulingStatus'] = 'Queued for Scheduling'
 
-    room_id = course.get('room', {}).get('id')
-
+    meeting = SisSection.get_meeting_from_feed(course)
+    room_id = meeting.get('room', {}).get('id')
     if course['scheduled']:
-        def _meeting(obj):
-            return f'{obj["meetingDays"]}-{obj["meetingStartTime"]}-{obj["meetingEndTime"]}'
-
+        scheduled_meeting_string = '-'.join(
+            [
+                str(course['scheduled']['meetingDays']),
+                course['scheduled']['meetingStartTime'],
+                course['scheduled']['meetingEndTime'],
+            ],
+        )
+        course_meeting_string = '-'.join(
+            [
+                str(meeting['daysFormatted']),
+                meeting['startTimeFormatted'],
+                meeting['endTimeFormatted'],
+            ],
+        )
         instructor_uids = [i['uid'] for i in course['instructors']]
         has_obsolete_instructors = set(instructor_uids) != set(course.get('scheduled').get('instructorUids'))
         course['scheduled'].update({
             'hasObsoleteInstructors': has_obsolete_instructors,
-            'hasObsoleteMeetingTimes': _meeting(course) != _meeting(course['scheduled']),
+            'hasObsoleteMeetingTimes': course_meeting_string != scheduled_meeting_string,
             'hasObsoleteRoom': room_id != course.get('scheduled').get('room', {}).get('id'),
         })
 
@@ -806,6 +825,18 @@ def _get_cross_listed_courses(section_ids, term_id, approvals, invited_uids):
     return courses_by_section_id, instructors_by_section_id, canvas_sites_by_section_id
 
 
+def _sections_with_at_least_one_eligible_room():
+    return """
+        SELECT DISTINCT s2.section_id
+        FROM sis_sections s2 JOIN rooms r2
+            ON r2.location = s2.meeting_location
+            AND r2.capability IS NOT NULL
+            AND s2.term_id = :term_id
+            AND s2.is_primary IS TRUE
+            AND s2.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
+            AND s2.is_principal_listing IS TRUE"""
+
+
 def _to_instructor_json(row, approvals, invited_uids):
     instructor_uid = row['instructor_uid']
     return {
@@ -816,6 +847,20 @@ def _to_instructor_json(row, approvals, invited_uids):
         'roleCode': row['instructor_role_code'],
         'uid': instructor_uid,
         'wasSentInvite': instructor_uid in invited_uids,
+    }
+
+
+def _to_meeting_json(row):
+    return {
+        'days': row['meeting_days'],
+        'daysFormatted': format_days(row['meeting_days']),
+        'endDate': row['meeting_end_date'],
+        'endTime': row['meeting_end_time'],
+        'endTimeFormatted': format_time(row['meeting_end_time']),
+        'location': row['meeting_location'],
+        'startDate': row['meeting_start_date'],
+        'startTime': row['meeting_start_time'],
+        'startTimeFormatted': format_time(row['meeting_start_time']),
     }
 
 

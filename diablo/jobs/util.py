@@ -164,16 +164,22 @@ def schedule_recordings(all_approvals, course):
     scheduled = None
     section_ids_opted_out = CoursePreference.get_section_ids_opted_out(term_id=term_id)
 
+    def _send_error(e):
+        error = f"Failed to schedule recordings {course['label']} (section_id: {course['sectionId']})"
+        app.logger.error(error)
+        app.logger.exception(e)
+        send_system_error_email(message=str(e), subject=error)
+
     if room.kaltura_resource_id:
-        # Query for date objects.
-        meeting_days, meeting_start_time, meeting_end_time = SisSection.get_meeting_times(
-            term_id=term_id,
-            section_id=section_id,
-        )
+        meeting = SisSection.get_meeting_from_feed(course)
+        if not meeting:
+            _send_error(RuntimeError('No meeting data found for course'))
+            return None
+
         # Recording starts X minutes before/after official start; it ends Y minutes before/after official end time.
-        days = format_days(meeting_days)
-        adjusted_start_time = _adjust_time(meeting_start_time, app.config['KALTURA_RECORDING_OFFSET_START'])
-        adjusted_end_time = _adjust_time(meeting_end_time, app.config['KALTURA_RECORDING_OFFSET_END'])
+        days = format_days(meeting['days'])
+        adjusted_start_time = _adjust_time(meeting['startTime'], app.config['KALTURA_RECORDING_OFFSET_START'])
+        adjusted_end_time = _adjust_time(meeting['endTime'], app.config['KALTURA_RECORDING_OFFSET_END'])
 
         app.logger.info(f"""
             Prepare to schedule recordings for {course['label']}:
@@ -198,9 +204,9 @@ def schedule_recordings(all_approvals, course):
             scheduled = Scheduled.create(
                 instructor_uids=[i['uid'] for i in course['instructors']],
                 kaltura_schedule_id=kaltura_schedule_id,
-                meeting_days=meeting_days,
-                meeting_start_time=meeting_start_time,
-                meeting_end_time=meeting_end_time,
+                meeting_days=meeting['days'],
+                meeting_start_time=meeting['startTime'],
+                meeting_end_time=meeting['endTime'],
                 publish_type_=approval.publish_type,
                 recording_type_=approval.recording_type,
                 room_id=room.id,
@@ -220,10 +226,7 @@ def schedule_recordings(all_approvals, course):
 
         except (KalturaClientException, KalturaException) as e:
             # Error codes: https://developer.kaltura.com/api-docs/Error_Codes
-            error = f"Failed to schedule recordings {course['label']} (section_id: {course['sectionId']})"
-            app.logger.error(error)
-            app.logger.exception(e)
-            send_system_error_email(message=str(e), subject=error)
+            _send_error(e)
 
     else:
         app.logger.warn(f"""

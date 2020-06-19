@@ -64,7 +64,8 @@ def approve():
     if Approval.get_approval(approved_by_uid=current_user.uid, section_id=section_id, term_id=term_id):
         raise ForbiddenRequestError(f'You have already approved recording of {course["courseName"]}, {term_name}')
 
-    location = course['meetingLocation']
+    meeting = SisSection.get_meeting_from_feed(course)
+    location = meeting and meeting.get('location')
     room = Room.find_room(location=location)
     if not room:
         raise BadRequestError(f'{location} is not eligible for Course Capture.')
@@ -139,10 +140,10 @@ def download_courses_csv():
         return {
             'Course Name': c.get('courseName'),
             'Section Id': section_id,
-            'Room': c.get('meetingLocation'),
-            'Days': ', '.join(c.get('meetingDays') or []),
-            'Start Time': c.get('meetingStartTime'),
-            'End Time': c.get('meetingEndTime'),
+            'Room': ' / '.join(m.get('location', '') for m in c.get('meetings', [])),
+            'Days': ' / '.join(', '.join(m.get('daysFormatted') or []) for m in c.get('meetings', [])),
+            'Start Time': ' / '.join(m.get('startTimeFormatted', '') for m in c.get('meetings', [])),
+            'End Time': ' / '.join(m.get('endTimeFormatted', '') for m in c.get('meetings', [])),
             'Publish Type': scheduled.get('publishTypeName'),
             'Recording Type': scheduled.get('recordingTypeName'),
             'Sign-up URL': get_sign_up_url(section_id=section_id, term_id=c.get('termId')),

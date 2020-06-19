@@ -38,7 +38,7 @@ from diablo.models.sent_email import SentEmail
 from diablo.models.sis_section import SisSection
 from flask import current_app as app
 import pytest
-from tests.test_api.api_test_utils import api_approve, api_get_course, get_instructor_uids
+from tests.test_api.api_test_utils import api_approve, api_get_course, get_instructor_uids, get_meeting_data
 from tests.util import simply_yield, test_approvals_workflow
 
 admin_uid = '90001'
@@ -155,7 +155,7 @@ class TestApprove:
                 term_id=self.term_id,
                 section_id=section_1_id,
             )
-            assert api_json['room']['location'] == 'Barrows 106'
+            assert api_json['meetings'][0]['room']['location'] == 'Barrows 106'
             instructor_uids = [i['uid'] for i in api_json['instructors']]
             assert instructor_uids == instructor_uids
             approvals_ = api_json['approvals']
@@ -280,8 +280,8 @@ class TestGetCourse:
             assert approved_by_uid == approvals[0]['approvedBy']['uid']
             assert api_json['approvalStatus'] == 'Partially Approved'
             assert api_json['schedulingStatus'] == 'Not Scheduled'
-            assert api_json['room']['id'] == room_id
-            assert api_json['room']['location'] == 'Barrows 106'
+            assert api_json['meetings'][0]['room']['id'] == room_id
+            assert api_json['meetings'][0]['room']['location'] == 'Barrows 106'
 
     def test_date_time_format(self, client, fake_auth):
         """Dates and times are properly formatted for front-end display."""
@@ -292,10 +292,10 @@ class TestGetCourse:
             term_id=self.term_id,
             section_id=section_2_id,
         )
-        assert api_json['meetingDays'] == ['MO', 'WE', 'FR']
-        assert api_json['meetingStartTime'] == '3:00 pm'
-        assert api_json['meetingEndTime'] == '3:59 pm'
-        assert api_json['meetingLocation'] == 'Wheeler 150'
+        assert api_json['meetings'][0]['daysFormatted'] == ['MO', 'WE', 'FR']
+        assert api_json['meetings'][0]['startTimeFormatted'] == '3:00 pm'
+        assert api_json['meetings'][0]['endTimeFormatted'] == '3:59 pm'
+        assert api_json['meetings'][0]['location'] == 'Wheeler 150'
 
     def test_li_ka_shing_recording_options(self, client, admin_session):
         """Rooms designated as 'auditorium' offer ALL types of recording."""
@@ -304,8 +304,8 @@ class TestGetCourse:
             term_id=self.term_id,
             section_id=section_3_id,
         )
-        assert api_json['room']['location'] == 'Li Ka Shing 145'
-        assert len(api_json['room']['recordingTypeOptions']) == 3
+        assert api_json['meetings'][0]['room']['location'] == 'Li Ka Shing 145'
+        assert len(api_json['meetings'][0]['room']['recordingTypeOptions']) == 3
 
     def test_section_with_canvas_course_sites(self, client, admin_session):
         """Canvas course site information is included in the API."""
@@ -670,7 +670,7 @@ class TestCoursesChanges:
     def test_has_obsolete_room(self, client, admin_session):
         """Admins can see room changes that might disrupt scheduled recordings."""
         course = SisSection.get_course(term_id=self.term_id, section_id=section_2_id)
-        actual_room_id = course['room']['id']
+        actual_room_id = course['meetings'][0]['room']['id']
         obsolete_room = Room.find_room('Barker 101')
 
         assert obsolete_room
@@ -691,7 +691,7 @@ class TestCoursesChanges:
     def test_has_obsolete_meeting_times(self, client, admin_session):
         """Admins can see meeting time changes that might disrupt scheduled recordings."""
         with test_approvals_workflow(app):
-            meeting_days, meeting_start_time, meeting_end_time = SisSection.get_meeting_times(
+            meeting_days, meeting_start_time, meeting_end_time = get_meeting_data(
                 term_id=self.term_id,
                 section_id=section_1_id,
             )
@@ -722,7 +722,7 @@ class TestCoursesChanges:
     def test_has_instructors(self, client, admin_session):
         """Admins can see instructor changes that might disrupt scheduled recordings."""
         with test_approvals_workflow(app):
-            meeting_days, meeting_start_time, meeting_end_time = SisSection.get_meeting_times(
+            meeting_days, meeting_start_time, meeting_end_time = get_meeting_data(
                 term_id=self.term_id,
                 section_id=section_3_id,
             )
@@ -1009,7 +1009,7 @@ class TestUnscheduleCourse:
 
 
 def _is_course_in_enabled_room(section_id, term_id):
-    capability = SisSection.get_course(term_id=term_id, section_id=section_id)['room']['capability']
+    capability = SisSection.get_course(term_id=term_id, section_id=section_id)['meetings'][0]['room']['capability']
     return capability is not None
 
 
@@ -1024,7 +1024,7 @@ def _schedule_recordings(
         recording_type='presenter_presentation_audio',
         room_id=None,
 ):
-    meeting_days, meeting_start_time, meeting_end_time = SisSection.get_meeting_times(
+    meeting_days, meeting_start_time, meeting_end_time = get_meeting_data(
         term_id=term_id,
         section_id=section_id,
     )

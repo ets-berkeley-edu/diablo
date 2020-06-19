@@ -27,6 +27,7 @@ import re
 
 from diablo.lib.berkeley import term_name_for_sis_id
 from diablo.lib.util import get_names_of_days, readable_join
+from diablo.models.sis_section import SisSection
 from flask import current_app as app
 
 
@@ -80,15 +81,16 @@ def get_template_substitutions(
             return None
         return ', '.join(i['name'] for i in _dict if i['name'])
 
-    days = course and get_names_of_days(course['meetingDays'])
+    meeting = SisSection.get_meeting_from_feed(course)
+    days = meeting and get_names_of_days(meeting['daysFormatted'])
     return {
         'course.days': readable_join(days),
         'course.format': course and course['instructionFormat'],
         'course.name': course and course['courseName'],
-        'course.room': course and course['meetingLocation'],
+        'course.room': meeting and meeting['location'],
         'course.section': course and course['sectionNum'],
-        'course.time.end': course and course['meetingEndTime'],
-        'course.time.start': course and course['meetingStartTime'],
+        'course.time.end': meeting and meeting['endTimeFormatted'],
+        'course.time.start': meeting and meeting['startTimeFormatted'],
         'course.title': course and course['courseTitle'],
         'instructors.all': course and _join_names(course.get('instructors')),
         'instructors.pending': _join_names(pending_instructors),

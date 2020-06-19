@@ -35,10 +35,9 @@ from diablo.models.queued_email import QueuedEmail
 from diablo.models.room import Room
 from diablo.models.scheduled import Scheduled
 from diablo.models.sent_email import SentEmail
-from diablo.models.sis_section import SisSection
 from flask import current_app as app
 import pytest
-from tests.test_api.api_test_utils import get_instructor_uids
+from tests.test_api.api_test_utils import get_instructor_uids, get_meeting_data
 from tests.util import simply_yield, test_approvals_workflow
 
 
@@ -69,7 +68,7 @@ class TestEmailAlertsForAdmins:
                 section_id=section_id,
                 term_id=term_id,
             )
-            meeting_days, meeting_start_time, meeting_end_time = SisSection.get_meeting_times(
+            meeting_days, meeting_start_time, meeting_end_time = get_meeting_data(
                 term_id=term_id,
                 section_id=section_id,
             )
@@ -101,7 +100,7 @@ class TestEmailAlertsForAdmins:
             term_id = app.config['CURRENT_TERM_ID']
             section_id = 50005
             room_id = Room.find_room('Barker 101').id
-            meeting_days, meeting_start_time, meeting_end_time = SisSection.get_meeting_times(
+            meeting_days, meeting_start_time, meeting_end_time = get_meeting_data(
                 term_id=term_id,
                 section_id=section_id,
             )

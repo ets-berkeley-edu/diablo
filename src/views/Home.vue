@@ -65,17 +65,19 @@
       this.pageTitle = `Your ${this.$config.currentTermName} Courses Eligible for Capture`
       this.courses = []
       this.$_.each(this.$currentUser.courses, c => {
-        if (c.room && c.room.capability) {
-          this.courses.push({
-            courseCodes: this.getCourseCodes(c),
-            days: c.meetingDays ? this.$_.join(c.meetingDays, ', ') : undefined,
-            instructors: this.oxfordJoin(this.$_.map(c.instructors, 'name')),
-            room: c.room,
-            sectionId: c.sectionId,
-            time: c.meetingStartTime ? `${c.meetingStartTime} - ${c.meetingEndTime}` : undefined,
-            title: c.courseTitle
-          })
-        }
+        this.$_each(c.meetings, m => {
+          if (m.room && m.room.capability) {
+            this.courses.push({
+              courseCodes: this.getCourseCodes(c),
+              days: m.daysFormatted ? this.$_.join(c.daysFormatted, ', ') : undefined,
+              instructors: this.oxfordJoin(this.$_.map(c.instructors, 'name')),
+              room: m.room,
+              sectionId: c.sectionId,
+              time: m.startTimeFormatted ? `${m.startTimeFormatted} - ${m.endTimeFormatted}` : undefined,
+              title: c.courseTitle
+            })
+          }
+        })
       })
       this.$ready(this.pageTitle)
     }

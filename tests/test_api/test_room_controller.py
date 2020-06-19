@@ -118,7 +118,7 @@ class TestGetRoom:
         courses = api_json['courses']
         assert len(courses) > 1
         for index in range(1, len(courses)):
-            assert courses[index - 1]['meetingDays'][0] <= courses[index]['meetingDays'][0]
+            assert courses[index - 1]['meetings'][0]['daysFormatted'][0] <= courses[index]['meetings'][0]['daysFormatted'][0]
 
     def test_screencast_and_video_auditorium(self, client, admin_session):
         """All recording types are available for Auditorium with 'screencast_and_video' capability."""
