@@ -247,6 +247,90 @@
       "course_title": "Linear algebra and differential calculus",
       "instruction_format": "COL",
       "section_id": 50013
+    },
+    {
+      "instructor_uid": "10004",
+      "meeting_days": "MOWEFR",
+      "meeting_end_date": "2020-11-06",
+      "meeting_end_time": "23:59",
+      "meeting_location": "Internet/Online",
+      "meeting_start_date": "2020-10-05",
+      "meeting_start_time": "23:00",
+      "course_name": "PHYSICS 7A LEC 001 (dual mode instruction)",
+      "course_title": "Physics for Scientists and Engineers",
+      "section_id": 50014
+    },
+    {
+      "instructor_uid": "10004",
+      "meeting_days": "MOWEFR",
+      "meeting_end_date": "2020-10-02",
+      "meeting_end_time": "08:59",
+      "meeting_location": "LeConte 1",
+      "meeting_start_date": "2020-08-26",
+      "meeting_start_time": "08:00",
+      "course_name": "PHYSICS 7A LEC 001 (dual mode instruction)",
+      "course_title": "Physics for Scientists and Engineers",
+      "section_id": 50014
+    },
+    {
+      "instructor_uid": "10004",
+      "meeting_days": "MOWEFR",
+      "meeting_end_date": "2020-12-11",
+      "meeting_end_time": "08:59",
+      "meeting_location": "LeConte 1",
+      "meeting_start_date": "2020-11-09",
+      "meeting_start_time": "08:00",
+      "course_name": "PHYSICS 7A LEC 001 (dual mode instruction)",
+      "course_title": "Physics for Scientists and Engineers",
+      "section_id": 50014
+    },
+    {
+      "instructor_uid": "10003",
+      "meeting_days": "MOWEFR",
+      "meeting_end_date": "2020-12-11",
+      "meeting_end_time": "13:59",
+      "meeting_location": "Barker 101",
+      "meeting_start_date": "2020-08-26",
+      "meeting_start_time": "13:00",
+      "course_name": "PHYSICS 7A (hybrid instruction)",
+      "course_title": "Physics for Scientists and Engineers",
+      "section_id": 50015
+    },
+    {
+      "instructor_uid": "10003",
+      "meeting_days": "TUTH",
+      "meeting_end_date": "2020-12-11",
+      "meeting_end_time": "15:29",
+      "meeting_location": "LeConte 1",
+      "meeting_start_date": "2020-08-26",
+      "meeting_start_time": "14:00",
+      "course_name": "PHYSICS 7A (hybrid instruction)",
+      "course_title": "Physics for Scientists and Engineers",
+      "section_id": 50015
+    },
+    {
+      "instructor_uid": "10005",
+      "meeting_days": "WE",
+      "meeting_end_date": "2020-12-11",
+      "meeting_end_time": "08:59",
+      "meeting_location": "Dwinelle 155",
+      "meeting_start_date": "2020-08-26",
+      "meeting_start_time": "08:00",
+      "course_name": "COMPSCI 161 LEC 001 (hybrid instruction)",
+      "course_title": "Computer Security",
+      "section_id": 50016
+    },
+    {
+      "instructor_uid": "10005",
+      "meeting_days": "TUTH",
+      "meeting_end_date": "2020-12-11",
+      "meeting_end_time": "19:59",
+      "meeting_location": "Pimentel 1",
+      "meeting_start_date": "2020-08-26",
+      "meeting_start_time": "18:30",
+      "course_name": "COMPSCI 161 LEC 001 (hybrid instruction)",
+      "course_title": "Computer Security",
+      "section_id": 50016
     }
   ]
 }
