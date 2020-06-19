@@ -65,7 +65,7 @@
       this.pageTitle = `Your ${this.$config.currentTermName} Courses Eligible for Capture`
       this.courses = []
       this.$_.each(this.$currentUser.courses, c => {
-        this.$_each(c.meetings, m => {
+        this.$_.each(c.meetings, m => {
           if (m.room && m.room.capability) {
             this.courses.push({
               courseCodes: this.getCourseCodes(c),
