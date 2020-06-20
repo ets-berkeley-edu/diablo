@@ -25,23 +25,16 @@ ENHANCEMENTS, OR MODIFICATIONS.
 import json
 
 from diablo import db, std_commit
-from diablo.api.errors import InternalServerError
 from diablo.lib.util import utc_now
 from diablo.models.sis_section import SisSection
-from flask import current_app as app
 
 
 def save_mock_courses(json_file_path):
     courses = _load_mock_courses(json_file_path)
-    if SisSection.get_course(term_id=courses[0]['term_id'], section_id=courses[0]['section_id']):
-        raise InternalServerError(f'The course data in {json_file_path} has already been loaded')
-    else:
+    # Save mock data if not present in db
+    if courses and not SisSection.get_course(term_id=courses[0]['term_id'], section_id=courses[0]['section_id']):
         _save_courses(sis_sections=courses)
         std_commit(allow_test_environment=True)
-
-
-def load_pilot_courses():
-    return _load_mock_courses(app.config['COURSE_CAPTURE_PILOT_JSON'])
 
 
 def _load_mock_courses(json_file_path):

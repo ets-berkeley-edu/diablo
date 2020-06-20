@@ -22,8 +22,6 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from diablo import std_commit
-from diablo.models.sis_section import SisSection
 from flask import current_app as app
 import pytest
 from tests.util import override_config
@@ -56,7 +54,7 @@ class TestVersion:
 class TestConfigController:
     """Config API."""
 
-    def test_anonymous(self, app, client):
+    def test_anonymous(self, client):
         """All users, even anonymous, can get configs."""
         term_id = '2218'
         with override_config(app, 'CURRENT_TERM_ID', term_id):
@@ -72,33 +70,3 @@ class TestConfigController:
             assert len(api_json['emailTemplateTypes'])
             assert len(api_json['roomCapabilityOptions'])
             assert len(api_json['searchFilterOptions'])
-
-
-class TestCourseCapturePilot:
-
-    @staticmethod
-    def _api_start_pilot(client, expected_status_code=200):
-        response = client.get('/api/config/start_course_capture_pilot')
-        assert response.status_code == expected_status_code
-        return response.json
-
-    def test_anonymous(self, client):
-        """Denies anonymous access."""
-        self._api_start_pilot(client, expected_status_code=401)
-
-    def test_unauthorized(self, client, instructor_session):
-        """Denies access if user is not an admin."""
-        self._api_start_pilot(client, expected_status_code=401)
-
-    def test_start_course_capture_pilot(self, client, admin_session):
-        """Admin can start Course Capture pilot."""
-        self._api_start_pilot(client)
-        std_commit(allow_test_environment=True)
-        # Verify
-        courses = SisSection.get_courses(
-            section_ids=[60000, 60001],
-            term_id=app.config['CURRENT_TERM_ID'],
-        )
-        assert len(courses) == 2
-        # You cannot hit the API a second time.
-        self._api_start_pilot(client, expected_status_code=500)
