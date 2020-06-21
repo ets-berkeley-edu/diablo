@@ -13,9 +13,9 @@
     >
       <template v-slot:body="{ items }">
         <tbody>
-          <tr v-for="course in items" :id="`course-${course.sectionId}`" :key="course.sectionId">
-            <td class="text-no-wrap" :class="{'pt-3 pb-3': course.courseCodes.length > 1}">
-              <div v-if="course.room && course.room.capability">
+          <template v-for="course in items" :id="`course-${course.sectionId}`">
+            <tr :key="course.sectionId">
+              <td class="text-no-wrap" :class="{'pt-3 pb-3': course.courseCodes.length > 1, 'border-bottom-zero': course.meetings.length > 1}">
                 <div v-for="(courseCode, index) in course.courseCodes" :key="courseCode">
                   <router-link
                     v-if="course.room && course.room.capability && index === 0"
@@ -26,15 +26,38 @@
                   </router-link>
                   <span v-if="index > 0 || !course.room || !course.room.capability">{{ courseCode }}</span>
                 </div>
-              </div>
-              <span v-if="!course.room || !course.room.capability">{{ course.label }}</span>
-            </td>
-            <td>{{ course.title }}</td>
-            <td>{{ course.instructors }}</td>
-            <td class="text-no-wrap">{{ course.room ? course.room.location : '&mdash;' }}</td>
-            <td class="text-no-wrap">{{ course.days }}</td>
-            <td class="text-no-wrap">{{ course.time }}</td>
-          </tr>
+              </td>
+              <td :class="{'border-bottom-zero': course.meetings.length > 1}">
+                {{ course.title || '&mdash;' }}
+              </td>
+              <td :class="{'border-bottom-zero': course.meetings.length > 1}">
+                {{ oxfordJoin($_.map(course.instructors, 'name')) }}
+              </td>
+              <td :class="{'border-bottom-zero': course.meetings.length > 1}" class="text-no-wrap">
+                {{ course.meetings[0].room.location }}
+              </td>
+              <td :class="{'border-bottom-zero': course.meetings.length > 1}" class="text-no-wrap">
+                {{ $_.join(course.meetings[0].daysFormatted, ', ') }}
+              </td>
+              <td :class="{'border-bottom-zero': course.meetings.length > 1}" class="text-no-wrap">
+                {{ course.meetings[0].startTimeFormatted }} - {{ course.meetings[0].endTimeFormatted }}
+              </td>
+            </tr>
+            <tr v-for="index in course.meetings.length - 1" :key="index">
+              <td></td>
+              <td></td>
+              <td></td>
+              <td class="pt-0 text-no-wrap">
+                {{ course.meetings[index].room.location }}
+              </td>
+              <td class="text-no-wrap">
+                {{ $_.join(course.meetings[index].daysFormatted, ', ') }}
+              </td>
+              <td class="text-no-wrap">
+                {{ course.meetings[index].startTimeFormatted }} - {{ course.meetings[index].endTimeFormatted }}
+              </td>
+            </tr>
+          </template>
         </tbody>
       </template>
     </v-data-table>
@@ -54,7 +77,7 @@
         {text: 'Course', value: 'label'},
         {text: 'Title', value: 'title'},
         {text: 'Instructors', value: 'instructors', sortable: false},
-        {text: 'Room', value: 'room'},
+        {text: 'Room', value: 'room', sortable: false},
         {text: 'Days', value: 'days', sortable: false},
         {text: 'Time', value: 'time', sortable: false}
       ],
@@ -63,21 +86,10 @@
     created() {
       this.$loading()
       this.pageTitle = `Your ${this.$config.currentTermName} Courses Eligible for Capture`
-      this.courses = []
-      this.$_.each(this.$currentUser.courses, c => {
-        this.$_.each(c.meetings, m => {
-          if (m.room && m.room.capability) {
-            this.courses.push({
-              courseCodes: this.getCourseCodes(c),
-              days: m.daysFormatted ? this.$_.join(c.daysFormatted, ', ') : undefined,
-              instructors: this.oxfordJoin(this.$_.map(c.instructors, 'name')),
-              room: m.room,
-              sectionId: c.sectionId,
-              time: m.startTimeFormatted ? `${m.startTimeFormatted} - ${m.endTimeFormatted}` : undefined,
-              title: c.courseTitle
-            })
-          }
-        })
+      this.courses = this.$_.filter(this.$currentUser.courses, course => {
+        course.courseCodes = this.getCourseCodes(course)
+        course.meetings = this.$_.filter(course.meetings, m => m.room && m.room.capability)
+        return course.meetings.length
       })
       this.$ready(this.pageTitle)
     }
