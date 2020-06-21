@@ -18,13 +18,13 @@
               <td class="text-no-wrap" :class="{'pt-3 pb-3': course.courseCodes.length > 1, 'border-bottom-zero': course.meetings.length > 1}">
                 <div v-for="(courseCode, index) in course.courseCodes" :key="courseCode">
                   <router-link
-                    v-if="course.room && course.room.capability && index === 0"
+                    v-if="index === 0"
                     :id="`link-course-${course.sectionId}`"
                     :to="`/course/${$config.currentTermId}/${course.sectionId}`"
                   >
                     {{ courseCode }}
                   </router-link>
-                  <span v-if="index > 0 || !course.room || !course.room.capability">{{ courseCode }}</span>
+                  <span v-if="index > 0">{{ courseCode }}</span>
                 </div>
               </td>
               <td :class="{'border-bottom-zero': course.meetings.length > 1}">
@@ -40,6 +40,10 @@
                 {{ $_.join(course.meetings[0].daysFormatted, ', ') }}
               </td>
               <td :class="{'border-bottom-zero': course.meetings.length > 1}" class="text-no-wrap">
+                <div v-if="course.meetingDateRangesVary" class="pt-2">
+                  <span class="text-no-wrap">{{ course.meetings[0].startDate }} - </span>
+                  <span class="text-no-wrap">{{ course.meetings[0].endDate }}</span>
+                </div>
                 {{ course.meetings[0].startTimeFormatted }} - {{ course.meetings[0].endTimeFormatted }}
               </td>
             </tr>
@@ -54,7 +58,13 @@
                 {{ $_.join(course.meetings[index].daysFormatted, ', ') }}
               </td>
               <td class="text-no-wrap">
-                {{ course.meetings[index].startTimeFormatted }} - {{ course.meetings[index].endTimeFormatted }}
+                <div v-if="course.meetingDateRangesVary" class="pt-2">
+                  <span class="text-no-wrap">{{ course.meetings[index].startDate }} - </span>
+                  <span class="text-no-wrap">{{ course.meetings[index].endDate }}</span>
+                </div>
+                <div :class="{'pb-2': course.meetingDateRangesVary && index === course.meetings.length - 1}">
+                  {{ course.meetings[index].startTimeFormatted }} - {{ course.meetings[index].endTimeFormatted }}
+                </div>
               </td>
             </tr>
           </template>

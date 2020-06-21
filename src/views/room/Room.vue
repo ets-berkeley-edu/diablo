@@ -109,9 +109,6 @@
       scrollToKalturaEvents() {
         this.$vuetify.goTo('#kaltura-event-list', {duration: 300, offset: 100, easing: 'easeInOutCubic'})
         this.alertScreenReader('Scrolled to Kaltura events.')
-      },
-      tdClass(course) {
-        return course.approvals.length ? 'border-bottom-zero text-no-wrap' : 'text-no-wrap'
       }
     }
   }

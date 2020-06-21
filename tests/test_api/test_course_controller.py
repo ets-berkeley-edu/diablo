@@ -296,6 +296,7 @@ class TestGetCourse:
         assert api_json['meetings'][0]['startTimeFormatted'] == '3:00 pm'
         assert api_json['meetings'][0]['endTimeFormatted'] == '3:59 pm'
         assert api_json['meetings'][0]['location'] == 'Wheeler 150'
+        assert api_json['meetingDateRangesVary'] is False
 
     def test_li_ka_shing_recording_options(self, client, admin_session):
         """Rooms designated as 'auditorium' offer ALL types of recording."""
@@ -375,8 +376,9 @@ class TestGetCourse:
         )
         meetings = api_json['meetings']
         assert len(meetings) == 3
-        assert meetings[0]['startDate'] <= meetings[1]['startDate']
-        assert meetings[1]['startDate'] <= meetings[2]['startDate']
+        assert meetings[0]['startDate'] < meetings[1]['startDate']
+        assert meetings[1]['startDate'] < meetings[2]['startDate']
+        assert api_json['meetingDateRangesVary'] is True
 
     def test_hybrid_instruction(self, client, admin_session):
         """Course changes location halfway through the semester."""
@@ -387,7 +389,8 @@ class TestGetCourse:
         )
         meetings = api_json['meetings']
         assert len(meetings) == 2
-        assert meetings[0]['startDate'] <= meetings[1]['startDate']
+        assert meetings[0]['startDate'] == meetings[1]['startDate']
+        assert api_json['meetingDateRangesVary'] is False
         assert meetings[0]['location'] == 'Barker 101'
         assert meetings[0]['eligible'] is True
         assert meetings[1]['location'] == 'LeConte 1'

@@ -36,7 +36,7 @@
         <tbody v-if="!refreshing && items.length">
           <template v-for="course in items">
             <tr :key="course.sectionId">
-              <td :id="`course-name-${course.sectionId}`" :class="tdClass(course)">
+              <td :id="`course-name-${course.sectionId}`" :class="tdc(course)">
                 <div v-for="(courseCode, index) in course.courseCodes" :key="courseCode">
                   <router-link
                     v-if="index === 0"
@@ -49,39 +49,29 @@
                   <span v-if="index > 0" class="subtitle-1">{{ courseCode }}</span>
                 </div>
               </td>
-              <td :id="`section-id-${course.sectionId}`" :class="tdClass(course)">{{ course.sectionId }}</td>
-              <td v-if="includeRoomColumn" :class="tdClass(course)">
-                <div
-                  v-for="(meeting, index) in course.meetings"
-                  :id="`meeting-room-${course.sectionId}-${index}`"
-                  :key="index"
-                >
+              <td :id="`section-id-${course.sectionId}`" :class="tdc(course)">{{ course.sectionId }}</td>
+              <td v-if="includeRoomColumn" :class="tdc(course)">
+                <div v-if="course.meetings.length && course.meetings[0].room">
                   <router-link
-                    v-if="meeting.room"
-                    :id="`course-${course.sectionId}-room-${meeting.room.id}`"
-                    :to="`/room/${meeting.room.id}`"
+                    :id="`course-${course.sectionId}-room-${course.meetings[0].room.id}`"
+                    :to="`/room/${course.meetings[0].room.id}`"
                   >
-                    {{ meeting.room.location }}
+                    {{ course.meetings[0].room.location }}
                   </router-link>
-                  <span v-if="!meeting.room">&mdash;</span>
                 </div>
+                <span v-if="!course.meetings.length || !course.meetings[0].room">&mdash;</span>
               </td>
-              <td :id="`meeting-days-${course.sectionId}`" :class="tdClass(course)">
-                <div v-for="(meeting, index) in course.meetings" :id="`meeting-days-${course.sectionId}-${index}`" :key="index">
-                  {{ meeting.daysFormatted ? meeting.daysFormatted.join(',') : '-' }}
+              <td :id="`meeting-days-${course.sectionId}-0`" :class="tdc(course)">
+                {{ $_.join(course.meetings[0].daysFormatted, ', ') || '&mdash;' }}
+              </td>
+              <td :id="`meeting-times-${course.sectionId}-0`" :class="tdc(course)">
+                <div v-if="course.meetingDateRangesVary">
+                  <span class="text-no-wrap">{{ course.meetings[0].startDate }} - </span>
+                  <span class="text-no-wrap">{{ course.meetings[0].endDate }}</span>
                 </div>
+                <span class="text-no-wrap">{{ course.meetings[0].startTimeFormatted }} - {{ course.meetings[0].endTimeFormatted }}</span>
               </td>
-              <td :id="`meeting-times-${course.sectionId}`" :class="tdClass(course)">
-                <div
-                  v-for="(meeting, index) in course.meetings"
-                  :id="`meeting-times-${course.sectionId}-${index}`"
-                  :key="index"
-                  class="text-no-wrap"
-                >
-                  {{ meeting.startTimeFormatted }} - {{ meeting.endTimeFormatted }}
-                </div>
-              </td>
-              <td :id="`course-${course.sectionId}-status`" :class="tdClass(course)">
+              <td :id="`course-${course.sectionId}-status`" :class="tdc(course)">
                 <v-tooltip v-if="course.wasApprovedByAdmin" :id="`tooltip-admin-approval-${course.sectionId}`" bottom>
                   <template v-slot:activator="{ on }">
                     <v-icon
@@ -100,7 +90,7 @@
                 <div :id="`course-${course.sectionId}-approval-status`">{{ course.approvalStatus || '&mdash;' }}</div>
                 <div :id="`course-${course.sectionId}-scheduling-status`">{{ course.schedulingStatus || '&mdash;' }}</div>
               </td>
-              <td :class="tdClass(course)">
+              <td :class="tdc(course)">
                 <div v-for="instructor in course.instructors" :key="instructor.uid" class="mb-1 mt-1">
                   <v-tooltip v-if="instructor.approval" :id="`tooltip-approval-${course.sectionId}-by-${instructor.uid}`" bottom>
                     <template v-slot:activator="{ on }">
@@ -120,10 +110,10 @@
                   </router-link> ({{ instructor.uid }})
                 </div>
               </td>
-              <td :id="`course-${course.sectionId}-publish-types`" :class="tdClass(course)">
+              <td :id="`course-${course.sectionId}-publish-types`" :class="tdc(course)">
                 {{ course.publishTypeNames || '&mdash;' }}
               </td>
-              <td :class="tdClass(course)">
+              <td :class="tdc(course)">
                 <ToggleOptOut
                   v-if="!course.hasNecessaryApprovals && !course.scheduled"
                   :key="course.sectionId"
@@ -131,6 +121,32 @@
                   :on-toggle="onToggleOptOut"
                 />
               </td>
+            </tr>
+            <tr v-for="index in course.meetings.length - 1" :key="index">
+              <td colspan="2" :class="mdc(course)"></td>
+              <td v-if="includeRoomColumn" :class="mdc(course)">
+                <router-link
+                  v-if="course.meetings[index].room"
+                  :id="`course-${course.sectionId}-room-${course.meetings[index].room.id}`"
+                  :to="`/room/${course.meetings[index].room.id}`"
+                >
+                  {{ course.meetings[index].room.location }}
+                </router-link>
+                <span v-if="!course.meetings[index].room">&mdash;</span>
+              </td>
+              <td class="text-no-wrap" :class="mdc(course)">
+                {{ $_.join(course.meetings[index].daysFormatted, ', ') || '&mdash;' }}
+              </td>
+              <td class="text-no-wrap" :class="mdc(course)">
+                <div v-if="course.meetingDateRangesVary">
+                  <span class="text-no-wrap">{{ course.meetings[index].startDate }} - </span>
+                  <span class="text-no-wrap">{{ course.meetings[index].endDate }}</span>
+                </div>
+                <div :class="{'pb-2': course.meetingDateRangesVary && index === course.meetings.length - 1}">
+                  {{ course.meetings[index].startTimeFormatted }} - {{ course.meetings[index].endTimeFormatted }}
+                </div>
+              </td>
+              <td colspan="4" :class="mdc(course)"></td>
             </tr>
             <tr v-if="course.approvals.length" :key="`approvals-${course.sectionId}`">
               <td :colspan="headers.length + 1" class="pb-2">
@@ -239,12 +255,14 @@
       })
     },
     methods: {
-      tdClass(course) {
-        let classStr = course.approvals.length ? 'border-bottom-zero' : ''
-        if (course.courseCodes && course.courseCodes.length > 1) {
-          classStr += ' pt-3 pb-3'
+      mdc(course) {
+        return {'border-bottom-zero': course.approvals.length}
+      },
+      tdc(course) {
+        return {
+          'border-bottom-zero': course.meetingDateRangesVary || course.approvals.length,
+          'pt-3 pb-3': this.$_.size(course.courseCodes) > 1
         }
-        return classStr
       }
     }
   }

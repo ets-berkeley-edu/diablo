@@ -681,6 +681,10 @@ def _to_api_json(term_id, rows, include_rooms=True):
                 meeting['room'] = room.to_api_json() if room else None
         course['meetings'] = sorted(course['meetings'], key=lambda m: f"{m['startDate']} {m['startTime']}")
 
+        def _date_ranges_vary(key):
+            return len(set([m[key] for m in course['meetings']])) > 1
+        course['meetingDateRangesVary'] = _date_ranges_vary('startDate') or _date_ranges_vary('endDate')
+
     # Next, construct the feed
     api_json = []
     for section_id, course in courses_per_id.items():
