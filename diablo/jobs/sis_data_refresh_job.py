@@ -27,9 +27,7 @@ from diablo.jobs.base_job import BaseJob
 from diablo.jobs.errors import BackgroundJobError
 from diablo.jobs.util import insert_or_update_instructors, refresh_cross_listings, refresh_rooms
 from diablo.lib.db import resolve_sql_template
-from diablo.lib.development_db_utils import load_pilot_courses
-from diablo.models.approval import Approval
-from diablo.models.scheduled import Scheduled
+from diablo.lib.development_db_utils import save_mock_courses
 from diablo.models.sis_section import SisSection
 from flask import current_app as app
 
@@ -54,11 +52,8 @@ class SisDataRefreshJob(BaseJob):
 
     @classmethod
     def after_sis_data_refresh(cls, term_id):
-        for course in load_pilot_courses():
-            # Because sis_data_refresh deletes "pilot" courses in sis_sections, we must delete related objects.
-            section_id = course['section_id']
-            Approval.delete(term_id=course['term_id'], section_id=section_id)
-            Scheduled.delete(term_id=course['term_id'], section_id=section_id)
+        # TODO: Remove when Summer 2020 pilot is done
+        save_mock_courses(app.config['COURSE_CAPTURE_PILOT_JSON'])
 
         distinct_instructor_uids = SisSection.get_distinct_instructor_uids()
         insert_or_update_instructors(distinct_instructor_uids)
