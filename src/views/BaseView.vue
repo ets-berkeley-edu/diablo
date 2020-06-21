@@ -11,16 +11,6 @@
       dark
     >
       <v-list nav>
-        <v-list-item id="nav-link-home" @click="toRoute('/')">
-          <v-list-item-icon class="align-self-center">
-            <v-icon color="icon-nav-default">{{ $currentUser.isAdmin ? 'mdi-auto-fix' : 'mdi-home' }}</v-icon>
-          </v-list-item-icon>
-          <v-list-item-content>
-            <v-list-item-title>
-              {{ $currentUser.isAdmin ? 'Ouija Board' : 'Home' }}
-            </v-list-item-title>
-          </v-list-item-content>
-        </v-list-item>
         <v-list-item
           v-for="(item, index) in navItems"
           :id="`sidebar-link-${item.title}`"
@@ -135,13 +125,14 @@
     }),
     created() {
       this.prefersColorScheme()
+      this.navItems = this.$currentUser.courses.length ? [{ title: 'Home', icon: 'mdi-home', path: '/home' }] : []
       if (this.$currentUser.isAdmin) {
-        this.navItems = [
+        this.navItems = this.navItems.concat([
+          { title: 'Ouija Board', icon: 'mdi-auto-fix', path: '/ouija' },
           { title: 'Rooms', icon: 'mdi-domain', path: '/rooms' },
           { title: 'Course Changes', icon: 'mdi-swap-horizontal', path: '/changes' }
-        ]
+        ])
       } else {
-        this.navItems = []
         this.$_.each(this.$currentUser.courses, course => {
           if (course.room && course.room.capability) {
             this.navItems.push({

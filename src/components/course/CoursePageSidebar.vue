@@ -13,26 +13,29 @@
     </v-row>
     <div v-for="(meeting, index) in course.meetings" :key="index">
       <v-row v-if="meeting.daysFormatted" :id="`meeting-days-${index}`">
-        <v-col md="auto">
+        <v-col md="auto" :class="{'pb-0': course.meetingDateRangesVary}">
           <v-icon>mdi-calendar</v-icon>
         </v-col>
-        <v-col>
+        <v-col :class="{'pb-0': course.meetingDateRangesVary}">
           {{ $_.join(meeting.daysFormatted, ', ') }}
+          <div v-if="course.meetingDateRangesVary">
+            {{ meeting.startDate }} - {{ meeting.endDate }}
+          </div>
         </v-col>
       </v-row>
       <v-row v-if="meeting.startTimeFormatted" :id="`meeting-times-${index}`">
-        <v-col md="auto">
+        <v-col md="auto" :class="{'pb-1 pt-1': course.meetingDateRangesVary}">
           <v-icon>mdi-clock-outline</v-icon>
         </v-col>
-        <v-col>
+        <v-col :class="{'pb-1 pt-1': course.meetingDateRangesVary}">
           {{ meeting.startTimeFormatted }} - {{ meeting.endTimeFormatted }}
         </v-col>
       </v-row>
       <v-row v-if="meeting.room" :id="`rooms-${index}`">
-        <v-col md="auto">
+        <v-col md="auto" :class="{'pb-5 pt-1': course.meetingDateRangesVary}">
           <v-icon>mdi-map-marker</v-icon>
         </v-col>
-        <v-col v-if="$currentUser.isAdmin">
+        <v-col v-if="$currentUser.isAdmin" :class="{'pb-5 pt-1': course.meetingDateRangesVary}">
           <router-link id="room" :to="`/room/${meeting.room.id}`">{{ meeting.room.location }}</router-link>
         </v-col>
         <v-col v-if="!$currentUser.isAdmin">
