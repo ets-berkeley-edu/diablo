@@ -51,7 +51,7 @@
               </td>
               <td :id="`section-id-${course.sectionId}`" :class="tdClass(course)">{{ course.sectionId }}</td>
               <td v-if="includeRoomColumn" :class="tdClass(course)">
-                <div 
+                <div
                   v-for="(meeting, index) in course.meetings"
                   :id="`meeting-room-${course.sectionId}-${index}`"
                   :key="index"
@@ -72,7 +72,12 @@
                 </div>
               </td>
               <td :id="`meeting-times-${course.sectionId}`" :class="tdClass(course)">
-                <div v-for="(meeting, index) in course.meetings" :id="`meeting-times-${course.sectionId}-${index}`" :key="index">
+                <div
+                  v-for="(meeting, index) in course.meetings"
+                  :id="`meeting-times-${course.sectionId}-${index}`"
+                  :key="index"
+                  class="text-no-wrap"
+                >
                   {{ meeting.startTimeFormatted }} - {{ meeting.endTimeFormatted }}
                 </div>
               </td>
