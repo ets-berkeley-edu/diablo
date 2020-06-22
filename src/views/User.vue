@@ -8,6 +8,7 @@
       <CoursesDataTable
         class="pt-5"
         :courses="user.courses"
+        :include-room-column="true"
         :message-for-courses="summarize(user.courses)"
         :on-toggle-opt-out="() => {}"
         :refreshing="false"

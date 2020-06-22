@@ -96,8 +96,8 @@
                 <v-text-field
                   v-model="editJob.schedule.value"
                   required
-                  :suffix="editJob.schedule.type === 'day_at' ? 'PST': ''"
-                  :type="editJob.schedule.type === 'day_at' ? 'time': 'number'"
+                  :suffix="editJob.schedule.type === 'day_at' ? 'PST' : ''"
+                  :type="editJob.schedule.type === 'day_at' ? 'time' : 'number'"
                 ></v-text-field>
               </v-col>
             </v-row>
@@ -105,12 +105,12 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="blue darken-1" text @click="scheduleEditCancel()">Close</v-btn>
+          <v-btn color="blue darken-1" text @click="scheduleEditCancel">Close</v-btn>
           <v-btn
             color="blue darken-1"
             :disabled="disableScheduleSave"
             text
-            @click="scheduleEditSave()"
+            @click="scheduleEditSave"
           >
             Save
           </v-btn>

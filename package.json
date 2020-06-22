@@ -8,8 +8,8 @@
     "serve-vue": "vue-cli-service serve --open"
   },
   "dependencies": {
-    "@babel/core": "7.10.2",
-    "@babel/runtime": "7.10.2",
+    "@babel/core": "7.10.3",
+    "@babel/runtime": "7.10.3",
     "@mdi/font": "5.3.45",
     "axios": "0.19.2",
     "core-js": "3.6.5",
@@ -36,7 +36,7 @@
     "@vue/eslint-config-typescript": "^5.0.2",
     "babel-eslint": "^10.1.0",
     "deepmerge": "^4.2.2",
-    "eslint": "^7.2.0",
+    "eslint": "^7.3.0",
     "eslint-plugin-import": "^2.21.2",
     "eslint-plugin-no-loops": "^0.3.0",
     "eslint-plugin-unicorn": "^20.1.0",

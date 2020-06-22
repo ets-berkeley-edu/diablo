@@ -38,7 +38,7 @@
       </v-row>
       <v-row class="mt-4">
         <v-col>
-          <tiptap-vuetify
+          <TiptapVuetify
             id="textarea-template-body"
             v-model="message"
             :extensions="extensions"
