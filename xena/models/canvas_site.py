@@ -24,31 +24,9 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 
 
-class User(object):
+class CanvasSite(object):
 
-    def __init__(self, data):
-        self.data = data
-
-    @property
-    def uid(self):
-        return self.data['uid']
-
-    @property
-    def canvas_id(self):
-        return self.data['canvas_id']
-
-    @property
-    def first_name(self):
-        return self.data['first_name']
-
-    @property
-    def last_name(self):
-        return self.data['last_name']
-
-    @property
-    def email(self):
-        return self.data['email']
-
-    @property
-    def role(self):
-        return self.data['role']
+    def __init__(self, code, name, site_id):
+        self.code = code
+        self.name = name
+        self.site_id = site_id

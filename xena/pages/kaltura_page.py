@@ -47,6 +47,7 @@ class KalturaPage(Page):
     SERIES_STATUS_PRIVATE_RADIO = (By.ID, 'private')
     SERIES_STATUS_UNLISTED_RADIO = (By.ID, 'unlisted')
     SERIES_STATUS_PUBLISHED_RADIO = (By.ID, 'published')
+    SERIES_CATEGORY_ROW = (By.XPATH, '//div[@class="pblBadge"]/dl')
     SERIES_RECUR_BUTTON = (By.ID, 'CreateEvent-recurrenceMain')
     SERIES_DELETE_BUTTON = (By.ID, 'CreateEvent-btnDelete')
     SERIES_DELETE_CONFIRM_BUTTON = (By.XPATH, '//div[@class="modal-footer"]/a[text()="Delete"]')
@@ -105,6 +106,12 @@ class KalturaPage(Page):
 
     def is_published(self):
         return self.element(KalturaPage.SERIES_STATUS_PUBLISHED_RADIO).is_selected()
+
+    def publish_category_els(self):
+        return self.elements(KalturaPage.SERIES_CATEGORY_ROW)
+
+    def is_publish_category_present(self, site):
+        return self.is_present((By.XPATH, f'//div[@class="pblBadge"][contains(., "{site.code}")]'))
 
     def open_recurrence_modal(self):
         app.logger.info('Clicking recurrence button')

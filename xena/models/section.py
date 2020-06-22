@@ -33,8 +33,9 @@ from xena.models.user import User
 
 class Section(object):
 
-    def __init__(self, data):
+    def __init__(self, data, sites=None):
         self.data = data
+        self.sites = sites or []
 
     @property
     def term(self):

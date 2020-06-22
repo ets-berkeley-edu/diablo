@@ -24,6 +24,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 
 from datetime import datetime
+import time
 
 import pytest
 from xena.models.email import Email
@@ -144,6 +145,7 @@ class TestCourseChanges:
 
     def test_changes_page_new_instr_in_kaltura(self):
         # TODO verify the new instructor has replaced the old in the collaborators
+        time.sleep(15)
         self.changes_page.load_page()
         self.changes_page.wait_for_results()
         assert not self.changes_page.is_course_row_present(self.real_section)
@@ -163,10 +165,10 @@ class TestCourseChanges:
     def test_changes_page_with_new_times(self):
         self.jobs_page.click_course_changes_link()
         self.changes_page.wait_for_course_row(self.real_section)
-        fake_start = datetime.strftime(datetime.strptime(self.fake_section.start_time, '%I:%M%p'), '%I:%M %p')
-        fake_end = datetime.strftime(datetime.strptime(self.fake_section.end_time, '%I:%M%p'), '%I:%M %p')
-        real_start = datetime.strftime(datetime.strptime(self.real_section.start_time, '%I:%M%p'), '%I:%M %p')
-        real_end = datetime.strftime(datetime.strptime(self.real_section.end_time, '%I:%M%p'), '%I:%M %p')
+        fake_start = datetime.strftime(datetime.strptime(self.fake_section.start_time, '%I:%M%p'), '%-I:%M %p')
+        fake_end = datetime.strftime(datetime.strptime(self.fake_section.end_time, '%I:%M%p'), '%-I:%M %p')
+        real_start = datetime.strftime(datetime.strptime(self.real_section.start_time, '%I:%M%p'), '%-I:%M %p')
+        real_end = datetime.strftime(datetime.strptime(self.real_section.end_time, '%I:%M%p'), '%-I:%M %p')
         fake_sched = f'{self.fake_section.days.replace(" ", "")} {fake_start} - {fake_end}'
         real_sched = f'{self.real_section.days.replace(" ", "")} {real_start} - {real_end}'
         expected = f'{real_sched}\n changed to\n{fake_sched}'
@@ -203,7 +205,7 @@ class TestCourseChanges:
         self.sign_up_page.load_page(self.real_section)
         self.sign_up_page.click_kaltura_series_link(self.recording_sched)
         self.kaltura_page.wait_for_delete_button()
-        expected = f'{self.section.code}, {self.section.number} ({self.term.name})'
+        expected = f'{self.real_section.code}, {self.real_section.number} ({self.real_section.term.name})'
         assert self.kaltura_page.visible_series_title() == expected
 
     def test_verify_new_kaltura_days(self):
@@ -223,10 +225,10 @@ class TestCourseChanges:
 
     def test_verify_new_kaltura_times(self):
         start = self.fake_section.get_berkeley_start_time()
-        visible_start = datetime.strptime(self.kaltura_page.visible_start_time(), '%I:%M %p')
+        visible_start = datetime.strptime(self.kaltura_page.visible_start_time(), '%I:%M%p')
         assert visible_start == start
         end = self.fake_section.get_berkeley_end_time()
-        visible_end = datetime.strptime(self.kaltura_page.visible_end_time(), '%I:%M %p')
+        visible_end = datetime.strptime(self.kaltura_page.visible_end_time(), '%I:%M%p')
         assert visible_end == end
 
     def test_close_kaltura(self):
@@ -273,7 +275,7 @@ class TestCourseChanges:
         email = Email(msg_type=None, subject=subj, sender=None)
         assert self.email_page.is_message_delivered(email)
 
-    def test_instructor_email_ineligibel_room(self):
+    def test_instructor_email_ineligible_room(self):
         subj = f'Your course {self.real_section.code} is no longer eligible for Course Capture'
         email = Email(msg_type=None, subject=subj, sender=None)
         assert self.email_page.is_message_delivered(email)

@@ -102,6 +102,24 @@ def wait_for_kaltura_id(recording_schedule, term):
                 time.sleep(get_short_timeout())
 
 
+def get_course_site_ids(section):
+    sql = f'SELECT canvas_course_site_id FROM canvas_course_sites WHERE term_id = {section.term.id} AND section_id = {section.ccn}'
+    app.logger.info(sql)
+    ids = []
+    result = db.session.execute(text(sql))
+    std_commit(allow_test_environment=True)
+    for row in result:
+        ids.append(dict(row).get('canvas_course_site_id'))
+    app.logger.info(f'Site IDs are {ids}')
+    return ids
+
+
+def delete_course_site(site_id):
+    sql = f'DELETE FROM canvas_course_sites WHERE canvas_course_site_id = {site_id}'
+    db.session.execute(text(sql))
+    std_commit(allow_test_environment=True)
+
+
 def reset_email_template_test_data(template_type):
     sql = f"DELETE FROM email_templates WHERE template_type = '{template_type}'"
     db.session.execute(text(sql))

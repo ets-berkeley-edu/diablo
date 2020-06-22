@@ -26,6 +26,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 from datetime import datetime
 
 import pytest
+from xena.models.canvas_site import CanvasSite
 from xena.models.email import Email
 from xena.models.publish_type import PublishType
 from xena.models.recording_approval_status import RecordingApprovalStatus
@@ -38,6 +39,7 @@ from xena.test_utils import util
 
 """
 SCENARIO:
+- Course site is created
 - Sole instructor visits sign-up page, selects presentation + presenter, approves
 - Recordings scheduled
 """
@@ -49,6 +51,11 @@ class TestSignUp0:
     test_data = util.parse_course_test_data()[0]
     section = Section(test_data)
     recording_schedule = RecordingSchedule(section)
+    site = CanvasSite(
+        code=f'XENA SignUp0 - {section.code}',
+        name=f'XENA SignUp0 - {section.code}',
+        site_id=None,
+    )
 
     # DELETE PRE-EXISTING DATA
 
@@ -57,11 +64,15 @@ class TestSignUp0:
         self.login_page.dev_auth()
         self.ouija_page.click_jobs_link()
         self.jobs_page.run_queued_emails_job()
+        self.jobs_page.run_canvas_job()
         self.jobs_page.disable_all_jobs()
 
     def test_delete_old_kaltura_series(self):
         self.kaltura_page.log_in_via_calnet()
         self.kaltura_page.reset_test_data(self.term, self.recording_schedule)
+
+    def test_delete_old_canvas_sites(self):
+        self.canvas_page.delete_sites(self.section)
 
     def test_delete_old_diablo_data(self):
         util.reset_sign_up_test_data(self.test_data)
@@ -73,6 +84,17 @@ class TestSignUp0:
         self.email_page.delete_all_messages()
 
     # TODO - configure email template subjects prior to verifying emails
+
+    # CREATE COURSE SITE
+
+    def test_create_course_site(self):
+        self.canvas_page.provision_site(self.section, [self.section.ccn], self.site)
+
+    def test_run_canvas_job(self):
+        self.jobs_page.load_page()
+        self.jobs_page.run_canvas_job()
+
+    # TODO - def test_course_site_on_course_page(self):
 
     # CHECK FILTERS - NOT INVITED
 
@@ -207,6 +229,8 @@ class TestSignUp0:
         assert self.sign_up_page.visible_cross_listing_codes() == listing_codes
 
     # VERIFY VARIABLE CONTENT AND EXTERNAL LINKS
+
+    # TODO def test_course_site_on_sign_up(self):
 
     def test_rec_type_text(self):
         assert self.sign_up_page.is_present(SignUpPage.RECORDING_TYPE_TEXT) is True
@@ -407,6 +431,12 @@ class TestSignUp0:
     def test_series_publish_status(self):
         assert self.kaltura_page.is_private()
 
+    def test_kaltura_course_site_count(self):
+        assert len(self.kaltura_page.publish_category_els) == 1
+
+    def test_kaltura_course_site(self):
+        assert self.kaltura_page.is_publish_category_present(self.site)
+
     def test_recur_weekly(self):
         self.kaltura_page.open_recurrence_modal()
         assert self.kaltura_page.is_weekly_checked()
@@ -471,3 +501,7 @@ class TestSignUp0:
         subj = f'Your course, {self.section.code}, has been scheduled for Course Capture'
         expected_message = Email(msg_type=None, sender=None, subject=subj)
         assert self.email_page.is_message_delivered(expected_message)
+
+    # VERIFY KALTURA IN COURSE SITE
+
+    # TODO def test_media_in_course_site(self):

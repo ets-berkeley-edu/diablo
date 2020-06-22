@@ -26,6 +26,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 from datetime import datetime
 
 import pytest
+from xena.models.canvas_site import CanvasSite
 from xena.models.email import Email
 from xena.models.publish_type import PublishType
 from xena.models.recording_approval_status import RecordingApprovalStatus
@@ -41,14 +42,21 @@ SCENARIO:
 - Admin visits sign-up page, selects presentation
 - Recordings scheduled
 - Sole instructor visits sign-up page and approves
+- Course site is created
 """
 
 
 @pytest.mark.usefixtures('page_objects')
 class TestSignUp1:
+
     test_data = util.parse_course_test_data()[1]
     section = Section(test_data)
     recording_schedule = RecordingSchedule(section)
+    site = CanvasSite(
+        code=f'XENA SignUp1 - {section.code}',
+        name=f'XENA SignUp1 - {section.code}',
+        site_id=None,
+    )
 
     # DELETE PRE-EXISTING DATA
 
@@ -57,6 +65,7 @@ class TestSignUp1:
         self.login_page.dev_auth()
         self.ouija_page.click_jobs_link()
         self.jobs_page.run_queued_emails_job()
+        self.jobs_page.run_canvas_job()
         self.jobs_page.disable_all_jobs()
 
     def test_delete_old_kaltura_series(self):
@@ -67,6 +76,9 @@ class TestSignUp1:
         util.reset_sign_up_test_data(self.test_data)
         self.recording_schedule.approval_status = RecordingApprovalStatus.NOT_INVITED
         self.recording_schedule.scheduling_status = RecordingSchedulingStatus.NOT_SCHEDULED
+
+    def test_delete_old_canvas_sites(self):
+        self.canvas_page.delete_sites(self.section)
 
     def test_delete_old_email(self):
         self.email_page.log_in()
@@ -196,6 +208,8 @@ class TestSignUp1:
     def test_visible_listings(self):
         listing_codes = [li.code for li in self.section.listings]
         assert self.sign_up_page.visible_cross_listing_codes() == listing_codes
+
+    # TODO def test_no_course_site_on_sign_up(self):
 
     # VERIFY AVAILABLE OPTIONS
 
@@ -374,6 +388,9 @@ class TestSignUp1:
     def test_series_publish_status(self):
         assert self.kaltura_page.is_private()
 
+    def test_kaltura_no_course_site(self):
+        assert len(self.kaltura_page.publish_category_els) == 0
+
     def test_recur_weekly(self):
         self.kaltura_page.open_recurrence_modal()
         assert self.kaltura_page.is_weekly_checked()
@@ -513,3 +530,29 @@ class TestSignUp1:
     def test_approved_filter_scheduled(self):
         self.ouija_page.filter_for_scheduled()
         assert self.ouija_page.is_course_in_results(self.section) is True
+
+    # CREATE COURSE SITE
+
+    def test_create_course_site(self):
+        self.canvas_page.provision_site(self.section, [self.section.ccn])
+
+    def test_run_canvas_and_kaltura_jobs(self):
+        self.jobs_page.load_page()
+        self.jobs_page.run_canvas_job()
+        self.jobs_page.run_kaltura_job()
+
+    # VERIFY SITE IN KALTURA SERIES
+
+    def test_load_kaltura_series(self):
+        self.kaltura_page.load_event_edit_page(self.recording_schedule.series_id)
+        self.kaltura_page.wait_for_delete_button()
+
+    def test_kaltura_course_site_count(self):
+        assert len(self.kaltura_page.publish_category_els) == 1
+
+    def test_kaltura_course_site(self):
+        assert self.kaltura_page.is_publish_category_present(self.site)
+
+    # VERIFY KALTURA IN COURSE SITE
+
+    # TODO def test_media_in_course_site(self):

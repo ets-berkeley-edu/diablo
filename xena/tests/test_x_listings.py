@@ -24,6 +24,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 
 import pytest
+from xena.models.canvas_site import CanvasSite
 from xena.models.email import Email
 from xena.models.publish_type import PublishType
 from xena.models.recording_approval_status import RecordingApprovalStatus
@@ -40,6 +41,16 @@ class TestCrossListings:
     section = Section(test_data)
     x_listings = section.listings
     recording_schedule = RecordingSchedule(section)
+    site_1 = CanvasSite(
+        code=f'XENA X-Listing One - {section.code}',
+        name=f'XENA X-Listing One - {section.code}',
+        site_id=None,
+    )
+    site_2 = CanvasSite(
+        code=f'XENA X-Listing Two - {section.code}',
+        name=f'XENA X-Listing Two - {section.code}',
+        site_id=None,
+    )
 
     # DELETE PRE-EXISTING DATA AND MAKE SURE THE CROSS-LISTED COURSE IS IN A ROOM WITH A KALTURA RESOURCE
 
@@ -48,11 +59,15 @@ class TestCrossListings:
         self.login_page.dev_auth()
         self.ouija_page.click_jobs_link()
         self.jobs_page.run_queued_emails_job()
+        self.jobs_page.run_canvas_job()
         self.jobs_page.disable_all_jobs()
 
     def test_delete_old_kaltura_series(self):
         self.kaltura_page.log_in_via_calnet()
         self.kaltura_page.reset_test_data(self.term, self.recording_schedule)
+
+    def test_delete_old_canvas_sites(self):
+        self.canvas_page.delete_sites(self.section)
 
     def test_delete_old_diablo_data(self):
         util.reset_sign_up_test_data(self.test_data)
@@ -65,6 +80,20 @@ class TestCrossListings:
     def test_delete_old_email(self):
         self.email_page.log_in()
         self.email_page.delete_all_messages()
+
+    # CREATE A COURSE SITE FOR EACH OF THE LISTINGS
+
+    def test_create_course_site_one(self):
+        self.canvas_page.provision_site(self.section, [self.section.listings[0].ccn], self.site_1)
+
+    def test_create_course_site_two(self):
+        self.canvas_page.provision_site(self.section, [self.section.listings[1].ccn], self.site_1)
+
+    def test_run_canvas_job(self):
+        self.jobs_page.load_page()
+        self.jobs_page.run_canvas_job()
+
+    # TODO - def test_course_site_on_course_page(self):
 
     # INSTRUCTORS FOLLOW SIGN UP WORKFLOW
 
@@ -124,6 +153,13 @@ class TestCrossListings:
         listing_codes.append(f'{self.section.code}, {self.section.number}')
         for code in listing_codes:
             assert code in self.kaltura_page.visible_series_title()
+
+    def test_kaltura_course_site_count_two(self):
+        assert len(self.kaltura_page.publish_category_els) == 2
+
+    def test_kaltura_course_sites(self):
+        assert self.kaltura_page.is_publish_category_present(self.site_1)
+        assert self.kaltura_page.is_publish_category_present(self.site_2)
 
     # VERIFY AUTO-EMAILS
 
@@ -193,3 +229,7 @@ class TestCrossListings:
         subj = f'Your course, {self.section.listings[0].code}, has been scheduled for Course Capture (To: {self.section.instructors[0].email})'
         expected_message = Email(msg_type=None, sender=None, subject=subj)
         assert not self.email_page.is_message_present(expected_message)
+
+    # VERIFY KALTURA MEDIA IN COURSE SITES
+
+    # TODO

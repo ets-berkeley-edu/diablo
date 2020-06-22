@@ -26,6 +26,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 from datetime import datetime
 
 import pytest
+from xena.models.canvas_site import CanvasSite
 from xena.models.email import Email
 from xena.models.publish_type import PublishType
 from xena.models.recording_approval_status import RecordingApprovalStatus
@@ -39,8 +40,10 @@ from xena.test_utils import util
 """
 SCENARIO:
 - Instructor 1 signs up
+- Course site created
 - Instructor 2 signs up, changes recording type
 - Recordings scheduled
+- Another course site created
 """
 
 
@@ -50,6 +53,16 @@ class TestSignUp2:
     test_data = util.parse_course_test_data()[2]
     section = Section(test_data)
     recording_schedule = RecordingSchedule(section)
+    site_1 = CanvasSite(
+        code=f'XENA SignUp2A - {section.code}',
+        name=f'XENA SignUp2A - {section.code}',
+        site_id=None,
+    )
+    site_2 = CanvasSite(
+        code=f'XENA SignUp2B - {section.code}',
+        name=f'XENA SignUp2B - {section.code}',
+        site_id=None,
+    )
 
     # DELETE PRE-EXISTING DATA
 
@@ -58,11 +71,15 @@ class TestSignUp2:
         self.login_page.dev_auth()
         self.ouija_page.click_jobs_link()
         self.jobs_page.run_queued_emails_job()
+        self.jobs_page.run_canvas_job()
         self.jobs_page.disable_all_jobs()
 
     def test_delete_old_kaltura_series(self):
         self.kaltura_page.log_in_via_calnet()
         self.kaltura_page.reset_test_data(self.term, self.recording_schedule)
+
+    def test_delete_old_canvas_sites(self):
+        self.canvas_page.delete_sites(self.section)
 
     def test_delete_old_diablo_data(self):
         util.reset_sign_up_test_data(self.test_data)
@@ -213,6 +230,8 @@ class TestSignUp2:
         listing_codes = [li.code for li in self.section.listings]
         assert self.sign_up_page.visible_cross_listing_codes() == listing_codes
 
+    # TODO def test_no_course_site(self):
+
     # VERIFY AVAILABLE OPTIONS
 
     def test_rec_type_text(self):
@@ -319,6 +338,15 @@ class TestSignUp2:
         expected_message = Email(msg_type=None, sender=None, subject=subj)
         assert not self.email_page.is_message_present(expected_message)
 
+    # CREATE COURSE SITE
+
+    def test_create_course_site_one(self):
+        self.canvas_page.provision_site(self.section, [self.section.ccn], self.site_1)
+
+    def test_run_canvas_job_one(self):
+        self.jobs_page.load_page()
+        self.jobs_page.run_canvas_job()
+
     # INSTRUCTOR 2 LOGS IN
 
     def test_home_page_inst_2(self):
@@ -338,6 +366,8 @@ class TestSignUp2:
         name = f'{self.section.instructors[0].first_name} {self.section.instructors[0].last_name}'
         msg = f'Approved by {name}. Recordings will be scheduled when we have approval from you.'
         self.sign_up_page.wait_for_approvals_msg(msg)
+
+    # TODO - def test_course_site_on_course_page(self):
 
     # VERIFY AVAILABLE OPTIONS
 
@@ -533,6 +563,12 @@ class TestSignUp2:
     def test_series_publish_status(self):
         assert self.kaltura_page.is_private()
 
+    def test_kaltura_course_site_count_one(self):
+        assert len(self.kaltura_page.publish_category_els) == 1
+
+    def test_kaltura_course_site_one(self):
+        assert self.kaltura_page.is_publish_category_present(self.site)
+
     def test_recur_weekly(self):
         self.kaltura_page.open_recurrence_modal()
         assert self.kaltura_page.is_weekly_checked()
@@ -616,3 +652,34 @@ class TestSignUp2:
 
     def test_view_scheduled_inst_1(self):
         assert self.sign_up_page.element(SignUpPage.H4_HEADING).text == 'Recordings scheduled'
+
+    # CREATE CANVAS SITE TWO
+
+    def test_create_course_site_two(self):
+        self.canvas_page.provision_site(self.section, [self.section.ccn], self.site_2)
+
+    def test_run_canvas_job_site_two(self):
+        self.jobs_page.load_page()
+        self.jobs_page.run_canvas_job()
+        self.jobs_page_run_kaltura_job()
+
+    # TODO - def test_course_site_two_on_course_page(self):
+
+    # VERIFY SITES IN KALTURA SERIES
+
+    def test_load_kaltura_series(self):
+        self.kaltura_page.load_event_edit_page(self.recording_schedule.series_id)
+        self.kaltura_page.wait_for_delete_button()
+
+    def test_kaltura_course_site_count_two(self):
+        assert len(self.kaltura_page.publish_category_els) == 2
+
+    def test_kaltura_course_site_both(self):
+        assert self.kaltura_page.is_publish_category_present(self.site_1)
+        assert self.kaltura_page.is_publish_category_present(self.site_2)
+
+    # VERIFY KALTURA IN COURSE SITES
+
+    # TODO def test_media_in_course_site_one(self):
+
+    # TODO def test_media_in_course_site_two(self):

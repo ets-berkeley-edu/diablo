@@ -45,6 +45,7 @@ class DiabloPages(Page):
 
     SPINNER = (By.XPATH, '//div[contains(@class, "spinner")]')
     ALERT_MSG = (By.ID, 'alert-text')
+    ERROR_REDIRECT = (By.XPATH, '//span[text()="Request failed with status code 504"]')
     VISIBLE_MENU_OPTION = (By.XPATH, '//div[contains(@class, "menuable__content__active")]//span[contains(@id, "-option-")]')
 
     @staticmethod
