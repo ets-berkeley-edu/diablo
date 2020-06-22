@@ -22,7 +22,6 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-
 from urllib.parse import urlencode, urljoin, urlparse
 
 import cas
@@ -68,7 +67,7 @@ def dev_auth_login():
 @app.route('/api/auth/logout')
 @login_required
 def logout():
-    _logout_user()
+    logout_user()
     redirect_url = app.config['VUE_LOCALHOST_BASE_URL'] or request.url_root
     cas_logout_url = _cas_client().get_logout_url(redirect_url=redirect_url)
     return tolerant_jsonify({
@@ -118,7 +117,3 @@ def _is_safe_url(target):
     ref_url = urlparse(request.host_url)
     test_url = urlparse(urljoin(request.host_url, target))
     return test_url.scheme in ('http', 'https') and ref_url.netloc == test_url.netloc
-
-
-def _logout_user():
-    logout_user()

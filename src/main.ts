@@ -20,30 +20,48 @@ Vue.use(VueMoment, { moment })
 const apiBaseUrl = process.env.VUE_APP_API_BASE_URL
 const isDebugMode = _.trim(process.env.VUE_APP_DEBUG).toLowerCase() === 'true'
 
+const axiosErrorHandler = error => {
+  const errorStatus = _.get(error, 'response.status')
+  if (_.get(Vue.prototype.$currentUser, 'isAuthenticated')) {
+    if (errorStatus === 404) {
+      router.push({ path: '/404' })
+    } else if (errorStatus >= 400) {
+      const message = _.get(error, 'response.data.message') || error.message
+      console.error(message)
+      router.push({
+        path: '/error',
+        query: {
+          m: message
+        }
+      })
+    }
+  } else {
+    router.push({
+      path: '/login',
+      query: {
+        m: 'Your session has expired'
+      }
+    })
+  }
+}
+
 // Axios
 axios.defaults.withCredentials = true
 axios.interceptors.response.use(
     response => response.headers['content-type'] === 'application/json' ? response.data : response,
     error => {
       const errorStatus = _.get(error, 'response.status')
-      if (_.get(Vue.prototype.$currentUser, 'isAuthenticated')) {
-        if (errorStatus === 404) {
-          router.push({ path: '/404' })
-        } else if (errorStatus >= 400) {
-          const message = _.get(error, 'response.data.message') || error.message
-          console.error(message)
-          router.push({
-            path: '/error',
-            query: {
-              m: message
-            }
-          })
-        }
+      if (_.includes([401, 403], errorStatus)) {
+        // Refresh user in case his/her session expired.
+        axios.get(`${apiBaseUrl}/api/user/my_profile`).then(data => {
+          Vue.prototype.$currentUser = data
+          axiosErrorHandler(error)
+          return Promise.reject(error)
+        })
       } else {
-        // Raise error and let /login page display the message
-        throw _.get(error, 'response.data.message') || `Error: Server responded with status ${errorStatus}`
+        axiosErrorHandler(error)
+        return Promise.reject(error)
       }
-      return Promise.reject(error)
     })
 
 // Vue config
