@@ -78,7 +78,9 @@ class TestSignUp1:
         self.recording_schedule.scheduling_status = RecordingSchedulingStatus.NOT_SCHEDULED
 
     def test_delete_old_canvas_sites(self):
-        self.canvas_page.delete_sites(self.section)
+        self.canvas_page.delete_section_sites(self.section)
+        self.jobs_page.load_page()
+        self.jobs_page.run_canvas_job()
 
     def test_delete_old_email(self):
         self.email_page.log_in()
@@ -205,11 +207,12 @@ class TestSignUp1:
     def test_visible_room(self):
         assert self.sign_up_page.visible_rooms() == self.section.room.name
 
+    def test_no_visible_site_ids(self):
+        assert len(self.sign_up_page.visible_course_site_ids()) == 0
+
     def test_visible_listings(self):
         listing_codes = [li.code for li in self.section.listings]
         assert self.sign_up_page.visible_cross_listing_codes() == listing_codes
-
-    # TODO def test_no_course_site_on_sign_up(self):
 
     # VERIFY AVAILABLE OPTIONS
 
@@ -490,7 +493,7 @@ class TestSignUp1:
     def test_confirmation(self):
         self.sign_up_page.wait_for_approvals_msg('Approved by you.')
 
-        # VERIFY OUIJA FILTER
+    # VERIFY OUIJA FILTER
 
     def test_approved_filter_all(self):
         self.sign_up_page.log_out()
@@ -541,18 +544,21 @@ class TestSignUp1:
         self.jobs_page.run_canvas_job()
         self.jobs_page.run_kaltura_job()
 
+    def test_visible_site_ids(self):
+        self.sign_up_page.load_page(self.section)
+        assert self.sign_up_page.visible_course_site_ids() == [site.site_id for site in self.section.sites]
+
     # VERIFY SITE IN KALTURA SERIES
 
     def test_load_kaltura_series(self):
         self.kaltura_page.load_event_edit_page(self.recording_schedule.series_id)
         self.kaltura_page.wait_for_delete_button()
 
+    def test_kaltura_published_status(self):
+        assert self.kaltura_page.is_published()
+
     def test_kaltura_course_site_count(self):
         assert len(self.kaltura_page.publish_category_els) == 1
 
     def test_kaltura_course_site(self):
         assert self.kaltura_page.is_publish_category_present(self.site)
-
-    # VERIFY KALTURA IN COURSE SITE
-
-    # TODO def test_media_in_course_site(self):
