@@ -114,11 +114,16 @@ class TestGetRoom:
         assert api_json['location'] == location
         assert api_json['kalturaResourceId'] == 890
         assert len(api_json['recordingTypeOptions']) == 1
+
         # Simple verification of courses sort order
         courses = api_json['courses']
         assert len(courses) > 1
+
+        def _days_first_eligible(course):
+            return course['meetings']['eligible'][0]['daysFormatted'][0]
+
         for index in range(1, len(courses)):
-            assert courses[index - 1]['meetings'][0]['daysFormatted'][0] <= courses[index]['meetings'][0]['daysFormatted'][0]
+            assert _days_first_eligible(courses[index - 1]) <= _days_first_eligible(courses[index])
 
     def test_screencast_and_video_auditorium(self, client, admin_session):
         """All recording types are available for Auditorium with 'screencast_and_video' capability."""

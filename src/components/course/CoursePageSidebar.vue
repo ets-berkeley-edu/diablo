@@ -11,7 +11,7 @@
         </OxfordJoin>
       </v-col>
     </v-row>
-    <div v-for="(meeting, index) in course.meetings" :key="index">
+    <div v-for="(meeting, index) in course.displayMeetings" :key="index">
       <v-row v-if="meeting.daysFormatted" :id="`meeting-days-${index}`">
         <v-col md="auto" :class="{'pb-0': multipleMeetings}">
           <v-icon>mdi-calendar</v-icon>
@@ -142,13 +142,14 @@
 <script>
   import Context from '@/mixins/Context'
   import OxfordJoin from '@/components/util/OxfordJoin'
+  import Utils from '@/mixins/Utils'
   import {unschedule} from '@/api/course'
   import {queueEmail} from '@/api/email'
 
   export default {
     name: 'CoursePageSidebar',
     components: {OxfordJoin},
-    mixins: [Context],
+    mixins: [Context, Utils],
     props: {
       afterUnschedule: {
         required: true,
@@ -172,7 +173,8 @@
       }
     },
     created() {
-      this.multipleMeetings = this.course.meetings.length > 1
+      this.course.displayMeetings = this.getDisplayMeetings(this.course)
+      this.multipleMeetings = this.course.displayMeetings.length > 1
     },
     methods: {
       sendInvite() {

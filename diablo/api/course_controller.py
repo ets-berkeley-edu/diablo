@@ -64,7 +64,11 @@ def approve():
     if Approval.get_approval(approved_by_uid=current_user.uid, section_id=section_id, term_id=term_id):
         raise ForbiddenRequestError(f'You have already approved recording of {course["courseName"]}, {term_name}')
 
-    meeting = SisSection.get_meeting_from_feed(course)
+    meetings = course.get('meetings', {}).get('eligible', [])
+    if len(meetings) != 1:
+        raise BadRequestError('Unique eligible meeting pattern not found for course')
+    meeting = meetings[0]
+
     location = meeting and meeting.get('location')
     room = Room.find_room(location=location)
     if not room:
@@ -140,10 +144,10 @@ def download_courses_csv():
         return {
             'Course Name': c.get('courseName'),
             'Section Id': section_id,
-            'Room': ' / '.join(m.get('location', '') for m in c.get('meetings', [])),
-            'Days': ' / '.join(', '.join(m.get('daysFormatted') or []) for m in c.get('meetings', [])),
-            'Start Time': ' / '.join(m.get('startTimeFormatted', '') for m in c.get('meetings', [])),
-            'End Time': ' / '.join(m.get('endTimeFormatted', '') for m in c.get('meetings', [])),
+            'Room': ' / '.join(m.get('location', '') for m in c.get('meetings', {}).get('eligible', [])),
+            'Days': ' / '.join(', '.join(m.get('daysFormatted') or []) for m in c.get('meetings', {}).get('eligible', [])),
+            'Start Time': ' / '.join(m.get('startTimeFormatted', '') for m in c.get('meetings', {}).get('eligible', [])),
+            'End Time': ' / '.join(m.get('endTimeFormatted', '') for m in c.get('meetings', {}).get('eligible', [])),
             'Publish Type': scheduled.get('publishTypeName'),
             'Recording Type': scheduled.get('recordingTypeName'),
             'Sign-up URL': get_sign_up_url(section_id=section_id, term_id=c.get('termId')),

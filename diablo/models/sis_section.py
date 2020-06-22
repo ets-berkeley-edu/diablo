@@ -133,15 +133,6 @@ class SisSection(db.Model):
         )
 
     @classmethod
-    def get_meeting_from_feed(cls, feed):
-        if not feed or not feed.get('meetings'):
-            return None
-        meeting = next((m for m in feed['meetings'] if m.get('eligible')), None)
-        if not meeting:
-            meeting = feed['meetings'][0]
-        return meeting
-
-    @classmethod
     def get_distinct_meeting_locations(cls):
         sql = """
             SELECT DISTINCT meeting_location FROM sis_sections
@@ -649,7 +640,10 @@ def _to_api_json(term_id, rows, include_rooms=True):
                     section_num=row['section_num'],
                     cross_listings=cross_listed_courses,
                 ),
-                'meetings': [],
+                'meetings': {
+                    'eligible': [],
+                    'ineligible': [],
+                },
                 'sectionId': section_id,
                 'sectionNum': row['section_num'],
                 'scheduled': scheduled,
@@ -669,20 +663,21 @@ def _to_api_json(term_id, rows, include_rooms=True):
             )
 
         meeting = _to_meeting_json(row)
-        if not next((m for m in course['meetings'] if meeting.items() <= m.items()), None):
-            course['meetings'].append(meeting)
+        if not next((m for m in (course['meetings']['eligible'] + course['meetings']['ineligible']) if meeting.items() <= m.items()), None):
             room = rooms_by_id.get(row['room_id']) if 'room_id' in row else None
             if room and room.capability:
                 meeting['eligible'] = True
-                course['eligibleMeetingCount'] += 1
+                course['meetings']['eligible'].append(meeting)
+                course['meetings']['eligible'].sort(key=lambda m: f"{m['startDate']} {m['startTime']}")
             else:
                 meeting['eligible'] = False
+                course['meetings']['ineligible'].append(meeting)
+                course['meetings']['ineligible'].sort(key=lambda m: f"{m['startDate']} {m['startTime']}")
             if include_rooms:
                 meeting['room'] = room.to_api_json() if room else None
-        course['meetings'] = sorted(course['meetings'], key=lambda m: f"{m['startDate']} {m['startTime']}")
 
         def _date_ranges_vary(key):
-            return len(set([m[key] for m in course['meetings']])) > 1
+            return len(set([m[key] for m in (course['meetings']['eligible'] + course['meetings']['ineligible'])])) > 1
         course['meetingDateRangesVary'] = _date_ranges_vary('startDate') or _date_ranges_vary('endDate')
 
     # Next, construct the feed
@@ -718,8 +713,20 @@ def _decorate_course(course):
     elif course['hasNecessaryApprovals']:
         course['schedulingStatus'] = 'Queued for Scheduling'
 
-    meeting = SisSection.get_meeting_from_feed(course)
-    room_id = meeting.get('room', {}).get('id')
+    meetings = course['meetings']['eligible'] + course['meetings']['ineligible']
+    if meetings:
+        course_meeting_string = '-'.join(
+            [
+                str(meetings[0]['daysFormatted']),
+                meetings[0]['startTimeFormatted'],
+                meetings[0]['endTimeFormatted'],
+            ],
+        )
+        room_id = meetings[0].get('room', {}).get('id')
+    else:
+        course_meeting_string = '-'
+        room_id = None
+
     if course['scheduled']:
         scheduled_meeting_string = '-'.join(
             [
@@ -728,15 +735,9 @@ def _decorate_course(course):
                 course['scheduled']['meetingEndTime'],
             ],
         )
-        course_meeting_string = '-'.join(
-            [
-                str(meeting['daysFormatted']),
-                meeting['startTimeFormatted'],
-                meeting['endTimeFormatted'],
-            ],
-        )
         instructor_uids = [i['uid'] for i in course['instructors']]
         has_obsolete_instructors = set(instructor_uids) != set(course.get('scheduled').get('instructorUids'))
+
         course['scheduled'].update({
             'hasObsoleteInstructors': has_obsolete_instructors,
             'hasObsoleteMeetingTimes': course_meeting_string != scheduled_meeting_string,
