@@ -64,7 +64,7 @@ def api_get_course(client, term_id, section_id, expected_status_code=200):
 
 def get_meeting_data(term_id, section_id):
     feed = SisSection.get_course(term_id=term_id, section_id=section_id)
-    meeting = SisSection.get_meeting_from_feed(feed)
+    meeting = (feed['meetings']['eligible'] + feed['meetings']['ineligible'])[0]
     return meeting['days'], meeting['startTime'], meeting['endTime']
 
 

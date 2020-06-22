@@ -61,7 +61,7 @@ class TestKalturaJob:
             course = SisSection.get_course(section_id=section_id, term_id=term_id)
             instructors = course['instructors']
             cross_listings = course['crossListings']
-            room_id = Room.find_room(course['meetings'][0]['location']).id
+            room_id = Room.find_room(course['meetings']['eligible'][0]['location']).id
 
             assert len(instructors) == 2
             assert room_id == Room.find_room('Barrows 106').id

@@ -41,12 +41,12 @@
                       </div>
                     </td>
                     <td :id="`course-${course.sectionId}-days`" class="text-no-wrap">
-                      <div v-for="(meeting, index) in course.meetings" :id="`meeting-days-${index}`" :key="index">
+                      <div v-for="(meeting, index) in course.displayMeetings" :id="`meeting-days-${index}`" :key="index">
                         {{ meeting.daysFormatted ? meeting.daysFormatted.join(',') : '&mdash;' }}                        
                       </div>
                     </td>
                     <td :id="`course-${course.sectionId}-times`" class="text-no-wrap">
-                      <div v-for="(meeting, index) in course.meetings" :id="`meeting-times-${index}`" :key="index">
+                      <div v-for="(meeting, index) in course.displayMeetings" :id="`meeting-times-${index}`" :key="index">
                         {{ meeting.startTimeFormatted ? `${meeting.startTimeFormatted} - ${meeting.endTimeFormatted}` : '&mdash;' }}                        
                       </div>
                     </td>
@@ -97,6 +97,9 @@
       getRoom(id).then(room => {
         this.room = room
         this.courses = this.$_.filter(this.room.courses, 'scheduled')
+        this.$_.each(this.courses, course => {
+          course.displayMeetings = this.getDisplayMeetings(course)
+        })
         this.$ready(`${this.room.location} printable`)
       })
     }

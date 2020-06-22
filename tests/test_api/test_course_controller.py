@@ -155,7 +155,7 @@ class TestApprove:
                 term_id=self.term_id,
                 section_id=section_1_id,
             )
-            assert api_json['meetings'][0]['room']['location'] == 'Barrows 106'
+            assert api_json['meetings']['eligible'][0]['room']['location'] == 'Barrows 106'
             instructor_uids = [i['uid'] for i in api_json['instructors']]
             assert instructor_uids == instructor_uids
             approvals_ = api_json['approvals']
@@ -280,8 +280,8 @@ class TestGetCourse:
             assert approved_by_uid == approvals[0]['approvedBy']['uid']
             assert api_json['approvalStatus'] == 'Partially Approved'
             assert api_json['schedulingStatus'] == 'Not Scheduled'
-            assert api_json['meetings'][0]['room']['id'] == room_id
-            assert api_json['meetings'][0]['room']['location'] == 'Barrows 106'
+            assert api_json['meetings']['eligible'][0]['room']['id'] == room_id
+            assert api_json['meetings']['eligible'][0]['room']['location'] == 'Barrows 106'
 
     def test_date_time_format(self, client, fake_auth):
         """Dates and times are properly formatted for front-end display."""
@@ -292,10 +292,10 @@ class TestGetCourse:
             term_id=self.term_id,
             section_id=section_2_id,
         )
-        assert api_json['meetings'][0]['daysFormatted'] == ['MO', 'WE', 'FR']
-        assert api_json['meetings'][0]['startTimeFormatted'] == '3:00 pm'
-        assert api_json['meetings'][0]['endTimeFormatted'] == '3:59 pm'
-        assert api_json['meetings'][0]['location'] == 'Wheeler 150'
+        assert api_json['meetings']['ineligible'][0]['daysFormatted'] == ['MO', 'WE', 'FR']
+        assert api_json['meetings']['ineligible'][0]['startTimeFormatted'] == '3:00 pm'
+        assert api_json['meetings']['ineligible'][0]['endTimeFormatted'] == '3:59 pm'
+        assert api_json['meetings']['ineligible'][0]['location'] == 'Wheeler 150'
         assert api_json['meetingDateRangesVary'] is False
 
     def test_li_ka_shing_recording_options(self, client, admin_session):
@@ -305,8 +305,8 @@ class TestGetCourse:
             term_id=self.term_id,
             section_id=section_3_id,
         )
-        assert api_json['meetings'][0]['room']['location'] == 'Li Ka Shing 145'
-        assert len(api_json['meetings'][0]['room']['recordingTypeOptions']) == 3
+        assert api_json['meetings']['eligible'][0]['room']['location'] == 'Li Ka Shing 145'
+        assert len(api_json['meetings']['eligible'][0]['room']['recordingTypeOptions']) == 3
 
     def test_section_with_canvas_course_sites(self, client, admin_session):
         """Canvas course site information is included in the API."""
@@ -374,27 +374,33 @@ class TestGetCourse:
             term_id=self.term_id,
             section_id=50014,
         )
-        meetings = api_json['meetings']
-        assert len(meetings) == 3
-        assert meetings[0]['startDate'] < meetings[1]['startDate']
-        assert meetings[1]['startDate'] < meetings[2]['startDate']
+        eligible_meetings = api_json['meetings']['eligible']
+        ineligible_meetings = api_json['meetings']['ineligible']
+        assert len(eligible_meetings) == 2
+        assert len(ineligible_meetings) == 1
+        assert eligible_meetings[0]['location'] == 'Barker 101'
+        assert eligible_meetings[1]['location'] == 'Barker 101'
+        assert ineligible_meetings[0]['location'] == 'Internet/Online'
+        assert eligible_meetings[0]['startDate'] < eligible_meetings[1]['startDate']
         assert api_json['meetingDateRangesVary'] is True
 
     def test_hybrid_instruction(self, client, admin_session):
-        """Course changes location halfway through the semester."""
+        """Course exists in two concurrent physical locations."""
         api_json = api_get_course(
             client,
             term_id=self.term_id,
             section_id=50015,
         )
-        meetings = api_json['meetings']
-        assert len(meetings) == 2
-        assert meetings[0]['startDate'] == meetings[1]['startDate']
+        eligible_meetings = api_json['meetings']['eligible']
+        ineligible_meetings = api_json['meetings']['ineligible']
+        assert len(eligible_meetings) == 1
+        assert len(ineligible_meetings) == 1
+        assert eligible_meetings[0]['startDate'] == ineligible_meetings[0]['startDate']
         assert api_json['meetingDateRangesVary'] is False
-        assert meetings[0]['location'] == 'Barker 101'
-        assert meetings[0]['eligible'] is True
-        assert meetings[1]['location'] == 'LeConte 1'
-        assert meetings[1]['eligible'] is False
+        assert eligible_meetings[0]['location'] == 'Barker 101'
+        assert eligible_meetings[0]['eligible'] is True
+        assert ineligible_meetings[0]['location'] == 'LeConte 1'
+        assert ineligible_meetings[0]['eligible'] is False
 
 
 class TestGetCourses:
@@ -610,7 +616,7 @@ class TestGetCourses:
             std_commit(allow_test_environment=True)
             # We gotta catch 'em all.
             api_json = self._api_courses(client, term_id=self.term_id, filter_='All')
-            assert len(api_json) == 9
+            assert len(api_json) == 10
             for section_id in [section_1_id, section_3_id, section_4_id, section_5_id, section_6_id]:
                 assert _find_course(api_json=api_json, section_id=section_id)
             assert not _find_course(api_json=api_json, section_id=section_in_ineligible_room)
@@ -700,7 +706,7 @@ class TestCoursesChanges:
     def test_has_obsolete_room(self, client, admin_session):
         """Admins can see room changes that might disrupt scheduled recordings."""
         course = SisSection.get_course(term_id=self.term_id, section_id=section_2_id)
-        actual_room_id = course['meetings'][0]['room']['id']
+        actual_room_id = course['meetings']['ineligible'][0]['room']['id']
         obsolete_room = Room.find_room('Barker 101')
 
         assert obsolete_room
@@ -1039,8 +1045,8 @@ class TestUnscheduleCourse:
 
 
 def _is_course_in_enabled_room(section_id, term_id):
-    capability = SisSection.get_course(term_id=term_id, section_id=section_id)['meetings'][0]['room']['capability']
-    return capability is not None
+    eligible_meetings = SisSection.get_course(term_id=term_id, section_id=section_id)['meetings']['eligible']
+    return eligible_meetings and eligible_meetings[0]['room']['capability'] is not None
 
 
 def _find_course(api_json, section_id):

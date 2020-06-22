@@ -263,7 +263,7 @@
         this.$loading()
         this.agreedToTerms = this.$currentUser.isAdmin
         this.course = data
-        this.meeting = this.$_.find(this.course.meetings, m => m.eligible) || this.course.meetings[0]
+        this.meeting = this.course.meetings.eligible[0] || this.course.meetings.ineligible[0]
         const approvedByInstructors = this.$_.filter(this.course.approvals, a => !a.wasApprovedByAdmin)
         const approvedByUIDs = this.$_.map(this.course.approvals, 'approvedBy.uid')
         const approvedByInstructorUIDs = this.$_.map(approvedByInstructors, 'approvedBy.uid')

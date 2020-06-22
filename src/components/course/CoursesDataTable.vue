@@ -51,25 +51,25 @@
               </td>
               <td :id="`section-id-${course.sectionId}`" :class="tdc(course)">{{ course.sectionId }}</td>
               <td v-if="includeRoomColumn" :class="tdc(course)">
-                <div v-if="course.meetings.length && course.meetings[0].room">
+                <div v-if="meetings(course).length && meetings(course)[0].room">
                   <router-link
-                    :id="`course-${course.sectionId}-room-${course.meetings[0].room.id}`"
-                    :to="`/room/${course.meetings[0].room.id}`"
+                    :id="`course-${course.sectionId}-room-${meetings(course)[0].room.id}`"
+                    :to="`/room/${meetings(course)[0].room.id}`"
                   >
-                    {{ course.meetings[0].room.location }}
+                    {{ meetings(course)[0].room.location }}
                   </router-link>
                 </div>
-                <span v-if="!course.meetings.length || !course.meetings[0].room">&mdash;</span>
+                <span v-if="!meetings(course).length || !meetings(course)[0].room">&mdash;</span>
               </td>
               <td :id="`meeting-days-${course.sectionId}-0`" :class="tdc(course)">
-                {{ $_.join(course.meetings[0].daysFormatted, ', ') || '&mdash;' }}
+                {{ $_.join(meetings(course)[0].daysFormatted, ', ') || '&mdash;' }}
               </td>
               <td :id="`meeting-times-${course.sectionId}-0`" :class="tdc(course)">
                 <div v-if="course.meetingDateRangesVary">
-                  <span class="text-no-wrap">{{ course.meetings[0].startDate }} - </span>
-                  <span class="text-no-wrap">{{ course.meetings[0].endDate }}</span>
+                  <span class="text-no-wrap">{{ meetings(course)[0].startDate }} - </span>
+                  <span class="text-no-wrap">{{ meetings(course)[0].endDate }}</span>
                 </div>
-                <span class="text-no-wrap">{{ course.meetings[0].startTimeFormatted }} - {{ course.meetings[0].endTimeFormatted }}</span>
+                <span class="text-no-wrap">{{ meetings(course)[0].startTimeFormatted }} - {{ meetings(course)[0].endTimeFormatted }}</span>
               </td>
               <td :id="`course-${course.sectionId}-status`" :class="tdc(course)">
                 <v-tooltip v-if="course.wasApprovedByAdmin" :id="`tooltip-admin-approval-${course.sectionId}`" bottom>
@@ -122,28 +122,28 @@
                 />
               </td>
             </tr>
-            <tr v-for="index in course.meetings.length - 1" :key="index">
+            <tr v-for="index in meetings(course).length - 1" :key="`${course.sectionId}-${index}`">
               <td colspan="2" :class="mdc(course)"></td>
               <td v-if="includeRoomColumn" :class="mdc(course)">
                 <router-link
-                  v-if="course.meetings[index].room"
-                  :id="`course-${course.sectionId}-room-${course.meetings[index].room.id}`"
-                  :to="`/room/${course.meetings[index].room.id}`"
+                  v-if="meetings(course)[index].room"
+                  :id="`course-${course.sectionId}-room-${meetings(course)[index].room.id}`"
+                  :to="`/room/${meetings(course)[index].room.id}`"
                 >
-                  {{ course.meetings[index].room.location }}
+                  {{ meetings(course)[index].room.location }}
                 </router-link>
-                <span v-if="!course.meetings[index].room">&mdash;</span>
+                <span v-if="!meetings(course)[index].room">&mdash;</span>
               </td>
               <td class="text-no-wrap" :class="mdc(course)">
-                {{ $_.join(course.meetings[index].daysFormatted, ', ') || '&mdash;' }}
+                {{ $_.join(meetings(course)[index].daysFormatted, ', ') || '&mdash;' }}
               </td>
               <td class="text-no-wrap" :class="mdc(course)">
                 <div v-if="course.meetingDateRangesVary">
-                  <span class="text-no-wrap">{{ course.meetings[index].startDate }} - </span>
-                  <span class="text-no-wrap">{{ course.meetings[index].endDate }}</span>
+                  <span class="text-no-wrap">{{ meetings(course)[index].startDate }} - </span>
+                  <span class="text-no-wrap">{{ meetings(course)[index].endDate }}</span>
                 </div>
-                <div :class="{'pb-2': course.meetingDateRangesVary && index === course.meetings.length - 1}">
-                  {{ course.meetings[index].startTimeFormatted }} - {{ course.meetings[index].endTimeFormatted }}
+                <div :class="{'pb-2': course.meetingDateRangesVary && index === meetings(course).length - 1}">
+                  {{ meetings(course)[index].startTimeFormatted }} - {{ meetings(course)[index].endTimeFormatted }}
                 </div>
               </td>
               <td colspan="4" :class="mdc(course)"></td>
@@ -258,9 +258,12 @@
       mdc(course) {
         return {'border-bottom-zero': course.approvals.length}
       },
+      meetings(course) {
+        return this.getDisplayMeetings(course)
+      },
       tdc(course) {
         return {
-          'border-bottom-zero': course.meetings.length > 1 || course.approvals.length,
+          'border-bottom-zero': this.getDisplayMeetings(course).length > 1 || course.approvals.length,
           'pt-3 pb-3': this.$_.size(course.courseCodes) > 1
         }
       }

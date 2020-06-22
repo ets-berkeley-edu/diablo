@@ -47,11 +47,11 @@ class TestInvitationJob:
             # Emails are sent. We have more emails than courses since some courses have multiple instructors.
             QueuedEmailsJob(simply_yield).run()
             invitations = _get_invitations_since(term_id, timestamp)
-            assert len(invitations) == 13
+            assert len(invitations) == 14
 
             # Each eligible course has an invitation.
             eligible_courses = SisSection.get_courses(term_id=term_id)
-            assert len(eligible_courses) == 9
+            assert len(eligible_courses) == 10
             for course in eligible_courses:
                 for i in course['instructors']:
                     sent_email = next((e for e in invitations if e.section_id == course['sectionId'] and i['uid'] == e.recipient_uid), None)
@@ -97,7 +97,7 @@ class TestInvitationJob:
             # Emails are sent.
             QueuedEmailsJob(simply_yield).run()
             invitations = _get_invitations_since(term_id, timestamp)
-            assert len(invitations) == 14
+            assert len(invitations) == 15
             assert not next((e for e in invitations if e.section_id == section_id), None)
 
 

@@ -35,8 +35,8 @@ from tests.util import override_config
 class TestInterpolator:
 
     def test_interpolate_email_content(self):
-        instructor = get_calnet_user_for_uid(app, '10001')
-        course = SisSection.get_course(app.config['CURRENT_TERM_ID'], '50001')
+        instructor = get_calnet_user_for_uid(app, '10005')
+        course = SisSection.get_course(app.config['CURRENT_TERM_ID'], '50003')
         interpolated = interpolate_content(
             course=course,
             recipient_name=instructor['name'],
@@ -64,12 +64,12 @@ def _get_mock_recipient():
 
 
 def _get_expected_email():
-    return """Hello William Peter Blatty,
+    return """Hello Dick Hallorann,
 
-    Your Fall 2020 course COMPSCI 61B, "Data Structures", is eligible for Course Capture.
+    Your Fall 2020 course PHYSICS 7A, "Fluid Dynamics", is eligible for Course Capture.
     This course meets Monday, Wednesday and Friday from 3:00 pm to 3:59 pm.
 
-    Go to <a href="http://foo.berkeley.edu">https://manage-test.coursecapture.berkeley.edu/course/2208/50001</a> and sign up.
+    Go to <a href="http://foo.berkeley.edu">https://manage-test.coursecapture.berkeley.edu/course/2208/50003</a> and sign up.
 
     Thank you."""
 

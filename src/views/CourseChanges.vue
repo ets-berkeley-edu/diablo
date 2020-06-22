@@ -58,8 +58,11 @@
                   changed to
                 </div>
               </div>
-              <div v-for="(meeting, index) in course.meetings" :id="`course-${course.sectionId}-meeting-new-${index}`" :key="index">
-                {{ meeting.daysFormatted.join(',') }} {{ meeting.startTimeFormatted }} - {{ meeting.endTimeFormatted }}
+              <div v-for="(meeting, index) in course.meetings.eligible" :id="`course-${course.sectionId}-meeting-new-eligible-${index}`" :key="index">
+                {{ meeting.daysFormatted.join(',') }} {{ meeting.startTimeFormatted }} - {{ meeting.endTimeFormatted }} (Eligible)
+              </div>
+              <div v-for="(meeting, index) in course.meetings.ineligible" :id="`course-${course.sectionId}-meeting-new-ineligible-${index}`" :key="index">
+                {{ meeting.daysFormatted.join(',') }} {{ meeting.startTimeFormatted }} - {{ meeting.endTimeFormatted }} (Ineligible)
               </div>
               <div>
                 {{ course.publishTypeNames }}
@@ -80,13 +83,21 @@
                   changed to
                 </div>
               </div>
-              <div v-for="(meeting, index) in course.meetings" :key="index">
+              <div v-for="(meeting, index) in course.meetings.eligible" :key="index">
                 <router-link
-                  v-if="meeting.room"
-                  :id="`course-${course.sectionId}-room-new-${meeting.room.id}-${index}`"
+                  :id="`course-${course.sectionId}-room-new-eligible-${meeting.room.id}-${index}`"
                   :to="`/room/${meeting.room.id}`"
                 >
-                  {{ meeting.room.location }}
+                  {{ meeting.room.location }} (Eligible)
+                </router-link>
+              </div>
+              <div v-for="(meeting, index) in course.meetings.ineligible" :key="index">
+                <router-link
+                  v-if="meeting.room"
+                  :id="`course-${course.sectionId}-room-new-ineligible-${meeting.room.id}-${index}`"
+                  :to="`/room/${meeting.room.id}`"
+                >
+                  {{ meeting.room.location }} (Ineligible)
                 </router-link>
                 <span v-if="!meeting.room">&mdash;</span>
               </div>

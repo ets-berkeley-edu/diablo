@@ -171,10 +171,11 @@ def schedule_recordings(all_approvals, course):
         send_system_error_email(message=str(e), subject=error)
 
     if room.kaltura_resource_id:
-        meeting = SisSection.get_meeting_from_feed(course)
-        if not meeting:
-            _send_error(RuntimeError('No meeting data found for course'))
+        meetings = course.get('meetings', {}).get('eligible', [])
+        if len(meetings) != 1:
+            _send_error(RuntimeError('Unique eligible meeting pattern not found for course'))
             return None
+        meeting = meetings[0]
 
         # Recording starts X minutes before/after official start; it ends Y minutes before/after official end time.
         days = format_days(meeting['days'])

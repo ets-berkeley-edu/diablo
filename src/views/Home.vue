@@ -15,7 +15,7 @@
         <tbody>
           <template v-for="course in items" :id="`course-${course.sectionId}`">
             <tr :key="course.sectionId">
-              <td class="text-no-wrap" :class="{'pt-3 pb-3': course.courseCodes.length > 1, 'border-bottom-zero': course.meetings.length > 1}">
+              <td class="text-no-wrap" :class="{'pt-3 pb-3': course.courseCodes.length > 1, 'border-bottom-zero': course.meetings.eligible.length > 1}">
                 <div v-for="(courseCode, index) in course.courseCodes" :key="courseCode">
                   <router-link
                     v-if="index === 0"
@@ -27,43 +27,43 @@
                   <span v-if="index > 0">{{ courseCode }}</span>
                 </div>
               </td>
-              <td :class="{'border-bottom-zero': course.meetings.length > 1}">
+              <td :class="{'border-bottom-zero': course.meetings.eligible.length > 1}">
                 {{ course.title || '&mdash;' }}
               </td>
-              <td :class="{'border-bottom-zero': course.meetings.length > 1}">
+              <td :class="{'border-bottom-zero': course.meetings.eligible.length > 1}">
                 {{ oxfordJoin($_.map(course.instructors, 'name')) }}
               </td>
-              <td :class="{'border-bottom-zero': course.meetings.length > 1}" class="text-no-wrap">
-                {{ course.meetings[0].room.location }}
+              <td :class="{'border-bottom-zero': course.meetings.eligible.length > 1}" class="text-no-wrap">
+                {{ course.meetings.eligible[0].room.location }}
               </td>
-              <td :class="{'border-bottom-zero': course.meetings.length > 1}" class="text-no-wrap">
-                {{ $_.join(course.meetings[0].daysFormatted, ', ') }}
+              <td :class="{'border-bottom-zero': course.meetings.eligible.length > 1}" class="text-no-wrap">
+                {{ $_.join(course.meetings.eligible[0].daysFormatted, ', ') }}
               </td>
-              <td :class="{'border-bottom-zero': course.meetings.length > 1}" class="text-no-wrap">
+              <td :class="{'border-bottom-zero': course.meetings.eligible.length > 1}" class="text-no-wrap">
                 <div v-if="course.meetingDateRangesVary" class="pt-2">
-                  <span class="text-no-wrap">{{ course.meetings[0].startDate }} - </span>
-                  <span class="text-no-wrap">{{ course.meetings[0].endDate }}</span>
+                  <span class="text-no-wrap">{{ course.meetings.eligible[0].startDate }} - </span>
+                  <span class="text-no-wrap">{{ course.meetings.eligible[0].endDate }}</span>
                 </div>
-                {{ course.meetings[0].startTimeFormatted }} - {{ course.meetings[0].endTimeFormatted }}
+                {{ course.meetings.eligible[0].startTimeFormatted }} - {{ course.meetings.eligible[0].endTimeFormatted }}
               </td>
             </tr>
-            <tr v-for="index in course.meetings.length - 1" :key="index">
+            <tr v-for="index in course.meetings.eligible.length - 1" :key="index">
               <td></td>
               <td></td>
               <td></td>
               <td class="pt-0 text-no-wrap">
-                {{ course.meetings[index].room.location }}
+                {{ course.meetings.eligible[index].room.location }}
               </td>
               <td class="text-no-wrap">
-                {{ $_.join(course.meetings[index].daysFormatted, ', ') }}
+                {{ $_.join(course.meetings.eligible[index].daysFormatted, ', ') }}
               </td>
               <td class="text-no-wrap">
                 <div v-if="course.meetingDateRangesVary" class="pt-2">
-                  <span class="text-no-wrap">{{ course.meetings[index].startDate }} - </span>
-                  <span class="text-no-wrap">{{ course.meetings[index].endDate }}</span>
+                  <span class="text-no-wrap">{{ course.meetings.eligible[index].startDate }} - </span>
+                  <span class="text-no-wrap">{{ course.meetings.eligible[index].endDate }}</span>
                 </div>
-                <div :class="{'pb-2': course.meetingDateRangesVary && index === course.meetings.length - 1}">
-                  {{ course.meetings[index].startTimeFormatted }} - {{ course.meetings[index].endTimeFormatted }}
+                <div :class="{'pb-2': course.meetingDateRangesVary && index === course.meetings.eligible.length - 1}">
+                  {{ course.meetings.eligible[index].startTimeFormatted }} - {{ course.meetings.eligible[index].endTimeFormatted }}
                 </div>
               </td>
             </tr>
@@ -98,8 +98,7 @@
       this.pageTitle = `Your ${this.$config.currentTermName} Courses Eligible for Capture`
       this.courses = this.$_.filter(this.$currentUser.courses, course => {
         course.courseCodes = this.getCourseCodes(course)
-        course.meetings = this.$_.filter(course.meetings, m => m.room && m.room.capability)
-        return course.meetings.length
+        return course.meetings.eligible.length
       })
       this.$ready(this.pageTitle)
     }

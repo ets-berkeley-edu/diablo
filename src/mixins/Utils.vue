@@ -7,6 +7,13 @@
       getCourseCodes(course) {
         return course.label.split('|').map(l => l.trim())
       },
+      getDisplayMeetings(course) {
+        if (course.meetings.eligible.length) {
+          return course.meetings.eligible
+        } else {
+          return course.meetings.ineligible
+        }
+      },
       getSelectOptionsFromObject(obj, isDisabled=() => false) {
         const options = []
         _.each(obj, (text, value) => options.push({text, value, disabled: isDisabled(value)}))
