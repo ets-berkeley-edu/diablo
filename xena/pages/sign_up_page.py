@@ -41,6 +41,7 @@ class SignUpPage(DiabloPages):
     MEETING_DAYS = (By.ID, 'meeting-days')
     MEETING_TIMES = (By.ID, 'meeting-times')
     ROOMS = (By.ID, 'rooms')
+    COURSE_SITE_LINK = (By.XPATH, '//a[contains(@id, "canvas-course-site-")]')
     CROSS_LISTING = (By.XPATH, '//div[contains(@id, "cross-listing-")]')
     OPTED_OUT = (By.ID, 'opted-out')
     SEND_INVITE_BUTTON = (By.ID, 'send-invite-btn')
@@ -76,6 +77,10 @@ class SignUpPage(DiabloPages):
         return By.LINK_TEXT, room.name
 
     @staticmethod
+    def course_site_link_locator(site):
+        return By.XPATH, f'canvas-course-site-{site.site_id}'
+
+    @staticmethod
     def kaltura_series_link(recording_schedule):
         return By.PARTIAL_LINK_TEXT, f'Kaltura series {recording_schedule.series_id}'
 
@@ -107,6 +112,10 @@ class SignUpPage(DiabloPages):
 
     def visible_rooms(self):
         return self.element(SignUpPage.ROOMS).get_attribute('innerText').strip()
+
+    def visible_course_site_ids(self):
+        site_els = self.elements(SignUpPage.COURSE_SITE_LINK)
+        return [el.get_attribute('id').split('-')[-1] for el in site_els]
 
     def visible_cross_listing_codes(self):
         return [el.text for el in self.elements(SignUpPage.CROSS_LISTING)]

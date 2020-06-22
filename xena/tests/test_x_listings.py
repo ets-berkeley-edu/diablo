@@ -67,7 +67,10 @@ class TestCrossListings:
         self.kaltura_page.reset_test_data(self.term, self.recording_schedule)
 
     def test_delete_old_canvas_sites(self):
-        self.canvas_page.delete_sites(self.section)
+        for listing in self.section.listings:
+            self.canvas_page.delete_section_sites(listing)
+        self.jobs_page.load_page()
+        self.jobs_page.run_canvas_job()
 
     def test_delete_old_diablo_data(self):
         util.reset_sign_up_test_data(self.test_data)
@@ -93,7 +96,9 @@ class TestCrossListings:
         self.jobs_page.load_page()
         self.jobs_page.run_canvas_job()
 
-    # TODO - def test_course_site_on_course_page(self):
+    def test_visible_site_ids(self):
+        self.sign_up_page.load_page(self.section)
+        assert self.sign_up_page.visible_course_site_ids() == [site.site_id for site in self.section.sites]
 
     # INSTRUCTORS FOLLOW SIGN UP WORKFLOW
 
@@ -153,6 +158,9 @@ class TestCrossListings:
         listing_codes.append(f'{self.section.code}, {self.section.number}')
         for code in listing_codes:
             assert code in self.kaltura_page.visible_series_title()
+
+    def test_kaltura_publish_status(self):
+        assert self.kaltura_page.is_published()
 
     def test_kaltura_course_site_count_two(self):
         assert len(self.kaltura_page.publish_category_els) == 2
@@ -229,7 +237,3 @@ class TestCrossListings:
         subj = f'Your course, {self.section.listings[0].code}, has been scheduled for Course Capture (To: {self.section.instructors[0].email})'
         expected_message = Email(msg_type=None, sender=None, subject=subj)
         assert not self.email_page.is_message_present(expected_message)
-
-    # VERIFY KALTURA MEDIA IN COURSE SITES
-
-    # TODO

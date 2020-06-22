@@ -129,14 +129,16 @@ class CanvasPage(Page):
         site.site_id = [i for i in parts if i][-1]
         section.sites.append(site)
 
-    def delete_sites(self, section):
+    def delete_site(self, site_id):
+        app.logger.info(f'Deleting course site ID #{site_id}')
+        self.driver.get(f'{app.config["CANVAS_BASE_URL"]}/courses/{site_id}/confirm_action?event=delete')
+        self.wait_for_page_and_click_js(CanvasPage.DELETE_COURSE_BUTTON)
+        Wait(self.driver, util.get_medium_timeout()).until(ec.visibility_of_element_located(CanvasPage.DELETE_COURSE_SUCCESS))
+
+    def delete_section_sites(self, section):
         site_ids = util.get_course_site_ids(section)
         for site_id in site_ids:
-            app.logger.info(f'Deleting course site ID #{site_id}')
-            self.driver.get(f'{app.config["CANVAS_BASE_URL"]}/courses/{site_id}/confirm_action?event=delete')
-            self.wait_for_page_and_click_js(CanvasPage.DELETE_COURSE_BUTTON)
-            Wait(self.driver, util.get_medium_timeout()).until(ec.visibility_of_element_located(CanvasPage.DELETE_COURSE_SUCCESS))
-            util.delete_course_site(site_id)
+            self.delete_site(site_id)
 
     def click_media_gallery_tool(self):
         app.logger.info('Clicking the Media Gallery LTI tool')

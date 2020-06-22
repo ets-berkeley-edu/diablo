@@ -43,7 +43,7 @@ SCENARIO:
 - Course site created
 - Instructor 2 signs up, changes recording type
 - Recordings scheduled
-- Another course site created
+- Another course site created and attached to series, then original site deleted
 """
 
 
@@ -79,7 +79,9 @@ class TestSignUp2:
         self.kaltura_page.reset_test_data(self.term, self.recording_schedule)
 
     def test_delete_old_canvas_sites(self):
-        self.canvas_page.delete_sites(self.section)
+        self.canvas_page.delete_section_sites(self.section)
+        self.jobs_page.load_page()
+        self.jobs_page.run_canvas_job()
 
     def test_delete_old_diablo_data(self):
         util.reset_sign_up_test_data(self.test_data)
@@ -230,7 +232,8 @@ class TestSignUp2:
         listing_codes = [li.code for li in self.section.listings]
         assert self.sign_up_page.visible_cross_listing_codes() == listing_codes
 
-    # TODO def test_no_course_site(self):
+    def test_no_visible_site_ids(self):
+        assert len(self.sign_up_page.visible_course_site_ids()) == 0
 
     # VERIFY AVAILABLE OPTIONS
 
@@ -367,7 +370,9 @@ class TestSignUp2:
         msg = f'Approved by {name}. Recordings will be scheduled when we have approval from you.'
         self.sign_up_page.wait_for_approvals_msg(msg)
 
-    # TODO - def test_course_site_on_course_page(self):
+    def test_visible_site_ids(self):
+        self.sign_up_page.load_page(self.section)
+        assert self.sign_up_page.visible_course_site_ids() == [site.site_id for site in self.section.sites]
 
     # VERIFY AVAILABLE OPTIONS
 
@@ -561,7 +566,7 @@ class TestSignUp2:
             assert self.kaltura_page.collaborator_perm(instr) == 'Co-Editor'
 
     def test_series_publish_status(self):
-        assert self.kaltura_page.is_private()
+        assert self.kaltura_page.published()
 
     def test_kaltura_course_site_count_one(self):
         assert len(self.kaltura_page.publish_category_els) == 1
@@ -663,13 +668,18 @@ class TestSignUp2:
         self.jobs_page.run_canvas_job()
         self.jobs_page_run_kaltura_job()
 
-    # TODO - def test_course_site_two_on_course_page(self):
+    def test_two_visible_site_ids(self):
+        self.sign_up_page.load_page(self.section)
+        assert self.sign_up_page.visible_course_site_ids() == [site.site_id for site in self.section.sites]
 
     # VERIFY SITES IN KALTURA SERIES
 
     def test_load_kaltura_series(self):
         self.kaltura_page.load_event_edit_page(self.recording_schedule.series_id)
         self.kaltura_page.wait_for_delete_button()
+
+    def test_kaltura_published_status(self):
+        assert self.kaltura_page.is_published()
 
     def test_kaltura_course_site_count_two(self):
         assert len(self.kaltura_page.publish_category_els) == 2
@@ -678,8 +688,30 @@ class TestSignUp2:
         assert self.kaltura_page.is_publish_category_present(self.site_1)
         assert self.kaltura_page.is_publish_category_present(self.site_2)
 
-    # VERIFY KALTURA IN COURSE SITES
+    # DELETE COURSE SITE 1
 
-    # TODO def test_media_in_course_site_one(self):
+    def test_delete_course_site(self):
+        self.canvas_page.delete_site(self.site_1.site_id)
+        self.section.sites.remove(self.site_1)
 
-    # TODO def test_media_in_course_site_two(self):
+    def test_run_jobs(self):
+        self.jobs_page.load_page()
+        self.jobs_page.run_canvas_job()
+        self.jobs_page.run_kaltura_job()
+
+    def test_one_visible_site_id(self):
+        self.sign_up_page.load_page(self.section)
+        assert self.sign_up_page.visible_course_site_ids() == [site.site_id for site in self.section.sites]
+
+    # VERIFY SITES IN KALTURA SERIES
+
+    def test_load_kaltura_series_again(self):
+        self.kaltura_page.load_event_edit_page(self.recording_schedule.series_id)
+        self.kaltura_page.wait_for_delete_button()
+
+    def test_kaltura_course_site_count_still_two(self):
+        assert len(self.kaltura_page.publish_category_els) == 2
+
+    def test_kaltura_course_site_still_both(self):
+        assert self.kaltura_page.is_publish_category_present(self.site_1)
+        assert self.kaltura_page.is_publish_category_present(self.site_2)

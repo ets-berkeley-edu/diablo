@@ -63,6 +63,11 @@ class TestSignUp3:
         self.kaltura_page.log_in_via_calnet()
         self.kaltura_page.reset_test_data(self.term, self.recording_schedule)
 
+    def test_delete_old_canvas_sites(self):
+        self.canvas_page.delete_section_sites(self.section)
+        self.jobs_page.load_page()
+        self.jobs_page.run_canvas_job()
+
     def test_delete_old_diablo_data(self):
         util.reset_sign_up_test_data(self.test_data)
         self.recording_schedule.approval_status = RecordingApprovalStatus.NOT_INVITED

@@ -64,7 +64,6 @@ class TestSignUp0:
         self.login_page.dev_auth()
         self.ouija_page.click_jobs_link()
         self.jobs_page.run_queued_emails_job()
-        self.jobs_page.run_canvas_job()
         self.jobs_page.disable_all_jobs()
 
     def test_delete_old_kaltura_series(self):
@@ -72,7 +71,9 @@ class TestSignUp0:
         self.kaltura_page.reset_test_data(self.term, self.recording_schedule)
 
     def test_delete_old_canvas_sites(self):
-        self.canvas_page.delete_sites(self.section)
+        self.canvas_page.delete_section_sites(self.section)
+        self.jobs_page.load_page()
+        self.jobs_page.run_canvas_job()
 
     def test_delete_old_diablo_data(self):
         util.reset_sign_up_test_data(self.test_data)
@@ -93,8 +94,6 @@ class TestSignUp0:
     def test_run_canvas_job(self):
         self.jobs_page.load_page()
         self.jobs_page.run_canvas_job()
-
-    # TODO - def test_course_site_on_course_page(self):
 
     # CHECK FILTERS - NOT INVITED
 
@@ -224,13 +223,17 @@ class TestSignUp0:
     def test_visible_room(self):
         assert self.sign_up_page.visible_rooms() == self.section.room.name
 
+    def test_visible_site_ids(self):
+        assert self.sign_up_page.visible_course_site_ids() == [site.site_id for site in self.section.sites]
+
+    def test_site_link(self):
+        assert self.sign_up_page.external_link_valid(SignUpPage.course_site_link_locator(self.site), self.site.name)
+
     def test_visible_listings(self):
         listing_codes = [li.code for li in self.section.listings]
         assert self.sign_up_page.visible_cross_listing_codes() == listing_codes
 
     # VERIFY VARIABLE CONTENT AND EXTERNAL LINKS
-
-    # TODO def test_course_site_on_sign_up(self):
 
     def test_rec_type_text(self):
         assert self.sign_up_page.is_present(SignUpPage.RECORDING_TYPE_TEXT) is True
@@ -429,7 +432,7 @@ class TestSignUp0:
             assert self.kaltura_page.collaborator_perm(instr) == 'Co-Editor'
 
     def test_series_publish_status(self):
-        assert self.kaltura_page.is_private()
+        assert self.kaltura_page.is_published()
 
     def test_kaltura_course_site_count(self):
         assert len(self.kaltura_page.publish_category_els) == 1
@@ -501,7 +504,3 @@ class TestSignUp0:
         subj = f'Your course, {self.section.code}, has been scheduled for Course Capture'
         expected_message = Email(msg_type=None, sender=None, subject=subj)
         assert self.email_page.is_message_delivered(expected_message)
-
-    # VERIFY KALTURA IN COURSE SITE
-
-    # TODO def test_media_in_course_site(self):
