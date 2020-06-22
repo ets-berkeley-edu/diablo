@@ -134,7 +134,7 @@
         ])
       } else {
         this.$_.each(this.$currentUser.courses, course => {
-          if (this.course.meetings.eligible.length) {
+          if (course.meetings.eligible.length) {
             this.navItems.push({
               title: this.getCourseCodes(course)[0],
               icon: 'mdi-video-plus',
