@@ -112,8 +112,8 @@ LOGGING_LOCATION = 'diablo.log'
 LOGGING_LEVEL = logging.DEBUG
 LOGGING_PROPAGATION_LEVEL = logging.WARN
 
-REDSHIFT_DATABASE = 'redshift_database'
-REDSHIFT_SCHEMA_SIS = 'sis_data_ext_dev'
+REDSHIFT_DATABASE = '__nessie__'
+REDSHIFT_SCHEMA_SIS = '__sis_data_ext__'
 
 REMEMBER_COOKIE_NAME = 'remember_diablo_token'
 
