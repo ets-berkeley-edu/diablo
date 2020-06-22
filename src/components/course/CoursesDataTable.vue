@@ -260,7 +260,7 @@
       },
       tdc(course) {
         return {
-          'border-bottom-zero': course.meetingDateRangesVary || course.approvals.length,
+          'border-bottom-zero': course.meetings.length > 1 || course.approvals.length,
           'pt-3 pb-3': this.$_.size(course.courseCodes) > 1
         }
       }
