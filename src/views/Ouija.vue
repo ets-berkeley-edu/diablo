@@ -64,6 +64,7 @@
     </v-card-title>
     <CoursesDataTable
       :courses="courses"
+      :include-room-column="true"
       :message-for-courses="courses.length ? (courses.length === 1 ? '' : `${courses.length} courses`) : 'No courses'"
       :on-toggle-opt-out="onToggleOptOut"
       :refreshing="refreshing"

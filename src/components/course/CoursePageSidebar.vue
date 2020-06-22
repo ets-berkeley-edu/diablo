@@ -89,7 +89,7 @@
     >
       <v-btn
         id="send-invite-btn"
-        @click="sendInvite()"
+        @click="sendInvite"
       >
         Send Invite
       </v-btn>
@@ -119,7 +119,7 @@
                 id="confirm-unschedule-course-btn"
                 color="blue"
                 text
-                @click="unscheduleCourse()"
+                @click="unscheduleCourse"
               >
                 Confirm
               </v-btn>

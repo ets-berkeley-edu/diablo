@@ -3,7 +3,7 @@
     :id="`toggle-opt-out-${course.sectionId}`"
     v-model="optOut"
     dense
-    @change="toggleOptOut()"
+    @change="toggleOptOut"
   ></v-switch>
 </template>
 

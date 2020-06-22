@@ -201,7 +201,7 @@
         type: Array
       },
       includeRoomColumn: {
-        default: true,
+        required: true,
         type: Boolean
       },
       messageForCourses: {
