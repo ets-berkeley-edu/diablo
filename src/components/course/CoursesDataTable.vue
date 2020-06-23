@@ -66,8 +66,8 @@
               </td>
               <td :id="`meeting-times-${course.sectionId}-0`" :class="tdc(course)">
                 <div v-if="course.meetingDateRangesVary">
-                  <span class="text-no-wrap">{{ meetings(course)[0].startDate }} - </span>
-                  <span class="text-no-wrap">{{ meetings(course)[0].endDate }}</span>
+                  <span class="text-no-wrap">{{ meetings(course)[0].startDate | moment('MMM D, YYYY') }} - </span>
+                  <span class="text-no-wrap">{{ meetings(course)[0].endDate | moment('MMM D, YYYY') }}</span>
                 </div>
                 <span class="text-no-wrap">{{ meetings(course)[0].startTimeFormatted }} - {{ meetings(course)[0].endTimeFormatted }}</span>
               </td>
@@ -139,8 +139,8 @@
               </td>
               <td class="text-no-wrap" :class="mdc(course)">
                 <div v-if="course.meetingDateRangesVary">
-                  <span class="text-no-wrap">{{ meetings(course)[index].startDate }} - </span>
-                  <span class="text-no-wrap">{{ meetings(course)[index].endDate }}</span>
+                  <span class="text-no-wrap">{{ meetings(course)[index].startDate | moment('MMM D, YYYY') }} - </span>
+                  <span class="text-no-wrap">{{ meetings(course)[index].endDate | moment('MMM D, YYYY') }}</span>
                 </div>
                 <div :class="{'pb-2': course.meetingDateRangesVary && index === meetings(course).length - 1}">
                   {{ meetings(course)[index].startTimeFormatted }} - {{ meetings(course)[index].endTimeFormatted }}
