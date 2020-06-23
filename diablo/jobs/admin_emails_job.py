@@ -37,13 +37,18 @@ class AdminEmailsJob(BaseJob):
     def _run(self):
         self.term_id = app.config['CURRENT_TERM_ID']
         self.courses = SisSection.get_course_changes(term_id=self.term_id)
-        self._alert_admin_of_instructor_changes()
-        self._alert_admin_of_room_changes()
+        self._instructor_change_alerts()
+        self._multiple_meeting_pattern_alerts()
+        self._room_change_alerts()
 
     @classmethod
     def description(cls):
         names_by_type = EmailTemplate.get_template_type_options()
-        template_types = ['admin_alert_instructor_change', 'admin_alert_room_change']
+        template_types = [
+            'admin_alert_instructor_change',
+            'admin_alert_multiple_meeting_patterns',
+            'admin_alert_room_change',
+        ]
         return f"""
             Queues up admin notifications. Email templates used:
             <ul>
@@ -55,12 +60,15 @@ class AdminEmailsJob(BaseJob):
     def key(cls):
         return 'admin_emails'
 
-    def _alert_admin_of_instructor_changes(self):
+    def _instructor_change_alerts(self):
         for course in self.courses:
             if course['scheduled'] and course['scheduled']['hasObsoleteInstructors']:
                 self._notify(course=course, template_type='admin_alert_instructor_change')
 
-    def _alert_admin_of_room_changes(self):
+    def _multiple_meeting_pattern_alerts(self):
+        pass
+
+    def _room_change_alerts(self):
         for course in self.courses:
             if course['scheduled'] and course['scheduled']['hasObsoleteRoom']:
                 self._notify(course=course, template_type='admin_alert_room_change')
