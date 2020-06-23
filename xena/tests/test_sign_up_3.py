@@ -26,6 +26,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 from datetime import datetime
 
 import pytest
+from xena.models.canvas_site import CanvasSite
 from xena.models.email import Email
 from xena.models.publish_type import PublishType
 from xena.models.recording_approval_status import RecordingApprovalStatus
@@ -46,9 +47,15 @@ SCENARIO:
 
 @pytest.mark.usefixtures('page_objects')
 class TestSignUp3:
+
     test_data = util.parse_course_test_data()[3]
     section = Section(test_data)
     recording_schedule = RecordingSchedule(section)
+    site = CanvasSite(
+        code=f'XENA SignUp3 - {section.code}',
+        name=f'XENA SignUp3 - {section.code}',
+        site_id=None,
+    )
 
     # DELETE PRE-EXISTING DATA
 
@@ -78,6 +85,15 @@ class TestSignUp3:
         self.email_page.delete_all_messages()
 
     # TODO - configure email template subjects prior to verifying emails
+
+    # CREATE COURSE SITE
+
+    def test_create_course_site(self):
+        self.canvas_page.provision_site(self.section, [self.section.ccn], self.site)
+
+    def test_run_canvas_job(self):
+        self.jobs_page.load_page()
+        self.jobs_page.run_canvas_job()
 
     # CHECK FILTERS - NOT INVITED
 
@@ -213,6 +229,9 @@ class TestSignUp3:
     def test_visible_room(self):
         assert self.sign_up_page.visible_rooms() == self.section.room.name
 
+    def test_visible_course_site(self):
+        assert self.sign_up_page.visible_course_sites() == [site.id for site in self.section.sites]
+
     def test_visible_listings(self):
         listing_codes = [li.code for li in self.section.listings]
         assert self.sign_up_page.visible_cross_listing_codes() == listing_codes
@@ -252,8 +271,8 @@ class TestSignUp3:
         self.recording_schedule.recording_type = RecordingType.SCREENCAST
 
     def test_choose_publish_type_inst_1(self):
-        self.sign_up_page.select_publish_type(PublishType.BCOURSES.value)
-        self.recording_schedule.publish_type = PublishType.BCOURSES
+        self.sign_up_page.select_publish_type(PublishType.KALTURA.value)
+        self.recording_schedule.publish_type = PublishType.KALTURA
 
     def test_agree_terms_inst_1(self):
         self.sign_up_page.click_agree_checkbox()
@@ -472,6 +491,9 @@ class TestSignUp3:
 
     def test_series_publish_status(self):
         assert self.kaltura_page.is_private()
+
+    def test_series_no_category(self):
+        assert len(self.kaltura_page.publish_category_els()) == 0
 
     def test_recur_weekly(self):
         self.kaltura_page.open_recurrence_modal()

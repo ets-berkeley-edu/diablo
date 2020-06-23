@@ -267,8 +267,8 @@ class TestSignUp2:
         self.recording_schedule.recording_type = RecordingType.SCREENCAST
 
     def test_choose_publish_type_inst_1(self):
-        self.sign_up_page.select_publish_type(PublishType.BCOURSES.value)
-        self.recording_schedule.publish_type = PublishType.BCOURSES
+        self.sign_up_page.select_publish_type(PublishType.KALTURA.value)
+        self.recording_schedule.publish_type = PublishType.KALTURA
 
     def test_agree_terms_inst_1(self):
         self.sign_up_page.click_agree_checkbox()
@@ -395,8 +395,8 @@ class TestSignUp2:
         self.recording_schedule.recording_type = RecordingType.VIDEO
 
     def test_choose_publish_type_inst_2(self):
-        self.sign_up_page.select_publish_type(PublishType.KALTURA.value)
-        self.recording_schedule.publish_type = PublishType.KALTURA
+        self.sign_up_page.select_publish_type(PublishType.BCOURSES.value)
+        self.recording_schedule.publish_type = PublishType.BCOURSES
 
     def test_agree_terms_inst_2(self):
         self.sign_up_page.click_agree_checkbox()

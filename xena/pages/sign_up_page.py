@@ -78,7 +78,7 @@ class SignUpPage(DiabloPages):
 
     @staticmethod
     def course_site_link_locator(site):
-        return By.XPATH, f'canvas-course-site-{site.site_id}'
+        return By.XPATH, f'//a[@id="canvas-course-site-{site.site_id}"]'
 
     @staticmethod
     def kaltura_series_link(recording_schedule):

@@ -300,6 +300,7 @@ class TestSignUp0:
     def test_approved_filter_all(self):
         self.sign_up_page.log_out()
         self.login_page.dev_auth()
+        self.ouija_page.load_page()
         self.ouija_page.search_for_course_code(self.section)
         self.ouija_page.filter_for_all()
         assert self.ouija_page.is_course_in_results(self.section) is True
@@ -435,7 +436,7 @@ class TestSignUp0:
         assert self.kaltura_page.is_published()
 
     def test_kaltura_course_site_count(self):
-        assert len(self.kaltura_page.publish_category_els) == 1
+        assert len(self.kaltura_page.publish_category_els()) == 1
 
     def test_kaltura_course_site(self):
         assert self.kaltura_page.is_publish_category_present(self.site)
