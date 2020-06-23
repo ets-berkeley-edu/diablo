@@ -22,7 +22,6 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-
 from diablo import db, std_commit
 from diablo.lib.util import to_isoformat
 from diablo.models.base import Base
@@ -31,6 +30,7 @@ from sqlalchemy.dialects.postgresql import ENUM
 
 email_template_type = ENUM(
     'admin_alert_instructor_change',
+    'admin_alert_multiple_meeting_patterns',
     'admin_alert_room_change',
     'invitation',
     'notify_instructor_of_changes',
@@ -119,7 +119,8 @@ class EmailTemplate(Base):
     @classmethod
     def get_template_type_options(cls):
         return {
-            'admin_alert_instructor_change': 'Admin alert of instructor change',
+            'admin_alert_instructor_change': 'Admin alert: Instructor change',
+            'admin_alert_multiple_meeting_patterns': 'Admin alert: Multiple meeting patterns',
             'admin_alert_room_change': 'Admin alert: Room change',
             'invitation': 'Invitation',
             'notify_instructor_of_changes': 'Notify instructor of changes',

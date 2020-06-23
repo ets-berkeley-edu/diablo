@@ -47,6 +47,7 @@ CREATE TYPE approver_types AS ENUM (
 
 CREATE TYPE email_template_types AS ENUM (
     'admin_alert_instructor_change',
+    'admin_alert_multiple_meeting_patterns',
     'admin_alert_room_change',
     'invitation',
     'notify_instructor_of_changes',
