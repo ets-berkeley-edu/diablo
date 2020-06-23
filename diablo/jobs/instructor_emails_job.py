@@ -66,7 +66,8 @@ class InstructorEmailsJob(BaseJob):
         for scheduled in all_scheduled:
             course = courses_per_section_id[scheduled.section_id]
             if course:
-                if scheduled.room_id != course['room']['id']:
+                eligible_meetings = course.get('meetings', {}).get('eligible', [])
+                if scheduled.room_id not in [meeting.get('room', {}).get('id') for meeting in eligible_meetings]:
                     template_type = 'room_change_no_longer_eligible'
                     email_template = EmailTemplate.get_template_by_type(template_type)
                     if email_template:
