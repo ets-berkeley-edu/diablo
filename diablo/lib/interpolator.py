@@ -81,7 +81,7 @@ def get_template_substitutions(
         return ', '.join(i['name'] for i in _dict if i['name'])
 
     meetings = course and course.get('meetings', {}).get('eligible', [])
-    if len(meetings) != 1:
+    if not meetings or len(meetings) != 1:
         meeting = None
     else:
         meeting = meetings[0]
