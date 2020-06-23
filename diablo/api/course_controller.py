@@ -245,7 +245,9 @@ def _get_courses_per_filter(filter_, term_id):
     elif filter_ == 'Queued for Scheduling':
         courses = SisSection.get_courses_queued_for_scheduling(term_id)
     elif filter_ == 'Scheduled':
-        courses = SisSection.get_courses_scheduled(term_id)
+        courses = SisSection.get_courses_scheduled_standard_dates(term_id)
+    elif filter_ == 'Scheduled (Nonstandard Dates)':
+        courses = SisSection.get_courses_scheduled_nonstandard_dates(term_id)
     else:
         raise BadRequestError(f'Invalid filter: {filter_}')
     return courses

@@ -530,32 +530,21 @@ class SisSection(db.Model):
 
     @classmethod
     def get_courses_scheduled(cls, term_id):
-        sql = """
-            SELECT
-                s.*,
-                i.dept_code AS instructor_dept_code,
-                i.email AS instructor_email,
-                i.first_name || ' ' || i.last_name AS instructor_name,
-                i.uid AS instructor_uid,
-                r.id AS room_id,
-                r.location AS room_location
-            FROM sis_sections s
-            JOIN rooms r ON r.location = s.meeting_location
-                AND s.term_id = :term_id AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
-                AND s.is_primary IS TRUE AND s.is_principal_listing IS TRUE
-            JOIN scheduled d ON d.section_id = s.section_id AND d.term_id = :term_id AND d.deleted_at IS NULL
-            LEFT JOIN instructors i ON i.uid = s.instructor_uid
-            ORDER BY s.course_name, s.section_id, s.instructor_uid, r.capability NULLS LAST
-        """
-        rows = db.session.execute(
-            text(sql),
-            {
-                'term_id': term_id,
-            },
-        )
-        section_ids = []
-        for row in rows:
-            section_ids.append(row['section_id'])
+        scheduled_section_ids = list(cls._section_ids_scheduled(term_id))
+        return cls.get_courses(term_id, scheduled_section_ids)
+
+    @classmethod
+    def get_courses_scheduled_standard_dates(cls, term_id):
+        scheduled_section_ids = cls._section_ids_scheduled(term_id)
+        multiple_dates_section_ids = cls._section_ids_with_multiple_dates(term_id)
+        section_ids = list(scheduled_section_ids - multiple_dates_section_ids)
+        return cls.get_courses(term_id, section_ids)
+
+    @classmethod
+    def get_courses_scheduled_nonstandard_dates(cls, term_id):
+        scheduled_section_ids = cls._section_ids_scheduled(term_id)
+        multiple_dates_section_ids = cls._section_ids_with_multiple_dates(term_id)
+        section_ids = list(scheduled_section_ids.intersection(multiple_dates_section_ids))
         return cls.get_courses(term_id, section_ids)
 
     @classmethod
@@ -573,6 +562,49 @@ class SisSection(db.Model):
         """
         section_id = db.session.execute(text(sql), {'term_id': term_id}).scalar()
         return cls.get_course(term_id, section_id)
+
+    @classmethod
+    def _section_ids_with_multiple_dates(cls, term_id):
+        sql = """
+            SELECT s2.section_id, count(*) FROM
+              (
+                SELECT DISTINCT s.section_id, s.meeting_start_date, s.meeting_end_date
+                FROM sis_sections s
+                WHERE s.term_id = :term_id AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
+                    AND s.is_primary IS TRUE AND s.is_principal_listing IS TRUE
+                ORDER BY s.section_id
+              ) s2
+            GROUP BY s2.section_id
+            HAVING count(*) > 1
+            ORDER BY s2.section_id
+        """
+        rows = db.session.execute(
+            text(sql),
+            {
+                'term_id': term_id,
+            },
+        )
+        return set([row['section_id'] for row in rows])
+
+    @classmethod
+    def _section_ids_scheduled(cls, term_id):
+        sql = """
+            SELECT DISTINCT s.section_id
+            FROM sis_sections s
+            JOIN rooms r ON r.location = s.meeting_location
+                AND s.term_id = :term_id AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
+                AND s.is_primary IS TRUE AND s.is_principal_listing IS TRUE
+            JOIN scheduled d ON d.section_id = s.section_id AND d.term_id = :term_id AND d.deleted_at IS NULL
+            LEFT JOIN instructors i ON i.uid = s.instructor_uid
+            ORDER BY s.section_id
+        """
+        rows = db.session.execute(
+            text(sql),
+            {
+                'term_id': term_id,
+            },
+        )
+        return set([row['section_id'] for row in rows])
 
 
 def _to_api_json(term_id, rows, include_rooms=True):
