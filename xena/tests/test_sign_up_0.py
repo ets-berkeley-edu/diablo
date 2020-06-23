@@ -39,6 +39,7 @@ from xena.test_utils import util
 
 """
 SCENARIO:
+- Course has single meeting
 - Course site is created
 - Sole instructor visits sign-up page, selects presentation + presenter, approves
 - Recordings scheduled
@@ -50,6 +51,7 @@ class TestSignUp0:
 
     test_data = util.parse_course_test_data()[0]
     section = Section(test_data)
+    meeting = section.meetings[0]
     recording_schedule = RecordingSchedule(section)
     site = CanvasSite(
         code=f'XENA SignUp0 - {section.code}',
@@ -215,13 +217,13 @@ class TestSignUp0:
         assert self.sign_up_page.visible_instructors() == instructor_names
 
     def test_visible_meeting_days(self):
-        assert self.sign_up_page.visible_meeting_days() == self.section.days
+        assert self.sign_up_page.visible_meeting_days()[0] == self.meeting.days
 
     def test_visible_meeting_time(self):
-        assert self.sign_up_page.visible_meeting_time() == f'{self.section.start_time} - {self.section.end_time}'
+        assert self.sign_up_page.visible_meeting_time()[0] == f'{self.meeting.start_time} - {self.meeting.end_time}'
 
     def test_visible_room(self):
-        assert self.sign_up_page.visible_rooms() == self.section.room.name
+        assert self.sign_up_page.visible_rooms()[0] == self.meeting.room.name
 
     def test_visible_site_ids(self):
         assert self.sign_up_page.visible_course_site_ids() == [site.site_id for site in self.section.sites]
@@ -300,7 +302,6 @@ class TestSignUp0:
     def test_approved_filter_all(self):
         self.sign_up_page.log_out()
         self.login_page.dev_auth()
-        self.ouija_page.load_page()
         self.ouija_page.search_for_course_code(self.section)
         self.ouija_page.filter_for_all()
         assert self.ouija_page.is_course_in_results(self.section) is True
@@ -350,8 +351,8 @@ class TestSignUp0:
 
     def test_room_series(self):
         self.rooms_page.load_page()
-        self.rooms_page.find_room(self.section.room)
-        self.rooms_page.click_room_link(self.section.room)
+        self.rooms_page.find_room(self.meeting.room)
+        self.rooms_page.click_room_link(self.meeting.room)
         self.room_page.wait_for_series_row(self.recording_schedule)
 
     def test_room_series_link(self):
@@ -359,18 +360,18 @@ class TestSignUp0:
         assert self.room_page.series_row_kaltura_link_text(self.recording_schedule) == expected
 
     def test_room_series_start(self):
-        start = util.get_first_recording_date(self.recording_schedule)
+        start = util.get_first_recording_date(self.meeting)
         assert self.room_page.series_row_start_date(self.recording_schedule) == start
 
     def test_room_series_end(self):
         assert self.room_page.series_row_end_date(self.recording_schedule) == self.term.end_date
 
     def test_room_series_days(self):
-        assert self.room_page.series_row_days(self.recording_schedule) == self.section.days.replace(' ', '')
+        assert self.room_page.series_row_days(self.recording_schedule) == self.meeting.days.replace(' ', '')
 
     def test_series_recordings(self):
         self.room_page.expand_series_row(self.recording_schedule)
-        expected = util.expected_recording_dates(self.recording_schedule)
+        expected = util.expected_recording_dates(self.section.term, self.meeting)
         visible = self.room_page.series_recording_start_dates(self.recording_schedule)
         assert visible == expected
 
@@ -450,23 +451,23 @@ class TestSignUp0:
 
     def test_recur_monday(self):
         checked = self.kaltura_page.is_mon_checked()
-        assert checked if 'MO' in self.section.days else not checked
+        assert checked if 'MO' in self.meeting.days else not checked
 
     def test_recur_tuesday(self):
         checked = self.kaltura_page.is_tue_checked()
-        assert checked if 'TU' in self.section.days else not checked
+        assert checked if 'TU' in self.meeting.days else not checked
 
     def test_recur_wednesday(self):
         checked = self.kaltura_page.is_wed_checked()
-        assert checked if 'WE' in self.section.days else not checked
+        assert checked if 'WE' in self.meeting.days else not checked
 
     def test_recur_thursday(self):
         checked = self.kaltura_page.is_thu_checked()
-        assert checked if 'TH' in self.section.days else not checked
+        assert checked if 'TH' in self.meeting.days else not checked
 
     def test_recur_friday(self):
         checked = self.kaltura_page.is_fri_checked()
-        assert checked if 'FR' in self.section.days else not checked
+        assert checked if 'FR' in self.meeting.days else not checked
 
     def test_recur_saturday(self):
         assert not self.kaltura_page.is_sat_checked()
@@ -475,7 +476,7 @@ class TestSignUp0:
         assert not self.kaltura_page.is_sun_checked()
 
     def test_start_date(self):
-        start = util.get_kaltura_term_date_str(util.get_first_recording_date(self.recording_schedule))
+        start = util.get_kaltura_term_date_str(util.get_first_recording_date(self.meeting))
         assert self.kaltura_page.visible_start_date() == start
 
     def test_end_date(self):
@@ -483,12 +484,12 @@ class TestSignUp0:
         assert self.kaltura_page.visible_end_date() == end
 
     def test_start_time(self):
-        start = self.section.get_berkeley_start_time()
+        start = self.meeting.get_berkeley_start_time()
         visible_start = datetime.strptime(self.kaltura_page.visible_start_time(), '%I:%M %p')
         assert visible_start == start
 
     def test_end_time(self):
-        end = self.section.get_berkeley_end_time()
+        end = self.meeting.get_berkeley_end_time()
         visible_end = datetime.strptime(self.kaltura_page.visible_end_time(), '%I:%M %p')
         assert visible_end == end
 

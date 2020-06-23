@@ -23,45 +23,39 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-from xena.models.meeting import Meeting
-from xena.models.term import Term
-from xena.models.user import User
+from datetime import datetime
+from datetime import timedelta
+
+from xena.models.room import Room
 
 
-class Section(object):
+class Meeting(object):
 
-    def __init__(self, data, sites=None):
+    def __init__(self, data):
         self.data = data
-        self.sites = sites or []
 
     @property
-    def term(self):
-        return Term()
+    def days(self):
+        return self.data['days']
 
     @property
-    def ccn(self):
-        return self.data['ccn']
+    def start_time(self):
+        return self.data['start_time']
 
     @property
-    def code(self):
-        return self.data['code']
+    def end_time(self):
+        return self.data['end_time']
 
     @property
-    def number(self):
-        return self.data['number']
+    def room(self):
+        return Room(self.data['room'])
 
-    @property
-    def title(self):
-        return self.data['title']
+    @staticmethod
+    def add_minutes(section_time_str, minutes):
+        return datetime.strptime(section_time_str, '%I:%M %p') + timedelta(minutes=minutes)
 
-    @property
-    def instructors(self):
-        return [User(i) for i in self.data['instructors']]
+    def get_berkeley_start_time(self):
+        return Meeting.add_minutes(self.start_time, 7)
 
-    @property
-    def listings(self):
-        return [Section(i) for i in self.data['listings']]
-
-    @property
-    def meetings(self):
-        return [Meeting(i) for i in self.data['meetings']]
+    def get_berkeley_end_time(self):
+        return Meeting.add_minutes(self.end_time, 2)
