@@ -147,25 +147,25 @@ def get_next_date(start_date, day_index):
     return start_date + timedelta(days_ahead)
 
 
-def get_first_recording_date(recording_schedule):
+def get_first_recording_date(meeting):
     term_start_date = datetime.strptime(app.config['CURRENT_TERM_BEGIN'], '%Y-%m-%d')
     day_to_index = {'MO': 0, 'TU': 1, 'WE': 2, 'TH': 3, 'FR': 4}
-    schedule_days_str = recording_schedule.section.days.replace(' ', '').split(',')
+    schedule_days_str = meeting.days.replace(' ', '').split(',')
     schedule_days_ind = [day_to_index[day] for day in schedule_days_str]
     next_dates = [get_next_date(term_start_date, index) for index in schedule_days_ind]
     next_dates.sort()
     return next_dates[0]
 
 
-def expected_recording_dates(recording_schedule):
+def expected_recording_dates(term, meeting):
     weekdays = ['MO', 'TU', 'WE', 'TH', 'FR']
     weekday_indices = []
     for day in weekdays:
-        if day in recording_schedule.section.days:
+        if day in meeting.days:
             weekday_indices.append(weekdays.index(day))
 
-    term_start_date = dateutil.parser.parse(f'{recording_schedule.section.term.start_date}').date()
-    term_end_date = dateutil.parser.parse(f'{recording_schedule.section.term.end_date}').date()
+    term_start_date = dateutil.parser.parse(f'{term.start_date}').date()
+    term_end_date = dateutil.parser.parse(f'{term.end_date}').date()
     delta = term_end_date - term_start_date
 
     holidays = []

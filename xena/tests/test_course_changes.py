@@ -42,7 +42,9 @@ class TestCourseChanges:
     real_test_data = util.parse_course_test_data()[8]
     fake_test_data = util.parse_course_test_data()[9]
     real_section = Section(real_test_data)
+    real_meeting = real_section.meetings[0]
     fake_section = Section(fake_test_data)
+    fake_meeting = fake_section.meetings[0]
     recording_sched = RecordingSchedule(real_section)
 
     def test_disable_jobs(self):
@@ -165,12 +167,12 @@ class TestCourseChanges:
     def test_changes_page_with_new_times(self):
         self.jobs_page.click_course_changes_link()
         self.changes_page.wait_for_course_row(self.real_section)
-        fake_start = datetime.strftime(datetime.strptime(self.fake_section.start_time, '%I:%M%p'), '%-I:%M %p')
-        fake_end = datetime.strftime(datetime.strptime(self.fake_section.end_time, '%I:%M%p'), '%-I:%M %p')
-        real_start = datetime.strftime(datetime.strptime(self.real_section.start_time, '%I:%M%p'), '%-I:%M %p')
-        real_end = datetime.strftime(datetime.strptime(self.real_section.end_time, '%I:%M%p'), '%-I:%M %p')
-        fake_sched = f'{self.fake_section.days.replace(" ", "")} {fake_start} - {fake_end}'
-        real_sched = f'{self.real_section.days.replace(" ", "")} {real_start} - {real_end}'
+        fake_start = datetime.strftime(datetime.strptime(self.fake_meeting, '%I:%M%p'), '%-I:%M %p')
+        fake_end = datetime.strftime(datetime.strptime(self.fake_meeting, '%I:%M%p'), '%-I:%M %p')
+        real_start = datetime.strftime(datetime.strptime(self.real_meeting, '%I:%M%p'), '%-I:%M %p')
+        real_end = datetime.strftime(datetime.strptime(self.real_meeting, '%I:%M%p'), '%-I:%M %p')
+        fake_sched = f'{self.fake_meeting.replace(" ", "")} {fake_start} - {fake_end}'
+        real_sched = f'{self.real_meeting.replace(" ", "")} {real_start} - {real_end}'
         expected = f'{real_sched}\n changed to\n{fake_sched}'
         actual = self.changes_page.course_schedule_info(self.real_section)
         assert expected in actual
@@ -215,19 +217,19 @@ class TestCourseChanges:
         wed_checked = self.kaltura_page.is_wed_checked()
         thu_checked = self.kaltura_page.is_thu_checked()
         fri_checked = self.kaltura_page.is_fri_checked()
-        assert mon_checked if 'MO' in self.fake_section.days else not mon_checked
-        assert tue_checked if 'TU' in self.fake_section.days else not tue_checked
-        assert wed_checked if 'WE' in self.fake_section.days else not wed_checked
-        assert thu_checked if 'TH' in self.fake_section.days else not thu_checked
-        assert fri_checked if 'FR' in self.fake_section.days else not fri_checked
+        assert mon_checked if 'MO' in self.fake_meeting.days else not mon_checked
+        assert tue_checked if 'TU' in self.fake_meeting.days else not tue_checked
+        assert wed_checked if 'WE' in self.fake_meeting.days else not wed_checked
+        assert thu_checked if 'TH' in self.fake_meeting.days else not thu_checked
+        assert fri_checked if 'FR' in self.fake_meeting.days else not fri_checked
         assert not self.kaltura_page.is_sat_checked()
         assert not self.kaltura_page.is_sun_checked()
 
     def test_verify_new_kaltura_times(self):
-        start = self.fake_section.get_berkeley_start_time()
+        start = self.fake_meeting.get_berkeley_start_time()
         visible_start = datetime.strptime(self.kaltura_page.visible_start_time(), '%I:%M%p')
         assert visible_start == start
-        end = self.fake_section.get_berkeley_end_time()
+        end = self.fake_meeting.get_berkeley_end_time()
         visible_end = datetime.strptime(self.kaltura_page.visible_end_time(), '%I:%M%p')
         assert visible_end == end
 
@@ -252,7 +254,7 @@ class TestCourseChanges:
     def test_changes_page_ineligible_room(self):
         self.jobs_page.click_course_changes_link()
         self.changes_page.wait_for_course_row(self.real_section)
-        expected = f'{self.real_section.room.name}\n changed to\n{self.fake_section.room.name}'
+        expected = f'{self.real_meeting.room.name}\n changed to\n{self.fake_meeting.room.name}'
         actual = self.changes_page.course_room_info(self.real_section)
         assert expected in actual
 
@@ -271,7 +273,7 @@ class TestCourseChanges:
         self.kaltura_page.wait_for_title('Access Denied - UC Berkeley - Test')
 
     def test_admin_email_ineligible_room(self):
-        subj = f'Course Capture Admin: {self.real_section.code} has moved to {self.fake_section.room.name}'
+        subj = f'Course Capture Admin: {self.real_section.code} has moved to {self.fake_meeting.room.name}'
         email = Email(msg_type=None, subject=subj, sender=None)
         assert self.email_page.is_message_delivered(email)
 

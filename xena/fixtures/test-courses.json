@@ -13,13 +13,17 @@
           "role": "PI"
         }
       ],
-      "days": "Tuesday, Thursday",
-      "start_time": "12:30pm",
-      "end_time": "01:59pm",
-      "room": {
-        "name": "Pimentel 1",
-        "capabilities": "Screencast + Video"
-      },
+      "meetings": [
+        {
+          "days": "Tuesday, Thursday",
+          "start_time": "12:30pm",
+          "end_time": "01:59pm",
+          "room": {
+            "name": "Pimentel 1",
+            "capabilities": "Screencast + Video"
+          }
+        }
+      ],
       "listings": []
     },
     {
@@ -35,13 +39,17 @@
           "role": "PI"
         }
       ],
-      "days": "Tuesday, Thursday",
-      "start_time": "12:30pm",
-      "end_time": "01:59pm",
-      "room": {
-        "name": "Cory 277",
-        "capabilities": "Screencast"
-      },
+      "meetings": [
+        {
+          "days": "Tuesday, Thursday",
+          "start_time": "12:30pm",
+          "end_time": "01:59pm",
+          "room": {
+            "name": "Cory 277",
+            "capabilities": "Screencast"
+          }
+        }
+      ],
       "listings": []
     },
     {
@@ -64,13 +72,17 @@
           "role": "PI"
         }
       ],
-      "days": "Tuesday, Thursday",
-      "start_time": "12:30pm",
-      "end_time": "01:59pm",
-      "room": {
-        "name": "Pimentel 1",
-        "capabilities": "Screencast + Video"
-      },
+      "meetings": [
+        {
+          "days": "Tuesday, Thursday",
+          "start_time": "12:30pm",
+          "end_time": "01:59pm",
+          "room": {
+            "name": "Pimentel 1",
+            "capabilities": "Screencast + Video"
+          }
+        }
+      ],
       "listings": []
     },
     {
@@ -93,13 +105,17 @@
           "role": "PI"
         }
       ],
-      "days": "Tuesday, Thursday",
-      "start_time": "12:30pm",
-      "end_time": "01:59pm",
-      "room": {
-        "name": "Pimentel 1",
-        "capabilities": "Screencast + Video"
-      },
+      "meetings": [
+        {
+          "days": "Tuesday, Thursday",
+          "start_time": "12:30pm",
+          "end_time": "01:59pm",
+          "room": {
+            "name": "Pimentel 1",
+            "capabilities": "Screencast + Video"
+          }
+        }
+      ],
       "listings": []
     },
     {
@@ -115,13 +131,17 @@
           "role": "PI"
         }
       ],
-      "days": "Tuesday, Thursday",
-      "start_time": "12:30pm",
-      "end_time": "01:59pm",
-      "room": {
-        "name": "Pimentel 1",
-        "capabilities": "Screencast + Video"
-      },
+      "meetings": [
+        {
+          "days": "Tuesday, Thursday",
+          "start_time": "12:30pm",
+          "end_time": "01:59pm",
+          "room": {
+            "name": "Pimentel 1",
+            "capabilities": "Screencast + Video"
+          }
+        }
+      ],
       "listings": []
     },
     {
@@ -137,13 +157,17 @@
           "role": "PI"
         }
       ],
-      "days": "Tuesday, Thursday",
-      "start_time": "12:30pm",
-      "end_time": "01:59pm",
-      "room": {
-        "name": "Pimentel 1",
-        "capabilities": "Screencast + Video"
-      },
+      "meetings": [
+        {
+          "days": "Tuesday, Thursday",
+          "start_time": "12:30pm",
+          "end_time": "01:59pm",
+          "room": {
+            "name": "Pimentel 1",
+            "capabilities": "Screencast + Video"
+          }
+        }
+      ],
       "listings": []
     },
     {
@@ -159,13 +183,17 @@
           "role": "PI"
         }
       ],
-      "days": "Tuesday, Thursday",
-      "start_time": "12:30pm",
-      "end_time": "01:59pm",
-      "room": {
-        "name": "Pimentel 1",
-        "capabilities": "Screencast + Video"
-      },
+      "meetings": [
+        {
+          "days": "Tuesday, Thursday",
+          "start_time": "12:30pm",
+          "end_time": "01:59pm",
+          "room": {
+            "name": "Pimentel 1",
+            "capabilities": "Screencast + Video"
+          }
+        }
+      ],
       "listings": []
     }
   ]

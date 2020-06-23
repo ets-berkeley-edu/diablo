@@ -38,9 +38,9 @@ class SignUpPage(DiabloPages):
     COURSE_TITLE = (By.ID, 'course-title')
     INSTRUCTORS = (By.ID, 'instructors')
     INSTRUCTOR = (By.XPATH, '//*[contains(@id, "instructor-")]')
-    MEETING_DAYS = (By.ID, 'meeting-days')
-    MEETING_TIMES = (By.ID, 'meeting-times')
-    ROOMS = (By.ID, 'rooms')
+    MEETING_DAYS = (By.XPATH, '//*[contains(@id, "meeting-days-")]')
+    MEETING_TIMES = (By.XPATH, '//*[contains(@id, "meeting-times-")]')
+    ROOMS = (By.XPATH, '//*[contains(@id, "rooms-")]')
     COURSE_SITE_LINK = (By.XPATH, '//a[contains(@id, "canvas-course-site-")]')
     CROSS_LISTING = (By.XPATH, '//div[contains(@id, "cross-listing-")]')
     OPTED_OUT = (By.ID, 'opted-out')
@@ -105,13 +105,13 @@ class SignUpPage(DiabloPages):
         return [el.text for el in els]
 
     def visible_meeting_days(self):
-        return self.element(SignUpPage.MEETING_DAYS).get_attribute('innerText').strip()
+        return [el.get_attribute('innerText').strip() for el in self.elements(SignUpPage.MEETING_DAYS)]
 
     def visible_meeting_time(self):
-        return self.element(SignUpPage.MEETING_TIMES).get_attribute('innerText').strip()
+        return [el.get_attribute('innerText').strip() for el in self.elements(SignUpPage.MEETING_TIMES)]
 
     def visible_rooms(self):
-        return self.element(SignUpPage.ROOMS).get_attribute('innerText').strip()
+        return [el.get_attribute('innerText').strip() for el in self.elements(SignUpPage.ROOMS)]
 
     def visible_course_site_ids(self):
         site_els = self.elements(SignUpPage.COURSE_SITE_LINK)
