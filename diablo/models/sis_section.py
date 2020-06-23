@@ -718,8 +718,8 @@ def _decorate_course(course):
         course_meeting_string = '-'.join(
             [
                 str(meetings[0]['daysFormatted']),
-                meetings[0]['startTimeFormatted'],
-                meetings[0]['endTimeFormatted'],
+                str(meetings[0]['startTimeFormatted']),
+                str(meetings[0]['endTimeFormatted']),
             ],
         )
         room_id = meetings[0].get('room', {}).get('id')
