@@ -50,6 +50,7 @@ def get_search_filter_options():
         'Partially Approved': 'Eligible courses (received invitation) with some but not all necessary approvals.',
         'Queued for Scheduling': 'Courses with all necessary approvals but recordings not yet scheduled.',
         'Scheduled': 'Courses with scheduled recordings.',
+        'Scheduled (Nonstandard Dates)': 'Courses with scheduled recordings and nonstandard dates.',
     }
 
 
