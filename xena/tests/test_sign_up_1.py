@@ -541,6 +541,14 @@ class TestSignUp1:
     def test_create_course_site(self):
         self.canvas_page.provision_site(self.section, [self.section.ccn])
 
+    def test_enable_media_gallery(self):
+        self.canvas_page.enable_media_gallery(self.site)
+        self.canvas_page.click_media_gallery_tool()
+
+    def test_enable_my_media(self):
+        self.canvas_page.enable_my_media(self.site)
+        self.canvas_page.click_my_media_tool()
+
     def test_run_canvas_and_kaltura_jobs(self):
         self.jobs_page.load_page()
         self.jobs_page.run_canvas_job()

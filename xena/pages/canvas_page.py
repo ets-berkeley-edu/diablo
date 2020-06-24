@@ -27,6 +27,7 @@ from flask import current_app as app
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.wait import WebDriverWait as Wait
+from xena.models.kaltura_lti_tool import KalturaLTITool
 from xena.pages.calnet_page import CalNetPage
 from xena.pages.page import Page
 from xena.test_utils import util
@@ -46,6 +47,8 @@ class CanvasPage(Page):
     DELETE_COURSE_BUTTON = (By.XPATH, '//button[text()="Delete Course"]')
     DELETE_COURSE_SUCCESS = (By.XPATH, '//li[contains(.,"successfully deleted")]')
 
+    NAVIGATION_LINK = (By.LINK_TEXT, 'Navigation')
+    TOOL_SAVE_BUTTON = (By.XPATH, '//button[text()="Save"]')
     MEDIA_GALLERY_LINK = (By.LINK_TEXT, 'Media Gallery')
     MY_MEDIA_LINK = (By.LINK_TEXT, 'My Media')
 
@@ -72,6 +75,12 @@ class CanvasPage(Page):
 
     def hit_homepage(self):
         self.driver.get(app.config['CANVAS_BASE_URL'])
+
+    def hide_canvas_footer(self):
+        el_id = 'element_toggler_0'
+        el_loc = By.ID, el_id
+        if self.is_present(el_loc) and self.element(el_loc):
+            self.driver.execute_script('document.getElementById("element_toggler_0").style.display="none";')
 
     def log_in(self):
         app.logger.info('Logging in to Canvas')
@@ -140,12 +149,49 @@ class CanvasPage(Page):
         for site_id in site_ids:
             self.delete_site(site_id)
 
+    @staticmethod
+    def tool_nav_link_locator(tool):
+        return By.XPATH, f'//ul[@id="section-tabs"]//a[text()="{tool.value}"]'
+
+    @staticmethod
+    def disabled_tool_locator(tool):
+        return By.XPATH, f'//ul[@id="nav_disabled_list"]/li[contains(.,"{tool.value}")]//a'
+
+    @staticmethod
+    def enable_tool_link_locator(tool):
+        return By.XPATH, f'//ul[@id="nav_disabled_list"]/li[contains(.,"{tool.value}")]//a[@title="Enable this item"]'
+
+    @staticmethod
+    def enabled_tool_locator(tool):
+        return By.XPATH, f'//ul[@id="nav_enabled_list"]/li[contains(.,"{tool.value}")]'
+
+    def enable_tool(self, site, tool):
+        app.logger.info(f'Enabling {tool} on site ID {site.site_id}')
+        self.driver.get(f'{app.config["CANVAS_BASE_URL"]}/courses/{site.site_id}/settings')
+        self.wait_for_page_and_click(CanvasPage.NAVIGATION_LINK)
+        self.hide_canvas_footer()
+        self.wait_for_element_and_click(CanvasPage.disabled_tool_locator(tool))
+        self.wait_for_element_and_click(CanvasPage.enable_tool_link_locator(tool))
+        Wait(self.driver, util.get_medium_timeout()).until(
+            ec.visibility_of_element_located(CanvasPage.enabled_tool_locator(tool)),
+        )
+        self.wait_for_element_and_click(CanvasPage.TOOL_SAVE_BUTTON)
+        Wait(self.driver, util.get_medium_timeout()).until(
+            ec.visibility_of_element_located(CanvasPage.tool_nav_link_locator(tool)),
+        )
+
+    def enable_media_gallery(self, site):
+        self.enable_tool(site, KalturaLTITool.MEDIA_GALLERY)
+
+    def enable_my_media(self, site):
+        self.enable_tool(site, KalturaLTITool.MY_MEDIA)
+
     def click_media_gallery_tool(self):
         app.logger.info('Clicking the Media Gallery LTI tool')
-        self.wait_for_page_and_click_js(CanvasPage.MEDIA_GALLERY_LINK)
-        Wait(self.driver, util.get_medium_timeout()).until(ec.frame_to_be_available_and_switch_to_it(CanvasPage.FRAME))
+        self.hide_canvas_footer()
+        self.wait_for_page_and_click(CanvasPage.MEDIA_GALLERY_LINK)
 
     def click_my_media_tool(self):
         app.logger.info('Clicking the My Media LTI tool')
-        self.wait_for_page_and_click_js(CanvasPage.MY_MEDIA_LINK)
-        Wait(self.driver, util.get_medium_timeout()).until(ec.frame_to_be_available_and_switch_to_it(CanvasPage.FRAME))
+        self.hide_canvas_footer()
+        self.wait_for_page_and_click(CanvasPage.MY_MEDIA_LINK)
