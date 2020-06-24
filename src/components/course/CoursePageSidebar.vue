@@ -19,7 +19,7 @@
         <v-col :class="{'pb-0': course.displayMeetings.length > 1}">
           {{ $_.join(meeting.daysFormatted, ', ') }}
           <div v-if="course.meetingDateRangesVary">
-            {{ meeting.startDate | moment('MMM D, YYYY')}} to {{ meeting.endDate | moment('MMM D, YYYY')}}
+            {{ meeting.startDate | moment('MMM D, YYYY') }} to {{ meeting.endDate | moment('MMM D, YYYY') }}
           </div>
         </v-col>
       </v-row>

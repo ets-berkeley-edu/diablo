@@ -62,10 +62,9 @@ def api_get_course(client, term_id, section_id, expected_status_code=200):
     return response.json
 
 
-def get_meeting_data(term_id, section_id):
+def get_eligible_meeting(section_id, term_id):
     feed = SisSection.get_course(term_id=term_id, section_id=section_id)
-    meeting = (feed['meetings']['eligible'] + feed['meetings']['ineligible'])[0]
-    return meeting['days'], meeting['startTime'], meeting['endTime']
+    return (feed['meetings']['eligible'] + feed['meetings']['ineligible'])[0]
 
 
 @cachify('instructor_uids_{section_id}_{term_id}')

@@ -38,7 +38,7 @@ from diablo.models.sent_email import SentEmail
 from diablo.models.sis_section import SisSection
 from flask import current_app as app
 import pytest
-from tests.test_api.api_test_utils import api_approve, api_get_course, get_instructor_uids, get_meeting_data
+from tests.test_api.api_test_utils import api_approve, api_get_course, get_eligible_meeting, get_instructor_uids
 from tests.util import simply_yield, test_approvals_workflow
 
 admin_uid = '90001'
@@ -727,19 +727,18 @@ class TestCoursesChanges:
     def test_has_obsolete_meeting_times(self, client, admin_session):
         """Admins can see meeting time changes that might disrupt scheduled recordings."""
         with test_approvals_workflow(app):
-            meeting_days, meeting_start_time, meeting_end_time = get_meeting_data(
-                term_id=self.term_id,
-                section_id=section_1_id,
-            )
+            meeting = get_eligible_meeting(section_id=section_1_id, term_id=self.term_id)
             obsolete_meeting_days = 'MOWE'
-            assert meeting_days != obsolete_meeting_days
+            assert meeting['days'] != obsolete_meeting_days
 
             Scheduled.create(
                 instructor_uids=get_instructor_uids(term_id=self.term_id, section_id=section_1_id),
                 kaltura_schedule_id=random.randint(1, 10),
                 meeting_days=obsolete_meeting_days,
-                meeting_start_time=meeting_start_time,
-                meeting_end_time=meeting_end_time,
+                meeting_end_date=meeting['endDate'],
+                meeting_end_time=meeting['endTime'],
+                meeting_start_date=meeting['startDate'],
+                meeting_start_time=meeting['startTime'],
                 publish_type_='kaltura_my_media',
                 recording_type_='presentation_audio',
                 room_id=Room.get_room_id(section_id=section_1_id, term_id=self.term_id),
@@ -758,17 +757,16 @@ class TestCoursesChanges:
     def test_has_instructors(self, client, admin_session):
         """Admins can see instructor changes that might disrupt scheduled recordings."""
         with test_approvals_workflow(app):
-            meeting_days, meeting_start_time, meeting_end_time = get_meeting_data(
-                term_id=self.term_id,
-                section_id=section_3_id,
-            )
+            meeting = get_eligible_meeting(section_id=section_3_id, term_id=self.term_id)
             instructor_uids = get_instructor_uids(term_id=self.term_id, section_id=section_3_id)
             Scheduled.create(
                 instructor_uids=instructor_uids + ['100099'],
                 kaltura_schedule_id=random.randint(1, 10),
-                meeting_days=meeting_days,
-                meeting_start_time=meeting_start_time,
-                meeting_end_time=meeting_end_time,
+                meeting_days=meeting['days'],
+                meeting_end_date=meeting['endDate'],
+                meeting_end_time=meeting['endTime'],
+                meeting_start_date=meeting['startDate'],
+                meeting_start_time=meeting['startTime'],
                 publish_type_='kaltura_my_media',
                 recording_type_='presenter_audio',
                 room_id=Room.get_room_id(section_id=section_3_id, term_id=self.term_id),
@@ -1060,16 +1058,15 @@ def _schedule_recordings(
         recording_type='presenter_presentation_audio',
         room_id=None,
 ):
-    meeting_days, meeting_start_time, meeting_end_time = get_meeting_data(
-        term_id=term_id,
-        section_id=section_id,
-    )
+    meeting = get_eligible_meeting(section_id=section_id, term_id=term_id)
     Scheduled.create(
         instructor_uids=get_instructor_uids(term_id=term_id, section_id=section_id),
         kaltura_schedule_id=random.randint(1, 10),
-        meeting_days=meeting_days,
-        meeting_start_time=meeting_start_time,
-        meeting_end_time=meeting_end_time,
+        meeting_days=meeting['days'],
+        meeting_end_date=meeting['endDate'],
+        meeting_end_time=meeting['endTime'],
+        meeting_start_date=meeting['startDate'],
+        meeting_start_time=meeting['startTime'],
         publish_type_=publish_type,
         recording_type_=recording_type,
         room_id=room_id or Room.get_room_id(section_id=section_id, term_id=term_id),

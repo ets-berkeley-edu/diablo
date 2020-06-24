@@ -22,33 +22,21 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
+from diablo.lib.berkeley import get_recording_end_date, get_recording_start_date
 from flask import current_app as app
+from tests.util import override_config
 
 
-def flatten_location(name):
-    return name and ''.join(name.split()).lower()
+class TestRecordingDates:
 
+    def test_recording_end_date(self):
+        diablo_end = '2020-11-25'
+        with override_config(app, 'CURRENT_TERM_END', diablo_end):
+            assert get_recording_end_date(meeting={'endDate': '2020-12-11'}) == diablo_end
+            assert get_recording_end_date(meeting={'endDate': '2020-11-01'}) == '2020-11-01'
 
-def get_recording_end_date(meeting):
-    actual_end = meeting['endDate']
-    diablo_end = app.config['CURRENT_TERM_END']
-    return actual_end if actual_end < diablo_end else diablo_end
-
-
-def get_recording_start_date(meeting):
-    actual_start = meeting['startDate']
-    diablo_start = app.config['CURRENT_TERM_BEGIN']
-    return actual_start if actual_start > diablo_start else diablo_start
-
-
-def term_name_for_sis_id(sis_id=None):
-    if sis_id:
-        sis_id = str(sis_id)
-        season_codes = {
-            '0': 'Winter',
-            '2': 'Spring',
-            '5': 'Summer',
-            '8': 'Fall',
-        }
-        year = f'19{sis_id[1:3]}' if sis_id.startswith('1') else f'20{sis_id[1:3]}'
-        return f'{season_codes[sis_id[3:4]]} {year}'
+    def test_recording_start_date(self):
+        diablo_start = '2020-09-07'
+        with override_config(app, 'CURRENT_TERM_BEGIN', diablo_start):
+            assert get_recording_start_date(meeting={'startDate': '2020-08-26'}) == diablo_start
+            assert get_recording_start_date(meeting={'startDate': '2020-09-14'}) == '2020-09-14'

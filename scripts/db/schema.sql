@@ -46,6 +46,7 @@ CREATE TYPE approver_types AS ENUM (
 --
 
 CREATE TYPE email_template_types AS ENUM (
+    'admin_alert_date_change',
     'admin_alert_instructor_change',
     'admin_alert_multiple_meeting_patterns',
     'admin_alert_room_change',
@@ -309,9 +310,11 @@ CREATE TABLE scheduled (
     term_id INTEGER NOT NULL,
     instructor_uids VARCHAR(80)[] NOT NULL,
     kaltura_schedule_id INTEGER NOT NULL,
-    meeting_days VARCHAR(80),
-    meeting_end_time VARCHAR(80),
-    meeting_start_time VARCHAR(80),
+    meeting_days VARCHAR(80) NOT NULL,
+    meeting_end_date VARCHAR(80) NOT NULL,
+    meeting_end_time VARCHAR(80) NOT NULL,
+    meeting_start_date VARCHAR(80) NOT NULL,
+    meeting_start_time VARCHAR(80) NOT NULL,
     publish_type publish_types NOT NULL,
     recording_type recording_types NOT NULL,
     room_id INTEGER NOT NULL,
