@@ -48,6 +48,7 @@ class AdminEmailsJob(BaseJob):
     def description(cls):
         names_by_type = EmailTemplate.get_template_type_options()
         template_types = [
+            'admin_alert_date_change',
             'admin_alert_instructor_change',
             'admin_alert_multiple_meeting_patterns',
             'admin_alert_room_change',
@@ -87,13 +88,13 @@ class AdminEmailsJob(BaseJob):
         )
         courses_by_section_id = dict((course['sectionId'], course) for course in courses)
 
-        for scheduled_course in scheduled_subset:
-            course = courses_by_section_id[scheduled_course.section_id]
+        for scheduled in scheduled_subset:
+            course = courses_by_section_id[scheduled.section_id]
             meetings = course.get('meetings', {}).get('eligible', [])
             if len(meetings):
-                scheduled_start = scheduled_course.meeting_start_date
-                scheduled_end = scheduled_course.meeting_end_date
-                if meetings[0]['startDate'] != scheduled_start or meetings[0]['endDate'] != scheduled_end:
+                api_json = scheduled.to_api_json()
+                start_date_mismatch = meetings[0]['startDate'] != api_json['meetingStartDate']
+                if start_date_mismatch or meetings[0]['endDate'] != api_json['meetingEndDate']:
                     self._notify(course=course, template_type=template_type)
 
     def _instructor_change_alerts(self):

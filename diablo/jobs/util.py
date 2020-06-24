@@ -95,10 +95,10 @@ def refresh_cross_listings(term_id):
                 FROM sis_sections
                 WHERE term_id = :term_id
                     AND meeting_days <> ''
-                    AND meeting_end_date <> ''
+                    AND meeting_end_date IS NOT NULL
                     AND meeting_end_time <> ''
                     AND meeting_location <> ''
-                    AND meeting_start_date <> ''
+                    AND meeting_start_date IS NOT NULL
                     AND meeting_start_time <> ''
                 ORDER BY schedule, section_id
             """
@@ -190,9 +190,9 @@ def schedule_recordings(all_approvals, course):
                 instructor_uids=[i['uid'] for i in course['instructors']],
                 kaltura_schedule_id=kaltura_schedule_id,
                 meeting_days=meeting['days'],
-                meeting_end_date=get_recording_end_date(meeting).strftime('%Y-%m-%d'),
+                meeting_end_date=get_recording_end_date(meeting),
                 meeting_end_time=meeting['endTime'],
-                meeting_start_date=get_recording_start_date(meeting).strftime('%Y-%m-%d'),
+                meeting_start_date=get_recording_start_date(meeting),
                 meeting_start_time=meeting['startTime'],
                 publish_type_=approval.publish_type,
                 recording_type_=approval.recording_type,
