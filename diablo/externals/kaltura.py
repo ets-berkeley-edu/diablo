@@ -254,8 +254,8 @@ class Kaltura:
             term_id,
     ):
         term_name = term_name_for_sis_id(term_id)
-        start_date = datetime.strptime(get_recording_start_date(meeting), '%Y-%m-%d')
-        term_end = datetime.strptime(get_recording_end_date(meeting), '%Y-%m-%d')
+        start_date = get_recording_start_date(meeting)
+        term_end = get_recording_end_date(meeting)
 
         # Recording starts X minutes before/after official start; it ends Y minutes before/after official end time.
         days = format_days(meeting['days'])

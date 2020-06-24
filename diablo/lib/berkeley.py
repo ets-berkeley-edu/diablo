@@ -22,6 +22,8 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
+from datetime import datetime
+
 from flask import current_app as app
 
 
@@ -30,14 +32,14 @@ def flatten_location(name):
 
 
 def get_recording_end_date(meeting):
-    actual_end = meeting['endDate']
-    diablo_end = app.config['CURRENT_TERM_END']
+    actual_end = datetime.strptime(meeting['endDate'].split()[0], '%Y-%m-%d')
+    diablo_end = datetime.strptime(app.config['CURRENT_TERM_END'], '%Y-%m-%d')
     return actual_end if actual_end < diablo_end else diablo_end
 
 
 def get_recording_start_date(meeting):
-    actual_start = meeting['startDate']
-    diablo_start = app.config['CURRENT_TERM_BEGIN']
+    actual_start = datetime.strptime(meeting['startDate'].split()[0], '%Y-%m-%d')
+    diablo_start = datetime.strptime(app.config['CURRENT_TERM_BEGIN'], '%Y-%m-%d')
     return actual_start if actual_start > diablo_start else diablo_start
 
 

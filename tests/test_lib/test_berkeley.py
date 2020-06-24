@@ -22,6 +22,8 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
+from datetime import datetime
+
 from diablo.lib.berkeley import get_recording_end_date, get_recording_start_date
 from flask import current_app as app
 from tests.util import override_config
@@ -32,11 +34,19 @@ class TestRecordingDates:
     def test_recording_end_date(self):
         diablo_end = '2020-11-25'
         with override_config(app, 'CURRENT_TERM_END', diablo_end):
-            assert get_recording_end_date(meeting={'endDate': '2020-12-11'}) == diablo_end
-            assert get_recording_end_date(meeting={'endDate': '2020-11-01'}) == '2020-11-01'
+            def _get_recording_end_date(end_date):
+                return get_recording_end_date(meeting={'endDate': end_date})
+            assert _get_recording_end_date('2020-12-11 00:00:00 UTC') == _to_datetime(diablo_end)
+            assert _get_recording_end_date('2020-11-01 00:00:00 UTC') == _to_datetime('2020-11-01')
 
     def test_recording_start_date(self):
         diablo_start = '2020-09-07'
         with override_config(app, 'CURRENT_TERM_BEGIN', diablo_start):
-            assert get_recording_start_date(meeting={'startDate': '2020-08-26'}) == diablo_start
-            assert get_recording_start_date(meeting={'startDate': '2020-09-14'}) == '2020-09-14'
+            def _get_recording_start_date(start_date):
+                return get_recording_start_date(meeting={'startDate': start_date})
+            assert _get_recording_start_date('2020-08-26 00:00:00 UTC') == _to_datetime(diablo_start)
+            assert _get_recording_start_date('2020-09-14 00:00:00 UTC') == _to_datetime('2020-09-14')
+
+
+def _to_datetime(date):
+    return datetime.strptime(date, '%Y-%m-%d')
