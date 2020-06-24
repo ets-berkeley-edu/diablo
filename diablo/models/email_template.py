@@ -120,7 +120,7 @@ class EmailTemplate(Base):
     def get_template_type_options(cls):
         return {
             'admin_alert_instructor_change': 'Admin alert: Instructor change',
-            'admin_alert_multiple_meeting_patterns': 'Admin alert: Multiple meeting patterns',
+            'admin_alert_multiple_meeting_patterns': 'Admin alert: Weird start/end dates',
             'admin_alert_room_change': 'Admin alert: Room change',
             'invitation': 'Invitation',
             'notify_instructor_of_changes': 'Notify instructor of changes',

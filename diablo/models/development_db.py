@@ -105,6 +105,12 @@ def _create_email_templates():
         message='<code>course.name</code>: old instructor(s) <code>instructors.previous</code>, new instructor(s) <code>instructors.all</code>.',
     )
     EmailTemplate.create(
+        template_type='admin_alert_multiple_meeting_patterns',
+        name='Alert admin when multiple meeting patterns',
+        subject_line="It's complicated!",
+        message='<code>course.name</code> has weird dates: <code>course.date.start</code> to <code>course.date.end</code>',
+    )
+    EmailTemplate.create(
         template_type='admin_alert_room_change',
         name='Alert admin when room change',
         subject_line='Room change alert',

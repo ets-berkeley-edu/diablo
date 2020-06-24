@@ -35,6 +35,7 @@ from diablo.models.queued_email import QueuedEmail
 from diablo.models.room import Room
 from diablo.models.scheduled import Scheduled
 from diablo.models.sent_email import SentEmail
+from diablo.models.sis_section import SisSection
 from flask import current_app as app
 import pytest
 from tests.test_api.api_test_utils import get_instructor_uids, get_meeting_data
@@ -140,6 +141,58 @@ class TestEmailAlertsForAdmins:
             # Message sent.
             QueuedEmailsJob(simply_yield).run()
             assert _get_email_count(admin_uid) == email_count + 1
+
+    def test_admin_alert_multiple_meeting_patterns(self, enable_admin_emails):
+        """Emails admin if course is scheduled with weird start/end dates."""
+        with test_approvals_workflow(app):
+            term_id = app.config['CURRENT_TERM_ID']
+            section_id = 50014
+            room_id = Room.find_room('Barker 101').id
+            meeting_days, meeting_start_time, meeting_end_time = get_meeting_data(
+                term_id=term_id,
+                section_id=section_id,
+            )
+            # The course has two instructors.
+            instructor_uid = get_instructor_uids(section_id=section_id, term_id=term_id)[0]
+            approval = Approval.create(
+                approved_by_uid=instructor_uid,
+                approver_type_='instructor',
+                publish_type_='kaltura_my_media',
+                recording_type_='presenter_audio',
+                room_id=room_id,
+                section_id=section_id,
+                term_id=term_id,
+            )
+            # Uh oh! Only one of them has been scheduled.
+            Scheduled.create(
+                instructor_uids=[instructor_uid],
+                kaltura_schedule_id=random.randint(1, 10),
+                meeting_days=meeting_days,
+                meeting_start_time=meeting_start_time,
+                meeting_end_time=meeting_end_time,
+                publish_type_=approval.publish_type,
+                recording_type_=approval.recording_type,
+                room_id=room_id,
+                section_id=section_id,
+                term_id=term_id,
+            )
+            courses = SisSection.get_courses_scheduled_nonstandard_dates(term_id=term_id)
+            course = next((c for c in courses if c['sectionId'] == section_id), None)
+            assert course
+
+            # Message queued but not sent.
+            admin_uid = app.config['EMAIL_DIABLO_ADMIN_UID']
+            email_count = _get_email_count(admin_uid)
+            AdminEmailsJob(simply_yield).run()
+            queued_messages = QueuedEmail.query.filter_by(template_type='admin_alert_multiple_meeting_patterns').all()
+            assert len(queued_messages) == 1
+            assert queued_messages[0].message == f"{course['courseName']} has weird dates: 2020-08-26 to 2020-10-02"
+
+            # Message sent.
+            QueuedEmailsJob(simply_yield).run()
+            emails_sent = SentEmail.get_emails_sent_to(uid=admin_uid)
+            assert len(emails_sent) == email_count + 1
+            assert section_id == emails_sent[0].section_id
 
     def test_alert_on_job_failure(self):
         admin_uid = app.config['EMAIL_DIABLO_ADMIN_UID']
