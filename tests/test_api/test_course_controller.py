@@ -376,12 +376,12 @@ class TestGetCourse:
         )
         eligible_meetings = api_json['meetings']['eligible']
         ineligible_meetings = api_json['meetings']['ineligible']
-        assert len(eligible_meetings) == 2
-        assert len(ineligible_meetings) == 1
+        assert len(eligible_meetings) == 1
+        assert len(ineligible_meetings) == 2
         assert eligible_meetings[0]['location'] == 'Barker 101'
-        assert eligible_meetings[1]['location'] == 'Barker 101'
         assert ineligible_meetings[0]['location'] == 'Internet/Online'
-        assert eligible_meetings[0]['startDate'] < eligible_meetings[1]['startDate']
+        assert ineligible_meetings[1]['location'] == 'Dwinelle 155'
+        assert ineligible_meetings[0]['startDate'] < ineligible_meetings[1]['startDate']
         assert api_json['meetingDateRangesVary'] is True
 
     def test_hybrid_instruction(self, client, admin_session):

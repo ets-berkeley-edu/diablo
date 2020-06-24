@@ -88,6 +88,8 @@ def get_template_substitutions(
     days = meeting and get_names_of_days(meeting['daysFormatted'])
 
     return {
+        'course.date.end': meeting and meeting['endDate'],
+        'course.date.start': meeting and meeting['startDate'],
         'course.days': readable_join(days),
         'course.format': course and course['instructionFormat'],
         'course.name': course and course['courseName'],

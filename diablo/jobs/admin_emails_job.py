@@ -28,6 +28,7 @@ from diablo.lib.interpolator import interpolate_content
 from diablo.merged.emailer import get_admin_alert_recipient
 from diablo.models.email_template import EmailTemplate
 from diablo.models.queued_email import QueuedEmail
+from diablo.models.sent_email import SentEmail
 from diablo.models.sis_section import SisSection
 from flask import current_app as app
 
@@ -66,7 +67,17 @@ class AdminEmailsJob(BaseJob):
                 self._notify(course=course, template_type='admin_alert_instructor_change')
 
     def _multiple_meeting_pattern_alerts(self):
-        pass
+        template_type = 'admin_alert_multiple_meeting_patterns'
+        courses = SisSection.get_courses_scheduled_nonstandard_dates(self.term_id)
+        emails_sent = SentEmail.get_emails_of_type(
+            section_ids=[course['sectionId'] for course in courses],
+            template_type=template_type,
+            term_id=self.term_id,
+        )
+        skip_section_ids = [email_sent.section_id for email_sent in emails_sent]
+
+        for course in list(filter(lambda c: c['sectionId'] not in skip_section_ids, courses)):
+            self._notify(course=course, template_type=template_type)
 
     def _room_change_alerts(self):
         for course in self.courses:
