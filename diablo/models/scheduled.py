@@ -41,9 +41,9 @@ class Scheduled(db.Model):
     instructor_uids = db.Column(ARRAY(db.String(80)), nullable=False)
     kaltura_schedule_id = db.Column(db.Integer, nullable=False)
     meeting_days = db.Column(db.String, nullable=False)
-    meeting_end_date = db.Column(db.String, nullable=False)
+    meeting_end_date = db.Column(db.DateTime, nullable=False)
     meeting_end_time = db.Column(db.String, nullable=False)
-    meeting_start_date = db.Column(db.String, nullable=False)
+    meeting_start_date = db.Column(db.DateTime, nullable=False)
     meeting_start_time = db.Column(db.String, nullable=False)
     publish_type = db.Column(publish_type, nullable=False)
     recording_type = db.Column(recording_type, nullable=False)
@@ -162,9 +162,9 @@ class Scheduled(db.Model):
             'instructorUids': self.instructor_uids,
             'kalturaScheduleId': self.kaltura_schedule_id,
             'meetingDays': format_days(self.meeting_days),
-            'meetingEndDate': self.meeting_end_date,
+            'meetingEndDate': datetime.strftime(self.meeting_end_date, '%Y-%m-%d'),
             'meetingEndTime': format_time(self.meeting_end_time),
-            'meetingStartDate': self.meeting_start_date,
+            'meetingStartDate': datetime.strftime(self.meeting_start_date, '%Y-%m-%d'),
             'meetingStartTime': format_time(self.meeting_start_time),
             'publishType': self.publish_type,
             'publishTypeName': NAMES_PER_PUBLISH_TYPE[self.publish_type],

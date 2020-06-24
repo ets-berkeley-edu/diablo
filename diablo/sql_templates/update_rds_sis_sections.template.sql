@@ -34,8 +34,8 @@ INSERT INTO sis_sections (allowed_units, course_name, course_title, instruction_
    (SELECT * FROM dblink('{rds_dblink_to_redshift}',$REDSHIFT$
     SELECT
        allowed_units, course_display_name, course_title, instruction_format, instructor_name, instructor_role_code,
-       instructor_uid, is_primary::BOOLEAN, meeting_days, meeting_end_date, meeting_end_time, meeting_location,
-       meeting_start_date, meeting_start_time, section_id::INTEGER, section_num, term_id::INTEGER
+       instructor_uid, is_primary::BOOLEAN, meeting_days, meeting_end_date::TIMESTAMP, meeting_end_time, meeting_location,
+       meeting_start_date::TIMESTAMP, meeting_start_time, section_id::INTEGER, section_num, term_id::INTEGER
     FROM {redshift_schema_sis}.courses
     WHERE term_id='{term_id}'
   $REDSHIFT$)
