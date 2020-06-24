@@ -69,12 +69,14 @@ class AdminEmailsJob(BaseJob):
     def _multiple_meeting_pattern_alerts(self):
         template_type = 'admin_alert_multiple_meeting_patterns'
         courses = SisSection.get_courses_scheduled_nonstandard_dates(self.term_id)
+        # Skip the already-notified courses
         emails_sent = SentEmail.get_emails_of_type(
             section_ids=[course['sectionId'] for course in courses],
             template_type=template_type,
             term_id=self.term_id,
         )
         skip_section_ids = [email_sent.section_id for email_sent in emails_sent]
+        skip_section_ids += QueuedEmail.get_all_section_ids(template_type=template_type, term_id=self.term_id)
 
         for course in list(filter(lambda c: c['sectionId'] not in skip_section_ids, courses)):
             self._notify(course=course, template_type=template_type)
