@@ -41,8 +41,10 @@ class Scheduled(db.Model):
     instructor_uids = db.Column(ARRAY(db.String(80)), nullable=False)
     kaltura_schedule_id = db.Column(db.Integer, nullable=False)
     meeting_days = db.Column(db.String, nullable=False)
-    meeting_start_time = db.Column(db.String, nullable=False)
+    meeting_end_date = db.Column(db.String, nullable=False)
     meeting_end_time = db.Column(db.String, nullable=False)
+    meeting_start_date = db.Column(db.String, nullable=False)
+    meeting_start_time = db.Column(db.String, nullable=False)
     publish_type = db.Column(publish_type, nullable=False)
     recording_type = db.Column(recording_type, nullable=False)
     room_id = db.Column(db.Integer, db.ForeignKey('rooms.id'), nullable=False)
@@ -56,8 +58,10 @@ class Scheduled(db.Model):
             instructor_uids,
             kaltura_schedule_id,
             meeting_days,
-            meeting_start_time,
+            meeting_end_date,
             meeting_end_time,
+            meeting_start_date,
+            meeting_start_time,
             publish_type_,
             recording_type_,
             room_id,
@@ -67,8 +71,10 @@ class Scheduled(db.Model):
         self.instructor_uids = instructor_uids
         self.kaltura_schedule_id = kaltura_schedule_id
         self.meeting_days = meeting_days
-        self.meeting_start_time = meeting_start_time
+        self.meeting_end_date = meeting_end_date
         self.meeting_end_time = meeting_end_time
+        self.meeting_start_date = meeting_start_date
+        self.meeting_start_time = meeting_start_time
         self.publish_type = publish_type_
         self.recording_type = recording_type_
         self.room_id = room_id
@@ -81,8 +87,10 @@ class Scheduled(db.Model):
                     instructor_uids={', '.join(self.instructor_uids)},
                     kaltura_schedule_id={self.kaltura_schedule_id}
                     meeting_days={self.meeting_days},
-                    meeting_start_time={self.meeting_start_time},
+                    meeting_end_date={self.meeting_end_date},
                     meeting_end_time={self.meeting_end_time},
+                    meeting_start_date={self.meeting_start_date},
+                    meeting_start_time={self.meeting_start_time},
                     publish_type={self.publish_type},
                     recording_type={self.recording_type},
                     room_id={self.room_id},
@@ -97,8 +105,10 @@ class Scheduled(db.Model):
             instructor_uids,
             kaltura_schedule_id,
             meeting_days,
-            meeting_start_time,
+            meeting_end_date,
             meeting_end_time,
+            meeting_start_date,
+            meeting_start_time,
             publish_type_,
             recording_type_,
             room_id,
@@ -107,8 +117,10 @@ class Scheduled(db.Model):
             instructor_uids=instructor_uids,
             kaltura_schedule_id=kaltura_schedule_id,
             meeting_days=meeting_days,
-            meeting_start_time=meeting_start_time,
+            meeting_end_date=meeting_end_date,
             meeting_end_time=meeting_end_time,
+            meeting_start_date=meeting_start_date,
+            meeting_start_time=meeting_start_time,
             publish_type_=publish_type_,
             recording_type_=recording_type_,
             room_id=room_id,
@@ -150,7 +162,9 @@ class Scheduled(db.Model):
             'instructorUids': self.instructor_uids,
             'kalturaScheduleId': self.kaltura_schedule_id,
             'meetingDays': format_days(self.meeting_days),
+            'meetingEndDate': self.meeting_end_date,
             'meetingEndTime': format_time(self.meeting_end_time),
+            'meetingStartDate': self.meeting_start_date,
             'meetingStartTime': format_time(self.meeting_start_time),
             'publishType': self.publish_type,
             'publishTypeName': NAMES_PER_PUBLISH_TYPE[self.publish_type],

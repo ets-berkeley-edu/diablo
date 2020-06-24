@@ -26,7 +26,6 @@ from datetime import datetime, timedelta
 import json
 
 from diablo.lib.util import default_timezone, epoch_time_to_isoformat
-from flask import current_app as app
 from KalturaClient.Plugins.Schedule import KalturaBlackoutScheduleEvent, KalturaScheduleEventClassificationType, \
     KalturaScheduleEventRecurrenceType, KalturaScheduleEventStatus
 
@@ -116,8 +115,7 @@ def get_recurrence_name(recurrence_type):
     }[recurrence_type.value]
 
 
-def get_first_matching_datetime_of_term(meeting_days, time_hours, time_minutes):
-    start_date = datetime.strptime(app.config['CURRENT_TERM_BEGIN'], '%Y-%m-%d')
+def get_first_matching_datetime_of_term(meeting_days, start_date, time_hours, time_minutes):
     first_meeting = None
     meeting_day_indices = [DAYS.index(day) for day in meeting_days]
     for index in range(7):

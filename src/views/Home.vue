@@ -59,8 +59,8 @@
               </td>
               <td class="text-no-wrap">
                 <div v-if="course.meetingDateRangesVary" class="pt-2">
-                  <span class="text-no-wrap">{{ course.meetings.eligible[index].startDate | moment('MMM D, YYYY')}} - </span>
-                  <span class="text-no-wrap">{{ course.meetings.eligible[index].endDate | moment('MMM D, YYYY')}}</span>
+                  <span class="text-no-wrap">{{ course.meetings.eligible[index].startDate | moment('MMM D, YYYY') }} - </span>
+                  <span class="text-no-wrap">{{ course.meetings.eligible[index].endDate | moment('MMM D, YYYY') }}</span>
                 </div>
                 <div :class="{'pb-2': course.meetingDateRangesVary && index === course.meetings.eligible.length - 1}">
                   {{ course.meetings.eligible[index].startTimeFormatted }} - {{ course.meetings.eligible[index].endTimeFormatted }}

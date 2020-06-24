@@ -38,7 +38,7 @@ from diablo.models.sent_email import SentEmail
 from diablo.models.sis_section import SisSection
 from flask import current_app as app
 import pytest
-from tests.test_api.api_test_utils import get_instructor_uids, get_meeting_data
+from tests.test_api.api_test_utils import get_eligible_meeting, get_instructor_uids
 from tests.util import simply_yield, test_approvals_workflow
 
 
@@ -69,16 +69,15 @@ class TestEmailAlertsForAdmins:
                 section_id=section_id,
                 term_id=term_id,
             )
-            meeting_days, meeting_start_time, meeting_end_time = get_meeting_data(
-                term_id=term_id,
-                section_id=section_id,
-            )
+            meeting = get_eligible_meeting(section_id=section_id, term_id=term_id)
             Scheduled.create(
                 instructor_uids=get_instructor_uids(term_id=term_id, section_id=section_id),
                 kaltura_schedule_id=random.randint(1, 10),
-                meeting_days=meeting_days,
-                meeting_start_time=meeting_start_time,
-                meeting_end_time=meeting_end_time,
+                meeting_days=meeting['days'],
+                meeting_end_date=meeting['endDate'],
+                meeting_end_time=meeting['endTime'],
+                meeting_start_date=meeting['startDate'],
+                meeting_start_time=meeting['startTime'],
                 publish_type_=approval.publish_type,
                 recording_type_=approval.recording_type,
                 room_id=scheduled_in_room.id,
@@ -101,10 +100,6 @@ class TestEmailAlertsForAdmins:
             term_id = app.config['CURRENT_TERM_ID']
             section_id = 50005
             room_id = Room.find_room('Barker 101').id
-            meeting_days, meeting_start_time, meeting_end_time = get_meeting_data(
-                term_id=term_id,
-                section_id=section_id,
-            )
             # The course has two instructors.
             instructor_1_uid, instructor_2_uid = get_instructor_uids(section_id=section_id, term_id=term_id)
             approval = Approval.create(
@@ -117,12 +112,15 @@ class TestEmailAlertsForAdmins:
                 term_id=term_id,
             )
             # Uh oh! Only one of them has been scheduled.
+            meeting = get_eligible_meeting(section_id=section_id, term_id=term_id)
             Scheduled.create(
                 instructor_uids=[instructor_1_uid],
                 kaltura_schedule_id=random.randint(1, 10),
-                meeting_days=meeting_days,
-                meeting_start_time=meeting_start_time,
-                meeting_end_time=meeting_end_time,
+                meeting_days=meeting['days'],
+                meeting_end_date=meeting['endDate'],
+                meeting_end_time=meeting['endTime'],
+                meeting_start_date=meeting['startDate'],
+                meeting_start_time=meeting['startTime'],
                 publish_type_=approval.publish_type,
                 recording_type_=approval.recording_type,
                 room_id=room_id,
@@ -148,10 +146,6 @@ class TestEmailAlertsForAdmins:
             term_id = app.config['CURRENT_TERM_ID']
             section_id = 50014
             room_id = Room.find_room('Barker 101').id
-            meeting_days, meeting_start_time, meeting_end_time = get_meeting_data(
-                term_id=term_id,
-                section_id=section_id,
-            )
             # The course has two instructors.
             instructor_uid = get_instructor_uids(section_id=section_id, term_id=term_id)[0]
             approval = Approval.create(
@@ -164,12 +158,15 @@ class TestEmailAlertsForAdmins:
                 term_id=term_id,
             )
             # Uh oh! Only one of them has been scheduled.
+            meeting = get_eligible_meeting(section_id=section_id, term_id=term_id)
             Scheduled.create(
                 instructor_uids=[instructor_uid],
                 kaltura_schedule_id=random.randint(1, 10),
-                meeting_days=meeting_days,
-                meeting_start_time=meeting_start_time,
-                meeting_end_time=meeting_end_time,
+                meeting_days=meeting['days'],
+                meeting_end_date=meeting['endDate'],
+                meeting_end_time=meeting['endTime'],
+                meeting_start_date=meeting['startDate'],
+                meeting_start_time=meeting['startTime'],
                 publish_type_=approval.publish_type,
                 recording_type_=approval.recording_type,
                 room_id=room_id,

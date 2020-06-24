@@ -22,12 +22,12 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from datetime import datetime
+from datetime import date, datetime, time, timedelta
 
 from diablo import cachify, skip_when_pytest
-from diablo.lib.berkeley import term_name_for_sis_id
+from diablo.lib.berkeley import get_recording_end_date, get_recording_start_date, term_name_for_sis_id
 from diablo.lib.kaltura_util import events_to_api_json, get_first_matching_datetime_of_term
-from diablo.lib.util import default_timezone, to_isoformat
+from diablo.lib.util import default_timezone, format_days, to_isoformat
 from flask import current_app as app
 from KalturaClient import KalturaClient, KalturaConfiguration
 from KalturaClient.exceptions import KalturaException
@@ -163,9 +163,7 @@ class Kaltura:
             canvas_course_site_ids,
             course_label,
             instructors,
-            days,
-            start_time,
-            end_time,
+            meeting,
             publish_type,
             recording_type,
             room,
@@ -183,9 +181,7 @@ class Kaltura:
             category_ids=category_ids,
             course_label=course_label,
             instructors=instructors,
-            days=days,
-            start_time=start_time,
-            end_time=end_time,
+            meeting=meeting,
             publish_type=publish_type,
             recording_type=recording_type,
             room=room,
@@ -251,16 +247,28 @@ class Kaltura:
             category_ids,
             course_label,
             instructors,
-            days,
-            start_time,
-            end_time,
+            meeting,
             publish_type,
             recording_type,
             room,
             term_id,
     ):
         term_name = term_name_for_sis_id(term_id)
-        term_end = datetime.strptime(app.config['CURRENT_TERM_END'], '%Y-%m-%d')
+        start_date = datetime.strptime(get_recording_start_date(meeting), '%Y-%m-%d')
+        term_end = datetime.strptime(get_recording_end_date(meeting), '%Y-%m-%d')
+
+        # Recording starts X minutes before/after official start; it ends Y minutes before/after official end time.
+        days = format_days(meeting['days'])
+        start_time = _adjust_time(meeting['startTime'], app.config['KALTURA_RECORDING_OFFSET_START'])
+        end_time = _adjust_time(meeting['endTime'], app.config['KALTURA_RECORDING_OFFSET_END'])
+
+        app.logger.info(f"""
+            Prepare to schedule recordings for {course_label}:
+                Room: {room.location}
+                Instructor UIDs: {[instructor['uid'] for instructor in instructors]}
+                Schedule: {days}, {start_time} to {end_time}
+                Recording: {recording_type}; {publish_type}
+        """)
 
         summary = f'{course_label} ({term_name})'
         description = f"""{course_label} ({term_name}) meets in {room.location},
@@ -270,11 +278,13 @@ class Kaltura:
 
         first_day_start = get_first_matching_datetime_of_term(
             meeting_days=days,
+            start_date=start_date,
             time_hours=start_time.hour,
             time_minutes=start_time.minute,
         )
         first_day_end = get_first_matching_datetime_of_term(
             meeting_days=days,
+            start_date=start_date,
             time_hours=end_time.hour,
             time_minutes=end_time.minute,
         )
@@ -350,6 +360,17 @@ class Kaltura:
             ),
         )
         app.logger.info(f'Kaltura schedule {kaltura_schedule.id} attached to {room.location}: {event_resource}')
+
+
+def _adjust_time(military_time, offset_minutes):
+    hour_and_minutes = military_time.split(':')
+    hour = int(hour_and_minutes[0])
+    minutes = int(hour_and_minutes[1])
+    return datetime.combine(
+        date.today(),
+        time(hour, minutes),
+        tzinfo=default_timezone(),
+    ) + timedelta(minutes=offset_minutes)
 
 
 def _category_object_to_json(obj):

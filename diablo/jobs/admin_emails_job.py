@@ -28,6 +28,7 @@ from diablo.lib.interpolator import interpolate_content
 from diablo.merged.emailer import get_admin_alert_recipient
 from diablo.models.email_template import EmailTemplate
 from diablo.models.queued_email import QueuedEmail
+from diablo.models.scheduled import Scheduled
 from diablo.models.sent_email import SentEmail
 from diablo.models.sis_section import SisSection
 from flask import current_app as app
@@ -38,6 +39,7 @@ class AdminEmailsJob(BaseJob):
     def _run(self):
         self.term_id = app.config['CURRENT_TERM_ID']
         self.courses = SisSection.get_course_changes(term_id=self.term_id)
+        self._date_change_alerts()
         self._instructor_change_alerts()
         self._multiple_meeting_pattern_alerts()
         self._room_change_alerts()
@@ -61,6 +63,39 @@ class AdminEmailsJob(BaseJob):
     def key(cls):
         return 'admin_emails'
 
+    def _already_notified(self, section_ids, template_type):
+        emails_sent = SentEmail.get_emails_of_type(
+            section_ids=section_ids,
+            template_type=template_type,
+            term_id=self.term_id,
+        )
+        skip_section_ids = [email_sent.section_id for email_sent in emails_sent]
+        skip_section_ids += QueuedEmail.get_all_section_ids(template_type=template_type, term_id=self.term_id)
+        return skip_section_ids
+
+    def _date_change_alerts(self):
+        template_type = 'admin_alert_date_change'
+        scheduled = Scheduled.get_all_scheduled(self.term_id)
+        exclude_section_ids = self._already_notified(
+            section_ids=[s.section_id for s in scheduled],
+            template_type=template_type,
+        )
+        scheduled_subset = [s for s in scheduled if s.section_id not in exclude_section_ids]
+        courses = SisSection.get_courses(
+            section_ids=[s.section_id for s in scheduled_subset],
+            term_id=self.term_id,
+        )
+        courses_by_section_id = dict((course['sectionId'], course) for course in courses)
+
+        for scheduled_course in scheduled_subset:
+            course = courses_by_section_id[scheduled_course.section_id]
+            meetings = course.get('meetings', {}).get('eligible', [])
+            if len(meetings):
+                scheduled_start = scheduled_course.meeting_start_date
+                scheduled_end = scheduled_course.meeting_end_date
+                if meetings[0]['startDate'] != scheduled_start or meetings[0]['endDate'] != scheduled_end:
+                    self._notify(course=course, template_type=template_type)
+
     def _instructor_change_alerts(self):
         for course in self.courses:
             if course['scheduled'] and course['scheduled']['hasObsoleteInstructors']:
@@ -70,15 +105,8 @@ class AdminEmailsJob(BaseJob):
         template_type = 'admin_alert_multiple_meeting_patterns'
         courses = SisSection.get_courses_scheduled_nonstandard_dates(self.term_id)
         # Skip the already-notified courses
-        emails_sent = SentEmail.get_emails_of_type(
-            section_ids=[course['sectionId'] for course in courses],
-            template_type=template_type,
-            term_id=self.term_id,
-        )
-        skip_section_ids = [email_sent.section_id for email_sent in emails_sent]
-        skip_section_ids += QueuedEmail.get_all_section_ids(template_type=template_type, term_id=self.term_id)
-
-        for course in list(filter(lambda c: c['sectionId'] not in skip_section_ids, courses)):
+        already_notified = self._already_notified([course['sectionId'] for course in courses], template_type)
+        for course in list(filter(lambda c: c['sectionId'] not in already_notified, courses)):
             self._notify(course=course, template_type=template_type)
 
     def _room_change_alerts(self):

@@ -22,6 +22,8 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
+from datetime import datetime
+
 from diablo.lib.kaltura_util import get_first_matching_datetime_of_term
 from flask import current_app as app
 import pytz
@@ -35,6 +37,7 @@ class TestFirstDayRecording:
         with override_config(app, 'CURRENT_TERM_BEGIN', _get_wednesday_august_26()):
             first_day_start = get_first_matching_datetime_of_term(
                 meeting_days=['MO', 'WE', 'FR'],
+                start_date=datetime.strptime(app.config['CURRENT_TERM_BEGIN'], '%Y-%m-%d'),
                 time_hours=13,
                 time_minutes=30,
             )
@@ -45,6 +48,7 @@ class TestFirstDayRecording:
         with override_config(app, 'CURRENT_TERM_BEGIN', _get_wednesday_august_26()):
             first_day_start = get_first_matching_datetime_of_term(
                 meeting_days=['TU', 'TH'],
+                start_date=datetime.strptime(app.config['CURRENT_TERM_BEGIN'], '%Y-%m-%d'),
                 time_hours=13,
                 time_minutes=30,
             )
@@ -55,6 +59,7 @@ class TestFirstDayRecording:
         with override_config(app, 'CURRENT_TERM_BEGIN', _get_wednesday_august_26()):
             first_day_start = get_first_matching_datetime_of_term(
                 meeting_days=['MO', 'TU'],
+                start_date=datetime.strptime(app.config['CURRENT_TERM_BEGIN'], '%Y-%m-%d'),
                 time_hours=8,
                 time_minutes=45,
             )
@@ -65,6 +70,7 @@ class TestFirstDayRecording:
         with override_config(app, 'CURRENT_TERM_BEGIN', _get_wednesday_august_26()):
             first_day_start = get_first_matching_datetime_of_term(
                 meeting_days=['TU'],
+                start_date=datetime.strptime(app.config['CURRENT_TERM_BEGIN'], '%Y-%m-%d'),
                 time_hours=9,
                 time_minutes=15,
             )
@@ -76,6 +82,7 @@ class TestFirstDayRecording:
         with override_config(app, 'CURRENT_TERM_BEGIN', _get_wednesday_august_26()):
             first_day_start = get_first_matching_datetime_of_term(
                 meeting_days=['TU', 'TH'],
+                start_date=datetime.strptime(app.config['CURRENT_TERM_BEGIN'], '%Y-%m-%d'),
                 time_hours=9,
                 time_minutes=37,
             )

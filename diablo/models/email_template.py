@@ -29,6 +29,7 @@ from sqlalchemy.dialects.postgresql import ENUM
 
 
 email_template_type = ENUM(
+    'admin_alert_date_change',
     'admin_alert_instructor_change',
     'admin_alert_multiple_meeting_patterns',
     'admin_alert_room_change',
@@ -120,6 +121,7 @@ class EmailTemplate(Base):
     def get_template_type_options(cls):
         return {
             'admin_alert_instructor_change': 'Admin alert: Instructor change',
+            'admin_alert_date_change': 'Admin alert: Date change',
             'admin_alert_multiple_meeting_patterns': 'Admin alert: Weird start/end dates',
             'admin_alert_room_change': 'Admin alert: Room change',
             'invitation': 'Invitation',

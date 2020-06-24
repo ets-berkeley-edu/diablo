@@ -22,12 +22,11 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from datetime import date, datetime, time, timedelta
 from itertools import islice
 
 from diablo import db, std_commit
 from diablo.externals.kaltura import Kaltura
-from diablo.lib.util import default_timezone, format_days
+from diablo.lib.berkeley import get_recording_end_date, get_recording_start_date
 from diablo.merged.calnet import get_calnet_users_for_uids
 from diablo.merged.emailer import send_system_error_email
 from diablo.models.course_preference import CoursePreference
@@ -176,27 +175,12 @@ def schedule_recordings(all_approvals, course):
             _send_error(RuntimeError('Unique eligible meeting pattern not found for course'))
             return None
         meeting = meetings[0]
-
-        # Recording starts X minutes before/after official start; it ends Y minutes before/after official end time.
-        days = format_days(meeting['days'])
-        adjusted_start_time = _adjust_time(meeting['startTime'], app.config['KALTURA_RECORDING_OFFSET_START'])
-        adjusted_end_time = _adjust_time(meeting['endTime'], app.config['KALTURA_RECORDING_OFFSET_END'])
-
-        app.logger.info(f"""
-            Prepare to schedule recordings for {course['label']}:
-                Room: {room.location}
-                Instructor UIDs: {[instructor['uid'] for instructor in course['instructors']]}
-                Schedule: {days}, {adjusted_start_time} to {adjusted_end_time}
-                Recording: {approval.recording_type}; {approval.publish_type}
-        """)
         try:
             kaltura_schedule_id = Kaltura().schedule_recording(
                 canvas_course_site_ids=[c['courseSiteId'] for c in course['canvasCourseSites']],
                 course_label=course['label'],
                 instructors=course['instructors'],
-                days=days,
-                start_time=adjusted_start_time,
-                end_time=adjusted_end_time,
+                meeting=meeting,
                 publish_type=approval.publish_type,
                 recording_type=approval.recording_type,
                 room=room,
@@ -206,8 +190,10 @@ def schedule_recordings(all_approvals, course):
                 instructor_uids=[i['uid'] for i in course['instructors']],
                 kaltura_schedule_id=kaltura_schedule_id,
                 meeting_days=meeting['days'],
-                meeting_start_time=meeting['startTime'],
+                meeting_end_date=get_recording_end_date(meeting),
                 meeting_end_time=meeting['endTime'],
+                meeting_start_date=get_recording_start_date(meeting),
+                meeting_start_time=meeting['startTime'],
                 publish_type_=approval.publish_type,
                 recording_type_=approval.recording_type,
                 room_id=room.id,
@@ -238,17 +224,6 @@ def schedule_recordings(all_approvals, course):
         """)
 
     return scheduled
-
-
-def _adjust_time(military_time, offset_minutes):
-    hour_and_minutes = military_time.split(':')
-    hour = int(hour_and_minutes[0])
-    minutes = int(hour_and_minutes[1])
-    return datetime.combine(
-        date.today(),
-        time(hour, minutes),
-        tzinfo=default_timezone(),
-    ) + timedelta(minutes=offset_minutes)
 
 
 def _join(items, separator=', '):
