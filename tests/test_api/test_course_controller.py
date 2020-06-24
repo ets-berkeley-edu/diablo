@@ -296,7 +296,7 @@ class TestGetCourse:
         assert api_json['meetings']['ineligible'][0]['startTimeFormatted'] == '3:00 pm'
         assert api_json['meetings']['ineligible'][0]['endTimeFormatted'] == '3:59 pm'
         assert api_json['meetings']['ineligible'][0]['location'] == 'Wheeler 150'
-        assert api_json['meetingDateRangesVary'] is False
+        assert api_json['nonstandardMeetingDates'] is False
 
     def test_li_ka_shing_recording_options(self, client, admin_session):
         """Rooms designated as 'auditorium' offer ALL types of recording."""
@@ -382,7 +382,7 @@ class TestGetCourse:
         assert ineligible_meetings[0]['location'] == 'Internet/Online'
         assert ineligible_meetings[1]['location'] == 'Dwinelle 155'
         assert ineligible_meetings[0]['startDate'] < ineligible_meetings[1]['startDate']
-        assert api_json['meetingDateRangesVary'] is True
+        assert api_json['nonstandardMeetingDates'] is True
 
     def test_hybrid_instruction(self, client, admin_session):
         """Course exists in two concurrent physical locations."""
@@ -396,7 +396,7 @@ class TestGetCourse:
         assert len(eligible_meetings) == 1
         assert len(ineligible_meetings) == 1
         assert eligible_meetings[0]['startDate'] == ineligible_meetings[0]['startDate']
-        assert api_json['meetingDateRangesVary'] is False
+        assert api_json['nonstandardMeetingDates'] is False
         assert eligible_meetings[0]['location'] == 'Barker 101'
         assert eligible_meetings[0]['eligible'] is True
         assert ineligible_meetings[0]['location'] == 'LeConte 1'
@@ -721,6 +721,7 @@ class TestCoursesChanges:
         course = _find_course(api_json=api_json, section_id=section_2_id)
         assert course
         assert course['scheduled']['hasObsoleteRoom'] is True
+        assert course['scheduled']['hasObsoleteMeetingDates'] is False
         assert course['scheduled']['hasObsoleteMeetingTimes'] is False
         assert course['scheduled']['hasObsoleteInstructors'] is False
 
@@ -751,10 +752,42 @@ class TestCoursesChanges:
             course = _find_course(api_json=api_json, section_id=section_1_id)
             assert course
             assert course['scheduled']['hasObsoleteRoom'] is False
+            assert course['scheduled']['hasObsoleteMeetingDates'] is False
             assert course['scheduled']['hasObsoleteMeetingTimes'] is True
             assert course['scheduled']['hasObsoleteInstructors'] is False
 
-    def test_has_instructors(self, client, admin_session):
+    def test_has_obsolete_meeting_dates(self, client, admin_session):
+        """Admins can see meeting date changes that might disrupt scheduled recordings."""
+        with test_approvals_workflow(app):
+            meeting = get_eligible_meeting(section_id=section_1_id, term_id=self.term_id)
+            obsolete_meeting_end_date = '2020-04-01'
+            assert meeting['endDate'] != obsolete_meeting_end_date
+
+            Scheduled.create(
+                instructor_uids=get_instructor_uids(term_id=self.term_id, section_id=section_1_id),
+                kaltura_schedule_id=random.randint(1, 10),
+                meeting_days=meeting['days'],
+                meeting_end_date=obsolete_meeting_end_date,
+                meeting_end_time=meeting['endTime'],
+                meeting_start_date=meeting['startDate'],
+                meeting_start_time=meeting['startTime'],
+                publish_type_='kaltura_my_media',
+                recording_type_='presentation_audio',
+                room_id=Room.get_room_id(section_id=section_1_id, term_id=self.term_id),
+                section_id=section_1_id,
+                term_id=self.term_id,
+            )
+            std_commit(allow_test_environment=True)
+
+            api_json = self._api_course_changes(client, term_id=self.term_id)
+            course = _find_course(api_json=api_json, section_id=section_1_id)
+            assert course
+            assert course['scheduled']['hasObsoleteRoom'] is False
+            assert course['scheduled']['hasObsoleteMeetingDates'] is True
+            assert course['scheduled']['hasObsoleteMeetingTimes'] is False
+            assert course['scheduled']['hasObsoleteInstructors'] is False
+
+    def test_has_obsolete_instructors(self, client, admin_session):
         """Admins can see instructor changes that might disrupt scheduled recordings."""
         with test_approvals_workflow(app):
             meeting = get_eligible_meeting(section_id=section_3_id, term_id=self.term_id)
@@ -779,6 +812,7 @@ class TestCoursesChanges:
             course = _find_course(api_json=api_json, section_id=section_3_id)
             assert course
             assert course['scheduled']['hasObsoleteRoom'] is False
+            assert course['scheduled']['hasObsoleteMeetingDates'] is False
             assert course['scheduled']['hasObsoleteMeetingTimes'] is False
             assert course['scheduled']['hasObsoleteInstructors'] is True
             assert len(course['instructors']) == 1

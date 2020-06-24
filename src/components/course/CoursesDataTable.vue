@@ -65,7 +65,7 @@
                 {{ $_.join(meetings(course)[0].daysFormatted, ', ') || '&mdash;' }}
               </td>
               <td :id="`meeting-times-${course.sectionId}-0`" :class="tdc(course)">
-                <div v-if="course.meetingDateRangesVary">
+                <div v-if="course.nonstandardMeetingDates">
                   <span class="text-no-wrap">{{ meetings(course)[0].startDate | moment('MMM D, YYYY') }} - </span>
                   <span class="text-no-wrap">{{ meetings(course)[0].endDate | moment('MMM D, YYYY') }}</span>
                 </div>
@@ -138,11 +138,11 @@
                 {{ $_.join(meetings(course)[index].daysFormatted, ', ') || '&mdash;' }}
               </td>
               <td class="text-no-wrap" :class="mdc(course)">
-                <div v-if="course.meetingDateRangesVary">
+                <div v-if="course.nonstandardMeetingDates">
                   <span class="text-no-wrap">{{ meetings(course)[index].startDate | moment('MMM D, YYYY') }} - </span>
                   <span class="text-no-wrap">{{ meetings(course)[index].endDate | moment('MMM D, YYYY') }}</span>
                 </div>
-                <div :class="{'pb-2': course.meetingDateRangesVary && index === meetings(course).length - 1}">
+                <div :class="{'pb-2': course.nonstandardMeetingDates && index === meetings(course).length - 1}">
                   {{ meetings(course)[index].startTimeFormatted }} - {{ meetings(course)[index].endTimeFormatted }}
                 </div>
               </td>

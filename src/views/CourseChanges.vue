@@ -49,8 +49,8 @@
               <div>
                 {{ course.sectionId }}
               </div>
-              <div v-if="course.scheduled.hasObsoleteMeetingTimes">
-                <div :id="`course-${course.sectionId}-meeting-before`">
+              <div v-if="course.scheduled.hasObsoleteMeetingTimes" :id="`course-${course.sectionId}-obsolete-meeting-times`">
+                <div :id="`course-${course.sectionId}-meeting-times-old`">
                   {{ course.scheduled.meetingDays.join(',') }} {{ course.scheduled.meetingStartTime }} - {{ course.scheduled.meetingEndTime }}
                 </div>
                 <div class="primary--text">
@@ -58,11 +58,26 @@
                   changed to
                 </div>
               </div>
-              <div v-for="(meeting, index) in course.meetings.eligible" :id="`course-${course.sectionId}-meeting-new-eligible-${index}`" :key="index">
+              <div v-for="(meeting, index) in course.meetings.eligible" :id="`course-${course.sectionId}-meeting-times-eligible-${index}`" :key="index">
                 {{ meeting.daysFormatted.join(',') }} {{ meeting.startTimeFormatted }} - {{ meeting.endTimeFormatted }} (Eligible)
               </div>
-              <div v-for="(meeting, index) in course.meetings.ineligible" :id="`course-${course.sectionId}-meeting-new-ineligible-${index}`" :key="index">
+              <div v-for="(meeting, index) in course.meetings.ineligible" :id="`course-${course.sectionId}-meeting-times-ineligible-${index}`" :key="index">
                 {{ meeting.daysFormatted.join(',') }} {{ meeting.startTimeFormatted }} - {{ meeting.endTimeFormatted }} (Ineligible)
+              </div>
+              <div v-if="course.scheduled.hasObsoleteMeetingDates" :id="`course-${course.sectionId}-obsolete-meeting-dates`">
+                <div :id="`course-${course.sectionId}-meeting-dates-old`">
+                  {{ course.scheduled.meetingStartDate }} - {{ course.scheduled.meetingEndDate }}
+                </div>
+                <div class="primary--text">
+                  <v-icon small color="primary">mdi-arrow-down-bold</v-icon>
+                  changed to
+                </div>
+                <div v-for="(meeting, index) in course.meetings.eligible" :id="`course-${course.sectionId}-meeting-dates-eligible-${index}`" :key="index">
+                  {{ meeting.startDate }} - {{ meeting.endDate }} (Eligible)
+                </div>
+                <div v-for="(meeting, index) in course.meetings.ineligible" :id="`course-${course.sectionId}-meeting-dates-ineligible-${index}`" :key="index">
+                  {{ meeting.startDate }} - {{ meeting.endDate }} (Ineligible)
+                </div>
               </div>
               <div>
                 {{ course.publishTypeNames }}

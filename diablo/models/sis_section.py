@@ -33,6 +33,7 @@ from diablo.models.cross_listing import CrossListing
 from diablo.models.room import Room
 from diablo.models.scheduled import Scheduled
 from diablo.models.sent_email import SentEmail
+from flask import current_app as app
 from sqlalchemy import text
 
 
@@ -216,6 +217,7 @@ class SisSection(db.Model):
             scheduled = course['scheduled']
             if scheduled['hasObsoleteRoom'] \
                     or scheduled['hasObsoleteInstructors'] \
+                    or scheduled['hasObsoleteMeetingDates'] \
                     or scheduled['hasObsoleteMeetingTimes']:
                 courses.append(course)
             if scheduled['hasObsoleteInstructors']:
@@ -536,15 +538,15 @@ class SisSection(db.Model):
     @classmethod
     def get_courses_scheduled_standard_dates(cls, term_id):
         scheduled_section_ids = cls._section_ids_scheduled(term_id)
-        multiple_dates_section_ids = cls._section_ids_with_multiple_dates(term_id)
-        section_ids = list(scheduled_section_ids - multiple_dates_section_ids)
+        nonstandard_dates_section_ids = cls._section_ids_with_nonstandard_dates(term_id)
+        section_ids = list(scheduled_section_ids - nonstandard_dates_section_ids)
         return cls.get_courses(term_id, section_ids)
 
     @classmethod
     def get_courses_scheduled_nonstandard_dates(cls, term_id):
         scheduled_section_ids = cls._section_ids_scheduled(term_id)
-        multiple_dates_section_ids = cls._section_ids_with_multiple_dates(term_id)
-        section_ids = list(scheduled_section_ids.intersection(multiple_dates_section_ids))
+        nonstandard_dates_section_ids = cls._section_ids_with_nonstandard_dates(term_id)
+        section_ids = list(scheduled_section_ids.intersection(nonstandard_dates_section_ids))
         return cls.get_courses(term_id, section_ids)
 
     @classmethod
@@ -564,24 +566,29 @@ class SisSection(db.Model):
         return cls.get_course(term_id, section_id)
 
     @classmethod
-    def _section_ids_with_multiple_dates(cls, term_id):
+    def _section_ids_with_nonstandard_dates(cls, term_id):
+        if str(term_id) != str(app.config['CURRENT_TERM_ID']):
+            app.logger.warn(f'Dates for term id {term_id} not configured; cannot query for nonstandard dates.')
+            return set()
         sql = """
-            SELECT s2.section_id, count(*) FROM
-              (
-                SELECT DISTINCT s.section_id, s.meeting_start_date, s.meeting_end_date
-                FROM sis_sections s
-                WHERE s.term_id = :term_id AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
-                    AND s.is_primary IS TRUE AND s.is_principal_listing IS TRUE
-                ORDER BY s.section_id
-              ) s2
-            GROUP BY s2.section_id
-            HAVING count(*) > 1
-            ORDER BY s2.section_id
+            SELECT DISTINCT s.section_id
+            FROM sis_sections s
+            WHERE s.term_id = :term_id AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
+                AND s.is_primary IS TRUE AND s.is_principal_listing IS TRUE
+                AND (s.meeting_start_date NOT LIKE :term_begin OR s.meeting_end_date NOT LIKE :term_end)
+            ORDER BY s.section_id
         """
+
+        # TODO Remove this temporary substring comparison once meeting dates are stored as timestamps.
+        def _format_term_date(d):
+            return f'{d}%'
+
         rows = db.session.execute(
             text(sql),
             {
                 'term_id': term_id,
+                'term_begin': _format_term_date(app.config['CURRENT_TERM_BEGIN']),
+                'term_end': _format_term_date(app.config['CURRENT_TERM_END']),
             },
         )
         return set([row['section_id'] for row in rows])
@@ -660,7 +667,6 @@ def _to_api_json(term_id, rows, include_rooms=True):
                 'courseName': row['course_name'],
                 'courseTitle': row['course_title'],
                 'crossListings': cross_listed_courses,
-                'eligibleMeetingCount': 0,
                 'hasOptedOut': section_id in section_ids_opted_out,
                 'instructionFormat': row['instruction_format'],
                 'instructors': instructors,
@@ -676,6 +682,7 @@ def _to_api_json(term_id, rows, include_rooms=True):
                     'eligible': [],
                     'ineligible': [],
                 },
+                'nonstandardMeetingDates': False,
                 'sectionId': section_id,
                 'sectionNum': row['section_num'],
                 'scheduled': scheduled,
@@ -701,16 +708,14 @@ def _to_api_json(term_id, rows, include_rooms=True):
                 meeting['eligible'] = True
                 course['meetings']['eligible'].append(meeting)
                 course['meetings']['eligible'].sort(key=lambda m: f"{m['startDate']} {m['startTime']}")
+                if meeting['startDate'] != app.config['CURRENT_TERM_BEGIN'] or meeting['endDate'] != app.config['CURRENT_TERM_END']:
+                    course['nonstandardMeetingDates'] = True
             else:
                 meeting['eligible'] = False
                 course['meetings']['ineligible'].append(meeting)
                 course['meetings']['ineligible'].sort(key=lambda m: f"{m['startDate']} {m['startTime']}")
             if include_rooms:
                 meeting['room'] = room.to_api_json() if room else None
-
-        def _date_ranges_vary(key):
-            return len(set([m[key] for m in (course['meetings']['eligible'] + course['meetings']['ineligible'])])) > 1
-        course['meetingDateRangesVary'] = _date_ranges_vary('startDate') or _date_ranges_vary('endDate')
 
     # Next, construct the feed
     api_json = []
@@ -747,20 +752,34 @@ def _decorate_course(course):
 
     meetings = course['meetings']['eligible'] + course['meetings']['ineligible']
     if meetings:
-        course_meeting_string = '-'.join(
+        meeting = meetings[0]
+        course_meeting_date = '-'.join(
             [
-                str(meetings[0]['daysFormatted']),
-                str(meetings[0]['startTimeFormatted']),
-                str(meetings[0]['endTimeFormatted']),
+                str(meeting['startDate']),
+                str(meeting['endDate']),
             ],
         )
-        room_id = meetings[0].get('room', {}).get('id')
+        course_meeting_time = '-'.join(
+            [
+                str(meeting['daysFormatted']),
+                str(meeting['startTimeFormatted']),
+                str(meeting['endTimeFormatted']),
+            ],
+        )
+        room_id = meeting.get('room', {}).get('id')
     else:
-        course_meeting_string = '-'
+        course_meeting_date = '-'
+        course_meeting_time = '-'
         room_id = None
 
     if course['scheduled']:
-        scheduled_meeting_string = '-'.join(
+        scheduled_meeting_date = '-'.join(
+            [
+                course['scheduled']['meetingStartDate'],
+                course['scheduled']['meetingEndDate'],
+            ],
+        )
+        scheduled_meeting_time = '-'.join(
             [
                 str(course['scheduled']['meetingDays']),
                 course['scheduled']['meetingStartTime'],
@@ -772,7 +791,8 @@ def _decorate_course(course):
 
         course['scheduled'].update({
             'hasObsoleteInstructors': has_obsolete_instructors,
-            'hasObsoleteMeetingTimes': course_meeting_string != scheduled_meeting_string,
+            'hasObsoleteMeetingDates': course_meeting_date != scheduled_meeting_date,
+            'hasObsoleteMeetingTimes': course_meeting_time != scheduled_meeting_time,
             'hasObsoleteRoom': room_id != course.get('scheduled').get('room', {}).get('id'),
         })
 
@@ -892,11 +912,12 @@ def _to_meeting_json(row):
     return {
         'days': row['meeting_days'],
         'daysFormatted': format_days(row['meeting_days']),
-        'endDate': row['meeting_end_date'],
+        # TODO Alter this substring code once meeting dates are stored as timestamps.
+        'endDate': row['meeting_end_date'] and row['meeting_end_date'][0:10],
         'endTime': row['meeting_end_time'],
         'endTimeFormatted': format_time(row['meeting_end_time']),
         'location': row['meeting_location'],
-        'startDate': row['meeting_start_date'],
+        'startDate': row['meeting_start_date'] and row['meeting_start_date'][0:10],
         'startTime': row['meeting_start_time'],
         'startTimeFormatted': format_time(row['meeting_start_time']),
     }
