@@ -99,16 +99,32 @@ def _load_courses():
 
 def _create_email_templates():
     EmailTemplate.create(
+        template_type='admin_alert_date_change',
+        name='Scheduled course had date change',
+        subject_line='Funky dates!',
+        message="""
+            Scheduled recordings of <code>course.name</code> have invalid dates:
+            <code>course.date.start</code> to <code>course.date.end</code>.
+        """,
+    )
+    EmailTemplate.create(
         template_type='admin_alert_instructor_change',
         name='Alert admin instructors change',
         subject_line='Instructors have changed',
-        message='<code>course.name</code>: old instructor(s) <code>instructors.previous</code>, new instructor(s) <code>instructors.all</code>.',
+        message="""
+            <code>course.name</code>:
+            Old instructor(s) <code>instructors.previous</code>
+            New instructor(s) <code>instructors.all</code>
+        """,
     )
     EmailTemplate.create(
         template_type='admin_alert_multiple_meeting_patterns',
         name='Alert admin when multiple meeting patterns',
         subject_line="It's complicated!",
-        message='<code>course.name</code> has weird dates: <code>course.date.start</code> to <code>course.date.end</code>',
+        message="""
+            <code>course.name</code> has weird dates:
+            <code>course.date.start</code> to <code>course.date.end</code>
+        """,
     )
     EmailTemplate.create(
         template_type='admin_alert_room_change',

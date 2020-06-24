@@ -29,6 +29,7 @@ from diablo.jobs.admin_emails_job import AdminEmailsJob
 from diablo.jobs.canvas_job import CanvasJob
 from diablo.jobs.doomed_to_failure import DoomedToFailure
 from diablo.jobs.queued_emails_job import QueuedEmailsJob
+from diablo.lib.berkeley import get_recording_end_date, get_recording_start_date
 from diablo.models.approval import Approval
 from diablo.models.job import Job
 from diablo.models.queued_email import QueuedEmail
@@ -74,9 +75,9 @@ class TestEmailAlertsForAdmins:
                 instructor_uids=get_instructor_uids(term_id=term_id, section_id=section_id),
                 kaltura_schedule_id=random.randint(1, 10),
                 meeting_days=meeting['days'],
-                meeting_end_date=meeting['endDate'],
+                meeting_end_date=get_recording_end_date(meeting),
                 meeting_end_time=meeting['endTime'],
-                meeting_start_date=meeting['startDate'],
+                meeting_start_date=get_recording_start_date(meeting),
                 meeting_start_time=meeting['startTime'],
                 publish_type_=approval.publish_type,
                 recording_type_=approval.recording_type,
@@ -86,13 +87,13 @@ class TestEmailAlertsForAdmins:
             )
 
             admin_uid = app.config['EMAIL_DIABLO_ADMIN_UID']
-            email_count = _get_email_count(admin_uid)
-            # Message queued but not sent.
+            # Message queued, then sent.
             AdminEmailsJob(simply_yield).run()
-            assert _get_email_count(admin_uid) == email_count
-            # Message sent.
             QueuedEmailsJob(simply_yield).run()
-            assert _get_email_count(admin_uid) == email_count + 1
+            emails_sent = SentEmail.get_emails_sent_to(uid=admin_uid)
+            assert len(emails_sent) == 1
+            assert emails_sent[0].section_id == section_id
+            assert emails_sent[0].template_type == 'admin_alert_room_change'
 
     def test_alert_admin_of_instructor_change(self, enable_admin_emails):
         """Emails admin when a scheduled course gets a new instructor."""
@@ -117,9 +118,9 @@ class TestEmailAlertsForAdmins:
                 instructor_uids=[instructor_1_uid],
                 kaltura_schedule_id=random.randint(1, 10),
                 meeting_days=meeting['days'],
-                meeting_end_date=meeting['endDate'],
+                meeting_end_date=get_recording_end_date(meeting),
                 meeting_end_time=meeting['endTime'],
-                meeting_start_date=meeting['startDate'],
+                meeting_start_date=get_recording_start_date(meeting),
                 meeting_start_time=meeting['startTime'],
                 publish_type_=approval.publish_type,
                 recording_type_=approval.recording_type,
@@ -134,8 +135,8 @@ class TestEmailAlertsForAdmins:
             assert _get_email_count(admin_uid) == email_count
             queued_messages = QueuedEmail.query.filter_by(template_type='admin_alert_instructor_change').all()
             assert len(queued_messages) == 1
-            assert queued_messages[0].message ==\
-                'LAW 23: old instructor(s) Regan MacNeil, new instructor(s) Regan MacNeil, Burke Dennings.'
+            for snippet in ['LAW 23', 'Old instructor(s) Regan MacNeil', 'New instructor(s) Regan MacNeil, Burke Dennings']:
+                assert snippet in queued_messages[0].message
             # Message sent.
             QueuedEmailsJob(simply_yield).run()
             assert _get_email_count(admin_uid) == email_count + 1
@@ -163,9 +164,9 @@ class TestEmailAlertsForAdmins:
                 instructor_uids=[instructor_uid],
                 kaltura_schedule_id=random.randint(1, 10),
                 meeting_days=meeting['days'],
-                meeting_end_date=meeting['endDate'],
+                meeting_end_date=get_recording_end_date(meeting),
                 meeting_end_time=meeting['endTime'],
-                meeting_start_date=meeting['startDate'],
+                meeting_start_date=get_recording_start_date(meeting),
                 meeting_start_time=meeting['startTime'],
                 publish_type_=approval.publish_type,
                 recording_type_=approval.recording_type,
@@ -179,17 +180,18 @@ class TestEmailAlertsForAdmins:
 
             # Message queued but not sent.
             admin_uid = app.config['EMAIL_DIABLO_ADMIN_UID']
-            email_count = _get_email_count(admin_uid)
             AdminEmailsJob(simply_yield).run()
-            queued_messages = QueuedEmail.query.filter_by(template_type='admin_alert_multiple_meeting_patterns').all()
+            queued_messages = QueuedEmail.query.filter_by(section_id=section_id).all()
             assert len(queued_messages) == 1
-            assert queued_messages[0].message == f"{course['courseName']} has weird dates: 2020-08-26 to 2020-10-02"
+            for queued_message in queued_messages:
+                assert '2020-08-26 to 2020-10-02' in queued_message.message
 
             # Message sent.
             QueuedEmailsJob(simply_yield).run()
             emails_sent = SentEmail.get_emails_sent_to(uid=admin_uid)
-            assert len(emails_sent) == email_count + 1
-            assert section_id == emails_sent[0].section_id
+            assert len(emails_sent) == 1
+            assert emails_sent[0].template_type == 'admin_alert_multiple_meeting_patterns'
+            assert emails_sent[0].section_id == section_id
 
     def test_alert_on_job_failure(self):
         admin_uid = app.config['EMAIL_DIABLO_ADMIN_UID']

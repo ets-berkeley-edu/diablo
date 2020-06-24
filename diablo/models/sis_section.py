@@ -51,10 +51,10 @@ class SisSection(db.Model):
     is_primary = db.Column(db.Boolean)
     is_principal_listing = db.Column(db.Boolean, nullable=False, default=True)
     meeting_days = db.Column(db.String)
-    meeting_end_date = db.Column(db.String)
+    meeting_end_date = db.Column(db.DateTime)
     meeting_end_time = db.Column(db.String)
     meeting_location = db.Column(db.String)
-    meeting_start_date = db.Column(db.String)
+    meeting_start_date = db.Column(db.DateTime)
     meeting_start_time = db.Column(db.String)
     section_id = db.Column(db.Integer, nullable=False)
     section_num = db.Column(db.String)
@@ -575,20 +575,15 @@ class SisSection(db.Model):
             FROM sis_sections s
             WHERE s.term_id = :term_id AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
                 AND s.is_primary IS TRUE AND s.is_principal_listing IS TRUE
-                AND (s.meeting_start_date NOT LIKE :term_begin OR s.meeting_end_date NOT LIKE :term_end)
+                AND (s.meeting_start_date::text NOT LIKE :term_begin OR s.meeting_end_date::text NOT LIKE :term_end)
             ORDER BY s.section_id
         """
-
-        # TODO Remove this temporary substring comparison once meeting dates are stored as timestamps.
-        def _format_term_date(d):
-            return f'{d}%'
-
         rows = db.session.execute(
             text(sql),
             {
                 'term_id': term_id,
-                'term_begin': _format_term_date(app.config['CURRENT_TERM_BEGIN']),
-                'term_end': _format_term_date(app.config['CURRENT_TERM_END']),
+                'term_begin': f"{app.config['CURRENT_TERM_BEGIN']}%",
+                'term_end': f"{app.config['CURRENT_TERM_END']}%",
             },
         )
         return set([row['section_id'] for row in rows])
@@ -909,15 +904,16 @@ def _to_instructor_json(row, approvals, invited_uids):
 
 
 def _to_meeting_json(row):
+    end_date = row['meeting_end_date']
+    start_date = row['meeting_start_date']
     return {
         'days': row['meeting_days'],
         'daysFormatted': format_days(row['meeting_days']),
-        # TODO Alter this substring code once meeting dates are stored as timestamps.
-        'endDate': row['meeting_end_date'] and row['meeting_end_date'][0:10],
+        'endDate': end_date and datetime.strftime(end_date, '%Y-%m-%d'),
         'endTime': row['meeting_end_time'],
         'endTimeFormatted': format_time(row['meeting_end_time']),
         'location': row['meeting_location'],
-        'startDate': row['meeting_start_date'] and row['meeting_start_date'][0:10],
+        'startDate': start_date and datetime.strftime(start_date, '%Y-%m-%d'),
         'startTime': row['meeting_start_time'],
         'startTimeFormatted': format_time(row['meeting_start_time']),
     }

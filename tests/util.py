@@ -52,6 +52,7 @@ def test_approvals_workflow(app):
         db.session.execute(text('DELETE FROM approvals'))
         db.session.execute(text('DELETE FROM course_preferences'))
         db.session.execute(text('DELETE FROM scheduled'))
+        db.session.execute(text('DELETE FROM queued_emails'))
         db.session.execute(text('DELETE FROM sent_emails'))
 
     try:
