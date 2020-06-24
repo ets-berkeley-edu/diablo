@@ -121,6 +121,9 @@ def _get_courses_ready_to_schedule(approvals, term_id):
             course = courses_per_section_id.get(section_id)
             if not course:
                 continue
+            if len(course.get('meetings', {}).get('eligible', [])) != 1:
+                app.logger.warn(f'Unique meeting pattern not found for section id {section_id}; will not schedule.')
+                continue
             if admin_user_uids.intersection(set(uids)):
                 ready_to_schedule.append(course)
             else:

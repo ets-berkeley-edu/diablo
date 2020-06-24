@@ -16,7 +16,7 @@
         </v-col>
         <v-col>
           <v-card class="pa-6" outlined>
-            <v-container v-if="isCurrentTerm && meeting.room.capability">
+            <v-container v-if="isCurrentTerm && meeting.room.capability && !multipleEligibleMeetings">
               <v-row no-gutters>
                 <v-col id="approvals-described" class="font-weight-medium red--text">
                   <span v-if="queuedForScheduling">This course is currently queued for scheduling. Recordings will be scheduled in an hour or less. </span>
@@ -173,6 +173,12 @@
                 This course is not eligible for Course Capture because {{ meeting.room.location }} is not capture-enabled.
               </v-row>
             </v-container>
+            <v-container v-if="multipleEligibleMeetings">
+              <v-row id="course-multiple-eligible-meetings">
+                <v-icon class="pr-2" color="red">mdi-alert</v-icon>
+                This course does not meet a typical course's meeting pattern and cannot be scheduled automatically. Scheduling requests must be communicated to coursecapture@berkeley.edu.
+              </v-row>
+            </v-container>
             <v-container v-if="!isCurrentTerm">
               <v-row id="course-not-current">
                 <v-icon class="pr-2" color="red">mdi-alert</v-icon>
@@ -210,6 +216,7 @@
       courseDisplayTitle: null,
       hasCurrentUserApproved: undefined,
       isApproving: false,
+      multipleEligibleMeetings: undefined,
       publishType: undefined,
       publishTypeOptions: undefined,
       recordingType: undefined,
@@ -264,6 +271,7 @@
         this.agreedToTerms = this.$currentUser.isAdmin
         this.course = data
         this.meeting = this.course.meetings.eligible[0] || this.course.meetings.ineligible[0]
+        this.multipleEligibleMeetings = (this.course.meetings.eligible.length > 1)
         const approvedByInstructors = this.$_.filter(this.course.approvals, a => !a.wasApprovedByAdmin)
         const approvedByUIDs = this.$_.map(this.course.approvals, 'approvedBy.uid')
         const approvedByInstructorUIDs = this.$_.map(approvedByInstructors, 'approvedBy.uid')
