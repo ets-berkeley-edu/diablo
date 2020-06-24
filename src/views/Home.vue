@@ -40,7 +40,7 @@
                 {{ $_.join(course.meetings.eligible[0].daysFormatted, ', ') }}
               </td>
               <td :class="{'border-bottom-zero': course.meetings.eligible.length > 1}" class="text-no-wrap">
-                <div v-if="course.meetingDateRangesVary" class="pt-2">
+                <div v-if="course.nonstandardMeetingDates" class="pt-2">
                   <span class="text-no-wrap">{{ course.meetings.eligible[0].startDate | moment('MMM D, YYYY') }} - </span>
                   <span class="text-no-wrap">{{ course.meetings.eligible[0].endDate | moment('MMM D, YYYY') }}</span>
                 </div>
@@ -58,11 +58,11 @@
                 {{ $_.join(course.meetings.eligible[index].daysFormatted, ', ') }}
               </td>
               <td class="text-no-wrap">
-                <div v-if="course.meetingDateRangesVary" class="pt-2">
+                <div v-if="course.nonstandardMeetingDates" class="pt-2">
                   <span class="text-no-wrap">{{ course.meetings.eligible[index].startDate | moment('MMM D, YYYY') }} - </span>
                   <span class="text-no-wrap">{{ course.meetings.eligible[index].endDate | moment('MMM D, YYYY') }}</span>
                 </div>
-                <div :class="{'pb-2': course.meetingDateRangesVary && index === course.meetings.eligible.length - 1}">
+                <div :class="{'pb-2': course.nonstandardMeetingDates && index === course.meetings.eligible.length - 1}">
                   {{ course.meetings.eligible[index].startTimeFormatted }} - {{ course.meetings.eligible[index].endTimeFormatted }}
                 </div>
               </td>
