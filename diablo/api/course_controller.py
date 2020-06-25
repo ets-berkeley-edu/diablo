@@ -148,6 +148,7 @@ def download_courses_csv():
             'Days': ' / '.join(', '.join(m.get('daysFormatted') or []) for m in c.get('meetings', {}).get('eligible', [])),
             'Start Time': ' / '.join(m.get('startTimeFormatted', '') for m in c.get('meetings', {}).get('eligible', [])),
             'End Time': ' / '.join(m.get('endTimeFormatted', '') for m in c.get('meetings', {}).get('eligible', [])),
+            'Meeting Type': c.get('meetingType'),
             'Publish Type': scheduled.get('publishTypeName'),
             'Recording Type': scheduled.get('recordingTypeName'),
             'Sign-up URL': get_sign_up_url(section_id=section_id, term_id=c.get('termId')),

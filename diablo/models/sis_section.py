@@ -723,6 +723,13 @@ def _to_api_json(term_id, rows, include_rooms=True):
 
 
 def _decorate_course(course):
+    _decorate_course_approvals(course)
+    _decorate_course_scheduling(course)
+    _decorate_course_changes(course)
+    _decorate_course_meeting_type(course)
+
+
+def _decorate_course_approvals(course):
     course['hasNecessaryApprovals'] = False
     if any(a['wasApprovedByAdmin'] for a in course['approvals']):
         course['hasNecessaryApprovals'] = True
@@ -739,12 +746,16 @@ def _decorate_course(course):
         elif course['invitees']:
             course['approvalStatus'] = 'Invited'
 
+
+def _decorate_course_scheduling(course):
     course['schedulingStatus'] = 'Not Scheduled'
     if course['scheduled']:
         course['schedulingStatus'] = 'Scheduled'
     elif course['hasNecessaryApprovals']:
         course['schedulingStatus'] = 'Queued for Scheduling'
 
+
+def _decorate_course_changes(course):
     meetings = course['meetings']['eligible'] + course['meetings']['ineligible']
     if meetings:
         meeting = meetings[0]
@@ -793,6 +804,18 @@ def _decorate_course(course):
 
     for approval in course['approvals']:
         approval['hasObsoleteRoom'] = room_id != approval.get('room', {}).get('id')
+
+
+def _decorate_course_meeting_type(course):
+    # 'meetingType' is our own homegrown typology. See DIABLO-436.
+    if len(course['meetings']['eligible']) > 1:
+        course['meetingType'] = 'D'
+    elif course['nonstandardMeetingDates']:
+        course['meetingType'] = 'C'
+    elif len(course['meetings']['eligible'] + course['meetings']['ineligible']) > 1:
+        course['meetingType'] = 'B'
+    else:
+        course['meetingType'] = 'A'
 
 
 def _get_cross_listed_courses(section_ids, term_id, approvals, invited_uids):
