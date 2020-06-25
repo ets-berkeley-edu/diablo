@@ -23,6 +23,7 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 from itertools import islice
+import traceback
 
 from diablo import db, std_commit
 from diablo.externals.kaltura import Kaltura
@@ -163,16 +164,16 @@ def schedule_recordings(all_approvals, course):
     scheduled = None
     section_ids_opted_out = CoursePreference.get_section_ids_opted_out(term_id=term_id)
 
-    def _send_error(e):
-        error = f"Failed to schedule recordings {course['label']} (section_id: {course['sectionId']})"
-        app.logger.error(error)
-        app.logger.exception(e)
-        send_system_error_email(message=str(e), subject=error)
-
     if room.kaltura_resource_id:
         meetings = course.get('meetings', {}).get('eligible', [])
         if len(meetings) != 1:
-            _send_error(RuntimeError('Unique eligible meeting pattern not found for course'))
+            subject = f"Unique eligible meeting pattern not found for {course['label']}"
+            message = f'{subject}\n\n<pre>{course}</pre>'
+            app.logger.error(message)
+            send_system_error_email(
+                message=message,
+                subject=subject,
+            )
             return None
         meeting = meetings[0]
         try:
@@ -213,7 +214,13 @@ def schedule_recordings(all_approvals, course):
 
         except (KalturaClientException, KalturaException) as e:
             # Error codes: https://developer.kaltura.com/api-docs/Error_Codes
-            _send_error(e)
+            summary = f"Failed to schedule recordings {course['label']} (section_id: {course['sectionId']})"
+            app.logger.error(summary)
+            app.logger.exception(e)
+            send_system_error_email(
+                message=f'{summary}\n\n<pre>{traceback.format_exc()}</pre>',
+                subject=f'{summary[:50]}...' if len(summary) > 50 else summary,
+            )
 
     else:
         app.logger.warn(f"""

@@ -22,7 +22,6 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-
 from datetime import datetime
 
 from diablo import db, std_commit
@@ -117,7 +116,7 @@ class QueuedEmail(db.Model):
         return not(self.subject_line is None or self.message is None or self.recipient is None)
 
     def interpolate(self, course):
-        template = _evaluate_template_type(self.template_type)
+        template = _get_email_template(course=course, template_type=self.template_type)
         if template:
             self.subject_line = interpolate_content(
                 course=course,
@@ -145,15 +144,19 @@ class QueuedEmail(db.Model):
         }
 
 
-def _evaluate_template_type(template_type):
+def _get_email_template(course, template_type):
     template = EmailTemplate.get_template_by_type(template_type)
     if not template:
-        send_system_error_email(f'Unable to queue email of type {template_type} because no template is available.')
+        subject = f"No {template_type} email template found; failed to queue email for section_id {course['sectionId']}"
+        send_system_error_email(
+            message=f'{subject}\n\n<pre>{course}</pre>',
+            subject=subject,
+        )
     return template
 
 
 def notify_instructors_of_changes(course, approval, previous_approvals):
-    template = _evaluate_template_type('notify_instructor_of_changes')
+    template = _get_email_template(course=course, template_type='notify_instructor_of_changes')
     if not template:
         return
     for previous_approval in previous_approvals:
@@ -186,7 +189,7 @@ def notify_instructors_of_changes(course, approval, previous_approvals):
 
 
 def notify_instructor_waiting_for_approval(course, instructor, pending_instructors):
-    template = _evaluate_template_type('waiting_for_approval')
+    template = _get_email_template(course=course, template_type='waiting_for_approval')
     if not template:
         return
     message = interpolate_content(

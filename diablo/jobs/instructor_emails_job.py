@@ -98,6 +98,7 @@ class InstructorEmailsJob(BaseJob):
                             {course['label']} instructors were NOT notified of scheduled: {scheduled}.
                         """)
             else:
-                error = f'section_id of scheduled recordings was not found in SIS data: {scheduled}'
-                app.logger.error(error)
-                send_system_error_email(message=error)
+                subject = f'Scheduled course has no SIS data (section_id={scheduled.section_id})'
+                message = f'{subject}\n\nScheduled:<pre>{scheduled}</pre>'
+                app.logger.error(message)
+                send_system_error_email(message=message, subject=subject)
