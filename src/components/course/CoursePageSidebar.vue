@@ -11,12 +11,12 @@
         </OxfordJoin>
       </v-col>
     </v-row>
-    <div v-for="(meeting, index) in course.displayMeetings" :key="index">
+    <div v-for="(meeting, index) in displayMeetings" :key="index">
       <v-row v-if="meeting.daysFormatted" :id="`meeting-days-${index}`">
-        <v-col md="auto" :class="{'pb-0': course.displayMeetings.length > 1}">
+        <v-col md="auto" :class="{'pb-0': displayMeetings.length > 1}">
           <v-icon>mdi-calendar</v-icon>
         </v-col>
-        <v-col :class="{'pb-0': course.displayMeetings.length > 1}">
+        <v-col :class="{'pb-0': displayMeetings.length > 1}">
           {{ $_.join(meeting.daysFormatted, ', ') }}
           <div v-if="course.nonstandardMeetingDates">
             {{ meeting.startDate | moment('MMM D, YYYY') }} to {{ meeting.endDate | moment('MMM D, YYYY') }}
@@ -24,18 +24,18 @@
         </v-col>
       </v-row>
       <v-row v-if="meeting.startTimeFormatted" :id="`meeting-times-${index}`">
-        <v-col md="auto" :class="{'pb-1 pt-1': course.displayMeetings.length > 1}">
+        <v-col md="auto" :class="{'pb-1 pt-1': displayMeetings.length > 1}">
           <v-icon>mdi-clock-outline</v-icon>
         </v-col>
-        <v-col :class="{'pb-1 pt-1': course.displayMeetings.length > 1}">
+        <v-col :class="{'pb-1 pt-1': displayMeetings.length > 1}">
           {{ meeting.startTimeFormatted }} - {{ meeting.endTimeFormatted }}
         </v-col>
       </v-row>
       <v-row v-if="meeting.room" :id="`rooms-${index}`">
-        <v-col md="auto" :class="{'pb-5 pt-1': course.displayMeetings.length > 1}">
+        <v-col md="auto" :class="{'pb-5 pt-1': displayMeetings.length > 1}">
           <v-icon>mdi-map-marker</v-icon>
         </v-col>
-        <v-col v-if="$currentUser.isAdmin" :class="{'pb-5 pt-1': course.displayMeetings.length > 1}">
+        <v-col v-if="$currentUser.isAdmin" :class="{'pb-5 pt-1': displayMeetings.length > 1}">
           <router-link id="room" :to="`/room/${meeting.room.id}`">{{ meeting.room.location }}</router-link>
         </v-col>
         <v-col v-if="!$currentUser.isAdmin">
@@ -161,6 +161,7 @@
       }
     },
     data: () => ({
+      displayMeetings: undefined,
       showUnscheduleModal: false
     }),
     computed: {
@@ -172,7 +173,7 @@
       }
     },
     created() {
-      this.course.displayMeetings = this.getDisplayMeetings(this.course)
+      this.displayMeetings = this.getDisplayMeetings(this.course)
     },
     methods: {
       sendInvite() {

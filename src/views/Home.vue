@@ -69,6 +69,13 @@
             </tr>
           </template>
         </tbody>
+        <tbody v-if="!items.length">
+          <tr>
+            <td id="message-when-zero-courses" class="ma-4 text-no-wrap title" :colspan="headers.length">
+              <span>No courses.</span>
+            </td>
+          </tr>
+        </tbody>
       </template>
     </v-data-table>
   </div>
