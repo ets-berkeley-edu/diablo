@@ -92,15 +92,12 @@ def cas_login():
         redirect_url = add_param_to_url('/', param)
     else:
         login_user(user)
-        flash('Logged in successfully.')
-
-        # Check if url is safe for redirects per https://flask-login.readthedocs.io/en/latest/
-        if not _is_safe_url(request.args.get('next')):
+        if _is_safe_url(request.args.get('next')):
+            # Is safe URL per https://flask-login.readthedocs.io/en/latest/
+            flash('Logged in successfully.')
+            redirect_url = target_url or '/'
+        else:
             return abort(400)
-        if not target_url:
-            target_url = '/'
-        # Our googleAnalyticsService uses 'casLogin' marker to track CAS login events
-        redirect_url = add_param_to_url(target_url, ('casLogin', 'true'))
     app.logger.info(f'After CAS callback, redirect_url: {redirect_url}')
     return redirect(redirect_url)
 
