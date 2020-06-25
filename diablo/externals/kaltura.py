@@ -31,9 +31,9 @@ from diablo.lib.util import default_timezone, format_days, to_isoformat
 from flask import current_app as app
 from KalturaClient import KalturaClient, KalturaConfiguration
 from KalturaClient.exceptions import KalturaException
-from KalturaClient.Plugins.Core import KalturaBaseEntry, KalturaCategoryEntry, KalturaCategoryEntryStatus, \
-    KalturaCategoryFilter, KalturaEntryDisplayInSearchType, KalturaEntryModerationStatus, KalturaEntryStatus, \
-    KalturaEntryType, KalturaFilterPager, KalturaMediaEntryFilter
+from KalturaClient.Plugins.Core import KalturaBaseEntry, KalturaCategoryEntry, KalturaCategoryEntryFilter, \
+    KalturaCategoryEntryStatus, KalturaCategoryFilter, KalturaEntryDisplayInSearchType, KalturaEntryModerationStatus, \
+    KalturaEntryStatus, KalturaEntryType, KalturaFilterPager, KalturaMediaEntryFilter
 from KalturaClient.Plugins.Schedule import KalturaBlackoutScheduleEvent, KalturaBlackoutScheduleEventFilter, \
     KalturaRecordScheduleEvent, KalturaScheduleEventClassificationType, KalturaScheduleEventFilter, \
     KalturaScheduleEventRecurrence, KalturaScheduleEventRecurrenceFrequency, KalturaScheduleEventRecurrenceType, \
@@ -121,7 +121,9 @@ class Kaltura:
         return self.kaltura_client.schedule.scheduleEvent.delete(kaltura_schedule_id)
 
     @skip_when_pytest()
-    def get_categories(self, category_ids):
+    def get_categories(self, template_entry_id):
+        category_entries = self._get_category_entries(KalturaCategoryEntryFilter(entryIdEqual=template_entry_id))
+        category_ids = [entry['categoryId'] for entry in category_entries]
         category_filter = KalturaCategoryFilter(idIn=','.join(str(id_) for id_ in category_ids))
         return self._get_categories(kaltura_category_filter=category_filter)
 
@@ -241,6 +243,14 @@ class Kaltura:
                 pager=KalturaFilterPager(pageIndex=page_index, pageSize=DEFAULT_KALTURA_PAGE_SIZE),
             )
         return [_category_object_to_json(obj) for obj in _get_kaltura_objects(_fetch)]
+
+    def _get_category_entries(self, kaltura_category_entry_filter):
+        def _fetch(page_index):
+            return self.kaltura_client.categoryEntry.list(
+                filter=kaltura_category_entry_filter,
+                pager=KalturaFilterPager(pageIndex=page_index, pageSize=DEFAULT_KALTURA_PAGE_SIZE),
+            )
+        return [_category_entry_object_to_json(obj) for obj in _get_kaltura_objects(_fetch)]
 
     def _schedule_recurring_events_in_kaltura(
             self,
@@ -371,6 +381,13 @@ def _adjust_time(military_time, offset_minutes):
         time(hour, minutes),
         tzinfo=default_timezone(),
     ) + timedelta(minutes=offset_minutes)
+
+
+def _category_entry_object_to_json(obj):
+    return {
+        'categoryId': obj.categoryId,
+        'status': obj.status,
+    }
 
 
 def _category_object_to_json(obj):
