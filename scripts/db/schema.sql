@@ -92,9 +92,9 @@ CREATE TYPE room_capability_types AS ENUM (
 CREATE TABLE admin_users (
     id integer NOT NULL,
     uid character varying(255) NOT NULL,
-    created_at timestamp with time zone NOT NULL,
-    updated_at timestamp with time zone NOT NULL,
-    deleted_at timestamp with time zone
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    deleted_at TIMESTAMP WITH TIME ZONE
 );
 ALTER TABLE admin_users OWNER TO diablo;
 CREATE SEQUENCE admin_users_id_seq
@@ -122,8 +122,8 @@ CREATE TABLE approvals (
     publish_type publish_types NOT NULL,
     recording_type recording_types NOT NULL,
     room_id INTEGER NOT NULL,
-    created_at timestamp with time zone NOT NULL,
-    deleted_at timestamp with time zone
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    deleted_at TIMESTAMP WITH TIME ZONE
 );
 ALTER TABLE approvals OWNER TO diablo;
 CREATE UNIQUE INDEX approvals_unique_idx ON approvals (approved_by_uid, section_id, term_id) WHERE deleted_at IS NULL;
@@ -135,7 +135,7 @@ CREATE TABLE canvas_course_sites (
     section_id INTEGER NOT NULL,
     term_id INTEGER NOT NULL,
     canvas_course_site_name TEXT NOT NULL,
-    created_at timestamp with time zone NOT NULL
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL
 );
 ALTER TABLE canvas_course_sites OWNER TO diablo;
 ALTER TABLE canvas_course_sites ADD CONSTRAINT canvas_course_sites_pkey PRIMARY KEY (canvas_course_site_id, section_id, term_id);
@@ -146,7 +146,7 @@ CREATE TABLE course_preferences (
     term_id INTEGER NOT NULL,
     section_id INTEGER NOT NULL,
     has_opted_out BOOLEAN NOT NULL,
-    created_at timestamp with time zone NOT NULL
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL
 );
 ALTER TABLE course_preferences OWNER TO diablo;
 ALTER TABLE course_preferences ADD CONSTRAINT course_preferences_pkey PRIMARY KEY (section_id, term_id);
@@ -157,7 +157,7 @@ CREATE TABLE cross_listings (
     term_id INTEGER NOT NULL,
     section_id INTEGER NOT NULL,
     cross_listed_section_ids INTEGER[] NOT NULL,
-    created_at timestamp with time zone NOT NULL
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL
 );
 ALTER TABLE cross_listings OWNER TO diablo;
 ALTER TABLE cross_listings ADD CONSTRAINT cross_listings_pkey PRIMARY KEY (section_id, term_id);
@@ -170,8 +170,8 @@ CREATE TABLE email_templates (
     name VARCHAR(255) NOT NULL,
     message TEXT NOT NULL,
     subject_line VARCHAR(255) NOT NULL,
-    created_at timestamp with time zone NOT NULL,
-    updated_at timestamp with time zone NOT NULL
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL
 );
 ALTER TABLE email_templates OWNER TO diablo;
 CREATE SEQUENCE email_templates_id_seq
@@ -196,8 +196,8 @@ CREATE TABLE instructors (
     email VARCHAR(255),
     first_name VARCHAR(255),
     last_name VARCHAR(255),
-    created_at timestamp with time zone NOT NULL,
-    updated_at timestamp with time zone NOT NULL
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL
 );
 ALTER TABLE instructors OWNER TO diablo;
 ALTER TABLE ONLY instructors
@@ -209,8 +209,8 @@ CREATE TABLE job_history (
     id INTEGER NOT NULL,
     job_key VARCHAR(80) NOT NULL,
     failed BOOLEAN DEFAULT FALSE,
-    started_at timestamp with time zone NOT NULL,
-    finished_at timestamp with time zone
+    started_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    finished_at TIMESTAMP WITH TIME ZONE
 );
 ALTER TABLE job_history OWNER TO diablo;
 CREATE SEQUENCE job_history_id_seq
@@ -233,8 +233,8 @@ CREATE TABLE jobs (
     job_schedule_type job_schedule_types NOT NULL,
     job_schedule_value VARCHAR(80) NOT NULL,
     key VARCHAR(80) NOT NULL,
-    created_at timestamp with time zone NOT NULL,
-    updated_at timestamp with time zone NOT NULL
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL
 );
 ALTER TABLE jobs OWNER TO diablo;
 CREATE SEQUENCE jobs_id_seq
@@ -261,7 +261,7 @@ CREATE TABLE queued_emails (
     section_id INTEGER NOT NULL,
     template_type email_template_types,
     term_id INTEGER NOT NULL,
-    created_at timestamp with time zone NOT NULL
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL
 );
 ALTER TABLE queued_emails OWNER TO diablo;
 CREATE SEQUENCE queued_emails_id_seq
@@ -284,7 +284,7 @@ CREATE TABLE rooms (
     is_auditorium BOOLEAN NOT NULL,
     kaltura_resource_id INTEGER,
     location VARCHAR(255) NOT NULL,
-    created_at timestamp with time zone NOT NULL
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL
 );
 ALTER TABLE rooms OWNER TO diablo;
 CREATE SEQUENCE rooms_id_seq
@@ -311,15 +311,15 @@ CREATE TABLE scheduled (
     instructor_uids VARCHAR(80)[] NOT NULL,
     kaltura_schedule_id INTEGER NOT NULL,
     meeting_days VARCHAR(80) NOT NULL,
-    meeting_end_date VARCHAR(80) NOT NULL,
+    meeting_end_date TIMESTAMP NOT NULL,
     meeting_end_time VARCHAR(80) NOT NULL,
-    meeting_start_date VARCHAR(80) NOT NULL,
+    meeting_start_date TIMESTAMP NOT NULL,
     meeting_start_time VARCHAR(80) NOT NULL,
     publish_type publish_types NOT NULL,
     recording_type recording_types NOT NULL,
     room_id INTEGER NOT NULL,
-    created_at timestamp with time zone NOT NULL,
-    deleted_at timestamp with time zone
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    deleted_at TIMESTAMP WITH TIME ZONE
 );
 ALTER TABLE scheduled OWNER TO diablo;
 CREATE UNIQUE INDEX scheduled_unique_idx ON scheduled (section_id, term_id) WHERE deleted_at IS NULL;
@@ -332,7 +332,7 @@ CREATE TABLE sent_emails (
     section_id INTEGER,
     template_type email_template_types,
     term_id INTEGER NOT NULL,
-    sent_at timestamp with time zone NOT NULL
+    sent_at TIMESTAMP WITH TIME ZONE NOT NULL
 );
 ALTER TABLE sent_emails OWNER TO diablo;
 CREATE SEQUENCE sent_emails_id_seq
@@ -362,15 +362,15 @@ CREATE TABLE sis_sections (
     is_primary BOOLEAN,
     is_principal_listing BOOLEAN DEFAULT TRUE NOT NULL,
     meeting_days VARCHAR(80),
-    meeting_end_date VARCHAR(80),
+    meeting_end_date TIMESTAMP,
     meeting_end_time VARCHAR(80),
     meeting_location VARCHAR(80),
-    meeting_start_date VARCHAR(80),
+    meeting_start_date TIMESTAMP,
     meeting_start_time VARCHAR(80),
     section_id INTEGER NOT NULL,
     section_num VARCHAR(80),
     term_id INTEGER NOT NULL,
-    created_at timestamp with time zone NOT NULL
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL
 );
 ALTER TABLE sis_sections OWNER TO diablo;
 CREATE SEQUENCE sis_sections_id_seq

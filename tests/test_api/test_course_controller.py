@@ -30,6 +30,7 @@ import random
 from diablo import std_commit
 from diablo.jobs.canvas_job import CanvasJob
 from diablo.jobs.queued_emails_job import QueuedEmailsJob
+from diablo.lib.berkeley import get_recording_end_date, get_recording_start_date
 from diablo.models.approval import Approval
 from diablo.models.course_preference import CoursePreference
 from diablo.models.room import Room
@@ -736,9 +737,9 @@ class TestCoursesChanges:
                 instructor_uids=get_instructor_uids(term_id=self.term_id, section_id=section_1_id),
                 kaltura_schedule_id=random.randint(1, 10),
                 meeting_days=obsolete_meeting_days,
-                meeting_end_date=meeting['endDate'],
+                meeting_end_date=get_recording_end_date(meeting),
                 meeting_end_time=meeting['endTime'],
-                meeting_start_date=meeting['startDate'],
+                meeting_start_date=get_recording_start_date(meeting),
                 meeting_start_time=meeting['startTime'],
                 publish_type_='kaltura_my_media',
                 recording_type_='presentation_audio',
@@ -796,9 +797,9 @@ class TestCoursesChanges:
                 instructor_uids=instructor_uids + ['100099'],
                 kaltura_schedule_id=random.randint(1, 10),
                 meeting_days=meeting['days'],
-                meeting_end_date=meeting['endDate'],
+                meeting_end_date=get_recording_end_date(meeting),
                 meeting_end_time=meeting['endTime'],
-                meeting_start_date=meeting['startDate'],
+                meeting_start_date=get_recording_start_date(meeting),
                 meeting_start_time=meeting['startTime'],
                 publish_type_='kaltura_my_media',
                 recording_type_='presenter_audio',
@@ -1097,9 +1098,9 @@ def _schedule_recordings(
         instructor_uids=get_instructor_uids(term_id=term_id, section_id=section_id),
         kaltura_schedule_id=random.randint(1, 10),
         meeting_days=meeting['days'],
-        meeting_end_date=meeting['endDate'],
+        meeting_end_date=get_recording_end_date(meeting),
         meeting_end_time=meeting['endTime'],
-        meeting_start_date=meeting['startDate'],
+        meeting_start_date=get_recording_start_date(meeting),
         meeting_start_time=meeting['startTime'],
         publish_type_=publish_type,
         recording_type_=recording_type,
