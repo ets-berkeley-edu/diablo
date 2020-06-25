@@ -101,6 +101,7 @@ def cas_login():
             target_url = '/'
         # Our googleAnalyticsService uses 'casLogin' marker to track CAS login events
         redirect_url = add_param_to_url(target_url, ('casLogin', 'true'))
+    app.logger.info(f'After CAS callback, redirect_url: {redirect_url}')
     return redirect(redirect_url)
 
 
