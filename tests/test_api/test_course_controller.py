@@ -298,6 +298,7 @@ class TestGetCourse:
         assert api_json['meetings']['ineligible'][0]['endTimeFormatted'] == '3:59 pm'
         assert api_json['meetings']['ineligible'][0]['location'] == 'Wheeler 150'
         assert api_json['nonstandardMeetingDates'] is False
+        assert api_json['meetingType'] == 'A'
 
     def test_li_ka_shing_recording_options(self, client, admin_session):
         """Rooms designated as 'auditorium' offer ALL types of recording."""
@@ -384,6 +385,7 @@ class TestGetCourse:
         assert ineligible_meetings[1]['location'] == 'Dwinelle 155'
         assert ineligible_meetings[0]['startDate'] < ineligible_meetings[1]['startDate']
         assert api_json['nonstandardMeetingDates'] is True
+        assert api_json['meetingType'] == 'C'
 
     def test_hybrid_instruction(self, client, admin_session):
         """Course exists in two concurrent physical locations."""
@@ -402,6 +404,7 @@ class TestGetCourse:
         assert eligible_meetings[0]['eligible'] is True
         assert ineligible_meetings[0]['location'] == 'LeConte 1'
         assert ineligible_meetings[0]['eligible'] is False
+        assert api_json['meetingType'] == 'B'
 
 
 class TestGetCourses:
@@ -656,11 +659,13 @@ class TestDownloadCoursesCsv:
         reader = csv.reader(StringIO(csv_string), delimiter=',')
         for index, row in enumerate(reader):
             section_id = row[1]
-            sign_up_url = row[8]
+            meeting_type = row[6]
+            sign_up_url = row[9]
             instructors = row[-2]
             instructor_uids = row[-1]
             if index == 0:
                 assert section_id == 'Section Id'
+                assert meeting_type == 'Meeting Type'
                 assert sign_up_url == 'Sign-up URL'
                 assert instructors == 'Instructors'
                 assert instructor_uids == 'Instructor UIDs'
@@ -675,6 +680,15 @@ class TestDownloadCoursesCsv:
                 for instructor in course['instructors']:
                     assert instructor['email'] in instructors
                     assert instructor['name'] in instructors
+
+                if len(course['meetings']['eligible']) > 1:
+                    assert meeting_type == 'D'
+                elif course['nonstandardMeetingDates']:
+                    assert meeting_type == 'C'
+                elif len(course['meetings']['eligible'] + course['meetings']['ineligible']) > 1:
+                    assert meeting_type == 'B'
+                else:
+                    assert meeting_type == 'A'
 
 
 class TestCoursesChanges:
