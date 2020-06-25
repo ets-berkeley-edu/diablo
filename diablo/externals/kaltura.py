@@ -123,9 +123,12 @@ class Kaltura:
     @skip_when_pytest()
     def get_categories(self, template_entry_id):
         category_entries = self._get_category_entries(KalturaCategoryEntryFilter(entryIdEqual=template_entry_id))
-        category_ids = [entry['categoryId'] for entry in category_entries]
-        category_filter = KalturaCategoryFilter(idIn=','.join(str(id_) for id_ in category_ids))
-        return self._get_categories(kaltura_category_filter=category_filter)
+        if category_entries:
+            category_ids = [entry['categoryId'] for entry in category_entries]
+            category_filter = KalturaCategoryFilter(idIn=','.join(str(id_) for id_ in category_ids))
+            return self._get_categories(kaltura_category_filter=category_filter)
+        else:
+            return []
 
     @skip_when_pytest()
     def get_events_by_location(self, kaltura_resource_id):
