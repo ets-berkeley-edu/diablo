@@ -39,6 +39,7 @@ class TestCrossListings:
 
     test_data = util.parse_course_test_data()[7]
     section = Section(test_data)
+    meeting = section.meetings[0]
     x_listings = section.listings
     recording_schedule = RecordingSchedule(section)
     site_1 = CanvasSite(
@@ -66,6 +67,10 @@ class TestCrossListings:
         self.kaltura_page.log_in_via_calnet()
         self.kaltura_page.reset_test_data(self.term, self.recording_schedule)
 
+    def test_run_initial_canvas_job(self):
+        self.jobs_page.load_page()
+        self.jobs_page.run_canvas_job()
+
     def test_delete_old_canvas_sites(self):
         for listing in self.section.listings:
             self.canvas_page.delete_section_sites(listing)
@@ -78,7 +83,7 @@ class TestCrossListings:
         self.recording_schedule.scheduling_status = RecordingSchedulingStatus.NOT_SCHEDULED
 
     def test_move_course_location(self):
-        util.set_course_room(self.section)
+        util.set_course_room(self.section, self.meeting)
 
     def test_delete_old_email(self):
         self.email_page.log_in()
@@ -89,8 +94,24 @@ class TestCrossListings:
     def test_create_course_site_one(self):
         self.canvas_page.provision_site(self.section, [self.section.listings[0].ccn], self.site_1)
 
+    def test_enable_media_gallery_site_1(self):
+        self.canvas_page.enable_media_gallery(self.site_1)
+        self.canvas_page.click_media_gallery_tool()
+
+    def test_enable_my_media_site_1(self):
+        self.canvas_page.enable_my_media(self.site_1)
+        self.canvas_page.click_my_media_tool()
+
     def test_create_course_site_two(self):
-        self.canvas_page.provision_site(self.section, [self.section.listings[1].ccn], self.site_1)
+        self.canvas_page.provision_site(self.section, [self.section.listings[1].ccn], self.site_2)
+
+    def test_enable_media_gallery_site_2(self):
+        self.canvas_page.enable_media_gallery(self.site_2)
+        self.canvas_page.click_media_gallery_tool()
+
+    def test_enable_my_media_site_2(self):
+        self.canvas_page.enable_my_media(self.site_2)
+        self.canvas_page.click_my_media_tool()
 
     def test_run_canvas_job(self):
         self.jobs_page.load_page()
@@ -128,7 +149,7 @@ class TestCrossListings:
         assert visible == expected
 
     def test_approve_inst_1(self):
-        self.sign_up_page.select_publish_type(PublishType.BCOURSES.value)
+        self.sign_up_page.select_publish_type(PublishType.KALTURA.value)
         self.sign_up_page.click_agree_checkbox()
         self.sign_up_page.click_approve_button()
 
@@ -136,7 +157,7 @@ class TestCrossListings:
         self.sign_up_page.log_out()
         self.login_page.dev_auth(self.section.instructors[1].uid)
         self.ouija_page.click_sign_up_page_link(self.section)
-        self.sign_up_page.select_publish_type(PublishType.KALTURA.value)
+        self.sign_up_page.select_publish_type(PublishType.BCOURSES.value)
         self.sign_up_page.click_agree_checkbox()
         self.sign_up_page.click_approve_button()
         self.recording_schedule.approval_status = RecordingApprovalStatus.APPROVED
@@ -144,7 +165,7 @@ class TestCrossListings:
     def test_schedule_recordings(self):
         self.sign_up_page.log_out()
         self.login_page.dev_auth()
-        self.jobs_page.load_page()
+        self.ouija_page.click_jobs_link()
         self.jobs_page.run_kaltura_job()
         util.wait_for_kaltura_id(self.recording_schedule, self.term)
 
@@ -160,10 +181,11 @@ class TestCrossListings:
             assert code in self.kaltura_page.visible_series_title()
 
     def test_kaltura_publish_status(self):
+        self.kaltura_page.wait_for_publish_category_el()
         assert self.kaltura_page.is_published()
 
     def test_kaltura_course_site_count_two(self):
-        assert len(self.kaltura_page.publish_category_els) == 2
+        assert len(self.kaltura_page.publish_category_els()) == 2
 
     def test_kaltura_course_sites(self):
         assert self.kaltura_page.is_publish_category_present(self.site_1)

@@ -25,6 +25,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 
 from datetime import datetime
 
+from flask import current_app as app
 import pytest
 from xena.models.canvas_site import CanvasSite
 from xena.models.email import Email
@@ -78,6 +79,10 @@ class TestSignUp1:
         util.reset_sign_up_test_data(self.test_data)
         self.recording_schedule.approval_status = RecordingApprovalStatus.NOT_INVITED
         self.recording_schedule.scheduling_status = RecordingSchedulingStatus.NOT_SCHEDULED
+
+    def test_run_initial_canvas_job(self):
+        self.jobs_page.load_page()
+        self.jobs_page.run_canvas_job()
 
     def test_delete_old_canvas_sites(self):
         self.canvas_page.delete_section_sites(self.section)
@@ -201,7 +206,8 @@ class TestSignUp1:
         assert self.sign_up_page.visible_instructors() == instructor_names
 
     def test_visible_meeting_days(self):
-        assert self.sign_up_page.visible_meeting_days()[0] == self.meeting.days
+        term_dates = f'{SignUpPage.expected_term_date_str(self.meeting.start_date, self.meeting.end_date)}'
+        assert self.sign_up_page.visible_meeting_days()[0] == f'{self.meeting.days}\n{term_dates}'
 
     def test_visible_meeting_time(self):
         assert self.sign_up_page.visible_meeting_time()[0] == f'{self.meeting.start_time} - {self.meeting.end_time}'
@@ -324,12 +330,14 @@ class TestSignUp1:
         assert self.room_page.series_row_end_date(self.recording_schedule) == self.term.end_date
 
     def test_room_series_days(self):
-        assert self.room_page.series_row_days(self.recording_schedule) == self.meeting.replace(' ', '')
+        assert self.room_page.series_row_days(self.recording_schedule) == self.meeting.days.replace(' ', '')
 
     def test_series_recordings(self):
         self.room_page.expand_series_row(self.recording_schedule)
         expected = util.expected_recording_dates(self.section.term, self.meeting)
         visible = self.room_page.series_recording_start_dates(self.recording_schedule)
+        app.logger.info(f'Missing: {list(set(expected) - set(visible))}')
+        app.logger.info(f'Unexpected: {list(set(visible) - set(expected))} ')
         assert visible == expected
 
     # VERIFY OUIJA FILTER
@@ -539,7 +547,8 @@ class TestSignUp1:
     # CREATE COURSE SITE
 
     def test_create_course_site(self):
-        self.canvas_page.provision_site(self.section, [self.section.ccn])
+        self.canvas_page.log_in()
+        self.canvas_page.provision_site(self.section, [self.section.ccn], self.site)
 
     def test_enable_media_gallery(self):
         self.canvas_page.enable_media_gallery(self.site)
@@ -565,6 +574,7 @@ class TestSignUp1:
         self.kaltura_page.wait_for_delete_button()
 
     def test_kaltura_published_status(self):
+        self.kaltura_page.wait_for_publish_category_el()
         assert self.kaltura_page.is_published()
 
     def test_kaltura_course_site_count(self):

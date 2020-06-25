@@ -187,6 +187,9 @@ class Page(object):
 
     # NAVIGATION AND KEYSTROKES
 
+    def reload_page(self):
+        self.driver.refresh()
+
     def scroll_to_top(self):
         self.driver.execute_script('window.scrollTo(0, 0);')
 

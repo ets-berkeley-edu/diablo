@@ -203,9 +203,9 @@ def reset_invite_test_data(term, section, instructor=None):
     std_commit(allow_test_environment=True)
 
 
-def set_course_room(section):
+def set_course_room(section, meeting):
     sql = f"""UPDATE sis_sections
-              SET meeting_location = '{section.room.name}'
+              SET meeting_location = '{meeting.room.name}'
               WHERE section_id = {section.ccn}
                 AND term_id = {section.term.id}
     """

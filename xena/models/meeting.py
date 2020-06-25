@@ -26,6 +26,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 from datetime import datetime
 from datetime import timedelta
 
+from flask import current_app as app
 from xena.models.room import Room
 
 
@@ -33,6 +34,16 @@ class Meeting(object):
 
     def __init__(self, data):
         self.data = data
+
+    @property
+    def start_date(self):
+        date_str = self.data['start_date'] or app.config['CURRENT_TERM_BEGIN']
+        return datetime.strptime(date_str, '%Y-%m-%d')
+
+    @property
+    def end_date(self):
+        date_str = self.data['end_date'] or app.config['CURRENT_TERM_END']
+        return datetime.strptime(date_str, '%Y-%m-%d')
 
     @property
     def days(self):

@@ -81,6 +81,12 @@ class SignUpPage(DiabloPages):
         return By.XPATH, f'//a[@id="canvas-course-site-{site.site_id}"]'
 
     @staticmethod
+    def expected_term_date_str(start_date, end_date):
+        start_str = start_date.strftime('%b %-d, %Y')
+        end_str = end_date.strftime('%b %-d, %Y')
+        return f'{start_str} to {end_str}'
+
+    @staticmethod
     def kaltura_series_link(recording_schedule):
         return By.PARTIAL_LINK_TEXT, f'Kaltura series {recording_schedule.series_id}'
 

@@ -136,6 +136,7 @@ class CanvasPage(Page):
         Wait(self.driver, util.get_long_timeout()).until(ec.url_contains('/courses/'))
         parts = self.driver.current_url.split('/')
         site.site_id = [i for i in parts if i][-1]
+        app.logger.info(f'Site ID is {site.site_id}')
         section.sites.append(site)
 
     def delete_site(self, site_id):
@@ -166,19 +167,22 @@ class CanvasPage(Page):
         return By.XPATH, f'//ul[@id="nav_enabled_list"]/li[contains(.,"{tool.value}")]'
 
     def enable_tool(self, site, tool):
-        app.logger.info(f'Enabling {tool} on site ID {site.site_id}')
-        self.driver.get(f'{app.config["CANVAS_BASE_URL"]}/courses/{site.site_id}/settings')
-        self.wait_for_page_and_click(CanvasPage.NAVIGATION_LINK)
-        self.hide_canvas_footer()
-        self.wait_for_element_and_click(CanvasPage.disabled_tool_locator(tool))
-        self.wait_for_element_and_click(CanvasPage.enable_tool_link_locator(tool))
-        Wait(self.driver, util.get_medium_timeout()).until(
-            ec.visibility_of_element_located(CanvasPage.enabled_tool_locator(tool)),
-        )
-        self.wait_for_element_and_click(CanvasPage.TOOL_SAVE_BUTTON)
-        Wait(self.driver, util.get_medium_timeout()).until(
-            ec.visibility_of_element_located(CanvasPage.tool_nav_link_locator(tool)),
-        )
+        if self.is_present(CanvasPage.tool_nav_link_locator(tool)):
+            app.logger.info(f'{tool} is already enabled')
+        else:
+            app.logger.info(f'Enabling {tool} on site ID {site.site_id}')
+            self.driver.get(f'{app.config["CANVAS_BASE_URL"]}/courses/{site.site_id}/settings')
+            self.wait_for_page_and_click(CanvasPage.NAVIGATION_LINK)
+            self.hide_canvas_footer()
+            self.wait_for_element_and_click(CanvasPage.disabled_tool_locator(tool))
+            self.wait_for_element_and_click(CanvasPage.enable_tool_link_locator(tool))
+            Wait(self.driver, util.get_medium_timeout()).until(
+                ec.visibility_of_element_located(CanvasPage.enabled_tool_locator(tool)),
+            )
+            self.wait_for_element_and_click(CanvasPage.TOOL_SAVE_BUTTON)
+            Wait(self.driver, util.get_medium_timeout()).until(
+                ec.visibility_of_element_located(CanvasPage.tool_nav_link_locator(tool)),
+            )
 
     def enable_media_gallery(self, site):
         self.enable_tool(site, KalturaLTITool.MEDIA_GALLERY)
