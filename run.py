@@ -51,6 +51,13 @@ if __name__.startswith('_mod_wsgi'):
     for line in shell_environment.stdout:
         key, _, value = line.decode('utf-8').rstrip().partition('=')
         os.environ[key] = value
+    # Grab the current EC2 instance id and stash it in an environment variable.
+    try:
+        instance_metadata = subprocess.Popen(['ec2-metadata', '-i'], stdout=subprocess.PIPE)
+        os.environ['EC2_INSTANCE_ID'] = next(instance_metadata.stdout).decode('utf-8').partition(':')[2].strip()
+    except Exception:
+        pass
+
 
 application = create_app()
 
@@ -68,11 +75,4 @@ if __name__ == '__main__':
     application.logger.info('Starting development server on %s:%s', host, port)
     application.run(host=host, port=port)
 elif __name__.startswith('_mod_wsgi'):
-    # Grab the current EC2 instance id and stash it in an environment variable.
-    try:
-        instance_metadata = subprocess.Popen(['ec2-metadata', '-i'], stdout=subprocess.PIPE)
-        os.environ['EC2_INSTANCE_ID'] = next(instance_metadata.stdout).decode('utf-8').partition(':')[2].strip()
-    except Exception as e:
-        application.logger.error(f'Could not retrieve current EC2 instance id: {e}')
-
     application.logger.info('Will start WSGI server on %s:%s', host, port)
