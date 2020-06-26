@@ -25,6 +25,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 
 from datetime import datetime
 
+from flask import current_app as app
 import pytest
 from xena.models.canvas_site import CanvasSite
 from xena.models.email import Email
@@ -67,6 +68,10 @@ class TestSignUp3:
         self.ouija_page.click_jobs_link()
         self.jobs_page.run_queued_emails_job()
         self.jobs_page.disable_all_jobs()
+
+    def test_run_initial_canvas_job(self):
+        self.jobs_page.load_page()
+        self.jobs_page.run_canvas_job()
 
     def test_delete_old_kaltura_series(self):
         self.kaltura_page.log_in_via_calnet()
@@ -231,7 +236,8 @@ class TestSignUp3:
         assert self.sign_up_page.visible_instructors() == instructor_names
 
     def test_visible_meeting_days(self):
-        assert self.sign_up_page.visible_meeting_days()[0] == self.meeting.days
+        term_dates = f'{SignUpPage.expected_term_date_str(self.meeting.start_date, self.meeting.end_date)}'
+        assert self.sign_up_page.visible_meeting_days()[0] == f'{self.meeting.days}\n{term_dates}'
 
     def test_visible_meeting_time(self):
         assert self.sign_up_page.visible_meeting_time()[0] == f'{self.meeting.start_time} - {self.meeting.end_time}'
@@ -240,7 +246,7 @@ class TestSignUp3:
         assert self.sign_up_page.visible_rooms()[0] == self.meeting.room.name
 
     def test_visible_course_site(self):
-        assert self.sign_up_page.visible_course_site_ids() == [site.id for site in self.section.sites]
+        assert self.sign_up_page.visible_course_site_ids() == [site.site_id for site in self.section.sites]
 
     def test_visible_listings(self):
         listing_codes = [li.code for li in self.section.listings]
@@ -439,6 +445,8 @@ class TestSignUp3:
         self.room_page.expand_series_row(self.recording_schedule)
         expected = util.expected_recording_dates(self.section.term, self.meeting)
         visible = self.room_page.series_recording_start_dates(self.recording_schedule)
+        app.logger.info(f'Missing: {list(set(expected) - set(visible))}')
+        app.logger.info(f'Unexpected: {list(set(visible) - set(expected))} ')
         assert visible == expected
 
     # VERIFY OUIJA FILTER
@@ -499,12 +507,6 @@ class TestSignUp3:
         for instr in self.section.instructors:
             assert self.kaltura_page.collaborator_perm(instr) == 'Co-Editor'
 
-    def test_series_publish_status(self):
-        assert self.kaltura_page.is_private()
-
-    def test_series_no_category(self):
-        assert len(self.kaltura_page.publish_category_els()) == 0
-
     def test_recur_weekly(self):
         self.kaltura_page.open_recurrence_modal()
         assert self.kaltura_page.is_weekly_checked()
@@ -555,6 +557,13 @@ class TestSignUp3:
         end = self.meeting.get_berkeley_end_time()
         visible_end = datetime.strptime(self.kaltura_page.visible_end_time(), '%I:%M %p')
         assert visible_end == end
+
+    def test_series_publish_status(self):
+        self.kaltura_page.close_recurrence_modal()
+        assert self.kaltura_page.is_private()
+
+    def test_series_no_category(self):
+        assert len(self.kaltura_page.publish_category_els()) == 0
 
     def test_close_kaltura_window(self):
         self.kaltura_page.close_window_and_switch()

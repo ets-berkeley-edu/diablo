@@ -15,6 +15,8 @@
       ],
       "meetings": [
         {
+          "start_date": null,
+          "end_date": null,
           "days": "Tuesday, Thursday",
           "start_time": "12:30pm",
           "end_time": "01:59pm",
@@ -41,6 +43,8 @@
       ],
       "meetings": [
         {
+          "start_date": null,
+          "end_date": null,
           "days": "Tuesday, Thursday",
           "start_time": "12:30pm",
           "end_time": "01:59pm",
@@ -74,6 +78,8 @@
       ],
       "meetings": [
         {
+          "start_date": null,
+          "end_date": null,
           "days": "Tuesday, Thursday",
           "start_time": "12:30pm",
           "end_time": "01:59pm",
@@ -107,6 +113,8 @@
       ],
       "meetings": [
         {
+          "start_date": null,
+          "end_date": null,
           "days": "Tuesday, Thursday",
           "start_time": "12:30pm",
           "end_time": "01:59pm",
@@ -133,6 +141,8 @@
       ],
       "meetings": [
         {
+          "start_date": null,
+          "end_date": null,
           "days": "Tuesday, Thursday",
           "start_time": "12:30pm",
           "end_time": "01:59pm",
@@ -159,6 +169,8 @@
       ],
       "meetings": [
         {
+          "start_date": null,
+          "end_date": null,
           "days": "Tuesday, Thursday",
           "start_time": "12:30pm",
           "end_time": "01:59pm",
@@ -185,6 +197,8 @@
       ],
       "meetings": [
         {
+          "start_date": null,
+          "end_date": null,
           "days": "Tuesday, Thursday",
           "start_time": "12:30pm",
           "end_time": "01:59pm",

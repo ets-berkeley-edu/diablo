@@ -47,7 +47,7 @@ class KalturaPage(Page):
     SERIES_STATUS_PRIVATE_RADIO = (By.ID, 'private')
     SERIES_STATUS_UNLISTED_RADIO = (By.ID, 'unlisted')
     SERIES_STATUS_PUBLISHED_RADIO = (By.ID, 'published')
-    SERIES_CATEGORY_ROW = (By.XPATH, '//div[@class="pblBadge"]/dl')
+    SERIES_CATEGORY_ROW = (By.XPATH, '//div[@class="pblBadge"]/dl//span')
     SERIES_RECUR_BUTTON = (By.ID, 'CreateEvent-recurrenceMain')
     SERIES_DELETE_BUTTON = (By.ID, 'CreateEvent-btnDelete')
     SERIES_DELETE_CONFIRM_BUTTON = (By.XPATH, '//div[@class="modal-footer"]/a[text()="Delete"]')
@@ -98,6 +98,9 @@ class KalturaPage(Page):
     def collaborator_perm(self, user):
         return self.element((By.XPATH, f'//tr[@id="collaborator_{user.uid}"]/td[3]')).text.strip()
 
+    def wait_for_publish_category_el(self):
+        self.wait_for_element(KalturaPage.SERIES_CATEGORY_ROW, util.get_medium_timeout())
+
     def is_private(self):
         return self.element(KalturaPage.SERIES_STATUS_PRIVATE_RADIO).is_selected()
 
@@ -117,6 +120,11 @@ class KalturaPage(Page):
         app.logger.info('Clicking recurrence button')
         self.wait_for_element_and_click(KalturaPage.SERIES_RECUR_BUTTON)
         self.wait_for_element(KalturaPage.RECUR_MODAL_H3, util.get_short_timeout())
+
+    def close_recurrence_modal(self):
+        app.logger.info('Closing recurrence modal')
+        self.wait_for_element_and_click(KalturaPage.RECUR_MODAL_CANCEL_BUTTON)
+        self.when_not_present(KalturaPage.RECUR_MODAL_CANCEL_BUTTON, util.get_short_timeout())
 
     def visible_series_title(self):
         return self.element(KalturaPage.SERIES_TITLE).get_attribute('value')

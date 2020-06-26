@@ -25,6 +25,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 
 from datetime import datetime
 
+from flask import current_app as app
 import pytest
 from xena.models.canvas_site import CanvasSite
 from xena.models.email import Email
@@ -79,6 +80,10 @@ class TestSignUp2:
     def test_delete_old_kaltura_series(self):
         self.kaltura_page.log_in_via_calnet()
         self.kaltura_page.reset_test_data(self.term, self.recording_schedule)
+
+    def test_run_initial_canvas_job(self):
+        self.jobs_page.load_page()
+        self.jobs_page.run_canvas_job()
 
     def test_delete_old_canvas_sites(self):
         self.canvas_page.delete_section_sites(self.section)
@@ -222,7 +227,8 @@ class TestSignUp2:
         assert self.sign_up_page.visible_instructors() == instructor_names
 
     def test_visible_meeting_days(self):
-        assert self.sign_up_page.visible_meeting_days()[0] == self.meeting.days
+        term_dates = f'{SignUpPage.expected_term_date_str(self.meeting.start_date, self.meeting.end_date)}'
+        assert self.sign_up_page.visible_meeting_days()[0] == f'{self.meeting.days}\n{term_dates}'
 
     def test_visible_meeting_time(self):
         assert self.sign_up_page.visible_meeting_time()[0] == f'{self.meeting.start_time} - {self.meeting.end_time}'
@@ -465,8 +471,6 @@ class TestSignUp2:
     # VERIFY 'NOTIFY INSTRUCTOR OF CHANGES' EMAIL IS SENT TO INSTRUCTOR 1 ONLY
 
     def test_send_notify_of_changes_email(self):
-        self.sign_up_page.log_out()
-        self.login_page.dev_auth()
         self.ouija_page.click_jobs_link()
         self.jobs_page.run_queued_emails_job()
 
@@ -515,6 +519,8 @@ class TestSignUp2:
         self.room_page.expand_series_row(self.recording_schedule)
         expected = util.expected_recording_dates(self.section.term, self.meeting)
         visible = self.room_page.series_recording_start_dates(self.recording_schedule)
+        app.logger.info(f'Missing: {list(set(expected) - set(visible))}')
+        app.logger.info(f'Unexpected: {list(set(visible) - set(expected))} ')
         assert visible == expected
 
     # VERIFY OUIJA FILTER
@@ -575,15 +581,6 @@ class TestSignUp2:
         for instr in self.section.instructors:
             assert self.kaltura_page.collaborator_perm(instr) == 'Co-Editor'
 
-    def test_series_publish_status(self):
-        assert self.kaltura_page.published()
-
-    def test_kaltura_course_site_count_one(self):
-        assert len(self.kaltura_page.publish_category_els) == 1
-
-    def test_kaltura_course_site_one(self):
-        assert self.kaltura_page.is_publish_category_present(self.site)
-
     def test_recur_weekly(self):
         self.kaltura_page.open_recurrence_modal()
         assert self.kaltura_page.is_weekly_checked()
@@ -635,6 +632,17 @@ class TestSignUp2:
         visible_end = datetime.strptime(self.kaltura_page.visible_end_time(), '%I:%M %p')
         assert visible_end == end
 
+    def test_series_publish_status(self):
+        self.kaltura_page.reload_page()
+        self.kaltura_page.wait_for_publish_category_el()
+        assert self.kaltura_page.is_published()
+
+    def test_kaltura_course_site_count_one(self):
+        assert len(self.kaltura_page.publish_category_els()) == 1
+
+    def test_kaltura_course_site_one(self):
+        assert self.kaltura_page.is_publish_category_present(self.site_1)
+
     def test_close_kaltura_window(self):
         self.kaltura_page.close_window_and_switch()
 
@@ -682,9 +690,12 @@ class TestSignUp2:
         self.canvas_page.click_my_media_tool()
 
     def test_run_canvas_job_site_two(self):
-        self.jobs_page.load_page()
+        self.sign_up_page.load_page(self.section)
+        self.sign_up_page.log_out()
+        self.login_page.dev_auth()
+        self.ouija_page.click_jobs_link()
         self.jobs_page.run_canvas_job()
-        self.jobs_page_run_kaltura_job()
+        self.jobs_page.run_kaltura_job()
 
     def test_two_visible_site_ids(self):
         self.sign_up_page.load_page(self.section)
@@ -697,10 +708,11 @@ class TestSignUp2:
         self.kaltura_page.wait_for_delete_button()
 
     def test_kaltura_published_status(self):
+        self.kaltura_page.wait_for_publish_category_el()
         assert self.kaltura_page.is_published()
 
     def test_kaltura_course_site_count_two(self):
-        assert len(self.kaltura_page.publish_category_els) == 2
+        assert len(self.kaltura_page.publish_category_els()) == 2
 
     def test_kaltura_course_site_both(self):
         assert self.kaltura_page.is_publish_category_present(self.site_1)
@@ -728,7 +740,8 @@ class TestSignUp2:
         self.kaltura_page.wait_for_delete_button()
 
     def test_kaltura_course_site_count_still_two(self):
-        assert len(self.kaltura_page.publish_category_els) == 2
+        self.kaltura_page.wait_for_publish_category_el()
+        assert len(self.kaltura_page.publish_category_els()) == 2
 
     def test_kaltura_course_site_still_both(self):
         assert self.kaltura_page.is_publish_category_present(self.site_1)
