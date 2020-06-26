@@ -22,13 +22,16 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
+import os
 import traceback
 
+from diablo import db
 from diablo.jobs.errors import BackgroundJobError
 from diablo.merged.emailer import send_system_error_email
 from diablo.models.job import Job
 from diablo.models.job_history import JobHistory
 from flask import current_app as app
+from sqlalchemy import text
 
 
 class BaseJob:
@@ -40,8 +43,14 @@ class BaseJob:
         with self.app_context():
             job = Job.get_job_by_key(self.key())
             if job:
+                current_instance_id = os.environ.get('EC2_INSTANCE_ID')
+                job_runner_id = fetch_job_runner_id()
+
                 if job.disabled and not force_run:
                     app.logger.warn(f'Job {self.key()} is disabled. It will not run.')
+
+                elif current_instance_id and current_instance_id != job_runner_id:
+                    app.logger.warn(f'Skipping job because current instance {current_instance_id} is not job runner {job_runner_id}')
 
                 elif JobHistory.is_job_running(job_key=self.key()):
                     app.logger.warn(f'Skipping job {self.key()} because an older instance is still running')
@@ -76,3 +85,7 @@ class BaseJob:
     @classmethod
     def description(cls):
         raise BackgroundJobError('Implement this method in Job sub-class')
+
+
+def fetch_job_runner_id():
+    return db.session.execute(text('SELECT ec2_instance_id FROM job_runner LIMIT 1')).scalar()

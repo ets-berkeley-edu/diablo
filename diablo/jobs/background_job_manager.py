@@ -23,9 +23,11 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 from datetime import datetime
+import os
 import threading
 import time
 
+from diablo.externals import rds
 from diablo.jobs.base_job import BaseJob
 from diablo.jobs.errors import BackgroundJobError
 from diablo.models.job import Job
@@ -79,6 +81,14 @@ class BackgroundJobManager:
                 {[job_config.to_api_json() for job_config in job_configs]}
 
             """)
+
+        # If running on EC2, tell the database that this instance is the one now running scheduled jobs.
+        instance_id = os.environ.get('EC2_INSTANCE_ID')
+        if instance_id:
+            rds.execute(
+                'DELETE FROM job_runner; INSERT INTO job_runner (ec2_instance_id) VALUES (%s);',
+                params=(instance_id,),
+            )
 
         # Clean up history for any older jobs that got lost.
         JobHistory.fail_orphans()

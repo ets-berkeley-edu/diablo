@@ -227,6 +227,12 @@ ALTER TABLE ONLY job_history
 
 --
 
+CREATE TABLE job_runner (
+    ec2_instance_id VARCHAR(80) NOT NULL
+);
+
+--
+
 CREATE TABLE jobs (
     id INTEGER NOT NULL,
     disabled BOOLEAN NOT NULL,
