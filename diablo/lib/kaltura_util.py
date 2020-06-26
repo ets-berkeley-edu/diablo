@@ -90,13 +90,7 @@ def events_to_api_json(scheduled_events):
                 'updatedAt': epoch_time_to_isoformat(event.updatedAt),
             }
 
-    raw_list = [_event_to_json(event) for event in scheduled_events]
-    recurring_events = list(filter(lambda e: e['recurrenceType'] == 'Recurring', raw_list))
-    standalone_events = list(filter(lambda e: e['recurrenceType'] not in ['Recurrence', 'Recurring'], raw_list))
-    for recurring_event in recurring_events:
-        recurring_event['children'] = list(filter(lambda e: e.get('parentId') == recurring_event['id'], raw_list))
-
-    return recurring_events + standalone_events
+    return [_event_to_json(event) for event in scheduled_events]
 
 
 def get_classification_name(classification_type):

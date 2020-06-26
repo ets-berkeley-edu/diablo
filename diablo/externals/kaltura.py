@@ -67,19 +67,20 @@ class Kaltura:
         events = []
         for blackout_date in blackout_dates:
             try:
-                date_format = '%Y-%m-%d %H:%M'
-                start_time = datetime.strptime(f'{blackout_date} 00:00', date_format).replace(tzinfo=default_timezone())
-                end_time = datetime.strptime(f'{blackout_date} 23:59', date_format).replace(tzinfo=default_timezone())
-                summary = f'Academic and Administrative Holiday: {blackout_date}'
+                blackout_start = datetime.strptime(blackout_date, '%Y-%m-%d').replace(hour=0, minute=0).timestamp()
+                one_day_in_seconds = 86400
                 event = KalturaBlackoutScheduleEvent(
                     # https://developer.kaltura.com/api-docs/General_Objects/Objects/KalturaScheduleEvent
                     classificationType=KalturaScheduleEventClassificationType.PUBLIC_EVENT,
-                    endDate=int(end_time.timestamp()),
-                    startDate=int(start_time.timestamp()),
+                    duration=one_day_in_seconds,
+                    endDate=blackout_start + one_day_in_seconds,
+                    startDate=blackout_start,
+                    organizer=app.config['KALTURA_EVENT_ORGANIZER'],
                     ownerId=app.config['KALTURA_KMS_OWNER_ID'],
+                    partnerId=self.kaltura_partner_id,
                     recurrenceType=KalturaScheduleEventRecurrenceType.NONE,
                     status=KalturaScheduleEventStatus.ACTIVE,
-                    summary=summary,
+                    summary=f'Academic and Administrative Holiday: {blackout_date}',
                     tags=CREATED_BY_DIABLO_TAG,
                 )
                 events.append(self.kaltura_client.schedule.scheduleEvent.add(event))
@@ -192,6 +193,15 @@ class Kaltura:
             room=room,
             term_id=term_id,
         )
+        recurrences_filter = KalturaScheduleEventFilter(parentIdEqual=kaltura_schedule.id)
+        for recurrence in self._get_events(kaltura_event_filter=recurrences_filter):
+            if recurrence['blackoutConflicts']:
+                self.kaltura_client.schedule.scheduleEvent.cancel(recurrence['id'])
+                app.logger.warn(f"""
+                    {course_label}: Event {recurrence['id']}), a child of Kaltura series {kaltura_schedule.id},
+                    cancelled due to blackout conflict(s): {recurrence['blackoutConflicts']}
+                """)
+
         # Link the schedule to the room (ie, capture agent)
         self._attach_scheduled_recordings_to_room(kaltura_schedule=kaltura_schedule, room=room)
         return kaltura_schedule.id
@@ -266,10 +276,6 @@ class Kaltura:
             room,
             term_id,
     ):
-        term_name = term_name_for_sis_id(term_id)
-        start_date = get_recording_start_date(meeting)
-        term_end = get_recording_end_date(meeting)
-
         # Recording starts X minutes before/after official start; it ends Y minutes before/after official end time.
         days = format_days(meeting['days'])
         start_time = _adjust_time(meeting['startTime'], app.config['KALTURA_RECORDING_OFFSET_START'])
@@ -283,6 +289,9 @@ class Kaltura:
                 Recording: {recording_type}; {publish_type}
         """)
 
+        term_name = term_name_for_sis_id(term_id)
+        recording_start_date = get_recording_start_date(meeting)
+        recording_end_date = get_recording_end_date(meeting)
         summary = f'{course_label} ({term_name})'
         description = f"""{course_label} ({term_name}) meets in {room.location},
             between {start_time.strftime('%H:%M')} and {end_time.strftime('%H:%M')}, on {days}.
@@ -291,13 +300,13 @@ class Kaltura:
 
         first_day_start = get_first_matching_datetime_of_term(
             meeting_days=days,
-            start_date=start_date,
+            start_date=recording_start_date,
             time_hours=start_time.hour,
             time_minutes=start_time.minute,
         )
         first_day_end = get_first_matching_datetime_of_term(
             meeting_days=days,
-            start_date=start_date,
+            start_date=recording_start_date,
             time_hours=end_time.hour,
             time_minutes=end_time.minute,
         )
@@ -328,7 +337,7 @@ class Kaltura:
                 interval=1,
                 name=summary,
                 timeZone='US/Pacific',
-                until=term_end.replace(hour=23, minute=59).timestamp(),
+                until=recording_end_date.replace(hour=23, minute=59).timestamp(),
                 weekStartDay=days[0],
             ),
             recurrenceType=KalturaScheduleEventRecurrenceType.RECURRING,

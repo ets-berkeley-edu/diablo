@@ -12,7 +12,7 @@
       </v-row>
       <v-row>
         <v-col lg="3" md="3" sm="3">
-          <CoursePageSidebar :after-unschedule="render" :course="course" />
+          <CoursePageSidebar :after-unschedule="afterUnschedule" :course="course" />
         </v-col>
         <v-col>
           <v-card class="pa-6" outlined>
@@ -255,6 +255,11 @@
       })
     },
     methods: {
+      afterUnschedule(data) {
+        this.publishType = undefined
+        this.recordingType = undefined
+        this.render(data)
+      },
       approve() {
         this.isApproving = true
         approve(this.publishType, this.recordingType, this.course.sectionId).then(data => {
