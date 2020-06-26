@@ -81,6 +81,7 @@ DROP TABLE IF EXISTS public.instructors;
 DROP TABLE IF EXISTS public.job_history;
 DROP SEQUENCE IF EXISTS job_history_id_seq;
 DROP TABLE IF EXISTS public.jobs;
+DROP TABLE IF EXISTS public.job_runner;
 DROP SEQUENCE IF EXISTS jobs_id_seq;
 DROP TABLE IF EXISTS public.queued_emails;
 DROP SEQUENCE IF EXISTS public.queued_emails_id_seq;
