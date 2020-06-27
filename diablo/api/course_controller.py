@@ -23,6 +23,7 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 from datetime import datetime
+import traceback
 
 from diablo.api.errors import BadRequestError, ForbiddenRequestError, ResourceNotFoundError
 from diablo.api.util import admin_required, csv_download_response, get_search_filter_options
@@ -31,6 +32,7 @@ from diablo.jobs.util import schedule_recordings
 from diablo.lib.berkeley import term_name_for_sis_id
 from diablo.lib.http import tolerant_jsonify
 from diablo.lib.interpolator import get_sign_up_url
+from diablo.merged.emailer import send_system_error_email
 from diablo.models.approval import Approval, get_all_publish_types, get_all_recording_types
 from diablo.models.course_preference import CoursePreference
 from diablo.models.queued_email import notify_instructor_waiting_for_approval, notify_instructors_of_changes
@@ -115,9 +117,8 @@ def get_course(term_id, section_id):
 
     if current_user.is_admin and course['scheduled']:
         # When debugging, the raw Kaltura-provided JSON is useful.
-        kaltura_schedule_id = course['scheduled'].get('kalturaScheduleId')
-        course['scheduled']['kalturaSchedule'] = Kaltura().get_schedule_event(kaltura_schedule_id)
-
+        event_id = course['scheduled'].get('kalturaScheduleId')
+        course['scheduled']['kalturaSchedule'] = Kaltura().get_event(event_id)
     return tolerant_jsonify(course)
 
 
@@ -182,16 +183,21 @@ def unschedule():
     if not (course['scheduled'] or course['hasNecessaryApprovals']):
         raise BadRequestError(f'Section id {section_id}, term id {term_id} is not currently scheduled or queued for scheduling')
 
-    kaltura_schedule_id = (course.get('scheduled') or {}).get('kalturaScheduleId')
     Approval.delete(term_id=term_id, section_id=section_id)
     Scheduled.delete(term_id=term_id, section_id=section_id)
 
-    if kaltura_schedule_id:
+    event_id = (course.get('scheduled') or {}).get('kalturaScheduleId')
+    if event_id:
         try:
-            Kaltura().delete_event(kaltura_schedule_id)
+            Kaltura().delete(event_id)
         except (KalturaClientException, KalturaException) as e:
-            app.logger.error(f'Failed to delete Kaltura schedule: {kaltura_schedule_id}')
+            message = f'Failed to delete Kaltura schedule: {event_id}'
+            app.logger.error(message)
             app.logger.exception(e)
+            send_system_error_email(
+                message=f'{message}\n\n<pre>{traceback.format_exc()}</pre>',
+                subject=message,
+            )
 
     CoursePreference.update_opt_out(
         term_id=term_id,

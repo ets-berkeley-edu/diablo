@@ -61,7 +61,7 @@ def _update_already_scheduled_events():
     for course in SisSection.get_courses_scheduled(term_id=app.config['CURRENT_TERM_ID']):
         course_name = course['label']
         scheduled = course['scheduled']
-        kaltura_schedule = kaltura.get_schedule_event(scheduled['kalturaScheduleId'])
+        kaltura_schedule = kaltura.get_event(event_id=scheduled['kalturaScheduleId'])
         if kaltura_schedule and course['canvasCourseSites'] and scheduled['publishType'] == 'kaltura_media_gallery':
             # From Kaltura, get Canvas course sites (categories) currently mapped to the course.
             template_entry_id = kaltura_schedule['templateEntryId']
