@@ -32,15 +32,17 @@ def flatten_location(name):
 
 
 def get_recording_end_date(meeting):
+    term_end = datetime.strptime(app.config['CURRENT_TERM_END'], '%Y-%m-%d')
     actual_end = datetime.strptime(meeting['endDate'].split()[0], '%Y-%m-%d')
-    diablo_end = datetime.strptime(app.config['CURRENT_TERM_END'], '%Y-%m-%d')
-    return actual_end if actual_end < diablo_end else diablo_end
+    return actual_end if actual_end < term_end else term_end
 
 
 def get_recording_start_date(meeting):
+    term_begin = datetime.strptime(app.config['CURRENT_TERM_BEGIN'], '%Y-%m-%d')
     actual_start = datetime.strptime(meeting['startDate'].split()[0], '%Y-%m-%d')
-    diablo_start = datetime.strptime(app.config['CURRENT_TERM_BEGIN'], '%Y-%m-%d')
-    return actual_start if actual_start > diablo_start else diablo_start
+    start_date = actual_start if actual_start > term_begin else term_begin
+    today = datetime.today()
+    return start_date if start_date > today else today
 
 
 def term_name_for_sis_id(sis_id=None):

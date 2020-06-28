@@ -56,7 +56,7 @@ def delete_kaltura_events(rehearsal):
 
             for event in kaltura_events:
                 if not rehearsal:
-                    kaltura.delete_event(kaltura_schedule_id=event['id'])
+                    kaltura.delete(kaltura_schedule_id=event['id'])
                 _print(f'Deleted --> {event["description"] or event["summary"]}')
         else:
             _print(f'No events found with tag {CREATED_BY_DIABLO_TAG}')
@@ -103,17 +103,3 @@ def assign_blackout_dates(rehearsal):
             _print('Empty list of blackout_dates in Diablo config file.')
 
         _print('Have a nice day!')
-
-
-@application.cli.command('delete_kaltura_event_by_id')
-@click.argument('event_id')
-def delete_kaltura_event(event_id):
-    """Delete Kaltura event."""
-    with application.app_context():
-        from diablo.externals.kaltura import Kaltura
-
-        Kaltura().delete_event(kaltura_schedule_id=event_id)
-        print(f"""
-            Kaltura event {event_id} deleted.
-            Have a nice day.
-        """)

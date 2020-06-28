@@ -22,7 +22,7 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from diablo.lib.berkeley import get_recording_end_date, get_recording_start_date
 from flask import current_app as app
@@ -32,20 +32,31 @@ from tests.util import override_config
 class TestRecordingDates:
 
     def test_recording_end_date(self):
-        diablo_end = '2020-11-25'
-        with override_config(app, 'CURRENT_TERM_END', diablo_end):
-            def _get_recording_end_date(end_date):
-                return get_recording_end_date(meeting={'endDate': end_date})
-            assert _get_recording_end_date('2020-12-11 00:00:00 UTC') == _to_datetime(diablo_end)
-            assert _get_recording_end_date('2020-11-01 00:00:00 UTC') == _to_datetime('2020-11-01')
+        term_end = '2525-11-25'
+        with override_config(app, 'CURRENT_TERM_END', term_end):
+            meeting = {'endDate': '2525-12-11 00:00:00 UTC'}
+            assert get_recording_end_date(meeting) == _to_datetime(term_end)
+
+            meeting = {'endDate': '2525-11-01 00:00:00 UTC'}
+            assert get_recording_end_date(meeting) == _to_datetime('2525-11-01')
 
     def test_recording_start_date(self):
-        diablo_start = '2020-09-07'
-        with override_config(app, 'CURRENT_TERM_BEGIN', diablo_start):
-            def _get_recording_start_date(start_date):
-                return get_recording_start_date(meeting={'startDate': start_date})
-            assert _get_recording_start_date('2020-08-26 00:00:00 UTC') == _to_datetime(diablo_start)
-            assert _get_recording_start_date('2020-09-14 00:00:00 UTC') == _to_datetime('2020-09-14')
+        term_begin = '2525-09-07'
+        with override_config(app, 'CURRENT_TERM_BEGIN', term_begin):
+            meeting = {'startDate': '2525-08-26 00:00:00 UTC'}
+            assert get_recording_start_date(meeting) == _to_datetime(term_begin)
+
+            meeting = {'startDate': '2525-09-14 00:00:00 UTC'}
+            assert get_recording_start_date(meeting) == _to_datetime('2525-09-14')
+
+    def test_start_date_is_in_the_past(self):
+        df = '%Y-%m-%d'
+        today = datetime.today()
+        term_begin = today - timedelta(days=7)
+        first_meeting = today - timedelta(days=3)
+        with override_config(app, 'CURRENT_TERM_BEGIN', datetime.strftime(term_begin, df)):
+            meeting = {'startDate': f'{datetime.strftime(first_meeting, df)} 00:00:00 UTC'}
+            assert datetime.strftime(get_recording_start_date(meeting), df) == datetime.strftime(today, df)
 
 
 def _to_datetime(date):

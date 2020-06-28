@@ -23,11 +23,14 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 from datetime import date, datetime, time, timedelta
+import json
 
+import dateutil.parser
 from diablo import cachify, skip_when_pytest
 from diablo.lib.berkeley import get_recording_end_date, get_recording_start_date, term_name_for_sis_id
-from diablo.lib.kaltura_util import events_to_api_json, get_first_matching_datetime_of_term
-from diablo.lib.util import default_timezone, format_days, to_isoformat
+from diablo.lib.kaltura_util import get_classification_name, get_first_matching_datetime_of_term, get_recurrence_name, \
+    get_status_name
+from diablo.lib.util import default_timezone, epoch_time_to_isoformat, format_days, to_isoformat
 from flask import current_app as app
 from KalturaClient import KalturaClient, KalturaConfiguration
 from KalturaClient.exceptions import KalturaException
@@ -118,10 +121,6 @@ class Kaltura:
         return self._get_events(kaltura_event_filter=KalturaBlackoutScheduleEventFilter(tagsLike=tags_like))
 
     @skip_when_pytest()
-    def delete_event(self, kaltura_schedule_id):
-        return self.kaltura_client.schedule.scheduleEvent.delete(kaltura_schedule_id)
-
-    @skip_when_pytest()
     def get_categories(self, template_entry_id):
         category_entries = self._get_category_entries(KalturaCategoryEntryFilter(entryIdEqual=template_entry_id))
         if category_entries:
@@ -141,8 +140,8 @@ class Kaltura:
         return self._get_events(kaltura_event_filter=KalturaScheduleEventFilter(tagsLike=tags_like))
 
     @skip_when_pytest()
-    def get_schedule_event(self, kaltura_schedule_id):
-        events = self._get_events(kaltura_event_filter=KalturaScheduleEventFilter(idEqual=kaltura_schedule_id))
+    def get_event(self, event_id):
+        events = self._get_events(kaltura_event_filter=KalturaScheduleEventFilter(idEqual=event_id))
         return events[0] if events else None
 
     @cachify('kaltura/schedule_resources', timeout=30)
@@ -206,6 +205,29 @@ class Kaltura:
         self._attach_scheduled_recordings_to_room(kaltura_schedule=kaltura_schedule, room=room)
         return kaltura_schedule.id
 
+    @skip_when_pytest()
+    def delete(self, event_id):
+        def is_future(kaltura_event):
+            start_date = dateutil.parser.parse(kaltura_event['startDate'])
+            return start_date.timestamp() > datetime.now().timestamp()
+
+        event = self.get_event(event_id)
+        if event:
+            if 'recurrence' in event:
+                # This is a Kaltura series event.
+                if is_future(kaltura_event=event):
+                    # Start date of the series in the future. Delete it all.
+                    self.kaltura_client.schedule.scheduleEvent.delete(event_id)
+                else:
+                    # Series started in the past. Delete only the future 'recurrences'.
+                    recurrences_filter = KalturaScheduleEventFilter(parentIdEqual=event_id)
+                    for recurrence in self._get_events(kaltura_event_filter=recurrences_filter):
+                        if is_future(kaltura_event=recurrence):
+                            self.kaltura_client.schedule.scheduleEvent.cancel(recurrence['id'])
+            else:
+                # This is not a series event. Delete it, whatever it is.
+                self.kaltura_client.schedule.scheduleEvent.delete(event_id)
+
     def ping(self):
         filter_ = KalturaMediaEntryFilter()
         filter_.nameLike = "Love is the drug I'm thinking of"
@@ -247,7 +269,7 @@ class Kaltura:
                 filter=kaltura_event_filter,
                 pager=KalturaFilterPager(pageIndex=page_index, pageSize=DEFAULT_KALTURA_PAGE_SIZE),
             )
-        return events_to_api_json(_get_kaltura_objects(_fetch))
+        return _events_to_api_json(_get_kaltura_objects(_fetch))
 
     def _get_categories(self, kaltura_category_filter):
         def _fetch(page_index):
@@ -420,3 +442,90 @@ def _get_kaltura_objects(_fetch):
 
 def _to_normalized_set(strings):
     return set([s.strip().lower() for s in strings])
+
+
+def _events_to_api_json(scheduled_events):
+    def _event_to_json(event):
+        if isinstance(event, KalturaBlackoutScheduleEvent):
+            return _blackout_to_json(event)
+        else:
+            conflicts = [_blackout_to_json(e) for e in event.blackoutConflicts] if event.blackoutConflicts else None
+            api_json = {
+                'blackoutConflicts': conflicts,
+                'categoryIds': json.loads(event.categoryIds) if event.categoryIds else [],
+                'classificationType': get_classification_name(event.classificationType),
+                'comment': event.comment,
+                'contact': event.contact,
+                'createdAt': epoch_time_to_isoformat(event.createdAt),
+                'description': event.description,
+                'duration': event.duration,
+                'durationFormatted': str(timedelta(seconds=event.duration)) if event.duration else None,
+                'endDate': epoch_time_to_isoformat(event.endDate),
+                'entryIds': event.entryIds,
+                'geoLatitude': event.geoLatitude,
+                'geoLongitude': event.geoLongitude,
+                'id': event.id,
+                'location': event.location,
+                'organizer': event.organizer,
+                'ownerId': event.ownerId,
+                'parentId': event.parentId,
+                'partnerId': event.partnerId,
+                'priority': event.priority,
+                'recurrenceType': get_recurrence_name(event.recurrenceType),
+                'referenceId': event.referenceId,
+                'relatedObjects': event.relatedObjects,
+                'sequence': event.sequence,
+                'startDate': epoch_time_to_isoformat(event.startDate),
+                'status': get_status_name(event.status),
+                'summary': event.summary,
+                'tags': event.tags,
+                'templateEntryId': event.templateEntryId,
+                'updatedAt': epoch_time_to_isoformat(event.updatedAt),
+            }
+            if event.recurrence:
+                api_json['recurrence'] = {
+                    'byDay': event.recurrence.byDay,
+                    'byHour': event.recurrence.byHour,
+                    'byMinute': event.recurrence.byMinute,
+                    'byMonth': event.recurrence.byMonth,
+                    'byMonthDay': event.recurrence.byMonthDay,
+                    'byOffset': event.recurrence.byOffset,
+                    'bySecond': event.recurrence.bySecond,
+                    'byWeekNumber': event.recurrence.byWeekNumber,
+                    'byYearDay': event.recurrence.byYearDay,
+                    'count': event.recurrence.count,
+                    'frequency': event.recurrence.frequency.value.capitalize(),
+                    'interval': event.recurrence.interval,
+                    'name': event.recurrence.name,
+                    'relatedObjects': event.recurrence.relatedObjects,
+                    'timeZone': event.recurrence.timeZone,
+                    'until': epoch_time_to_isoformat(event.recurrence.until),
+                }
+            return api_json
+
+    return [_event_to_json(event) for event in scheduled_events]
+
+
+def _blackout_to_json(event):
+    return {
+        'classificationType': get_classification_name(event.classificationType),
+        'comment': event.comment,
+        'contact': event.contact,
+        'createdAt': epoch_time_to_isoformat(event.createdAt),
+        'description': event.description,
+        'duration': event.duration,
+        'durationFormatted': str(timedelta(seconds=event.duration)) if event.duration else None,
+        'endDate': epoch_time_to_isoformat(event.endDate),
+        'geoLatitude': event.geoLatitude,
+        'geoLongitude': event.geoLongitude,
+        'id': event.id,
+        'organizer': event.organizer,
+        'ownerId': event.ownerId,
+        'partnerId': event.partnerId,
+        'recurrenceType': get_recurrence_name(event.recurrenceType),
+        'startDate': epoch_time_to_isoformat(event.startDate),
+        'status': get_status_name(event.status),
+        'summary': event.summary,
+        'tags': event.tags,
+        'updatedAt': epoch_time_to_isoformat(event.updatedAt),
+    }
