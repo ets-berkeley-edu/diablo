@@ -40,7 +40,7 @@ from diablo.models.sis_section import SisSection
 from flask import current_app as app
 import pytest
 from tests.test_api.api_test_utils import api_approve, api_get_course, get_eligible_meeting, get_instructor_uids
-from tests.util import simply_yield, test_approvals_workflow
+from tests.util import override_config, simply_yield, test_approvals_workflow
 
 admin_uid = '90001'
 deleted_admin_user_uid = '910001'
@@ -405,6 +405,18 @@ class TestGetCourse:
         assert ineligible_meetings[0]['location'] == 'LeConte 1'
         assert ineligible_meetings[0]['eligible'] is False
         assert api_json['meetingType'] == 'B'
+
+    def test_meeting_recording_end_date(self, client, admin_session):
+        with override_config(app, 'CURRENT_TERM_END', '2020-11-24'):
+            api_json = api_get_course(
+                client,
+                term_id=self.term_id,
+                section_id=50015,
+            )
+            assert api_json['meetings']['eligible'][0]['endDate'] == '2020-12-11'
+            assert api_json['meetings']['eligible'][0]['recordingEndDate'] == '2020-11-24'
+            assert api_json['meetings']['ineligible'][0]['endDate'] == '2020-12-11'
+            assert 'recordingEndDate' not in api_json['meetings']['ineligible'][0]
 
 
 class TestGetCourses:

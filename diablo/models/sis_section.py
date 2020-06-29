@@ -25,6 +25,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 from datetime import datetime
 
 from diablo import db
+from diablo.lib.berkeley import get_recording_end_date, get_recording_start_date
 from diablo.lib.util import format_days, format_time
 from diablo.models.approval import Approval
 from diablo.models.canvas_course_site import CanvasCourseSite
@@ -701,6 +702,10 @@ def _to_api_json(term_id, rows, include_rooms=True):
             room = rooms_by_id.get(row['room_id']) if 'room_id' in row else None
             if room and room.capability:
                 meeting['eligible'] = True
+                meeting.update({
+                    'recordingEndDate': datetime.strftime(get_recording_end_date(meeting), '%Y-%m-%d'),
+                    'recordingStartDate': datetime.strftime(get_recording_start_date(meeting), '%Y-%m-%d'),
+                })
                 course['meetings']['eligible'].append(meeting)
                 course['meetings']['eligible'].sort(key=lambda m: f"{m['startDate']} {m['startTime']}")
                 if meeting['startDate'] != app.config['CURRENT_TERM_BEGIN'] or meeting['endDate'] != app.config['CURRENT_TERM_END']:
