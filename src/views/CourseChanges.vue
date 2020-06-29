@@ -73,7 +73,7 @@
                   changed to
                 </div>
                 <div v-for="(meeting, index) in course.meetings.eligible" :id="`course-${course.sectionId}-meeting-dates-eligible-${index}`" :key="index">
-                  {{ meeting.startDate }} - {{ meeting.endDate }} (Eligible)
+                  {{ meeting.recordingStartDate }} - {{ meeting.recordingEndDate }} (Eligible)
                 </div>
                 <div v-for="(meeting, index) in course.meetings.ineligible" :id="`course-${course.sectionId}-meeting-dates-ineligible-${index}`" :key="index">
                   {{ meeting.startDate }} - {{ meeting.endDate }} (Ineligible)
