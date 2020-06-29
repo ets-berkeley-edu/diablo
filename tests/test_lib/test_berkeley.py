@@ -32,17 +32,17 @@ from tests.util import override_config
 class TestRecordingDates:
 
     def test_recording_end_date(self):
-        term_end = '2525-11-25'
-        with override_config(app, 'CURRENT_TERM_END', term_end):
+        capture_recordings_until = '2525-11-25'
+        with override_config(app, 'CURRENT_TERM_RECORDINGS_END', capture_recordings_until):
             meeting = {'endDate': '2525-12-11 00:00:00 UTC'}
-            assert get_recording_end_date(meeting) == _to_datetime(term_end)
+            assert get_recording_end_date(meeting) == _to_datetime(capture_recordings_until)
 
             meeting = {'endDate': '2525-11-01 00:00:00 UTC'}
             assert get_recording_end_date(meeting) == _to_datetime('2525-11-01')
 
     def test_recording_start_date(self):
         term_begin = '2525-09-07'
-        with override_config(app, 'CURRENT_TERM_BEGIN', term_begin):
+        with override_config(app, 'CURRENT_TERM_RECORDINGS_BEGIN', term_begin):
             meeting = {'startDate': '2525-08-26 00:00:00 UTC'}
             assert get_recording_start_date(meeting) == _to_datetime(term_begin)
 
@@ -54,7 +54,7 @@ class TestRecordingDates:
         today = datetime.today()
         term_begin = today - timedelta(days=7)
         first_meeting = today - timedelta(days=3)
-        with override_config(app, 'CURRENT_TERM_BEGIN', datetime.strftime(term_begin, df)):
+        with override_config(app, 'CURRENT_TERM_RECORDINGS_BEGIN', datetime.strftime(term_begin, df)):
             meeting = {'startDate': f'{datetime.strftime(first_meeting, df)} 00:00:00 UTC'}
             assert datetime.strftime(get_recording_start_date(meeting), df) == datetime.strftime(today, df)
 
