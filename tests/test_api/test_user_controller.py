@@ -124,3 +124,30 @@ class TestUserProfile:
         user = self._api_user(client, instructor_uid)
         assert find_course(50000)
         assert not find_course(50006)
+
+
+class TestAdminUsers:
+    """Admin user has access to all admin user profiles."""
+
+    @staticmethod
+    def _api_admin_users(client, expected_status_code=200):
+        response = client.get('/api/users/admins')
+        assert response.status_code == expected_status_code
+        return response.json
+
+    def test_anonymous(self, client):
+        """Denies anonymous access."""
+        self._api_admin_users(client, expected_status_code=401)
+
+    def test_unauthorized(self, client, instructor_session):
+        """Denies access if user is not an admin."""
+        self._api_admin_users(client, expected_status_code=401)
+
+    def test_authorized(self, client, admin_session):
+        """Admin user has access."""
+        admin_users = self._api_admin_users(client)
+        assert len(admin_users) > 0
+        for admin_user in admin_users:
+            assert 'email' in admin_user
+            assert 'name' in admin_user
+            assert 'uid' in admin_user
