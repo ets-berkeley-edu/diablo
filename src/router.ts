@@ -1,5 +1,6 @@
 import _ from 'lodash'
 import auth from './auth'
+import Attic from '@/views/Attic.vue'
 import BaseView from '@/views/BaseView.vue'
 import Course from '@/views/Course.vue'
 import CourseChanges from '@/views/CourseChanges.vue'
@@ -90,6 +91,13 @@ const router = new Router({
       beforeEnter: auth.requiresAdmin,
       component: BaseView,
       children: [
+        {
+          path: '/attic',
+          component: Attic,
+          meta: {
+            title: 'The Attic'
+          }
+        },
         {
           path: '/changes',
           component: CourseChanges,

@@ -22,11 +22,11 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-
 from diablo.api.errors import ResourceNotFoundError
 from diablo.api.util import admin_required
 from diablo.lib.http import tolerant_jsonify
-from diablo.merged.calnet import get_calnet_user_for_uid
+from diablo.merged.calnet import get_calnet_user_for_uid, get_calnet_users_for_uids
+from diablo.models.admin_user import AdminUser
 from diablo.models.sis_section import SisSection
 from flask import current_app as app
 from flask_login import current_user
@@ -50,3 +50,17 @@ def get_user(uid):
         )
         user['courses'] = courses
         return tolerant_jsonify(user)
+
+
+@app.route('/api/users/admins')
+@admin_required
+def admin_users():
+    api_json = []
+    admin_uids = [admin_user.uid for admin_user in AdminUser.all_admin_users()]
+    for admin_user in get_calnet_users_for_uids(app=app, uids=admin_uids).values():
+        api_json.append({
+            'email': admin_user.get('campusEmail') or admin_user.get('email'),
+            'name': admin_user.get('name'),
+            'uid': admin_user['uid'],
+        })
+    return tolerant_jsonify(api_json)
