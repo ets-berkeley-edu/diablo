@@ -771,8 +771,8 @@ def _decorate_course_changes(course):
         meeting = meetings[0]
         course_meeting_date = '-'.join(
             [
-                str(meeting['startDate']),
-                str(meeting['endDate']),
+                datetime.strftime(get_recording_start_date(meeting), '%Y-%m-%d'),
+                datetime.strftime(get_recording_end_date(meeting), '%Y-%m-%d'),
             ],
         )
         course_meeting_time = '-'.join(
