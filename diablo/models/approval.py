@@ -165,7 +165,13 @@ class Approval(db.Model):
             },
         )
 
-    def to_api_json(self):
+    def to_api_json(self, rooms_by_id=None):
+        room_feed = None
+        if self.room_id:
+            if rooms_by_id:
+                room_feed = rooms_by_id.get(self.room_id, None).to_api_json()
+            else:
+                room_feed = Room.get_room(self.room_id).to_api_json()
         return {
             'approvedBy': get_calnet_user_for_uid(app, self.approved_by_uid),
             'wasApprovedByAdmin': self.approver_type == 'admin',
@@ -174,7 +180,7 @@ class Approval(db.Model):
             'publishTypeName': NAMES_PER_PUBLISH_TYPE[self.publish_type],
             'recordingType': self.recording_type,
             'recordingTypeName': NAMES_PER_RECORDING_TYPE[self.recording_type],
-            'room': Room.get_room(self.room_id).to_api_json() if self.room_id else None,
+            'room': room_feed,
             'sectionId': self.section_id,
             'termId': self.term_id,
         }

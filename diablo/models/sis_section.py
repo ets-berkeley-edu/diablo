@@ -623,12 +623,20 @@ def _to_api_json(term_id, rows, include_rooms=True):
         if invite.recipient_uid not in invited_uids_by_section_id[invite.section_id]:
             invited_uids_by_section_id[invite.section_id].append(invite.recipient_uid)
 
-    approvals_by_section_id = {section_id: [] for section_id in section_ids}
-    for approval in Approval.get_approvals_per_section_ids(section_ids=section_ids, term_id=term_id):
-        approvals_by_section_id[approval.section_id].append(approval.to_api_json())
-
+    approval_results = Approval.get_approvals_per_section_ids(section_ids=section_ids, term_id=term_id)
     scheduled_results = Scheduled.get_scheduled_per_section_ids(section_ids=section_ids, term_id=term_id)
-    scheduled_by_section_id = {s.section_id: s.to_api_json() for s in scheduled_results}
+
+    room_ids = set(row['room_id'] for row in rows)
+    room_ids.update(a.room_id for a in approval_results)
+    room_ids.update(s.room_id for s in scheduled_results)
+    rooms = Room.get_rooms(list(room_ids))
+    rooms_by_id = {room.id: room for room in rooms}
+
+    approvals_by_section_id = {section_id: [] for section_id in section_ids}
+    for approval in approval_results:
+        approvals_by_section_id[approval.section_id].append(approval.to_api_json(rooms_by_id=rooms_by_id))
+
+    scheduled_by_section_id = {s.section_id: s.to_api_json(rooms_by_id=rooms_by_id) for s in scheduled_results}
 
     cross_listings_per_section_id, instructors_per_section_id, canvas_sites_by_section_id = _get_cross_listed_courses(
         section_ids=section_ids,
@@ -636,9 +644,6 @@ def _to_api_json(term_id, rows, include_rooms=True):
         approvals=approvals_by_section_id,
         invited_uids=invited_uids_by_section_id,
     )
-
-    rooms = Room.get_rooms(list(set(row['room_id'] for row in rows)))
-    rooms_by_id = {room.id: room for room in rooms}
 
     # Construct course objects.
     # If course has multiple instructors or multiple rooms then the section_id will be represented across multiple rows.
