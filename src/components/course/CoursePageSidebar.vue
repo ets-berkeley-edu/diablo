@@ -18,8 +18,20 @@
         </v-col>
         <v-col :class="{'pb-0': displayMeetings.length > 1}">
           {{ $_.join(meeting.daysFormatted, ', ') }}
-          <div v-if="course.nonstandardMeetingDates">
+          <div>
             {{ meeting.startDate | moment('MMM D, YYYY') }} to {{ meeting.endDate | moment('MMM D, YYYY') }}
+            <div v-if="meeting.recordingEndDate && meeting.endDate !== meeting.recordingEndDate" class="font-weight-light">
+              <div v-if="course.termId === $config.currentTermId">
+                (Final recording
+                <span v-if="meeting.recordingEndDate < nowDate">was on</span>
+                <span v-if="meeting.recordingEndDate > nowDate">scheduled for</span>
+                <span v-if="meeting.recordingEndDate === nowDate">is today, </span>
+                {{ meeting.recordingEndDate | moment('MMM D, YYYY') }}.)
+              </div>
+              <div v-if="course.termId < $config.currentTermId && course.scheduled">
+                (Final recording was on {{ meeting.recordingEndDate | moment('MMM D, YYYY') }}.)
+              </div>
+            </div>
           </div>
         </v-col>
       </v-row>
@@ -164,12 +176,14 @@
       displayMeetings: undefined,
       isCurrentTerm: undefined,
       isSendInviteAvailable: undefined,
+      nowDate: undefined,
       showUnscheduleModal: false
     }),
     created() {
       this.displayMeetings = this.getDisplayMeetings(this.course)
       this.isCurrentTerm = this.course.termId === this.$config.currentTermId
       this.isSendInviteAvailable = this.course.instructors.length && !this.course.hasOptedOut && this.$_.find(this.displayMeetings, m => this.$_.get(m, 'room.capability'))
+      this.nowDate = this.$moment().format('YYYY-MM-DD')
     },
     methods: {
       sendInvite() {
