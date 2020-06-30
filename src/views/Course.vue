@@ -2,7 +2,7 @@
   <div v-if="!loading">
     <v-container fluid>
       <v-row class="pl-3">
-        <h1>{{ courseDisplayTitle }}</h1>
+        <h1>{{ courseDisplayTitle }}<span v-if="$config.currentTermId !== course.termId"> ({{ getTermName(course.termId) }})</span></h1>
       </v-row>
       <v-row class="pl-3">
         Section ID: <span id="section-id">{{ course.sectionId }}</span>
@@ -167,7 +167,7 @@
                 </v-col>
               </v-row>
             </v-container>
-            <v-container v-if="!meeting.room.capability">
+            <v-container v-if="isCurrentTerm && !meeting.room.capability">
               <v-row id="course-not-eligible">
                 <v-icon class="pr-2" color="red">mdi-alert</v-icon>
                 This course is not eligible for Course Capture because {{ meeting.room.location }} is not capture-enabled.

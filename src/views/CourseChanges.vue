@@ -49,7 +49,7 @@
               <div>
                 {{ course.sectionId }}
               </div>
-              <div v-if="course.scheduled.hasObsoleteMeetingTimes" :id="`course-${course.sectionId}-obsolete-meeting-times`">
+              <div v-if="course.scheduled.hasObsoleteTimes" :id="`course-${course.sectionId}-obsolete-meeting-times`">
                 <div :id="`course-${course.sectionId}-meeting-times-old`">
                   {{ course.scheduled.meetingDays.join(',') }} {{ course.scheduled.meetingStartTime }} - {{ course.scheduled.meetingEndTime }}
                 </div>
@@ -64,7 +64,7 @@
               <div v-for="(meeting, index) in course.meetings.ineligible" :id="`course-${course.sectionId}-meeting-times-ineligible-${index}`" :key="index">
                 {{ meeting.daysFormatted.join(',') }} {{ meeting.startTimeFormatted }} - {{ meeting.endTimeFormatted }} (Ineligible)
               </div>
-              <div v-if="course.scheduled.hasObsoleteMeetingDates" :id="`course-${course.sectionId}-obsolete-meeting-dates`">
+              <div v-if="course.scheduled.hasObsoleteDates" :id="`course-${course.sectionId}-obsolete-meeting-dates`">
                 <div :id="`course-${course.sectionId}-meeting-dates-old`">
                   {{ course.scheduled.meetingStartDate }} - {{ course.scheduled.meetingEndDate }}
                 </div>
