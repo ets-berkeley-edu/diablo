@@ -64,7 +64,7 @@ class InstructorEmailsJob(BaseJob):
         courses = SisSection.get_courses(term_id=self.term_id, section_ids=[s.section_id for s in all_scheduled])
         courses_per_section_id = dict((course['sectionId'], course) for course in courses)
         for scheduled in all_scheduled:
-            course = courses_per_section_id[scheduled.section_id]
+            course = courses_per_section_id.get(scheduled.section_id)
             if course:
                 eligible_meetings = course.get('meetings', {}).get('eligible', [])
                 if scheduled.room_id not in [meeting.get('room', {}).get('id') for meeting in eligible_meetings]:
