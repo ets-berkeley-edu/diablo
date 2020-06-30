@@ -11,17 +11,17 @@
         disable-pagination
         :headers="headers"
         hide-default-footer
-        :items="items"
+        :items="configs"
       >
         <template v-slot:body="{ items }">
           <tbody>
-            <tr v-for="item in items" :key="item.key">
+            <tr v-for="config in items" :key="config.key">
               <td>
-                {{ item.key }}
+                {{ config.key }}
               </td>
               <td>
-                <span v-if="isUrl(item.value)"><a :id="`link-to-${item.key}`" :href="item.value" target="_blank">{{ item.value }} <v-icon small class="pl-1">mdi-open-in-new</v-icon></a></span>
-                <span v-if="!isUrl(item.value)">{{ item.value }}</span>
+                <span v-if="isUrl(config.value)"><a :id="`link-to-${config.key}`" :href="config.value" target="_blank">{{ config.value }} <v-icon small class="pl-1">mdi-open-in-new</v-icon></a></span>
+                <span v-if="!isUrl(config.value)">{{ config.value }}</span>
               </td>
             </tr>
           </tbody>
@@ -55,6 +55,7 @@
     mixins: [Context],
     data: () => ({
       adminUsers: undefined,
+      configs: undefined,
       excludeConfigs: [
         'apiBaseUrl',
         'courseCaptureExplainedUrl',
@@ -72,19 +73,16 @@
       headers: [
         {text: 'Key', value: 'key'},
         {text: 'Value', value: 'value'}
-      ],
-      items: undefined
+      ]
     }),
     mounted() {
       this.$loading()
-      this.items = []
       getAdminUsers().then(data => {
         this.adminUsers = data
         axios.get(`${Vue.prototype.$config.apiBaseUrl}/api/version`).then(data => {
-          this.$_.each({...data, ...this.$config }, (value, key) => {
-            this.push(key, value)
-          })
-          this.items = this.$_.sortBy(this.items, ['key'])
+          this.configs = []
+          this.$_.each({...data, ...this.$config }, (value, key) => this.pushConfig(key, value))
+          this.configs = this.$_.sortBy(this.configs, ['key'])
           this.$ready('Attic')
         })
       })
@@ -93,13 +91,13 @@
       isUrl(value) {
         return this.$_.startsWith(value, 'https://')
       },
-      push(key, value) {
+      pushConfig(key, value) {
         if (!this.$_.includes(this.excludeConfigs, key)) {
           if (key === 'build') {
-            this.items.push({key: 'buildArtifact', value: value.artifact})
-            this.items.push({key: 'gitCommit', value: value.gitCommit && `https://github.com/ets-berkeley-edu/diablo/commit/${value.gitCommit}`})
+            this.configs.push({key: 'buildArtifact', value: value.artifact})
+            this.configs.push({key: 'gitCommit', value: value.gitCommit && `https://github.com/ets-berkeley-edu/diablo/commit/${value.gitCommit}`})
           } else {
-            this.items.push({key, value})
+            this.configs.push({key, value})
           }
         }
       }
