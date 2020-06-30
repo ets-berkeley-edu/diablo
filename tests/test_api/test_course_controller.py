@@ -407,6 +407,7 @@ class TestGetCourse:
         assert api_json['meetingType'] == 'B'
 
     def test_meeting_recording_end_date(self, client, admin_session):
+        # The term ends on a Tuesday
         with override_config(app, 'CURRENT_TERM_END', '2020-11-24'):
             api_json = api_get_course(
                 client,
@@ -414,7 +415,8 @@ class TestGetCourse:
                 section_id=50015,
             )
             assert api_json['meetings']['eligible'][0]['endDate'] == '2020-12-11'
-            assert api_json['meetings']['eligible'][0]['recordingEndDate'] == '2020-11-24'
+            # The course meets on ['MO', 'WE', 'FR']. The last recordings is on Wed preceding term_end
+            assert api_json['meetings']['eligible'][0]['recordingEndDate'] == '2020-11-23'
             assert api_json['meetings']['ineligible'][0]['endDate'] == '2020-12-11'
             assert 'recordingEndDate' not in api_json['meetings']['ineligible'][0]
 

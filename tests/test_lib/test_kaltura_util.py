@@ -22,77 +22,30 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from datetime import datetime
-
-from diablo.lib.kaltura_util import get_first_matching_datetime_of_term
-from flask import current_app as app
-import pytz
-from tests.util import override_config
+from diablo.lib.kaltura_util import get_classification_name, get_recurrence_name, get_status_name
+from KalturaClient.Plugins.Schedule import KalturaScheduleEventClassificationType, KalturaScheduleEventRecurrenceType, \
+    KalturaScheduleEventStatus
 
 
-class TestFirstDayRecording:
+class TestKalturaEnums:
 
-    def test_first_meeting_is_same_as_term_begin(self):
-        """First meeting of course is the same day as first of term."""
-        with override_config(app, 'CURRENT_TERM_BEGIN', _get_wednesday_august_26()):
-            first_day_start = get_first_matching_datetime_of_term(
-                meeting_days=['MO', 'WE', 'FR'],
-                start_date=datetime.strptime(app.config['CURRENT_TERM_BEGIN'], '%Y-%m-%d'),
-                time_hours=13,
-                time_minutes=30,
-            )
-            assert first_day_start.day == 26
+    def test_classification_name(self):
+        """Friendly name for KalturaScheduleEventClassificationType enum values."""
+        assert get_classification_name(None) is None
+        assert get_classification_name(
+            KalturaScheduleEventClassificationType(KalturaScheduleEventClassificationType.PUBLIC_EVENT),
+        ) == 'Public'
 
-    def test_first_meeting_is_day_after_term_begin(self):
-        """First meeting is the day after start of term."""
-        with override_config(app, 'CURRENT_TERM_BEGIN', _get_wednesday_august_26()):
-            first_day_start = get_first_matching_datetime_of_term(
-                meeting_days=['TU', 'TH'],
-                start_date=datetime.strptime(app.config['CURRENT_TERM_BEGIN'], '%Y-%m-%d'),
-                time_hours=13,
-                time_minutes=30,
-            )
-            assert first_day_start.day == 27
+    def test_recurrence_name(self):
+        """Friendly name for KalturaScheduleEventRecurrenceType enum values."""
+        assert get_recurrence_name(None) is None
+        assert get_recurrence_name(
+            KalturaScheduleEventRecurrenceType(KalturaScheduleEventRecurrenceType.RECURRING),
+        ) == 'Recurring'
 
-    def test_first_meeting_is_week_after_term_begin(self):
-        """First meeting is the Monday following first week of term."""
-        with override_config(app, 'CURRENT_TERM_BEGIN', _get_wednesday_august_26()):
-            first_day_start = get_first_matching_datetime_of_term(
-                meeting_days=['MO', 'TU'],
-                start_date=datetime.strptime(app.config['CURRENT_TERM_BEGIN'], '%Y-%m-%d'),
-                time_hours=8,
-                time_minutes=45,
-            )
-            assert first_day_start.day == 31
-
-    def test_first_meeting_is_different_month(self):
-        """First meeting is in week after start of term, in a new month."""
-        with override_config(app, 'CURRENT_TERM_BEGIN', _get_wednesday_august_26()):
-            first_day_start = get_first_matching_datetime_of_term(
-                meeting_days=['TU'],
-                start_date=datetime.strptime(app.config['CURRENT_TERM_BEGIN'], '%Y-%m-%d'),
-                time_hours=9,
-                time_minutes=15,
-            )
-            assert first_day_start.month == 9
-            assert first_day_start.day == 1
-
-    def test_timestamps(self):
-        """Epoch timestamp in PST timezone."""
-        with override_config(app, 'CURRENT_TERM_BEGIN', _get_wednesday_august_26()):
-            first_day_start = get_first_matching_datetime_of_term(
-                meeting_days=['TU', 'TH'],
-                start_date=datetime.strptime(app.config['CURRENT_TERM_BEGIN'], '%Y-%m-%d'),
-                time_hours=9,
-                time_minutes=37,
-            )
-            assert first_day_start.timestamp() == 1598546220.0
-
-
-def _get_wednesday_august_26():
-    # Aug 26, 2020, is a Wednesday.
-    return '2020-08-26'
-
-
-def _timezone():
-    return pytz.timezone(app.config['TIMEZONE'])
+    def test_status_name(self):
+        """Friendly name for KalturaScheduleEventStatus enum values."""
+        assert get_status_name(None) is None
+        assert get_status_name(
+            KalturaScheduleEventStatus(KalturaScheduleEventStatus.ACTIVE),
+        ) == 'Active'
