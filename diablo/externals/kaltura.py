@@ -503,7 +503,13 @@ def _events_to_api_json(scheduled_events):
                 }
             return api_json
 
-    return [_event_to_json(event) for event in scheduled_events]
+    raw_list = [_event_to_json(event) for event in scheduled_events]
+    recurring_events = list(filter(lambda e: e['recurrenceType'] == 'Recurring', raw_list))
+    standalone_events = list(filter(lambda e: e['recurrenceType'] not in ['Recurrence', 'Recurring'], raw_list))
+    for recurring_event in recurring_events:
+        recurring_event['children'] = list(filter(lambda e: e.get('parentId') == recurring_event['id'], raw_list))
+
+    return recurring_events + standalone_events
 
 
 def _blackout_to_json(event):
