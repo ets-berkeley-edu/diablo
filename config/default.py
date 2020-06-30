@@ -46,6 +46,15 @@ CANVAS_BERKELEY_ACCOUNT_ID = 00000
 CANVAS_BERKELEY_SUB_ACCOUNTS = [00000]
 CANVAS_ENROLLMENT_TERM_ID = 0000
 
+CANVAS_LTI_EXTERNAL_TOOL_IDS = {
+    'media_gallery': 1,
+    'my_media': 2,
+    'quick_ingest': 3,
+    'video_submission': 4,
+}
+CANVAS_LTI_KEY = 'a_key'
+CANVAS_LTI_SECRET = 'a_secret'
+
 CAS_SERVER = 'https://auth-test.berkeley.edu/cas/'
 
 COURSE_CAPTURE_EXPLAINED_URL = 'https://www.ets.berkeley.edu/services-facilities/course-capture'

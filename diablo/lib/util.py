@@ -109,3 +109,17 @@ def get_names_of_days(day_codes):
 
 def readable_join(items):
     return (f"{', '.join(items[:-1])} and {items[-1]}" if len(items) > 1 else items[0]) if len(items or []) else ''
+
+
+def resolve_xml_template(xml_filename):
+    with open(app.config['BASE_DIR'] + f'/diablo/xml_templates/{xml_filename}', encoding='utf-8') as file:
+        template_string = file.read()
+    return resolve_xml_template_string(template_string)
+
+
+def resolve_xml_template_string(template_string):
+    return template_string.format(
+        **{
+            'kmc_id': app.config['CANVAS_LTI_KEY'],
+        },
+    )
