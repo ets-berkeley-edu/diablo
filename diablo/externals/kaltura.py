@@ -27,9 +27,9 @@ import json
 
 import dateutil.parser
 from diablo import cachify, skip_when_pytest
-from diablo.lib.berkeley import get_recording_end_date, get_recording_start_date, term_name_for_sis_id
-from diablo.lib.kaltura_util import get_classification_name, get_first_matching_datetime_of_term, get_recurrence_name, \
-    get_status_name
+from diablo.lib.berkeley import get_first_matching_datetime_of_term, get_recording_end_date, get_recording_start_date, \
+    term_name_for_sis_id
+from diablo.lib.kaltura_util import get_classification_name, get_recurrence_name, get_status_name
 from diablo.lib.util import default_timezone, epoch_time_to_isoformat, format_days, to_isoformat
 from flask import current_app as app
 from KalturaClient import KalturaClient, KalturaConfiguration

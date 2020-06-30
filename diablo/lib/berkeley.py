@@ -22,19 +22,55 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from datetime import datetime
+from datetime import datetime, timedelta
 
+from diablo.lib.util import default_timezone, format_days
 from flask import current_app as app
+
+# This order of days is aligned with datetime module: https://pythontic.com/datetime/date/weekday
+DAYS = ('MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU')
 
 
 def flatten_location(name):
     return name and ''.join(name.split()).lower()
 
 
+def get_first_matching_datetime_of_term(meeting_days, start_date, time_hours, time_minutes):
+    first_meeting = None
+    meeting_day_indices = [DAYS.index(day) for day in meeting_days]
+    for index in range(7):
+        # Monday is 0 and Sunday is 6
+        day_index = (start_date.weekday() + index) % 7
+        if day_index in meeting_day_indices:
+            first_day = start_date + timedelta(days=index)
+            first_meeting = default_timezone().localize(
+                datetime(
+                    first_day.year,
+                    first_day.month,
+                    first_day.day,
+                    time_hours,
+                    time_minutes,
+                ),
+            )
+            break
+    return first_meeting
+
+
 def get_recording_end_date(meeting):
     term_end = datetime.strptime(app.config['CURRENT_TERM_RECORDINGS_END'], '%Y-%m-%d')
     actual_end = datetime.strptime(meeting['endDate'].split()[0], '%Y-%m-%d')
-    return actual_end if actual_end < term_end else term_end
+    end_date = actual_end if actual_end < term_end else term_end
+    # Determine first course meeting BEFORE end_date.
+    last_recording = None
+    meeting_day_indices = [DAYS.index(day) for day in format_days(meeting['days'])]
+    for index in range(7):
+        # Monday is 0 and Sunday is 6
+        day_index = (end_date.weekday() - index) % 7
+        if day_index in meeting_day_indices:
+            last_day = end_date - timedelta(days=index)
+            last_recording = datetime(last_day.year, last_day.month, last_day.day)
+            break
+    return last_recording
 
 
 def get_recording_start_date(meeting, return_today_if_past_start=False):
@@ -42,7 +78,18 @@ def get_recording_start_date(meeting, return_today_if_past_start=False):
     actual_start = datetime.strptime(meeting['startDate'].split()[0], '%Y-%m-%d')
     start_date = actual_start if actual_start > term_begin else term_begin
     today = datetime.today()
-    return today if start_date < today and return_today_if_past_start else start_date
+    start_date = today if start_date < today and return_today_if_past_start else start_date
+    # Determine first course meeting AFTER start_date.
+    first_recording = None
+    meeting_day_indices = [DAYS.index(day) for day in format_days(meeting['days'])]
+    for index in range(7):
+        # Monday is 0 and Sunday is 6
+        day_index = (start_date.weekday() + index) % 7
+        if day_index in meeting_day_indices:
+            first_day = start_date + timedelta(days=index)
+            first_recording = datetime(first_day.year, first_day.month, first_day.day)
+            break
+    return first_recording
 
 
 def scheduled_dates_are_obsolete(meeting, scheduled):

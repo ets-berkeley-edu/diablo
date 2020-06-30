@@ -26,11 +26,13 @@ from datetime import datetime, timedelta
 import random
 
 from diablo import db, std_commit
-from diablo.lib.berkeley import get_recording_end_date, get_recording_start_date, scheduled_dates_are_obsolete
+from diablo.lib.berkeley import DAYS, get_first_matching_datetime_of_term, get_recording_end_date, \
+    get_recording_start_date, scheduled_dates_are_obsolete
 from diablo.models.room import Room
 from diablo.models.scheduled import Scheduled
 from diablo.models.sis_section import SisSection
 from flask import current_app as app
+import pytz
 from sqlalchemy import text
 from tests.test_api.api_test_utils import get_instructor_uids
 from tests.util import override_config, test_approvals_workflow
@@ -39,30 +41,61 @@ from tests.util import override_config, test_approvals_workflow
 class TestRecordingDates:
 
     def test_recording_end_date(self):
-        capture_recordings_until = '2525-11-25'
-        with override_config(app, 'CURRENT_TERM_RECORDINGS_END', capture_recordings_until):
-            meeting = {'endDate': '2525-12-11 00:00:00 UTC'}
-            assert get_recording_end_date(meeting) == _to_datetime(capture_recordings_until)
+        # End date is a Friday
+        recordings_end_date = '2525-11-23'
+        with override_config(app, 'CURRENT_TERM_RECORDINGS_END', recordings_end_date):
+            meeting = {
+                'days': 'TUTH',
+                'endDate': '2525-12-11 00:00:00 UTC',
+            }
+            # Expect preceding Thursday
+            assert get_recording_end_date(meeting) == _to_datetime('2525-11-22')
 
-            meeting = {'endDate': '2525-11-01 00:00:00 UTC'}
-            assert get_recording_end_date(meeting) == _to_datetime('2525-11-01')
+            meeting = {
+                'days': 'MO',
+                # End date is a Thursday
+                'endDate': '2525-11-01 00:00:00 UTC',
+            }
+            # Expect preceding Monday
+            assert get_recording_end_date(meeting) == _to_datetime('2525-10-29')
+
+    def test_recording_end_date_with_offset(self):
+        recordings_end_date = '2020-11-24'
+        with override_config(app, 'CURRENT_TERM_RECORDINGS_END', recordings_end_date):
+            meeting = {
+                'days': 'MO',
+                'endDate': '2020-12-11 00:00:00 UTC',
+            }
+            # The last recording is on a Monday.
+            assert get_recording_end_date(meeting) == _to_datetime('2020-11-23')
 
     def test_recording_start_date(self):
-        term_begin = '2525-09-07'
-        with override_config(app, 'CURRENT_TERM_RECORDINGS_BEGIN', term_begin):
-            meeting = {'startDate': '2525-08-26 00:00:00 UTC'}
-            assert get_recording_start_date(meeting) == _to_datetime(term_begin)
+        # Begin date is a Friday
+        recordings_begin_date = '2525-09-07'
+        with override_config(app, 'CURRENT_TERM_RECORDINGS_BEGIN', recordings_begin_date):
+            meeting = {
+                'days': 'MO',
+                'startDate': '2525-08-26 00:00:00 UTC',
+            }
+            # Expect the following Monday
+            assert get_recording_start_date(meeting) == _to_datetime('2525-09-10')
 
-            meeting = {'startDate': '2525-09-14 00:00:00 UTC'}
+            meeting = {
+                'days': 'FR',
+                'startDate': '2525-09-14 00:00:00 UTC',
+            }
             assert get_recording_start_date(meeting) == _to_datetime('2525-09-14')
 
     def test_start_date_is_in_the_past(self):
         df = '%Y-%m-%d'
         today = datetime.today()
-        term_begin = today - timedelta(days=7)
+        recordings_begin_date = today - timedelta(days=7)
         first_meeting = today - timedelta(days=3)
-        with override_config(app, 'CURRENT_TERM_RECORDINGS_BEGIN', datetime.strftime(term_begin, df)):
-            meeting = {'startDate': f'{datetime.strftime(first_meeting, df)} 00:00:00 UTC'}
+        with override_config(app, 'CURRENT_TERM_RECORDINGS_BEGIN', datetime.strftime(recordings_begin_date, df)):
+            meeting = {
+                'days': ''.join(DAYS),
+                'startDate': f'{datetime.strftime(first_meeting, df)} 00:00:00 UTC',
+            }
             start_date = get_recording_start_date(meeting, return_today_if_past_start=True)
             assert datetime.strftime(start_date, df) == datetime.strftime(today, df)
 
@@ -109,6 +142,7 @@ class TestObsoleteScheduledDates:
 
     def test_scheduled_before_the_meeting_start(self):
         meeting = {
+            'days': ''.join(DAYS),
             'endDate': '2525-12-11',
             'startDate': '2525-08-25',
         }
@@ -121,6 +155,7 @@ class TestObsoleteScheduledDates:
 
     def test_scheduled_after_the_meeting_start(self):
         meeting = {
+            'days': ''.join(DAYS),
             'endDate': _format(datetime.now() + timedelta(days=100)),
             'startDate': _format(datetime.now() - timedelta(days=100)),
         }
@@ -133,6 +168,7 @@ class TestObsoleteScheduledDates:
 
     def test_scheduled_obsolete_start_date(self):
         meeting = {
+            'days': ''.join(DAYS),
             'endDate': '2525-12-11',
             'startDate': '2525-08-25',
         }
@@ -145,6 +181,7 @@ class TestObsoleteScheduledDates:
 
     def test_scheduled_obsolete_end_date(self):
         meeting = {
+            'days': ''.join(DAYS),
             'endDate': '2525-12-11',
             'startDate': '2525-08-25',
         }
@@ -154,6 +191,74 @@ class TestObsoleteScheduledDates:
                     self._schedule_recordings(meeting=meeting, override_end_date='2525-12-01')
                     course = SisSection.get_course(section_id=self.section_id, term_id=self.term_id)
                     assert scheduled_dates_are_obsolete(meeting=meeting, scheduled=course['scheduled']) is True
+
+
+class TestFirstDayRecording:
+
+    def test_first_meeting_is_same_as_term_begin(self):
+        """First meeting of course is the same day as first of term."""
+        with override_config(app, 'CURRENT_TERM_BEGIN', _get_wednesday_august_26()):
+            first_day_start = get_first_matching_datetime_of_term(
+                meeting_days=['MO', 'WE', 'FR'],
+                start_date=datetime.strptime(app.config['CURRENT_TERM_BEGIN'], '%Y-%m-%d'),
+                time_hours=13,
+                time_minutes=30,
+            )
+            assert first_day_start.day == 26
+
+    def test_first_meeting_is_day_after_term_begin(self):
+        """First meeting is the day after start of term."""
+        with override_config(app, 'CURRENT_TERM_BEGIN', _get_wednesday_august_26()):
+            first_day_start = get_first_matching_datetime_of_term(
+                meeting_days=['TU', 'TH'],
+                start_date=datetime.strptime(app.config['CURRENT_TERM_BEGIN'], '%Y-%m-%d'),
+                time_hours=13,
+                time_minutes=30,
+            )
+            assert first_day_start.day == 27
+
+    def test_first_meeting_is_week_after_term_begin(self):
+        """First meeting is the Monday following first week of term."""
+        with override_config(app, 'CURRENT_TERM_BEGIN', _get_wednesday_august_26()):
+            first_day_start = get_first_matching_datetime_of_term(
+                meeting_days=['MO', 'TU'],
+                start_date=datetime.strptime(app.config['CURRENT_TERM_BEGIN'], '%Y-%m-%d'),
+                time_hours=8,
+                time_minutes=45,
+            )
+            assert first_day_start.day == 31
+
+    def test_first_meeting_is_different_month(self):
+        """First meeting is in week after start of term, in a new month."""
+        with override_config(app, 'CURRENT_TERM_BEGIN', _get_wednesday_august_26()):
+            first_day_start = get_first_matching_datetime_of_term(
+                meeting_days=['TU'],
+                start_date=datetime.strptime(app.config['CURRENT_TERM_BEGIN'], '%Y-%m-%d'),
+                time_hours=9,
+                time_minutes=15,
+            )
+            assert first_day_start.month == 9
+            assert first_day_start.day == 1
+
+    def test_timestamps(self):
+        """Epoch timestamp in PST timezone."""
+        with override_config(app, 'CURRENT_TERM_BEGIN', _get_wednesday_august_26()):
+            first_day_start = get_first_matching_datetime_of_term(
+                meeting_days=['TU', 'TH'],
+                start_date=datetime.strptime(app.config['CURRENT_TERM_BEGIN'], '%Y-%m-%d'),
+                time_hours=9,
+                time_minutes=37,
+            )
+            assert first_day_start.timestamp() == 1598546220.0
+
+
+def _get_wednesday_august_26():
+    # Aug 26, 2020, is a Wednesday.
+    return '2020-08-26'
+
+
+def _timezone():
+    return pytz.timezone(app.config['TIMEZONE'])
 
 
 def _format(date):
