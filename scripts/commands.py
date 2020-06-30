@@ -103,3 +103,23 @@ def assign_blackout_dates(rehearsal):
             _print('Empty list of blackout_dates in Diablo config file.')
 
         _print('Have a nice day!')
+
+
+@application.cli.command('update_lti')
+def update_lti():
+    """Update Kaltura LTI configurations in Canvas to match local Diablo configs."""
+    with application.app_context():
+        from diablo.externals.canvas import update_lti_configurations
+
+        print('Starting LTI configuration update...')
+
+        successes, errors = update_lti_configurations()
+        if successes:
+            print('The following tools were updated:')
+            for tool_name in successes:
+                print(f'  * {tool_name}')
+        if errors:
+            print('The following tools could not be updated:')
+            for tool_name in errors:
+                print(f'  * {tool_name}')
+            print('Check app logs for details.')

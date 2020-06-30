@@ -25,7 +25,9 @@ ENHANCEMENTS, OR MODIFICATIONS.
 import re
 
 from canvasapi import Canvas
+from canvasapi.external_tool import ExternalTool
 from diablo import skip_when_pytest
+from diablo.lib.util import resolve_xml_template
 from flask import current_app as app
 
 
@@ -57,6 +59,40 @@ def get_canvas_course_sites(canvas_enrollment_term_id):
 
 def ping_canvas():
     return _get_canvas() is not None
+
+
+def update_lti_configurations():
+    canvas = Canvas(
+        base_url=app.config['CANVAS_API_URL'],
+        access_token=app.config['CANVAS_ACCESS_TOKEN'],
+    )
+    successes = []
+    errors = []
+    for tool_name, tool_id in app.config.get('CANVAS_LTI_EXTERNAL_TOOL_IDS', {}).items():
+        xml_string = resolve_xml_template(f'{tool_name}.xml')
+        external_tool = ExternalTool(
+            canvas._Canvas__requester,
+            {
+                'account_id': app.config['CANVAS_BERKELEY_ACCOUNT_ID'],
+                'id': tool_id,
+            },
+        )
+        response = None
+        try:
+            response = external_tool.edit(
+                config_type='by_xml',
+                config_xml=xml_string,
+                consumer_key=app.config['CANVAS_LTI_KEY'],
+                shared_secret=app.config['CANVAS_LTI_SECRET'],
+            )
+        except Exception as e:
+            app.logger.error(f'Failed to update external tool {tool_name} due to error: {str(e)}')
+            app.logger.exception(e)
+        if response and response.name:
+            successes.append(response.name)
+        else:
+            errors.append(tool_name)
+    return successes, errors
 
 
 def _get_canvas():
