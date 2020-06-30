@@ -22,11 +22,9 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from datetime import datetime
-
 from diablo.jobs.base_job import BaseJob
 from diablo.jobs.errors import BackgroundJobError
-from diablo.lib.berkeley import get_recording_end_date, get_recording_start_date
+from diablo.lib.berkeley import scheduled_dates_are_obsolete
 from diablo.lib.interpolator import interpolate_content
 from diablo.merged.emailer import get_admin_alert_recipient
 from diablo.models.email_template import EmailTemplate
@@ -95,14 +93,7 @@ class AdminEmailsJob(BaseJob):
             course = courses_by_section_id[scheduled.section_id]
             meetings = course.get('meetings', {}).get('eligible', [])
             if len(meetings):
-                api_json = scheduled.to_api_json()
-                expected_start_date = get_recording_start_date(meetings[0])
-                expected_end_date = get_recording_end_date(meetings[0])
-
-                def _format(date):
-                    return datetime.strftime(date, '%Y-%m-%d')
-                start_date_mismatch = _format(expected_start_date) != api_json['meetingStartDate']
-                if start_date_mismatch or _format(expected_end_date) != api_json['meetingEndDate']:
+                if scheduled_dates_are_obsolete(meeting=meetings[0], scheduled=scheduled.to_api_json()):
                     self._notify(course=course, template_type=template_type)
 
     def _instructor_change_alerts(self):

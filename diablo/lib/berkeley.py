@@ -37,12 +37,28 @@ def get_recording_end_date(meeting):
     return actual_end if actual_end < term_end else term_end
 
 
-def get_recording_start_date(meeting):
+def get_recording_start_date(meeting, return_today_if_past_start=False):
     term_begin = datetime.strptime(app.config['CURRENT_TERM_RECORDINGS_BEGIN'], '%Y-%m-%d')
     actual_start = datetime.strptime(meeting['startDate'].split()[0], '%Y-%m-%d')
     start_date = actual_start if actual_start > term_begin else term_begin
     today = datetime.today()
-    return start_date if start_date > today else today
+    return today if start_date < today and return_today_if_past_start else start_date
+
+
+def scheduled_dates_are_obsolete(meeting, scheduled):
+    if meeting:
+        def _format(date):
+            return datetime.strftime(date, '%Y-%m-%d')
+        expected_start_date = get_recording_start_date(meeting, return_today_if_past_start=False)
+        expected_end_date = get_recording_end_date(meeting)
+        # Is the schedule-of-recordings in Kaltura still valid?
+        start_date_mismatch = _format(expected_start_date) != scheduled['meetingStartDate']
+        end_date_mismatch = _format(expected_end_date) != scheduled['meetingEndDate']
+        # If recordings were scheduled AFTER the meeting_start_date then we will ignore start_date_mismatch
+        scheduled_after_start_date = scheduled['createdAt'][0:10] > _format(expected_start_date)
+        return end_date_mismatch if scheduled_after_start_date else (start_date_mismatch or end_date_mismatch)
+    else:
+        return True
 
 
 def term_name_for_sis_id(sis_id=None):

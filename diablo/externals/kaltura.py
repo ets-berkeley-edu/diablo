@@ -312,7 +312,7 @@ class Kaltura:
         """)
 
         term_name = term_name_for_sis_id(term_id)
-        recording_start_date = get_recording_start_date(meeting)
+        recording_start_date = get_recording_start_date(meeting, return_today_if_past_start=True)
         recording_end_date = get_recording_end_date(meeting)
         summary = f'{course_label} ({term_name})'
         description = f"""{course_label} ({term_name}) meets in {room.location},

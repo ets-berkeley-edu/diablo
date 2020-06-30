@@ -748,8 +748,8 @@ class TestCoursesChanges:
         course = _find_course(api_json=api_json, section_id=section_2_id)
         assert course
         assert course['scheduled']['hasObsoleteRoom'] is True
-        assert course['scheduled']['hasObsoleteMeetingDates'] is False
-        assert course['scheduled']['hasObsoleteMeetingTimes'] is False
+        assert course['scheduled']['hasObsoleteDates'] is False
+        assert course['scheduled']['hasObsoleteTimes'] is False
         assert course['scheduled']['hasObsoleteInstructors'] is False
 
     def test_has_obsolete_meeting_times(self, client, admin_session):
@@ -765,7 +765,7 @@ class TestCoursesChanges:
                 meeting_days=obsolete_meeting_days,
                 meeting_end_date=get_recording_end_date(meeting),
                 meeting_end_time=meeting['endTime'],
-                meeting_start_date=get_recording_start_date(meeting),
+                meeting_start_date=get_recording_start_date(meeting, return_today_if_past_start=True),
                 meeting_start_time=meeting['startTime'],
                 publish_type_='kaltura_my_media',
                 recording_type_='presentation_audio',
@@ -779,8 +779,8 @@ class TestCoursesChanges:
             course = _find_course(api_json=api_json, section_id=section_1_id)
             assert course
             assert course['scheduled']['hasObsoleteRoom'] is False
-            assert course['scheduled']['hasObsoleteMeetingDates'] is False
-            assert course['scheduled']['hasObsoleteMeetingTimes'] is True
+            assert course['scheduled']['hasObsoleteDates'] is False
+            assert course['scheduled']['hasObsoleteTimes'] is True
             assert course['scheduled']['hasObsoleteInstructors'] is False
 
     def test_has_obsolete_meeting_dates(self, client, admin_session):
@@ -810,8 +810,8 @@ class TestCoursesChanges:
             course = _find_course(api_json=api_json, section_id=section_1_id)
             assert course
             assert course['scheduled']['hasObsoleteRoom'] is False
-            assert course['scheduled']['hasObsoleteMeetingDates'] is True
-            assert course['scheduled']['hasObsoleteMeetingTimes'] is False
+            assert course['scheduled']['hasObsoleteDates'] is True
+            assert course['scheduled']['hasObsoleteTimes'] is False
             assert course['scheduled']['hasObsoleteInstructors'] is False
 
     def test_has_obsolete_instructors(self, client, admin_session):
@@ -825,7 +825,7 @@ class TestCoursesChanges:
                 meeting_days=meeting['days'],
                 meeting_end_date=get_recording_end_date(meeting),
                 meeting_end_time=meeting['endTime'],
-                meeting_start_date=get_recording_start_date(meeting),
+                meeting_start_date=get_recording_start_date(meeting, return_today_if_past_start=True),
                 meeting_start_time=meeting['startTime'],
                 publish_type_='kaltura_my_media',
                 recording_type_='presenter_audio',
@@ -839,8 +839,8 @@ class TestCoursesChanges:
             course = _find_course(api_json=api_json, section_id=section_3_id)
             assert course
             assert course['scheduled']['hasObsoleteRoom'] is False
-            assert course['scheduled']['hasObsoleteMeetingDates'] is False
-            assert course['scheduled']['hasObsoleteMeetingTimes'] is False
+            assert course['scheduled']['hasObsoleteDates'] is False
+            assert course['scheduled']['hasObsoleteTimes'] is False
             assert course['scheduled']['hasObsoleteInstructors'] is True
             assert len(course['instructors']) == 1
             assert course['instructors'][0]['name'] == 'Terry Lewis'
@@ -1126,7 +1126,7 @@ def _schedule_recordings(
         meeting_days=meeting['days'],
         meeting_end_date=get_recording_end_date(meeting),
         meeting_end_time=meeting['endTime'],
-        meeting_start_date=get_recording_start_date(meeting),
+        meeting_start_date=get_recording_start_date(meeting, return_today_if_past_start=True),
         meeting_start_time=meeting['startTime'],
         publish_type_=publish_type,
         recording_type_=recording_type,

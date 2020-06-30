@@ -25,7 +25,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 from datetime import datetime
 
 from diablo import db
-from diablo.lib.berkeley import get_recording_end_date, get_recording_start_date
+from diablo.lib.berkeley import get_recording_end_date, get_recording_start_date, scheduled_dates_are_obsolete
 from diablo.lib.util import format_days, format_time
 from diablo.models.approval import Approval
 from diablo.models.canvas_course_site import CanvasCourseSite
@@ -218,8 +218,8 @@ class SisSection(db.Model):
             scheduled = course['scheduled']
             if scheduled['hasObsoleteRoom'] \
                     or scheduled['hasObsoleteInstructors'] \
-                    or scheduled['hasObsoleteMeetingDates'] \
-                    or scheduled['hasObsoleteMeetingTimes']:
+                    or scheduled['hasObsoleteDates'] \
+                    or scheduled['hasObsoleteTimes']:
                 courses.append(course)
             if scheduled['hasObsoleteInstructors']:
                 obsolete_instructor_uids.update(scheduled['instructorUids'])
@@ -767,14 +767,8 @@ def _decorate_course_scheduling(course):
 
 def _decorate_course_changes(course):
     meetings = course['meetings']['eligible'] + course['meetings']['ineligible']
-    if meetings:
-        meeting = meetings[0]
-        course_meeting_date = '-'.join(
-            [
-                datetime.strftime(get_recording_start_date(meeting), '%Y-%m-%d'),
-                datetime.strftime(get_recording_end_date(meeting), '%Y-%m-%d'),
-            ],
-        )
+    meeting = meetings[0] if meetings else None
+    if meeting:
         course_meeting_time = '-'.join(
             [
                 str(meeting['daysFormatted']),
@@ -784,17 +778,10 @@ def _decorate_course_changes(course):
         )
         room_id = meeting.get('room', {}).get('id')
     else:
-        course_meeting_date = '-'
         course_meeting_time = '-'
         room_id = None
 
     if course['scheduled']:
-        scheduled_meeting_date = '-'.join(
-            [
-                course['scheduled']['meetingStartDate'],
-                course['scheduled']['meetingEndDate'],
-            ],
-        )
         scheduled_meeting_time = '-'.join(
             [
                 str(course['scheduled']['meetingDays']),
@@ -805,10 +792,11 @@ def _decorate_course_changes(course):
         instructor_uids = [i['uid'] for i in course['instructors']]
         has_obsolete_instructors = set(instructor_uids) != set(course.get('scheduled').get('instructorUids'))
 
+        obsolete_dates = scheduled_dates_are_obsolete(meeting=meeting, scheduled=course['scheduled'])
         course['scheduled'].update({
             'hasObsoleteInstructors': has_obsolete_instructors,
-            'hasObsoleteMeetingDates': course_meeting_date != scheduled_meeting_date,
-            'hasObsoleteMeetingTimes': course_meeting_time != scheduled_meeting_time,
+            'hasObsoleteDates': obsolete_dates,
+            'hasObsoleteTimes': course_meeting_time != scheduled_meeting_time,
             'hasObsoleteRoom': room_id != course.get('scheduled').get('room', {}).get('id'),
         })
 

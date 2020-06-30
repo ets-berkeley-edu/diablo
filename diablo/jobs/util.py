@@ -193,7 +193,7 @@ def schedule_recordings(all_approvals, course):
                 meeting_days=meeting['days'],
                 meeting_end_date=get_recording_end_date(meeting),
                 meeting_end_time=meeting['endTime'],
-                meeting_start_date=get_recording_start_date(meeting),
+                meeting_start_date=get_recording_start_date(meeting, return_today_if_past_start=True),
                 meeting_start_time=meeting['startTime'],
                 publish_type_=approval.publish_type,
                 recording_type_=approval.recording_type,
