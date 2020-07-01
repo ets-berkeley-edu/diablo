@@ -3,39 +3,6 @@
     <v-list-item-title class="pl-4 pt-4">
       <h4 class="title">Recordings scheduled</h4>
       <div v-if="$currentUser.isAdmin" class="d-flex align-bottom">
-        <v-dialog v-if="$currentUser.isAdmin && course.scheduled.kalturaSchedule" v-model="kalturaScheduleDialogJSON">
-          <template v-slot:activator="{ on }">
-            <v-btn
-              class="pa-0"
-              text
-              x-small
-              v-on="on"
-            >
-              <v-icon id="kaltura-schedule-dialog" class="pt-1" v-on="on">
-                mdi-code-json
-              </v-icon>
-            </v-btn>
-          </template>
-          <v-card>
-            <v-card-title primary-title>
-              Raw JSON of Kaltura schedule
-            </v-card-title>
-            <v-card-text>
-              <pre>{{ course.scheduled.kalturaSchedule }}</pre>
-            </v-card-text>
-            <v-divider></v-divider>
-            <v-card-actions>
-              <v-spacer></v-spacer>
-              <v-btn
-                color="primary"
-                text
-                @click="kalturaScheduleDialogJSON = false"
-              >
-                Close
-              </v-btn>
-            </v-card-actions>
-          </v-card>
-        </v-dialog>
         <div>
           <a
             id="link-to-edit-kaltura-event"
@@ -123,8 +90,7 @@
     data: () => ({
       agreedToTerms: false,
       currentUserMustApprove: undefined,
-      isApproving: false,
-      kalturaScheduleDialogJSON: false
+      isApproving: false
     }),
     created() {
       this.currentUserMustApprove = !this.$currentUser.isAdmin && !this.$_.includes(this.$_.map(this.course.approvals, 'approvedBy.uid'), this.$currentUser.uid)

@@ -89,40 +89,39 @@
               </tbody>
             </template>
           </v-simple-table>
-          <div class="ma-5">
-            <v-dialog v-model="rawJsonDialog[item.id]">
-              <template v-slot:activator="{ on }">
-                <v-btn color="accent" dark v-on="on">
-                  <v-icon :id="`kaltura-event-{item.id}-recurrences`" class="pr-3" v-on="on">
-                    mdi-code-json
-                  </v-icon> Raw JSON
-                </v-btn>
-              </template>
-              <v-card>
-                <v-card-title class="headline grey lighten-2" primary-title>
-                  Recurrences in series {{ item.id }}
-                </v-card-title>
-                <v-card-text>
-                  <pre>{{ item.recurrences }}</pre>
-                </v-card-text>
-                <v-divider></v-divider>
-                <v-card-actions>
-                  <v-spacer></v-spacer>
-                  <v-btn
-                    color="primary"
-                    text
-                    @click="rawJsonDialog[item.id] = false"
-                  >
-                    Close
-                  </v-btn>
-                </v-card-actions>
-              </v-card>
-            </v-dialog>
-          </div>
         </div>
-        <pre v-if="!item.recurrences">
-          {{ item }}
-        </pre>
+        <v-simple-table v-if="!item.recurrences" class="ma-5">
+          <template v-slot:default>
+            <thead>
+              <tr>
+                <th class="text-left">Key</th>
+                <th class="text-left">Value</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="key in ['id', 'summary', 'description', 'endDate', 'startDate', 'durationFormatted', 'status', 'classificationType']" :key="key">
+                <td class="w-30">{{ key }}</td>
+                <td v-if="item[key]">
+                  <span v-if="$_.endsWith(key, 'Date')">{{ item[key] | moment('MMM D, YYYY') }}</span>
+                  <div v-if="!$_.endsWith(key, 'Date')">
+                    <span v-if="key === 'id'">
+                      <a
+                        :id="`kaltura-event-${item[key]}`"
+                        :href="`${$config.kalturaMediaSpaceUrl}/recscheduling/index/edit-event/eventid/${item[key]}`"
+                        target="_blank"
+                        :aria-label="`Open Kaltura MediaSpace in a new window (event ${item[key]})`"
+                      >
+                        {{ item[key] }} <v-icon small class="pl-2">mdi-open-in-new</v-icon>
+                      </a>
+                    </span>
+                    <span v-if="key !== 'id'">{{ item[key] }}</span>
+                  </div>
+                </td>
+                <td v-if="!item[key]">&mdash;</td>
+              </tr>
+            </tbody>
+          </template>
+        </v-simple-table>
       </td>
     </template>
   </v-data-table>
@@ -145,8 +144,7 @@
           { text: 'End', value: 'endDate', sortable: false },
           { text: 'Duration', value: 'duration', sortable: false },
           { text: 'Days', value: 'days', sortable: false }
-      ],
-      rawJsonDialog: {},
+      ]
     }),
   }
 </script>
