@@ -26,6 +26,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 from datetime import datetime
 from datetime import timedelta
 
+import dateutil.parser
 from flask import current_app as app
 from xena.models.room import Room
 
@@ -70,3 +71,27 @@ class Meeting(object):
 
     def get_berkeley_end_time(self):
         return Meeting.add_minutes(self.end_time, 2)
+
+    def expected_recording_dates(self, term):
+        weekdays = ['MO', 'TU', 'WE', 'TH', 'FR']
+        weekday_indices = []
+        for day in weekdays:
+            if day in self.days:
+                weekday_indices.append(weekdays.index(day))
+
+        term_start_date = dateutil.parser.parse(f'{term.start_date}').date()
+        last_record_date = dateutil.parser.parse(f'{term.last_record_date}').date()
+        delta = last_record_date - term_start_date
+
+        holidays = []
+        for i in app.config['KALTURA_BLACKOUT_DATES']:
+            day = dateutil.parser.parse(i).date()
+            holidays.append(day)
+
+        recording_dates = []
+        for i in range(delta.days + 1):
+            day = term_start_date + timedelta(i)
+            if day.weekday() in weekday_indices and day not in holidays:
+                recording_dates.append(day)
+
+        return recording_dates

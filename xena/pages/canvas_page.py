@@ -23,6 +23,8 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
+import time
+
 from flask import current_app as app
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
@@ -64,7 +66,7 @@ class CanvasPage(Page):
     CREATE_SITE_BUTTON = (By.XPATH, '//button[text()="Create Course Site"]')
 
     @staticmethod
-    def form_loc():
+    def junction_form_loc():
         junction_url = app.config['JUNCTION_BASE_URL']
         return By.XPATH, f'//form[contains(@action, "{junction_url}")]'
 
@@ -111,13 +113,17 @@ class CanvasPage(Page):
             self.when_not_present(CanvasPage.ACCEPT_INVITE_BUTTON)
 
     def provision_site(self, section, section_ids, site):
-        app.logger.info(f'Creating a site for {section.code} sections {section_ids}')
+        epoch = int(time.time())
+        site.name = f'{site.name} {epoch}'
+        site.code = f'{site.code} {epoch}'
+        app.logger.info(f'Creating a site named {site.code} for {section.code} sections {section_ids}')
 
         # Load tool
         admin_id = app.config['CANVAS_ADMIN_ID']
         tool_id = app.config['CANVAS_SITE_CREATION_TOOL']
         self.driver.get(f'{app.config["CANVAS_BASE_URL"]}/users/{admin_id}/external_tools/{tool_id}')
-        Wait(self.driver, util.get_medium_timeout()).until(ec.presence_of_element_located(CanvasPage.form_loc()))
+        Wait(self.driver, util.get_medium_timeout()).until(ec.presence_of_element_located(CanvasPage.junction_form_loc()))
+        self.hide_canvas_footer()
         Wait(self.driver, util.get_medium_timeout()).until(ec.frame_to_be_available_and_switch_to_it(CanvasPage.FRAME))
         self.wait_for_element_and_click(CanvasPage.CREATE_SITE_LINK)
 
@@ -126,17 +132,18 @@ class CanvasPage(Page):
         self.wait_for_page_and_click_js(CanvasPage.SWITCH_TO_CCN_BUTTON)
         self.wait_for_page_and_click_js(CanvasPage.term_loc())
         self.wait_for_element_and_type(CanvasPage.CCN_TEXT_AREA, ', '.join(section_ids))
-        self.wait_for_page_and_click(CanvasPage.REVIEW_CCNS_BUTTON)
-        self.wait_for_page_and_click(CanvasPage.NEXT_BUTTON)
+        self.wait_for_page_and_click_js(CanvasPage.REVIEW_CCNS_BUTTON)
+        self.wait_for_page_and_click_js(CanvasPage.NEXT_BUTTON)
 
         # Name and create site; store site ID
+        self.scroll_to_bottom()
         self.wait_for_element_and_type(CanvasPage.SITE_NAME_INPUT, f'{site.name}')
         self.wait_for_element_and_type(CanvasPage.SITE_ABBREV_INPUT, f'{site.code}')
-        self.wait_for_element_and_click(CanvasPage.CREATE_SITE_BUTTON)
+        self.wait_for_page_and_click_js(CanvasPage.CREATE_SITE_BUTTON)
         Wait(self.driver, util.get_long_timeout()).until(ec.url_contains('/courses/'))
         parts = self.driver.current_url.split('/')
         site.site_id = [i for i in parts if i][-1]
-        app.logger.info(f'Site ID is {site.site_id}')
+        app.logger.info(f'Site {site.code} ID is {site.site_id}')
         section.sites.append(site)
 
     def delete_site(self, site_id):
@@ -149,6 +156,13 @@ class CanvasPage(Page):
         site_ids = util.get_course_site_ids(section)
         for site_id in site_ids:
             self.delete_site(site_id)
+
+    # KALTURA
+
+    @staticmethod
+    def kaltura_form_loc():
+        tool_url = app.config['KALTURA_TOOL_URL']
+        return By.XPATH, f'//form[contains(@action, "{tool_url}")]'
 
     @staticmethod
     def tool_nav_link_locator(tool):
@@ -194,8 +208,22 @@ class CanvasPage(Page):
         app.logger.info('Clicking the Media Gallery LTI tool')
         self.hide_canvas_footer()
         self.wait_for_page_and_click(CanvasPage.MEDIA_GALLERY_LINK)
+        Wait(self.driver, util.get_medium_timeout()).until(ec.presence_of_element_located(CanvasPage.kaltura_form_loc()))
 
     def click_my_media_tool(self):
         app.logger.info('Clicking the My Media LTI tool')
         self.hide_canvas_footer()
         self.wait_for_page_and_click(CanvasPage.MY_MEDIA_LINK)
+        Wait(self.driver, util.get_medium_timeout()).until(ec.presence_of_element_located(CanvasPage.kaltura_form_loc()))
+
+    def load_media_gallery_tool(self, site):
+        app.logger.info(f'Loading Media Gallery on site ID {site.site_id}')
+        tool_id = app.config['CANVAS_MEDIA_GALLERY_TOOL']
+        self.driver.get(f'{app.config["CANVAS_BASE_URL"]}/courses/{site.site_id}/external_tools/{tool_id}')
+        Wait(self.driver, util.get_medium_timeout()).until(ec.presence_of_element_located(CanvasPage.kaltura_form_loc()))
+
+    def load_my_media_tool(self, site):
+        app.logger.info(f'Loading My Media on site ID {site.site_id}')
+        tool_id = app.config['CANVAS_MY_MEDIA_TOOL']
+        self.driver.get(f'{app.config["CANVAS_BASE_URL"]}/courses/{site.site_id}/external_tools/{tool_id}')
+        Wait(self.driver, util.get_medium_timeout()).until(ec.presence_of_element_located(CanvasPage.kaltura_form_loc()))

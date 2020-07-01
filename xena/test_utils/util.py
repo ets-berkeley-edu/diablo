@@ -27,7 +27,6 @@ from datetime import datetime, timedelta
 import json
 import time
 
-import dateutil.parser
 from diablo import db, std_commit
 from diablo.models.scheduled import Scheduled
 from flask import current_app as app
@@ -147,48 +146,13 @@ def get_next_date(start_date, day_index):
     return start_date + timedelta(days_ahead)
 
 
-def get_first_recording_date(meeting):
-    term_start_date = datetime.strptime(app.config['CURRENT_TERM_BEGIN'], '%Y-%m-%d')
-    day_to_index = {'MO': 0, 'TU': 1, 'WE': 2, 'TH': 3, 'FR': 4}
-    schedule_days_str = meeting.days.replace(' ', '').split(',')
-    schedule_days_ind = [day_to_index[day] for day in schedule_days_str]
-    next_dates = [get_next_date(term_start_date, index) for index in schedule_days_ind]
-    next_dates.sort()
-    return next_dates[0]
-
-
-def expected_recording_dates(term, meeting):
-    weekdays = ['MO', 'TU', 'WE', 'TH', 'FR']
-    weekday_indices = []
-    for day in weekdays:
-        if day in meeting.days:
-            weekday_indices.append(weekdays.index(day))
-
-    term_start_date = dateutil.parser.parse(f'{term.start_date}').date()
-    term_end_date = dateutil.parser.parse(f'{term.end_date}').date()
-    delta = term_end_date - term_start_date
-
-    holidays = []
-    for i in app.config['KALTURA_BLACKOUT_DATES']:
-        day = dateutil.parser.parse(i).date()
-        holidays.append(day)
-
-    recording_dates = []
-    for i in range(delta.days + 1):
-        day = term_start_date + timedelta(i)
-        if day.weekday() in weekday_indices and day not in holidays:
-            recording_dates.append(day)
-
-    return recording_dates
-
-
 def reset_invite_test_data(term, section, instructor=None):
     # So that invitation will be sent to one instructor on a course
     if instructor:
         sql = f"""DELETE FROM sent_emails
                   WHERE term_id = {term.id}
                     AND section_id = {section.ccn}
-                    AND recipient_id = '{instructor.uid}'
+                    AND recipient_uid = '{instructor.uid}'
                     AND template_type = 'invitation'
         """
     # So that invitations will be sent to all instructors on a course
@@ -214,10 +178,10 @@ def set_course_room(section, meeting):
     std_commit(allow_test_environment=True)
 
 
-def set_course_meeting_time(section):
-    start_time = datetime.strptime(section.start_time, '%I:%M%p')
+def set_course_meeting_time(section, meeting):
+    start_time = datetime.strptime(meeting.start_time, '%I:%M%p')
     start_time_str = start_time.strftime('%H:%M')
-    end_time = datetime.strptime(section.end_time, '%I:%M%p')
+    end_time = datetime.strptime(meeting.end_time, '%I:%M%p')
     end_time_str = end_time.strftime('%H:%M')
     sql = f"""UPDATE sis_sections
               SET meeting_start_time = '{start_time_str}',

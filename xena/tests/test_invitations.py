@@ -65,12 +65,12 @@ class TestInvitations:
         self.jobs_page.run_queued_emails_job()
 
     def test_course_auto_invites_delivered(self):
-        subject = f'Invitation {self.section.term.name} {self.section.code} (To: {self.section_1.instructors[0].email})'
+        subject = f'Invitation {self.section_1.term.name} {self.section_1.code} (To: {self.section_1.instructors[0].email})'
         email = Email(msg_type=None, sender=None, subject=subject)
         assert self.email_page.is_message_delivered(email) is True
 
     def test_course_auto_invites_not_delivered(self):
-        subject = f'Invitation {self.section.term.name} {self.section.code} (To: {self.section_2.instructors[0].email})'
+        subject = f'Invitation {self.section_2.term.name} {self.section_2.code} (To: {self.section_2.instructors[0].email})'
         email = Email(msg_type=None, sender=None, subject=subject)
         assert self.email_page.is_message_present(email) is False
 
@@ -82,7 +82,7 @@ class TestInvitations:
         self.jobs_page.run_queued_emails_job()
 
     def test_inst_auto_invite_delivered(self):
-        subject = f'Invitation {self.section.term.name} {self.section.code} (To: {self.section_1.instructors[0].email})'
+        subject = f'Invitation {self.section_1.term.name} {self.section_1.code} (To: {self.section_1.instructors[0].email})'
         email = Email(msg_type=None, sender=None, subject=subject)
         assert self.email_page.is_message_delivered(email)
 
@@ -115,6 +115,6 @@ class TestInvitations:
         self.jobs_page.run_queued_emails_job()
 
     def test_course_manual_invite_delivered(self):
-        subject = f'Invitation {self.section.term.name} {self.section.code} (To: {self.section_1.instructors[0].email})'
+        subject = f'Invitation {self.section_1.term.name} {self.section_1.code} (To: {self.section_1.instructors[0].email})'
         email = Email(msg_type=None, sender=None, subject=subject)
         assert self.email_page.is_message_delivered(email) is True

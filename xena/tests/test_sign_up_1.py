@@ -207,7 +207,8 @@ class TestSignUp1:
 
     def test_visible_meeting_days(self):
         term_dates = f'{SignUpPage.expected_term_date_str(self.meeting.start_date, self.meeting.end_date)}'
-        assert self.sign_up_page.visible_meeting_days()[0] == f'{self.meeting.days}\n{term_dates}'
+        last_date = f'(Final recording scheduled for {SignUpPage.expected_final_record_date_str(self.meeting, self.section.term)}.)'
+        assert self.sign_up_page.visible_meeting_days()[0] == f'{self.meeting.days}\n{term_dates}\n{last_date}'
 
     def test_visible_meeting_time(self):
         assert self.sign_up_page.visible_meeting_time()[0] == f'{self.meeting.start_time} - {self.meeting.end_time}'
@@ -323,18 +324,19 @@ class TestSignUp1:
         assert self.room_page.series_row_kaltura_link_text(self.recording_schedule) == expected
 
     def test_room_series_start(self):
-        start = util.get_first_recording_date(self.meeting)
+        start = self.meeting.expected_recording_dates(self.section.term)[0]
         assert self.room_page.series_row_start_date(self.recording_schedule) == start
 
     def test_room_series_end(self):
-        assert self.room_page.series_row_end_date(self.recording_schedule) == self.term.end_date
+        last_date = self.meeting.expected_recording_dates(self.section.term)[-1]
+        assert self.room_page.series_row_end_date(self.recording_schedule) == last_date
 
     def test_room_series_days(self):
         assert self.room_page.series_row_days(self.recording_schedule) == self.meeting.days.replace(' ', '')
 
     def test_series_recordings(self):
         self.room_page.expand_series_row(self.recording_schedule)
-        expected = util.expected_recording_dates(self.section.term, self.meeting)
+        expected = self.meeting.expected_recording_dates(self.section.term)
         visible = self.room_page.series_recording_start_dates(self.recording_schedule)
         app.logger.info(f'Missing: {list(set(expected) - set(visible))}')
         app.logger.info(f'Unexpected: {list(set(visible) - set(expected))} ')
@@ -438,11 +440,11 @@ class TestSignUp1:
         assert not self.kaltura_page.is_sun_checked()
 
     def test_start_date(self):
-        start = util.get_kaltura_term_date_str(util.get_first_recording_date(self.meeting))
+        start = util.get_kaltura_term_date_str(self.meeting.expected_recording_dates(self.section.term)[0])
         assert self.kaltura_page.visible_start_date() == start
 
     def test_end_date(self):
-        end = util.get_kaltura_term_date_str(self.term.end_date)
+        end = util.get_kaltura_term_date_str(self.meeting.expected_recording_dates(self.section.term)[-1])
         assert self.kaltura_page.visible_end_date() == end
 
     def test_start_time(self):
@@ -578,7 +580,7 @@ class TestSignUp1:
         assert self.kaltura_page.is_published()
 
     def test_kaltura_course_site_count(self):
-        assert len(self.kaltura_page.publish_category_els) == 1
+        assert len(self.kaltura_page.publish_category_els()) == 1
 
     def test_kaltura_course_site(self):
         assert self.kaltura_page.is_publish_category_present(self.site)

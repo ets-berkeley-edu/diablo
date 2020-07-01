@@ -69,11 +69,11 @@ class RoomPage(DiabloPages):
 
     def series_row_start_date(self, recording_sched):
         text = self.element((By.XPATH, f'{RoomPage.series_row_xpath(recording_sched)}/td[4]/span')).text.strip()
-        return datetime.strptime(text, '%a, %b %d, %Y')
+        return datetime.strptime(text, '%a, %b %d, %Y').date()
 
     def series_row_end_date(self, recording_sched):
         text = self.element((By.XPATH, f'{RoomPage.series_row_xpath(recording_sched)}/td[5]/span')).text.strip()
-        return datetime.strptime(text, '%a, %b %d, %Y')
+        return datetime.strptime(text, '%a, %b %d, %Y').date()
 
     def series_row_duration(self, recording_sched):
         return self.element((By.XPATH, f'{RoomPage.series_row_xpath(recording_sched)}/td[6]/span')).text.strip()
@@ -83,7 +83,7 @@ class RoomPage(DiabloPages):
 
     def expand_series_row(self, recording_sched):
         app.logger.info(f'Expanding series recordings for Kaltura series ID {recording_sched.series_id}')
-        self.scroll_to_bottom()
+        self.hide_diablo_footer()
         self.wait_for_element_and_click((By.XPATH, f'{RoomPage.series_row_xpath(recording_sched)}//button'))
 
     @staticmethod

@@ -87,6 +87,10 @@ class SignUpPage(DiabloPages):
         return f'{start_str} to {end_str}'
 
     @staticmethod
+    def expected_final_record_date_str(meeting, term):
+        return meeting.expected_recording_dates(term)[-1].strftime('%b %-d, %Y')
+
+    @staticmethod
     def kaltura_series_link(recording_schedule):
         return By.PARTIAL_LINK_TEXT, f'Kaltura series {recording_schedule.series_id}'
 
@@ -147,6 +151,12 @@ class SignUpPage(DiabloPages):
         self.click_unschedule_button()
         self.wait_for_element_and_click(SignUpPage.UNSCHEDULE_CONFIRM_BUTTON)
         Wait(self.driver, util.get_medium_timeout()).until(ec.visibility_of_element_located(SignUpPage.APPROVE_BUTTON))
+        recording_schedule.scheduling_status = RecordingSchedulingStatus.NOT_SCHEDULED
+
+    def confirm_unscheduling_ineligible(self, recording_schedule):
+        self.click_unschedule_button()
+        self.wait_for_element_and_click(SignUpPage.UNSCHEDULE_CONFIRM_BUTTON)
+        Wait(self.driver, util.get_medium_timeout()).until(ec.visibility_of_element_located(SignUpPage.OPTED_OUT))
         recording_schedule.scheduling_status = RecordingSchedulingStatus.NOT_SCHEDULED
 
     def cancel_unscheduling(self):
