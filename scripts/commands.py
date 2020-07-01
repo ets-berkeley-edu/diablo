@@ -56,7 +56,7 @@ def delete_kaltura_events(rehearsal):
 
             for event in kaltura_events:
                 if not rehearsal:
-                    kaltura.delete(kaltura_schedule_id=event['id'])
+                    kaltura.delete(event_id=event['id'])
                 _print(f'Deleted --> {event["description"] or event["summary"]}')
         else:
             _print(f'No events found with tag {CREATED_BY_DIABLO_TAG}')
