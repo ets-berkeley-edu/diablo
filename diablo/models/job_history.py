@@ -22,7 +22,7 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from diablo import db, std_commit
 from diablo.lib.util import to_isoformat
@@ -74,9 +74,8 @@ class JobHistory(db.Model):
         return row
 
     @classmethod
-    def get_job_history_in_past_days(cls, day_count=1):
-        days_ago = datetime.now() - timedelta(days=day_count)
-        return cls.query.filter(cls.started_at >= days_ago).order_by(desc(cls.started_at)).all()
+    def get_job_history(cls):
+        return cls.query.order_by(desc(cls.started_at)).all()
 
     @staticmethod
     def fail_orphans():
