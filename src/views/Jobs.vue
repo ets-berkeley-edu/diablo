@@ -132,7 +132,6 @@
     components: {DisableJobToggle, JobHistory},
     mixins: [Context, Utils],
     data: () => ({
-      daysCount: 7,
       disableScheduleSave: false,
       editJob: undefined,
       editJobDialog: false,
@@ -174,7 +173,7 @@
       },
       refresh(quietly) {
         this.refreshing = true
-        return getJobHistory(this.daysCount).then(data => {
+        return getJobHistory().then(data => {
           this.jobHistory = data
           this.refreshing = false
           if (!quietly) {

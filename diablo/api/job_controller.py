@@ -83,18 +83,10 @@ def update_schedule():
     return tolerant_jsonify(job.to_api_json())
 
 
-@app.route('/api/job/history/<day_count>')
+@app.route('/api/job/history')
 @admin_required
-def job_history(day_count):
-    def _raise_error():
-        raise BadRequestError(f'Invalid day_count: {day_count}')
-    try:
-        days = int(day_count)
-        if days < 1:
-            _raise_error()
-        return tolerant_jsonify([h.to_api_json() for h in JobHistory.get_job_history_in_past_days(day_count=days)])
-    except ValueError:
-        _raise_error()
+def job_history():
+    return tolerant_jsonify([h.to_api_json() for h in JobHistory.get_job_history()])
 
 
 @app.route('/api/job/schedule')

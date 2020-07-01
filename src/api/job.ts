@@ -1,8 +1,8 @@
 import axios from 'axios'
 import utils from '@/api/api-utils'
 
-export function getJobHistory(daysCount) {
-  return axios.get(`${utils.apiBaseUrl()}/api/job/history/${daysCount}`)
+export function getJobHistory() {
+  return axios.get(`${utils.apiBaseUrl()}/api/job/history`)
 }
 
 export function getJobSchedule() {
