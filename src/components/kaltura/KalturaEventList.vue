@@ -43,7 +43,7 @@
     </template>
     <template v-slot:expanded-item="{ headers, item }">
       <td :colspan="headers.length">
-        <div v-if="item.children" class="ma-5">
+        <div v-if="item.recurrences" class="ma-5">
           <div class="title">
             Series
           </div>
@@ -57,7 +57,7 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="event in item.children" :key="event.id">
+                <tr v-for="event in item.recurrences" :key="event.id">
                   <td>
                     <v-tooltip v-if="$_.size(event.blackoutConflicts)" :id="`blackout-conflicts-${event.id}`" top>
                       <template v-slot:activator="{ on }">
@@ -93,17 +93,17 @@
             <v-dialog v-model="rawJsonDialog[item.id]">
               <template v-slot:activator="{ on }">
                 <v-btn color="accent" dark v-on="on">
-                  <v-icon :id="`kaltura-event-{item.id}-children`" class="pr-3" v-on="on">
+                  <v-icon :id="`kaltura-event-{item.id}-recurrences`" class="pr-3" v-on="on">
                     mdi-code-json
                   </v-icon> Raw JSON
                 </v-btn>
               </template>
               <v-card>
                 <v-card-title class="headline grey lighten-2" primary-title>
-                  Raw JSON of Event {{ item.id }} Children
+                  Recurrences in series {{ item.id }}
                 </v-card-title>
                 <v-card-text>
-                  <pre>{{ item.children }}</pre>
+                  <pre>{{ item.recurrences }}</pre>
                 </v-card-text>
                 <v-divider></v-divider>
                 <v-card-actions>
@@ -120,7 +120,7 @@
             </v-dialog>
           </div>
         </div>
-        <pre v-if="!item.children">
+        <pre v-if="!item.recurrences">
           {{ item }}
         </pre>
       </td>

@@ -444,66 +444,85 @@ def _to_normalized_set(strings):
     return set([s.strip().lower() for s in strings])
 
 
-def _events_to_api_json(scheduled_events):
-    def _event_to_json(event):
-        if isinstance(event, KalturaBlackoutScheduleEvent):
-            return _blackout_to_json(event)
+def _events_to_api_json(events):
+    # Time to organize. Find 'recurring' events and their corresponding 'recurrences'.
+    recurring_events = []
+    miscellanea = []
+    for event in [_event_to_json(event) for event in events]:
+        if event.get('recurrenceType', '').lower() == 'recurring':
+            recurring_events.append(event)
         else:
-            conflicts = [_blackout_to_json(e) for e in event.blackoutConflicts] if event.blackoutConflicts else None
-            api_json = {
-                'blackoutConflicts': conflicts,
-                'categoryIds': json.loads(event.categoryIds) if event.categoryIds else [],
-                'classificationType': get_classification_name(event.classificationType),
-                'comment': event.comment,
-                'contact': event.contact,
-                'createdAt': epoch_time_to_isoformat(event.createdAt),
-                'description': event.description,
-                'duration': event.duration,
-                'durationFormatted': str(timedelta(seconds=event.duration)) if event.duration else None,
-                'endDate': epoch_time_to_isoformat(event.endDate),
-                'entryIds': event.entryIds,
-                'geoLatitude': event.geoLatitude,
-                'geoLongitude': event.geoLongitude,
-                'id': event.id,
-                'location': event.location,
-                'organizer': event.organizer,
-                'ownerId': event.ownerId,
-                'parentId': event.parentId,
-                'partnerId': event.partnerId,
-                'priority': event.priority,
-                'recurrenceType': get_recurrence_name(event.recurrenceType),
-                'referenceId': event.referenceId,
-                'relatedObjects': event.relatedObjects,
-                'sequence': event.sequence,
-                'startDate': epoch_time_to_isoformat(event.startDate),
-                'status': get_status_name(event.status),
-                'summary': event.summary,
-                'tags': event.tags,
-                'templateEntryId': event.templateEntryId,
-                'updatedAt': epoch_time_to_isoformat(event.updatedAt),
-            }
-            if event.recurrence:
-                api_json['recurrence'] = {
-                    'byDay': event.recurrence.byDay,
-                    'byHour': event.recurrence.byHour,
-                    'byMinute': event.recurrence.byMinute,
-                    'byMonth': event.recurrence.byMonth,
-                    'byMonthDay': event.recurrence.byMonthDay,
-                    'byOffset': event.recurrence.byOffset,
-                    'bySecond': event.recurrence.bySecond,
-                    'byWeekNumber': event.recurrence.byWeekNumber,
-                    'byYearDay': event.recurrence.byYearDay,
-                    'count': event.recurrence.count,
-                    'frequency': event.recurrence.frequency.value.capitalize(),
-                    'interval': event.recurrence.interval,
-                    'name': event.recurrence.name,
-                    'relatedObjects': event.recurrence.relatedObjects,
-                    'timeZone': event.recurrence.timeZone,
-                    'until': epoch_time_to_isoformat(event.recurrence.until),
-                }
-            return api_json
+            miscellanea.append(event)
 
-    return [_event_to_json(event) for event in scheduled_events]
+    for recurring_event in recurring_events:
+        def _belongs_in_the_series(e):
+            return e.get('recurrenceType', '').lower() == 'recurrence' and e.get('parentId') == recurring_event['id']
+        # Find events of the series.
+        recurrences = list(filter(lambda e: _belongs_in_the_series(e), miscellanea))
+        recurring_event['recurrences'] = recurrences
+        for recurrence in recurrences:
+            # The 'recurrence' is removed from the generic list.
+            miscellanea.remove(recurrence)
+    return recurring_events + miscellanea
+
+
+def _event_to_json(event):
+    if isinstance(event, KalturaBlackoutScheduleEvent):
+        return _blackout_to_json(event)
+    else:
+        conflicts = [_blackout_to_json(e) for e in event.blackoutConflicts] if event.blackoutConflicts else None
+        api_json = {
+            'blackoutConflicts': conflicts,
+            'categoryIds': json.loads(event.categoryIds) if event.categoryIds else [],
+            'classificationType': get_classification_name(event.classificationType),
+            'comment': event.comment,
+            'contact': event.contact,
+            'createdAt': epoch_time_to_isoformat(event.createdAt),
+            'description': event.description,
+            'duration': event.duration,
+            'durationFormatted': str(timedelta(seconds=event.duration)) if event.duration else None,
+            'endDate': epoch_time_to_isoformat(event.endDate),
+            'entryIds': event.entryIds,
+            'geoLatitude': event.geoLatitude,
+            'geoLongitude': event.geoLongitude,
+            'id': event.id,
+            'location': event.location,
+            'organizer': event.organizer,
+            'ownerId': event.ownerId,
+            'parentId': event.parentId,
+            'partnerId': event.partnerId,
+            'priority': event.priority,
+            'recurrenceType': get_recurrence_name(event.recurrenceType),
+            'referenceId': event.referenceId,
+            'relatedObjects': event.relatedObjects,
+            'sequence': event.sequence,
+            'startDate': epoch_time_to_isoformat(event.startDate),
+            'status': get_status_name(event.status),
+            'summary': event.summary,
+            'tags': event.tags,
+            'templateEntryId': event.templateEntryId,
+            'updatedAt': epoch_time_to_isoformat(event.updatedAt),
+        }
+        if event.recurrence:
+            api_json['recurrence'] = {
+                'byDay': event.recurrence.byDay,
+                'byHour': event.recurrence.byHour,
+                'byMinute': event.recurrence.byMinute,
+                'byMonth': event.recurrence.byMonth,
+                'byMonthDay': event.recurrence.byMonthDay,
+                'byOffset': event.recurrence.byOffset,
+                'bySecond': event.recurrence.bySecond,
+                'byWeekNumber': event.recurrence.byWeekNumber,
+                'byYearDay': event.recurrence.byYearDay,
+                'count': event.recurrence.count,
+                'frequency': event.recurrence.frequency.value.capitalize(),
+                'interval': event.recurrence.interval,
+                'name': event.recurrence.name,
+                'relatedObjects': event.recurrence.relatedObjects,
+                'timeZone': event.recurrence.timeZone,
+                'until': epoch_time_to_isoformat(event.recurrence.until),
+            }
+        return api_json
 
 
 def _blackout_to_json(event):
