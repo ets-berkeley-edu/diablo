@@ -520,7 +520,17 @@ class SisSection(db.Model):
                 AND s.is_primary IS TRUE AND s.is_principal_listing IS TRUE
                 AND s.meeting_location = :location
             LEFT JOIN instructors i ON i.uid = s.instructor_uid
-            ORDER BY s.meeting_days, s.meeting_start_time, s.section_id
+            ORDER BY CASE LEFT(s.meeting_days, 2)
+              WHEN 'MO' THEN 1
+              WHEN 'TU' THEN 2
+              WHEN 'WE' THEN 3
+              WHEN 'TH' THEN 4
+              WHEN 'FR' THEN 5
+              WHEN 'SA' THEN 6
+              WHEN 'SU' THEN 7
+              ELSE 8
+            END,
+            s.meeting_start_time, s.section_id
         """
         rows = db.session.execute(
             text(sql),
