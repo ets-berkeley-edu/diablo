@@ -819,10 +819,13 @@ class TestCoursesChanges:
     def test_has_obsolete_instructors(self, client, admin_session):
         """Admins can see instructor changes that might disrupt scheduled recordings."""
         with test_approvals_workflow(app):
-            meeting = get_eligible_meeting(section_id=section_3_id, term_id=self.term_id)
-            instructor_uids = get_instructor_uids(term_id=self.term_id, section_id=section_3_id)
+            meeting = get_eligible_meeting(section_id=section_1_id, term_id=self.term_id)
+            instructor_uids = get_instructor_uids(term_id=self.term_id, section_id=section_1_id)
+            # Course has multiple instructors; we will schedule using only one instructor UID.
+            assert len(instructor_uids) > 1
+            scheduled_with_uid = instructor_uids[0]
             Scheduled.create(
-                instructor_uids=instructor_uids + ['100099'],
+                instructor_uids=[scheduled_with_uid],
                 kaltura_schedule_id=random.randint(1, 10),
                 meeting_days=meeting['days'],
                 meeting_end_date=get_recording_end_date(meeting),
@@ -831,25 +834,22 @@ class TestCoursesChanges:
                 meeting_start_time=meeting['startTime'],
                 publish_type_='kaltura_my_media',
                 recording_type_='presenter_audio',
-                room_id=Room.get_room_id(section_id=section_3_id, term_id=self.term_id),
-                section_id=section_3_id,
+                room_id=Room.get_room_id(section_id=section_1_id, term_id=self.term_id),
+                section_id=section_1_id,
                 term_id=self.term_id,
             )
             std_commit(allow_test_environment=True)
 
             api_json = self._api_course_changes(client, term_id=self.term_id)
-            course = _find_course(api_json=api_json, section_id=section_3_id)
+            course = _find_course(api_json=api_json, section_id=section_1_id)
             assert course
             assert course['scheduled']['hasObsoleteRoom'] is False
             assert course['scheduled']['hasObsoleteDates'] is False
             assert course['scheduled']['hasObsoleteTimes'] is False
             assert course['scheduled']['hasObsoleteInstructors'] is True
-            assert len(course['instructors']) == 1
-            assert course['instructors'][0]['name'] == 'Terry Lewis'
-            assert course['instructors'][0]['uid'] == '10003'
-            assert len(course['scheduled']['instructors']) == 2
-            assert {'name': 'Terry Lewis', 'uid': '10003'} in course['scheduled']['instructors']
-            assert {'name': '', 'uid': '100099'} in course['scheduled']['instructors']
+            assert len(course['instructors']) == 2
+            assert len(course['scheduled']['instructors']) == 1
+            assert course['scheduled']['instructors'][0]['uid'] == scheduled_with_uid
 
 
 class TestCrossListedNameGeneration:
