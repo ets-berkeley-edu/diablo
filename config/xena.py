@@ -36,6 +36,8 @@ BASE_URL = 'https://manage-dev.coursecapture.berkeley.edu'
 CANVAS_ADMIN_ID = '123456'
 CANVAS_BASE_URL = 'https://ucberkeley.beta.instructure.com'
 CANVAS_SITE_CREATION_TOOL = '654321'
+CANVAS_MEDIA_GALLERY_TOOL = '13579'
+CANVAS_MY_MEDIA_TOOL = '24680'
 
 CLICK_SLEEP = 0.5
 
@@ -44,6 +46,8 @@ CURRENT_TERM_NAME = 'Fall 2020'
 INDEX_HTML = f'{BASE_DIR}/tests/static/test-index.html'
 
 JUNCTION_BASE_URL = 'https://junction-dev.berkeley.edu'
+
+KALTURA_TOOL_URL = 'https://kaltura.tool.url'
 
 LOGGING_LEVEL = logging.INFO
 

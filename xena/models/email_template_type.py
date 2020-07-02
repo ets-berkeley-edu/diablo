@@ -28,8 +28,10 @@ from enum import Enum
 
 class EmailTemplateType(Enum):
 
-    ADMIN_INSTR_CHANGE = 'Admin alert of instructor change'
+    ADMIN_DATE_CHANGE = 'Admin alert: Date change'
+    ADMIN_INSTR_CHANGE = 'Admin alert: Instructor change'
     ADMIN_ROOM_CHANGE = 'Admin alert: Room change'
+    ADMIN_WEIRD_DATES = 'Admin alert: Weird start/end dates'
     INSTR_AWAITING_APPROVAL = 'Waiting for approval'
     INSTR_INVITATION = 'Invitation'
     INSTR_RECORDINGS_SCHEDULED = 'Recordings scheduled'

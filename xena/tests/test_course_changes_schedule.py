@@ -24,8 +24,8 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 
 from datetime import datetime
-import time
 
+from flask import current_app as app
 import pytest
 from xena.models.email import Email
 from xena.models.publish_type import PublishType
@@ -33,11 +33,12 @@ from xena.models.recording_approval_status import RecordingApprovalStatus
 from xena.models.recording_schedule import RecordingSchedule
 from xena.models.recording_scheduling_status import RecordingSchedulingStatus
 from xena.models.section import Section
+from xena.pages.course_changes_page import CourseChangesPage
 from xena.test_utils import util
 
 
 @pytest.mark.usefixtures('page_objects')
-class TestCourseChanges:
+class TestCourseScheduleChanges:
 
     real_test_data = util.parse_course_test_data()[8]
     fake_test_data = util.parse_course_test_data()[9]
@@ -78,21 +79,16 @@ class TestCourseChanges:
         self.email_page.log_in()
         self.email_page.delete_all_messages()
 
-    # SCHEDULED COURSE CHANGES INSTRUCTOR
-
-    def test_set_fake_instr(self):
-        util.change_course_instructor(self.fake_section, self.real_section.instructors[0], self.fake_section.instructors[0])
-
-    def test_sign_up_with_fake_instr(self):
+    def test_sign_up(self):
         self.ouija_page.load_page()
         self.ouija_page.log_out()
-        self.login_page.dev_auth(self.fake_section.instructors[0].uid)
-        self.ouija_page.click_sign_up_page_link(self.fake_section)
+        self.login_page.dev_auth(self.real_section.instructors[0].uid)
+        self.ouija_page.click_sign_up_page_link(self.real_section)
         self.sign_up_page.select_publish_type(PublishType.BCOURSES.value)
         self.sign_up_page.click_agree_checkbox()
         self.sign_up_page.click_approve_button()
 
-    def test_schedule_recordings_with_fake_instr(self):
+    def test_schedule_recordings(self):
         self.sign_up_page.log_out()
         self.login_page.dev_auth()
         self.ouija_page.click_jobs_link()
@@ -108,54 +104,10 @@ class TestCourseChanges:
     def test_run_queued_email_job_with_instr_change(self):
         self.jobs_page.run_queued_emails_job()
 
-    def test_changes_page_with_instr_change(self):
-        self.jobs_page.click_course_changes_link()
-        self.changes_page.wait_for_course_row(self.real_section)
-        fake_instr_name = f'{self.fake_section.instructors[0].first_name} {self.fake_section.instructors[0].last_name}'
-        fake_instr_text = f'{fake_instr_name} ({self.fake_section.instructors[0].uid})'
-        real_instr_name = f'{self.real_section.instructors[0].first_name} {self.real_section.instructors[0].last_name}'
-        real_instr_text = f'{real_instr_name} ({self.real_section.instructors[0].uid})'
-        expected = f'{fake_instr_text}\n changed to\n {real_instr_text}'
-        actual = self.changes_page.course_instructor_info(self.real_section)
-        assert expected in actual
-
-    # TODO - verify filters
-
-    def test_admin_emails_with_instr_change(self):
-        subj = f'Course Capture Admin: {self.real_section.code} Instructor changes'
-        email = Email(msg_type=None, subject=subj, sender=None)
-        assert self.email_page.is_message_delivered(email)
-
-    def test_real_instr_approves(self):
-        self.ouija_page.load_page()
-        self.ouija_page.log_out()
-        self.login_page.dev_auth(self.real_section.instructors[0].uid)
-        self.ouija_page.click_sign_up_page_link(self.real_section)
-        # TODO - verify text and static options
-        self.sign_up_page.click_agree_checkbox()
-        self.sign_up_page.click_approve_button()
-
-    def test_changes_page_new_instr_approved(self):
-        self.sign_up_page.log_out()
-        self.login_page.dev_auth()
-        self.ouija_page.click_course_changes_link()
-        self.changes_page.wait_for_course_row(self.real_section)
-
-    def test_update_recordings_with_new_instr(self):
-        self.changes_page.click_jobs_link()
-        self.jobs_page.run_kaltura_job()
-
-    def test_changes_page_new_instr_in_kaltura(self):
-        # TODO verify the new instructor has replaced the old in the collaborators
-        time.sleep(15)
-        self.changes_page.load_page()
-        self.changes_page.wait_for_results()
-        assert not self.changes_page.is_course_row_present(self.real_section)
-
     # SCHEDULED COURSE CHANGES MEETING TIME
 
     def test_set_fake_meeting_time(self):
-        util.set_course_meeting_time(self.fake_section)
+        util.set_course_meeting_time(self.fake_section, self.fake_section.meetings[0])
 
     def test_run_admin_email_job_with_new_times(self):
         self.jobs_page.load_page()
@@ -167,17 +119,18 @@ class TestCourseChanges:
     def test_changes_page_with_new_times(self):
         self.jobs_page.click_course_changes_link()
         self.changes_page.wait_for_course_row(self.real_section)
-        fake_start = datetime.strftime(datetime.strptime(self.fake_meeting, '%I:%M%p'), '%-I:%M %p')
-        fake_end = datetime.strftime(datetime.strptime(self.fake_meeting, '%I:%M%p'), '%-I:%M %p')
-        real_start = datetime.strftime(datetime.strptime(self.real_meeting, '%I:%M%p'), '%-I:%M %p')
-        real_end = datetime.strftime(datetime.strptime(self.real_meeting, '%I:%M%p'), '%-I:%M %p')
-        fake_sched = f'{self.fake_meeting.replace(" ", "")} {fake_start} - {fake_end}'
-        real_sched = f'{self.real_meeting.replace(" ", "")} {real_start} - {real_end}'
-        expected = f'{real_sched}\n changed to\n{fake_sched}'
-        actual = self.changes_page.course_schedule_info(self.real_section)
+        fake_sched = f'{self.fake_meeting.days.replace(" ", "")} {CourseChangesPage.meeting_time_str(self.fake_meeting)}'
+        real_sched = f'{self.real_meeting.days.replace(" ", "")} {CourseChangesPage.meeting_time_str(self.real_meeting)}'
+        expected = f'{real_sched}\n changed to\n{fake_sched}'.upper()
+        actual = self.changes_page.course_schedule_info(self.real_section).upper()
+        app.logger.info(f'Expecting {expected}')
+        app.logger.info(f'Actual {actual}')
         assert expected in actual
 
-    # TODO - admin email?
+    def test_admin_email_received(self):
+        subj = f'Course Capture Admin: {self.real_section.code} schedule change'
+        email = Email(msg_type=None, subject=subj, sender=None)
+        assert self.email_page.is_message_delivered(email)
 
     def test_admin_unsched_new_times(self):
         self.sign_up_page.load_page(self.real_section)
@@ -196,8 +149,9 @@ class TestCourseChanges:
     def test_run_jobs_with_resched(self):
         self.sign_up_page.click_jobs_link()
         self.jobs_page.run_kaltura_job()
-        old_series_id = self.recording_sched.series_id
-        self.kaltura_page.load_event_edit_page(old_series_id)
+
+    def test_verify_old_kaltura_series_gone(self):
+        self.kaltura_page.load_event_edit_page(self.recording_sched.series_id)
         self.kaltura_page.wait_for_title('Access Denied - UC Berkeley - Test')
 
     def test_verify_new_kaltura_series_id(self):
@@ -232,52 +186,3 @@ class TestCourseChanges:
         end = self.fake_meeting.get_berkeley_end_time()
         visible_end = datetime.strptime(self.kaltura_page.visible_end_time(), '%I:%M%p')
         assert visible_end == end
-
-    def test_close_kaltura(self):
-        self.kaltura_page.close_window_and_switch()
-
-    # SCHEDULED COURSE MOVES TO INELIGIBLE ROOM
-
-    def test_move_to_ineligible_room(self):
-        util.set_course_room(self.fake_section)
-
-    def test_run_admin_email_job_ineligible_room(self):
-        self.sign_up_page.click_jobs_link()
-        self.jobs_page.run_admin_emails_job()
-
-    def test_run_instr_email_job_ineligible_room(self):
-        self.jobs_page.run_instructor_emails_job()
-
-    def test_run_queued_email_job_ineligible_room(self):
-        self.jobs_page.run_queued_emails_job()
-
-    def test_changes_page_ineligible_room(self):
-        self.jobs_page.click_course_changes_link()
-        self.changes_page.wait_for_course_row(self.real_section)
-        expected = f'{self.real_meeting.room.name}\n changed to\n{self.fake_meeting.room.name}'
-        actual = self.changes_page.course_room_info(self.real_section)
-        assert expected in actual
-
-    def test_admin_unsched_ineligible_room(self):
-        self.sign_up_page.load_page(self.real_section)
-        # TODO - verify 'ineligible' message on page?
-        self.sign_up_page.confirm_unscheduling(self.recording_sched)
-
-    def test_changes_page_ineligible_room_unsched(self):
-        self.sign_up_page.click_course_changes_link()
-        self.changes_page.wait_for_results()
-        assert not self.changes_page.is_course_row_present(self.real_section)
-
-    def test_no_kaltura_series_ineligible_room(self):
-        self.kaltura_page.load_event_edit_page(self.recording_sched.series_id)
-        self.kaltura_page.wait_for_title('Access Denied - UC Berkeley - Test')
-
-    def test_admin_email_ineligible_room(self):
-        subj = f'Course Capture Admin: {self.real_section.code} has moved to {self.fake_meeting.room.name}'
-        email = Email(msg_type=None, subject=subj, sender=None)
-        assert self.email_page.is_message_delivered(email)
-
-    def test_instructor_email_ineligible_room(self):
-        subj = f'Your course {self.real_section.code} is no longer eligible for Course Capture'
-        email = Email(msg_type=None, subject=subj, sender=None)
-        assert self.email_page.is_message_delivered(email)

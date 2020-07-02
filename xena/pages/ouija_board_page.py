@@ -84,7 +84,7 @@ class OuijaBoardPage(DiabloPages):
     def filter_for_option(self, opt_locator):
         if not self.is_present(opt_locator) or not self.element(opt_locator).is_displayed():
             self.wait_for_element_and_click(OuijaBoardPage.SEARCH_SELECT_BUTTON)
-        self.wait_for_element_and_click(opt_locator)
+        self.wait_for_page_and_click(opt_locator)
         time.sleep(2)
         self.wait_for_filter_search()
 

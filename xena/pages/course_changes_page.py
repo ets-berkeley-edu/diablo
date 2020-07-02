@@ -23,6 +23,8 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
+from datetime import datetime
+
 from flask import current_app as app
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
@@ -34,11 +36,28 @@ from xena.test_utils import util
 class CourseChangesPage(DiabloPages):
 
     NO_RESULTS_MSG = (By.XPATH, '//div[contains(text(), "No changes within scheduled courses.")]')
-    COURSE_INFO_HEADER = (By.XPATH, '//th[@aria-label="Course Information"]')
+    COURSE_INFO_HEADER = (By.XPATH, '//th[contains(@aria-label, "Course Information")]')
 
     @staticmethod
     def course_row_xpath(section):
         return f'//tr[contains(., "{section.code}, {section.number}")]'
+
+    @staticmethod
+    def meeting_time_format(time_str):
+        return datetime.strftime(datetime.strptime(time_str, '%I:%M%p'), '%-I:%M %p')
+
+    @staticmethod
+    def meeting_time_str(meeting):
+        start = CourseChangesPage.meeting_time_format(meeting.start_time)
+        end = CourseChangesPage.meeting_time_format(meeting.end_time)
+        return f'{start} - {end}'
+
+    @staticmethod
+    def recording_date_str(meeting, term):
+        dates = meeting.expected_recording_dates(term)
+        start = dates[0].strftime('%Y-%m-%d')
+        end = dates[-1].strftime('%Y-%m-%d')
+        return f'{start} - {end}'
 
     def load_page(self):
         app.logger.info('Loading the course changes page')

@@ -39,9 +39,10 @@ class TestEnableRooms:
         if 'Course Capture' not in self.rooms_page.title():
             self.login_page.load_page()
             self.login_page.dev_auth(util.get_admin_uid())
+            self.ouija_page.click_rooms_link()
         else:
             app.logger.info('Already logged in')
-        self.rooms_page.load_page()
+            self.rooms_page.load_page()
         self.rooms_page.wait_for_rooms_list()
         self.rooms_page.find_room(room)
 

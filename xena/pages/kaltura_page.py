@@ -188,7 +188,9 @@ class KalturaPage(Page):
     def delete_series(self, recording_schedule):
         app.logger.info('Clicking the delete button')
         self.load_event_edit_page(recording_schedule.series_id)
-        self.wait_for_page_and_click(KalturaPage.SERIES_DELETE_BUTTON)
+        self.wait_for_element(KalturaPage.SERIES_DELETE_BUTTON, util.get_medium_timeout())
+        self.scroll_to_bottom()
+        self.wait_for_page_and_click(KalturaPage.SERIES_DELETE_BUTTON, 3)
         self.wait_for_element_and_click(KalturaPage.SERIES_DELETE_CONFIRM_BUTTON)
         redirect_url = f'{app.config["KALTURA_MEDIA_SPACE_URL"]}/calendar/index/calendar/'
         Wait(self.driver, util.get_short_timeout()).until(ec.url_to_be(redirect_url))
