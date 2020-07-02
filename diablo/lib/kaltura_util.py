@@ -45,6 +45,6 @@ def get_recurrence_name(recurrence_type):
 def get_status_name(status_type):
     return status_type and {
         KalturaScheduleEventStatus.ACTIVE: 'Active',
-        KalturaScheduleEventStatus.CANCELLED: 'Canceled',
+        KalturaScheduleEventStatus.CANCELLED: 'Cancelled',
         KalturaScheduleEventStatus.DELETED: 'Deleted',
     }[status_type.value]

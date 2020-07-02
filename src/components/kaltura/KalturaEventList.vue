@@ -54,6 +54,7 @@
                   <th class="text-left">Id</th>
                   <th class="text-left">Start</th>
                   <th class="text-left">End</th>
+                  <th class="text-left">Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -85,6 +86,7 @@
                   </td>
                   <td>{{ event.startDate | moment('h:mma, ddd, MMM D') }}</td>
                   <td>{{ event.endDate | moment('h:mma, ddd, MMM D') }}</td>
+                  <td>{{ event.status }}</td>
                 </tr>
               </tbody>
             </template>
