@@ -5,28 +5,17 @@
         <h1><v-icon class="pb-2" large>mdi-candle</v-icon> The Attic</h1>
       </div>
     </v-card-title>
-    <div class="ma-3">
-      <h2>Diablo Configs</h2>
+    <div class="ma-3 pt-3">
+      <h2>Report</h2>
       <v-data-table
         disable-pagination
-        :headers="headers"
+        :headers="[
+          {text: 'Key', value: 'key'},
+          {text: 'Value', value: 'value'}
+        ]"
         hide-default-footer
-        :items="configs"
-      >
-        <template v-slot:body="{ items }">
-          <tbody>
-            <tr v-for="config in items" :key="config.key">
-              <td>
-                {{ config.key }}
-              </td>
-              <td>
-                <span v-if="isUrl(config.value)"><a :id="`link-to-${config.key}`" :href="config.value" target="_blank">{{ config.value }} <v-icon small class="pl-1">mdi-open-in-new</v-icon></a></span>
-                <span v-if="!isUrl(config.value)">{{ config.value }}</span>
-              </td>
-            </tr>
-          </tbody>
-        </template>
-      </v-data-table>
+        :items="coursesReport"
+      ></v-data-table>
     </div>
     <div class="ma-3 pt-3">
       <h2>Admin Users</h2>
@@ -41,66 +30,43 @@
         :items="adminUsers"
       ></v-data-table>
     </div>
+    <div class="ma-3">
+      <Configs />
+    </div>
   </v-card>
 </template>
 
 <script>
-  import axios from 'axios'
+  import Configs from '@/components/attic/Configs'
   import Context from '@/mixins/Context'
-  import Vue from 'vue'
+  import Utils from '@/mixins/Utils'
   import {getAdminUsers} from '@/api/user'
+  import {getCoursesReport} from '@/api/course'
 
   export default {
     name: 'Attic',
-    mixins: [Context],
+    components: {Configs},
+    mixins: [Context, Utils],
     data: () => ({
       adminUsers: undefined,
-      configs: undefined,
-      excludeConfigs: [
-        'apiBaseUrl',
-        'courseCaptureExplainedUrl',
-        'courseCapturePoliciesUrl',
-        'currentTermName',
-        'devAuthEnabled',
-        'emailTemplateTypes',
-        'isVueAppDebugMode',
-        'publishTypeOptions',
-        'roomCapabilityOptions',
-        'searchFilterOptions',
-        'searchItemsPerPage',
-        'timezone'
-      ],
-      headers: [
-        {text: 'Key', value: 'key'},
-        {text: 'Value', value: 'value'}
-      ]
+      coursesReport: undefined
     }),
-    mounted() {
+    created() {
       this.$loading()
-      getAdminUsers().then(data => {
-        this.adminUsers = data
-        axios.get(`${Vue.prototype.$config.apiBaseUrl}/api/version`).then(data => {
-          this.configs = []
-          this.$_.each({...data, ...this.$config }, (value, key) => this.pushConfig(key, value))
-          this.configs = this.$_.sortBy(this.configs, ['key'])
+      getCoursesReport(this.$config.currentTermId).then(report => {
+        this.coursesReport = []
+        this.$_.each(report, (value, key) => {
+          this.coursesReport.push({key: this.decamelize(key), value})
+        })
+        this.coursesReport = this.$_.sortBy(this.coursesReport, ['key'])
+
+        getAdminUsers().then(data => {
+          this.adminUsers = data
           this.$ready('Attic')
         })
       })
     },
     methods: {
-      isUrl(value) {
-        return this.$_.startsWith(value, 'https://')
-      },
-      pushConfig(key, value) {
-        if (!this.$_.includes(this.excludeConfigs, key)) {
-          if (key === 'build') {
-            this.configs.push({key: 'buildArtifact', value: value.artifact})
-            this.configs.push({key: 'gitCommit', value: value.gitCommit && `https://github.com/ets-berkeley-edu/diablo/commit/${value.gitCommit}`})
-          } else {
-            this.configs.push({key, value})
-          }
-        }
-      }
     }
   }
 </script>

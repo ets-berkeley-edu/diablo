@@ -1137,3 +1137,32 @@ def _schedule_recordings(
         term_id=term_id,
     )
     std_commit(allow_test_environment=True)
+
+
+class TestCoursesReport:
+    """Only admins can see courses report."""
+
+    @property
+    def term_id(self):
+        return app.config['CURRENT_TERM_ID']
+
+    @staticmethod
+    def _api_courses_report(client, term_id, expected_status_code=200):
+        response = client.get(f'/api/courses/report/{term_id}')
+        assert response.status_code == expected_status_code
+        return response.json
+
+    def test_not_authenticated(self, client):
+        """Deny anonymous access."""
+        self._api_courses_report(client, term_id=self.term_id, expected_status_code=401)
+
+    def test_unauthorized(self, client, fake_auth):
+        """Instructors cannot view courses report."""
+        instructor_uids = get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
+        fake_auth.login(instructor_uids[0])
+        self._api_courses_report(client, term_id=self.term_id, expected_status_code=401)
+
+    def test_total_scheduled_count(self, client, admin_session):
+        """The courses report includes valid total_scheduled_count."""
+        report = self._api_courses_report(client, term_id=self.term_id)
+        assert report['totalScheduledCount'] == len(Scheduled.get_all_scheduled(self.term_id))

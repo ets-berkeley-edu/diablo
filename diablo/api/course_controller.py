@@ -235,6 +235,14 @@ def update_opt_out():
     return tolerant_jsonify(preferences.to_api_json())
 
 
+@app.route('/api/courses/report/<term_id>')
+@admin_required
+def courses_report(term_id):
+    return tolerant_jsonify({
+        'totalScheduledCount': len(Scheduled.get_all_scheduled(term_id=term_id)),
+    })
+
+
 def _get_courses_per_filter(filter_, term_id):
     if filter_ not in get_search_filter_options() or not term_id:
         raise BadRequestError('One or more required params are missing or invalid')

@@ -53,6 +53,10 @@ export function unschedule(
     })
 }
 
+export function getCoursesReport(termId) {
+  return axios.get(`${utils.apiBaseUrl()}/api/courses/report/${termId}`)
+}
+
 export function updateOptOut(termId, sectionId, optOut) {
   return axios.post(`${utils.apiBaseUrl()}/api/course/opt_out/update`, {
     optOut,
