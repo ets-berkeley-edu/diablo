@@ -800,7 +800,7 @@ def _decorate_course_changes(course):
             ],
         )
         instructor_uids = [i['uid'] for i in course['instructors']]
-        has_obsolete_instructors = set(instructor_uids) != set(course.get('scheduled').get('instructorUids'))
+        has_obsolete_instructors = not set(instructor_uids).issubset(set(course.get('scheduled').get('instructorUids')))
 
         obsolete_dates = scheduled_dates_are_obsolete(meeting=meeting, scheduled=course['scheduled'])
         course['scheduled'].update({
