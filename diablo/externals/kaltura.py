@@ -335,7 +335,7 @@ class Kaltura:
         base_entry = self._create_kaltura_base_entry(
             description=description,
             instructors=instructors,
-            name=summary,
+            name=f'{summary} recordings scheduled by Diablo on {to_isoformat(datetime.now())}',
         )
         for category_id in category_ids or []:
             self.add_to_kaltura_category(category_id=category_id, entry_id=base_entry.id)
