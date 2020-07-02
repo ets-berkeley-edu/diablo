@@ -90,11 +90,12 @@ class AdminEmailsJob(BaseJob):
         courses_by_section_id = dict((course['sectionId'], course) for course in courses)
 
         for scheduled in scheduled_subset:
-            course = courses_by_section_id[scheduled.section_id]
-            meetings = course.get('meetings', {}).get('eligible', [])
-            if len(meetings):
-                if scheduled_dates_are_obsolete(meeting=meetings[0], scheduled=scheduled.to_api_json()):
-                    self._notify(course=course, template_type=template_type)
+            course = courses_by_section_id.get(scheduled.section_id)
+            if course:
+                meetings = course.get('meetings', {}).get('eligible', [])
+                if len(meetings):
+                    if scheduled_dates_are_obsolete(meeting=meetings[0], scheduled=scheduled.to_api_json()):
+                        self._notify(course=course, template_type=template_type)
 
     def _instructor_change_alerts(self):
         for course in self.courses:
