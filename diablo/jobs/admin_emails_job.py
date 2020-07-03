@@ -24,7 +24,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 from diablo.jobs.base_job import BaseJob
 from diablo.jobs.errors import BackgroundJobError
-from diablo.lib.berkeley import scheduled_dates_are_obsolete
+from diablo.lib.berkeley import is_schedule_obsolete
 from diablo.lib.interpolator import interpolate_content
 from diablo.merged.emailer import get_admin_alert_recipient
 from diablo.models.email_template import EmailTemplate
@@ -94,7 +94,7 @@ class AdminEmailsJob(BaseJob):
             if course:
                 meetings = course.get('meetings', {}).get('eligible', [])
                 if len(meetings):
-                    if scheduled_dates_are_obsolete(meeting=meetings[0], scheduled=scheduled.to_api_json()):
+                    if is_schedule_obsolete(meeting=meetings[0], scheduled=scheduled.to_api_json()):
                         self._notify(course=course, template_type=template_type)
 
     def _instructor_change_alerts(self):

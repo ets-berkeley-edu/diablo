@@ -51,7 +51,8 @@
               </div>
               <div v-if="course.scheduled.hasObsoleteTimes" :id="`course-${course.sectionId}-obsolete-meeting-times`">
                 <div :id="`course-${course.sectionId}-meeting-times-old`">
-                  {{ course.scheduled.meetingDays.join(',') }} {{ course.scheduled.meetingStartTime }} - {{ course.scheduled.meetingEndTime }}
+                  {{ course.scheduled.meetingDays.join(',') }}
+                  {{ course.scheduled.meetingStartTimeFormatted }} - {{ course.scheduled.meetingEndTimeFormatted }}
                 </div>
                 <div class="primary--text">
                   <v-icon small color="primary">mdi-arrow-down-bold</v-icon>
@@ -66,7 +67,7 @@
               </div>
               <div v-if="course.scheduled.hasObsoleteDates" :id="`course-${course.sectionId}-obsolete-meeting-dates`">
                 <div :id="`course-${course.sectionId}-meeting-dates-old`">
-                  {{ course.scheduled.meetingStartDate }} - {{ course.scheduled.meetingEndDate }}
+                  {{ course.scheduled.meetingStartDateFormatted }} - {{ course.scheduled.meetingEndDateFormatted }}
                 </div>
                 <div class="primary--text">
                   <v-icon small color="primary">mdi-arrow-down-bold</v-icon>

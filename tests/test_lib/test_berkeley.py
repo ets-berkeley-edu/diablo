@@ -27,7 +27,7 @@ import random
 
 from diablo import db, std_commit
 from diablo.lib.berkeley import DAYS, get_first_matching_datetime_of_term, get_recording_end_date, \
-    get_recording_start_date, scheduled_dates_are_obsolete
+    get_recording_start_date, is_schedule_obsolete
 from diablo.models.room import Room
 from diablo.models.scheduled import Scheduled
 from diablo.models.sis_section import SisSection
@@ -110,87 +110,127 @@ class TestObsoleteScheduledDates:
     def term_id(self):
         return app.config['CURRENT_TERM_ID']
 
-    def _schedule_recordings(self, meeting, override_start_date=None, override_end_date=None):
+    def test_scheduled_before_the_meeting_start(self):
+        meeting = {
+            'days': ''.join(DAYS),
+            'endDate': '2525-12-11',
+            'endTime': '10:59',
+            'startDate': '2525-08-25',
+            'startTime': '10:00',
+        }
+        self._assert_schedule_is_obsolete(expected_result=False, meeting=meeting)
+
+    def test_scheduled_after_the_meeting_start(self):
+        meeting = {
+            'days': ''.join(DAYS),
+            'endDate': _format(datetime.now() + timedelta(days=100)),
+            'endTime': '10:59',
+            'startDate': _format(datetime.now() - timedelta(days=100)),
+            'startTime': '10:00',
+        }
+        self._assert_schedule_is_obsolete(expected_result=False, meeting=meeting)
+
+    def test_scheduled_obsolete_start_date(self):
+        meeting = {
+            'days': ''.join(DAYS),
+            'endDate': '2525-12-11',
+            'endTime': '10:59',
+            'startDate': '2525-08-25',
+            'startTime': '10:00',
+        }
+        self._assert_schedule_is_obsolete(expected_result=True, meeting=meeting, override_start_date='2525-08-01')
+
+    def test_scheduled_obsolete_end_date(self):
+        meeting = {
+            'days': ''.join(DAYS),
+            'endDate': '2525-12-11',
+            'endTime': '10:59',
+            'startDate': '2525-08-25',
+            'startTime': '10:00',
+        }
+        self._assert_schedule_is_obsolete(expected_result=True, meeting=meeting, override_end_date='2525-12-01')
+
+    def test_scheduled_obsolete_times(self):
+        meeting = {
+            'days': ''.join(DAYS),
+            'endDate': '2525-12-11',
+            'endTime': '10:59',
+            'startDate': '2525-08-25',
+            'startTime': '10:00',
+        }
+        self._assert_schedule_is_obsolete(
+            expected_result=True,
+            meeting=meeting,
+            override_end_time='14:00',
+            override_start_time='14:59',
+        )
+
+    def _assert_schedule_is_obsolete(
+            self,
+            expected_result,
+            meeting,
+            override_end_date=None,
+            override_end_time=None,
+            override_start_date=None,
+            override_start_time=None,
+    ):
+        with test_approvals_workflow(app):
+            with override_config(app, 'CURRENT_TERM_RECORDINGS_BEGIN', meeting['startDate']):
+                with override_config(app, 'CURRENT_TERM_RECORDINGS_END', meeting['endDate']):
+                    self._schedule_recordings(
+                        meeting=meeting,
+                        override_end_date=override_end_date,
+                        override_end_time=override_end_time,
+                        override_start_date=override_start_date,
+                        override_start_time=override_start_time,
+                    )
+                    course = SisSection.get_course(section_id=self.section_id, term_id=self.term_id)
+                    assert is_schedule_obsolete(meeting=meeting, scheduled=course['scheduled']) is expected_result
+
+    def _schedule_recordings(
+            self,
+            meeting,
+            override_end_date=None,
+            override_end_time=None,
+            override_start_date=None,
+            override_start_time=None,
+    ):
         scheduled = Scheduled.create(
             instructor_uids=get_instructor_uids(term_id=self.term_id, section_id=self.section_id),
             kaltura_schedule_id=random.randint(1, 10),
             meeting_days='MO,WE,FR',
             meeting_end_date=override_end_date or get_recording_end_date(meeting),
-            meeting_end_time='10:59',
+            meeting_end_time=override_end_time or meeting['endTime'],
             meeting_start_date=override_start_date or get_recording_start_date(meeting, return_today_if_past_start=True),
-            meeting_start_time='10:00',
+            meeting_start_time=override_start_time or meeting['startTime'],
             publish_type_='kaltura_media_gallery',
             recording_type_='presenter_presentation_audio',
             room_id=Room.get_room_id(section_id=self.section_id, term_id=self.term_id),
             section_id=self.section_id,
             term_id=self.term_id,
         )
-        if override_start_date or override_end_date:
+        if override_end_date or override_end_time or override_start_date or override_start_time:
+            args = {
+                'meeting_end_date': override_end_date,
+                'meeting_end_time': override_end_time,
+                'meeting_start_date': override_start_date,
+                'meeting_start_time': override_start_time,
+            }
             sql = 'UPDATE scheduled SET'
-            sql += ' meeting_end_date = :meeting_end_date' if override_end_date else ''
-            sql += ' meeting_start_date = :meeting_start_date' if override_start_date else ''
+            previous_value = None
+            for key, value in args.items():
+                if value:
+                    sql += f"{',' if previous_value else ''} {key} = :{key}"
+                    previous_value = value
             sql += ' WHERE id = :id'
             db.session.execute(
                 text(sql),
                 {
-                    'id': scheduled.id,
-                    'meeting_end_date': override_end_date,
-                    'meeting_start_date': override_start_date,
+                    **{'id': scheduled.id},
+                    **args,
                 },
             )
         std_commit(allow_test_environment=True)
-
-    def test_scheduled_before_the_meeting_start(self):
-        meeting = {
-            'days': ''.join(DAYS),
-            'endDate': '2525-12-11',
-            'startDate': '2525-08-25',
-        }
-        with test_approvals_workflow(app):
-            with override_config(app, 'CURRENT_TERM_RECORDINGS_BEGIN', meeting['startDate']):
-                with override_config(app, 'CURRENT_TERM_RECORDINGS_END', meeting['endDate']):
-                    self._schedule_recordings(meeting)
-                    course = SisSection.get_course(section_id=self.section_id, term_id=self.term_id)
-                    assert scheduled_dates_are_obsolete(meeting=meeting, scheduled=course['scheduled']) is False
-
-    def test_scheduled_after_the_meeting_start(self):
-        meeting = {
-            'days': ''.join(DAYS),
-            'endDate': _format(datetime.now() + timedelta(days=100)),
-            'startDate': _format(datetime.now() - timedelta(days=100)),
-        }
-        with test_approvals_workflow(app):
-            with override_config(app, 'CURRENT_TERM_RECORDINGS_BEGIN', meeting['startDate']):
-                with override_config(app, 'CURRENT_TERM_RECORDINGS_END', meeting['endDate']):
-                    self._schedule_recordings(meeting)
-                    course = SisSection.get_course(section_id=self.section_id, term_id=self.term_id)
-                    assert scheduled_dates_are_obsolete(meeting=meeting, scheduled=course['scheduled']) is False
-
-    def test_scheduled_obsolete_start_date(self):
-        meeting = {
-            'days': ''.join(DAYS),
-            'endDate': '2525-12-11',
-            'startDate': '2525-08-25',
-        }
-        with test_approvals_workflow(app):
-            with override_config(app, 'CURRENT_TERM_RECORDINGS_BEGIN', meeting['startDate']):
-                with override_config(app, 'CURRENT_TERM_RECORDINGS_END', meeting['endDate']):
-                    self._schedule_recordings(meeting=meeting, override_start_date='2525-08-01')
-                    course = SisSection.get_course(section_id=self.section_id, term_id=self.term_id)
-                    assert scheduled_dates_are_obsolete(meeting=meeting, scheduled=course['scheduled']) is True
-
-    def test_scheduled_obsolete_end_date(self):
-        meeting = {
-            'days': ''.join(DAYS),
-            'endDate': '2525-12-11',
-            'startDate': '2525-08-25',
-        }
-        with test_approvals_workflow(app):
-            with override_config(app, 'CURRENT_TERM_RECORDINGS_BEGIN', meeting['startDate']):
-                with override_config(app, 'CURRENT_TERM_RECORDINGS_END', meeting['endDate']):
-                    self._schedule_recordings(meeting=meeting, override_end_date='2525-12-01')
-                    course = SisSection.get_course(section_id=self.section_id, term_id=self.term_id)
-                    assert scheduled_dates_are_obsolete(meeting=meeting, scheduled=course['scheduled']) is True
 
 
 class TestFirstDayRecording:

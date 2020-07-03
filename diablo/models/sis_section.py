@@ -25,7 +25,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 from datetime import datetime
 
 from diablo import db
-from diablo.lib.berkeley import get_recording_end_date, get_recording_start_date, scheduled_dates_are_obsolete
+from diablo.lib.berkeley import get_recording_end_date, get_recording_start_date, is_schedule_obsolete
 from diablo.lib.util import format_days, format_time
 from diablo.models.approval import Approval
 from diablo.models.canvas_course_site import CanvasCourseSite
@@ -782,8 +782,8 @@ def _decorate_course_changes(course):
         course_meeting_time = '-'.join(
             [
                 str(meeting['daysFormatted']),
-                str(meeting['startTimeFormatted']),
-                str(meeting['endTimeFormatted']),
+                str(meeting['startTime']),
+                str(meeting['endTime']),
             ],
         )
         room_id = meeting.get('room', {}).get('id')
@@ -802,7 +802,7 @@ def _decorate_course_changes(course):
         instructor_uids = [i['uid'] for i in course['instructors']]
         has_obsolete_instructors = not set(instructor_uids).issubset(set(course.get('scheduled').get('instructorUids')))
 
-        obsolete_dates = scheduled_dates_are_obsolete(meeting=meeting, scheduled=course['scheduled'])
+        obsolete_dates = is_schedule_obsolete(meeting=meeting, scheduled=course['scheduled'])
         course['scheduled'].update({
             'hasObsoleteInstructors': has_obsolete_instructors,
             'hasObsoleteDates': obsolete_dates,
