@@ -92,20 +92,10 @@ def get_recording_start_date(meeting, return_today_if_past_start=False):
     return first_recording
 
 
-def scheduled_dates_are_obsolete(meeting, scheduled):
-    if meeting:
-        def _format(date):
-            return datetime.strftime(date, '%Y-%m-%d')
-        expected_start_date = get_recording_start_date(meeting, return_today_if_past_start=False)
-        expected_end_date = get_recording_end_date(meeting)
-        # Is the schedule-of-recordings in Kaltura still valid?
-        start_date_mismatch = _format(expected_start_date) != scheduled['meetingStartDate']
-        end_date_mismatch = _format(expected_end_date) != scheduled['meetingEndDate']
-        # If recordings were scheduled AFTER the meeting_start_date then we will ignore start_date_mismatch
-        scheduled_after_start_date = scheduled['createdAt'][0:10] > _format(expected_start_date)
-        return end_date_mismatch if scheduled_after_start_date else (start_date_mismatch or end_date_mismatch)
-    else:
-        return True
+def is_schedule_obsolete(meeting, scheduled):
+    return not meeting or \
+        _scheduled_dates_are_obsolete(meeting, scheduled) or \
+        not _have_matching_times(meeting, scheduled)
 
 
 def term_name_for_sis_id(sis_id=None):
@@ -119,3 +109,20 @@ def term_name_for_sis_id(sis_id=None):
         }
         year = f'19{sis_id[1:3]}' if sis_id.startswith('1') else f'20{sis_id[1:3]}'
         return f'{season_codes[sis_id[3:4]]} {year}'
+
+
+def _scheduled_dates_are_obsolete(meeting, scheduled):
+    def _format(date):
+        return datetime.strftime(date, '%Y-%m-%d')
+    expected_start_date = get_recording_start_date(meeting, return_today_if_past_start=False)
+    expected_end_date = get_recording_end_date(meeting)
+    # Is the schedule-of-recordings in Kaltura still valid?
+    start_date_mismatch = _format(expected_start_date) != scheduled['meetingStartDate']
+    end_date_mismatch = _format(expected_end_date) != scheduled['meetingEndDate']
+    # If recordings were scheduled AFTER the meeting_start_date then we will ignore start_date_mismatch
+    scheduled_after_start_date = scheduled['createdAt'][0:10] > _format(expected_start_date)
+    return end_date_mismatch if scheduled_after_start_date else (start_date_mismatch or end_date_mismatch)
+
+
+def _have_matching_times(meeting, scheduled):
+    return meeting['startTime'] == scheduled['meetingStartTime'] and meeting['endTime'] == scheduled['meetingEndTime']
