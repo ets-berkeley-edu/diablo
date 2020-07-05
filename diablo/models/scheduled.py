@@ -27,6 +27,7 @@ from datetime import datetime
 from diablo import db, std_commit
 from diablo.lib.util import format_days, format_time, to_isoformat
 from diablo.models.approval import NAMES_PER_PUBLISH_TYPE, NAMES_PER_RECORDING_TYPE, publish_type, recording_type
+from diablo.models.email_template import email_template_type
 from diablo.models.room import Room
 from sqlalchemy import and_, text
 from sqlalchemy.dialects.postgresql import ARRAY
@@ -38,6 +39,7 @@ class Scheduled(db.Model):
     id = db.Column(db.Integer, nullable=False, primary_key=True)  # noqa: A003
     section_id = db.Column(db.Integer, nullable=False)
     term_id = db.Column(db.Integer, nullable=False)
+    alerts = db.Column(ARRAY(email_template_type))
     instructor_uids = db.Column(ARRAY(db.String(80)), nullable=False)
     kaltura_schedule_id = db.Column(db.Integer, nullable=False)
     meeting_days = db.Column(db.String, nullable=False)
@@ -84,6 +86,7 @@ class Scheduled(db.Model):
                     id={self.id},
                     section_id={self.section_id},
                     term_id={self.term_id},
+                    alerts={', '.join(self.alerts or [])},
                     instructor_uids={', '.join(self.instructor_uids)},
                     kaltura_schedule_id={self.kaltura_schedule_id}
                     meeting_days={self.meeting_days},
@@ -156,6 +159,16 @@ class Scheduled(db.Model):
             },
         )
 
+    @classmethod
+    def add_alert(cls, scheduled_id, template_type):
+        row = cls.query.filter_by(id=scheduled_id).first()
+        if row.alerts:
+            row.alerts.append(template_type)
+        else:
+            row.alerts = [template_type]
+        db.session.add(row)
+        std_commit()
+
     def to_api_json(self, rooms_by_id=None):
         room_feed = None
         if self.room_id:
@@ -164,6 +177,8 @@ class Scheduled(db.Model):
             else:
                 room_feed = Room.get_room(self.room_id).to_api_json()
         return {
+            'id': self.id,
+            'alerts': self.alerts or [],
             'createdAt': to_isoformat(self.created_at),
             'instructorUids': self.instructor_uids,
             'kalturaScheduleId': self.kaltura_schedule_id,

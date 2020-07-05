@@ -29,7 +29,7 @@ from diablo.jobs.admin_emails_job import AdminEmailsJob
 from diablo.jobs.canvas_job import CanvasJob
 from diablo.jobs.doomed_to_failure import DoomedToFailure
 from diablo.jobs.queued_emails_job import QueuedEmailsJob
-from diablo.lib.berkeley import get_recording_end_date, get_recording_start_date
+from diablo.lib.berkeley import get_recording_end_date, get_recording_start_date, is_schedule_obsolete
 from diablo.models.approval import Approval
 from diablo.models.job import Job
 from diablo.models.queued_email import QueuedEmail
@@ -39,8 +39,8 @@ from diablo.models.sent_email import SentEmail
 from diablo.models.sis_section import SisSection
 from flask import current_app as app
 import pytest
-from tests.test_api.api_test_utils import get_eligible_meeting, get_instructor_uids
-from tests.util import simply_yield, test_approvals_workflow
+from tests.test_api.api_test_utils import get_eligible_meeting, get_instructor_uids, mock_scheduled
+from tests.util import override_config, simply_yield, test_approvals_workflow
 
 
 @pytest.fixture()
@@ -52,6 +52,43 @@ def enable_admin_emails():
 
 
 class TestEmailAlertsForAdmins:
+
+    def test_admin_alert_date_change(self, db_session, enable_admin_emails):
+        admin_uid = app.config['EMAIL_DIABLO_ADMIN_UID']
+        term_id = app.config['CURRENT_TERM_ID']
+        section_id = 50004
+        meeting = get_eligible_meeting(section_id=section_id, term_id=term_id)
+        with test_approvals_workflow(app):
+            with override_config(app, 'CURRENT_TERM_RECORDINGS_BEGIN', meeting['startDate']):
+                with override_config(app, 'CURRENT_TERM_RECORDINGS_END', meeting['endDate']):
+                    def _schedule_and_run_jobs():
+                        mock_scheduled(
+                            meeting=meeting,
+                            override_end_time='16:59',
+                            override_start_time='08:00',
+                            section_id=section_id,
+                            term_id=term_id,
+                        )
+                        course = SisSection.get_course(section_id=section_id, term_id=term_id)
+                        assert is_schedule_obsolete(meeting=meeting, scheduled=course['scheduled'])
+                        AdminEmailsJob(simply_yield).run()
+                        QueuedEmailsJob(simply_yield).run()
+                        return course['scheduled']['id']
+
+                    def _assert_alert_count(count):
+                        emails_sent = SentEmail.get_emails_sent_to(uid=admin_uid)
+                        assert len(emails_sent) == count
+                        assert emails_sent[0].section_id == section_id
+                        assert emails_sent[0].template_type == 'admin_alert_date_change'
+
+                    # First time scheduled.
+                    _schedule_and_run_jobs()
+                    _assert_alert_count(1)
+                    # Unschedule and schedule a second time.
+                    Scheduled.delete(section_id=section_id, term_id=term_id)
+                    _schedule_and_run_jobs()
+                    # Another alert is emailed to admin because it is a new schedule.
+                    _assert_alert_count(2)
 
     def test_alert_admin_of_room_change(self, db_session, enable_admin_emails):
         """Emails admin when a scheduled course gets a room change."""

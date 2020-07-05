@@ -314,6 +314,7 @@ CREATE TABLE scheduled (
     id SERIAL PRIMARY KEY,
     section_id INTEGER NOT NULL,
     term_id INTEGER NOT NULL,
+    alerts email_template_types[],
     instructor_uids VARCHAR(80)[] NOT NULL,
     kaltura_schedule_id INTEGER NOT NULL,
     meeting_days VARCHAR(80) NOT NULL,

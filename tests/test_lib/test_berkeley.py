@@ -23,18 +23,13 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 from datetime import datetime, timedelta
-import random
 
-from diablo import db, std_commit
 from diablo.lib.berkeley import DAYS, get_first_matching_datetime_of_term, get_recording_end_date, \
     get_recording_start_date, is_schedule_obsolete
-from diablo.models.room import Room
-from diablo.models.scheduled import Scheduled
 from diablo.models.sis_section import SisSection
 from flask import current_app as app
 import pytz
-from sqlalchemy import text
-from tests.test_api.api_test_utils import get_instructor_uids
+from tests.test_api.api_test_utils import mock_scheduled
 from tests.util import override_config, test_approvals_workflow
 
 
@@ -177,60 +172,17 @@ class TestObsoleteScheduledDates:
         with test_approvals_workflow(app):
             with override_config(app, 'CURRENT_TERM_RECORDINGS_BEGIN', meeting['startDate']):
                 with override_config(app, 'CURRENT_TERM_RECORDINGS_END', meeting['endDate']):
-                    self._schedule_recordings(
+                    mock_scheduled(
                         meeting=meeting,
                         override_end_date=override_end_date,
                         override_end_time=override_end_time,
                         override_start_date=override_start_date,
                         override_start_time=override_start_time,
+                        section_id=self.section_id,
+                        term_id=self.term_id,
                     )
                     course = SisSection.get_course(section_id=self.section_id, term_id=self.term_id)
                     assert is_schedule_obsolete(meeting=meeting, scheduled=course['scheduled']) is expected_result
-
-    def _schedule_recordings(
-            self,
-            meeting,
-            override_end_date=None,
-            override_end_time=None,
-            override_start_date=None,
-            override_start_time=None,
-    ):
-        scheduled = Scheduled.create(
-            instructor_uids=get_instructor_uids(term_id=self.term_id, section_id=self.section_id),
-            kaltura_schedule_id=random.randint(1, 10),
-            meeting_days='MO,WE,FR',
-            meeting_end_date=override_end_date or get_recording_end_date(meeting),
-            meeting_end_time=override_end_time or meeting['endTime'],
-            meeting_start_date=override_start_date or get_recording_start_date(meeting, return_today_if_past_start=True),
-            meeting_start_time=override_start_time or meeting['startTime'],
-            publish_type_='kaltura_media_gallery',
-            recording_type_='presenter_presentation_audio',
-            room_id=Room.get_room_id(section_id=self.section_id, term_id=self.term_id),
-            section_id=self.section_id,
-            term_id=self.term_id,
-        )
-        if override_end_date or override_end_time or override_start_date or override_start_time:
-            args = {
-                'meeting_end_date': override_end_date,
-                'meeting_end_time': override_end_time,
-                'meeting_start_date': override_start_date,
-                'meeting_start_time': override_start_time,
-            }
-            sql = 'UPDATE scheduled SET'
-            previous_value = None
-            for key, value in args.items():
-                if value:
-                    sql += f"{',' if previous_value else ''} {key} = :{key}"
-                    previous_value = value
-            sql += ' WHERE id = :id'
-            db.session.execute(
-                text(sql),
-                {
-                    **{'id': scheduled.id},
-                    **args,
-                },
-            )
-        std_commit(allow_test_environment=True)
 
 
 class TestFirstDayRecording:
