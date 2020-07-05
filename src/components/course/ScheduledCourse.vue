@@ -29,6 +29,16 @@
         <v-list-item-subtitle>{{ course.scheduled.publishTypeName }}</v-list-item-subtitle>
       </v-list-item-content>
     </v-list-item>
+    <v-list-item v-if="$currentUser.isAdmin && course.scheduled.alerts.length" two-line class="pb-3">
+      <v-list-item-content>
+        <v-list-item-title>
+          <v-icon class="pb-1 pr-1" color="red">mdi-alert</v-icon>
+          <OxfordJoin v-slot="{ item }" :items="course.scheduled.alerts">
+            {{ $config.emailTemplateTypes[item] }}
+          </OxfordJoin>
+        </v-list-item-title>
+      </v-list-item-content>
+    </v-list-item>
     <v-card-text v-if="currentUserMustApprove">
       <v-container>
         <v-row class="pb-2">
@@ -70,12 +80,13 @@
 
 <script>
   import Context from '@/mixins/Context'
+  import OxfordJoin from '@/components/util/OxfordJoin'
   import TermsAgreementText from '@/components/util/TermsAgreementText'
   import {approve} from '@/api/course'
 
   export default {
     name: 'ScheduledCourse',
-    components: {TermsAgreementText},
+    components: {OxfordJoin, TermsAgreementText},
     mixins: [Context],
     props: {
       afterApprove: {
