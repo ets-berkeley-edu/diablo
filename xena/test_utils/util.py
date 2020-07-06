@@ -25,10 +25,8 @@ ENHANCEMENTS, OR MODIFICATIONS.
 
 from datetime import datetime, timedelta
 import json
-import time
 
 from diablo import db, std_commit
-from diablo.models.scheduled import Scheduled
 from flask import current_app as app
 from sqlalchemy import text
 from xena.models.recording_scheduling_status import RecordingSchedulingStatus
@@ -79,26 +77,26 @@ def parse_course_test_data():
         return parsed['courses']
 
 
-def wait_for_kaltura_id(recording_schedule, term):
+def get_kaltura_id(recording_schedule, term):
     section = recording_schedule.section
-    app.logger.info(f'Term {term.id} section {section.ccn}')
-    tries = 0
-    retries = 10
-    while tries <= retries:
-        tries += 1
-        try:
-            result = Scheduled.get_scheduled(section.ccn, term.id)
-            app.logger.info(f'Result is {result}')
-            app.logger.info(f'ID is {result.kaltura_schedule_id}')
-            assert result
-            recording_schedule.series_id = result.kaltura_schedule_id
-            recording_schedule.scheduling_status = RecordingSchedulingStatus.SCHEDULED
-            break
-        except Exception:
-            if tries == retries:
-                raise
-            else:
-                time.sleep(get_short_timeout())
+    sql = f"""SELECT kaltura_schedule_id
+              FROM scheduled
+              WHERE term_id = {term.id}
+                AND section_id = {section.ccn}
+                AND deleted_at IS NULL
+    """
+    ids = []
+    app.logger.info(f'Checking for Kaltura ID for term {term.id} section {section.ccn}')
+    result = db.session.execute(text(sql))
+    std_commit(allow_test_environment=True)
+    for row in result:
+        ids.append(dict(row).get('kaltura_schedule_id'))
+    if len(ids) > 0:
+        kaltura_id = ids[0]
+        app.logger.info(f'ID is {kaltura_id}')
+        recording_schedule.series_id = kaltura_id
+        recording_schedule.scheduling_status = RecordingSchedulingStatus.SCHEDULED
+        return kaltura_id
 
 
 def get_course_site_ids(section):
@@ -135,6 +133,17 @@ def reset_sign_up_test_data(course_data):
     sql = f'DELETE FROM sent_emails WHERE section_id = {ccn} AND term_id = {term_id}'
     db.session.execute(text(sql))
     sql = f'DELETE FROM course_preferences WHERE section_id = {ccn} AND term_id = {term_id}'
+    db.session.execute(text(sql))
+    std_commit(allow_test_environment=True)
+
+
+def set_meeting_location(section, meeting):
+    sql = f"""UPDATE sis_sections
+              SET meeting_location = '{meeting.room.name}'
+              WHERE section_id = {section.ccn}
+                AND term_id = {section.term.id}
+    """
+    app.logger.info(sql)
     db.session.execute(text(sql))
     std_commit(allow_test_environment=True)
 
@@ -179,9 +188,9 @@ def set_course_room(section, meeting):
 
 
 def set_course_meeting_time(section, meeting):
-    start_time = datetime.strptime(meeting.start_time, '%I:%M%p')
+    start_time = datetime.strptime(meeting.start_time, '%I:%M %p')
     start_time_str = start_time.strftime('%H:%M')
-    end_time = datetime.strptime(meeting.end_time, '%I:%M%p')
+    end_time = datetime.strptime(meeting.end_time, '%I:%M %p')
     end_time_str = end_time.strftime('%H:%M')
     sql = f"""UPDATE sis_sections
               SET meeting_start_time = '{start_time_str}',

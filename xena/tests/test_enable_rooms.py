@@ -25,6 +25,8 @@ ENHANCEMENTS, OR MODIFICATIONS.
 
 from flask import current_app as app
 import pytest
+from xena.models.capability import Capability
+from xena.models.recording_type import RecordingType
 from xena.test_utils import util
 
 
@@ -34,6 +36,9 @@ room_data = util.parse_rooms_data()
 @pytest.mark.usefixtures('page_objects')
 @pytest.mark.parametrize('room', room_data, scope='class', ids=[room.name for room in room_data])
 class TestEnableRooms:
+
+    screencast_rooms = [classroom for classroom in room_data if classroom.capability == Capability.SCREENCAST]
+    video_rooms = [classroom for classroom in room_data if classroom.capability == Capability.SCREENCAST_AND_VIDEO]
 
     def test_room_search(self, room):
         if 'Course Capture' not in self.rooms_page.title():
@@ -52,3 +57,44 @@ class TestEnableRooms:
 
     def test_set_capability(self, room):
         self.room_page.set_capability(room.capability)
+
+    def test_screencast_and_auditorium_true(self, room):
+        if room == self.screencast_rooms[0]:
+            self.room_page.set_auditorium_true()
+            self.room_page.click_first_course_link()
+            self.sign_up_page.click_rec_type_input()
+            visible_opts = self.sign_up_page.visible_menu_options()
+            expected = [RecordingType.SCREENCAST.value['option']]
+            assert visible_opts == expected
+
+    def test_screencast_and_auditorium_false(self, room):
+        if room == self.screencast_rooms[0]:
+            self.sign_up_page.click_room_link(room)
+            self.room_page.set_auditorium_false()
+            self.room_page.click_first_course_link()
+            self.sign_up_page.click_rec_type_input()
+            visible_opts = self.sign_up_page.visible_menu_options()
+            expected = [RecordingType.SCREENCAST.value['option']]
+            assert visible_opts == expected
+
+    def test_video_and_auditorium_false(self, room):
+        if room == self.video_rooms[0]:
+            self.room_page.set_auditorium_false()
+            self.room_page.click_first_course_link()
+            self.sign_up_page.click_rec_type_input()
+            visible_opts = self.sign_up_page.visible_menu_options()
+            expected = [RecordingType.SCREENCAST_AND_VIDEO.value['option']]
+            assert visible_opts == expected
+
+    def test_video_and_auditorium_true(self, room):
+        if room == self.video_rooms[0]:
+            self.sign_up_page.click_room_link(room)
+            self.room_page.set_auditorium_true()
+            self.room_page.click_first_course_link()
+            self.sign_up_page.click_rec_type_input()
+            visible_opts = self.sign_up_page.visible_menu_options()
+            expected = [
+                RecordingType.SCREENCAST.value['option'], RecordingType.VIDEO.value['option'],
+                RecordingType.SCREENCAST_AND_VIDEO.value['option'],
+            ]
+            assert visible_opts == expected

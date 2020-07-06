@@ -81,7 +81,7 @@ class TestUnschedule:
         self.ouija_page.click_jobs_link()
         self.jobs_page.run_kaltura_job()
         with pytest.raises(AttributeError):
-            util.wait_for_kaltura_id(self.recording_schedule, self.term)
+            util.get_kaltura_id(self.recording_schedule, self.term)
 
     # VERIFY FILTERS
 
@@ -145,7 +145,7 @@ class TestUnschedule:
         self.login_page.dev_auth()
         self.ouija_page.click_jobs_link()
         self.jobs_page.run_kaltura_job()
-        util.wait_for_kaltura_id(self.recording_schedule, self.term)
+        util.get_kaltura_id(self.recording_schedule, self.term)
 
     # SERIES IS CREATED IN KALTURA
 

@@ -46,7 +46,8 @@ class OuijaBoardPage(DiabloPages):
     FILTER_NOT_INVITED_OPTION = (By.XPATH, '//div[@role="option"][contains(., "Not Invited")]')
     FILTER_PARTIALLY_APPROVED_OPTION = (By.XPATH, '//div[@role="option"][contains(., "Partially Approved")]')
     FILTER_QUEUED_FOR_SCHEDULING_OPTION = (By.XPATH, '//div[@role="option"][contains(., "Queued for Scheduling")]')
-    FILTER_SCHEDULED_OPTION = (By.XPATH, '//div[@role="option"][contains(., "Scheduled")]')
+    FILTER_SCHEDULED_OPTION = (By.XPATH, '//div[@role="option"][contains(., "Scheduled") and not(contains(., "Nonstandard"))]')
+    FILTER_SCHEDULED_WEIRD_OPTION = (By.XPATH, '//div[@role="option"][contains(., "Scheduled (Nonstandard Dates)")]')
 
     NO_RESULTS_MSG = (By.ID, 'message-when-zero-courses')
 
@@ -138,6 +139,10 @@ class OuijaBoardPage(DiabloPages):
     def filter_for_scheduled(self):
         app.logger.info('Filtering by option Scheduled')
         self.filter_for_option(OuijaBoardPage.FILTER_SCHEDULED_OPTION)
+
+    def filter_for_scheduled_weird(self):
+        app.logger.info('Filtering by option Scheduled (Nonstandard Dates)')
+        self.filter_for_option(OuijaBoardPage.FILTER_SCHEDULED_WEIRD_OPTION)
 
     # COURSES
 

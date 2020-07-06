@@ -23,7 +23,6 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-from diablo.models.scheduled import Scheduled
 from flask import current_app as app
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
@@ -177,9 +176,9 @@ class KalturaPage(Page):
     # DELETION
 
     def reset_test_data(self, term, recording_schedule):
-        old_schedule = Scheduled.get_scheduled(recording_schedule.section.ccn, term.id)
+        old_schedule = util.get_kaltura_id(recording_schedule, term)
         if old_schedule:
-            recording_schedule.series_id = old_schedule.kaltura_schedule_id
+            recording_schedule.series_id = old_schedule
             app.logger.info(f'Deleting an existing Kaltura series id {recording_schedule.series_id}')
             self.delete_series(recording_schedule)
         else:

@@ -44,7 +44,7 @@ class CourseChangesPage(DiabloPages):
 
     @staticmethod
     def meeting_time_format(time_str):
-        return datetime.strftime(datetime.strptime(time_str, '%I:%M%p'), '%-I:%M %p')
+        return datetime.strftime(datetime.strptime(time_str, '%I:%M %p'), '%-I:%M %p')
 
     @staticmethod
     def meeting_time_str(meeting):

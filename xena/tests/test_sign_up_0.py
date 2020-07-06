@@ -69,9 +69,13 @@ class TestSignUp0:
         self.jobs_page.run_queued_emails_job()
         self.jobs_page.disable_all_jobs()
 
-    def test_delete_old_kaltura_series(self):
+    def test_delete_old_diablo_and_kaltura(self):
         self.kaltura_page.log_in_via_calnet()
         self.kaltura_page.reset_test_data(self.term, self.recording_schedule)
+        util.set_meeting_location(self.section, self.meeting)
+        util.reset_sign_up_test_data(self.test_data)
+        self.recording_schedule.approval_status = RecordingApprovalStatus.NOT_INVITED
+        self.recording_schedule.scheduling_status = RecordingSchedulingStatus.NOT_SCHEDULED
 
     def test_run_initial_canvas_job(self):
         self.jobs_page.load_page()
@@ -82,16 +86,9 @@ class TestSignUp0:
         self.jobs_page.load_page()
         self.jobs_page.run_canvas_job()
 
-    def test_delete_old_diablo_data(self):
-        util.reset_sign_up_test_data(self.test_data)
-        self.recording_schedule.approval_status = RecordingApprovalStatus.NOT_INVITED
-        self.recording_schedule.scheduling_status = RecordingSchedulingStatus.NOT_SCHEDULED
-
     def test_delete_old_email(self):
         self.email_page.log_in()
         self.email_page.delete_all_messages()
-
-    # TODO - configure email template subjects prior to verifying emails
 
     # CREATE COURSE SITE
 
@@ -150,6 +147,10 @@ class TestSignUp0:
         self.ouija_page.filter_for_scheduled()
         assert self.ouija_page.is_course_in_results(self.section) is False
 
+    def test_not_invited_filter_weird(self):
+        self.ouija_page.filter_for_scheduled_weird()
+        assert self.ouija_page.is_course_in_results(self.section) is False
+
     # RUN JOBS AND VERIFY INVITE
 
     def test_send_invite_email(self):
@@ -201,6 +202,10 @@ class TestSignUp0:
 
     def test_invited_filter_scheduled(self):
         self.ouija_page.filter_for_scheduled()
+        assert self.ouija_page.is_course_in_results(self.section) is False
+
+    def test_invited_filter_weird(self):
+        self.ouija_page.filter_for_scheduled_weird()
         assert self.ouija_page.is_course_in_results(self.section) is False
 
     # INSTRUCTOR LOGS IN
@@ -353,6 +358,10 @@ class TestSignUp0:
         self.ouija_page.filter_for_scheduled()
         assert self.ouija_page.is_course_in_results(self.section) is False
 
+    def test_approved_filter_weird(self):
+        self.ouija_page.filter_for_scheduled_weird()
+        assert self.ouija_page.is_course_in_results(self.section) is False
+
     # RUN KALTURA SCHEDULING JOB AND OBTAIN SERIES ID
 
     def test_kaltura_job(self):
@@ -360,7 +369,7 @@ class TestSignUp0:
         self.jobs_page.run_kaltura_job()
 
     def test_kaltura_schedule_id(self):
-        util.wait_for_kaltura_id(self.recording_schedule, self.term)
+        util.get_kaltura_id(self.recording_schedule, self.term)
 
     # VERIFY SERIES IN DIABLO
 
@@ -432,6 +441,10 @@ class TestSignUp0:
     def test_scheduled_filter_scheduled(self):
         self.ouija_page.filter_for_scheduled()
         assert self.ouija_page.is_course_in_results(self.section) is True
+
+    def test_scheduled_filter_weird(self):
+        self.ouija_page.filter_for_scheduled_weird()
+        assert self.ouija_page.is_course_in_results(self.section) is False
 
     # VERIFY SERIES IN KALTURA
 

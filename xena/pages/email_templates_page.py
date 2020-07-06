@@ -74,6 +74,11 @@ class EmailTemplatesPage(DiabloPages):
         app.logger.info('Loading the templates page')
         self.driver.get(f'{app.config["BASE_URL"]}/email/templates')
 
+    def wait_for_template_row(self, template):
+        Wait(self.driver, util.get_short_timeout()).until(
+            ec.visibility_of_element_located(EmailTemplatesPage.edit_template_link_locator(template)),
+        )
+
     def click_template_select(self):
         app.logger.info('Expanding template options')
         self.wait_for_page_and_click(EmailTemplatesPage.TEMPLATE_TYPE_SELECT)
@@ -131,7 +136,9 @@ class EmailTemplatesPage(DiabloPages):
 
     def click_edit_template_link(self, template):
         app.logger.info(f'Clicking link to edit template type "{template.template_type.value}"')
-        self.wait_for_page_and_click_js(EmailTemplatesPage.edit_template_link_locator(template), util.get_short_timeout())
+        self.wait_for_page_and_click_js(
+            EmailTemplatesPage.edit_template_link_locator(template), util.get_short_timeout(),
+        )
 
     def click_send_test_email(self, template):
         app.logger.info(f'Clicking test email button for template type "{template.template_type.value}"')
@@ -151,3 +158,4 @@ class EmailTemplatesPage(DiabloPages):
         self.enter_subject(template.subject)
         self.enter_all_codes_in_body()
         self.click_save()
+        self.wait_for_template_row(template)

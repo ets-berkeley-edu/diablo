@@ -58,6 +58,7 @@ class TestEmailTemplates:
     def test_template_options(self):
         self.templates_page.click_template_select()
         options = self.templates_page.visible_menu_options()
+        options.sort()
         types = [templ.value for templ in EmailTemplateType]
         types.sort()
         assert options == types
@@ -115,6 +116,78 @@ class TestEmailTemplates:
         template = EmailTemplate(
             template_type=EmailTemplateType.INSTR_INVITATION,
             subject='Invitation <code>term.name</code> <code>course.name</code>',
+            body='',
+        )
+        self.templates_page.create_template(template)
+
+    def test_admin_date_change(self):
+        util.reset_email_template_test_data('admin_alert_date_change')
+        template = EmailTemplate(
+            template_type=EmailTemplateType.ADMIN_DATE_CHANGE,
+            subject='Course Capture Admin: <code>course.name</code> schedule change',
+            body='',
+        )
+        self.templates_page.create_template(template)
+
+    def test_admin_instr_change(self):
+        util.reset_email_template_test_data('admin_alert_instructor_change')
+        template = EmailTemplate(
+            template_type=EmailTemplateType.ADMIN_INSTR_CHANGE,
+            subject='Course Capture Admin: <code>course.name</code> Instructor changes',
+            body='',
+        )
+        self.templates_page.create_template(template)
+
+    def test_admin_room_change(self):
+        util.reset_email_template_test_data('admin_alert_room_change')
+        template = EmailTemplate(
+            template_type=EmailTemplateType.ADMIN_ROOM_CHANGE,
+            subject='Course Capture Admin: <code>course.name</code> has moved to <code>course.room</code>',
+            body='',
+        )
+        self.templates_page.create_template(template)
+
+    def test_admin_weird_dates(self):
+        util.reset_email_template_test_data('admin_alert_multiple_meeting_patterns')
+        template = EmailTemplate(
+            template_type=EmailTemplateType.ADMIN_WEIRD_DATES,
+            subject='Admin alert: <code>course.name</code> is weird',
+            body='',
+        )
+        self.templates_page.create_template(template)
+
+    def test_instr_awaiting_approval(self):
+        util.reset_email_template_test_data('waiting_for_approval')
+        template = EmailTemplate(
+            template_type=EmailTemplateType.INSTR_AWAITING_APPROVAL,
+            subject='Course Capture: <code>course.name</code> waiting on approval',
+            body='',
+        )
+        self.templates_page.create_template(template)
+
+    def test_instr_recordings_scheduled(self):
+        util.reset_email_template_test_data('recordings_scheduled')
+        template = EmailTemplate(
+            template_type=EmailTemplateType.INSTR_RECORDINGS_SCHEDULED,
+            subject='Your course, <code>course.name</code>, has been scheduled for Course Capture',
+            body='',
+        )
+        self.templates_page.create_template(template)
+
+    def test_instr_room_change_ineligible(self):
+        util.reset_email_template_test_data('room_change_no_longer_eligible')
+        template = EmailTemplate(
+            template_type=EmailTemplateType.INSTR_ROOM_CHANGE_INELIGIBLE,
+            subject='Your course <code>course.name</code> is no longer eligible for Course Capture',
+            body='',
+        )
+        self.templates_page.create_template(template)
+
+    def test_instr_settings_change(self):
+        util.reset_email_template_test_data('notify_instructor_of_changes')
+        template = EmailTemplate(
+            template_type=EmailTemplateType.INSTR_SETTINGS_CHANGE,
+            subject='Changes to your Course Capture settings for <code>course.name</code>',
             body='',
         )
         self.templates_page.create_template(template)
