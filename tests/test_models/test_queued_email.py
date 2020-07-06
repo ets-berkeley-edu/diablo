@@ -40,16 +40,3 @@ class TestQueuedEmail:
         # Queued email creation fails.
         assert not QueuedEmail.create(section_id, email_template_type, term_id, recipient=None)
         assert section_id not in QueuedEmail.get_all_section_ids(template_type=email_template_type, term_id=term_id)
-
-    def test_no_email_template_available(self):
-        """Refuse to queue emails if no template is available."""
-        term_id = app.config['CURRENT_TERM_ID']
-        section_id = 50005
-        email_template_type = 'room_change_no_longer_eligible'
-        recipient = {
-            'name': 'Regan MacNeil',
-            'uid': '10006',
-        }
-        # Queued email creation fails.
-        assert not QueuedEmail.create(section_id, email_template_type, term_id, recipient=recipient)
-        assert section_id not in QueuedEmail.get_all_section_ids(template_type=email_template_type, term_id=term_id)

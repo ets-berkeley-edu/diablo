@@ -39,7 +39,8 @@ from diablo.models.sent_email import SentEmail
 from diablo.models.sis_section import SisSection
 from flask import current_app as app
 import pytest
-from tests.test_api.api_test_utils import api_approve, api_get_course, get_eligible_meeting, get_instructor_uids
+from tests.test_api.api_test_utils import api_approve, api_get_course, get_eligible_meeting, get_instructor_uids, \
+    mock_scheduled
 from tests.util import override_config, simply_yield, test_approvals_workflow
 
 admin_uid = '90001'
@@ -487,7 +488,7 @@ class TestGetCourses:
             # If course has approvals but not scheduled then it will show up in the feed.
             self._create_approval(section_4_id)
             # Feed will exclude scheduled.
-            _schedule_recordings(
+            mock_scheduled(
                 section_id=section_3_id,
                 term_id=self.term_id,
             )
@@ -578,7 +579,7 @@ class TestGetCourses:
 
             # Feed will include both scheduled and not scheduled.
             for section_id in [section_1_id, section_7_id]:
-                _schedule_recordings(section_id=section_id, term_id=self.term_id)
+                mock_scheduled(section_id=section_id, term_id=self.term_id)
 
             # Unschedule one of them
             Approval.delete(section_id=section_7_id, term_id=self.term_id)
@@ -602,12 +603,12 @@ class TestGetCourses:
                 self._create_approval(section_id)
 
             # Feed will only include courses that were scheduled.
-            _schedule_recordings(
+            mock_scheduled(
                 section_id=section_1_id,
                 term_id=self.term_id,
             )
             # Deleted records will be ignored
-            _schedule_recordings(
+            mock_scheduled(
                 section_id=section_2_id,
                 term_id=self.term_id,
             )
@@ -627,7 +628,7 @@ class TestGetCourses:
             for section_id in [section_1_id, section_6_id]:
                 self._send_invitation_email(section_id)
                 self._create_approval(section_id)
-            _schedule_recordings(
+            mock_scheduled(
                 section_id=section_1_id,
                 term_id=self.term_id,
             )
@@ -741,10 +742,10 @@ class TestCoursesChanges:
         assert obsolete_room
         assert actual_room_id != obsolete_room.id
 
-        _schedule_recordings(
+        mock_scheduled(
             section_id=section_2_id,
             term_id=self.term_id,
-            room_id=obsolete_room.id,
+            override_room_id=obsolete_room.id,
         )
         api_json = self._api_course_changes(client, term_id=self.term_id)
         course = _find_course(api_json=api_json, section_id=section_2_id)
@@ -1057,7 +1058,7 @@ class TestUnscheduleCourse:
                 recording_type='presentation_audio',
                 section_id=section_1_id,
             )
-            _schedule_recordings(
+            mock_scheduled(
                 section_id=section_1_id,
                 term_id=self.term_id,
             )
@@ -1112,31 +1113,6 @@ def _is_course_in_enabled_room(section_id, term_id):
 
 def _find_course(api_json, section_id):
     return next((s for s in api_json if s['sectionId'] == section_id), None)
-
-
-def _schedule_recordings(
-        section_id,
-        term_id,
-        publish_type='kaltura_media_gallery',
-        recording_type='presenter_presentation_audio',
-        room_id=None,
-):
-    meeting = get_eligible_meeting(section_id=section_id, term_id=term_id)
-    Scheduled.create(
-        instructor_uids=get_instructor_uids(term_id=term_id, section_id=section_id),
-        kaltura_schedule_id=random.randint(1, 10),
-        meeting_days=meeting['days'],
-        meeting_end_date=get_recording_end_date(meeting),
-        meeting_end_time=meeting['endTime'],
-        meeting_start_date=get_recording_start_date(meeting, return_today_if_past_start=True),
-        meeting_start_time=meeting['startTime'],
-        publish_type_=publish_type,
-        recording_type_=recording_type,
-        room_id=room_id or Room.get_room_id(section_id=section_id, term_id=term_id),
-        section_id=section_id,
-        term_id=term_id,
-    )
-    std_commit(allow_test_environment=True)
 
 
 class TestCoursesReport:

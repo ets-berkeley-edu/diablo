@@ -25,12 +25,11 @@ ENHANCEMENTS, OR MODIFICATIONS.
 import json
 import random
 
-from diablo import cachify, db, std_commit
+from diablo import cachify, std_commit
 from diablo.lib.berkeley import get_recording_end_date, get_recording_start_date
 from diablo.models.room import Room
 from diablo.models.scheduled import Scheduled
 from diablo.models.sis_section import SisSection
-from sqlalchemy import text
 
 
 def api_approve(
@@ -79,47 +78,30 @@ def get_instructor_uids(section_id, term_id):
 
 
 def mock_scheduled(
-        meeting,
         section_id,
         term_id,
+        meeting=None,
         override_end_date=None,
         override_end_time=None,
+        override_room_id=None,
         override_start_date=None,
         override_start_time=None,
+        publish_type='kaltura_media_gallery',
+        recording_type='presenter_presentation_audio',
 ):
-    scheduled = Scheduled.create(
+    meeting = meeting or get_eligible_meeting(section_id=section_id, term_id=term_id)
+    Scheduled.create(
         instructor_uids=get_instructor_uids(term_id=term_id, section_id=section_id),
         kaltura_schedule_id=random.randint(1, 10),
-        meeting_days='MO,WE,FR',
+        meeting_days=meeting['days'],
         meeting_end_date=override_end_date or get_recording_end_date(meeting),
         meeting_end_time=override_end_time or meeting['endTime'],
         meeting_start_date=override_start_date or get_recording_start_date(meeting, return_today_if_past_start=True),
         meeting_start_time=override_start_time or meeting['startTime'],
-        publish_type_='kaltura_media_gallery',
-        recording_type_='presenter_presentation_audio',
-        room_id=Room.get_room_id(section_id=section_id, term_id=term_id),
+        publish_type_=publish_type,
+        recording_type_=recording_type,
+        room_id=override_room_id or Room.get_room_id(section_id=section_id, term_id=term_id),
         section_id=section_id,
         term_id=term_id,
     )
-    if override_end_date or override_end_time or override_start_date or override_start_time:
-        args = {
-            'meeting_end_date': override_end_date,
-            'meeting_end_time': override_end_time,
-            'meeting_start_date': override_start_date,
-            'meeting_start_time': override_start_time,
-        }
-        sql = 'UPDATE scheduled SET'
-        previous_value = None
-        for key, value in args.items():
-            if value:
-                sql += f"{',' if previous_value else ''} {key} = :{key}"
-                previous_value = value
-        sql += ' WHERE id = :id'
-        db.session.execute(
-            text(sql),
-            {
-                **{'id': scheduled.id},
-                **args,
-            },
-        )
     std_commit(allow_test_environment=True)
