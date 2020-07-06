@@ -22,7 +22,6 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-
 from diablo.jobs.base_job import BaseJob
 from diablo.jobs.errors import BackgroundJobError
 from diablo.lib.interpolator import interpolate_content
@@ -38,7 +37,7 @@ class InstructorEmailsJob(BaseJob):
 
     def _run(self):
         self.term_id = app.config['CURRENT_TERM_ID']
-        self.email_scheduled_courses()
+        self._room_change_alert()
 
     @classmethod
     def description(cls):
@@ -57,8 +56,14 @@ class InstructorEmailsJob(BaseJob):
     def key(cls):
         return 'instructor_emails'
 
-    def email_scheduled_courses(self):
-        all_scheduled = Scheduled.get_all_scheduled(term_id=self.term_id)
+    def _room_change_alert(self):
+        template_type = 'room_change_no_longer_eligible'
+        all_scheduled = list(
+            filter(
+                lambda s: template_type not in (s.alerts or []),
+                Scheduled.get_all_scheduled(term_id=self.term_id),
+            ),
+        )
         if not all_scheduled:
             return
         courses = SisSection.get_courses(term_id=self.term_id, section_ids=[s.section_id for s in all_scheduled])
@@ -68,7 +73,6 @@ class InstructorEmailsJob(BaseJob):
             if course:
                 eligible_meetings = course.get('meetings', {}).get('eligible', [])
                 if scheduled.room_id not in [meeting.get('room', {}).get('id') for meeting in eligible_meetings]:
-                    template_type = 'room_change_no_longer_eligible'
                     email_template = EmailTemplate.get_template_by_type(template_type)
                     if email_template:
                         for instructor in course['instructors']:
@@ -89,9 +93,10 @@ class InstructorEmailsJob(BaseJob):
                                 subject_line=subject_line,
                                 recipient=instructor,
                                 section_id=course['sectionId'],
-                                template_type='invitation',
+                                template_type=template_type,
                                 term_id=self.term_id,
                             )
+                            Scheduled.add_alert(scheduled_id=course['scheduled']['id'], template_type=template_type)
                     else:
                         raise BackgroundJobError(f"""
                             No email template of type {template_type} is available.

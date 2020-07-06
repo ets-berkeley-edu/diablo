@@ -61,7 +61,11 @@ class TestEmailAlertsForAdmins:
         with test_approvals_workflow(app):
             with override_config(app, 'CURRENT_TERM_RECORDINGS_BEGIN', meeting['startDate']):
                 with override_config(app, 'CURRENT_TERM_RECORDINGS_END', meeting['endDate']):
-                    def _schedule_and_run_jobs():
+                    def _run_jobs():
+                        AdminEmailsJob(simply_yield).run()
+                        QueuedEmailsJob(simply_yield).run()
+
+                    def _schedule():
                         mock_scheduled(
                             meeting=meeting,
                             override_end_time='16:59',
@@ -71,9 +75,6 @@ class TestEmailAlertsForAdmins:
                         )
                         course = SisSection.get_course(section_id=section_id, term_id=term_id)
                         assert is_schedule_obsolete(meeting=meeting, scheduled=course['scheduled'])
-                        AdminEmailsJob(simply_yield).run()
-                        QueuedEmailsJob(simply_yield).run()
-                        return course['scheduled']['id']
 
                     def _assert_alert_count(count):
                         emails_sent = SentEmail.get_emails_sent_to(uid=admin_uid)
@@ -82,12 +83,17 @@ class TestEmailAlertsForAdmins:
                         assert emails_sent[0].template_type == 'admin_alert_date_change'
 
                     # First time scheduled.
-                    _schedule_and_run_jobs()
+                    _schedule()
+                    _run_jobs()
                     _assert_alert_count(1)
                     # Unschedule and schedule a second time.
                     Scheduled.delete(section_id=section_id, term_id=term_id)
-                    _schedule_and_run_jobs()
+                    _schedule()
+                    _run_jobs()
                     # Another alert is emailed to admin because it is a new schedule.
+                    _assert_alert_count(2)
+                    # Run jobs again and expect no alerts.
+                    _run_jobs()
                     _assert_alert_count(2)
 
     def test_alert_admin_of_room_change(self, db_session, enable_admin_emails):

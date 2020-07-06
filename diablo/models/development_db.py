@@ -133,6 +133,12 @@ def _create_email_templates():
         message='<code>course.name</code> has changed to a new room: <code>course.room</code>',
     )
     EmailTemplate.create(
+        template_type='room_change_no_longer_eligible',
+        name='Instructor alert when room change',
+        subject_line='Room change alert',
+        message='<code>course.name</code> has changed to a new room: <code>course.room</code>',
+    )
+    EmailTemplate.create(
         template_type='notify_instructor_of_changes',
         name="I'm the Devil. Now kindly undo these straps.",
         subject_line="If you're the Devil, why not make the straps disappear?",
