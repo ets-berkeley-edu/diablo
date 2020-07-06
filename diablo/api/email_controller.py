@@ -28,6 +28,8 @@ from diablo.api.util import admin_required
 from diablo.externals.b_connected import BConnected
 from diablo.lib.http import tolerant_jsonify
 from diablo.lib.interpolator import get_template_substitutions, interpolate_content
+from diablo.models.approval import get_all_publish_types, get_all_recording_types, NAMES_PER_PUBLISH_TYPE, \
+    NAMES_PER_RECORDING_TYPE
 from diablo.models.email_template import EmailTemplate
 from diablo.models.queued_email import QueuedEmail
 from diablo.models.sent_email import SentEmail
@@ -100,24 +102,28 @@ def test_email_template(template_id):
     if email_template:
         course = SisSection.get_random_co_taught_course(app.config['CURRENT_TERM_ID'])
         template = EmailTemplate.get_template(template_id)
-        subject_line = interpolate_content(
-            course=course,
-            recipient_name=current_user.name,
-            templated_string=template.subject_line,
-        )
-        message = interpolate_content(
-            course=course,
-            recipient_name=current_user.name,
-            templated_string=template.message,
-        )
+        publish_types = get_all_publish_types()
+        recording_types = get_all_recording_types()
+
+        def _get_interpolated_content(templated_string):
+            return interpolate_content(
+                course=course,
+                pending_instructors=course['instructors'],
+                previous_publish_type_name=NAMES_PER_PUBLISH_TYPE[publish_types[0]],
+                previous_recording_type_name=NAMES_PER_RECORDING_TYPE[recording_types[0]],
+                publish_type_name=NAMES_PER_PUBLISH_TYPE[publish_types[1]],
+                recording_type_name=NAMES_PER_RECORDING_TYPE[recording_types[1]],
+                recipient_name=current_user.name,
+                templated_string=templated_string,
+            )
         BConnected().send(
             recipient={
                 'email': current_user.email_address,
                 'name': current_user.name,
                 'uid': current_user.uid,
             },
-            message=message,
-            subject_line=subject_line,
+            message=_get_interpolated_content(template.message),
+            subject_line=_get_interpolated_content(template.subject_line),
         )
         return tolerant_jsonify({'message': f'Email sent to {current_user.email_address}'}), 200
     else:

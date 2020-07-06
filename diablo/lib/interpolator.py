@@ -31,9 +31,9 @@ from flask import current_app as app
 
 
 def interpolate_content(
-    templated_string,
     course,
     recipient_name,
+    templated_string,
     pending_instructors=None,
     previous_publish_type_name=None,
     previous_recording_type_name=None,

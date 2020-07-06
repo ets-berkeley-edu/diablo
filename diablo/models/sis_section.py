@@ -562,19 +562,24 @@ class SisSection(db.Model):
 
     @classmethod
     def get_random_co_taught_course(cls, term_id):
-        sql = """
-            SELECT section_id FROM (
-                SELECT section_id, instructor_uid from sis_sections
-                WHERE term_id = :term_id
-                AND is_principal_listing IS TRUE
-                GROUP BY section_id, instructor_uid
-            ) sections_by_instructor
-            GROUP BY section_id
-            HAVING COUNT(*) > 2
-            LIMIT 1
-        """
-        section_id = db.session.execute(text(sql), {'term_id': term_id}).scalar()
-        return cls.get_course(term_id, section_id)
+        def _get_section_id(in_eligible_room=True):
+            sql = f"""
+                SELECT section_id FROM (
+                    SELECT s.section_id, s.instructor_uid
+                    FROM sis_sections s
+                    {'JOIN rooms r ON r.location = s.meeting_location' if in_eligible_room else ''}
+                    WHERE s.term_id = :term_id
+                    AND s.is_principal_listing IS TRUE
+                    {'AND r.capability IS NOT NULL' if in_eligible_room else ''}
+                    GROUP BY s.section_id, s.instructor_uid
+                ) sections_by_instructor
+                GROUP BY section_id
+                HAVING COUNT(*) > 2
+                LIMIT 1
+            """
+            return db.session.execute(text(sql), {'term_id': term_id}).scalar()
+        section_id = _get_section_id() or _get_section_id(in_eligible_room=False)
+        return cls.get_course(section_id=section_id, term_id=term_id)
 
     @classmethod
     def _section_ids_with_nonstandard_dates(cls, term_id):
