@@ -163,7 +163,7 @@ class Scheduled(db.Model):
     def add_alert(cls, scheduled_id, template_type):
         row = cls.query.filter_by(id=scheduled_id).first()
         if row.alerts:
-            row.alerts.append(template_type)
+            row.alerts = list(set(row.alerts + [template_type]))
         else:
             row.alerts = [template_type]
         db.session.add(row)
