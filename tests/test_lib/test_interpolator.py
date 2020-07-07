@@ -49,12 +49,18 @@ class TestInterpolator:
     def test_email_test_mode_on(self):
         with override_config(app, 'EMAIL_TEST_MODE', True):
             recipient = _get_mock_recipient()
-            assert BConnected.get_email_address(recipient) == app.config['EMAIL_REDIRECT_WHEN_TESTING']
+            test_email_address = 'foo@berkeley.edu'
+            # EMAIL_REDIRECT_WHEN_TESTING can be single email address (string) or list of addresses.
+            expected = [test_email_address]
+            with override_config(app, 'EMAIL_REDIRECT_WHEN_TESTING', test_email_address):
+                assert BConnected.get_email_addresses(recipient) == expected
+            with override_config(app, 'EMAIL_REDIRECT_WHEN_TESTING', [test_email_address]):
+                assert BConnected.get_email_addresses(recipient) == expected
 
     def test_email_test_mode_off(self):
         with override_config(app, 'EMAIL_TEST_MODE', False):
             recipient = _get_mock_recipient()
-            assert BConnected.get_email_address(recipient) == recipient['email']
+            assert BConnected.get_email_addresses(recipient) == [recipient['email']]
 
 
 def _get_mock_recipient():

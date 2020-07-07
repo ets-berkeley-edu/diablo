@@ -37,13 +37,16 @@ def get_admin_alert_recipient():
 def send_system_error_email(message, subject=None):
     if subject is None:
         subject = f'{message[:50]}...' if len(message) > 50 else message
-    BConnected().send(
-        message=message,
-        recipient={
-            'email': app.config['EMAIL_SYSTEM_ERRORS'],
-            'name': 'Course Capture Errors',
-            'uid': '0',
-        },
-        subject_line=f'Alert: {subject}',
-    )
+    config_value = app.config['EMAIL_SYSTEM_ERRORS']
+    email_addresses = config_value if isinstance(config_value, list) else [config_value]
+    for email_address in email_addresses:
+        BConnected().send(
+            message=message,
+            recipient={
+                'email': email_address,
+                'name': 'Course Capture Errors',
+                'uid': '0',
+            },
+            subject_line=f'Alert: {subject}',
+        )
     app.logger.error(f'Alert: {message}')

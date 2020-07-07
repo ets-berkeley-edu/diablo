@@ -78,26 +78,26 @@ class BConnected:
                 app.logger.info(mock_message)
             else:
                 from_address = f"{app.config['EMAIL_COURSE_CAPTURE_SUPPORT_LABEL']} <{app.config['EMAIL_COURSE_CAPTURE_SUPPORT']}>"
-                to_address = self.get_email_address(user=recipient, subject_line=subject_line)
 
-                msg = MIMEMultipart('alternative')
-                msg['From'] = from_address
-                msg['To'] = to_address
+                for email_address in self.get_email_addresses(user=recipient):
+                    msg = MIMEMultipart('alternative')
+                    msg['From'] = from_address
+                    msg['To'] = email_address
 
-                if app.config['EMAIL_TEST_MODE']:
-                    # Append intended recipient email address to verify when testing.
-                    intended_email = recipient['email']
-                    msg['Subject'] = f'{subject_line} (To: {intended_email})'
-                else:
-                    msg['Subject'] = subject_line
+                    if app.config['EMAIL_TEST_MODE']:
+                        # Append intended recipient email address to verify when testing.
+                        intended_email = recipient['email']
+                        msg['Subject'] = f'{subject_line} (To: {intended_email})'
+                    else:
+                        msg['Subject'] = subject_line
 
-                # TODO: 'plain' text version of email?
-                msg.attach(MIMEText(message, 'plain'))
-                msg.attach(MIMEText(message, 'html'))
-                # Send
-                smtp.sendmail(from_addr=from_address, to_addrs=to_address, msg=msg.as_string())
+                    # TODO: 'plain' text version of email?
+                    msg.attach(MIMEText(message, 'plain'))
+                    msg.attach(MIMEText(message, 'html'))
+                    # Send
+                    smtp.sendmail(from_addr=from_address, to_addrs=email_address, msg=msg.as_string())
 
-                emails_sent_to.add(to_address)
+                    emails_sent_to.add(email_address)
 
             app.logger.info(f'\'{template_type}\' email sent to {", ".join(list(emails_sent_to))}')
             # Disconnect
@@ -120,13 +120,12 @@ class BConnected:
             return True
 
     @classmethod
-    def get_email_address(cls, user, subject_line=None):
-        user_email = user['email']
+    def get_email_addresses(cls, user):
         if app.config['EMAIL_TEST_MODE']:
-            app.logger.info(f'EMAIL_TEST_MODE intended email: {user_email}; subject_line: {subject_line}')
-            return app.config['EMAIL_REDIRECT_WHEN_TESTING']
+            config_value = app.config['EMAIL_REDIRECT_WHEN_TESTING']
+            return config_value if isinstance(config_value, list) else [config_value]
         else:
-            return user_email
+            return [user['email']]
 
 
 def _get_mock_message(recipient_name, email_address, subject_line, message):
