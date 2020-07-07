@@ -93,22 +93,21 @@ class AdminEmailsJob(BaseJob):
     def _notify(self, course, template_type):
         email_template = EmailTemplate.get_template_by_type(template_type)
         if email_template:
+            def _get_interpolate_content(template):
+                scheduled = course.get('scheduled', {})
+                return interpolate_content(
+                    course=course,
+                    publish_type_name=scheduled.get('publishTypeName'),
+                    recipient_name=recipient['name'],
+                    recording_type_name=scheduled.get('recordingTypeName'),
+                    templated_string=template,
+                )
             recipient = get_admin_alert_recipient()
-            message = interpolate_content(
-                templated_string=email_template.message,
-                course=course,
-                recipient_name=recipient['name'],
-            )
-            subject_line = interpolate_content(
-                templated_string=email_template.subject_line,
-                course=course,
-                recipient_name=recipient['name'],
-            )
             QueuedEmail.create(
-                message=message,
-                subject_line=subject_line,
+                message=_get_interpolate_content(email_template.message),
                 recipient=recipient,
                 section_id=course['sectionId'],
+                subject_line=_get_interpolate_content(email_template.subject_line),
                 template_type=template_type,
                 term_id=self.term_id,
             )
