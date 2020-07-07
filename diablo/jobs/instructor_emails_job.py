@@ -41,15 +41,9 @@ class InstructorEmailsJob(BaseJob):
 
     @classmethod
     def description(cls):
-        names_by_type = EmailTemplate.get_template_type_options()
-        template_types = ['room_change_no_longer_eligible']
         return f"""
-            Queues up instructor notifications. Email templates used:
-            <ul>
-                {''.join(f'<li>{names_by_type.get(template_type)}</li>' for template_type in template_types)}
-            </ul>
-            NOTE: The '{names_by_type['room_change_no_longer_eligible']}' email is queued by the Kaltura job, when recordings are
-            scheduled, and sent by the Queued Emails job.
+            Queues up '{EmailTemplate.get_template_type_options()['room_change_no_longer_eligible']}' emails.
+            Emails are sent when the when the 'Queued Emails' job runs.
         """
 
     @classmethod
