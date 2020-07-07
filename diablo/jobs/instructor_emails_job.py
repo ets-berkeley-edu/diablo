@@ -70,23 +70,19 @@ class InstructorEmailsJob(BaseJob):
                     email_template = EmailTemplate.get_template_by_type(template_type)
                     if email_template:
                         for instructor in course['instructors']:
-                            message = interpolate_content(
-                                templated_string=email_template.message,
-                                course=course,
-                                recipient_name=instructor['name'],
-                                recording_type_name=scheduled.recording_type,
-                            )
-                            subject_line = interpolate_content(
-                                templated_string=email_template.subject_line,
-                                course=course,
-                                recipient_name=instructor['name'],
-                                recording_type_name=scheduled.recording_type,
-                            )
+                            def _get_interpolate_content(template):
+                                return interpolate_content(
+                                    course=course,
+                                    publish_type_name=course.get('scheduled', {}).get('publishTypeName'),
+                                    recipient_name=instructor['name'],
+                                    recording_type_name=course.get('scheduled', {}).get('recordingTypeName'),
+                                    templated_string=template,
+                                )
                             QueuedEmail.create(
-                                message=message,
-                                subject_line=subject_line,
+                                message=_get_interpolate_content(email_template.message),
                                 recipient=instructor,
                                 section_id=course['sectionId'],
+                                subject_line=_get_interpolate_content(email_template.subject_line),
                                 template_type=template_type,
                                 term_id=self.term_id,
                             )
