@@ -44,11 +44,11 @@ def cas_login_url():
 
 @app.route('/api/auth/dev_auth_login', methods=['POST'])
 def dev_auth_login():
-    if app.config['DEVELOPER_AUTH_ENABLED']:
+    if app.config['DEV_AUTH_ENABLED']:
         params = request.get_json() or {}
         uid = params.get('uid')
         password = params.get('password')
-        if password != app.config['DEVELOPER_AUTH_PASSWORD']:
+        if password != app.config['DEV_AUTH_PASSWORD']:
             return tolerant_jsonify({'message': 'Invalid credentials'}, 401)
         user = User(uid)
         if not user.is_active:
@@ -87,7 +87,7 @@ def cas_login():
         app.logger.error(f'Sorry, user with UID {uid} is not authorized to use Diablo.')
         param = ('error', f"""
             Sorry, you are not registered to use Diablo.
-            Please <a href="mailto:{app.config['EMAIL_DIABLO_SUPPORT']}">email us</a> for assistance.
+            Please <a href="mailto:{app.config['EMAIL_COURSE_CAPTURE_SUPPORT']}">email us</a> for assistance.
         """)
         redirect_url = add_param_to_url('/', param)
     else:

@@ -62,11 +62,16 @@ class TestConfigController:
             assert response.status_code == 200
             assert 'diabloEnv' in response.json
             api_json = response.json
+            assert api_json['devAuthEnabled'] is False
             assert api_json['ebEnvironment'] == 'diablo-test'
-            assert 'berkeley.edu' in api_json['supportEmailAddress']
+            assert 'berkeley.edu' in api_json['emailCourseCaptureSupport']
             assert api_json['timezone'] == 'America/Los_Angeles'
             assert api_json['currentTermId'] == term_id
             assert api_json['currentTermName'] == 'Fall 2021'
             assert len(api_json['emailTemplateTypes'])
             assert len(api_json['roomCapabilityOptions'])
             assert len(api_json['searchFilterOptions'])
+
+            api_json_lower_string = str(api_json).lower()
+            for keyword in ('password', 'secret'):
+                assert keyword not in api_json_lower_string

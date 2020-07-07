@@ -77,7 +77,7 @@ class BConnected:
             if app.config['DIABLO_ENV'] == 'test':
                 app.logger.info(mock_message)
             else:
-                from_address = f"{app.config['EMAIL_DIABLO_SUPPORT_FRIENDLY']} <{app.config['EMAIL_DIABLO_SUPPORT']}>"
+                from_address = f"{app.config['EMAIL_COURSE_CAPTURE_SUPPORT_LABEL']} <{app.config['EMAIL_COURSE_CAPTURE_SUPPORT']}>"
                 to_address = self.get_email_address(user=recipient, subject_line=subject_line)
 
                 msg = MIMEMultipart('alternative')
@@ -134,7 +134,7 @@ def _get_mock_message(recipient_name, email_address, subject_line, message):
 
         To: {recipient_name} <{email_address}>
         Cc: Course Capture Admin <{app.config['EMAIL_DIABLO_ADMIN']}>
-        From: {app.config['EMAIL_DIABLO_SUPPORT_FRIENDLY']} <{app.config['EMAIL_DIABLO_SUPPORT']}>
+        From: {app.config['EMAIL_COURSE_CAPTURE_SUPPORT_LABEL']} <{app.config['EMAIL_COURSE_CAPTURE_SUPPORT']}>
         Subject: {subject_line}
 
         Message:

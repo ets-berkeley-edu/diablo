@@ -12,10 +12,10 @@
           <a
             id="diablo-support-mailto"
             class="white--text"
-            :href="`mailto:${$config.supportEmailAddress}`"
+            :href="`mailto:${$config.emailCourseCaptureSupport}`"
             target="_blank"
           >
-            {{ $config.supportEmailAddress }}
+            {{ $config.emailCourseCaptureSupport }}
           </a>
         </v-col>
         <v-col>
