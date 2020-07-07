@@ -255,3 +255,25 @@ class TestGetEmailsSent:
     def test_get_emails_sent(self, client, admin_session):
         """Admin user can get info on emails sent."""
         self._api_emails_sent_to(client, uid=instructor_uid)
+
+
+class TestGetEmailTemplateCodes:
+    """Only Admin users can get email template codes."""
+
+    @staticmethod
+    def _api_email_template_codes(client, expected_status_code=200):
+        response = client.get('/api/email/template/codes')
+        assert response.status_code == expected_status_code
+        return response.json
+
+    def test_anonymous(self, client):
+        """Denies anonymous access."""
+        self._api_email_template_codes(client, expected_status_code=401)
+
+    def test_unauthorized(self, client, instructor_session):
+        """Denies access if user is not an admin."""
+        self._api_email_template_codes(client, expected_status_code=401)
+
+    def test_authorized(self, client, admin_session):
+        """Admin user can get template codes."""
+        self._api_email_template_codes(client)
