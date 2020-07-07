@@ -69,7 +69,7 @@
           <v-list-item
             id="menu-item-feedback-and-help"
             aria-label="Send email to the Course Capture support team; this link opens a new tab."
-            :href="`mailto:${$config.supportEmailAddress}`"
+            :href="`mailto:${$config.emailCourseCaptureSupport}`"
             link
             target="_blank"
           >

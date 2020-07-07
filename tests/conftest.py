@@ -40,10 +40,10 @@ class FakeAuth(object):
         self.client = the_client
 
     def login(self, uid):
-        with override_config(self.app, 'DEVELOPER_AUTH_ENABLED', True):
+        with override_config(self.app, 'DEV_AUTH_ENABLED', True):
             params = {
                 'uid': uid,
-                'password': self.app.config['DEVELOPER_AUTH_PASSWORD'],
+                'password': self.app.config['DEV_AUTH_PASSWORD'],
             }
             self.client.post(
                 '/api/auth/dev_auth_login',

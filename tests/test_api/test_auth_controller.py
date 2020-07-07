@@ -48,19 +48,19 @@ class TestDevAuth:
 
     def test_dev_auth_is_off(self, app, client):
         """Blocks access unless enabled."""
-        with override_config(app, 'DEVELOPER_AUTH_ENABLED', False):
+        with override_config(app, 'DEV_AUTH_ENABLED', False):
             self._api_dev_auth_login(
                 client,
                 params={
                     'uid': admin_uid,
-                    'password': app.config['DEVELOPER_AUTH_PASSWORD'],
+                    'password': app.config['DEV_AUTH_PASSWORD'],
                 },
                 expected_status_code=404,
             )
 
     def test_password_fail(self, app, client):
         """Fails if no match on developer password."""
-        with override_config(app, 'DEVELOPER_AUTH_ENABLED', True):
+        with override_config(app, 'DEV_AUTH_ENABLED', True):
             self._api_dev_auth_login(
                 client,
                 params={
@@ -72,48 +72,48 @@ class TestDevAuth:
 
     def test_dev_auth_bad_uid(self, app, client):
         """Fails if the chosen UID does not match an authorized user."""
-        with override_config(app, 'DEVELOPER_AUTH_ENABLED', True):
+        with override_config(app, 'DEV_AUTH_ENABLED', True):
             self._api_dev_auth_login(
                 client,
                 params={
                     'uid': 'A Bad Sort',
-                    'password': app.config['DEVELOPER_AUTH_PASSWORD'],
+                    'password': app.config['DEV_AUTH_PASSWORD'],
                 },
                 expected_status_code=403,
             )
 
     def test_dev_auth_unauthorized(self, app, client):
         """Deny access to non-admin user with no teaching duties."""
-        with override_config(app, 'DEVELOPER_AUTH_ENABLED', True):
+        with override_config(app, 'DEV_AUTH_ENABLED', True):
             self._api_dev_auth_login(
                 client,
                 params={
                     'uid': unauthorized_uid,
-                    'password': app.config['DEVELOPER_AUTH_PASSWORD'],
+                    'password': app.config['DEV_AUTH_PASSWORD'],
                 },
                 expected_status_code=403,
             )
 
     def test_deny_deleted_admin_user(self, app, client):
         """Deny access to deleted admin user."""
-        with override_config(app, 'DEVELOPER_AUTH_ENABLED', True):
+        with override_config(app, 'DEV_AUTH_ENABLED', True):
             self._api_dev_auth_login(
                 client,
                 params={
                     'uid': deleted_admin_user_uid,
-                    'password': app.config['DEVELOPER_AUTH_PASSWORD'],
+                    'password': app.config['DEV_AUTH_PASSWORD'],
                 },
                 expected_status_code=403,
             )
 
     def test_dev_auth_for_admin_user(self, app, client):
         """Admin user can log in."""
-        with override_config(app, 'DEVELOPER_AUTH_ENABLED', True):
+        with override_config(app, 'DEV_AUTH_ENABLED', True):
             api_json = self._api_dev_auth_login(
                 client,
                 params={
                     'uid': admin_uid,
-                    'password': app.config['DEVELOPER_AUTH_PASSWORD'],
+                    'password': app.config['DEV_AUTH_PASSWORD'],
                 },
             )
             assert api_json['uid'] == admin_uid
@@ -123,12 +123,12 @@ class TestDevAuth:
 
     def test_dev_auth_for_instructor(self, app, client):
         """Instructor with one or more sections in current term can log in."""
-        with override_config(app, 'DEVELOPER_AUTH_ENABLED', True):
+        with override_config(app, 'DEV_AUTH_ENABLED', True):
             api_json = self._api_dev_auth_login(
                 client,
                 params={
                     'uid': instructor_uid,
-                    'password': app.config['DEVELOPER_AUTH_PASSWORD'],
+                    'password': app.config['DEV_AUTH_PASSWORD'],
                 },
             )
             assert api_json['uid'] == instructor_uid
@@ -138,12 +138,12 @@ class TestDevAuth:
 
     def test_user_expired_according_to_calnet(self, app, client):
         """Fails if user has no record in LDAP."""
-        with override_config(app, 'DEVELOPER_AUTH_ENABLED', True):
+        with override_config(app, 'DEV_AUTH_ENABLED', True):
             self._api_dev_auth_login(
                 client,
                 params={
                     'uid': no_calnet_record_for_uid,
-                    'password': app.config['DEVELOPER_AUTH_PASSWORD'],
+                    'password': app.config['DEV_AUTH_PASSWORD'],
                 },
                 expected_status_code=403,
             )

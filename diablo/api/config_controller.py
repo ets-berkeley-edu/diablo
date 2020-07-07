@@ -34,33 +34,50 @@ from diablo.models.email_template import EmailTemplate
 from diablo.models.room import Room
 from flask import current_app as app
 
+PUBLIC_CONFIGS = [
+    'CANVAS_BASE_URL',
+    'COURSE_CAPTURE_EXPLAINED_URL',
+    'COURSE_CAPTURE_POLICIES_URL',
+    'COURSE_CAPTURE_PREMIUM_COST',
+    'CURRENT_TERM_BEGIN',
+    'CURRENT_TERM_END',
+    'CURRENT_TERM_ID',
+    'CURRENT_TERM_RECORDINGS_BEGIN',
+    'CURRENT_TERM_RECORDINGS_END',
+    'DEV_AUTH_ENABLED',
+    'DIABLO_BASE_URL',
+    'DIABLO_ENV',
+    'EMAIL_COURSE_CAPTURE_SUPPORT',
+    'EMAIL_DIABLO_ADMIN',
+    'EMAIL_REDIRECT_WHEN_TESTING',
+    'EMAIL_SYSTEM_ERRORS',
+    'EMAIL_TEST_MODE',
+    'KALTURA_BLACKOUT_DATES',
+    'KALTURA_EVENT_ORGANIZER',
+    'KALTURA_MEDIA_SPACE_URL',
+    'SEARCH_ITEMS_PER_PAGE',
+    'TIMEZONE',
+]
+
 
 @app.route('/api/config')
 def app_config():
-    term_id = app.config['CURRENT_TERM_ID']
-    return tolerant_jsonify({
-        'canvasBaseUrl': app.config['CANVAS_BASE_URL'],
-        'courseCaptureExplainedUrl': app.config['COURSE_CAPTURE_EXPLAINED_URL'],
-        'courseCapturePoliciesUrl': app.config['COURSE_CAPTURE_POLICIES_URL'],
-        'courseCapturePremiumCost': app.config['COURSE_CAPTURE_PREMIUM_COST'],
-        'currentTermBegin': app.config['CURRENT_TERM_BEGIN'],
-        'currentTermEnd': app.config['CURRENT_TERM_END'],
-        'currentTermId': term_id,
-        'currentTermName': term_name_for_sis_id(term_id),
-        'currentTermRecordingsBegin': app.config['CURRENT_TERM_RECORDINGS_BEGIN'],
-        'currentTermRecordingsEnd': app.config['CURRENT_TERM_RECORDINGS_END'],
-        'devAuthEnabled': app.config['DEVELOPER_AUTH_ENABLED'],
-        'diabloEnv': app.config['DIABLO_ENV'],
-        'ebEnvironment': get_eb_environment(),
-        'emailTemplateTypes': EmailTemplate.get_template_type_options(),
-        'kalturaMediaSpaceUrl': app.config['KALTURA_MEDIA_SPACE_URL'],
-        'publishTypeOptions': NAMES_PER_PUBLISH_TYPE,
-        'roomCapabilityOptions': Room.get_room_capability_options(),
-        'searchFilterOptions': get_search_filter_options(),
-        'searchItemsPerPage': app.config['SEARCH_ITEMS_PER_PAGE'],
-        'supportEmailAddress': app.config['EMAIL_DIABLO_SUPPORT'],
-        'timezone': app.config['TIMEZONE'],
-    })
+    def _to_api_key(key):
+        chunks = key.split('_')
+        return f"{chunks[0].lower()}{''.join(chunk.title() for chunk in chunks[1:])}"
+    return tolerant_jsonify(
+        {
+            **dict((_to_api_key(key), app.config[key]) for key in PUBLIC_CONFIGS),
+            **{
+                'currentTermName': term_name_for_sis_id(app.config['CURRENT_TERM_ID']),
+                'ebEnvironment': get_eb_environment(),
+                'emailTemplateTypes': EmailTemplate.get_template_type_options(),
+                'publishTypeOptions': NAMES_PER_PUBLISH_TYPE,
+                'roomCapabilityOptions': Room.get_room_capability_options(),
+                'searchFilterOptions': get_search_filter_options(),
+            },
+        },
+    )
 
 
 @app.route('/api/version')

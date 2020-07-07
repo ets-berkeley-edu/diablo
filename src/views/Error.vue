@@ -14,7 +14,7 @@
       </div>
       <div>
         Problem? Question?
-        Email us at <a id="help-mailto" :href="`mailto:${$config.supportEmailAddress}`" target="_blank">{{ $config.supportEmailAddress }}</a>.
+        Email us at <a id="help-mailto" :href="`mailto:${$config.emailCourseCaptureSupport}`" target="_blank">{{ $config.emailCourseCaptureSupport }}</a>.
       </div>
     </div>
   </v-banner>
