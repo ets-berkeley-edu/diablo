@@ -51,7 +51,7 @@ def enable_admin_emails():
     std_commit(allow_test_environment=True)
 
 
-class TestEmailAlertsForAdmins:
+class TestAdminEmailsJob:
 
     def test_admin_alert_date_change(self, db_session, enable_admin_emails):
         admin_uid = app.config['EMAIL_DIABLO_ADMIN_UID']

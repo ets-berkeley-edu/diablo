@@ -44,7 +44,7 @@ def enable_instructor_emails_job():
     std_commit(allow_test_environment=True)
 
 
-class TestEmailAlertsForAdmins:
+class TestInstructorEmailsJob:
 
     def test_room_change_no_longer_eligible(self, db_session, enable_instructor_emails_job):
         term_id = app.config['CURRENT_TERM_ID']

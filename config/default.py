@@ -80,8 +80,8 @@ EMAIL_COURSE_CAPTURE_SUPPORT = '__EMAIL_COURSE_CAPTURE_SUPPORT__at_berkeley.edu'
 EMAIL_COURSE_CAPTURE_SUPPORT_LABEL = 'Course Capture Admin'
 EMAIL_DIABLO_ADMIN = '__EMAIL_DIABLO_ADMIN__at_berkeley.edu'
 EMAIL_DIABLO_ADMIN_UID = '0'
-EMAIL_REDIRECT_WHEN_TESTING = '__EMAIL_REDIRECT_WHEN_TESTING__at_berkeley.edu'
-EMAIL_SYSTEM_ERRORS = '__EMAIL_SYSTEM_ERRORS__at_berkeley.edu'
+EMAIL_REDIRECT_WHEN_TESTING = ['__EMAIL_REDIRECT_WHEN_TESTING__at_berkeley.edu']
+EMAIL_SYSTEM_ERRORS = ['__EMAIL_SYSTEM_ERRORS__at_berkeley.edu']
 EMAIL_TEST_MODE = True
 
 # Useful when working on or debugging the Kaltura integration. Recommended for localhost only.
