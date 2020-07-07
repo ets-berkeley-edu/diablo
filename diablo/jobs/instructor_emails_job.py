@@ -52,48 +52,48 @@ class InstructorEmailsJob(BaseJob):
 
     def _room_change_alert(self):
         template_type = 'room_change_no_longer_eligible'
-        all_scheduled = list(
-            filter(
-                lambda s: template_type not in (s.alerts or []),
-                Scheduled.get_all_scheduled(term_id=self.term_id),
-            ),
-        )
-        if not all_scheduled:
-            return
-        courses = SisSection.get_courses(term_id=self.term_id, section_ids=[s.section_id for s in all_scheduled])
-        courses_per_section_id = dict((course['sectionId'], course) for course in courses)
-        for scheduled in all_scheduled:
-            course = courses_per_section_id.get(scheduled.section_id)
-            if course:
-                eligible_meetings = course.get('meetings', {}).get('eligible', [])
-                if scheduled.room_id not in [meeting.get('room', {}).get('id') for meeting in eligible_meetings]:
-                    email_template = EmailTemplate.get_template_by_type(template_type)
-                    if email_template:
-                        for instructor in course['instructors']:
-                            def _get_interpolate_content(template):
-                                return interpolate_content(
-                                    course=course,
-                                    publish_type_name=course.get('scheduled', {}).get('publishTypeName'),
-                                    recipient_name=instructor['name'],
-                                    recording_type_name=course.get('scheduled', {}).get('recordingTypeName'),
-                                    templated_string=template,
+        email_template = EmailTemplate.get_template_by_type(template_type)
+        if email_template:
+            all_scheduled = list(
+                filter(
+                    lambda s: template_type not in (s.alerts or []),
+                    Scheduled.get_all_scheduled(term_id=self.term_id),
+                ),
+            )
+            if all_scheduled:
+                courses = SisSection.get_courses(term_id=self.term_id, section_ids=[s.section_id for s in all_scheduled])
+                courses_per_section_id = dict((course['sectionId'], course) for course in courses)
+                for scheduled in all_scheduled:
+                    course = courses_per_section_id.get(scheduled.section_id)
+                    if course:
+                        if _has_room_change(course, scheduled):
+                            for instructor in course['instructors']:
+                                def _get_interpolate_content(template):
+                                    return interpolate_content(
+                                        course=course,
+                                        publish_type_name=course.get('scheduled', {}).get('publishTypeName'),
+                                        recipient_name=instructor['name'],
+                                        recording_type_name=course.get('scheduled', {}).get('recordingTypeName'),
+                                        templated_string=template,
+                                    )
+                                QueuedEmail.create(
+                                    message=_get_interpolate_content(email_template.message),
+                                    recipient=instructor,
+                                    section_id=course['sectionId'],
+                                    subject_line=_get_interpolate_content(email_template.subject_line),
+                                    template_type=template_type,
+                                    term_id=self.term_id,
                                 )
-                            QueuedEmail.create(
-                                message=_get_interpolate_content(email_template.message),
-                                recipient=instructor,
-                                section_id=course['sectionId'],
-                                subject_line=_get_interpolate_content(email_template.subject_line),
-                                template_type=template_type,
-                                term_id=self.term_id,
-                            )
                             Scheduled.add_alert(scheduled_id=course['scheduled']['id'], template_type=template_type)
                     else:
-                        raise BackgroundJobError(f"""
-                            No email template of type {template_type} is available.
-                            {course['label']} instructors were NOT notified of scheduled: {scheduled}.
-                        """)
-            else:
-                subject = f'Scheduled course has no SIS data (section_id={scheduled.section_id})'
-                message = f'{subject}\n\nScheduled:<pre>{scheduled}</pre>'
-                app.logger.error(message)
-                send_system_error_email(message=message, subject=subject)
+                        subject = f'Scheduled course has no SIS data (section_id={scheduled.section_id})'
+                        message = f'{subject}\n\nScheduled:<pre>{scheduled}</pre>'
+                        app.logger.error(message)
+                        send_system_error_email(message=message, subject=subject)
+        else:
+            raise BackgroundJobError(f'No {template_type} email template is available.')
+
+
+def _has_room_change(course, scheduled):
+    eligible_meetings = course.get('meetings', {}).get('eligible', [])
+    return scheduled.room_id not in [meeting.get('room', {}).get('id') for meeting in eligible_meetings]
