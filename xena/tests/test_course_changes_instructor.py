@@ -51,12 +51,15 @@ class TestCourseInstructorChanges:
         self.ouija_page.click_jobs_link()
         self.jobs_page.disable_all_jobs()
 
-    def test_delete_old_diablo_data(self):
+    def test_delete_old_diablo_and_kaltura(self):
+        self.kaltura_page.log_in_via_calnet()
+        self.kaltura_page.reset_test_data(self.term, self.recording_sched)
         util.reset_sign_up_test_data(self.real_test_data)
         self.recording_sched.approval_status = RecordingApprovalStatus.NOT_INVITED
         self.recording_sched.scheduling_status = RecordingSchedulingStatus.NOT_SCHEDULED
 
     def test_sis_data_refresh_pre_run(self):
+        self.jobs_page.load_page()
         self.jobs_page.run_sis_data_refresh_job()
 
     def test_admin_emails_pre_run(self):
@@ -68,15 +71,14 @@ class TestCourseInstructorChanges:
     def test_queued_emails_pre_run(self):
         self.jobs_page.run_queued_emails_job()
 
-    def test_delete_old_kaltura_series(self):
-        self.kaltura_page.log_in_via_calnet()
-        self.kaltura_page.reset_test_data(self.term, self.recording_sched)
-
     def test_delete_old_email(self):
         self.email_page.log_in()
         self.email_page.delete_all_messages()
 
     # SCHEDULED COURSE CHANGES INSTRUCTOR
+
+    def test_set_room(self):
+        util.set_meeting_location(self.real_section, self.real_meeting)
 
     def test_set_fake_instr(self):
         util.change_course_instructor(self.fake_section, self.real_section.instructors[0], self.fake_section.instructors[0])
@@ -95,10 +97,13 @@ class TestCourseInstructorChanges:
         self.login_page.dev_auth()
         self.ouija_page.click_jobs_link()
         self.jobs_page.run_kaltura_job()
-        util.wait_for_kaltura_id(self.recording_sched, self.term)
+        util.get_kaltura_id(self.recording_sched, self.term)
 
     def test_run_sis_job_to_revert_to_real_instr(self):
         self.jobs_page.run_sis_data_refresh_job()
+
+    def test_reset_room(self):
+        util.set_meeting_location(self.real_section, self.real_meeting)
 
     def test_run_admin_email_job_with_instr_change(self):
         self.jobs_page.run_admin_emails_job()
@@ -119,24 +124,72 @@ class TestCourseInstructorChanges:
         app.logger.info(f'Actual: {actual}')
         assert expected in actual
 
-    # TODO - verify filters
+    # CHECK FILTERS AND ADMIN EMAIL
+
+    def test_not_invited_filter_all(self):
+        self.ouija_page.load_page()
+        self.ouija_page.search_for_course_code(self.real_section)
+        self.ouija_page.filter_for_all()
+        assert self.ouija_page.is_course_in_results(self.real_section) is True
+
+    def test_not_invited_approval_status(self):
+        visible_status = self.ouija_page.course_row_approval_status_el(self.real_section).text.strip()
+        assert visible_status == self.recording_sched.approval_status.value
+
+    def test_not_invited_sched_status(self):
+        visible_status = self.ouija_page.course_row_sched_status_el(self.real_section).text.strip()
+        assert visible_status == self.recording_sched.scheduling_status.value
+
+    def test_not_invited_filter_no_email(self):
+        self.ouija_page.filter_for_do_not_email()
+        assert self.ouija_page.is_course_in_results(self.real_section) is False
+
+    def test_not_invited_filter_not_invited(self):
+        self.ouija_page.filter_for_not_invited()
+        assert self.ouija_page.is_course_in_results(self.real_section) is False
+
+    def test_not_invited_filter_invited(self):
+        self.ouija_page.filter_for_invited()
+        assert self.ouija_page.is_course_in_results(self.real_section) is False
+
+    def test_not_invited_filter_partial_approve(self):
+        self.ouija_page.filter_for_partially_approved()
+        assert self.ouija_page.is_course_in_results(self.real_section) is False
+
+    def test_not_invited_filter_queued(self):
+        self.ouija_page.filter_for_queued_for_scheduling()
+        assert self.ouija_page.is_course_in_results(self.real_section) is False
+
+    def test_not_invited_filter_scheduled(self):
+        self.ouija_page.filter_for_scheduled()
+        assert self.ouija_page.is_course_in_results(self.real_section) is True
+
+    def test_note_invited_filter_weird(self):
+        self.ouija_page.filter_for_scheduled_weird()
+        assert self.ouija_page.is_course_in_results(self.real_section) is False
 
     def test_admin_emails_with_instr_change(self):
         subj = f'Course Capture Admin: {self.real_section.code} Instructor changes'
         email = Email(msg_type=None, subject=subj, sender=None)
         assert self.email_page.is_message_delivered(email)
 
-    def test_run_invite_email_job_with_instr_change(self):
-        self.jobs_page.load_page()
-        self.jobs_page.run_invitations_job()
-        self.jobs_page.run_queued_emails_job()
+    # UNSCHEDULE AND RESCHEDULE
+
+    def test_unschedule_confirm(self):
+        self.sign_up_page.load_page(self.real_section)
+        self.sign_up_page.confirm_unscheduling(self.recording_sched)
+
+    def test_changes_page_course_gone(self):
+        self.changes_page.load_page()
+        self.changes_page.wait_for_results()
+        assert not self.changes_page.is_course_row_present(self.real_section)
 
     def test_real_instr_approves(self):
         self.ouija_page.load_page()
         self.ouija_page.log_out()
         self.login_page.dev_auth(self.real_section.instructors[0].uid)
         self.ouija_page.click_sign_up_page_link(self.real_section)
-        # TODO - verify text and static options
+        self.sign_up_page.select_publish_type(PublishType.BCOURSES.value)
         self.sign_up_page.click_agree_checkbox()
         self.sign_up_page.click_approve_button()
 
@@ -146,7 +199,15 @@ class TestCourseInstructorChanges:
         self.changes_page.click_jobs_link()
         self.jobs_page.run_kaltura_job()
 
-    def test_changes_page_new_instr_in_kaltura(self):
-        self.changes_page.load_page()
-        self.changes_page.wait_for_results()
-        assert not self.changes_page.is_course_row_present(self.real_section)
+    def test_new_series_in_kaltura(self):
+        util.get_kaltura_id(self.recording_sched, self.term)
+        self.sign_up_page.load_page(self.real_section)
+        self.sign_up_page.click_kaltura_series_link(self.recording_sched)
+        self.kaltura_page.wait_for_delete_button()
+
+    def test_series_collab_count(self):
+        assert len(self.kaltura_page.collaborator_rows()) == len(self.real_section.instructors)
+
+    def test_series_collab_rights(self):
+        for instr in self.real_section.instructors:
+            assert self.kaltura_page.collaborator_perm(instr) == 'Co-Editor'

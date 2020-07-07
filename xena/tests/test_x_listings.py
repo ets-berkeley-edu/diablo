@@ -83,7 +83,7 @@ class TestCrossListings:
         self.recording_schedule.scheduling_status = RecordingSchedulingStatus.NOT_SCHEDULED
 
     def test_move_course_location(self):
-        util.set_course_room(self.section, self.meeting)
+        util.set_meeting_location(self.section, self.meeting)
 
     def test_delete_old_email(self):
         self.email_page.log_in()
@@ -167,7 +167,7 @@ class TestCrossListings:
         self.login_page.dev_auth()
         self.ouija_page.click_jobs_link()
         self.jobs_page.run_kaltura_job()
-        util.wait_for_kaltura_id(self.recording_schedule, self.term)
+        util.get_kaltura_id(self.recording_schedule, self.term)
 
     def test_click_series_link(self):
         self.sign_up_page.load_page(self.section)

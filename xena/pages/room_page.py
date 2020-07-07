@@ -37,6 +37,8 @@ from xena.test_utils import util
 
 class RoomPage(DiabloPages):
 
+    # HEADER
+
     SELECT_CAPABILITY_INPUT = (By.XPATH, '//input[contains(@id, "select-room-capability")]/ancestor::div[@role="button"]')
     AUDITORIUM_TOGGLE = (By.XPATH, '//label[text()="Auditorium"]/preceding-sibling::div')
 
@@ -48,6 +50,14 @@ class RoomPage(DiabloPages):
         app.logger.info('Clicking the auditorium toggle')
         self.wait_for_element_and_click(RoomPage.AUDITORIUM_TOGGLE)
 
+    def set_auditorium_true(self):
+        if not self.auditorium_selected():
+            self.click_auditorium_toggle()
+
+    def set_auditorium_false(self):
+        if self.auditorium_selected():
+            self.click_auditorium_toggle()
+
     def set_capability(self, capability):
         app.logger.info(f'Setting room capability "{capability.value}"')
         if (capability == Capability.SCREENCAST_AND_VIDEO) and not self.auditorium_selected():
@@ -55,6 +65,10 @@ class RoomPage(DiabloPages):
         self.wait_for_element_and_click(RoomPage.SELECT_CAPABILITY_INPUT)
         self.click_menu_option(capability.value)
         time.sleep(1)
+
+    # COURSES TABLE
+
+    COURSE_LINK = (By.XPATH, '//a[contains(@id, "link-course-")]')
 
     @staticmethod
     def series_row_xpath(recording_sched):
@@ -85,6 +99,11 @@ class RoomPage(DiabloPages):
         app.logger.info(f'Expanding series recordings for Kaltura series ID {recording_sched.series_id}')
         self.hide_diablo_footer()
         self.wait_for_element_and_click((By.XPATH, f'{RoomPage.series_row_xpath(recording_sched)}//button'))
+
+    def click_first_course_link(self):
+        self.wait_for_element_and_click(RoomPage.COURSE_LINK)
+
+    # KALTURA SERIES TABLE
 
     @staticmethod
     def series_recording_xpath(recording_sched):

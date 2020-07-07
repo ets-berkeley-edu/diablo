@@ -136,6 +136,9 @@ class SignUpPage(DiabloPages):
     def visible_opt_out(self):
         return self.element(SignUpPage.OPTED_OUT).get_attribute('innerText').strip()
 
+    def click_room_link(self, room):
+        self.wait_for_element_and_click(self.room_link_locator(room))
+
     # INVITES, UN-SCHEDULING, OPTED-OUT
 
     def click_send_invite_button(self):

@@ -50,12 +50,15 @@ class TestCourseRoomChanges:
         self.ouija_page.click_jobs_link()
         self.jobs_page.disable_all_jobs()
 
-    def test_delete_old_diablo_data(self):
+    def test_delete_old_diablo_and_kaltura(self):
+        self.kaltura_page.log_in_via_calnet()
+        self.kaltura_page.reset_test_data(self.term, self.recording_sched)
         util.reset_sign_up_test_data(self.real_test_data)
         self.recording_sched.approval_status = RecordingApprovalStatus.NOT_INVITED
         self.recording_sched.scheduling_status = RecordingSchedulingStatus.NOT_SCHEDULED
 
     def test_sis_data_refresh_pre_run(self):
+        self.jobs_page.load_page()
         self.jobs_page.run_sis_data_refresh_job()
 
     def test_admin_emails_pre_run(self):
@@ -67,13 +70,12 @@ class TestCourseRoomChanges:
     def test_queued_emails_pre_run(self):
         self.jobs_page.run_queued_emails_job()
 
-    def test_delete_old_kaltura_series(self):
-        self.kaltura_page.log_in_via_calnet()
-        self.kaltura_page.reset_test_data(self.term, self.recording_sched)
-
     def test_delete_old_email(self):
         self.email_page.log_in()
         self.email_page.delete_all_messages()
+
+    def test_set_room(self):
+        util.set_meeting_location(self.real_section, self.real_meeting)
 
     def test_sign_up(self):
         self.ouija_page.load_page()
@@ -89,12 +91,12 @@ class TestCourseRoomChanges:
         self.login_page.dev_auth()
         self.ouija_page.click_jobs_link()
         self.jobs_page.run_kaltura_job()
-        util.wait_for_kaltura_id(self.recording_sched, self.term)
+        util.get_kaltura_id(self.recording_sched, self.term)
 
     # SCHEDULED COURSE MOVES TO INELIGIBLE ROOM
 
     def test_move_to_ineligible_room(self):
-        util.set_course_room(self.fake_section, self.fake_section.meetings[0])
+        util.set_meeting_location(self.fake_section, self.fake_section.meetings[0])
 
     def test_run_admin_email_job_ineligible_room(self):
         self.jobs_page.run_admin_emails_job()
