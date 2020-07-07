@@ -22,7 +22,6 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-
 from diablo.jobs.base_job import BaseJob
 from diablo.models.email_template import EmailTemplate
 from diablo.models.queued_email import QueuedEmail
@@ -38,15 +37,9 @@ class InvitationJob(BaseJob):
 
     @classmethod
     def description(cls):
-        names_by_type = EmailTemplate.get_template_type_options()
-        template_types = ['invitation']
         return f"""
-            Queues up instructor invitations. Email templates used:
-            <ul>
-                {''.join(f'<li>{names_by_type.get(template_type)}</li>' for template_type in template_types)}
-            </ul>
-            NOTE: The '{names_by_type['invitation']}' email is queued by the Kaltura job, when recordings are
-            scheduled, and sent by the Queued Emails job.
+            Queues up '{EmailTemplate.get_template_type_options()['invitation']}' emails.
+            Emails are sent when the when the 'Queued Emails' job runs.
         """
 
     @classmethod
