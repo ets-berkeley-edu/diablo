@@ -16,7 +16,6 @@
             </div>
             <div>
               <SelectRoomCapability
-                :is-auditorium="room.isAuditorium"
                 :on-update="onUpdateRoomCapability"
                 :options="$config.roomCapabilityOptions"
                 :room="room"
