@@ -80,15 +80,19 @@ def get_template_substitutions(
             return None
         return ', '.join(i['name'] for i in _dict if i['name'])
 
-    meetings = course and course.get('meetings', {}).get('eligible', [])
-    meetings = meetings or course.get('meetings', {}).get('ineligible', [])
-    meeting = meetings and meetings[0]
-    days = meeting and get_names_of_days(meeting['daysFormatted'])
+    if course:
+        meetings = course.get('meetings', {}).get('eligible', [])
+        meetings = meetings or course.get('meetings', {}).get('ineligible', [])
+        meeting = meetings and meetings[0]
+        days = meeting and get_names_of_days(meeting['daysFormatted'])
+    else:
+        days = None
+        meeting = None
 
     return {
         'course.date.end': meeting and meeting['endDate'],
         'course.date.start': meeting and meeting['startDate'],
-        'course.days': readable_join(days),
+        'course.days': days and readable_join(days),
         'course.format': course and course['instructionFormat'],
         'course.name': course and course['courseName'],
         'course.room': meeting and meeting['location'],
