@@ -24,9 +24,24 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 from contextlib import contextmanager
 
-from diablo import db
+from diablo import db, std_commit
 from diablo.jobs.doomed_to_failure import DoomedToFailure  # noqa
+from diablo.models.job import Job
 from sqlalchemy import text
+
+
+@contextmanager
+def enabled_job(job_key):
+    """Temporarily enabled job."""
+    all_jobs = Job.get_all(include_disabled=True)
+    job = next((j for j in all_jobs if j.key == job_key))
+    Job.update_disabled(job_id=job.id, disable=False)
+    std_commit(allow_test_environment=True)
+    try:
+        yield
+    finally:
+        Job.update_disabled(job_id=job.id, disable=True)
+        std_commit(allow_test_environment=True)
 
 
 @contextmanager

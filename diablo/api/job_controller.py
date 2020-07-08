@@ -75,6 +75,9 @@ def update_schedule():
 
     if not job_id or not schedule_type or not schedule_value:
         raise BadRequestError('Required parameters are missing.')
+    job = Job.get_job(job_id=job_id)
+    if not job.disabled or JobHistory.is_job_running(job_key=job.key):
+        raise BadRequestError('You cannot edit job schedule if job is either enabled or running.')
     job = Job.update_schedule(job_id=job_id, schedule_type=schedule_type, schedule_value=schedule_value)
 
     if background_job_manager.is_running():
