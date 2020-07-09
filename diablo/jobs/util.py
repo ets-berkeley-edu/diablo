@@ -30,6 +30,7 @@ from diablo.externals.kaltura import Kaltura
 from diablo.lib.berkeley import get_recording_end_date, get_recording_start_date
 from diablo.merged.calnet import get_calnet_users_for_uids
 from diablo.merged.emailer import send_system_error_email
+from diablo.models.admin_user import AdminUser
 from diablo.models.course_preference import CoursePreference
 from diablo.models.cross_listing import CrossListing
 from diablo.models.instructor import Instructor
@@ -40,6 +41,33 @@ from diablo.models.sis_section import SisSection
 from flask import current_app as app
 from KalturaClient.exceptions import KalturaClientException, KalturaException
 from sqlalchemy import text
+
+
+def get_courses_ready_to_schedule(approvals, term_id):
+    ready_to_schedule = []
+    scheduled_section_ids = [s.section_id for s in Scheduled.get_all_scheduled(term_id=term_id)]
+    unscheduled_approvals = [approval for approval in approvals if approval.section_id not in scheduled_section_ids]
+
+    if unscheduled_approvals:
+        courses = SisSection.get_courses(section_ids=[a.section_id for a in unscheduled_approvals], term_id=term_id)
+        courses_per_section_id = dict((int(course['sectionId']), course) for course in courses)
+        admin_user_uids = set([user.uid for user in AdminUser.all_admin_users(include_deleted=True)])
+
+        for section_id, approved_by_uids in _get_uids_per_section_id(approvals=unscheduled_approvals).items():
+            course = courses_per_section_id.get(section_id)
+            if not course:
+                continue
+            if len(course.get('meetings', {}).get('eligible', [])) != 1:
+                app.logger.warn(f'Unique meeting pattern not found for section id {section_id}; will not schedule.')
+                continue
+            if admin_user_uids.intersection(set(approved_by_uids)):
+                ready_to_schedule.append(course)
+            else:
+                necessary_uids = [i['uid'] for i in course['instructors']]
+                if all(uid in approved_by_uids for uid in necessary_uids):
+                    ready_to_schedule.append(course)
+
+    return ready_to_schedule
 
 
 def insert_or_update_instructors(instructor_uids):
@@ -232,6 +260,13 @@ def schedule_recordings(all_approvals, course):
         """)
 
     return scheduled
+
+
+def _get_uids_per_section_id(approvals):
+    uids_per_section_id = {approval.section_id: [] for approval in approvals}
+    for approval in approvals:
+        uids_per_section_id[approval.section_id].append(approval.approved_by_uid)
+    return uids_per_section_id
 
 
 def _join(items, separator=', '):

@@ -49,8 +49,8 @@ class BackgroundJobManager:
         """Continuously run, executing pending jobs per time interval.
 
         It is intended behavior that ScheduleThread does not run missed jobs. For example, if you register a job that
-        should run every minute and yet SCHEDULER_INTERVAL is set to one hour, then your job won't run 60 times at
-        each interval. It will run once.
+        should run every minute and yet JOBS_SECONDS_BETWEEN_PENDING_CHECK is set to one hour, then your job won't run
+        60 times at each interval. It will run once.
         """
         if self.is_running():
             return

@@ -59,7 +59,6 @@ class BConnected:
 
         @skip_when_pytest()
         def _send():
-            # Connect to SMTP server
             smtp = SMTP(self.bcop_smtp_server, port=self.bcop_smtp_port)
             # TLS encryption
             smtp.starttls()
@@ -68,14 +67,8 @@ class BConnected:
 
             emails_sent_to = set()
 
-            mock_message = _get_mock_message(
-                recipient['name'],
-                recipient['email'],
-                subject_line,
-                message,
-            )
             if app.config['DIABLO_ENV'] == 'test':
-                app.logger.info(mock_message)
+                write_email_to_log(message=message, recipient=recipient, subject_line=subject_line)
             else:
                 from_address = f"{app.config['EMAIL_COURSE_CAPTURE_SUPPORT_LABEL']} <{app.config['EMAIL_COURSE_CAPTURE_SUPPORT']}>"
 
@@ -128,10 +121,10 @@ class BConnected:
             return [user['email']]
 
 
-def _get_mock_message(recipient_name, email_address, subject_line, message):
-    return f"""
+def write_email_to_log(message, recipient, subject_line):
+    app.logger.info(f"""
 
-        To: {recipient_name} <{email_address}>
+        To: {recipient['name']} <{recipient['email']}>
         Cc: Course Capture Admin <{app.config['EMAIL_DIABLO_ADMIN']}>
         From: {app.config['EMAIL_COURSE_CAPTURE_SUPPORT_LABEL']} <{app.config['EMAIL_COURSE_CAPTURE_SUPPORT']}>
         Subject: {subject_line}
@@ -139,4 +132,4 @@ def _get_mock_message(recipient_name, email_address, subject_line, message):
         Message:
         {message}
 
-    """
+    """)
