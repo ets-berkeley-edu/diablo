@@ -185,53 +185,62 @@ def refresh_cross_listings(term_id):
 
 
 def schedule_recordings(all_approvals, course):
+    def _report_error(subject):
+        message = f'{subject}\n\n<pre>{course}</pre>'
+        app.logger.error(message)
+        send_system_error_email(message=message, subject=subject)
+
+    meetings = course.get('meetings', {}).get('eligible', [])
+    meeting = meetings[0] if len(meetings) == 1 else None
+    if not meeting:
+        _report_error(subject=f"{course['label']} not scheduled. Unique eligible meeting pattern not found.")
+        return None
+
+    all_approvals.sort(key=lambda a: a.created_at.isoformat())
+    latest_approval = all_approvals[-1]
+    room = Room.get_room(latest_approval.room_id)
+    if room.location != meeting['location']:
+        _report_error(subject=f"{course['label']} not scheduled. Room change: {room.location} to {meeting['location']}")
+        return None
+
+    has_admin_approval = next((a for a in all_approvals if a.approver_type == 'admin'), None)
+    approved_by_uids = set(a.approved_by_uid for a in all_approvals)
+    instructor_uids = set([i['uid'] for i in course['instructors']])
+    if not has_admin_approval and not approved_by_uids.issubset(instructor_uids):
+        _report_error(subject=f"{course['label']} not scheduled. We are missing instructor approval(s).")
+        return None
+
     term_id = course['termId']
     section_id = int(course['sectionId'])
-    all_approvals.sort(key=lambda a: a.created_at.isoformat())
-    approval = all_approvals[-1]
-    room = Room.get_room(approval.room_id)
     scheduled = None
-    section_ids_opted_out = CoursePreference.get_section_ids_opted_out(term_id=term_id)
-
     if room.kaltura_resource_id:
-        meetings = course.get('meetings', {}).get('eligible', [])
-        if len(meetings) != 1:
-            subject = f"Unique eligible meeting pattern not found for {course['label']}"
-            message = f'{subject}\n\n<pre>{course}</pre>'
-            app.logger.error(message)
-            send_system_error_email(
-                message=message,
-                subject=subject,
-            )
-            return None
-        meeting = meetings[0]
         try:
             kaltura_schedule_id = Kaltura().schedule_recording(
                 canvas_course_site_ids=[c['courseSiteId'] for c in course['canvasCourseSites']],
                 course_label=course['label'],
                 instructors=course['instructors'],
                 meeting=meeting,
-                publish_type=approval.publish_type,
-                recording_type=approval.recording_type,
+                publish_type=latest_approval.publish_type,
+                recording_type=latest_approval.recording_type,
                 room=room,
                 term_id=term_id,
             )
             scheduled = Scheduled.create(
-                instructor_uids=[i['uid'] for i in course['instructors']],
+                instructor_uids=instructor_uids,
                 kaltura_schedule_id=kaltura_schedule_id,
                 meeting_days=meeting['days'],
                 meeting_end_date=get_recording_end_date(meeting),
                 meeting_end_time=meeting['endTime'],
                 meeting_start_date=get_recording_start_date(meeting, return_today_if_past_start=True),
                 meeting_start_time=meeting['startTime'],
-                publish_type_=approval.publish_type,
-                recording_type_=approval.recording_type,
+                publish_type_=latest_approval.publish_type,
+                recording_type_=latest_approval.recording_type,
                 room_id=room.id,
                 section_id=section_id,
                 term_id=term_id,
             )
             # Turn off opt-out setting if present.
-            if section_id in section_ids_opted_out:
+            if section_id in CoursePreference.get_section_ids_opted_out(term_id=term_id):
                 CoursePreference.update_opt_out(
                     term_id=term_id,
                     section_id=section_id,
@@ -256,7 +265,7 @@ def schedule_recordings(all_approvals, course):
             SKIP schedule recordings because room has no 'kaltura_resource_id'.
             Course: {course['label']}
             Room: {room.location}
-            Latest approved_by_uid: {approval.approved_by_uid}
+            Latest approved_by_uid: {latest_approval.approved_by_uid}
         """)
 
     return scheduled
