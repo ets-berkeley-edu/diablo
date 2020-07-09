@@ -59,8 +59,7 @@ def job_disable():
         raise BadRequestError('Required parameters are missing.')
     job = Job.update_disabled(job_id=job_id, disable=disable)
 
-    if background_job_manager.is_running():
-        background_job_manager.restart(app)
+    background_job_manager.restart()
 
     return tolerant_jsonify(job.to_api_json())
 
@@ -80,8 +79,7 @@ def update_schedule():
         raise BadRequestError('You cannot edit job schedule if job is either enabled or running.')
     job = Job.update_schedule(job_id=job_id, schedule_type=schedule_type, schedule_value=schedule_value)
 
-    if background_job_manager.is_running():
-        background_job_manager.restart(app)
+    background_job_manager.restart()
 
     return tolerant_jsonify(job.to_api_json())
 

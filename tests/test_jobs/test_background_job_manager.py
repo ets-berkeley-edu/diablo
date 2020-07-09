@@ -23,7 +23,6 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 from diablo.factory import background_job_manager
-from flask import current_app as app
 
 
 class TestBackgroundJobManager:
@@ -31,32 +30,9 @@ class TestBackgroundJobManager:
     def test_started_at_property(self):
         """The started_at property is only defined when background_job_manager is running."""
         assert background_job_manager.is_running()
-        assert background_job_manager.get_started_at()
-
-        background_job_manager.stop()
-        assert not background_job_manager.get_started_at()
-
-        background_job_manager.start(app)
-        assert background_job_manager.get_started_at()
-        assert background_job_manager.is_running()
-
-    def test_stop(self):
-        """Stops background_job_manager."""
-        original_started_at = background_job_manager.get_started_at()
-        assert original_started_at
-        assert background_job_manager.is_running()
-
-        background_job_manager.stop()
-        assert not background_job_manager.get_started_at()
-
-        # The following will have no effect because background_job_manager is NOT running.
-        background_job_manager.restart(app)
-        assert background_job_manager.get_started_at()
-
-    def test_restart(self):
-        """Restarts background_job_manager if it is running."""
         original_started_at = background_job_manager.get_started_at()
         assert original_started_at
 
-        background_job_manager.restart(app)
+        background_job_manager.restart()
         assert original_started_at != background_job_manager.get_started_at()
+        assert background_job_manager.is_running()

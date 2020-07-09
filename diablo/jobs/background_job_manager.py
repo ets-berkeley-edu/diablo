@@ -72,13 +72,13 @@ class BackgroundJobManager:
                 cls.active = False
 
         interval = app.config['JOBS_SECONDS_BETWEEN_PENDING_CHECK']
-        job_configs = Job.get_all()
+        all_jobs = Job.get_all()
         app.logger.info(f"""
 
             Starting background job manager.
             Seconds between pending jobs check = {interval}
             Jobs:
-                {[job_config.to_api_json() for job_config in job_configs]}
+                {[job.to_api_json() for job in all_jobs]}
 
             """)
 
@@ -93,46 +93,29 @@ class BackgroundJobManager:
         # Clean up history for any older jobs that got lost.
         JobHistory.fail_orphans()
 
-        if job_configs:
-            for job_config in job_configs:
-                job_key = job_config.key
-                job_class = next(
-                    (job for job in self.available_job_classes() if job.key() == job_key),
-                    None,
+        if all_jobs:
+            for job_config in all_jobs:
+                self._load_job(
+                    app=app,
+                    job_key=job_config.key,
+                    schedule_type=job_config.job_schedule_type,
+                    schedule_value=job_config.job_schedule_value,
                 )
-                if job_class:
-                    job = job_class(app.app_context)
-                else:
-                    raise BackgroundJobError(f'Failed to find job with key {job_key}')
-
-                type_ = job_config.job_schedule_type
-                value = job_config.job_schedule_value
-                if type_ == 'minutes':
-                    schedule.every(int(value)).minutes.do(job.run)
-                elif type_ == 'seconds':
-                    schedule.every(int(value)).seconds.do(job.run)
-                elif type_ == 'day_at':
-                    schedule.every().day.at(value).do(job.run)
-                else:
-                    raise BackgroundJobError(f'Unrecognized schedule type: {type_}')
 
             self.continuous_thread = JobRunnerThread(daemon=True)
             self.continuous_thread.start()
         else:
             app.logger.warn('No jobs. Nothing scheduled.')
 
-    def stop(self):
-        """Cease the scheduler thread. Stops everything."""
+    def restart(self):
         from flask import current_app as app
 
-        app.logger.info('Stopping job-runner thread')
         self.monitor.notify(is_running=False)
         self.started_at = None
+        schedule.clear()
 
-    def restart(self, app):
-        if self.is_running():
-            self.stop()
-        self.start(app)
+        self.start(app=app)
+        app.logger.info('Job manager restarted')
 
     def get_started_at(self):
         return self.started_at
@@ -140,6 +123,22 @@ class BackgroundJobManager:
     @classmethod
     def available_job_classes(cls):
         return BaseJob.__subclasses__()
+
+    def _load_job(self, app, job_key, schedule_type, schedule_value):
+        job_class = next((job for job in self.available_job_classes() if job.key() == job_key), None)
+        if job_class:
+            task_runner = job_class(app.app_context)
+        else:
+            raise BackgroundJobError(f'Failed to find job with key {job_key}')
+
+        if schedule_type == 'minutes':
+            schedule.every(int(schedule_value)).minutes.do(task_runner.run)
+        elif schedule_type == 'seconds':
+            schedule.every(int(schedule_value)).seconds.do(task_runner.run)
+        elif schedule_type == 'day_at':
+            schedule.every().day.at(schedule_value).do(task_runner.run)
+        else:
+            raise BackgroundJobError(f'Unrecognized schedule type: {schedule_type}')
 
 
 class _Monitor:
