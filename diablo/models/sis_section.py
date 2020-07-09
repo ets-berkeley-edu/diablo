@@ -796,23 +796,21 @@ def _decorate_course_changes(course):
         course_meeting_time = '-'
         room_id = None
 
-    if course['scheduled']:
+    scheduled = course['scheduled']
+    if scheduled:
         scheduled_meeting_time = '-'.join(
             [
-                str(course['scheduled']['meetingDays']),
-                course['scheduled']['meetingStartTime'],
-                course['scheduled']['meetingEndTime'],
+                str(scheduled['meetingDays']),
+                scheduled['meetingStartTime'],
+                scheduled['meetingEndTime'],
             ],
         )
         instructor_uids = [i['uid'] for i in course['instructors']]
-        has_obsolete_instructors = not set(instructor_uids).issubset(set(course.get('scheduled').get('instructorUids')))
-
-        obsolete_dates = is_schedule_obsolete(meeting=meeting, scheduled=course['scheduled'])
-        course['scheduled'].update({
-            'hasObsoleteInstructors': has_obsolete_instructors,
-            'hasObsoleteDates': obsolete_dates,
+        scheduled.update({
+            'hasObsoleteInstructors': set(instructor_uids) != set(scheduled.get('instructorUids')),
+            'hasObsoleteDates': is_schedule_obsolete(meeting=meeting, scheduled=scheduled),
             'hasObsoleteTimes': course_meeting_time != scheduled_meeting_time,
-            'hasObsoleteRoom': room_id != course.get('scheduled').get('room', {}).get('id'),
+            'hasObsoleteRoom': room_id != scheduled.get('room', {}).get('id'),
         })
 
     for approval in course['approvals']:
