@@ -24,12 +24,10 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 from diablo.externals.kaltura import Kaltura
 from diablo.jobs.base_job import BaseJob
-from diablo.jobs.util import schedule_recordings
+from diablo.jobs.util import get_courses_ready_to_schedule, schedule_recordings
 from diablo.lib.util import objects_to_dict_organized_by_section_id
-from diablo.models.admin_user import AdminUser
 from diablo.models.approval import Approval
 from diablo.models.email_template import EmailTemplate
-from diablo.models.scheduled import Scheduled
 from diablo.models.sis_section import SisSection
 from flask import current_app as app
 
@@ -95,7 +93,7 @@ def _schedule_the_ready_to_schedule():
     approvals = Approval.get_approvals_per_term(term_id=term_id)
     if approvals:
         approvals_per_section_id = objects_to_dict_organized_by_section_id(objects=approvals)
-        ready_to_schedule = _get_courses_ready_to_schedule(approvals=approvals, term_id=term_id)
+        ready_to_schedule = get_courses_ready_to_schedule(approvals=approvals, term_id=term_id)
         app.logger.info(f'Prepare to schedule recordings for {len(ready_to_schedule)} courses.')
         for course in ready_to_schedule:
             section_id = int(course['sectionId'])
@@ -103,37 +101,3 @@ def _schedule_the_ready_to_schedule():
                 all_approvals=approvals_per_section_id[section_id],
                 course=course,
             )
-
-
-def _get_courses_ready_to_schedule(approvals, term_id):
-    ready_to_schedule = []
-
-    scheduled_section_ids = [s.section_id for s in Scheduled.get_all_scheduled(term_id=term_id)]
-    unscheduled_approvals = [approval for approval in approvals if approval.section_id not in scheduled_section_ids]
-
-    if unscheduled_approvals:
-        courses = SisSection.get_courses(section_ids=[a.section_id for a in unscheduled_approvals], term_id=term_id)
-        courses_per_section_id = dict((int(course['sectionId']), course) for course in courses)
-        admin_user_uids = set([user.uid for user in AdminUser.all_admin_users(include_deleted=True)])
-
-        for section_id, uids in _get_uids_per_section_id(approvals=unscheduled_approvals).items():
-            course = courses_per_section_id.get(section_id)
-            if not course:
-                continue
-            if len(course.get('meetings', {}).get('eligible', [])) != 1:
-                app.logger.warn(f'Unique meeting pattern not found for section id {section_id}; will not schedule.')
-                continue
-            if admin_user_uids.intersection(set(uids)):
-                ready_to_schedule.append(course)
-            else:
-                necessary_uids = [i['uid'] for i in course['instructors']]
-                if all(uid in uids for uid in necessary_uids):
-                    ready_to_schedule.append(course)
-    return ready_to_schedule
-
-
-def _get_uids_per_section_id(approvals):
-    uids_per_section_id = {approval.section_id: [] for approval in approvals}
-    for approval in approvals:
-        uids_per_section_id[approval.section_id].append(approval.approved_by_uid)
-    return uids_per_section_id

@@ -28,7 +28,7 @@ import traceback
 from diablo.api.errors import BadRequestError, ForbiddenRequestError, ResourceNotFoundError
 from diablo.api.util import admin_required, csv_download_response, get_search_filter_options
 from diablo.externals.kaltura import Kaltura
-from diablo.jobs.util import schedule_recordings
+from diablo.jobs.util import get_courses_ready_to_schedule, schedule_recordings
 from diablo.lib.berkeley import term_name_for_sis_id
 from diablo.lib.http import tolerant_jsonify
 from diablo.lib.interpolator import get_sign_up_url
@@ -101,9 +101,10 @@ def approve():
         if last_approver:
             notify_instructor_waiting_for_approval(course, last_approver, pending_instructors)
 
-    _update_scheduling(course)
+    course = SisSection.get_course(term_id, section_id)
+    _after_approval(course=course)
 
-    return tolerant_jsonify(SisSection.get_course(term_id, section_id))
+    return tolerant_jsonify(course)
 
 
 @app.route('/api/course/<term_id>/<section_id>')
@@ -268,24 +269,22 @@ def _get_courses_per_filter(filter_, term_id):
     return courses
 
 
-def _update_scheduling(course):
-    def _has_necessary_approvals():
-        approval_uids = [a.approved_by_uid for a in all_approvals]
-        necessary_approval_uids = [i['uid'] for i in course['instructors']]
-        return all(uid in approval_uids for uid in necessary_approval_uids)
+def _after_approval(course):
+    section_id = course['sectionId']
+    term_id = course['termId']
+    approvals = Approval.get_approvals(section_id=section_id, term_id=term_id)
 
-    all_approvals = Approval.get_approvals(section_id=course['sectionId'], term_id=course['termId'])
-    if not course['scheduled'] and (current_user.is_admin or _has_necessary_approvals()):
-        # Queuing a course for scheduling wipes any opt-out preference.
+    if get_courses_ready_to_schedule(approvals=approvals, term_id=term_id):
+        # Queuing course for scheduling wipes any opt-out preference.
         if course['hasOptedOut']:
             CoursePreference.update_opt_out(
-                term_id=course['termId'],
-                section_id=course['sectionId'],
+                term_id=term_id,
+                section_id=section_id,
                 opt_out=False,
             )
-        # This feature flag is intended for developer workstation ONLY. Do not enable in diablo-dev|qa|prod.
         if app.config['FEATURE_FLAG_SCHEDULE_RECORDINGS_SYNCHRONOUSLY']:
+            # Feature flag intended for dev workstation ONLY. Do not enable in diablo-dev|qa|prod.
             schedule_recordings(
-                all_approvals=all_approvals,
+                all_approvals=approvals,
                 course=course,
             )
