@@ -7,72 +7,78 @@
           <h2><v-icon class="pb-1" large>mdi-timer-sand</v-icon> Jobs</h2>
         </div>
       </v-card-title>
-      <v-data-table
-        :headers="headers"
-        hide-default-footer
-        :items="jobSchedule.jobs"
-      >
-        <template v-slot:body="{ items }">
-          <tbody>
-            <tr v-if="!items.length">
-              <td id="message-when-zero-jobs" class="pa-4 text-no-wrap title" :colspan="headers.length">
-                No jobs
-              </td>
-            </tr>
-            <tr v-for="job in items" :key="job.key">
-              <td class="pb-2 pl-5 pt-2 text-center">
-                <v-btn
-                  v-if="!isRunning(job.key)"
-                  :id="`run-job-${job.key}`"
-                  :aria-label="`Run job ${job.key}`"
-                  @click="runJob(job)"
-                >
-                  Run <span class="sr-only">job {{ job.name }}</span><v-icon class="pl-2" small>mdi-run-fast</v-icon>
-                </v-btn>
-                <v-progress-circular
-                  v-if="isRunning(job.key)"
-                  indeterminate
-                  size="24"
-                  width="4"
-                ></v-progress-circular>
-              </td>
-              <td class="pr-4 text-no-wrap">
-                {{ job.name }}
-              </td>
-              <td class="pb-2 pt-2">
-                <span v-html="job.description"></span>
-              </td>
-              <td :id="`job-schedule-${job.key}`" class="text-no-wrap">
-                <div class="d-flex align-center">
-                  <div>
-                    <v-btn
-                      :id="`edit-job-schedule-${job.key}`"
-                      :aria-label="`Edit job schedule ${job.key}`"
-                      class="pr-2"
-                      small
-                      text
-                      @click.stop="scheduleEditOpen(job)"
-                    >
-                      <v-icon>mdi-playlist-edit</v-icon>
-                    </v-btn>
+      <v-card-text>
+        <div class="mb-3">
+          NOTE: You cannot edit a job schedule if the job is either enabled or running.
+        </div>
+        <v-data-table
+          :headers="headers"
+          hide-default-footer
+          :items="jobSchedule.jobs"
+        >
+          <template v-slot:body="{ items }">
+            <tbody>
+              <tr v-if="!items.length">
+                <td id="message-when-zero-jobs" class="pa-4 text-no-wrap title" :colspan="headers.length">
+                  No jobs
+                </td>
+              </tr>
+              <tr v-for="job in items" :key="job.key">
+                <td class="pb-2 pl-5 pt-2 text-center">
+                  <v-btn
+                    v-if="!isRunning(job.key)"
+                    :id="`run-job-${job.key}`"
+                    :aria-label="`Run job ${job.key}`"
+                    @click="runJob(job)"
+                  >
+                    Run <span class="sr-only">job {{ job.name }}</span><v-icon class="pl-2" small>mdi-run-fast</v-icon>
+                  </v-btn>
+                  <v-progress-circular
+                    v-if="isRunning(job.key)"
+                    indeterminate
+                    size="24"
+                    width="4"
+                  ></v-progress-circular>
+                </td>
+                <td class="pr-4 text-no-wrap">
+                  {{ job.name }}
+                </td>
+                <td class="pb-2 pt-2">
+                  <span v-html="job.description"></span>
+                </td>
+                <td :id="`job-schedule-${job.key}`" class="text-no-wrap">
+                  <div class="d-flex align-center">
+                    <div>
+                      <v-btn
+                        :id="`edit-job-schedule-${job.key}`"
+                        :aria-label="`Edit job schedule ${job.key}`"
+                        :disabled="!job.disabled || isRunning(job.key)"
+                        class="pr-2"
+                        small
+                        text
+                        @click.stop="scheduleEditOpen(job)"
+                      >
+                        <v-icon>mdi-playlist-edit</v-icon>
+                      </v-btn>
+                    </div>
+                    <div>
+                      <span v-if="job.schedule.type === 'day_at'" :for="`edit-job-schedule-${job.key}`">
+                        Daily at {{ job.schedule.value }}
+                      </span>
+                      <span v-if="job.schedule.type !== 'day_at'" :for="`edit-job-schedule-${job.key}`">
+                        Every {{ job.schedule.value }} {{ job.schedule.type }}
+                      </span>
+                    </div>
                   </div>
-                  <div>
-                    <span v-if="job.schedule.type === 'day_at'" :for="`edit-job-schedule-${job.key}`">
-                      Daily at {{ job.schedule.value }}
-                    </span>
-                    <span v-if="job.schedule.type !== 'day_at'" :for="`edit-job-schedule-${job.key}`">
-                      Every {{ job.schedule.value }} {{ job.schedule.type }}
-                    </span>
-                  </div>
-                </div>
-              </td>
-              <td>
-                <DisableJobToggle :key="job.disabled" :job="job" :on-change="toggleDisabled" />
-              </td>
-            </tr>
-          </tbody>
-        </template>
-      </v-data-table>
+                </td>
+                <td>
+                  <DisableJobToggle :key="job.disabled" :job="job" :on-change="toggleDisabled" />
+                </td>
+              </tr>
+            </tbody>
+          </template>
+        </v-data-table>
+      </v-card-text>
     </v-card>
     <JobHistory :job-history="jobHistory" :refreshing="refreshing" />
     <v-dialog v-model="editJobDialog" max-width="400px" persistent>

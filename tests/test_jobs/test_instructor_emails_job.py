@@ -22,68 +22,58 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from diablo import std_commit
 from diablo.jobs.instructor_emails_job import InstructorEmailsJob
 from diablo.jobs.queued_emails_job import QueuedEmailsJob
-from diablo.models.job import Job
 from diablo.models.room import Room
 from diablo.models.scheduled import Scheduled
 from diablo.models.sent_email import SentEmail
 from diablo.models.sis_section import SisSection
 from flask import current_app as app
-import pytest
 from tests.test_api.api_test_utils import mock_scheduled
-from tests.util import simply_yield, test_approvals_workflow
-
-
-@pytest.fixture()
-def enable_instructor_emails_job():
-    all_jobs = Job.get_all(include_disabled=True)
-    admin_emails_job = next((j for j in all_jobs if j.key == InstructorEmailsJob.key()))
-    Job.update_disabled(job_id=admin_emails_job.id, disable=False)
-    std_commit(allow_test_environment=True)
+from tests.util import enabled_job, simply_yield, test_approvals_workflow
 
 
 class TestInstructorEmailsJob:
 
-    def test_room_change_no_longer_eligible(self, db_session, enable_instructor_emails_job):
-        term_id = app.config['CURRENT_TERM_ID']
-        section_id = 50004
-        with test_approvals_workflow(app):
-            def _run_jobs():
-                InstructorEmailsJob(simply_yield).run()
-                QueuedEmailsJob(simply_yield).run()
+    def test_room_change_no_longer_eligible(self, db_session):
+        with enabled_job(job_key=InstructorEmailsJob.key()):
+            term_id = app.config['CURRENT_TERM_ID']
+            section_id = 50004
+            with test_approvals_workflow(app):
+                def _run_jobs():
+                    InstructorEmailsJob(simply_yield).run()
+                    QueuedEmailsJob(simply_yield).run()
 
-            def _schedule():
-                mock_scheduled(
-                    override_room_id=Room.find_room('Barker 101').id,
-                    section_id=section_id,
-                    term_id=term_id,
-                )
-                course = SisSection.get_course(section_id=section_id, term_id=term_id)
-                assert course['scheduled']['hasObsoleteRoom'] is True
+                def _schedule():
+                    mock_scheduled(
+                        override_room_id=Room.find_room('Barker 101').id,
+                        section_id=section_id,
+                        term_id=term_id,
+                    )
+                    course = SisSection.get_course(section_id=section_id, term_id=term_id)
+                    assert course['scheduled']['hasObsoleteRoom'] is True
 
-            def _assert_alert_count(count):
-                emails_sent = SentEmail.get_emails_of_type(
-                    section_ids=[section_id],
-                    template_type='room_change_no_longer_eligible',
-                    term_id=term_id,
-                )
-                assert len(emails_sent) == count
+                def _assert_alert_count(count):
+                    emails_sent = SentEmail.get_emails_of_type(
+                        section_ids=[section_id],
+                        template_type='room_change_no_longer_eligible',
+                        term_id=term_id,
+                    )
+                    assert len(emails_sent) == count
 
-            # First time scheduled.
-            _schedule()
-            _run_jobs()
-            _assert_alert_count(1)
-            # Unschedule and schedule a second time.
-            Scheduled.delete(section_id=section_id, term_id=term_id)
-            _schedule()
-            _run_jobs()
-            # Another alert is emailed to admin because it is a new schedule.
-            _assert_alert_count(2)
-            # Run jobs again and expect no alerts.
-            _run_jobs()
-            _assert_alert_count(2)
+                # First time scheduled.
+                _schedule()
+                _run_jobs()
+                _assert_alert_count(1)
+                # Unschedule and schedule a second time.
+                Scheduled.delete(section_id=section_id, term_id=term_id)
+                _schedule()
+                _run_jobs()
+                # Another alert is emailed to admin because it is a new schedule.
+                _assert_alert_count(2)
+                # Run jobs again and expect no alerts.
+                _run_jobs()
+                _assert_alert_count(2)
 
 
 def _get_email_count(uid):

@@ -97,6 +97,10 @@ class Job(Base):
             return cls.query.filter_by(disabled=False).order_by(cls.key).all()
 
     @classmethod
+    def get_job(cls, job_id):
+        return cls.query.filter_by(id=job_id).first()
+
+    @classmethod
     def get_job_by_key(cls, key):
         return cls.query.filter_by(key=key).first()
 

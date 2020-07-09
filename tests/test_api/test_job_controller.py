@@ -26,11 +26,13 @@ import json
 import time
 
 from diablo import std_commit
+from diablo.jobs.admin_emails_job import AdminEmailsJob
 from diablo.jobs.canvas_job import CanvasJob
 from diablo.models.job import Job
+from diablo.models.job_history import JobHistory
 from flask import current_app as app
 import pytest
-from tests.util import simply_yield
+from tests.util import enabled_job, simply_yield
 
 admin_uid = '90001'
 instructor_uid = '10001'
@@ -215,6 +217,30 @@ class TestUpdateJobSchedule:
             schedule_value=-30,
             expected_status_code=401,
         )
+
+    def test_edit_schedule_of_enabled_job(self, client, admin_session):
+        """You cannot edit job schedule if the job is enabled."""
+        with enabled_job(job_key=AdminEmailsJob.key()):
+            self._api_job_update_schedule(
+                client,
+                expected_status_code=400,
+                job_id=Job.get_job_by_key('admin_emails').id,
+                schedule_type='minutes',
+                schedule_value=3,
+            )
+
+    def test_edit_schedule_of_running_job(self, client, admin_session):
+        """You cannot edit job schedule if the job is running."""
+        job = Job.get_job_by_key('admin_emails')
+        job_history = JobHistory.job_started(job_key=job.key)
+        self._api_job_update_schedule(
+            client,
+            expected_status_code=400,
+            job_id=Job.get_job_by_key('admin_emails').id,
+            schedule_type='minutes',
+            schedule_value=3,
+        )
+        JobHistory.job_finished(id_=job_history.id, failed=False)
 
     def test_authorized(self, client, admin_session):
         """Admin can edit job schedule."""
