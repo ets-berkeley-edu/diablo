@@ -94,7 +94,7 @@
       </v-col>
     </v-row>
     <v-row
-      v-if="$currentUser.isAdmin && isCurrentTerm && isSendInviteAvailable"
+      v-if="offerSendInvite"
       id="send-invite"
       justify="center"
       class="mt-2"
@@ -106,7 +106,7 @@
         Send Invite
       </v-btn>
     </v-row>
-    <v-row v-if="$currentUser.isAdmin && isCurrentTerm && (course.scheduled || course.hasNecessaryApprovals)" id="unschedule" justify="center">
+    <v-row v-if="offerUnschedule" id="unschedule" justify="center">
       <v-col md="auto">
         <v-dialog v-model="showUnscheduleModal" persistent max-width="400">
           <template v-slot:activator="{ on }">
@@ -174,15 +174,19 @@
     },
     data: () => ({
       displayMeetings: undefined,
-      isCurrentTerm: undefined,
-      isSendInviteAvailable: undefined,
+      offerSendInvite: undefined,
+      offerUnschedule: undefined,
       nowDate: undefined,
       showUnscheduleModal: false
     }),
     created() {
+      if (this.$currentUser.isAdmin && this.course.termId === this.$config.currentTermId) {
+        this.offerSendInvite = this.course.instructors.length && !this.course.hasOptedOut && this.course.meetings.eligible.length === 1
+        this.offerUnschedule = this.course.scheduled || this.course.hasNecessaryApprovals
+      } else {
+        this.offerSendInvite = this.offerUnschedule = false
+      }
       this.displayMeetings = this.getDisplayMeetings(this.course)
-      this.isCurrentTerm = this.course.termId === this.$config.currentTermId
-      this.isSendInviteAvailable = this.course.instructors.length && !this.course.hasOptedOut && this.$_.find(this.displayMeetings, m => this.$_.get(m, 'room.capability'))
       this.nowDate = this.$moment().format('YYYY-MM-DD')
     },
     methods: {
