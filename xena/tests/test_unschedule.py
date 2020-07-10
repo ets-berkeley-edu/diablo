@@ -36,7 +36,7 @@ from xena.test_utils import util
 @pytest.mark.usefixtures('page_objects')
 class TestUnschedule:
 
-    test_data = util.parse_course_test_data()[6]
+    test_data = util.get_test_script_course('test_unschedule')
     section = Section(test_data)
     recording_schedule = RecordingSchedule(section)
 

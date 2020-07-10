@@ -40,8 +40,8 @@ from xena.test_utils import util
 @pytest.mark.usefixtures('page_objects')
 class TestCourseScheduleChanges:
 
-    real_test_data = util.parse_course_test_data()[8]
-    fake_test_data = util.parse_course_test_data()[9]
+    real_test_data = util.get_test_script_course('test_course_changes_real')
+    fake_test_data = util.get_test_script_course('test_course_changes_fake')
     real_section = Section(real_test_data)
     real_meeting = real_section.meetings[0]
     fake_section = Section(fake_test_data)

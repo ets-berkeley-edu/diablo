@@ -33,8 +33,8 @@ from xena.test_utils import util
 @pytest.mark.usefixtures('page_objects')
 class TestInvitations:
 
-    section_1 = Section(util.parse_course_test_data()[4])
-    section_2 = Section(util.parse_course_test_data()[5])
+    section_1 = Section(util.get_test_script_course('test_invitations_0'))
+    section_2 = Section(util.get_test_script_course('test_invitations_1'))
 
     def test_log_in_admin(self):
         self.login_page.load_page()

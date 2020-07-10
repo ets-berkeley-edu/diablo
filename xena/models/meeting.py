@@ -79,9 +79,10 @@ class Meeting(object):
             if day in self.days:
                 weekday_indices.append(weekdays.index(day))
 
-        term_start_date = dateutil.parser.parse(f'{term.start_date}').date()
-        last_record_date = dateutil.parser.parse(f'{term.last_record_date}').date()
-        delta = last_record_date - term_start_date
+        start = self.start_date.date()
+        end = term.last_record_date.date() if self.end_date > term.last_record_date else self.end_date.date()
+
+        delta = end - start
 
         holidays = []
         for i in app.config['KALTURA_BLACKOUT_DATES']:
@@ -90,7 +91,7 @@ class Meeting(object):
 
         recording_dates = []
         for i in range(delta.days + 1):
-            day = term_start_date + timedelta(i)
+            day = start + timedelta(i)
             if day.weekday() in weekday_indices and day not in holidays:
                 recording_dates.append(day)
 

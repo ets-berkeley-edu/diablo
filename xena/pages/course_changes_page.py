@@ -79,8 +79,8 @@ class CourseChangesPage(DiabloPages):
         return self.is_present((By.XPATH, CourseChangesPage.course_row_xpath(section)))
 
     def wait_for_results(self):
-        Wait(self.driver, util.get_medium_timeout()).until(ec.visibility_of_element_located(CourseChangesPage.COURSE_INFO_HEADER))
+        Wait(self.driver, util.get_short_timeout()).until(ec.visibility_of_element_located(CourseChangesPage.COURSE_INFO_HEADER))
 
     def wait_for_course_row(self, section):
         loc = By.XPATH, CourseChangesPage.course_row_xpath(section)
-        Wait(self.driver, util.get_medium_timeout()).until(ec.visibility_of_element_located(loc))
+        Wait(self.driver, util.get_short_timeout()).until(ec.visibility_of_element_located(loc))

@@ -37,7 +37,7 @@ from xena.test_utils import util
 @pytest.mark.usefixtures('page_objects')
 class TestCrossListings:
 
-    test_data = util.parse_course_test_data()[7]
+    test_data = util.get_test_script_course('test_x_listings')
     section = Section(test_data)
     meeting = section.meetings[0]
     x_listings = section.listings
