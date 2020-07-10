@@ -168,21 +168,41 @@
               </v-row>
             </v-container>
             <v-container v-if="isCurrentTerm && !meeting.room.capability">
-              <v-row id="course-not-eligible">
-                <v-icon class="pr-2" color="red">mdi-alert</v-icon>
-                This course is not eligible for Course Capture because {{ meeting.room.location }} is not capture-enabled.
+              <v-row>
+                <div class="d-flex justify-start">
+                  <div class="pr-2">
+                    <v-icon color="red">mdi-alert</v-icon>
+                  </div>
+                  <div id="course-not-eligible">
+                    This course is not eligible for Course Capture because {{ meeting.room.location }} is not capture-enabled.
+                  </div>
+                </div>
               </v-row>
             </v-container>
             <v-container v-if="multipleEligibleMeetings">
-              <v-row id="course-multiple-eligible-meetings">
-                <v-icon class="pr-2" color="red">mdi-alert</v-icon>
-                This course does not meet a typical course's meeting pattern and cannot be scheduled automatically. Scheduling requests must be communicated to coursecapture@berkeley.edu.
+              <v-row>
+                <div class="d-flex justify-start">
+                  <div class="pr-2">
+                    <v-icon color="red">mdi-alert</v-icon>
+                  </div>
+                  <div id="course-multiple-eligible-meetings">
+                    This course does not meet a typical course's meeting pattern and cannot be scheduled automatically.
+                    Scheduling requests must be communicated to
+                    <a :href="`mailto:${$config.emailCourseCaptureSupport}`" target="_blank">{{ $config.emailCourseCaptureSupport }}</a>.
+                  </div>
+                </div>
               </v-row>
             </v-container>
             <v-container v-if="!isCurrentTerm">
-              <v-row id="course-not-current">
-                <v-icon class="pr-2" color="red">mdi-alert</v-icon>
-                This course is not currently eligible for Course Capture.
+              <v-row>
+                <div class="d-flex justify-start">
+                  <div class="pr-2">
+                    <v-icon color="red">mdi-alert</v-icon>
+                  </div>
+                  <div id="course-not-current">
+                    This course is not currently eligible for Course Capture.
+                  </div>
+                </div>
               </v-row>
             </v-container>
           </v-card>
