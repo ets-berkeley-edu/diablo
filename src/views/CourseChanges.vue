@@ -60,10 +60,10 @@
                 </div>
               </div>
               <div v-for="(meeting, index) in course.meetings.eligible" :id="`course-${course.sectionId}-meeting-times-eligible-${index}`" :key="index">
-                {{ meeting.daysFormatted.join(',') }} {{ meeting.startTimeFormatted }} - {{ meeting.endTimeFormatted }} (Eligible)
+                {{ meeting.daysFormatted.join(',') }} {{ meeting.startTimeFormatted }} - {{ meeting.endTimeFormatted }}
               </div>
               <div v-for="(meeting, index) in course.meetings.ineligible" :id="`course-${course.sectionId}-meeting-times-ineligible-${index}`" :key="index">
-                {{ meeting.daysFormatted.join(',') }} {{ meeting.startTimeFormatted }} - {{ meeting.endTimeFormatted }} (Ineligible)
+                {{ meeting.daysFormatted.join(',') }} {{ meeting.startTimeFormatted }} - {{ meeting.endTimeFormatted }}
               </div>
               <div v-if="course.scheduled.hasObsoleteDates" :id="`course-${course.sectionId}-obsolete-meeting-dates`">
                 <div :id="`course-${course.sectionId}-meeting-dates-old`">
@@ -74,10 +74,10 @@
                   changed to
                 </div>
                 <div v-for="(meeting, index) in course.meetings.eligible" :id="`course-${course.sectionId}-meeting-dates-eligible-${index}`" :key="index">
-                  {{ meeting.recordingStartDate }} - {{ meeting.recordingEndDate }} (Eligible)
+                  {{ meeting.recordingStartDate }} - {{ meeting.recordingEndDate }}
                 </div>
                 <div v-for="(meeting, index) in course.meetings.ineligible" :id="`course-${course.sectionId}-meeting-dates-ineligible-${index}`" :key="index">
-                  {{ meeting.startDate }} - {{ meeting.endDate }} (Ineligible)
+                  {{ meeting.startDate }} - {{ meeting.endDate }}
                 </div>
               </div>
               <div>
