@@ -77,6 +77,12 @@ def parse_course_test_data():
         return parsed['courses']
 
 
+def get_test_script_course(test_script_str):
+    for course in parse_course_test_data():
+        if course['test_script'] == test_script_str:
+            return course
+
+
 def get_kaltura_id(recording_schedule, term):
     section = recording_schedule.section
     sql = f"""SELECT kaltura_schedule_id
@@ -176,11 +182,29 @@ def reset_invite_test_data(term, section, instructor=None):
     std_commit(allow_test_environment=True)
 
 
-def set_course_room(section, meeting):
+def change_course_room(section, old_room=None, new_room=None):
+    old = f"= '{old_room.name}'" if old_room else 'IS NULL'
+    new = f"'{new_room.name}'" if new_room else 'NULL'
     sql = f"""UPDATE sis_sections
-              SET meeting_location = '{meeting.room.name}'
+              SET meeting_location = {new}
               WHERE section_id = {section.ccn}
                 AND term_id = {section.term.id}
+                AND meeting_location {old}
+    """
+    app.logger.info(sql)
+    db.session.execute(text(sql))
+    std_commit(allow_test_environment=True)
+
+
+def update_course_start_end_dates(section, meeting):
+    start_date = meeting.start_date.strftime('%Y-%m-%d %H:%M:%S')
+    end_date = meeting.end_date.strftime('%Y-%m-%d %H:%M:%S')
+    sql = f"""UPDATE sis_sections
+              SET meeting_start_date = '{start_date}',
+                  meeting_end_date = '{end_date}'
+              WHERE section_id = {section.ccn}
+                  AND term_id = {section.term.id}
+                  AND meeting_location = '{meeting.room.name}'
     """
     app.logger.info(sql)
     db.session.execute(text(sql))
@@ -203,14 +227,60 @@ def set_course_meeting_time(section, meeting):
     std_commit(allow_test_environment=True)
 
 
-def change_course_instructor(section, old_instructor, new_instructor):
-    sql = f"""UPDATE sis_sections
-              SET instructor_uid = '{new_instructor.uid}',
-                  instructor_name = '{new_instructor.first_name} {new_instructor.last_name}'
-              WHERE section_id = {section.ccn}
-                  AND term_id = {section.term.id}
-                  AND instructor_uid = '{old_instructor.uid}'
-    """
+def change_course_instructor(section, old_instructor=None, new_instructor=None):
+    conditional = f" AND instructor_uid = '{old_instructor.uid}'" if old_instructor else ''
+    if new_instructor:
+        sql = f"""UPDATE sis_sections
+                  SET instructor_uid = '{new_instructor.uid}',
+                      instructor_name = '{new_instructor.first_name} {new_instructor.last_name}',
+                      instructor_role_code = '{new_instructor.role}'
+                  WHERE section_id = {section.ccn}
+                      AND term_id = {section.term.id}
+                      {conditional}
+        """
+    else:
+        sql = f"""UPDATE sis_sections
+                  SET instructor_uid = NULL,
+                      instructor_name = NULL,
+                      instructor_role_code = NULL
+                  WHERE section_id = {section.ccn}
+                      AND term_id = {section.term.id}
+                      AND instructor_uid = '{old_instructor.uid}'
+        """
+    app.logger.info(sql)
+    db.session.execute(text(sql))
+    std_commit(allow_test_environment=True)
+
+
+def add_sis_sections_rows(section):
+    instruction_format = section.number.split(' ')[0]
+    section_num = section.number.split(' ')[1]
+    for instructor in section.instructors:
+        instructor_name = f'{instructor.first_name} {instructor.last_name}'
+        for meeting in section.meetings:
+            days = meeting.days.replace(',', '').replace(' ', '')
+            start_date = meeting.start_date.strftime('%Y-%m-%d %H:%M:%S')
+            end_date = meeting.end_date.strftime('%Y-%m-%d %H:%M:%S')
+            start_time = datetime.strptime(meeting.start_time, '%I:%M %p').strftime('%H:%M')
+            end_time = datetime.strptime(meeting.end_time, '%I:%M %p').strftime('%H:%M')
+            sql = f"""
+                INSERT INTO sis_sections (
+                    allowed_units, course_name, course_title, created_at, instruction_format, instructor_name,
+                    instructor_role_code, instructor_uid, is_primary, meeting_days, meeting_end_date, meeting_end_time,
+                    meeting_location, meeting_start_date, meeting_start_time, section_id, section_num, term_id
+                )
+                SELECT
+                    '4', '{section.code}', '{section.title}', now(), '{instruction_format}', '{instructor_name}',
+                    '{instructor.role}', '{instructor.uid}', TRUE, '{days}', '{end_date}', '{end_time}',
+                    '{meeting.room.name}', '{start_date}', '{start_time}', {section.ccn}, '{section_num}', {section.term.id}
+            """
+            app.logger.info(sql)
+            db.session.execute(text(sql))
+            std_commit(allow_test_environment=True)
+
+
+def delete_sis_sections_rows(section):
+    sql = f'DELETE FROM sis_sections WHERE section_id = {section.ccn}'
     app.logger.info(sql)
     db.session.execute(text(sql))
     std_commit(allow_test_environment=True)

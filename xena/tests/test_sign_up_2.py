@@ -52,7 +52,7 @@ SCENARIO:
 @pytest.mark.usefixtures('page_objects')
 class TestSignUp2:
 
-    test_data = util.parse_course_test_data()[2]
+    test_data = util.get_test_script_course('test_sign_up_2')
     section = Section(test_data)
     meeting = section.meetings[0]
     recording_schedule = RecordingSchedule(section)

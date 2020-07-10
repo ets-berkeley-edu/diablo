@@ -61,6 +61,7 @@ class SignUpPage(DiabloPages):
     QUEUED_MSG = (By.XPATH, '//span[contains(text(), "This course is currently queued for scheduling")]')
     APPROVALS_MSG = (By.ID, 'approvals-described')
     CONFIRMATION_MSG = (By.XPATH, '//span[contains(text(), "You submitted the preferences below.")]')
+    NO_AUTO_SCHED_MSG = (By.XPATH, '//div[contains(text(), "cannot be scheduled automatically")]')
 
     RECORDING_TYPE_APPROVED = (By.XPATH, '//h4[contains(., "Recording Type")]/../following-sibling::div/div')
     PUBLISH_TYPE_APPROVED = (By.ID, 'approved-publish-type')

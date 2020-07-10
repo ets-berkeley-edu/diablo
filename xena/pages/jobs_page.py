@@ -38,6 +38,7 @@ from xena.test_utils import util
 class JobsPage(DiabloPages):
     RUN_ADMIN_EMAILS_JOB_BUTTON = (By.ID, 'run-job-admin_emails')
     RUN_CANVAS_JOB_BUTTON = (By.ID, 'run-job-canvas')
+    RUN_HOUSEKEEPING_JOB_BUTTON = (By.ID, 'run-job-house_keeping')
     RUN_INSTRUCTOR_EMAILS_JOB_BUTTON = (By.ID, 'run-job-instructor_emails')
     RUN_INVITATIONS_JOB = (By.ID, 'run-job-invitations')
     RUN_KALTURA_JOB_BUTTON = (By.ID, 'run-job-kaltura')
@@ -64,6 +65,13 @@ class JobsPage(DiabloPages):
         time.sleep(1)
         self.wait_for_page_and_click(JobsPage.RUN_CANVAS_JOB_BUTTON)
         self.wait_for_most_recent_job_success(AsyncJob.CANVAS)
+
+    def run_housekeeping_job(self):
+        app.logger.info('Vacuuming, dusting, and scrubbing the tub')
+        self.scroll_to_top()
+        time.sleep(1)
+        self.wait_for_page_and_click(JobsPage.RUN_HOUSEKEEPING_JOB_BUTTON)
+        self.wait_for_most_recent_job_success(AsyncJob.HOUSEKEEPING)
 
     def run_instructor_emails_job(self):
         app.logger.info('Running instructor emails job')
