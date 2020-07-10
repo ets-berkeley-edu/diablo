@@ -359,7 +359,7 @@ class Kaltura:
                 interval=1,
                 name=summary,
                 timeZone='US/Pacific',
-                until=recording_end_date.replace(hour=23, minute=59).timestamp(),
+                until=datetime.combine(recording_end_date, time(23, 59), tzinfo=default_timezone()).timestamp(),
                 weekStartDay=days[0],
             ),
             recurrenceType=KalturaScheduleEventRecurrenceType.RECURRING,
