@@ -29,13 +29,11 @@
         <v-list-item-subtitle>{{ course.scheduled.publishTypeName }}</v-list-item-subtitle>
       </v-list-item-content>
     </v-list-item>
-    <v-list-item v-if="$currentUser.isAdmin && course.scheduled.alerts.length" two-line class="pb-3">
+    <v-list-item v-if="$currentUser.isAdmin && adminAlerts.length" two-line class="pb-3">
       <v-list-item-content>
         <v-list-item-title>
           <v-icon class="pb-1 pr-1" color="red">mdi-alert</v-icon>
-          <OxfordJoin v-slot="{ item }" :items="course.scheduled.alerts">
-            {{ $config.emailTemplateTypes[item] }}
-          </OxfordJoin>
+          {{ $_.capitalize(oxfordJoin(adminAlerts).toLowerCase()) }}
         </v-list-item-title>
       </v-list-item-content>
     </v-list-item>
@@ -80,14 +78,14 @@
 
 <script>
   import Context from '@/mixins/Context'
-  import OxfordJoin from '@/components/util/OxfordJoin'
   import TermsAgreementText from '@/components/util/TermsAgreementText'
+  import Utils from '@/mixins/Utils'
   import {approve} from '@/api/course'
 
   export default {
     name: 'ScheduledCourse',
-    components: {OxfordJoin, TermsAgreementText},
-    mixins: [Context],
+    components: {TermsAgreementText},
+    mixins: [Context, Utils],
     props: {
       afterApprove: {
         required: true,
@@ -99,11 +97,14 @@
       }
     },
     data: () => ({
+      adminAlerts: undefined,
       agreedToTerms: false,
       currentUserMustApprove: undefined,
       isApproving: false
     }),
     created() {
+      const alertKeys = this.$_.filter(this.course.scheduled.alerts, alert => alert.includes('admin'))
+      this.adminAlerts = this.$_.map(alertKeys, key => this.$config.emailTemplateTypes[key].replace('Admin alert: ', ''))
       this.currentUserMustApprove = !this.$currentUser.isAdmin && !this.$_.includes(this.$_.map(this.course.approvals, 'approvedBy.uid'), this.$currentUser.uid)
     },
     methods: {
