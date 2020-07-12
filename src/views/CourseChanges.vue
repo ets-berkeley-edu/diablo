@@ -2,9 +2,15 @@
   <v-card v-if="!loading" outlined class="elevation-1">
     <v-card-title class="align-start">
       <div class="pt-2">
-        <h1><v-icon class="pb-3" large>mdi-swap-horizontal</v-icon> Course Changes</h1>
+        <h1><v-icon class="pl-2" large>mdi-swap-horizontal</v-icon> Course Changes</h1>
       </div>
     </v-card-title>
+    <v-card-text v-if="courses.length">
+      <ObsoleteSchedule v-for="course in courses" :key="course.sectionId" :course="course" />
+    </v-card-text>
+    <v-card-text v-if="!courses.length" class="ma-4 text-no-wrap title">
+      No changes within scheduled courses.
+    </v-card-text>
     <v-data-table
       disable-pagination
       :headers="headers"
@@ -121,22 +127,7 @@
             <td>
               <div v-if="course.scheduled.hasObsoleteInstructors">
                 <div v-for="instructor in course.scheduled.instructors" :key="instructor.uid">
-                  <v-tooltip v-if="instructor.approval" :id="`tooltip-approval-${course.sectionId}-by-${instructor.uid}`" bottom>
-                    <template v-slot:activator="{ on }">
-                      <v-icon
-                        :color="instructor.approval ? 'green' : 'yellow darken-2'"
-                        class="pa-0"
-                        dark
-                        v-on="on"
-                      >
-                        mdi-check
-                      </v-icon>
-                    </template>
-                    Approval submitted on {{ instructor.approval.createdAt | moment('MMM D, YYYY') }}.
-                  </v-tooltip>
-                  <router-link :id="`instructor-${instructor.uid}-mailto`" :to="`/user/${instructor.uid}`">
-                    {{ instructor.name }}
-                  </router-link> ({{ instructor.uid }})
+                  <Instructor :course="course" :instructor="instructor" />
                 </div>
                 <div class="primary--text">
                   <v-icon small color="primary">mdi-arrow-down-bold</v-icon>
@@ -144,37 +135,7 @@
                 </div>
               </div>
               <div v-for="instructor in course.instructors" :key="instructor.uid">
-                <v-tooltip v-if="instructor.approval" :id="`tooltip-approval-${course.sectionId}-by-${instructor.uid}`" bottom>
-                  <template v-slot:activator="{ on }">
-                    <v-icon
-                      :color="instructor.approval ? 'green' : 'yellow darken-2'"
-                      class="pa-0"
-                      dark
-                      v-on="on"
-                    >
-                      mdi-check
-                    </v-icon>
-                  </template>
-                  Approval submitted on {{ instructor.approval.createdAt | moment('MMM D, YYYY') }}.
-                </v-tooltip>
-                <v-tooltip v-if="!instructor.wasSentInvite" bottom>
-                  <template v-slot:activator="{ on }">
-                    <v-icon
-                      color="yellow darken-2"
-                      class="pb-1 pl-1"
-                      dark
-                      v-on="on"
-                    >
-                      mdi-alert-circle-outline
-                    </v-icon>
-                  </template>
-                  <div>
-                    No invite sent to {{ instructor.name }}.
-                  </div>
-                </v-tooltip>
-                <router-link :id="`instructor-${instructor.uid}-mailto`" :to="`/user/${instructor.uid}`">
-                  {{ instructor.name }}
-                </router-link> ({{ instructor.uid }})
+                <Instructor :course="course" :instructor="instructor" />
               </div>
             </td>
           </tr>
@@ -186,11 +147,15 @@
 
 <script>
   import Context from '@/mixins/Context'
+  import Instructor from '@/components/course/Instructor'
+  import ObsoleteSchedule from '@/components/course/ObsoleteSchedule'
+  import Utils from '@/mixins/Utils'
   import {getCourseChanges} from '@/api/course'
 
   export default {
     name: 'CourseChanges',
-    mixins: [Context],
+    mixins: [Context, Utils],
+    components: {Instructor, ObsoleteSchedule},
     data: () => ({
       courses: undefined,
       headers: [

@@ -20,6 +20,10 @@
         _.each(obj, (text, value) => options.push({text, value, disabled: isDisabled(value)}))
         return options
       },
+      isInRoom(course, room) {
+        const meetings = course.meetings.eligible.concat(course.meetings.ineligible)
+        return _.includes(_.map(meetings, 'room.id'), room.id)
+      },
       goToPath(path) {
         this.$router.push({ path }, _.noop)
       },
