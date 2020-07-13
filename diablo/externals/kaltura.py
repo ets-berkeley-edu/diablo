@@ -340,6 +340,11 @@ class Kaltura:
         for category_id in category_ids or []:
             self.add_to_kaltura_category(category_id=category_id, entry_id=base_entry.id)
 
+        until = datetime.combine(
+            recording_end_date,
+            time(end_time.hour, end_time.minute),
+            tzinfo=default_timezone(),
+        )
         recurring_event = KalturaRecordScheduleEvent(
             # https://developer.kaltura.com/api-docs/General_Objects/Objects/KalturaScheduleEvent
             classificationType=KalturaScheduleEventClassificationType.PUBLIC_EVENT,
@@ -359,7 +364,7 @@ class Kaltura:
                 interval=1,
                 name=summary,
                 timeZone='US/Pacific',
-                until=datetime.combine(recording_end_date, time(23, 59), tzinfo=default_timezone()).timestamp(),
+                until=until.timestamp(),
                 weekStartDay=days[0],
             ),
             recurrenceType=KalturaScheduleEventRecurrenceType.RECURRING,
