@@ -28,6 +28,7 @@ import time
 from diablo import std_commit
 from diablo.jobs.admin_emails_job import AdminEmailsJob
 from diablo.jobs.canvas_job import CanvasJob
+from diablo.jobs.house_keeping_job import HouseKeepingJob
 from diablo.models.job import Job
 from diablo.models.job_history import JobHistory
 from flask import current_app as app
@@ -305,3 +306,31 @@ class TestJobSchedule:
             'type': 'day_at',
             'value': '04:30',
         }
+
+
+class TestLastSuccessfulRun:
+
+    @staticmethod
+    def _api_last_successful_run(client, job_key, expected_status_code=200):
+        response = client.get(f'/api/job/{job_key}/last_successful_run')
+        assert response.status_code == expected_status_code
+        return response.json
+
+    def test_anonymous(self, client):
+        """Denies anonymous access."""
+        self._api_last_successful_run(client, job_key='house_keeping', expected_status_code=401)
+
+    def test_unauthorized(self, client, instructor_session):
+        """Denies access if user is not an admin."""
+        self._api_last_successful_run(client, job_key='house_keeping', expected_status_code=401)
+
+    def test_authorized(self, client, admin_session):
+        """Admin can access job_history."""
+        job_key = 'house_keeping'
+        api_json = self._api_last_successful_run(client, job_key=job_key)
+        assert api_json['jobKey'] == job_key
+        finished_at = api_json['finishedAt']
+        assert finished_at
+
+        HouseKeepingJob(app_context=simply_yield).run()
+        assert self._api_last_successful_run(client, job_key=job_key)['finishedAt'] > finished_at

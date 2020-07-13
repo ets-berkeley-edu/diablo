@@ -84,6 +84,13 @@ def update_schedule():
     return tolerant_jsonify(job.to_api_json())
 
 
+@app.route('/api/job/<job_key>/last_successful_run')
+@admin_required
+def last_successful_run(job_key):
+    entry = JobHistory.last_successful_run_of(job_key=job_key)
+    return tolerant_jsonify(entry and entry.to_api_json())
+
+
 @app.route('/api/job/history')
 @admin_required
 def job_history():

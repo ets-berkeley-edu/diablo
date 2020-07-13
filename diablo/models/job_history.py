@@ -26,7 +26,7 @@ from datetime import datetime
 
 from diablo import db, std_commit
 from diablo.lib.util import to_isoformat
-from sqlalchemy import text
+from sqlalchemy import and_, text
 from sqlalchemy.sql import desc
 
 
@@ -76,6 +76,11 @@ class JobHistory(db.Model):
     @classmethod
     def get_job_history(cls):
         return cls.query.order_by(desc(cls.started_at)).all()
+
+    @classmethod
+    def last_successful_run_of(cls, job_key):
+        criteria = and_(cls.job_key == job_key, cls.failed == False, cls.finished_at != None)  # noqa: E711, E712
+        return cls.query.filter(criteria).order_by(desc(cls.finished_at)).limit(1).first()
 
     @staticmethod
     def fail_orphans():

@@ -92,22 +92,7 @@
               </td>
               <td :class="tdc(course)">
                 <div v-for="instructor in course.instructors" :key="instructor.uid" class="mb-1 mt-1">
-                  <v-tooltip v-if="instructor.approval" :id="`tooltip-approval-${course.sectionId}-by-${instructor.uid}`" bottom>
-                    <template v-slot:activator="{ on }">
-                      <v-icon
-                        :color="instructor.approval ? 'green' : 'yellow darken-2'"
-                        class="pa-0"
-                        dark
-                        v-on="on"
-                      >
-                        mdi-check
-                      </v-icon>
-                    </template>
-                    Approval submitted on {{ instructor.approval.createdAt | moment('MMM D, YYYY') }}.
-                  </v-tooltip>
-                  <router-link :id="`course-${course.sectionId}-instructor-${instructor.uid}-mailto`" :to="`/user/${instructor.uid}`">
-                    {{ instructor.name }}
-                  </router-link> ({{ instructor.uid }})
+                  <Instructor :course="course" :instructor="instructor" />
                 </div>
               </td>
               <td :id="`course-${course.sectionId}-publish-types`" :class="tdc(course)">
@@ -188,12 +173,13 @@
 
 <script>
   import Context from '@/mixins/Context'
+  import Instructor from '@/components/course/Instructor'
   import ToggleOptOut from '@/components/course/ToggleOptOut'
   import Utils from '@/mixins/Utils'
 
   export default {
     name: 'CoursesDataTable',
-    components: {ToggleOptOut},
+    components: {Instructor, ToggleOptOut},
     mixins: [Context, Utils],
     props: {
       courses: {
