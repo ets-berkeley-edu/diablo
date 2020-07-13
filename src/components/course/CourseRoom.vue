@@ -1,6 +1,7 @@
 <template>
   <div class="d-flex">
     <v-tooltip
+      v-if="!hideEligibility"
       :id="`tooltip-course-${course.sectionId}-room-${room.id}-ineligible`"
       bottom
     >
@@ -42,6 +43,9 @@
       course: {
         required: true,
         type: Object
+      },
+      hideEligibility: {
+        type: Boolean
       },
       room: {
         required: true,

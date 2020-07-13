@@ -91,14 +91,14 @@
               <h5>All Meetings</h5>
               <div v-for="meeting in meetings" :key="meeting.location">
                 <CourseRoom :course="course" :room="meeting.room" />
-                <div v-if="!isRoomObsolete && (course.scheduled.hasObsoleteDates || course.scheduled.hasObsoleteTimes)">
-                  <div class="d-flex pt-2">
+                <div v-if="!isRoomObsolete && (course.scheduled.hasObsoleteDates || course.scheduled.hasObsoleteTimes)" class="pb-2">
+                  <div class="d-flex">
                     <div>
                       {{ meeting.startDate }} to {{ meeting.endDate }}
                     </div>
                   </div>
                   <div class="d-flex">
-                    <div class="pt-2">
+                    <div>
                       {{ $_.join(meeting.daysFormatted, ' ') }},
                       {{ meeting.startTimeFormatted }} - {{ meeting.endTimeFormatted }}
                     </div>
