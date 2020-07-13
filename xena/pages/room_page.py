@@ -112,16 +112,21 @@ class RoomPage(DiabloPages):
     def series_recording_rows(self, recording_sched):
         return self.elements((By.XPATH, f'{RoomPage.series_recording_xpath(recording_sched)}'))
 
-    def series_recording_cell_dates(self, recording_sched, cell_node):
+    def series_recording_cell_dates(self, xpath):
         values = []
         current_year = app.config['CURRENT_TERM_BEGIN'].split('-')[0]
-        els = self.series_recording_rows(recording_sched)
+        els = self.elements((By.XPATH, xpath))
         for el in els:
-            index = els.index(el)
-            cell = self.element((By.XPATH, f'{RoomPage.series_recording_xpath(recording_sched)}[{index + 1}]/td[{cell_node}]'))
+            i = els.index(el)
+            cell = self.element((By.XPATH, f'{xpath}[{i + 1}]/td[3]'))
             date = datetime.strptime(f'{cell.text}, {current_year}', '%I:%M%p, %a, %b %d, %Y').date()
             values.append(date)
         return values
 
     def series_recording_start_dates(self, recording_sched):
-        return self.series_recording_cell_dates(recording_sched, '3')
+        xpath = f'{RoomPage.series_recording_xpath(recording_sched)}[contains(., "Active")]'
+        return self.series_recording_cell_dates(xpath)
+
+    def series_recording_blackout_dates(self, recording_sched):
+        xpath = f'{RoomPage.series_recording_xpath(recording_sched)}[contains(., "Cancelled")]'
+        return self.series_recording_cell_dates(xpath)
