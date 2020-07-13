@@ -30,7 +30,10 @@
                 <Instructor :course="course" :instructor="instructor" />
               </div>
             </div>
-            <div :class="{'pt-2': course.scheduled.hasObsoleteInstructors}">
+            <div
+              v-if="isRoomObsolete || course.scheduled.hasObsoleteDates || course.scheduled.hasObsoleteTimes"
+              :class="{'pt-2': course.scheduled.hasObsoleteInstructors}"
+            >
               <h5>Meeting</h5>
               <div>
                 <CourseRoom :course="course" :room="course.scheduled.room" />
@@ -87,7 +90,10 @@
                 <Instructor :course="course" :instructor="instructor" />
               </div>
             </div>
-            <div :class="{'pt-2': course.scheduled.hasObsoleteInstructors}">
+            <div
+              v-if="isRoomObsolete || course.scheduled.hasObsoleteDates || course.scheduled.hasObsoleteTimes"
+              :class="{'pt-2': course.scheduled.hasObsoleteInstructors}"
+            >
               <h5>All Meetings</h5>
               <div v-for="meeting in meetings" :key="meeting.location">
                 <CourseRoom :course="course" :room="meeting.room" />
