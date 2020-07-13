@@ -39,7 +39,9 @@ class Meeting(object):
     @property
     def start_date(self):
         date_str = self.data['start_date'] or app.config['CURRENT_TERM_BEGIN']
-        return datetime.strptime(date_str, '%Y-%m-%d')
+        term_start = datetime.strptime(date_str, '%Y-%m-%d')
+        now = datetime.now()
+        return term_start if term_start > now else now
 
     @property
     def end_date(self):
@@ -72,27 +74,48 @@ class Meeting(object):
     def get_berkeley_end_time(self):
         return Meeting.add_minutes(self.end_time, 2)
 
-    def expected_recording_dates(self, term):
+    def __weekday_indices(self, term):
         weekdays = ['MO', 'TU', 'WE', 'TH', 'FR']
         weekday_indices = []
         for day in weekdays:
             if day in self.days:
                 weekday_indices.append(weekdays.index(day))
+        return weekday_indices
 
-        start = self.start_date.date()
-        end = term.last_record_date.date() if self.end_date > term.last_record_date else self.end_date.date()
-
-        delta = end - start
-
+    @staticmethod
+    def __holidays():
         holidays = []
         for i in app.config['KALTURA_BLACKOUT_DATES']:
             day = dateutil.parser.parse(i).date()
             holidays.append(day)
+        return holidays
+
+    def expected_recording_dates(self, term):
+        weekday_indices = self.__weekday_indices(term)
+        holidays = self.__holidays()
+
+        start = self.start_date.date()
+        end = term.last_record_date.date() if self.end_date > term.last_record_date else self.end_date.date()
+        delta = end - start
 
         recording_dates = []
         for i in range(delta.days + 1):
             day = start + timedelta(i)
             if day.weekday() in weekday_indices and day not in holidays:
                 recording_dates.append(day)
-
         return recording_dates
+
+    def expected_blackout_dates(self, term):
+        weekday_indices = self.__weekday_indices(term)
+        holidays = self.__holidays()
+
+        start = self.start_date.date()
+        end = term.last_record_date.date() if self.end_date > term.last_record_date else self.end_date.date()
+        delta = end - start
+
+        blackout_dates = []
+        for i in range(delta.days + 1):
+            day = start + timedelta(i)
+            if day.weekday() in weekday_indices and day in holidays:
+                blackout_dates.append(day)
+        return blackout_dates
