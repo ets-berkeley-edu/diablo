@@ -151,3 +151,28 @@ class TestAdminUsers:
             assert 'email' in admin_user
             assert 'name' in admin_user
             assert 'uid' in admin_user
+
+
+class TestGetCalnetUser:
+    """Admin user can fetch CalNet user profile."""
+
+    @staticmethod
+    def _api_calnet_user(client, uid, expected_status_code=200):
+        response = client.get(f'/api/user/{uid}/calnet')
+        assert response.status_code == expected_status_code
+        return response.json
+
+    def test_anonymous(self, client):
+        """Denies anonymous access."""
+        self._api_calnet_user(client, uid='10000', expected_status_code=401)
+
+    def test_unauthorized(self, client, instructor_session):
+        """Denies access if user is not an admin."""
+        self._api_calnet_user(client, uid='10000', expected_status_code=401)
+
+    def test_authorized(self, client, admin_session):
+        """Admin user has access."""
+        uid = '10000'
+        api_json = self._api_calnet_user(client, uid=uid)
+        assert api_json['name'] == 'Father Karras'
+        assert api_json['uid'] == uid

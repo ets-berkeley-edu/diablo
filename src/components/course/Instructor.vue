@@ -1,7 +1,7 @@
 <template>
   <div class="d-flex">
     <v-tooltip
-      v-if="!$_.includes($_.map(course.instructors, 'uid'), instructor.uid)"
+      v-if="!isStillTeachingCourse"
       :id="`tooltip-course-${course.sectionId}-instructor-${instructor.uid}-approved`"
       bottom
     >
@@ -11,7 +11,7 @@
       {{ instructor.name }} is no longer an instructor of this course.
     </v-tooltip>
     <v-tooltip
-      v-if="!instructor.approval && !instructor.wasSentInvite"
+      v-if="isStillTeachingCourse && !instructor.approval && !instructor.wasSentInvite"
       :id="`tooltip-course-${course.sectionId}-instructor-${instructor.uid}-not-invited`"
       bottom
     >
@@ -21,7 +21,17 @@
       No invite has been sent to {{ instructor.name }}.
     </v-tooltip>
     <v-tooltip
-      v-if="instructor.approval"
+      v-if="isStillTeachingCourse && hasNotApprovedScheduled"
+      :id="`tooltip-course-${course.sectionId}-instructor-${instructor.uid}-no-approval`"
+      bottom
+    >
+      <template v-slot:activator="{ on }">
+        <v-icon class="pr-1" color="yellow darken-2" v-on="on">mdi-checkbox-blank-outline</v-icon>
+      </template>
+      {{ instructor.name }} was sent an invite but has not approved the scheduled recordings.
+    </v-tooltip>
+    <v-tooltip
+      v-if="isStillTeachingCourse && instructor.approval"
       :id="`tooltip-course-${course.sectionId}-instructor-${instructor.uid}-approved`"
       bottom
     >
@@ -31,7 +41,7 @@
       Approval submitted on {{ instructor.approval.createdAt | moment('MMM D, YYYY') }}.
     </v-tooltip>
     <div>
-      <router-link :id="`course-${course.sectionId}-instructor-${instructor.uid}`" :to="`/user/${instructor.uid}`">
+      <router-link :id="id || `course-${course.sectionId}-instructor-${instructor.uid}`" :to="`/user/${instructor.uid}`">
         {{ instructor.name }}
       </router-link> ({{ instructor.uid }})
     </div>
@@ -46,10 +56,24 @@
         required: true,
         type: Object
       },
+      id: {
+        default: null,
+        required: false,
+        type: String
+      },
       instructor: {
         required: true,
         type: Object
       }
+    },
+    data: () => ({
+      hasNotApprovedScheduled: undefined,
+      isStillTeachingCourse: undefined
+    }),
+    created() {
+      const uid = this.instructor.uid
+      this.hasNotApprovedScheduled = this.course.scheduled && this.instructor.wasSentInvite && !this.$_.includes(this.course.scheduled.instructorUids, uid)
+      this.isStillTeachingCourse = this.$_.includes(this.$_.map(this.course.instructors, 'uid'), uid)
     }
   }
 </script>
