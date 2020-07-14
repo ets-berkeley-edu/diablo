@@ -26,7 +26,7 @@
             </div>
           </div>
           <v-list-item-title>
-            <span v-if="scheduledCourses.length">
+            <span v-if="offerPrintable">
               <router-link
                 :id="`print-room-${room.id}-schedule`"
                 class="subtitle-1"
@@ -69,7 +69,7 @@
     data: () => ({
       isAuditorium: undefined,
       kalturaEventList: undefined,
-      scheduledCourses: undefined,
+      offerPrintable: undefined,
       room: undefined
     }),
     watch: {
@@ -83,14 +83,14 @@
     },
     created() {
       this.$loading()
-      let id = this.$_.get(this.$route, 'params.id')
-      getRoom(id).then(data => {
+      let roomId = this.$_.get(this.$route, 'params.id')
+      getRoom(roomId).then(data => {
         this.room = data
         this.isAuditorium = data.isAuditorium
         this.$_.each(this.room.courses, course => {
           course.courseCodes = this.getCourseCodes(course)
         })
-        this.scheduledCourses = this.$_.filter(data.courses, 'scheduled')
+        this.offerPrintable = !!this.$_.find(this.$_.filter(this.room.courses, 'scheduled'), c => c.scheduled.room.id === this.room.id)
         this.$ready(data.location)
         // The page is ready; Kaltura events will pop up in a sec.
         if (this.room.kalturaResourceId) {
