@@ -331,6 +331,19 @@
       "course_name": "COMPSCI 161 LEC 001 (hybrid instruction)",
       "course_title": "Computer Security",
       "section_id": 50016
+    },
+    {
+      "allowed_units": "3.0",
+      "instructor_uid": null,
+      "meeting_days": "TUTH",
+      "meeting_end_date": "2020-12-11",
+      "meeting_end_time": "11:59",
+      "meeting_location": "Barker 101",
+      "meeting_start_date": "2020-08-26",
+      "meeting_start_time": "11:00",
+      "course_name": "MUSIC 25",
+      "course_title": "Introduction to Music Theory",
+      "section_id": 50017
     }
   ]
 }

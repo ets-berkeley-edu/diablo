@@ -86,8 +86,13 @@
           <v-card-text>
             <div v-if="course.scheduled.hasObsoleteInstructors">
               <h5>Instructors</h5>
-              <div v-for="instructor in course.instructors" :key="instructor.uid">
-                <Instructor :course="course" :instructor="instructor" />
+              <div v-if="course.instructors.length">
+                <div v-for="instructor in course.instructors" :key="instructor.uid">
+                  <Instructor :course="course" :instructor="instructor" />
+                </div>
+              </div>
+              <div v-if="!course.instructors.length">
+                None
               </div>
             </div>
             <div
