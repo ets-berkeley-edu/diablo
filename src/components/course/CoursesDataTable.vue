@@ -91,8 +91,13 @@
                 <div :id="`course-${course.sectionId}-scheduling-status`">{{ course.schedulingStatus || '&mdash;' }}</div>
               </td>
               <td :class="tdc(course)">
-                <div v-for="instructor in course.instructors" :key="instructor.uid" class="mb-1 mt-1">
-                  <Instructor :course="course" :instructor="instructor" />
+                <div v-if="course.instructors.length">
+                  <div v-for="instructor in course.instructors" :key="instructor.uid" class="mb-1 mt-1">
+                    <Instructor :course="course" :instructor="instructor" />
+                  </div>
+                </div>
+                <div v-if="!course.instructors.length">
+                  &mdash;
                 </div>
               </td>
               <td :id="`course-${course.sectionId}-publish-types`" :class="tdc(course)">

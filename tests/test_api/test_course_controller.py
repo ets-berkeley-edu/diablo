@@ -52,9 +52,11 @@ section_4_id = 50004
 section_5_id = 50003
 section_6_id = 50005
 section_7_id = 50010
+section_8_id = 50017
 
 section_in_ineligible_room = section_2_id
 section_with_canvas_course_sites = section_6_id
+eligible_course_with_no_instructors = section_8_id
 
 
 @pytest.fixture()
@@ -370,6 +372,15 @@ class TestGetCourse:
         )
         assert len(api_json['crossListings']) == 0
 
+    def test_no_instructors(self, client, admin_session):
+        """Course with no instructors should be available."""
+        api_json = api_get_course(
+            client,
+            term_id=self.term_id,
+            section_id=eligible_course_with_no_instructors,
+        )
+        assert len(api_json['instructors']) == 0
+
     def test_dual_mode_instruction(self, client, admin_session):
         """Course is both online and in a physical location."""
         api_json = api_get_course(
@@ -545,6 +556,7 @@ class TestGetCourses:
             self._create_approval(section_4_id)
             std_commit(allow_test_environment=True)
             api_json = self._api_courses(client, term_id=self.term_id, filter_='Not Invited')
+            assert not _find_course(api_json=api_json, section_id=eligible_course_with_no_instructors)
             assert not _find_course(api_json=api_json, section_id=section_1_id)
             assert not _find_course(api_json=api_json, section_id=section_4_id)
             # Third course is in enabled room and has not received an invite. Therefore, it is in the feed.
@@ -691,7 +703,10 @@ class TestDownloadCoursesCsv:
                     assert snippet in sign_up_url
 
                 expected_uids = [instructor['uid'] for instructor in course['instructors']]
-                assert set(instructor_uids.split(', ')) == set(expected_uids)
+                if expected_uids:
+                    assert set(instructor_uids.split(', ')) == set(expected_uids)
+                else:
+                    assert instructor_uids == ''
                 for instructor in course['instructors']:
                     assert instructor['email'] in instructors
                     assert instructor['name'] in instructors

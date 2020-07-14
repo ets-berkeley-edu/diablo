@@ -44,10 +44,15 @@ def _load_mock_courses(json_file_path):
         instructors = json_['instructors']
         courses = []
         for c in json_['courses']:
-            c['instructor_name'] = instructors[c['instructor_uid']]
             for key, value in defaults.items():
                 if key not in c:
                     c[key] = value
+            uid = c['instructor_uid']
+            if uid:
+                c['instructor_name'] = instructors[uid]
+            else:
+                c['instructor_name'] = None
+                c['instructor_role_code'] = None
             courses.append(c)
         return courses
 
