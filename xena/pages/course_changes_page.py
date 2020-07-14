@@ -24,6 +24,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 
 from datetime import datetime
+import time
 
 from flask import current_app as app
 from selenium.webdriver.common.by import By
@@ -36,7 +37,6 @@ from xena.test_utils import util
 class CourseChangesPage(DiabloPages):
 
     NO_RESULTS_MSG = (By.XPATH, '//div[contains(text(), "No changes within scheduled courses.")]')
-    COURSE_INFO_HEADER = (By.XPATH, '//th[contains(@aria-label, "Course Information")]')
 
     @staticmethod
     def course_row_xpath(section):
@@ -63,24 +63,50 @@ class CourseChangesPage(DiabloPages):
         app.logger.info('Loading the course changes page')
         self.driver.get(f'{app.config["BASE_URL"]}/changes')
 
-    def course_schedule_info(self, section):
-        el = self.element((By.XPATH, f'{CourseChangesPage.course_row_xpath(section)}/td[1]'))
-        return el.get_attribute('innerText')
-
-    def course_room_info(self, section):
-        el = self.element((By.XPATH, f'{CourseChangesPage.course_row_xpath(section)}/td[2]'))
-        return el.get_attribute('innerText')
-
-    def course_instructor_info(self, section):
-        el = self.element((By.XPATH, f'{CourseChangesPage.course_row_xpath(section)}/td[3]'))
-        return el.get_attribute('innerText')
-
     def is_course_row_present(self, section):
-        return self.is_present((By.XPATH, CourseChangesPage.course_row_xpath(section)))
+        return self.is_present((By.XPATH, CourseChangesPage.course_container_xpath(section)))
 
     def wait_for_results(self):
-        Wait(self.driver, util.get_short_timeout()).until(ec.visibility_of_element_located(CourseChangesPage.COURSE_INFO_HEADER))
+        Wait(self.driver, util.get_short_timeout()).until(ec.visibility_of_element_located(CourseChangesPage.PAGE_HEADING))
 
     def wait_for_course_row(self, section):
-        loc = By.XPATH, CourseChangesPage.course_row_xpath(section)
+        loc = By.XPATH, CourseChangesPage.course_container_xpath(section)
         Wait(self.driver, util.get_short_timeout()).until(ec.visibility_of_element_located(loc))
+        time.sleep(1)
+
+    @staticmethod
+    def course_container_xpath(section):
+        return f'//div[contains(@class, "container") and contains(., "Section ID: {section.ccn}")]'
+
+    @staticmethod
+    def obsolete_card_xpath(section):
+        return f'({CourseChangesPage.course_container_xpath(section)}//div[contains(@class, "v-card")][contains(., "Scheduled")])[1]'
+
+    def obsolete_summary(self, section):
+        xpath = f'{CourseChangesPage.obsolete_card_xpath(section)}/div[@class="v-card__subtitle"]'
+        return self.element((By.XPATH, xpath)).text.strip()
+
+    def old_instructor_text(self, section):
+        xpath = f'{CourseChangesPage.obsolete_card_xpath(section)}//h5[text()="Obsolete Instructors"]/following-sibling::div'
+        return self.element((By.XPATH, xpath)).get_attribute('innerText')
+
+    def old_room_text(self, section):
+        xpath = f'{CourseChangesPage.obsolete_card_xpath(section)}//h5[text()="Meeting"]/following-sibling::div'
+        return self.element((By.XPATH, xpath)).get_attribute('innerText')
+
+    def old_schedule_text(self, section):
+        xpath = f'{CourseChangesPage.obsolete_card_xpath(section)}//h5[text()="Meeting"]/following-sibling::div[2]'
+        return self.element((By.XPATH, xpath)).get_attribute('innerText')
+
+    @staticmethod
+    def current_card_xpath(section):
+        return f'({CourseChangesPage.course_container_xpath(section)}//div[contains(@class, "v-card")][contains(., "Current")])[1]'
+
+    def new_instructor_text(self, section):
+        xpath = f'{CourseChangesPage.current_card_xpath(section)}//h5[text()="Instructors"]/following-sibling::div'
+        app.logger.info(xpath)
+        return self.element((By.XPATH, xpath)).get_attribute('innerText')
+
+    def new_meeting_text(self, section):
+        xpath = f'{CourseChangesPage.current_card_xpath(section)}//h5[text()="All Meetings"]/following-sibling::div'
+        return self.element((By.XPATH, xpath)).get_attribute('innerText')

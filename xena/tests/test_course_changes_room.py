@@ -107,11 +107,25 @@ class TestCourseRoomChanges:
     def test_run_queued_email_job_ineligible_room(self):
         self.jobs_page.run_queued_emails_job()
 
-    def test_changes_page_ineligible_room(self):
+    def test_changes_page_summary(self):
         self.jobs_page.click_course_changes_link()
         self.changes_page.wait_for_course_row(self.real_section)
-        expected = f'{self.real_meeting.room.name}\n changed to\n{self.fake_meeting.room.name}'
-        actual = self.changes_page.course_room_info(self.real_section)
+        expected = 'Room is obsolete.'
+        actual = self.changes_page.obsolete_summary(self.real_section)
+        app.logger.info(f'Expecting: {expected}')
+        app.logger.info(f'Actual: {actual}')
+        assert expected in actual
+
+    def test_changes_page_old_room(self):
+        expected = f'{self.real_meeting.room.name}'
+        actual = self.changes_page.old_room_text(self.real_section)
+        app.logger.info(f'Expecting: {expected}')
+        app.logger.info(f'Actual: {actual}')
+        assert expected in actual
+
+    def test_changes_page_new_room(self):
+        expected = f'{self.fake_meeting.room.name}'
+        actual = self.changes_page.new_meeting_text(self.real_section)
         app.logger.info(f'Expecting: {expected}')
         app.logger.info(f'Actual: {actual}')
         assert expected in actual

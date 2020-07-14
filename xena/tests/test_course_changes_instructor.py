@@ -111,15 +111,27 @@ class TestCourseInstructorChanges:
     def test_run_queued_email_job_with_instr_change(self):
         self.jobs_page.run_queued_emails_job()
 
-    def test_changes_page_with_instr_change(self):
+    def test_changes_page_summary(self):
         self.jobs_page.click_course_changes_link()
         self.changes_page.wait_for_course_row(self.real_section)
+        expected = 'Instructors are obsolete.'
+        actual = self.changes_page.obsolete_summary(self.real_section)
+        app.logger.info(f'Expecting: {expected}')
+        app.logger.info(f'Actual: {actual}')
+        assert expected in actual
+
+    def test_changes_page_old_instructor(self):
         fake_instr_name = f'{self.fake_section.instructors[0].first_name} {self.fake_section.instructors[0].last_name}'
-        fake_instr_text = f'{fake_instr_name} ({self.fake_section.instructors[0].uid})'
+        expected = f'{fake_instr_name} ({self.fake_section.instructors[0].uid})'
+        actual = self.changes_page.old_instructor_text(self.real_section)
+        app.logger.info(f'Expecting: {expected}')
+        app.logger.info(f'Actual: {actual}')
+        assert expected in actual
+
+    def test_changes_page_new_instructor(self):
         real_instr_name = f'{self.real_section.instructors[0].first_name} {self.real_section.instructors[0].last_name}'
-        real_instr_text = f'{real_instr_name} ({self.real_section.instructors[0].uid})'
-        expected = f'{fake_instr_text}\n changed to\n {real_instr_text}'
-        actual = self.changes_page.course_instructor_info(self.real_section)
+        expected = f'{real_instr_name} ({self.real_section.instructors[0].uid})'
+        actual = self.changes_page.new_instructor_text(self.real_section)
         app.logger.info(f'Expecting: {expected}')
         app.logger.info(f'Actual: {actual}')
         assert expected in actual

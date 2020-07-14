@@ -39,7 +39,6 @@ from xena.test_utils import util
 
 @pytest.mark.usefixtures('page_objects')
 class TestCourseScheduleChanges:
-
     real_test_data = util.get_test_script_course('test_course_changes_real')
     fake_test_data = util.get_test_script_course('test_course_changes_fake')
     real_section = Section(real_test_data)
@@ -121,15 +120,38 @@ class TestCourseScheduleChanges:
     def test_run_queued_email_job_with_new_times(self):
         self.jobs_page.run_queued_emails_job()
 
-    def test_changes_page_with_new_times(self):
+    def test_changes_page_summary(self):
         self.jobs_page.click_course_changes_link()
         self.changes_page.wait_for_course_row(self.real_section)
-        fake_sched = f'{self.fake_meeting.days.replace(" ", "")} {CourseChangesPage.meeting_time_str(self.fake_meeting)}'
-        real_sched = f'{self.real_meeting.days.replace(" ", "")} {CourseChangesPage.meeting_time_str(self.real_meeting)}'
-        expected = f'{real_sched}\n changed to\n{fake_sched}'.upper()
-        actual = self.changes_page.course_schedule_info(self.real_section).upper()
-        app.logger.info(f'Expecting {expected}')
-        app.logger.info(f'Actual {actual}')
+        expected = 'Times are obsolete.'
+        actual = self.changes_page.obsolete_summary(self.real_section)
+        app.logger.info(f'Expecting: {expected}')
+        app.logger.info(f'Actual: {actual}')
+        assert expected in actual
+
+    def test_changes_page_old_room(self):
+        expected = self.real_meeting.room.name
+        actual = self.changes_page.old_room_text(self.real_section)
+        app.logger.info(f'Expecting: {expected}')
+        app.logger.info(f'Actual: {actual}')
+        assert expected in actual
+
+    def test_changes_page_old_times(self):
+        old_dates = f'{self.real_meeting.start_date.strftime("%Y-%m-%d")} to {self.real_meeting.end_date.strftime("%Y-%m-%d")}'
+        old_times = CourseChangesPage.meeting_time_str(self.real_meeting)
+        expected = f'{old_dates}\n{self.real_meeting.days.replace(",", "")}, {old_times}'.upper()
+        actual = self.changes_page.old_schedule_text(self.real_section).upper()
+        app.logger.info(f'Expecting: {expected}')
+        app.logger.info(f'Actual: {actual}')
+        assert expected in actual
+
+    def test_changes_page_new_times(self):
+        new_dates = f'{self.real_meeting.start_date.strftime("%Y-%m-%d")} to {self.real_meeting.end_date.strftime("%Y-%m-%d")}'
+        new_times = CourseChangesPage.meeting_time_str(self.fake_meeting)
+        expected = f'{self.real_meeting.room.name}\n{new_dates}\n{self.real_meeting.days.replace(",", "")}, {new_times}'.upper()
+        actual = self.changes_page.new_meeting_text(self.real_section).upper()
+        app.logger.info(f'Expecting: {expected}')
+        app.logger.info(f'Actual: {actual}')
         assert expected in actual
 
     def test_admin_email_received(self):
