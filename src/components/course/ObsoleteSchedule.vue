@@ -104,7 +104,10 @@
                 <CourseRoom :course="course" :room="meeting.room" />
                 <div v-if="!isRoomObsolete && (course.scheduled.hasObsoleteDates || course.scheduled.hasObsoleteTimes)" class="pb-2">
                   <div class="d-flex">
-                    <div>
+                    <div v-if="meeting.eligible">
+                      {{ meeting.recordingStartDate }} to {{ meeting.recordingEndDate }}
+                    </div>
+                    <div v-if="!meeting.eligible">
                       {{ meeting.startDate }} to {{ meeting.endDate }}
                     </div>
                   </div>

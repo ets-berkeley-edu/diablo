@@ -29,7 +29,8 @@ from diablo.jobs.admin_emails_job import AdminEmailsJob
 from diablo.jobs.canvas_job import CanvasJob
 from diablo.jobs.doomed_to_failure import DoomedToFailure
 from diablo.jobs.queued_emails_job import QueuedEmailsJob
-from diablo.lib.berkeley import get_recording_end_date, get_recording_start_date, is_schedule_obsolete
+from diablo.lib.berkeley import are_scheduled_dates_obsolete, are_scheduled_times_obsolete, get_recording_end_date, \
+    get_recording_start_date
 from diablo.models.approval import Approval
 from diablo.models.job import Job
 from diablo.models.queued_email import QueuedEmail
@@ -66,7 +67,9 @@ class TestAdminEmailsJob:
                                 term_id=term_id,
                             )
                             course = SisSection.get_course(section_id=section_id, term_id=term_id)
-                            assert is_schedule_obsolete(meeting=meeting, scheduled=course['scheduled'])
+                            scheduled = course['scheduled']
+                            assert are_scheduled_dates_obsolete(meeting=meeting, scheduled=scheduled) is False
+                            assert are_scheduled_times_obsolete(meeting=meeting, scheduled=scheduled) is True
 
                         def _assert_alert_count(count):
                             emails_sent = SentEmail.get_emails_sent_to(uid=admin_uid)

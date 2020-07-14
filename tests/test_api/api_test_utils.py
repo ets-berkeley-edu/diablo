@@ -81,6 +81,7 @@ def mock_scheduled(
         section_id,
         term_id,
         meeting=None,
+        override_days=None,
         override_end_date=None,
         override_end_time=None,
         override_room_id=None,
@@ -93,7 +94,7 @@ def mock_scheduled(
     Scheduled.create(
         instructor_uids=get_instructor_uids(term_id=term_id, section_id=section_id),
         kaltura_schedule_id=random.randint(1, 10),
-        meeting_days=meeting['days'],
+        meeting_days=override_days or meeting['days'],
         meeting_end_date=override_end_date or get_recording_end_date(meeting),
         meeting_end_time=override_end_time or meeting['endTime'],
         meeting_start_date=override_start_date or get_recording_start_date(meeting, return_today_if_past_start=True),

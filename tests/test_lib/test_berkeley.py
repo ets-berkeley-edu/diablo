@@ -24,8 +24,9 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 from datetime import datetime, timedelta
 
-from diablo.lib.berkeley import DAYS, get_first_matching_datetime_of_term, get_recording_end_date, \
-    get_recording_start_date, is_schedule_obsolete
+from diablo.lib.berkeley import are_scheduled_dates_obsolete, are_scheduled_times_obsolete, \
+    get_first_matching_datetime_of_term, get_recording_end_date, get_recording_start_date
+from diablo.lib.util import format_days
 from diablo.models.sis_section import SisSection
 from flask import current_app as app
 import pytz
@@ -88,7 +89,7 @@ class TestRecordingDates:
         first_meeting = today - timedelta(days=3)
         with override_config(app, 'CURRENT_TERM_RECORDINGS_BEGIN', datetime.strftime(recordings_begin_date, df)):
             meeting = {
-                'days': ''.join(DAYS),
+                'days': 'TUTH',
                 'startDate': f'{datetime.strftime(first_meeting, df)} 00:00:00 UTC',
             }
             start_date = get_recording_start_date(meeting, return_today_if_past_start=True)
@@ -106,64 +107,94 @@ class TestObsoleteScheduledDates:
         return app.config['CURRENT_TERM_ID']
 
     def test_scheduled_before_the_meeting_start(self):
-        meeting = {
-            'days': ''.join(DAYS),
-            'endDate': '2525-12-11',
-            'endTime': '10:59',
-            'startDate': '2525-08-25',
-            'startTime': '10:00',
-        }
-        self._assert_schedule_is_obsolete(expected_result=False, meeting=meeting)
+        self._assert_schedule_is_obsolete(
+            expect_obsolete_dates=False,
+            expect_obsolete_times=False,
+            meeting=_create_meeting(
+                days='TUTH',
+                end_date='2525-12-11',
+                end_time='10:59',
+                start_date='2525-08-25',
+                start_time='10:00',
+            ),
+        )
 
     def test_scheduled_after_the_meeting_start(self):
-        meeting = {
-            'days': ''.join(DAYS),
-            'endDate': _format(datetime.now() + timedelta(days=100)),
-            'endTime': '10:59',
-            'startDate': _format(datetime.now() - timedelta(days=100)),
-            'startTime': '10:00',
-        }
-        self._assert_schedule_is_obsolete(expected_result=False, meeting=meeting)
+        self._assert_schedule_is_obsolete(
+            expect_obsolete_dates=False,
+            expect_obsolete_times=False,
+            meeting=_create_meeting(
+                days='MO',
+                end_date=_format(datetime.now() + timedelta(days=100)),
+                end_time='10:59',
+                start_date=_format(datetime.now() - timedelta(days=100)),
+                start_time='10:00',
+            ),
+        )
 
     def test_scheduled_obsolete_start_date(self):
-        meeting = {
-            'days': ''.join(DAYS),
-            'endDate': '2525-12-11',
-            'endTime': '10:59',
-            'startDate': '2525-08-25',
-            'startTime': '10:00',
-        }
-        self._assert_schedule_is_obsolete(expected_result=True, meeting=meeting, override_start_date='2525-08-01')
+        self._assert_schedule_is_obsolete(
+            expect_obsolete_dates=True,
+            expect_obsolete_times=False,
+            meeting=_create_meeting(
+                days='MOWE',
+                end_date='2525-12-11',
+                end_time='10:59',
+                start_date='2525-08-25',
+                start_time='10:00',
+            ),
+            override_start_date='2525-08-01',
+        )
 
     def test_scheduled_obsolete_end_date(self):
-        meeting = {
-            'days': ''.join(DAYS),
-            'endDate': '2525-12-11',
-            'endTime': '10:59',
-            'startDate': '2525-08-25',
-            'startTime': '10:00',
-        }
-        self._assert_schedule_is_obsolete(expected_result=True, meeting=meeting, override_end_date='2525-12-01')
+        self._assert_schedule_is_obsolete(
+            expect_obsolete_dates=True,
+            expect_obsolete_times=False,
+            meeting=_create_meeting(
+                days='TH',
+                end_date='2525-12-11',
+                end_time='10:59',
+                start_date='2525-08-25',
+                start_time='10:00',
+            ),
+            override_end_date='2525-12-01',
+        )
+
+    def test_scheduled_obsolete_days(self):
+        self._assert_schedule_is_obsolete(
+            expect_obsolete_dates=False,
+            expect_obsolete_times=True,
+            meeting=_create_meeting(
+                days='MOWE',
+                end_date='2525-12-11',
+                end_time='10:59',
+                start_date='2525-08-25',
+                start_time='10:00',
+            ),
+            override_days='MOWEFR',
+        )
 
     def test_scheduled_obsolete_times(self):
-        meeting = {
-            'days': ''.join(DAYS),
-            'endDate': '2525-12-11',
-            'endTime': '10:59',
-            'startDate': '2525-08-25',
-            'startTime': '10:00',
-        }
         self._assert_schedule_is_obsolete(
-            expected_result=True,
-            meeting=meeting,
+            expect_obsolete_dates=False,
+            expect_obsolete_times=True,
+            meeting=_create_meeting(
+                days='MOWE',
+                end_date='2525-12-11',
+                end_time='10:59',
+                start_date='2525-08-25',
+                start_time='10:00',
+            ),
             override_end_time='14:00',
             override_start_time='14:59',
         )
 
     def _assert_schedule_is_obsolete(
             self,
-            expected_result,
+            expect_obsolete_dates,
+            expect_obsolete_times,
             meeting,
+            override_days=None,
             override_end_date=None,
             override_end_time=None,
             override_start_date=None,
@@ -174,6 +205,7 @@ class TestObsoleteScheduledDates:
                 with override_config(app, 'CURRENT_TERM_RECORDINGS_END', meeting['endDate']):
                     mock_scheduled(
                         meeting=meeting,
+                        override_days=override_days,
                         override_end_date=override_end_date,
                         override_end_time=override_end_time,
                         override_start_date=override_start_date,
@@ -182,7 +214,9 @@ class TestObsoleteScheduledDates:
                         term_id=self.term_id,
                     )
                     course = SisSection.get_course(section_id=self.section_id, term_id=self.term_id)
-                    assert is_schedule_obsolete(meeting=meeting, scheduled=course['scheduled']) is expected_result
+                    scheduled = course['scheduled']
+                    assert are_scheduled_dates_obsolete(meeting=meeting, scheduled=scheduled) is expect_obsolete_dates
+                    assert are_scheduled_times_obsolete(meeting=meeting, scheduled=scheduled) is expect_obsolete_times
 
 
 class TestFirstDayRecording:
@@ -242,6 +276,17 @@ class TestFirstDayRecording:
                 time_minutes=37,
             )
             assert first_day_start.timestamp() == 1598546220.0
+
+
+def _create_meeting(days, end_date, end_time, start_date, start_time):
+    return {
+        'days': days,
+        'daysFormatted': format_days(days),
+        'endDate': end_date,
+        'endTime': end_time,
+        'startDate': start_date,
+        'startTime': start_time,
+    }
 
 
 def _get_wednesday_august_26():
