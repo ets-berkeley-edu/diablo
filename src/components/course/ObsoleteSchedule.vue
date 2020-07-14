@@ -24,10 +24,24 @@
             {{ summary }}
           </v-card-subtitle>
           <v-card-text>
-            <div v-if="course.scheduled.hasObsoleteInstructors">
+            <div v-if="instructorsNew.length">
+              <h5>Joined course <i>after</i> recordings were scheduled</h5>
+              <div v-for="instructor in instructorsNew" :key="instructor.uid">
+                <Instructor
+                  :id="`course-${course.sectionId}-instructor-${instructor.uid}-new`"
+                  :course="course"
+                  :instructor="instructor"
+                />
+              </div>
+            </div>
+            <div v-if="instructorsObsolete.length" :class="{'pt-2': instructorsNew.length}">
               <h5>Obsolete Instructors</h5>
-              <div v-for="instructor in course.scheduled.instructors" :key="instructor.uid">
-                <Instructor :course="course" :instructor="instructor" />
+              <div v-for="instructor in instructorsObsolete" :key="instructor.uid">
+                <Instructor
+                  :id="`course-${course.sectionId}-instructor-${instructor.uid}-obsolete`"
+                  :course="course"
+                  :instructor="instructor"
+                />
               </div>
             </div>
             <div
@@ -100,7 +114,7 @@
               :class="{'pt-2': course.scheduled.hasObsoleteInstructors}"
             >
               <h5>All Meetings</h5>
-              <div v-for="meeting in meetings" :key="meeting.location">
+              <div v-for="(meeting, index) in meetings" :key="index">
                 <CourseRoom :course="course" :room="meeting.room" />
                 <div v-if="!isRoomObsolete && (course.scheduled.hasObsoleteDates || course.scheduled.hasObsoleteTimes)" class="pb-2">
                   <div class="d-flex">
@@ -131,6 +145,7 @@
   import CourseRoom from '@/components/course/CourseRoom'
   import Instructor from '@/components/course/Instructor'
   import Utils from '@/mixins/Utils'
+  import {getCalnetUser} from '@/api/user'
   import {getLastSuccessfulRun} from '@/api/job'
 
   export default {
@@ -144,8 +159,10 @@
       }
     },
     data: () => ({
-      meetings: undefined,
+      instructorsNew: [],
+      instructorsObsolete: [],
       isRoomObsolete: undefined,
+      meetings: undefined,
       sisDataImportDate: undefined,
       summary: undefined
     }),
@@ -168,6 +185,31 @@
       getLastSuccessfulRun('sis_data_refresh').then(data => {
         this.sisDataImportDate = data
       })
+      if (this.course.scheduled.hasObsoleteInstructors) {
+        const courseUids = this.$_.map(this.course.instructors, 'uid')
+        const scheduledUids = this.course.scheduled.instructorUids
+        this.addUsers(this.instructorsNew, courseUids.filter(uid => !scheduledUids.includes(uid)))
+        this.addUsers(this.instructorsObsolete, scheduledUids.filter(uid => !courseUids.includes(uid)))
+      }
+    },
+    methods: {
+      addUsers(list, uids) {
+        this.$_.each(uids, uid => {
+          this.fetchUser(uid).then(user => list.push(user))
+        })
+      },
+      fetchUser(uid) {
+        return new Promise(resolve => {
+          this.$_.each(this.course.instructors, instructor => {
+            if (instructor.uid === uid) {
+              resolve(instructor)
+            }
+          })
+          getCalnetUser(uid).then(user => {
+            resolve(user)
+          })
+        })
+      }
     }
   }
 </script>

@@ -52,6 +52,12 @@ def get_user(uid):
         return tolerant_jsonify(user)
 
 
+@app.route('/api/user/<uid>/calnet')
+@admin_required
+def get_calnet_user(uid):
+    return tolerant_jsonify(get_calnet_user_for_uid(app=app, uid=uid))
+
+
 @app.route('/api/users/admins')
 @admin_required
 def admin_users():
