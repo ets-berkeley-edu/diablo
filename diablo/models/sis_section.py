@@ -25,7 +25,8 @@ ENHANCEMENTS, OR MODIFICATIONS.
 from datetime import datetime
 
 from diablo import db
-from diablo.lib.berkeley import get_recording_end_date, get_recording_start_date, is_schedule_obsolete
+from diablo.lib.berkeley import are_scheduled_dates_obsolete, are_scheduled_times_obsolete, get_recording_end_date, \
+    get_recording_start_date
 from diablo.lib.util import format_days, format_time
 from diablo.models.approval import Approval
 from diablo.models.canvas_course_site import CanvasCourseSite
@@ -791,33 +792,15 @@ def _decorate_course_scheduling(course):
 def _decorate_course_changes(course):
     meetings = course['meetings']['eligible'] + course['meetings']['ineligible']
     meeting = meetings[0] if meetings else None
-    if meeting:
-        course_meeting_time = '-'.join(
-            [
-                str(meeting['daysFormatted']),
-                str(meeting['startTime']),
-                str(meeting['endTime']),
-            ],
-        )
-        room_id = meeting.get('room', {}).get('id')
-    else:
-        course_meeting_time = '-'
-        room_id = None
+    room_id = meeting.get('room', {}).get('id') if meeting else None
 
     scheduled = course['scheduled']
     if scheduled:
-        scheduled_meeting_time = '-'.join(
-            [
-                str(scheduled['meetingDays']),
-                scheduled['meetingStartTime'],
-                scheduled['meetingEndTime'],
-            ],
-        )
         instructor_uids = [i['uid'] for i in course['instructors']]
         scheduled.update({
             'hasObsoleteInstructors': set(instructor_uids) != set(scheduled.get('instructorUids')),
-            'hasObsoleteDates': is_schedule_obsolete(meeting=meeting, scheduled=scheduled),
-            'hasObsoleteTimes': course_meeting_time != scheduled_meeting_time,
+            'hasObsoleteDates': are_scheduled_dates_obsolete(meeting=meeting, scheduled=scheduled),
+            'hasObsoleteTimes': are_scheduled_times_obsolete(meeting=meeting, scheduled=scheduled),
             'hasObsoleteRoom': room_id != scheduled.get('room', {}).get('id'),
         })
 
