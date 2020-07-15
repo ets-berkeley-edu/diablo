@@ -12,6 +12,7 @@
           NOTE: You cannot edit a job schedule if the job is either enabled or running.
         </div>
         <v-data-table
+          disable-sort
           :headers="headers"
           hide-default-footer
           :items="jobSchedule.jobs"
@@ -142,11 +143,11 @@
       editJob: undefined,
       editJobDialog: false,
       headers: [
-        {sortable: false},
-        {text: 'Name', value: 'name', sortable: false},
-        {text: 'Description', value: 'description', sortable: false},
-        {text: 'Schedule', value: 'schedule', sortable: false},
-        {text: 'Enabled', sortable: false}
+        {},
+        {text: 'Name', value: 'name'},
+        {text: 'Description', value: 'description'},
+        {text: 'Schedule', value: 'schedule'},
+        {text: 'Enabled'}
       ],
       jobHistory: undefined,
       jobSchedule: undefined,
