@@ -64,7 +64,7 @@
                     </div>
                     <div>
                       <span v-if="job.schedule.type === 'day_at'" :for="`edit-job-schedule-${job.key}`">
-                        Daily at {{ job.schedule.value }}
+                        Daily at {{ job.schedule.value }} (UTC)
                       </span>
                       <span v-if="job.schedule.type !== 'day_at'" :for="`edit-job-schedule-${job.key}`">
                         Every {{ job.schedule.value }} {{ job.schedule.type }}
@@ -103,7 +103,7 @@
                 <v-text-field
                   v-model="editJob.schedule.value"
                   required
-                  :suffix="editJob.schedule.type === 'day_at' ? 'PST' : ''"
+                  :suffix="editJob.schedule.type === 'day_at' ? 'UTC' : ''"
                   :type="editJob.schedule.type === 'day_at' ? 'time' : 'number'"
                 ></v-text-field>
               </v-col>
