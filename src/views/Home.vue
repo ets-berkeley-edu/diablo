@@ -5,6 +5,7 @@
     </div>
     <v-data-table
       disable-pagination
+      disable-sort
       :headers="headers"
       :hide-default-footer="true"
       :items="courses"
@@ -28,7 +29,7 @@
                 </div>
               </td>
               <td :class="{'border-bottom-zero': course.meetings.eligible.length > 1}">
-                {{ course.title || '&mdash;' }}
+                {{ course.courseTitle || '&mdash;' }}
               </td>
               <td :class="{'border-bottom-zero': course.meetings.eligible.length > 1}">
                 {{ oxfordJoin($_.map(course.instructors, 'name')) }}
@@ -93,10 +94,10 @@
       headers: [
         {text: 'Course', value: 'label'},
         {text: 'Title', value: 'title'},
-        {text: 'Instructors', value: 'instructors', sortable: false},
-        {text: 'Room', value: 'room', sortable: false},
-        {text: 'Days', value: 'days', sortable: false},
-        {text: 'Time', value: 'time', sortable: false}
+        {text: 'Instructors', value: 'instructors'},
+        {text: 'Room', value: 'room'},
+        {text: 'Days', value: 'days'},
+        {text: 'Time', value: 'time'}
       ],
       pageTitle: undefined
     }),

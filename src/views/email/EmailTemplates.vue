@@ -29,6 +29,7 @@
       <v-card-text>
         <v-data-table
           disable-pagination
+          disable-sort
           :headers="headers"
           hide-default-footer
           :items="emailTemplates"
@@ -96,8 +97,8 @@
         {text: 'Subject Line', value: 'subjectLine'},
         {text: 'Type', value: 'typeName'},
         {text: 'Created', value: 'createdAt'},
-        {text: 'Test', sortable: false, class: 'pl-5 pr-0 mr-0'},
-        {text: 'Delete', sortable: false, class: 'pl-5 pr-0 mr-0'}
+        {text: 'Test', class: 'pl-5 pr-0 mr-0'},
+        {text: 'Delete', class: 'pl-5 pr-0 mr-0'}
       ],
       emailTemplates: undefined,
       emailTemplateTypes: undefined,

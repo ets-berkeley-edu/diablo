@@ -3,6 +3,7 @@
     id="kaltura-event-list"
     class="elevation-1 mt-3"
     disable-pagination
+    disable-sort
     :headers="headers"
     hide-default-footer
     item-key="id"
@@ -140,12 +141,12 @@
     },
     data: () => ({
       headers: [
-          { text: 'Id', value: 'id' },
-          { text: 'Summary', value: 'summary', sortable: false, class: 'w-30' },
-          { text: 'Start', value: 'startDate', sortable: false },
-          { text: 'End', value: 'endDate', sortable: false },
-          { text: 'Duration', value: 'duration', sortable: false },
-          { text: 'Days', value: 'days', sortable: false }
+        {text: 'Id', value: 'id'},
+        {text: 'Summary', value: 'summary', class: 'w-30'},
+        {text: 'Start', value: 'startDate'},
+        {text: 'End', value: 'endDate'},
+        {text: 'Duration', value: 'duration'},
+        {text: 'Days', value: 'days'}
       ]
     }),
   }
