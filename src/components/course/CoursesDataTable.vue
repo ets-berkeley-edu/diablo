@@ -6,11 +6,13 @@
     <v-data-table
       id="courses-data-table"
       v-model="selectedRows"
+      :disable-sort="courses.length < 2"
       :headers="headers"
       hide-default-footer
       item-key="sectionId"
       :items="courses"
       :loading="refreshing"
+      :must-sort="true"
       :options="{
         itemsPerPage: $config.searchItemsPerPage
       }"
@@ -51,25 +53,25 @@
               </td>
               <td :id="`section-id-${course.sectionId}`" :class="tdc(course)">{{ course.sectionId }}</td>
               <td v-if="includeRoomColumn" :class="tdc(course)">
-                <div v-if="meetings(course).length && meetings(course)[0].room">
+                <div v-if="course.room">
                   <router-link
-                    :id="`course-${course.sectionId}-room-${meetings(course)[0].room.id}`"
-                    :to="`/room/${meetings(course)[0].room.id}`"
+                    :id="`course-${course.sectionId}-room-${course.room.id}`"
+                    :to="`/room/${course.room.id}`"
                   >
-                    {{ meetings(course)[0].room.location }}
+                    {{ course.room.location }}
                   </router-link>
                 </div>
-                <span v-if="!meetings(course).length || !meetings(course)[0].room">&mdash;</span>
+                <span v-if="!course.room">&mdash;</span>
               </td>
               <td :id="`meeting-days-${course.sectionId}-0`" :class="tdc(course)">
-                {{ $_.join(meetings(course)[0].daysFormatted, ', ') || '&mdash;' }}
+                {{ $_.join(meetings[0].daysFormatted, ', ') || '&mdash;' }}
               </td>
               <td :id="`meeting-times-${course.sectionId}-0`" :class="tdc(course)">
                 <div v-if="course.nonstandardMeetingDates">
-                  <span class="text-no-wrap">{{ meetings(course)[0].startDate | moment('MMM D, YYYY') }} - </span>
-                  <span class="text-no-wrap">{{ meetings(course)[0].endDate | moment('MMM D, YYYY') }}</span>
+                  <span class="text-no-wrap">{{ meetings[0].startDate | moment('MMM D, YYYY') }} - </span>
+                  <span class="text-no-wrap">{{ meetings[0].endDate | moment('MMM D, YYYY') }}</span>
                 </div>
-                <span class="text-no-wrap">{{ meetings(course)[0].startTimeFormatted }} - {{ meetings(course)[0].endTimeFormatted }}</span>
+                <span class="text-no-wrap">{{ meetings[0].startTimeFormatted }} - {{ meetings[0].endTimeFormatted }}</span>
               </td>
               <td :id="`course-${course.sectionId}-status`" :class="tdc(course)">
                 <v-tooltip v-if="course.wasApprovedByAdmin" :id="`tooltip-admin-approval-${course.sectionId}`" bottom>
@@ -112,28 +114,28 @@
                 />
               </td>
             </tr>
-            <tr v-for="index in meetings(course).length - 1" :key="`${course.sectionId}-${index}`">
+            <tr v-for="index in meetings.length - 1" :key="`${course.sectionId}-${index}`">
               <td colspan="2" :class="mdc(course)"></td>
               <td v-if="includeRoomColumn" :class="mdc(course)">
                 <router-link
-                  v-if="meetings(course)[index].room"
-                  :id="`course-${course.sectionId}-room-${meetings(course)[index].room.id}`"
-                  :to="`/room/${meetings(course)[index].room.id}`"
+                  v-if="meetings[index].room"
+                  :id="`course-${course.sectionId}-room-${meetings[index].room.id}`"
+                  :to="`/room/${meetings[index].room.id}`"
                 >
-                  {{ meetings(course)[index].room.location }}
+                  {{ meetings[index].room.location }}
                 </router-link>
-                <span v-if="!meetings(course)[index].room">&mdash;</span>
+                <span v-if="!meetings[index].room">&mdash;</span>
               </td>
               <td class="text-no-wrap" :class="mdc(course)">
-                {{ $_.join(meetings(course)[index].daysFormatted, ', ') || '&mdash;' }}
+                {{ $_.join(meetings[index].daysFormatted, ', ') || '&mdash;' }}
               </td>
               <td class="text-no-wrap" :class="mdc(course)">
                 <div v-if="course.nonstandardMeetingDates">
-                  <span class="text-no-wrap">{{ meetings(course)[index].startDate | moment('MMM D, YYYY') }} - </span>
-                  <span class="text-no-wrap">{{ meetings(course)[index].endDate | moment('MMM D, YYYY') }}</span>
+                  <span class="text-no-wrap">{{ meetings[index].startDate | moment('MMM D, YYYY') }} - </span>
+                  <span class="text-no-wrap">{{ meetings[index].endDate | moment('MMM D, YYYY') }}</span>
                 </div>
-                <div :class="{'pb-2': course.nonstandardMeetingDates && index === meetings(course).length - 1}">
-                  {{ meetings(course)[index].startTimeFormatted }} - {{ meetings(course)[index].endTimeFormatted }}
+                <div :class="{'pb-2': course.nonstandardMeetingDates && index === meetings.length - 1}">
+                  {{ meetings[index].startTimeFormatted }} - {{ meetings[index].endTimeFormatted }}
                 </div>
               </td>
               <td colspan="4" :class="mdc(course)"></td>
@@ -220,37 +222,41 @@
         {text: 'Days', sortable: false},
         {text: 'Time', sortable: false},
         {text: 'Status', class: 'w-10', sortable: false},
-        {text: 'Instructor(s)', value: 'instructorNames'},
+        {text: 'Instructor(s)', value: 'instructorNames', sortable: false},
         {text: 'Publish', value: 'publishTypeNames', class: 'w-10'},
         {text: 'Opt out', value: 'hasOptedOut', sortable: false}
       ],
+      meetings: undefined,
       pageCount: undefined,
       pageCurrent: 1,
       selectedRows: [],
       selectedFilter: 'Not Invited'
     }),
     watch: {
-      refreshing(isRefreshing) {
-        if (isRefreshing) {
-          this.pageCurrent = 1
+      refreshing(value) {
+        if (!value) {
+          // False value means that the refresh just ended in the parent component and we can proceed.
+          this.refresh()
         }
       }
     },
-    mounted() {
-      this.headers = this.includeRoomColumn ? this.headers : this.$_.filter(this.headers, h => h.text !== 'Room')
-      this.$_.each(this.courses, course => {
-        // In support of search, we index nested course data
-        course.instructorNames = this.$_.map(course.instructors, 'name')
-        course.publishTypeNames = course.approvals.length ? this.$_.last(course.approvals).publishTypeName : null
-        course.isSelectable = !course.hasOptedOut
-      })
+    created() {
+      this.refresh()
     },
     methods: {
       mdc(course) {
         return {'border-bottom-zero': course.approvals.length}
       },
-      meetings(course) {
-        return this.getDisplayMeetings(course)
+      refresh() {
+        this.pageCurrent = 1
+        this.headers = this.includeRoomColumn ? this.headers : this.$_.filter(this.headers, h => h.text !== 'Room')
+        this.$_.each(this.courses, course => {
+          course.instructorNames = this.$_.map(course.instructors, 'name')
+          course.isSelectable = !course.hasOptedOut
+          course.publishTypeNames = course.approvals.length ? this.$_.last(course.approvals).publishTypeName : null
+          this.meetings = this.getDisplayMeetings(course)
+          course.room = this.meetings.length && this.meetings[0].room ? this.meetings[0].room : null
+        })
       },
       tdc(course) {
         return {

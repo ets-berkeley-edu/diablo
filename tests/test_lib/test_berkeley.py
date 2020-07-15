@@ -24,7 +24,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 from datetime import datetime, timedelta
 
-from diablo.lib.berkeley import are_scheduled_dates_obsolete, are_scheduled_times_obsolete, \
+from diablo.lib.berkeley import are_scheduled_dates_obsolete, are_scheduled_times_obsolete, DAYS, \
     get_first_matching_datetime_of_term, get_recording_end_date, get_recording_start_date
 from diablo.lib.util import format_days
 from diablo.models.sis_section import SisSection
@@ -89,7 +89,7 @@ class TestRecordingDates:
         first_meeting = today - timedelta(days=3)
         with override_config(app, 'CURRENT_TERM_RECORDINGS_BEGIN', datetime.strftime(recordings_begin_date, df)):
             meeting = {
-                'days': 'TUTH',
+                'days': ''.join(DAYS),
                 'startDate': f'{datetime.strftime(first_meeting, df)} 00:00:00 UTC',
             }
             start_date = get_recording_start_date(meeting, return_today_if_past_start=True)
