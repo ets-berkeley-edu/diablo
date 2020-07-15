@@ -84,6 +84,7 @@ def app_config():
 def app_version():
     v = {
         'version': version,
+        'devil': ' Ψ(•̀ᴗ•́)و ',
     }
     build_stats = load_json('config/build-summary.json')
     if build_stats:
