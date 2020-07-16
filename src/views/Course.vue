@@ -2,7 +2,16 @@
   <div v-if="!loading">
     <v-container fluid>
       <v-row class="pl-3">
-        <h1>{{ courseDisplayTitle }}<span v-if="$config.currentTermId !== course.termId"> ({{ getTermName(course.termId) }})</span></h1>
+        <PageTitle
+          v-if="$config.currentTermId === this.course.termId"
+          icon="mdi-swap-horizontal"
+          :text="courseDisplayTitle"
+        />
+        <PageTitle
+          v-if="$config.currentTermId !== this.course.termId"
+          icon="mdi-swap-horizontal"
+          :text="`${courseDisplayTitle} (${getTermName(course.termId)})`"
+        />
       </v-row>
       <v-row class="pl-3">
         Section ID: <span id="section-id">{{ course.sectionId }}</span>
@@ -216,6 +225,7 @@
   import Context from '@/mixins/Context'
   import CourseCaptureExplained from '@/components/util/CourseCaptureExplained'
   import CoursePageSidebar from '@/components/course/CoursePageSidebar'
+  import PageTitle from '@/components/util/PageTitle'
   import ScheduledCourse from '@/components/course/ScheduledCourse'
   import TermsAgreementText from '@/components/util/TermsAgreementText'
   import Utils from '@/mixins/Utils'
@@ -224,8 +234,8 @@
 
   export default {
     name: 'Course',
-    components: {CourseCaptureExplained, CoursePageSidebar, ScheduledCourse, TermsAgreementText},
     mixins: [Context, Utils],
+    components: {CourseCaptureExplained, CoursePageSidebar, PageTitle, ScheduledCourse, TermsAgreementText},
     data: () => ({
       agreedToTerms: false,
       approvalNeededNames: undefined,

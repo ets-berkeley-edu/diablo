@@ -1,51 +1,57 @@
 <template>
   <div v-if="!loading">
-    <h1><v-icon class="pb-2" large>mdi-domain</v-icon> {{ room.location }}</h1>
-    <div v-if="room.kalturaResourceId" class="pa-3 subtitle-1">
-      Kaltura resource ID: {{ room.kalturaResourceId }}
-      <span v-if="kalturaEventList">
-        (<a id="skip-to-kaltura-event-list" @keypress="scrollToKalturaEvents" @click="scrollToKalturaEvents">Scroll to Kaltura events</a>)
-      </span>
-    </div>
     <v-card outlined class="elevation-1">
-      <v-list-item three-line class="ma-2">
-        <v-list-item-content>
-          <div class="align-start overline w-50 d-flex">
-            <div class="pr-3 pt-1">
-              <label for="select-room-capability" class="subtitle-1">Capability:</label>
+      <v-card-title class="pb-0">
+        <PageTitle icon="mdi-home-city-outline" :text="room.location" />
+      </v-card-title>
+      <v-card-actions>
+        <v-list class="w-100" dense>
+          <v-list-item v-if="room.kalturaResourceId">
+            <div class="subtitle-1">
+              Kaltura resource ID: {{ room.kalturaResourceId }}
+              <span v-if="kalturaEventList">
+                (<a id="skip-to-kaltura-event-list" @keypress="scrollToKalturaEvents" @click="scrollToKalturaEvents">Scroll to Kaltura events</a>)
+              </span>
             </div>
-            <div>
-              <SelectRoomCapability
-                :on-update="onUpdateRoomCapability"
-                :options="$config.roomCapabilityOptions"
-                :room="room"
-              />
+          </v-list-item>
+          <v-list-item>
+            <div class="align-end d-flex w-100">
+              <div class="pb-4 pr-3">
+                <label for="select-room-capability" class="subtitle-1">Capability:</label>
+              </div>
+              <div>
+                <SelectRoomCapability
+                  :on-update="onUpdateRoomCapability"
+                  :options="$config.roomCapabilityOptions"
+                  :room="room"
+                />
+              </div>
+              <div class="ml-auto">
+                <v-switch v-model="isAuditorium" label="Auditorium"></v-switch>
+              </div>
             </div>
-            <div class="ml-auto">
-              <v-switch v-model="isAuditorium" label="Auditorium"></v-switch>
-            </div>
-          </div>
-          <v-list-item-title>
-            <span v-if="offerPrintable">
-              <router-link
-                :id="`print-room-${room.id}-schedule`"
-                class="subtitle-1"
-                target="_blank"
-                :to="`/room/printable/${room.id}`"
-              >
-                <v-icon class="linked-icon">mdi-printer</v-icon> Print schedule<span class="sr-only"> (opens a new browser tab)</span>
-              </router-link>
-            </span>
-          </v-list-item-title>
-        </v-list-item-content>
-      </v-list-item>
-      <CoursesDataTable
-        :courses="room.courses"
-        :include-room-column="false"
-        :message-for-courses="summarize(room.courses)"
-        :on-toggle-opt-out="() => {}"
-        :refreshing="false"
-      />
+          </v-list-item>
+          <v-list-item v-if="offerPrintable">
+            <router-link
+              :id="`print-room-${room.id}-schedule`"
+              class="subtitle-1"
+              target="_blank"
+              :to="`/room/printable/${room.id}`"
+            >
+              <v-icon class="linked-icon">mdi-printer</v-icon> Print schedule<span class="sr-only"> (opens a new browser tab)</span>
+            </router-link>
+          </v-list-item>
+        </v-list>
+      </v-card-actions>
+      <v-card-text>
+        <CoursesDataTable
+          :courses="room.courses"
+          :include-room-column="false"
+          :message-for-courses="summarize(room.courses)"
+          :on-toggle-opt-out="() => {}"
+          :refreshing="false"
+        />
+      </v-card-text>
     </v-card>
     <div v-if="kalturaEventList" class="ma-3 pt-5">
       <h2>Kaltura Events in {{ room.location }}</h2>
@@ -58,14 +64,15 @@
   import Context from '@/mixins/Context'
   import CoursesDataTable from '@/components/course/CoursesDataTable'
   import KalturaEventList from '@/components/kaltura/KalturaEventList'
+  import PageTitle from '@/components/util/PageTitle'
   import SelectRoomCapability from '@/components/room/SelectRoomCapability'
   import Utils from '@/mixins/Utils'
   import {getKalturaEventList, getRoom, setAuditorium} from '@/api/room'
 
   export default {
     name: 'Room',
-    components: {KalturaEventList, CoursesDataTable, SelectRoomCapability},
     mixins: [Context, Utils],
+    components: {KalturaEventList, CoursesDataTable, PageTitle, SelectRoomCapability},
     data: () => ({
       isAuditorium: undefined,
       kalturaEventList: undefined,

@@ -1,10 +1,12 @@
 <template>
   <div v-if="!loading">
-    <h1>{{ user.name }} ({{ user.uid }})</h1>
-    <div class="pb-3">
-      <a :href="`mailto:${user.campusEmail}`" target="_blank">{{ user.campusEmail }}<span class="sr-only"> (new browser tab will open)</span></a>
-    </div>
     <v-card outlined class="elevation-1">
+      <v-card-title>
+        <PageTitle icon="mdi-school-outline" :text="`${user.name} (${user.uid})`" />
+      </v-card-title>
+      <v-card-subtitle class="ml-8 pl-12">
+        <a :href="`mailto:${user.campusEmail}`" target="_blank">{{ user.campusEmail }}<span class="sr-only"> (new browser tab will open)</span></a>
+      </v-card-subtitle>
       <CoursesDataTable
         class="pt-5"
         :courses="user.courses"
@@ -20,13 +22,14 @@
 <script>
   import Context from '@/mixins/Context'
   import CoursesDataTable from '@/components/course/CoursesDataTable'
+  import PageTitle from '@/components/util/PageTitle'
   import Utils from '@/mixins/Utils'
   import {getUser} from '@/api/user'
 
   export default {
     name: 'Room',
-    components: {CoursesDataTable},
     mixins: [Context, Utils],
+    components: {CoursesDataTable, PageTitle},
     data: () => ({
       user: undefined
     }),
