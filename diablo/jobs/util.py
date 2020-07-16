@@ -75,7 +75,7 @@ def insert_or_update_instructors(instructor_uids):
     for instructor in get_calnet_users_for_uids(app=app, uids=instructor_uids).values():
         instructors.append({
             'dept_code': instructor.get('deptCode'),
-            'email': instructor.get('campusEmail') or instructor.get('email'),
+            'email': instructor.get('email'),
             'first_name': instructor.get('firstName') or '',
             'last_name': instructor.get('lastName') or '',
             'uid': instructor['uid'],

@@ -70,7 +70,6 @@ def _calnet_user_api_feed(person):
     first_name = _get('first_name')
     last_name = _get('last_name')
     return {
-        'campusEmail': _get('campus_email'),
         'deptCode': _get('primary_dept_code') or _get('dept_code'),
         'email': _get('email'),
         'firstName': first_name,

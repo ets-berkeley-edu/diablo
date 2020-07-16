@@ -65,7 +65,7 @@ def admin_users():
     admin_uids = [admin_user.uid for admin_user in AdminUser.all_admin_users()]
     for admin_user in get_calnet_users_for_uids(app=app, uids=admin_uids).values():
         api_json.append({
-            'email': admin_user.get('campusEmail') or admin_user.get('email'),
+            'email': admin_user.get('email'),
             'name': admin_user.get('name'),
             'uid': admin_user['uid'],
         })

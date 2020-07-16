@@ -27,10 +27,9 @@ import ssl
 import ldap3
 
 SCHEMA_DICT = {
-    'berkeleyEduOfficialEmail': 'campus_email',
+    'berkeleyEduAlternateID': 'email',
     'berkeleyEduPrimaryDeptUnit': 'primary_dept_code',
     'departmentNumber': 'dept_code',
-    'mail': 'email',
     'givenName': 'first_name',
     'sn': 'last_name',
     'uid': 'uid',

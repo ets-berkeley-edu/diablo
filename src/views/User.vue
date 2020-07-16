@@ -4,8 +4,8 @@
       <v-card-title>
         <PageTitle icon="mdi-school-outline" :text="`${user.name} (${user.uid})`" />
       </v-card-title>
-      <v-card-subtitle class="ml-8 pl-12">
-        <a :href="`mailto:${user.campusEmail}`" target="_blank">{{ user.campusEmail }}<span class="sr-only"> (new browser tab will open)</span></a>
+      <v-card-subtitle class="body-1 ml-8 pl-12">
+        <a :href="`mailto:${user.email}`" target="_blank">{{ user.email }}<span class="sr-only"> (new browser tab will open)</span></a>
       </v-card-subtitle>
       <CoursesDataTable
         class="pt-5"
