@@ -11,7 +11,7 @@
       {{ instructor.name }} is no longer an instructor of this course.
     </v-tooltip>
     <v-tooltip
-      v-if="isStillTeachingCourse && !instructor.approval && !instructor.wasSentInvite"
+      v-if="isEligibleCourse && isStillTeachingCourse && !instructor.approval && !instructor.wasSentInvite"
       :id="`tooltip-course-${course.sectionId}-instructor-${instructor.uid}-not-invited`"
       bottom
     >
@@ -21,7 +21,7 @@
       No invite has been sent to {{ instructor.name }}.
     </v-tooltip>
     <v-tooltip
-      v-if="isStillTeachingCourse && hasNotApprovedScheduled"
+      v-if="isEligibleCourse && isStillTeachingCourse && hasNotApprovedScheduled"
       :id="`tooltip-course-${course.sectionId}-instructor-${instructor.uid}-no-approval`"
       bottom
     >
@@ -31,7 +31,7 @@
       {{ instructor.name }} was sent an invite but has not approved the scheduled recordings.
     </v-tooltip>
     <v-tooltip
-      v-if="isStillTeachingCourse && instructor.approval"
+      v-if="isEligibleCourse && isStillTeachingCourse && instructor.approval"
       :id="`tooltip-course-${course.sectionId}-instructor-${instructor.uid}-approved`"
       bottom
     >
@@ -68,11 +68,13 @@
     },
     data: () => ({
       hasNotApprovedScheduled: undefined,
+      isEligibleCourse: undefined,
       isStillTeachingCourse: undefined
     }),
     created() {
       const uid = this.instructor.uid
       this.hasNotApprovedScheduled = this.course.scheduled && this.instructor.wasSentInvite && !this.$_.includes(this.course.scheduled.instructorUids, uid)
+      this.isEligibleCourse = !!this.course.meetings.eligible.length
       this.isStillTeachingCourse = this.$_.includes(this.$_.map(this.course.instructors, 'uid'), uid)
     }
   }
