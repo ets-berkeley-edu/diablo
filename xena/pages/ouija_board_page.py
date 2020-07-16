@@ -148,7 +148,7 @@ class OuijaBoardPage(DiabloPages):
 
     @staticmethod
     def course_row_locator(section):
-        return By.XPATH, f'//tr[contains(., "{section.code}")]'
+        return By.XPATH, f'//tr[contains(., "{section.code}") and contains(., "{section.ccn}")]'
 
     def wait_for_course_results(self):
         Wait(self.driver, util.get_short_timeout()).until(

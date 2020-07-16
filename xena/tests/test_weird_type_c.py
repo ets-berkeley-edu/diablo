@@ -262,7 +262,7 @@ class TestWeirdTypeC:
         assert visible == expected
 
     def test_series_blackouts(self):
-        expected = self.meeting.expected_blackout_dates(self.section.term)
+        expected = self.meeting_0.expected_blackout_dates(self.section.term)
         visible = self.room_page.series_recording_blackout_dates(self.recording_schedule)
         app.logger.info(f'Missing: {list(set(expected) - set(visible))}')
         app.logger.info(f'Unexpected: {list(set(visible) - set(expected))} ')
@@ -372,12 +372,18 @@ class TestWeirdTypeC:
     def test_remove_instructor(self):
         util.change_course_instructor(self.section, old_instructor=self.instructor_0, new_instructor=None)
 
-    def test_changes_page_instructor_removed(self):
+    def test_instr_removed_summary(self):
         self.changes_page.load_page()
         self.changes_page.wait_for_course_row(self.section)
-        orig_instr_text = f'{self.instructor_0.first_name} {self.instructor_0.last_name} ({self.instructor_0.uid})'
-        expected = f'{orig_instr_text}\n changed to'
-        actual = self.changes_page.course_instructor_info(self.section)
+        expected = 'Instructors are obsolete.'
+        actual = self.changes_page.scheduled_card_summary(self.section)
+        app.logger.info(f'Expecting: {expected}')
+        app.logger.info(f'Actual: {actual}')
+        assert expected in actual
+
+    def test_instr_removed_former_instr(self):
+        expected = f'{self.instructor_0.first_name} {self.instructor_0.last_name} ({self.instructor_0.uid})'
+        actual = self.changes_page.scheduled_card_old_instructors(self.section)
         app.logger.info(f'Expecting: {expected}')
         app.logger.info(f'Actual: {actual}')
         assert expected in actual
@@ -387,13 +393,106 @@ class TestWeirdTypeC:
     def test_add_instructor(self):
         util.change_course_instructor(self.section, old_instructor=None, new_instructor=self.instructor_1)
 
-    def test_changes_page_instructor_added(self):
+    def test_instr_changed_summary(self):
         self.changes_page.load_page()
         self.changes_page.wait_for_course_row(self.section)
-        orig_instr_text = f'{self.instructor_0.first_name} {self.instructor_0.last_name} ({self.instructor_0.uid})'
-        new_instr_text = f'{self.instructor_1.first_name} {self.instructor_1.last_name} ({self.instructor_1.uid})'
-        expected = f'{orig_instr_text}\n changed to\n {new_instr_text}'
-        actual = self.changes_page.course_instructor_info(self.section)
+        expected = 'Instructors are obsolete.'
+        actual = self.changes_page.scheduled_card_summary(self.section)
+        app.logger.info(f'Expecting: {expected}')
+        app.logger.info(f'Actual: {actual}')
+        assert expected in actual
+
+    def test_instr_changed_former_instr(self):
+        expected = f'{self.instructor_0.first_name} {self.instructor_0.last_name} ({self.instructor_0.uid})'
+        actual = self.changes_page.scheduled_card_old_instructors(self.section)
+        app.logger.info(f'Expecting: {expected}')
+        app.logger.info(f'Actual: {actual}')
+        assert expected in actual
+
+    def test_instr_changed_new_instr(self):
+        expected = f'{self.instructor_1.first_name} {self.instructor_1.last_name} ({self.instructor_1.uid})'
+        actual = self.changes_page.scheduled_card_new_instructors(self.section)
+        app.logger.info(f'Expecting: {expected}')
+        app.logger.info(f'Actual: {actual}')
+        assert expected in actual
+
+    def test_instr_changed_current_card(self):
+        expected = f'{self.instructor_1.first_name} {self.instructor_1.last_name} ({self.instructor_1.uid})'
+        actual = self.changes_page.current_card_instructors(self.section, 1)
+        app.logger.info(f'Expecting: {expected}')
+        app.logger.info(f'Actual: {actual}')
+        assert expected in actual
+
+    # START / END DATES CHANGE FOR ELIGIBLE SECTION
+
+    def test_change_dates(self):
+        start = self.meeting_0_changes.start_date
+        end = self.meeting_0_changes.end_date
+        util.update_course_start_end_dates(self.section, self.meeting_0_changes.room, start, end)
+
+    def test_dates_changed_summary(self):
+        self.changes_page.load_page()
+        self.changes_page.wait_for_course_row(self.section)
+        expected = 'Instructors and dates are obsolete.'
+        actual = self.changes_page.scheduled_card_summary(self.section)
+        app.logger.info(f'Expecting: {expected}')
+        app.logger.info(f'Actual: {actual}')
+        assert expected in actual
+
+    def test_dates_changed_former_sched_room(self):
+        expected = self.meeting_0.room.name
+        actual = self.changes_page.scheduled_card_old_room(self.section)
+        app.logger.info(f'Expecting: {expected}')
+        app.logger.info(f'Actual: {actual}')
+        assert expected in actual
+
+    def test_dates_changed_former_sched_dates(self):
+        dates = self.meeting_0.expected_recording_dates(self.section.term)
+        start = dates[0]
+        end = dates[-1]
+        dates = f'{start.strftime("%Y-%m-%d")} to {end.strftime("%Y-%m-%d")}'
+        days_times = f'{self.meeting_0.days.replace(",", "")}, {CourseChangesPage.meeting_time_str(self.meeting_0)}'
+        expected = f'{dates}\n{days_times}'.upper()
+        actual = self.changes_page.scheduled_card_old_schedule(self.section).upper()
+        app.logger.info(f'Expecting: {expected}')
+        app.logger.info(f'Actual: {actual}')
+        assert expected in actual
+
+    def test_dates_changed_current_room_1(self):
+        expected = self.meeting_0.room.name
+        actual = self.changes_page.current_card_schedule(self.section, 1, 1)
+        app.logger.info(f'Expecting: {expected}')
+        app.logger.info(f'Actual: {actual}')
+        assert expected in actual
+
+    def test_dates_changed_current_dates_1(self):
+        dates = self.meeting_0_changes.expected_recording_dates(self.section.term)
+        start = dates[0]
+        end = dates[-1]
+        dates = f'{start.strftime("%Y-%m-%d")} to {end.strftime("%Y-%m-%d")}'
+        days = self.meeting_0_changes.days.replace(',' '')
+        times = CourseChangesPage.meeting_time_str(self.meeting_0_changes)
+        expected = f'{dates}\n{days}, {times}'.upper()
+        actual = self.changes_page.current_card_schedule(self.section, 1, 2).upper()
+        app.logger.info(f'Expecting: {expected}')
+        app.logger.info(f'Actual: {actual}')
+        assert expected in actual
+
+    def test_dates_changed_current_room_2(self):
+        expected = self.meeting_1.room.name
+        actual = self.changes_page.current_card_schedule(self.section, 2, 1)
+        app.logger.info(f'Expecting: {expected}')
+        app.logger.info(f'Actual: {actual}')
+        assert expected in actual
+
+    def test_dates_changed_current_dates_2(self):
+        start = self.meeting_1.start_date
+        end = self.meeting_1.end_date
+        dates = f'{start.strftime("%Y-%m-%d")} to {end.strftime("%Y-%m-%d")}'
+        days = self.meeting_1.days.replace(',', '')
+        times = CourseChangesPage.meeting_time_str(self.meeting_1)
+        expected = f'{dates}\n{days}, {times}'.upper()
+        actual = self.changes_page.current_card_schedule(self.section, 2, 2).upper()
         app.logger.info(f'Expecting: {expected}')
         app.logger.info(f'Actual: {actual}')
         assert expected in actual
@@ -403,49 +502,49 @@ class TestWeirdTypeC:
     def test_remove_room(self):
         util.change_course_room(self.section, old_room=self.meeting_0.room, new_room=None)
 
-    def test_changes_page_room_removed(self):
+    def test_room_removed_summary(self):
         self.changes_page.load_page()
         self.changes_page.wait_for_course_row(self.section)
-        expected = f'{self.meeting_0.room.name}\n changed to\n'
-        actual = self.changes_page.course_room_info(self.section)
+        expected = 'Instructors and room are obsolete.'
+        actual = self.changes_page.scheduled_card_summary(self.section)
         app.logger.info(f'Expecting: {expected}')
         app.logger.info(f'Actual: {actual}')
         assert expected in actual
+
+    def test_room_removed_former_room(self):
+        actual = self.changes_page.scheduled_card_old_room(self.section)
+        app.logger.info(f'Expecting: {self.meeting_0.room.name}')
+        app.logger.info(f'Actual: {actual}')
+        assert self.meeting_0.room.name in actual
+
+    def test_room_removed_current_card(self):
+        actual = self.changes_page.current_card_schedule(self.section, list_node=None, detail_node=1)
+        app.logger.info(f'Expecting: {self.meeting_1.room.name}')
+        app.logger.info(f'Actual: {actual}')
+        assert self.meeting_1.room.name in actual
 
     # ROOM ADDED
 
     def test_add_room(self):
         util.change_course_room(self.section, old_room=self.meeting_1.room, new_room=self.meeting_1_changes.room)
 
-    def test_changes_page_room_added(self):
+    def test_room_changed_summary(self):
         self.changes_page.load_page()
         self.changes_page.wait_for_course_row(self.section)
-        expected = f'{self.meeting_1.room.name}\n changed to\n{self.meeting_1_changes.room.name}'
-        actual = self.changes_page.course_room_info(self.section)
+        expected = 'Instructors and room are obsolete.'
+        actual = self.changes_page.scheduled_card_summary(self.section)
         app.logger.info(f'Expecting: {expected}')
         app.logger.info(f'Actual: {actual}')
         assert expected in actual
 
-    # START / END DATES CHANGE FOR ELIGIBLE SECTION
+    def test_room_changed_former_room(self):
+        actual = self.changes_page.scheduled_card_old_room(self.section)
+        app.logger.info(f'Expecting: {self.meeting_0.room.name}')
+        app.logger.info(f'Actual: {actual}')
+        assert self.meeting_0.room.name in actual
 
-    def test_change_dates(self):
-        util.update_course_start_end_dates(self.section, self.meeting_0_changes)
-
-    def test_changes_page_new_dates(self):
-        self.changes_page.load_page()
-        self.changes_page.wait_for_course_row(self.section)
-        old_start_date = self.meeting_0.start_date.strftime('%Y-%m-%d')
-        old_end_date = self.meeting_0.end_date.strftime('%Y-%m-%d')
-        old_days = self.meeting_0.days.replace(' ', '')
-        old_time = CourseChangesPage.meeting_time_str(self.meeting_0)
-        old_sched = f'{old_start_date} - {old_end_date}\n{old_days} {old_time}'
-        new_start_date = self.meeting_0_changes.start_date.strftime('%Y-%m-%d')
-        new_end_date = self.meeting_0_changes.end_date.strftime('%Y-%m-%d')
-        new_days = self.meeting_0_changes.days.replace(' ', '')
-        new_time = CourseChangesPage.meeting_time_str(self.meeting_0_changes)
-        new_sched = f'{new_start_date} - {new_end_date}\n{new_days} {new_time}'
-        expected = f'{old_sched}\n changed to\n{new_sched}'.upper()
-        actual = self.changes_page.course_schedule_info(self.section).upper()
-        app.logger.info(f'Expecting {expected}')
-        app.logger.info(f'Actual {actual}')
-        assert expected in actual
+    def test_room_changed_current_card(self):
+        actual_1 = self.changes_page.current_card_schedule(self.section, list_node=None, detail_node=1)
+        app.logger.info(f'Expecting: {self.meeting_1_changes.room.name}')
+        app.logger.info(f'Actual: {actual_1}')
+        assert self.meeting_1_changes.room.name in actual_1

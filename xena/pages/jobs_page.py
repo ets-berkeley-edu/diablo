@@ -110,7 +110,7 @@ class JobsPage(DiabloPages):
 
     def wait_for_jobs_table(self):
         locator = By.XPATH, '//h2[contains(text(), "Jobs")]/../../following-sibling::div//table'
-        Wait(self.driver, util.get_short_timeout()).until(ec.visibility_of_element_located(locator))
+        Wait(self.driver, util.get_short_timeout()).until(ec.presence_of_element_located(locator))
 
     @staticmethod
     def job_toggle_id(async_job):
