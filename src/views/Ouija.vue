@@ -1,8 +1,8 @@
 <template>
   <v-card v-if="!loading" outlined class="elevation-1">
-    <v-card-title class="align-start p-3">
+    <v-card-title class="align-start">
       <div class="pt-2">
-        <h1><v-icon class="pb-2" large>mdi-auto-fix</v-icon> The Ouija Board</h1>
+        <PageTitle icon="mdi-auto-fix" text="The Ouija Board" />
         <v-btn
           v-if="courses.length"
           class="ml-8"
@@ -76,13 +76,14 @@
 <script>
   import CoursesDataTable from '@/components/course/CoursesDataTable'
   import Context from '@/mixins/Context'
-  import {downloadCSV, getCourses} from '@/api/course'
+  import PageTitle from '@/components/util/PageTitle'
   import Utils from '@/mixins/Utils'
+  import {downloadCSV, getCourses} from '@/api/course'
 
   export default {
     name: 'Ouija',
-    components: {CoursesDataTable},
     mixins: [Context, Utils],
+    components: {CoursesDataTable, PageTitle},
     data: () => ({
       courses: undefined,
       isDownloading: false,

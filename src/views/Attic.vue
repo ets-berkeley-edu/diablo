@@ -1,11 +1,9 @@
 <template>
   <v-card v-if="!loading" outlined class="elevation-1">
-    <v-card-title class="align-start p-3">
-      <div class="pt-2">
-        <h1><v-icon class="pb-2" large>mdi-candle</v-icon> The Attic</h1>
-      </div>
+    <v-card-title>
+      <PageTitle icon="mdi-candle" text="The Attic" />
     </v-card-title>
-    <div class="ma-3 pt-3">
+    <div class="ma-3">
       <h2>Report</h2>
       <v-data-table
         disable-pagination
@@ -39,14 +37,15 @@
 <script>
   import Configs from '@/components/attic/Configs'
   import Context from '@/mixins/Context'
+  import PageTitle from '@/components/util/PageTitle'
   import Utils from '@/mixins/Utils'
   import {getAdminUsers} from '@/api/user'
   import {getCoursesReport} from '@/api/course'
 
   export default {
     name: 'Attic',
-    components: {Configs},
     mixins: [Context, Utils],
+    components: {Configs, PageTitle},
     data: () => ({
       adminUsers: undefined,
       coursesReport: undefined

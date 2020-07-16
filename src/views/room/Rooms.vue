@@ -1,9 +1,7 @@
 <template>
   <v-card v-if="!loading" outlined class="elevation-1">
     <v-card-title class="align-start">
-      <div class="pt-2">
-        <h1><v-icon large>mdi-domain</v-icon> {{ $_.size(rooms) }} Rooms</h1>
-      </div>
+      <PageTitle icon="mdi-domain" :text="`${$_.size(rooms)} Rooms`" />
       <v-spacer></v-spacer>
       <v-tooltip v-model="adviseAgainstRoom237" bottom color="pink">
         <template v-slot:activator="{}">
@@ -54,11 +52,13 @@
 
 <script>
   import Context from '@/mixins/Context'
+  import PageTitle from '@/components/util/PageTitle'
   import {getAllRooms} from '@/api/room'
 
   export default {
     name: 'Rooms',
     mixins: [Context],
+    components: {PageTitle},
     data: () => ({
       headers: [
         {text: 'Room', value: 'location', class: 'w-50'},

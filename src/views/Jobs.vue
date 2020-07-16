@@ -1,11 +1,8 @@
 <template>
   <div v-if="!loading" class="pt-3">
-    <h1 class="sr-only">Jobs</h1>
     <v-card outlined class="elevation-1 mb-6">
       <v-card-title class="align-start">
-        <div class="pt-2">
-          <h2><v-icon class="pb-1" large>mdi-timer-sand</v-icon> Jobs</h2>
-        </div>
+        <PageTitle icon="mdi-engine-outline" text="Jobs" />
       </v-card-title>
       <v-card-text>
         <div class="mb-3">
@@ -131,12 +128,13 @@
   import Context from '@/mixins/Context'
   import DisableJobToggle from '@/components/job/DisableJobToggle'
   import JobHistory from '@/components/job/JobHistory'
+  import PageTitle from '@/components/util/PageTitle'
   import Utils from '@/mixins/Utils'
   import {getJobHistory, getJobSchedule, setJobDisabled, startJob, updateJobSchedule} from '@/api/job'
 
   export default {
     name: 'Jobs',
-    components: {DisableJobToggle, JobHistory},
+    components: {DisableJobToggle, JobHistory, PageTitle},
     mixins: [Context, Utils],
     data: () => ({
       disableScheduleSave: false,

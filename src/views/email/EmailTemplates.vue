@@ -1,7 +1,9 @@
 <template>
   <v-container v-if="!loading" class="pa-0" fluid>
-    <h2><v-icon class="pb-3" large>mdi-pencil</v-icon> Email Templates</h2>
     <v-card outlined class="elevation-1">
+      <v-card-title>
+        <PageTitle icon="mdi-pencil" text="Email Templates" />
+      </v-card-title>
       <v-card-text class="pb-0">
         <div>
           When email is ready to send it is put in a queue. Background jobs add emails to the queue &mdash;
@@ -85,12 +87,14 @@
 
 <script>
   import Context from '@/mixins/Context'
+  import PageTitle from '@/components/util/PageTitle'
   import Utils from '@/mixins/Utils'
   import {deleteTemplate, getAllEmailTemplates, sendTestEmail} from '@/api/email'
 
   export default {
     name: 'EmailTemplates',
     mixins: [Context, Utils],
+    components: {PageTitle},
     data: () => ({
       headers: [
         {text: 'Name', value: 'name'},

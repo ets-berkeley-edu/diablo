@@ -1,8 +1,6 @@
 <template>
   <div v-if="!loading">
-    <div class="pb-3">
-      <h1>{{ pageTitle }}</h1>
-    </div>
+    <PageTitle icon="mdi-video-plus" :text="pageTitle" />
     <v-data-table
       disable-pagination
       disable-sort
@@ -84,11 +82,13 @@
 
 <script>
   import Context from '@/mixins/Context'
+  import PageTitle from '@/components/util/PageTitle'
   import Utils from '@/mixins/Utils'
 
   export default {
     name: 'Home',
     mixins: [Context, Utils],
+    components: {PageTitle},
     data: () => ({
       courses: undefined,
       headers: [

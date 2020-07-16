@@ -1,8 +1,8 @@
 <template>
   <v-form>
     <v-container v-if="!loading" fluid>
-      <v-row no-gutters class="d-flex justify-space-between pr-4">
-        <h1><v-icon class="pb-2" large>mdi-file-document-outline</v-icon> {{ pageTitle }}</h1>
+      <v-row class="d-flex justify-space-between pb-3 pr-4">
+        <PageTitle icon="mdi-file-document-outline" :text="pageTitle" />
         <h2 class="title">
           <span class="font-weight-bold">Type:</span>&nbsp;&nbsp;
           <span id="template-type-name" class="font-italic">{{ typeName }}</span>
@@ -78,6 +78,7 @@
 
 <script>
   import Context from '@/mixins/Context'
+  import PageTitle from '@/components/util/PageTitle'
   import TemplateCodesDialog from '@/components/email/TemplateCodesDialog'
   import Utils from '@/mixins/Utils'
   import { TiptapVuetify, Heading, Bold, Italic, Strike, Underline, Code, Paragraph, BulletList, OrderedList, ListItem, Link, Blockquote, HardBreak, HorizontalRule, History } from 'tiptap-vuetify'
@@ -85,7 +86,7 @@
 
   export default {
     name: 'CreateEmailTemplate',
-    components: {TemplateCodesDialog, TiptapVuetify},
+    components: {PageTitle, TemplateCodesDialog, TiptapVuetify},
     mixins: [Context, Utils],
     data: () => ({
       extensions: [
