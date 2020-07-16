@@ -91,7 +91,7 @@ class User(UserMixin):
             calnet_profile = calnet.get_calnet_user_for_uid(app, uid)
             is_active = not calnet_profile.get('isExpiredPerLdap', True)
             if is_active:
-                email_address = calnet_profile.get('campusEmail') or calnet_profile.get('email')
+                email_address = calnet_profile.get('email')
                 is_admin = AdminUser.is_admin(uid)
                 courses = SisSection.get_courses_per_instructor_uid(
                     term_id=app.config['CURRENT_TERM_ID'],
