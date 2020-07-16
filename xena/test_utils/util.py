@@ -196,15 +196,15 @@ def change_course_room(section, old_room=None, new_room=None):
     std_commit(allow_test_environment=True)
 
 
-def update_course_start_end_dates(section, meeting):
-    start_date = meeting.start_date.strftime('%Y-%m-%d %H:%M:%S')
-    end_date = meeting.end_date.strftime('%Y-%m-%d %H:%M:%S')
+def update_course_start_end_dates(section, room, start, end):
+    start_date = start.strftime('%Y-%m-%d %H:%M:%S')
+    end_date = end.strftime('%Y-%m-%d %H:%M:%S')
     sql = f"""UPDATE sis_sections
               SET meeting_start_date = '{start_date}',
                   meeting_end_date = '{end_date}'
               WHERE section_id = {section.ccn}
                   AND term_id = {section.term.id}
-                  AND meeting_location = '{meeting.room.name}'
+                  AND meeting_location = '{room.name}'
     """
     app.logger.info(sql)
     db.session.execute(text(sql))

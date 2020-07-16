@@ -124,32 +124,38 @@ class TestCourseScheduleChanges:
         self.jobs_page.click_course_changes_link()
         self.changes_page.wait_for_course_row(self.real_section)
         expected = 'Times are obsolete.'
-        actual = self.changes_page.obsolete_summary(self.real_section)
+        actual = self.changes_page.scheduled_card_summary(self.real_section)
         app.logger.info(f'Expecting: {expected}')
         app.logger.info(f'Actual: {actual}')
         assert expected in actual
 
     def test_changes_page_old_room(self):
         expected = self.real_meeting.room.name
-        actual = self.changes_page.old_room_text(self.real_section)
+        actual = self.changes_page.scheduled_card_old_room(self.real_section)
         app.logger.info(f'Expecting: {expected}')
         app.logger.info(f'Actual: {actual}')
         assert expected in actual
 
-    def test_changes_page_old_times(self):
-        old_dates = f'{self.real_meeting.start_date.strftime("%Y-%m-%d")} to {self.real_meeting.end_date.strftime("%Y-%m-%d")}'
-        old_times = CourseChangesPage.meeting_time_str(self.real_meeting)
-        expected = f'{old_dates}\n{self.real_meeting.days.replace(",", "")}, {old_times}'.upper()
-        actual = self.changes_page.old_schedule_text(self.real_section).upper()
+    def test_changes_page_old_sched(self):
+        dates = self.real_meeting.expected_recording_dates(self.real_section.term)
+        start = dates[0]
+        end = dates[-1]
+        dates = f'{start.strftime("%Y-%m-%d")} to {end.strftime("%Y-%m-%d")}'
+        days_times = f'{self.real_meeting.days.replace(",", "")}, {CourseChangesPage.meeting_time_str(self.real_meeting)}'
+        expected = f'{dates}\n{days_times}'.upper()
+        actual = self.changes_page.scheduled_card_old_schedule(self.real_section).upper()
         app.logger.info(f'Expecting: {expected}')
         app.logger.info(f'Actual: {actual}')
         assert expected in actual
 
-    def test_changes_page_new_times(self):
-        new_dates = f'{self.real_meeting.start_date.strftime("%Y-%m-%d")} to {self.real_meeting.end_date.strftime("%Y-%m-%d")}'
-        new_times = CourseChangesPage.meeting_time_str(self.fake_meeting)
-        expected = f'{self.real_meeting.room.name}\n{new_dates}\n{self.real_meeting.days.replace(",", "")}, {new_times}'.upper()
-        actual = self.changes_page.new_meeting_text(self.real_section).upper()
+    def test_changes_page_new_sched(self):
+        dates = self.real_meeting.expected_recording_dates(self.fake_section.term)
+        start = dates[0]
+        end = dates[-1]
+        dates = f'{start.strftime("%Y-%m-%d")} to {end.strftime("%Y-%m-%d")}'
+        days_times = f'{self.real_meeting.days.replace(",", "")}, {CourseChangesPage.meeting_time_str(self.fake_meeting)}'
+        expected = f'{dates}\n{days_times}'.upper()
+        actual = self.changes_page.current_card_schedule(self.real_section, 1, 2).upper()
         app.logger.info(f'Expecting: {expected}')
         app.logger.info(f'Actual: {actual}')
         assert expected in actual

@@ -79,34 +79,48 @@ class CourseChangesPage(DiabloPages):
         return f'//div[contains(@class, "container") and contains(., "Section ID: {section.ccn}")]'
 
     @staticmethod
-    def obsolete_card_xpath(section):
+    def scheduled_card_xpath(section):
         return f'({CourseChangesPage.course_container_xpath(section)}//div[contains(@class, "v-card")][contains(., "Scheduled")])[1]'
 
-    def obsolete_summary(self, section):
-        xpath = f'{CourseChangesPage.obsolete_card_xpath(section)}/div[@class="v-card__subtitle"]'
+    @staticmethod
+    def scheduled_card_detail_xpath(section, heading, node=None):
+        i = node or 1
+        return f'{CourseChangesPage.scheduled_card_xpath(section)}//h5[contains(., "{heading}")]/following-sibling::div[{i}]'
+
+    def scheduled_card_summary(self, section):
+        xpath = f'{CourseChangesPage.scheduled_card_xpath(section)}/div[@class="v-card__subtitle"]'
         return self.element((By.XPATH, xpath)).text.strip()
 
-    def old_instructor_text(self, section):
-        xpath = f'{CourseChangesPage.obsolete_card_xpath(section)}//h5[text()="Obsolete Instructors"]/following-sibling::div'
+    def scheduled_card_old_instructors(self, section, node=None):
+        xpath = CourseChangesPage.scheduled_card_detail_xpath(section, 'Obsolete Instructors', node)
         return self.element((By.XPATH, xpath)).get_attribute('innerText')
 
-    def old_room_text(self, section):
-        xpath = f'{CourseChangesPage.obsolete_card_xpath(section)}//h5[text()="Meeting"]/following-sibling::div'
+    def scheduled_card_new_instructors(self, section, node=None):
+        xpath = CourseChangesPage.scheduled_card_detail_xpath(section, 'Joined course', node)
         return self.element((By.XPATH, xpath)).get_attribute('innerText')
 
-    def old_schedule_text(self, section):
-        xpath = f'{CourseChangesPage.obsolete_card_xpath(section)}//h5[text()="Meeting"]/following-sibling::div[2]'
+    def scheduled_card_old_room(self, section):
+        xpath = CourseChangesPage.scheduled_card_detail_xpath(section, 'Meeting')
+        return self.element((By.XPATH, xpath)).get_attribute('innerText')
+
+    def scheduled_card_old_schedule(self, section):
+        xpath = CourseChangesPage.scheduled_card_detail_xpath(section, 'Meeting', 2)
         return self.element((By.XPATH, xpath)).get_attribute('innerText')
 
     @staticmethod
     def current_card_xpath(section):
         return f'({CourseChangesPage.course_container_xpath(section)}//div[contains(@class, "v-card")][contains(., "Current")])[1]'
 
-    def new_instructor_text(self, section):
-        xpath = f'{CourseChangesPage.current_card_xpath(section)}//h5[text()="Instructors"]/following-sibling::div'
-        app.logger.info(xpath)
+    @staticmethod
+    def current_card_detail_xpath(section, heading, list_node, detail_node):
+        detail_node = detail_node or 1
+        path_to_el = f'{CourseChangesPage.current_card_xpath(section)}//h5[contains(., "{heading}")]/following-sibling::div'
+        return f'{path_to_el}[{list_node}]/div[{detail_node}]' if list_node else f'{path_to_el}[{detail_node}]'
+
+    def current_card_instructors(self, section, node):
+        xpath = CourseChangesPage.current_card_detail_xpath(section, 'Instructors', list_node=None, detail_node=node)
         return self.element((By.XPATH, xpath)).get_attribute('innerText')
 
-    def new_meeting_text(self, section):
-        xpath = f'{CourseChangesPage.current_card_xpath(section)}//h5[text()="All Meetings"]/following-sibling::div'
+    def current_card_schedule(self, section, list_node, detail_node):
+        xpath = CourseChangesPage.current_card_detail_xpath(section, 'All Meetings', list_node, detail_node)
         return self.element((By.XPATH, xpath)).get_attribute('innerText')

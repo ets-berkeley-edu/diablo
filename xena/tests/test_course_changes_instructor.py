@@ -115,7 +115,7 @@ class TestCourseInstructorChanges:
         self.jobs_page.click_course_changes_link()
         self.changes_page.wait_for_course_row(self.real_section)
         expected = 'Instructors are obsolete.'
-        actual = self.changes_page.obsolete_summary(self.real_section)
+        actual = self.changes_page.scheduled_card_summary(self.real_section)
         app.logger.info(f'Expecting: {expected}')
         app.logger.info(f'Actual: {actual}')
         assert expected in actual
@@ -123,7 +123,7 @@ class TestCourseInstructorChanges:
     def test_changes_page_old_instructor(self):
         fake_instr_name = f'{self.fake_section.instructors[0].first_name} {self.fake_section.instructors[0].last_name}'
         expected = f'{fake_instr_name} ({self.fake_section.instructors[0].uid})'
-        actual = self.changes_page.old_instructor_text(self.real_section)
+        actual = self.changes_page.scheduled_card_old_instructors(self.real_section)
         app.logger.info(f'Expecting: {expected}')
         app.logger.info(f'Actual: {actual}')
         assert expected in actual
@@ -131,7 +131,7 @@ class TestCourseInstructorChanges:
     def test_changes_page_new_instructor(self):
         real_instr_name = f'{self.real_section.instructors[0].first_name} {self.real_section.instructors[0].last_name}'
         expected = f'{real_instr_name} ({self.real_section.instructors[0].uid})'
-        actual = self.changes_page.new_instructor_text(self.real_section)
+        actual = self.changes_page.current_card_instructors(self.real_section, node=None)
         app.logger.info(f'Expecting: {expected}')
         app.logger.info(f'Actual: {actual}')
         assert expected in actual

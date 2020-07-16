@@ -111,21 +111,21 @@ class TestCourseRoomChanges:
         self.jobs_page.click_course_changes_link()
         self.changes_page.wait_for_course_row(self.real_section)
         expected = 'Room is obsolete.'
-        actual = self.changes_page.obsolete_summary(self.real_section)
+        actual = self.changes_page.scheduled_card_summary(self.real_section)
         app.logger.info(f'Expecting: {expected}')
         app.logger.info(f'Actual: {actual}')
         assert expected in actual
 
     def test_changes_page_old_room(self):
         expected = f'{self.real_meeting.room.name}'
-        actual = self.changes_page.old_room_text(self.real_section)
+        actual = self.changes_page.scheduled_card_old_room(self.real_section)
         app.logger.info(f'Expecting: {expected}')
         app.logger.info(f'Actual: {actual}')
         assert expected in actual
 
     def test_changes_page_new_room(self):
         expected = f'{self.fake_meeting.room.name}'
-        actual = self.changes_page.new_meeting_text(self.real_section)
+        actual = self.changes_page.current_card_schedule(self.real_section, list_node=None, detail_node=None)
         app.logger.info(f'Expecting: {expected}')
         app.logger.info(f'Actual: {actual}')
         assert expected in actual
