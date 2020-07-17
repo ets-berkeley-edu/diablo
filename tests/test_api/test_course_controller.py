@@ -522,14 +522,20 @@ class TestGetCourses:
     def test_invited_filter(self, client, admin_session):
         """Invited filter: Course in an eligible room, have received invitation. No approvals. Not scheduled."""
         with test_approvals_workflow(app):
-            # First, send invitations
-            self._send_invitation_email(section_4_id)
+            # Course with approval is NOT expected in results
             self._send_invitation_email(section_5_id)
-            # The section with approval will NOT show up in search results
             self._create_approval(section_5_id)
-
+            # Course in ineligible room is NOT expected in results
+            self._send_invitation_email(section_2_id)
+            # Course in eligible room
+            eligible_section_id = section_4_id
+            self._send_invitation_email(eligible_section_id)
             std_commit(allow_test_environment=True)
+
             api_json = self._api_courses(client, term_id=self.term_id, filter_='Invited')
+            assert len(api_json) == 1
+            assert api_json[0]['sectionId'] == eligible_section_id
+
             # Section with ZERO approvals will show up in search results
             course = _find_course(api_json=api_json, section_id=section_4_id)
             assert course
