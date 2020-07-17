@@ -97,12 +97,10 @@
         </v-list>
       </v-menu>
     </v-app-bar>
-    <v-main>
-      <div class="ma-3">
-        <Snackbar />
-        <Spinner v-if="loading" />
-        <router-view id="content" :key="$route.fullPath"></router-view>
-      </div>
+    <v-main id="content" class="ma-3">
+      <Snackbar />
+      <Spinner v-if="loading" />
+      <router-view :key="stripAnchorRef($route.fullPath)"></router-view>
     </v-main>
     <Footer />
   </v-app>
