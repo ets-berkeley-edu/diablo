@@ -1,14 +1,14 @@
 <template>
   <v-form>
     <v-container v-if="!loading" fluid>
-      <v-row class="d-flex justify-space-between pb-3 pr-4">
-        <PageTitle icon="mdi-file-document-outline" :text="pageTitle" />
-        <h2 class="title">
+      <v-row class="align-start d-flex justify-space-between pb-2" no-gutters>
+        <PageTitle icon="mdi-email-edit-outline" :text="pageTitle" />
+        <h2 class="pt-4 title">
           <span class="font-weight-bold">Type:</span>&nbsp;&nbsp;
           <span id="template-type-name" class="font-italic">{{ typeName }}</span>
         </h2>
       </v-row>
-      <v-row no-gutters>
+      <v-row class="pl-4">
         <v-col cols="8">
           <v-text-field
             id="input-template-name"
@@ -22,7 +22,7 @@
         </v-col>
         <v-spacer></v-spacer>
       </v-row>
-      <v-row no-gutters>
+      <v-row class="pl-4">
         <v-col cols="8">
           <v-text-field
             id="input-template-subject-line"
@@ -128,11 +128,11 @@
       this.$loading()
       this.templateType = this.$_.get(this.$route, 'params.type')
       this.typeName = this.$_.get(this.$config.emailTemplateTypes, this.templateType)
+      this.templateId = this.$_.get(this.$route, 'params.id')
       this.pageTitle = `${this.templateId ? 'Edit' : 'Create'} Email Template`
       if (this.typeName) {
         this.$ready(`${this.pageTitle} '${this.typeName}'`)
       } else {
-        this.templateId = this.$_.get(this.$route, 'params.id')
         getEmailTemplate(this.templateId).then(data => {
           this.name = data.name
           this.subjectLine = data.subjectLine

@@ -1,14 +1,14 @@
 <template>
-  <div class="pl-2 pt-1">
+  <div class="pl-2 pt-4">
     <h1>
       <v-icon
-        class="pb-1 pr-1"
+        class="icon-padding"
         :color="$vuetify.theme.dark ? 'white' : 'primary'"
         large
         @click="is420 ? sharknado() : $_.noop"
       >
         {{ is420 ? 'mdi-weather-tornado' : icon }}
-      </v-icon> {{ text }}
+      </v-icon> <span :class="{'text-h4': text.length > 40}"> {{ text }}</span>
     </h1>
   </div>
 </template>
@@ -39,3 +39,9 @@
     }
   }
 </script>
+
+<style scoped>
+  .icon-padding {
+    padding: 0 3px 4px 0;
+  }
+</style>

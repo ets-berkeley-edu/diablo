@@ -13,11 +13,11 @@
           :text="`${courseDisplayTitle} (${getTermName(course.termId)})`"
         />
       </v-row>
-      <v-row class="pl-3">
-        Section ID: <span id="section-id">{{ course.sectionId }}</span>
+      <v-row class="ml-8 pl-7">
+        <h2 id="course-title" class="primary--text">{{ course.courseTitle }}</h2>
       </v-row>
-      <v-row class="pl-3">
-        <h2 id="course-title">{{ course.courseTitle }}</h2>
+      <v-row class="body-1 ml-8 pl-7">
+        Section ID: <span id="section-id">{{ course.sectionId }}</span>
       </v-row>
       <v-row>
         <v-col lg="3" md="3" sm="3">

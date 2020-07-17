@@ -130,7 +130,7 @@
         this.navItems = this.navItems.concat([
           { title: 'Ouija Board', icon: 'mdi-auto-fix', path: '/ouija' },
           { title: 'Rooms', icon: 'mdi-domain', path: '/rooms' },
-          { title: 'Course Changes', icon: 'mdi-swap-horizontal', path: '/changes' },
+          { title: 'Course Changes', icon: 'mdi-directions-fork', path: '/changes' },
           { title: 'The Attic', icon: 'mdi-candle', path: '/attic' }
         ])
       } else {
