@@ -161,7 +161,7 @@
         </tbody>
         <tbody v-if="!refreshing && !items.length">
           <tr>
-            <td id="message-when-zero-courses" class="pt-4 text-no-wrap title" :colspan="headers.length">
+            <td id="message-when-zero-courses" class="pa-4 text-no-wrap title" :colspan="headers.length">
               <span v-if="!refreshing">No courses.</span>
             </td>
           </tr>

@@ -1,6 +1,6 @@
 <template>
   <div class="pt-1">
-    <label for="agree-to-terms-checkbox">
+    <label id="permission-agreement" for="agree-to-terms-checkbox">
       I have read the Audio and Video Recording Permission Agreement and I agree to the terms stated within.
       <a
         id="link-to-course-capture-policies"
