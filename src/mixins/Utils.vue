@@ -20,12 +20,21 @@
         _.each(obj, (text, value) => options.push({text, value, disabled: isDisabled(value)}))
         return options
       },
-      isInRoom(course, room) {
-        const meetings = course.meetings.eligible.concat(course.meetings.ineligible)
-        return _.includes(_.map(meetings, 'room.id'), room.id)
+      getTermName: termId => {
+        const id = termId.toString()
+        let termName = null
+        if (id.length === 4) {
+          const seasons = {'0': 'Winter', '2': 'Spring', '5': 'Summer', '8': 'Fall'}
+          termName = `${seasons[id.slice(3, 4)]} ${_.startsWith(id, '1') ? '19' : '20'}${id.slice(1, 3)}`
+        }
+        return termName
       },
       goToPath(path) {
         this.$router.push({ path }, _.noop)
+      },
+      isInRoom(course, room) {
+        const meetings = course.meetings.eligible.concat(course.meetings.ineligible)
+        return _.includes(_.map(meetings, 'room.id'), room.id)
       },
       onNextTick(callable) {
         this.$nextTick(() => {
@@ -53,15 +62,6 @@
         let text = html && html.replace(/<([^>]+)>/ig,'')
         text = text && text.replace(/&nbsp;/g, '')
         return _.trim(text)
-      },
-      getTermName: termId => {
-        const id = termId.toString()
-        let termName = null
-        if (id.length === 4) {
-          const seasons = {'0': 'Winter', '2': 'Spring', '5': 'Summer', '8': 'Fall'}
-          termName = `${seasons[id.slice(3, 4)]} ${_.startsWith(id, '1') ? '19' : '20'}${id.slice(1, 3)}`
-        }
-        return termName
       }
     }
   }

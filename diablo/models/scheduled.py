@@ -25,7 +25,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 from datetime import datetime
 
 from diablo import db, std_commit
-from diablo.lib.util import format_days, format_time, to_isoformat
+from diablo.lib.util import format_days, format_time, get_names_of_days, to_isoformat
 from diablo.models.approval import NAMES_PER_PUBLISH_TYPE, NAMES_PER_RECORDING_TYPE, publish_type, recording_type
 from diablo.models.email_template import email_template_type
 from diablo.models.room import Room
@@ -176,13 +176,15 @@ class Scheduled(db.Model):
                 room_feed = rooms_by_id.get(self.room_id, None).to_api_json()
             else:
                 room_feed = Room.get_room(self.room_id).to_api_json()
+        formatted_days = format_days(self.meeting_days)
         return {
             'id': self.id,
             'alerts': self.alerts or [],
             'createdAt': to_isoformat(self.created_at),
             'instructorUids': self.instructor_uids,
             'kalturaScheduleId': self.kaltura_schedule_id,
-            'meetingDays': format_days(self.meeting_days),
+            'meetingDays': formatted_days,
+            'meetingDaysNames': get_names_of_days(formatted_days),
             'meetingEndDate': datetime.strftime(self.meeting_end_date, '%Y-%m-%d'),
             'meetingEndTime': self.meeting_end_time,
             'meetingEndTimeFormatted': format_time(self.meeting_end_time),

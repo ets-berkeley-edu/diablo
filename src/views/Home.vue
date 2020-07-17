@@ -36,17 +36,18 @@
                   {{ oxfordJoin($_.map(course.instructors, 'name')) }}
                 </td>
                 <td :class="{'border-bottom-zero': course.meetings.eligible.length > 1}" class="text-no-wrap">
-                  {{ course.meetings.eligible[0].room.location }}
+                  {{ course.meeting.room.location }}
                 </td>
                 <td :class="{'border-bottom-zero': course.meetings.eligible.length > 1}" class="text-no-wrap">
-                  {{ $_.join(course.meetings.eligible[0].daysFormatted, ', ') }}
+                  <Days v-if="course.meeting.daysNames.length" :names-of-days="course.meeting.daysNames" />
+                  <span v-if="!course.meeting.daysNames.length">&mdash;</span>
                 </td>
                 <td :class="{'border-bottom-zero': course.meetings.eligible.length > 1}" class="text-no-wrap">
                   <div v-if="course.nonstandardMeetingDates" class="pt-2">
-                    <span class="text-no-wrap">{{ course.meetings.eligible[0].startDate | moment('MMM D, YYYY') }} - </span>
-                    <span class="text-no-wrap">{{ course.meetings.eligible[0].endDate | moment('MMM D, YYYY') }}</span>
+                    <span class="text-no-wrap">{{ course.meeting.startDate | moment('MMM D, YYYY') }} - </span>
+                    <span class="text-no-wrap">{{ course.meeting.endDate | moment('MMM D, YYYY') }}</span>
                   </div>
-                  {{ course.meetings.eligible[0].startTimeFormatted }} - {{ course.meetings.eligible[0].endTimeFormatted }}
+                  {{ course.meeting.startTimeFormatted }} - {{ course.meeting.endTimeFormatted }}
                 </td>
               </tr>
               <tr v-for="index in course.meetings.eligible.length - 1" :key="index">
@@ -57,7 +58,7 @@
                   {{ course.meetings.eligible[index].room.location }}
                 </td>
                 <td class="text-no-wrap">
-                  {{ $_.join(course.meetings.eligible[index].daysFormatted, ', ') }}
+                  <Days :names-of-days="course.meetings.eligible[index].daysNames" />
                 </td>
                 <td class="text-no-wrap">
                   <div v-if="course.nonstandardMeetingDates" class="pt-2">
@@ -82,13 +83,14 @@
 
 <script>
   import Context from '@/mixins/Context'
+  import Days from '@/components/util/Days'
   import PageTitle from '@/components/util/PageTitle'
   import Utils from '@/mixins/Utils'
 
   export default {
     name: 'Home',
     mixins: [Context, Utils],
-    components: {PageTitle},
+    components: {Days, PageTitle},
     data: () => ({
       courses: undefined,
       headers: [
@@ -106,7 +108,11 @@
       this.pageTitle = `Your ${this.$config.currentTermName} Courses Eligible for Capture`
       this.courses = this.$_.filter(this.$currentUser.courses, course => {
         course.courseCodes = this.getCourseCodes(course)
-        return course.meetings.eligible.length
+        const isEligible = course.meetings.eligible.length
+        if (isEligible) {
+          course.meeting = this.getDisplayMeetings(course)[0]
+        }
+        return isEligible
       })
       this.$ready(this.pageTitle)
     }

@@ -94,7 +94,7 @@
                     Meeting times have changed.
                   </v-tooltip>
                   <div>
-                    {{ $_.join(course.scheduled.meetingDays, ' ') }},
+                    <Days :names-of-days="course.scheduled.meetingDaysNames" :omit-comma="true" />,
                     {{ course.scheduled.meetingStartTimeFormatted }} - {{ course.scheduled.meetingEndTimeFormatted }}
                   </div>
                 </div>
@@ -141,7 +141,7 @@
                   </div>
                   <div class="d-flex">
                     <div>
-                      {{ $_.join(meeting.daysFormatted, ' ') }},
+                      <Days :names-of-days="meeting.daysNames" :omit-comma="true" />,
                       {{ meeting.startTimeFormatted }} - {{ meeting.endTimeFormatted }}
                     </div>
                   </div>
@@ -157,6 +157,7 @@
 
 <script>
   import CourseRoom from '@/components/course/CourseRoom'
+  import Days from '@/components/util/Days'
   import Instructor from '@/components/course/Instructor'
   import Utils from '@/mixins/Utils'
   import {getCalnetUser} from '@/api/user'
@@ -165,7 +166,7 @@
   export default {
     name: 'ObsoleteSchedule',
     mixins: [Utils],
-    components: {Instructor, CourseRoom},
+    components: {CourseRoom, Days, Instructor},
     props: {
       course: {
         required: true,

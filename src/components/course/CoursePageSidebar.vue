@@ -17,7 +17,7 @@
           <v-icon>mdi-calendar</v-icon>
         </v-col>
         <v-col :class="{'pb-0': displayMeetings.length > 1}">
-          {{ $_.join(meeting.daysFormatted, ', ') }}
+          <Days :names-of-days="meeting.daysNames" />
           <div>
             {{ meeting.startDate | moment('MMM D, YYYY') }} to {{ meeting.endDate | moment('MMM D, YYYY') }}
             <div v-if="meeting.recordingEndDate && meeting.endDate !== meeting.recordingEndDate" class="font-weight-light">
@@ -154,6 +154,7 @@
 
 <script>
   import Context from '@/mixins/Context'
+  import Days from '@/components/util/Days'
   import OxfordJoin from '@/components/util/OxfordJoin'
   import Utils from '@/mixins/Utils'
   import {unschedule} from '@/api/course'
@@ -161,7 +162,7 @@
 
   export default {
     name: 'CoursePageSidebar',
-    components: {OxfordJoin},
+    components: {Days, OxfordJoin},
     mixins: [Context, Utils],
     props: {
       afterUnschedule: {

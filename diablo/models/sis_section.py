@@ -27,7 +27,7 @@ from datetime import datetime
 from diablo import db
 from diablo.lib.berkeley import are_scheduled_dates_obsolete, are_scheduled_times_obsolete, get_recording_end_date, \
     get_recording_start_date
-from diablo.lib.util import format_days, format_time
+from diablo.lib.util import format_days, format_time, get_names_of_days
 from diablo.models.approval import Approval
 from diablo.models.canvas_course_site import CanvasCourseSite
 from diablo.models.course_preference import CoursePreference
@@ -932,9 +932,11 @@ def _to_instructor_json(row, approvals, invited_uids):
 def _to_meeting_json(row):
     end_date = row['meeting_end_date']
     start_date = row['meeting_start_date']
+    formatted_days = format_days(row['meeting_days'])
     return {
         'days': row['meeting_days'],
-        'daysFormatted': format_days(row['meeting_days']),
+        'daysFormatted': formatted_days,
+        'daysNames': get_names_of_days(formatted_days),
         'endDate': end_date and datetime.strftime(end_date, '%Y-%m-%d'),
         'endTime': row['meeting_end_time'],
         'endTimeFormatted': format_time(row['meeting_end_time']),
