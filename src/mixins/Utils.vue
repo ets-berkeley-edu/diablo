@@ -48,6 +48,7 @@
             return !!el
         })
       },
+      stripAnchorRef: path => _.split(path, '#', 1)[0],
       stripHtmlAndTrim: html => {
         let text = html && html.replace(/<([^>]+)>/ig,'')
         text = text && text.replace(/&nbsp;/g, '')
