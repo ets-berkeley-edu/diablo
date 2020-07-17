@@ -64,7 +64,8 @@
                 <span v-if="!course.room">&mdash;</span>
               </td>
               <td :id="`meeting-days-${course.sectionId}-0`" :class="tdc(course)">
-                {{ $_.join(meetings[0].daysFormatted, ', ') || '&mdash;' }}
+                <Days v-if="meetings[0].daysNames.length" :names-of-days="meetings[0].daysNames" />
+                <span v-if="!meetings[0].daysNames.length">&mdash;</span>
               </td>
               <td :id="`meeting-times-${course.sectionId}-0`" :class="tdc(course)">
                 <div v-if="course.nonstandardMeetingDates">
@@ -128,7 +129,8 @@
                 <span v-if="!meetings[index].room">&mdash;</span>
               </td>
               <td class="text-no-wrap" :class="mdc(course)">
-                {{ $_.join(meetings[index].daysFormatted, ', ') || '&mdash;' }}
+                <Days v-if="meetings[index].daysNames.length" :names-of-days="meetings[index].daysNames" />
+                <span v-if="!meetings[index].daysNames.length">&mdash;</span>
               </td>
               <td class="text-no-wrap" :class="mdc(course)">
                 <div v-if="course.nonstandardMeetingDates">
@@ -181,13 +183,14 @@
 
 <script>
   import Context from '@/mixins/Context'
+  import Days from '@/components/util/Days'
   import Instructor from '@/components/course/Instructor'
   import ToggleOptOut from '@/components/course/ToggleOptOut'
   import Utils from '@/mixins/Utils'
 
   export default {
     name: 'CoursesDataTable',
-    components: {Instructor, ToggleOptOut},
+    components: {Days, Instructor, ToggleOptOut},
     mixins: [Context, Utils],
     props: {
       courses: {
