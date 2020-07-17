@@ -62,10 +62,11 @@
                 <tr v-for="event in item.recurrences" :key="event.id">
                   <td>
                     <v-tooltip v-if="$_.size(event.blackoutConflicts)" :id="`blackout-conflicts-${event.id}`" top>
-                      <template v-slot:activator="{ on }">
+                      <template v-slot:activator="{ on, attrs }">
                         <v-icon
                           color="red"
                           class="pa-0"
+                          v-bind="attrs"
                           v-on="on"
                         >
                           mdi-alert

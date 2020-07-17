@@ -5,8 +5,13 @@
       :id="`tooltip-course-${course.sectionId}-room-${room.id}-ineligible`"
       bottom
     >
-      <template v-slot:activator="{ on }">
-        <v-icon class="pr-1" :color="room.capability ? 'light-green' : 'yellow darken-2'" v-on="on">
+      <template v-slot:activator="{ on, attrs }">
+        <v-icon
+          class="pr-1"
+          :color="room.capability ? 'light-green' : 'yellow darken-2'"
+          v-bind="attrs"
+          v-on="on"
+        >
           {{ room.capability ? 'mdi-video-plus' : 'mdi-video-off-outline' }}
         </v-icon>
       </template>
@@ -17,8 +22,15 @@
       :id="`tooltip-course-${course.sectionId}-room-${room.id}-obsolete`"
       bottom
     >
-      <template v-slot:activator="{ on }">
-        <v-icon class="pr-1" color="yellow darken-2" v-on="on">mdi-map-marker-remove-outline</v-icon>
+      <template v-slot:activator="{ on, attrs }">
+        <v-icon
+          class="pr-1"
+          color="yellow darken-2"
+          v-bind="attrs"
+          v-on="on"
+        >
+          mdi-map-marker-remove-outline
+        </v-icon>
       </template>
       This course moved out of {{ room.location }}.
     </v-tooltip>

@@ -45,10 +45,11 @@
             <span :id="`filter-option-${data.item.value}`" slot="item" slot-scope="data">{{ data.item }}</span>
             <template v-slot:selection="{ item }">
               <v-tooltip id="tooltip-ouija-filter" bottom>
-                <template v-slot:activator="{ on }">
+                <template v-slot:activator="{ on, attrs }">
                   <v-icon
                     slot="prepend-item"
                     class="pb-1 pr-2"
+                    v-bind="attrs"
                     v-on="on"
                   >
                     mdi-information-outline

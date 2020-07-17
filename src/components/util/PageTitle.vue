@@ -1,14 +1,26 @@
 <template>
   <div class="pl-2 pt-4">
     <h1>
-      <v-icon
-        class="icon-padding"
-        :color="$vuetify.theme.dark ? 'white' : 'primary'"
-        large
-        @click="is420 ? sharknado() : $_.noop"
-      >
-        {{ is420 ? 'mdi-weather-tornado' : icon }}
-      </v-icon> <span :class="{'text-h4': text.length > 40}"> {{ text }}</span>
+      <span v-if="is420">
+        <v-icon
+          aria-label="Play entertaining video clip (opens a new tab)"
+          class="icon-padding"
+          :color="$vuetify.theme.dark ? 'white' : 'primary'"
+          large
+          @click="smile"
+        >
+          mdi-weather-tornado
+        </v-icon> <span :class="{'text-h4': text.length > 40}"> {{ text }}</span>
+      </span>
+      <span v-if="!is420">
+        <v-icon
+          class="icon-padding"
+          :color="$vuetify.theme.dark ? 'white' : 'primary'"
+          large
+        >
+          {{ icon }}
+        </v-icon> <span :class="{'text-h4': text.length > 40}"> {{ text }}</span>
+      </span>
     </h1>
   </div>
 </template>
@@ -33,7 +45,7 @@
       this.is420 = this.$moment().format('H:mm') === '16:20'
     },
     methods: {
-      sharknado() {
+      smile() {
         window.open(this.$config.easterEgg420, '_blank')
       }
     }

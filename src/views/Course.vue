@@ -4,12 +4,12 @@
       <v-row class="pl-3">
         <PageTitle
           v-if="$config.currentTermId === this.course.termId"
-          icon="mdi-swap-horizontal"
+          icon="mdi-book-multiple-outline"
           :text="courseDisplayTitle"
         />
         <PageTitle
           v-if="$config.currentTermId !== this.course.termId"
-          icon="mdi-swap-horizontal"
+          icon="mdi-book-multiple-outline"
           :text="`${courseDisplayTitle} (${getTermName(course.termId)})`"
         />
       </v-row>

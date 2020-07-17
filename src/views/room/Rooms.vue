@@ -4,13 +4,14 @@
       <PageTitle icon="mdi-domain" :text="`${$_.size(rooms)} Rooms`" />
       <v-spacer></v-spacer>
       <v-tooltip v-model="adviseAgainstRoom237" bottom color="pink">
-        <template v-slot:activator="{}">
+        <template v-slot:activator="{ on, attrs }">
           <v-text-field
             v-model="search"
             append-icon="mdi-magnify"
             label="Search"
             single-line
             hide-details
+            v-bind="attrs"
           ></v-text-field>
         </template>
         Nothing. There ain't nothing in Room 237. But you ain't got no business going in there anyway. So stay out!

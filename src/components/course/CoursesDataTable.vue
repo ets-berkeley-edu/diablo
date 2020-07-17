@@ -75,11 +75,12 @@
               </td>
               <td :id="`course-${course.sectionId}-status`" :class="tdc(course)">
                 <v-tooltip v-if="course.wasApprovedByAdmin" :id="`tooltip-admin-approval-${course.sectionId}`" bottom>
-                  <template v-slot:activator="{ on }">
+                  <template v-slot:activator="{ on, attrs }">
                     <v-icon
                       color="green"
                       class="pa-0"
                       dark
+                      v-bind="attrs"
                       v-on="on"
                     >
                       mdi-account-check-outline
@@ -160,7 +161,7 @@
         </tbody>
         <tbody v-if="!refreshing && !items.length">
           <tr>
-            <td id="message-when-zero-courses" class="ma-4 text-no-wrap title" :colspan="headers.length">
+            <td id="message-when-zero-courses" class="pt-4 text-no-wrap title" :colspan="headers.length">
               <span v-if="!refreshing">No courses.</span>
             </td>
           </tr>

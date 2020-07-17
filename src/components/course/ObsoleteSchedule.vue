@@ -59,8 +59,15 @@
                     :id="`tooltip-course-${course.sectionId}-obsolete-dates`"
                     bottom
                   >
-                    <template v-slot:activator="{ on }">
-                      <v-icon class="pr-1" color="yellow darken-2" v-on="on">mdi-calendar-export</v-icon>
+                    <template v-slot:activator="{ on, attrs }">
+                      <v-icon
+                        class="pr-1"
+                        color="yellow darken-2"
+                        v-bind="attrs"
+                        v-on="on"
+                      >
+                        mdi-calendar-export
+                      </v-icon>
                     </template>
                     Meeting dates have changed.
                   </v-tooltip>
@@ -74,8 +81,15 @@
                     :id="`tooltip-course-${course.sectionId}-obsolete-times`"
                     bottom
                   >
-                    <template v-slot:activator="{ on }">
-                      <v-icon class="pr-1" color="yellow darken-2" v-on="on">mdi-clock-alert-outline</v-icon>
+                    <template v-slot:activator="{ on, attrs }">
+                      <v-icon
+                        class="pr-1"
+                        color="yellow darken-2"
+                        v-bind="attrs"
+                        v-on="on"
+                      >
+                        mdi-clock-alert-outline
+                      </v-icon>
                     </template>
                     Meeting times have changed.
                   </v-tooltip>

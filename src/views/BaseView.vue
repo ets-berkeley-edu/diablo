@@ -55,9 +55,10 @@
       </div>
       <v-spacer></v-spacer>
       <v-menu offset-y rounded="lg">
-        <template v-slot:activator="{ on }">
+        <template v-slot:activator="{ on, attrs }">
           <v-btn
             id="btn-main-menu"
+            v-bind="attrs"
             color="primary"
             dark
             v-on="on"
