@@ -4,12 +4,12 @@
       <v-row class="pl-3">
         <PageTitle
           v-if="$config.currentTermId === this.course.termId"
-          icon="mdi-swap-horizontal"
+          icon="mdi-book-multiple-outline"
           :text="courseDisplayTitle"
         />
         <PageTitle
           v-if="$config.currentTermId !== this.course.termId"
-          icon="mdi-swap-horizontal"
+          icon="mdi-book-multiple-outline"
           :text="`${courseDisplayTitle} (${getTermName(course.termId)})`"
         />
       </v-row>
@@ -147,11 +147,16 @@
                 </v-col>
               </v-row>
               <v-row v-if="showSignUpForm && !$currentUser.isAdmin" no-gutters align="start">
-                <v-col md="auto">
-                  <v-checkbox id="agree-to-terms-checkbox" v-model="agreedToTerms" class="mt-0"></v-checkbox>
-                </v-col>
-                <v-col>
+                <v-col order="12">
                   <TermsAgreementText class="pt-1" />
+                </v-col>
+                <v-col md="auto">
+                  <v-checkbox
+                    id="agree-to-terms-checkbox"
+                    v-model="agreedToTerms"
+                    class="mt-0"
+                    aria-labelledby="permission-agreement"
+                  ></v-checkbox>
                 </v-col>
               </v-row>
               <v-row v-if="showSignUpForm" lg="2">

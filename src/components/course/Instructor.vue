@@ -5,8 +5,15 @@
       :id="`tooltip-course-${course.sectionId}-instructor-${instructor.uid}-approved`"
       bottom
     >
-      <template v-slot:activator="{ on }">
-        <v-icon class="pr-1" color="yellow darken-2" v-on="on">mdi-account-remove-outline</v-icon>
+      <template v-slot:activator="{ on, attrs }">
+        <v-icon
+          class="pr-1"
+          color="yellow darken-2"
+          v-bind="attrs"
+          v-on="on"
+        >
+          mdi-account-remove-outline
+        </v-icon>
       </template>
       {{ instructor.name }} is no longer an instructor of this course.
     </v-tooltip>
@@ -15,8 +22,15 @@
       :id="`tooltip-course-${course.sectionId}-instructor-${instructor.uid}-not-invited`"
       bottom
     >
-      <template v-slot:activator="{ on }">
-        <v-icon class="pr-1" color="yellow darken-2" v-on="on">mdi-email-alert-outline</v-icon>
+      <template v-slot:activator="{ on, attrs }">
+        <v-icon
+          class="pr-1"
+          color="yellow darken-2"
+          v-bind="attrs"
+          v-on="on"
+        >
+          mdi-email-alert-outline
+        </v-icon>
       </template>
       No invite has been sent to {{ instructor.name }}.
     </v-tooltip>
@@ -25,8 +39,15 @@
       :id="`tooltip-course-${course.sectionId}-instructor-${instructor.uid}-no-approval`"
       bottom
     >
-      <template v-slot:activator="{ on }">
-        <v-icon class="pr-1" color="yellow darken-2" v-on="on">mdi-checkbox-blank-outline</v-icon>
+      <template v-slot:activator="{ on, attrs }">
+        <v-icon
+          class="pr-1"
+          color="yellow darken-2"
+          v-bind="attrs"
+          v-on="on"
+        >
+          mdi-checkbox-blank-outline
+        </v-icon>
       </template>
       {{ instructor.name }} was sent an invite but has not approved the scheduled recordings.
     </v-tooltip>
@@ -35,8 +56,15 @@
       :id="`tooltip-course-${course.sectionId}-instructor-${instructor.uid}-approved`"
       bottom
     >
-      <template v-slot:activator="{ on }">
-        <v-icon class="pr-1" color="green" v-on="on">mdi-check</v-icon>
+      <template v-slot:activator="{ on, attrs }">
+        <v-icon
+          class="pr-1"
+          color="green"
+          v-bind="attrs"
+          v-on="on"
+        >
+          mdi-check
+        </v-icon>
       </template>
       Approval submitted on {{ instructor.approval.createdAt | moment('MMM D, YYYY') }}.
     </v-tooltip>

@@ -4,12 +4,13 @@
       v-model="dialog"
       width="500"
     >
-      <template v-slot:activator="{ on }">
+      <template v-slot:activator="{ on, attrs }">
         <v-btn
           id="btn-email-template-codes"
           color="secondary"
           dark
           text
+          v-bind="attrs"
           v-on="on"
         >
           Template Codes

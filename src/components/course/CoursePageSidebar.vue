@@ -109,10 +109,11 @@
     <v-row v-if="offerUnschedule" id="unschedule" justify="center">
       <v-col md="auto">
         <v-dialog v-model="showUnscheduleModal" persistent max-width="400">
-          <template v-slot:activator="{ on }">
+          <template v-slot:activator="{ on, attrs }">
             <v-btn
               id="unschedule-course-btn"
               color="primary"
+              v-bind="attrs"
               v-on="on"
             >
               Unschedule
