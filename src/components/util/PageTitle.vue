@@ -34,7 +34,7 @@
     },
     methods: {
       sharknado() {
-        window.open('https://www.youtube.com/watch?v=JS9hjJJ9nWc', '_blank')
+        window.open(this.$config.easterEgg420, '_blank')
       }
     }
   }

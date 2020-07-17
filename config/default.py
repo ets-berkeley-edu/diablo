@@ -76,6 +76,8 @@ DEV_AUTH_PASSWORD = 'another secret'
 
 DIABLO_BASE_URL = 'https://manage-foo.coursecapture.berkeley.edu'
 
+EASTER_EGG_420 = 'https://www.youtube.com/watch?v=JS9hjJJ9nWc'
+
 EMAIL_COURSE_CAPTURE_SUPPORT = '__EMAIL_COURSE_CAPTURE_SUPPORT__at_berkeley.edu'
 EMAIL_COURSE_CAPTURE_SUPPORT_LABEL = 'Course Capture Admin'
 EMAIL_DIABLO_ADMIN = '__EMAIL_DIABLO_ADMIN__at_berkeley.edu'
