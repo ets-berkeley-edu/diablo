@@ -36,7 +36,6 @@ from diablo.models.admin_user import AdminUser
 from diablo.models.email_template import EmailTemplate
 from diablo.models.job import Job
 from diablo.models.room import Room
-from diablo.models.sent_email import SentEmail
 from diablo.models.sis_section import SisSection
 from flask import current_app as app
 from sqlalchemy.sql import text
@@ -65,7 +64,6 @@ def load(create_test_data=True):
     _load_schemas()
     if create_test_data:
         _create_email_templates()
-        _create_emails_sent()
         _create_users()
         _cache_externals()
         _load_courses()
@@ -161,17 +159,6 @@ def _create_email_templates():
         name='Waiting for approval',
         subject_line="Who's Captain Howdy?",
         message='You know, I make the questions and he does the answers.',
-    )
-    std_commit(allow_test_environment=True)
-
-
-def _create_emails_sent():
-    term_id = app.config['CURRENT_TERM_ID']
-    SentEmail.create(
-        recipient_uid='00001',
-        section_id='50001',
-        template_type='invitation',
-        term_id=term_id,
     )
     std_commit(allow_test_environment=True)
 

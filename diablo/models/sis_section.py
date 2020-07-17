@@ -286,6 +286,7 @@ class SisSection(db.Model):
                 r.location AS room_location
             FROM sis_sections s
             JOIN rooms r ON r.location = s.meeting_location
+                AND r.capability IS NOT NULL
                 AND s.term_id = :term_id
                 AND (s.instructor_uid IS NULL OR s.instructor_role_code IN ('ICNT', 'PI', 'TNIC'))
                 AND s.is_primary IS TRUE
