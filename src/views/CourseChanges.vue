@@ -1,7 +1,7 @@
 <template>
   <v-card v-if="!loading" outlined class="elevation-1">
     <v-card-title>
-      <PageTitle icon="mdi-swap-horizontal" text="Course Changes" />
+      <PageTitle icon="mdi-directions-fork" text="Course Changes" />
     </v-card-title>
     <v-card-text v-if="courses.length">
       <ObsoleteSchedule v-for="course in courses" :key="course.sectionId" :course="course" />

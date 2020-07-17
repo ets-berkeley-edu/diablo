@@ -2,7 +2,7 @@
   <v-container v-if="!loading" class="pa-0" fluid>
     <v-card outlined class="elevation-1">
       <v-card-title>
-        <PageTitle icon="mdi-pencil" text="Email Templates" />
+        <PageTitle icon="mdi-email-open-multiple-outline" text="Email Templates" />
       </v-card-title>
       <v-card-text class="pb-0">
         <div>
