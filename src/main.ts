@@ -1,3 +1,4 @@
+import '@mdi/font/css/materialdesignicons.min.css'
 import 'tiptap-vuetify/dist/main.css'
 import 'vuetify/dist/vuetify.min.css'
 import _ from 'lodash'
