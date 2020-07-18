@@ -104,7 +104,7 @@ def get_names_of_days(day_codes):
         'sa': 'Saturday',
         'su': 'Sunday',
     }
-    return [names_by_code.get(day_code[:2].lower()) for day_code in day_codes]
+    return day_codes and [names_by_code.get(day_code[:2].lower()) for day_code in day_codes]
 
 
 def readable_join(items):

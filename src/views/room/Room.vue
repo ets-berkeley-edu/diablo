@@ -34,6 +34,7 @@
           <v-list-item v-if="offerPrintable">
             <router-link
               :id="`print-room-${room.id}-schedule`"
+              aria-label="Open printable version of this page, in a new window"
               class="subtitle-1"
               target="_blank"
               :to="`/room/printable/${room.id}`"
