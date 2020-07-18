@@ -7,7 +7,6 @@ import CourseChanges from '@/views/CourseChanges.vue'
 import EditEmailTemplate from '@/views/email/EditEmailTemplate.vue'
 import EmailTemplates from '@/views/email/EmailTemplates.vue'
 import Error from '@/views/Error.vue'
-import goTo from 'vuetify/es5/services/goto'
 import Home from '@/views/Home.vue'
 import Jobs from '@/views/Jobs.vue'
 import Login from '@/views/Login.vue'
@@ -24,7 +23,9 @@ Vue.use(Router)
 
 const router = new Router({
   mode: 'history',
-  scrollBehavior: (to, from, savedPosition) => goTo(to.hash || (savedPosition ? savedPosition.y : 0)),
+  scrollBehavior() {
+    return { x: 0, y: 0 }
+  },
   routes: [
     {
       path: '/',
