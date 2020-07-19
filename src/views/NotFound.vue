@@ -1,5 +1,10 @@
 <template>
-  <v-card v-if="!loading" outlined class="elevation-1">
+  <v-card
+    v-if="!loading"
+    class="elevation-1"
+    disabled
+    outlined
+  >
     <v-card-title>
       <PageTitle icon="mdi-sign-caution" text="Uh oh!" />
     </v-card-title>

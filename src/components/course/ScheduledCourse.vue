@@ -1,5 +1,5 @@
 <template>
-  <v-card tile>
+  <v-card disabled tile>
     <v-list-item-title class="pl-4 pt-4">
       <h4 class="title">Recordings scheduled</h4>
       <div v-if="$currentUser.isAdmin" class="d-flex align-bottom">

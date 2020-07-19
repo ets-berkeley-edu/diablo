@@ -105,7 +105,6 @@
     }),
     created() {
       this.$loading()
-      this.pageTitle = `Your ${this.$config.currentTermName} Courses Eligible for Capture`
       this.courses = this.$_.filter(this.$currentUser.courses, course => {
         course.courseCodes = this.getCourseCodes(course)
         const isEligible = course.meetings.eligible.length
@@ -114,6 +113,7 @@
         }
         return isEligible
       })
+      this.pageTitle = `Your ${this.$config.currentTermName} Course${this.courses.length === 1 ? '' : 's'} Eligible for Capture`
       this.$ready(this.pageTitle)
     }
   }
