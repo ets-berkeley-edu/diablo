@@ -24,7 +24,7 @@
           <CoursePageSidebar :after-unschedule="afterUnschedule" :course="course" />
         </v-col>
         <v-col>
-          <v-card class="pa-6" disabled outlined>
+          <v-card class="pa-6" outlined>
             <v-container v-if="isCurrentTerm && meeting.room.capability && !multipleEligibleMeetings">
               <v-row no-gutters>
                 <v-col id="approvals-described" class="font-weight-medium red--text">
@@ -49,7 +49,7 @@
               </v-row>
               <v-row v-if="hasCurrentUserApproved && !course.scheduled">
                 <v-col>
-                  <v-card disabled tile>
+                  <v-card tile>
                     <v-list-item two-line class="pb-3">
                       <v-list-item-content>
                         <v-list-item-title>Recording Type</v-list-item-title>
