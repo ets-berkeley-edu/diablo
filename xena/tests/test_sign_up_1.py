@@ -498,7 +498,7 @@ class TestSignUp1:
         self.sign_up_page.log_out()
         self.login_page.load_page()
         self.login_page.dev_auth(self.section.instructors[0].uid)
-        self.ouija_page.wait_for_diablo_title(f'Your {self.section.term.name} Courses Eligible for Capture')
+        self.ouija_page.wait_for_title_containing(f'Your {self.section.term.name} Courses Eligible for Capture')
 
     def test_sign_up_link(self):
         self.ouija_page.click_sign_up_page_link(self.section)

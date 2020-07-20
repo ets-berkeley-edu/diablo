@@ -37,6 +37,10 @@ from xena.test_utils import util
 
 class RoomPage(DiabloPages):
 
+    def hit_url(self, room):
+        room_id = util.get_room_id(room)
+        self.driver.get(f'{app.config["BASE_URL"]}/room/{room_id}')
+
     # HEADER
 
     SELECT_CAPABILITY_INPUT = (By.XPATH, '//input[contains(@id, "select-room-capability")]/ancestor::div[@role="button"]')

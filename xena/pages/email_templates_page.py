@@ -70,9 +70,12 @@ class EmailTemplatesPage(DiabloPages):
     def delete_email_button_locator(template):
         return By.XPATH, f'{EmailTemplatesPage.template_row_xpath(template)}//button[contains(@id, "delete-email-template")]'
 
+    def hit_url(self):
+        self.driver.get(f'{app.config["BASE_URL"]}/email/templates')
+
     def load_page(self):
         app.logger.info('Loading the templates page')
-        self.driver.get(f'{app.config["BASE_URL"]}/email/templates')
+        self.hit_url()
 
     def wait_for_template_row(self, template):
         Wait(self.driver, util.get_short_timeout()).until(

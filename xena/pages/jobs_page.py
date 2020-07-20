@@ -47,9 +47,12 @@ class JobsPage(DiabloPages):
 
     SEARCH_HISTORY_INPUT = (By.XPATH, '//label[text()="Search History"]/following-sibling::input')
 
+    def hit_url(self):
+        self.driver.get(f'{app.config["BASE_URL"]}/jobs')
+
     def load_page(self):
         app.logger.info('Loading the Jobs page')
-        self.driver.get(f'{app.config["BASE_URL"]}/jobs')
+        self.hit_url()
         self.wait_for_diablo_title('Jobs')
 
     def run_admin_emails_job(self):
@@ -109,7 +112,7 @@ class JobsPage(DiabloPages):
         self.wait_for_most_recent_job_success(AsyncJob.SIS_DATA_REFRESH)
 
     def wait_for_jobs_table(self):
-        locator = By.XPATH, '//h2[contains(text(), "Jobs")]/../../following-sibling::div//table'
+        locator = By.XPATH, '//h1[contains(., "Jobs")]/../../following-sibling::div//table'
         Wait(self.driver, util.get_short_timeout()).until(ec.presence_of_element_located(locator))
 
     @staticmethod

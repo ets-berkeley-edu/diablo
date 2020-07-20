@@ -53,9 +53,12 @@ class OuijaBoardPage(DiabloPages):
 
     COURSE_ROW = (By.XPATH, '//div[@id="courses-data-table"]//tbody/tr/td[contains(@id, "course-name")]')
 
+    def hit_url(self):
+        self.driver.get(f'{app.config["BASE_URL"]}/ouija')
+
     def load_page(self):
         app.logger.info('Loading the Ouija Board')
-        self.driver.get(f'{app.config["BASE_URL"]}/ouija')
+        self.hit_url()
         self.wait_for_ouija_title()
 
     def load_instructor_view(self):
