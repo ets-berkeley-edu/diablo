@@ -182,6 +182,17 @@ def reset_invite_test_data(term, section, instructor=None):
     std_commit(allow_test_environment=True)
 
 
+def get_room_id(room):
+    sql = f"SELECT id FROM rooms WHERE location = '{room.name}'"
+    app.logger.info(sql)
+    ids = []
+    result = db.session.execute(text(sql))
+    std_commit(allow_test_environment=True)
+    for row in result:
+        ids.append(dict(row).get('id'))
+    return ids[0]
+
+
 def change_course_room(section, old_room=None, new_room=None):
     old = f"= '{old_room.name}'" if old_room else 'IS NULL'
     new = f"'{new_room.name}'" if new_room else 'NULL'
@@ -247,6 +258,18 @@ def change_course_instructor(section, old_instructor=None, new_instructor=None):
                       AND term_id = {section.term.id}
                       AND instructor_uid = '{old_instructor.uid}'
         """
+    app.logger.info(sql)
+    db.session.execute(text(sql))
+    std_commit(allow_test_environment=True)
+
+
+def set_instructor_role(section, instructor, role):
+    sql = f"""UPDATE sis_sections
+              SET instructor_role_code = '{role}'
+              WHERE section_id = {section.ccn}
+                  AND term_id = {section.term.id}
+                  AND instructor_uid = '{instructor.uid}'
+    """
     app.logger.info(sql)
     db.session.execute(text(sql))
     std_commit(allow_test_environment=True)

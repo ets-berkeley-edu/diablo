@@ -73,7 +73,7 @@ class DiabloPages(Page):
         self.wait_for_element_and_click(DiabloPages.MENU_BUTTON)
 
     def open_menu(self):
-        if not self.is_present(DiabloPages.LOG_OUT_LINK):
+        if not self.is_present(DiabloPages.LOG_OUT_LINK) or not self.element(DiabloPages.LOG_OUT_LINK).is_displayed():
             app.logger.info('Clicking header menu button')
             self.click_menu_button()
 

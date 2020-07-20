@@ -147,7 +147,7 @@ class TestWeirdTypeB:
     def test_home_page(self):
         self.ouija_page.log_out()
         self.login_page.dev_auth(self.instructor_0.uid)
-        self.ouija_page.wait_for_diablo_title(f'Your {self.section.term.name} Courses Eligible for Capture')
+        self.ouija_page.wait_for_title_containing(f'Your {self.section.term.name} Course')
 
     def test_sign_up_link(self):
         self.ouija_page.click_sign_up_page_link(self.section)

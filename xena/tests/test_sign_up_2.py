@@ -210,10 +210,7 @@ class TestSignUp2:
         self.jobs_page.load_page()
         self.jobs_page.log_out()
         self.login_page.dev_auth(self.section.instructors[0].uid)
-        self.ouija_page.wait_for_diablo_title(f'Your {self.term.name} Courses Eligible for Capture')
-
-    def test_current_term_inst_1(self):
-        assert self.ouija_page.visible_heading() == f'Your {self.term.name} Courses Eligible for Capture'
+        self.ouija_page.wait_for_title_containing(f'Your {self.term.name} Course')
 
     def test_sign_up_link_inst_1(self):
         self.ouija_page.click_sign_up_page_link(self.section)
@@ -382,10 +379,7 @@ class TestSignUp2:
         self.jobs_page.load_page()
         self.jobs_page.log_out()
         self.login_page.dev_auth(self.section.instructors[1].uid)
-        self.ouija_page.wait_for_diablo_title(f'Your {self.term.name} Courses Eligible for Capture')
-
-    def test_current_term_inst_2(self):
-        assert self.ouija_page.visible_heading() == f'Your {self.term.name} Courses Eligible for Capture'
+        self.ouija_page.wait_for_title_containing(f'Your {self.term.name} Course')
 
     def test_sign_up_link_inst_2(self):
         self.ouija_page.click_sign_up_page_link(self.section)

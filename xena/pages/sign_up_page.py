@@ -62,6 +62,7 @@ class SignUpPage(DiabloPages):
     APPROVALS_MSG = (By.ID, 'approvals-described')
     CONFIRMATION_MSG = (By.XPATH, '//span[contains(text(), "You submitted the preferences below.")]')
     NO_AUTO_SCHED_MSG = (By.XPATH, '//div[contains(text(), "cannot be scheduled automatically")]')
+    NOT_ELIGIBLE_MSG = (By.ID, 'course-not-eligible')
 
     RECORDING_TYPE_APPROVED = (By.XPATH, '//h4[contains(., "Recording Type")]/../following-sibling::div/div')
     PUBLISH_TYPE_APPROVED = (By.ID, 'approved-publish-type')
@@ -80,6 +81,10 @@ class SignUpPage(DiabloPages):
     @staticmethod
     def course_site_link_locator(site):
         return By.XPATH, f'//a[@id="canvas-course-site-{site.site_id}"]'
+
+    @staticmethod
+    def not_authorized_msg_locator(section):
+        return By.XPATH, f'//span[text()="Sorry, you are unauthorized to view the course {section.code}, {section.number}."]'
 
     @staticmethod
     def expected_term_date_str(start_date, end_date):

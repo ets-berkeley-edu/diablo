@@ -127,6 +127,9 @@ class Page(object):
                 else:
                     time.sleep(1)
 
+    def wait_for_title_containing(self, string):
+        Wait(self.driver, util.get_medium_timeout()).until(ec.title_contains(string))
+
     def hide_diablo_footer(self):
         if self.is_present(Page.DIABLO_FOOTER) and self.element(Page.DIABLO_FOOTER).is_displayed():
             self.driver.execute_script('document.getElementById("footer").style.display="none";')

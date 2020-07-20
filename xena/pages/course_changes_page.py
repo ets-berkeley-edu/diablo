@@ -59,9 +59,12 @@ class CourseChangesPage(DiabloPages):
         end = dates[-1].strftime('%Y-%m-%d')
         return f'{start} - {end}'
 
+    def hit_url(self):
+        self.driver.get(f'{app.config["BASE_URL"]}/changes')
+
     def load_page(self):
         app.logger.info('Loading the course changes page')
-        self.driver.get(f'{app.config["BASE_URL"]}/changes')
+        self.hit_url()
 
     def is_course_row_present(self, section):
         return self.is_present((By.XPATH, CourseChangesPage.course_container_xpath(section)))
