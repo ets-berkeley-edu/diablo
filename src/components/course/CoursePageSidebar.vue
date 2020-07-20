@@ -2,7 +2,6 @@
   <v-card
     aria-labelledby="course-page-sidebar-title"
     class="pa-6"
-    disabled
     outlined
     tile
   >
