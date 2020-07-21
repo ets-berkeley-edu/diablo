@@ -2,7 +2,6 @@
   <v-card
     v-if="!loading"
     class="elevation-1"
-    disabled
     outlined
   >
     <v-card-title>

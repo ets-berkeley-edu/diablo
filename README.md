@@ -2,7 +2,7 @@
 
 Diablo supports UC Berkeley's Course Capture service.
 
-![Picture of sun setting in the city of Hatra, Iraq](src/assets/iraqi-sunset-from-exorcist-movie.png)
+![A house in Georgetown, DC](src/assets/the-house-in-georgetown.png)
 
 ## Installation
 
