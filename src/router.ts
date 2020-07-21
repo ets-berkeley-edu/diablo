@@ -44,13 +44,8 @@ const router = new Router({
       path: '/login',
       component: Login,
       beforeEnter: (to: any, from: any, next: any) => {
-        const currentUser = Vue.prototype.$currentUser
-        if (currentUser.isAuthenticated) {
-          if (_.trim(to.query.redirect)) {
-            next(to.query.redirect)
-          } else {
-            next('/home')
-          }
+        if (Vue.prototype.$currentUser.isAuthenticated) {
+          next('/')
         } else {
           next()
         }
@@ -189,6 +184,15 @@ const router = new Router({
       ]
     }
   ]
+})
+
+router.beforeEach((to: any, from: any, next: any) => {
+  const redirect = _.trim(to.query.redirect)
+  if (Vue.prototype.$currentUser.isAuthenticated && redirect) {
+    next(redirect)
+  } else {
+    next()
+  }
 })
 
 router.afterEach((to: any) => {
