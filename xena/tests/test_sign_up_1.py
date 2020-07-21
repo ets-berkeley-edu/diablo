@@ -358,6 +358,32 @@ class TestSignUp1:
         app.logger.info(f'Unexpected: {list(set(visible) - set(expected))} ')
         assert visible == expected
 
+    def test_open_printable(self):
+        self.room_printable_page.open_printable_schedule()
+
+    def test_printable_course(self):
+        expected = f'{self.section.code}, {self.section.number}'
+        assert self.room_printable_page.visible_course(self.section) == expected
+
+    def test_printable_instructors(self):
+        expected = [f'{inst.first_name} {inst.last_name} ({inst.uid})' for inst in self.section.instructors]
+        assert self.room_printable_page.visible_instructors(self.section) == expected
+
+    def test_printable_days(self):
+        expected = [f'{self.meeting.days}']
+        assert self.room_printable_page.visible_days(self.section) == expected
+
+    def test_printable_times(self):
+        expected = [f'{self.meeting.start_date} - {self.meeting.end_date}\n{self.meeting.start_time} - {self.meeting.end_time}']
+        assert self.room_printable_page.visible_times(self.section) == expected
+
+    def test_printable_rec_type(self):
+        expected = self.recording_schedule.recording_type.value['selection']
+        assert self.room_printable_page.visible_recording_type(self.section) == expected
+
+    def test_close_printable(self):
+        self.room_printable_page.close_printable_schedule()
+
     # VERIFY OUIJA FILTER
 
     def test_scheduled_filter_all(self):

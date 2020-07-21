@@ -83,8 +83,6 @@ class TestSignUp0:
 
     def test_delete_old_canvas_sites(self):
         self.canvas_page.delete_section_sites(self.section)
-        self.jobs_page.load_page()
-        self.jobs_page.run_canvas_job()
 
     def test_delete_old_email(self):
         self.email_page.log_in()
@@ -405,6 +403,33 @@ class TestSignUp0:
         app.logger.info(f'Missing: {list(set(expected) - set(visible))}')
         app.logger.info(f'Unexpected: {list(set(visible) - set(expected))} ')
         assert visible == expected
+
+    def test_open_printable(self):
+        self.room_printable_page.open_printable_schedule()
+
+    def test_printable_course(self):
+        expected = f'{self.section.code}, {self.section.number}'
+        assert self.room_printable_page.visible_course(self.section) == expected
+
+    def test_printable_instructors(self):
+        expected = [f'{inst.first_name} {inst.last_name} ({inst.uid})' for inst in self.section.instructors]
+        assert self.room_printable_page.visible_instructors(self.section) == expected
+
+    def test_printable_days(self):
+        expected = [f'{self.meeting.days}']
+        assert self.room_printable_page.visible_days(self.section) == expected
+
+    def test_printable_times(self):
+        dates = f'{self.meeting.start_date.strftime("%b %-d, %Y")} - {self.meeting.end_date.strftime("%b %-d, %Y")}'
+        times = f'{self.meeting.start_time} - {self.meeting.end_time}'
+        assert self.room_printable_page.visible_times(self.section) == f'{dates}\n{times}'
+
+    def test_printable_rec_type(self):
+        expected = self.recording_schedule.recording_type.value['selection']
+        assert self.room_printable_page.visible_recording_type(self.section) == expected
+
+    def test_close_printable(self):
+        self.room_printable_page.close_printable_schedule()
 
     # VERIFY OUIJA FILTER
 

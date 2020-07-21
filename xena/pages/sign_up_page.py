@@ -121,13 +121,16 @@ class SignUpPage(DiabloPages):
         return [el.text for el in els]
 
     def visible_meeting_days(self):
-        return [el.get_attribute('innerText').strip() for el in self.elements(SignUpPage.MEETING_DAYS)]
+        els = self.elements(SignUpPage.MEETING_DAYS)
+        return [el.get_attribute('innerText').replace('Days of the week:', '').replace('Dates:', '').strip() for el in els]
 
     def visible_meeting_time(self):
-        return [el.get_attribute('innerText').strip() for el in self.elements(SignUpPage.MEETING_TIMES)]
+        els = self.elements(SignUpPage.MEETING_TIMES)
+        return [el.get_attribute('innerText').replace('Start and end times:', '').strip() for el in els]
 
     def visible_rooms(self):
-        return [el.get_attribute('innerText').strip() for el in self.elements(SignUpPage.ROOMS)]
+        els = self.elements(SignUpPage.ROOMS)
+        return [el.get_attribute('innerText').replace('Location:', '').strip() for el in els]
 
     def visible_course_site_ids(self):
         site_els = self.elements(SignUpPage.COURSE_SITE_LINK)

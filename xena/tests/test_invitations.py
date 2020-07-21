@@ -23,6 +23,7 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
+from flask import current_app as app
 import pytest
 from xena.models.email import Email
 from xena.models.section import Section
@@ -118,3 +119,12 @@ class TestInvitations:
         subject = f'Invitation {self.section_1.term.name} {self.section_1.code} (To: {self.section_1.instructors[0].email})'
         email = Email(msg_type=None, sender=None, subject=subject)
         assert self.email_page.is_message_delivered(email) is True
+
+    def test_verify_csv_export_sections(self):
+        self.ouija_page.load_page()
+        self.ouija_page.filter_for_all()
+        downloaded_ids = self.ouija_page.download_csv_and_get_section_ids()
+        expected_ids = util.get_all_eligible_section_ids()
+        app.logger.info(f'Missing section ids: {list(set(expected_ids) - set(downloaded_ids))}')
+        app.logger.info(f'Unexpected section ids: {list(set(downloaded_ids) - set(expected_ids))}')
+        assert downloaded_ids == expected_ids
