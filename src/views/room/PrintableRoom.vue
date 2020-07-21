@@ -20,14 +20,14 @@
                   <th>Course</th>
                   <th>Instructors</th>
                   <th>Days</th>
-                  <th>Time</th>
+                  <th>Dates / Time</th>
                   <th>Recording</th>
                 </tr>
               </thead>
               <tbody v-if="courses.length">
                 <template v-for="course in courses">
                   <tr :key="course.sectionId">
-                    <td :id="`course-${course.sectionId}-label`" class="font-weight-black text-no-wrap w-30">
+                    <td :id="`course-${course.sectionId}-label`" class="font-weight-black w-20">
                       {{ course.label }}
                     </td>
                     <td>
@@ -47,7 +47,13 @@
                     </td>
                     <td :id="`course-${course.sectionId}-times`" class="text-no-wrap">
                       <div v-for="(meeting, index) in course.displayMeetings" :id="`meeting-times-${index}`" :key="index">
-                        {{ meeting.startTimeFormatted ? `${meeting.startTimeFormatted} - ${meeting.endTimeFormatted}` : '&mdash;' }}
+                        <div>
+                          <span class="text-no-wrap">{{ meeting.startDate | moment('MMM D, YYYY') }} - </span>
+                          <span class="text-no-wrap">{{ meeting.endDate | moment('MMM D, YYYY') }}</span>
+                        </div>
+                        <div v-if="meeting.startTimeFormatted">
+                          <span class="text-no-wrap">{{ meeting.startTimeFormatted }} - {{ meeting.endTimeFormatted }}</span>
+                        </div>
                       </div>
                     </td>
                     <td :id="`course-${course.sectionId}-recording-type`" class="text-no-wrap">
