@@ -94,6 +94,7 @@ def get_all_eligible_section_ids():
               WHERE sis_sections.term_id = {app.config['CURRENT_TERM_ID']}
                 AND sis_sections.is_primary IS TRUE
                 AND rooms.capability IS NOT NULL
+                AND sis_sections.is_principal_listing IS TRUE
               ORDER BY section_id ASC;
     """
     app.logger.info(sql)
