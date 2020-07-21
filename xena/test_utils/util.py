@@ -49,6 +49,10 @@ def get_long_timeout():
     return app.config['TIMEOUT_LONG']
 
 
+def default_download_dir():
+    return f'{app.config["BASE_DIR"]}/xena/downloads'
+
+
 def get_admin_uid():
     return app.config['ADMIN_UID']
 
@@ -81,6 +85,24 @@ def get_test_script_course(test_script_str):
     for course in parse_course_test_data():
         if course['test_script'] == test_script_str:
             return course
+
+
+def get_all_eligible_section_ids():
+    sql = f"""SELECT DISTINCT(section_id)
+              FROM sis_sections
+              JOIN rooms ON rooms.location = sis_sections.meeting_location
+              WHERE sis_sections.term_id = {app.config['CURRENT_TERM_ID']}
+                AND sis_sections.is_primary IS TRUE
+                AND rooms.capability IS NOT NULL
+              ORDER BY section_id ASC;
+    """
+    app.logger.info(sql)
+    ids = []
+    result = db.session.execute(text(sql))
+    std_commit(allow_test_environment=True)
+    for row in result:
+        ids.append(f'{dict(row).get("section_id")}')
+    return ids
 
 
 def get_kaltura_id(recording_schedule, term):

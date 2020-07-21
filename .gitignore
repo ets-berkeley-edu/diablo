@@ -39,3 +39,4 @@ tmp/
 # Xena
 geckodriver.log
 xena/fixtures/*-local.json
+xena/downloads/*

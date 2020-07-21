@@ -25,6 +25,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 
 from flask import current_app as app
 from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from xena.test_utils import util
 
@@ -39,7 +40,14 @@ class WebDriverManager(object):
         else:
             d = DesiredCapabilities.CHROME
             d['loggingPrefs'] = {'browser': 'ALL'}
-            return webdriver.Chrome(desired_capabilities=d)
+            options = Options()
+            prefs = {
+                'profile.default_content_settings.popups': 0,
+                'download.default_directory': util.default_download_dir(),
+                'directory_upgrade': True,
+            }
+            options.add_experimental_option('prefs', prefs)
+            return webdriver.Chrome(desired_capabilities=d, options=options)
 
     @classmethod
     def quit_browser(cls, driver):

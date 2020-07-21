@@ -23,6 +23,10 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
+import csv
+import glob
+import os
+import shutil
 import time
 
 from flask import current_app as app
@@ -35,6 +39,9 @@ from xena.test_utils import util
 
 
 class OuijaBoardPage(DiabloPages):
+
+    DOWNLOAD_CSV_BUTTON = (By.XPATH, '//button[contains(., "Download CSV")]')
+
     SEARCH_INPUT = (By.ID, 'input-search')
     SEARCH_SELECT_BUTTON = (By.XPATH, '//div[@aria-haspopup="listbox"]')
     SEARCH_SELECT_SELECTION = (By.XPATH, '//input[@id="ouija-filter-options"]/preceding-sibling::div')
@@ -67,6 +74,39 @@ class OuijaBoardPage(DiabloPages):
 
     def wait_for_ouija_title(self):
         self.wait_for_diablo_title('Ouija Board')
+
+    def download_csv_and_get_section_ids(self):
+        app.logger.info(f'Downloading course CSV to {util.default_download_dir()}')
+
+        # Make sure a clean download directory exists
+        if os.path.isdir(util.default_download_dir()):
+            shutil.rmtree(util.default_download_dir())
+        os.mkdir(util.default_download_dir())
+
+        # Click the download button and wait for the download to complete
+        self.wait_for_page_and_click(OuijaBoardPage.DOWNLOAD_CSV_BUTTON)
+        tries = 0
+        max_tries = 15
+        while tries <= max_tries:
+            tries += 1
+            try:
+                assert len(glob.glob(f'{util.default_download_dir()}/*.csv')) == 1
+                break
+            except AssertionError:
+                if tries == max_tries:
+                    raise
+                else:
+                    time.sleep(1)
+
+        # Parse the section ids from the file
+        file = glob.glob(f'{util.default_download_dir()}/*.csv')[0]
+        section_ids = []
+        with open(file) as csv_file:
+            for row in csv.DictReader(csv_file):
+                section_ids.append(row['Section Id'])
+        section_ids.sort()
+        app.logger.info(f'{section_ids}')
+        return section_ids
 
     # SEARCH AND FILTER
 

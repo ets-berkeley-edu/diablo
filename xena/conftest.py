@@ -39,6 +39,7 @@ from xena.pages.kaltura_page import KalturaPage
 from xena.pages.login_page import LoginPage
 from xena.pages.ouija_board_page import OuijaBoardPage
 from xena.pages.room_page import RoomPage
+from xena.pages.room_printable_page import RoomPrintablePage
 from xena.pages.rooms_page import RoomsPage
 from xena.pages.sign_up_page import SignUpPage
 from xena.test_utils.webdriver_manager import WebDriverManager
@@ -68,6 +69,7 @@ def page_objects(request):
     login_page = LoginPage(driver)
     ouija_page = OuijaBoardPage(driver)
     room_page = RoomPage(driver)
+    room_printable_page = RoomPrintablePage(driver)
     rooms_page = RoomsPage(driver)
     sign_up_page = SignUpPage(driver)
     templates_page = EmailTemplatesPage(driver)
@@ -88,6 +90,7 @@ def page_objects(request):
             setattr(cls.obj, 'login_page', login_page)
             setattr(cls.obj, 'ouija_page', ouija_page)
             setattr(cls.obj, 'room_page', room_page)
+            setattr(cls.obj, 'room_printable_page', room_printable_page)
             setattr(cls.obj, 'rooms_page', rooms_page)
             setattr(cls.obj, 'sign_up_page', sign_up_page)
             setattr(cls.obj, 'templates_page', templates_page)
