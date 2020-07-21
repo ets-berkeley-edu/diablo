@@ -98,15 +98,9 @@
         <v-icon aria-label="Bookmark icon">mdi-bookmark-outline</v-icon>
       </v-col>
       <v-col>
-        <span v-for="(canvasCourseSite, index) in course.canvasCourseSites" :key="canvasCourseSite.courseSiteId">
-          <a
-            :id="`canvas-course-site-${canvasCourseSite.courseSiteId}`"
-            aria-label="Open Canvas course site in a new window"
-            :href="`${$config.canvasBaseUrl}/courses/${canvasCourseSite.courseSiteId}`"
-            target="_blank"
-          >{{ canvasCourseSite.courseSiteName }}</a>
-          <span v-if="course.canvasCourseSites.length > 1 && index === course.canvasCourseSites.length - 2"> and </span>
-        </span>
+        <OxfordJoin v-slot="{ item }" :items="course.canvasCourseSites">
+          <CanvasCourseSite :site="item" />
+        </OxfordJoin>
       </v-col>
     </v-row>
     <v-row v-if="$currentUser.isAdmin && course.hasOptedOut" id="opted-out">
@@ -177,6 +171,7 @@
 </template>
 
 <script>
+  import CanvasCourseSite from '@/components/course/CanvasCourseSite'
   import Context from '@/mixins/Context'
   import Days from '@/components/util/Days'
   import OxfordJoin from '@/components/util/OxfordJoin'
@@ -186,7 +181,7 @@
 
   export default {
     name: 'CoursePageSidebar',
-    components: {Days, OxfordJoin},
+    components: {CanvasCourseSite, Days, OxfordJoin},
     mixins: [Context, Utils],
     props: {
       afterUnschedule: {
