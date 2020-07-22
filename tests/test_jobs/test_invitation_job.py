@@ -51,7 +51,7 @@ class TestInvitationJob:
 
             # Each eligible course has an invitation.
             eligible_courses = [c for c in SisSection.get_courses(term_id=term_id) if len(c['meetings']['eligible']) == 1]
-            assert len(eligible_courses) == 10
+            assert len(eligible_courses) == 11
             for course in eligible_courses:
                 for i in course['instructors']:
                     sent_email = next((e for e in invitations if e.section_id == course['sectionId'] and i['uid'] == e.recipient_uid), None)

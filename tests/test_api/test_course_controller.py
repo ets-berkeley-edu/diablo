@@ -562,9 +562,10 @@ class TestGetCourses:
             self._create_approval(section_4_id)
             std_commit(allow_test_environment=True)
             api_json = self._api_courses(client, term_id=self.term_id, filter_='Not Invited')
-            assert not _find_course(api_json=api_json, section_id=eligible_course_with_no_instructors)
             assert not _find_course(api_json=api_json, section_id=section_1_id)
             assert not _find_course(api_json=api_json, section_id=section_4_id)
+            # Zero instructors is acceptable
+            assert _find_course(api_json=api_json, section_id=eligible_course_with_no_instructors)
             # Third course is in enabled room and has not received an invite. Therefore, it is in the feed.
             assert _is_course_in_enabled_room(section_id=section_3_id, term_id=self.term_id)
             course = _find_course(api_json=api_json, section_id=section_3_id)
@@ -653,7 +654,7 @@ class TestGetCourses:
             std_commit(allow_test_environment=True)
             # We gotta catch 'em all.
             api_json = self._api_courses(client, term_id=self.term_id, filter_='All')
-            assert len(api_json) == 10
+            assert len(api_json) == 11
             for section_id in [section_1_id, section_3_id, section_4_id, section_5_id, section_6_id]:
                 assert _find_course(api_json=api_json, section_id=section_id)
             assert not _find_course(api_json=api_json, section_id=section_in_ineligible_room)
