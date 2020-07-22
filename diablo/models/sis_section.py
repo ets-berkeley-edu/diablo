@@ -197,7 +197,10 @@ class SisSection(db.Model):
                 r.location AS room_location
             FROM sis_sections s
             JOIN rooms r ON r.location = s.meeting_location
-            JOIN scheduled d ON d.section_id = s.section_id AND d.term_id = :term_id AND d.deleted_at IS NULL
+            JOIN scheduled d ON
+                d.section_id = s.section_id
+                AND d.term_id = :term_id
+                AND d.deleted_at IS NULL
             LEFT JOIN instructors i ON i.uid = s.instructor_uid
             WHERE
                 s.term_id = :term_id
@@ -261,11 +264,12 @@ class SisSection(db.Model):
                 r.id AS room_id,
                 r.location AS room_location
             FROM sis_sections s
-            JOIN rooms r ON r.location = s.meeting_location
+            JOIN rooms r ON
+                r.location = s.meeting_location
                 AND {course_filter}
                 AND s.term_id = :term_id
                 AND s.is_primary IS TRUE
-                AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
+                AND (s.instructor_uid IS NULL OR s.instructor_role_code IN ('ICNT', 'PI', 'TNIC'))
                 AND s.is_principal_listing IS TRUE
             LEFT JOIN instructors i ON i.uid = s.instructor_uid
             ORDER BY s.course_name, s.section_id, s.instructor_uid, r.capability NULLS LAST
@@ -291,12 +295,23 @@ class SisSection(db.Model):
                 AND (s.instructor_uid IS NULL OR s.instructor_role_code IN ('ICNT', 'PI', 'TNIC'))
                 AND s.is_primary IS TRUE
                 AND s.is_principal_listing IS TRUE
-            JOIN sent_emails e ON e.section_id = s.section_id AND e.template_type = 'invitation'
+            JOIN sent_emails e ON
+                e.section_id = s.section_id
+                AND e.template_type = 'invitation'
             LEFT JOIN instructors i ON i.uid = s.instructor_uid
             -- Omit approved courses, scheduled courses and opt-outs.
-            LEFT JOIN approvals a ON a.section_id = s.section_id AND a.term_id = s.term_id AND a.deleted_at IS NULL
-            LEFT JOIN scheduled d ON d.section_id = s.section_id AND d.term_id = s.term_id AND d.deleted_at IS NULL
-            LEFT JOIN course_preferences cp ON cp.section_id = s.section_id AND cp.term_id = s.term_id AND cp.has_opted_out IS TRUE
+            LEFT JOIN approvals a ON
+                a.section_id = s.section_id
+                AND a.term_id = s.term_id
+                AND a.deleted_at IS NULL
+            LEFT JOIN scheduled d ON
+                d.section_id = s.section_id
+                AND d.term_id = s.term_id
+                AND d.deleted_at IS NULL
+            LEFT JOIN course_preferences cp ON
+                cp.section_id = s.section_id
+                AND cp.term_id = s.term_id
+                AND cp.has_opted_out IS TRUE
             WHERE a.section_id IS NULL AND d.section_id IS NULL and cp.section_id IS NULL
             ORDER BY s.course_name, s.section_id, s.instructor_uid, r.capability NULLS LAST
         """
@@ -322,14 +337,28 @@ class SisSection(db.Model):
             FROM sis_sections s
             JOIN rooms r ON r.location = s.meeting_location
                 AND s.section_id IN ({_sections_with_at_least_one_eligible_room()})
-                AND s.term_id = :term_id AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
-                AND s.is_primary IS TRUE AND s.is_principal_listing IS TRUE
+                AND s.term_id = :term_id
+                AND (s.instructor_uid IS NULL OR s.instructor_role_code IN ('ICNT', 'PI', 'TNIC'))
+                AND s.is_primary IS TRUE
+                AND s.is_principal_listing IS TRUE
             LEFT JOIN instructors i ON i.uid = s.instructor_uid
             -- Omit sent invitations, approved courses, scheduled courses and opt-outs.
-            LEFT JOIN approvals a ON a.section_id = s.section_id AND a.term_id = s.term_id AND a.deleted_at IS NULL
-            LEFT JOIN scheduled d ON d.section_id = s.section_id AND d.term_id = s.term_id AND d.deleted_at IS NULL
-            LEFT JOIN sent_emails e on e.section_id = s.section_id AND e.term_id = s.term_id AND e.template_type = 'invitation'
-            LEFT JOIN course_preferences cp ON cp.section_id = s.section_id AND cp.term_id = s.term_id AND cp.has_opted_out IS TRUE
+            LEFT JOIN approvals a ON
+                a.section_id = s.section_id
+                AND a.term_id = s.term_id
+                AND a.deleted_at IS NULL
+            LEFT JOIN scheduled d ON
+                d.section_id = s.section_id
+                AND d.term_id = s.term_id
+                AND d.deleted_at IS NULL
+            LEFT JOIN sent_emails e ON
+                e.section_id = s.section_id
+                AND e.term_id = s.term_id
+                AND e.template_type = 'invitation'
+            LEFT JOIN course_preferences cp ON
+                cp.section_id = s.section_id
+                AND cp.term_id = s.term_id
+                AND cp.has_opted_out IS TRUE
             WHERE a.section_id IS NULL AND d.section_id IS NULL AND e.section_id IS NULL AND cp.section_id IS NULL
             ORDER BY s.course_name, s.section_id, s.instructor_uid, r.capability NULLS LAST
         """
@@ -353,16 +382,23 @@ class SisSection(db.Model):
                 r.id AS room_id,
                 r.location AS room_location
             FROM sis_sections s
-            JOIN rooms r ON r.location = s.meeting_location
+            JOIN rooms r ON
+                r.location = s.meeting_location
                 AND s.term_id = :term_id
                 AND (s.instructor_uid IS NULL OR s.instructor_role_code IN ('ICNT', 'PI', 'TNIC'))
                 AND s.is_primary IS TRUE
                 AND s.is_principal_listing IS TRUE
                 AND s.section_id IN ({_sections_with_at_least_one_eligible_room()})
-            JOIN course_preferences c ON c.section_id = s.section_id AND c.term_id = :term_id AND c.has_opted_out IS TRUE
+            JOIN course_preferences c ON
+                c.section_id = s.section_id
+                AND c.term_id = :term_id
+                AND c.has_opted_out IS TRUE
             LEFT JOIN instructors i ON i.uid = s.instructor_uid
             -- Omit scheduled courses.
-            LEFT JOIN scheduled d ON d.section_id = s.section_id AND d.term_id = :term_id AND d.deleted_at IS NULL
+            LEFT JOIN scheduled d ON
+                d.section_id = s.section_id
+                AND d.term_id = :term_id
+                AND d.deleted_at IS NULL
             WHERE d.section_id IS NULL
             ORDER BY s.course_name, s.section_id, s.instructor_uid, r.capability NULLS LAST
         """
@@ -389,16 +425,20 @@ class SisSection(db.Model):
                 r.location AS room_location,
                 r.capability AS room_capability
             FROM sis_sections s
-            JOIN approvals a
-                ON s.term_id = :term_id AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
-                AND s.is_primary IS TRUE AND s.is_principal_listing IS TRUE
-                AND a.section_id = s.section_id AND a.term_id = :term_id
+            JOIN approvals a ON
+                s.term_id = :term_id
+                AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
+                AND s.is_primary IS TRUE
+                AND s.is_principal_listing IS TRUE
+                AND a.section_id = s.section_id
+                AND a.term_id = :term_id
                 AND a.deleted_at IS NULL
             JOIN instructors i ON i.uid = s.instructor_uid
             -- This second course/instructor join is not for data display purposes, but to screen for the existence
             -- of any current instructor who has not approved.
-            JOIN sis_sections s2
-                ON s.term_id = s2.term_id AND s.section_id = s2.section_id
+            JOIN sis_sections s2 ON
+                s.term_id = s2.term_id
+                AND s.section_id = s2.section_id
                 AND s2.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
             JOIN instructors i2 ON
                 i2.uid = s2.instructor_uid
@@ -409,7 +449,8 @@ class SisSection(db.Model):
                 )
             -- And a final join to ensure that at least one current instructor has approved.
             JOIN sis_sections s3 ON
-                s3.term_id = s2.term_id AND s3.section_id = s2.section_id
+                s3.term_id = s2.term_id
+                AND s3.section_id = s2.section_id
                 AND s3.instructor_uid = a.approved_by_uid
             JOIN rooms r ON r.location = s.meeting_location
             ORDER BY s.course_name, s.section_id, s.instructor_uid, r.capability NULLS LAST
@@ -434,25 +475,37 @@ class SisSection(db.Model):
                 r.id AS room_id,
                 r.location AS room_location
             FROM sis_sections s
-            JOIN approvals a ON s.term_id = :term_id
+            JOIN approvals a ON
+                s.term_id = :term_id
                 AND (s.instructor_uid IS NULL OR s.instructor_role_code IN ('ICNT', 'PI', 'TNIC'))
-                AND s.is_primary IS TRUE AND s.is_principal_listing IS TRUE
-                AND a.section_id = s.section_id AND a.term_id = :term_id AND a.deleted_at IS NULL
+                AND s.is_primary IS TRUE
+                AND s.is_principal_listing IS TRUE
+                AND a.section_id = s.section_id
+                AND a.term_id = :term_id
+                AND a.deleted_at IS NULL
                 AND (
                     -- If approved by an admin, the course is considered queued.
                     s.section_id IN (
                         SELECT DISTINCT s.section_id
                         FROM sis_sections s
-                        JOIN approvals a ON a.section_id = s.section_id AND a.term_id = :term_id AND s.term_id = :term_id AND a.deleted_at IS NULL
+                        JOIN approvals a ON
+                            a.section_id = s.section_id
+                            AND a.term_id = :term_id
+                            AND s.term_id = :term_id
+                            AND a.deleted_at IS NULL
                         JOIN admin_users au ON a.approved_by_uid = au.uid
                     )
                     -- If not approved by an admin, we must screen out any courses with an instructor who has not approved.
                     OR s.section_id NOT IN (
                         SELECT DISTINCT s.section_id
                         FROM sis_sections s
-                        LEFT JOIN approvals a
-                            ON a.section_id = s.section_id AND a.term_id = :term_id AND a.approved_by_uid = s.instructor_uid AND a.deleted_at IS NULL
-                        WHERE s.term_id = :term_id AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
+                        LEFT JOIN approvals a ON
+                            a.section_id = s.section_id
+                            AND a.term_id = :term_id
+                            AND a.approved_by_uid = s.instructor_uid
+                            AND a.deleted_at IS NULL
+                        WHERE s.term_id = :term_id
+                            AND (s.instructor_uid IS NULL OR s.instructor_role_code IN ('ICNT', 'PI', 'TNIC'))
                             AND s.is_primary IS TRUE AND s.is_principal_listing IS TRUE
                             AND a.section_id IS NULL
                     )
@@ -912,7 +965,7 @@ def _sections_with_at_least_one_eligible_room():
             AND r2.capability IS NOT NULL
             AND s2.term_id = :term_id
             AND s2.is_primary IS TRUE
-            AND s2.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
+            AND (s2.instructor_uid IS NULL OR s2.instructor_role_code IN ('ICNT', 'PI', 'TNIC'))
             AND s2.is_principal_listing IS TRUE"""
 
 
