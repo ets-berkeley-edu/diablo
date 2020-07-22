@@ -35,6 +35,7 @@ BASE_URL = 'https://manage-dev.coursecapture.berkeley.edu'
 
 CANVAS_ADMIN_ID = '123456'
 CANVAS_BASE_URL = 'https://ucberkeley.beta.instructure.com'
+CANVAS_ROOT_ACCOUNT = '123456'
 CANVAS_SITE_CREATION_TOOL = '654321'
 CANVAS_MEDIA_GALLERY_TOOL = '13579'
 CANVAS_MY_MEDIA_TOOL = '24680'

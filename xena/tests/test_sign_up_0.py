@@ -94,12 +94,22 @@ class TestSignUp0:
         self.canvas_page.provision_site(self.section, [self.section.ccn], self.site)
 
     def test_enable_media_gallery(self):
-        self.canvas_page.enable_media_gallery(self.site)
-        self.canvas_page.click_media_gallery_tool()
+        if self.canvas_page.is_tool_configured(app.config['CANVAS_MEDIA_GALLERY_TOOL']):
+            self.canvas_page.load_site(self.site.site_id)
+            self.canvas_page.enable_media_gallery(self.site)
+            self.canvas_page.click_media_gallery_tool()
+        else:
+            app.logger.info('Media Gallery is not properly configured')
+            raise
 
     def test_enable_my_media(self):
-        self.canvas_page.enable_my_media(self.site)
-        self.canvas_page.click_my_media_tool()
+        if self.canvas_page.is_tool_configured(app.config['CANVAS_MY_MEDIA_TOOL']):
+            self.canvas_page.load_site(self.site.site_id)
+            self.canvas_page.enable_my_media(self.site)
+            self.canvas_page.click_my_media_tool()
+        else:
+            app.logger.info('My Media is not properly configured')
+            raise
 
     def test_run_canvas_job(self):
         self.jobs_page.load_page()
@@ -210,11 +220,8 @@ class TestSignUp0:
 
     def test_home_page(self):
         self.ouija_page.log_out()
+        self.sign_up_page.hit_url(self.term.id, self.section.ccn)
         self.login_page.dev_auth(self.section.instructors[0].uid)
-        self.ouija_page.wait_for_title_containing(f'Your {self.section.term.name} Course')
-
-    def test_sign_up_link(self):
-        self.ouija_page.click_sign_up_page_link(self.section)
         self.sign_up_page.wait_for_diablo_title(f'{self.section.code}, {self.section.number}')
 
     # VERIFY STATIC COURSE SIS DATA

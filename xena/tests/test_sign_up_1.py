@@ -603,12 +603,22 @@ class TestSignUp1:
         self.canvas_page.provision_site(self.section, [self.section.ccn], self.site)
 
     def test_enable_media_gallery(self):
-        self.canvas_page.enable_media_gallery(self.site)
-        self.canvas_page.click_media_gallery_tool()
+        if self.canvas_page.is_tool_configured(app.config['CANVAS_MEDIA_GALLERY_TOOL']):
+            self.canvas_page.load_site(self.site.site_id)
+            self.canvas_page.enable_media_gallery(self.site)
+            self.canvas_page.click_media_gallery_tool()
+        else:
+            app.logger.info('Media Gallery is not properly configured')
+            raise
 
     def test_enable_my_media(self):
-        self.canvas_page.enable_my_media(self.site)
-        self.canvas_page.click_my_media_tool()
+        if self.canvas_page.is_tool_configured(app.config['CANVAS_MY_MEDIA_TOOL']):
+            self.canvas_page.load_site(self.site.site_id)
+            self.canvas_page.enable_my_media(self.site)
+            self.canvas_page.click_my_media_tool()
+        else:
+            app.logger.info('My Media is not properly configured')
+            raise
 
     def test_run_canvas_and_kaltura_jobs(self):
         self.jobs_page.load_page()

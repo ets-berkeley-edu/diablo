@@ -362,12 +362,22 @@ class TestSignUp2:
         self.canvas_page.provision_site(self.section, [self.section.ccn], self.site_1)
 
     def test_enable_media_gallery(self):
-        self.canvas_page.enable_media_gallery(self.site_1)
-        self.canvas_page.click_media_gallery_tool()
+        if self.canvas_page.is_tool_configured(app.config['CANVAS_MEDIA_GALLERY_TOOL']):
+            self.canvas_page.load_site(self.site_1.site_id)
+            self.canvas_page.enable_media_gallery(self.site_1)
+            self.canvas_page.click_media_gallery_tool()
+        else:
+            app.logger.info('Media Gallery is not properly configured')
+            raise
 
     def test_enable_my_media(self):
-        self.canvas_page.enable_my_media(self.site_1)
-        self.canvas_page.click_my_media_tool()
+        if self.canvas_page.is_tool_configured(app.config['CANVAS_MY_MEDIA_TOOL']):
+            self.canvas_page.load_site(self.site_1.site_id)
+            self.canvas_page.enable_my_media(self.site_1)
+            self.canvas_page.click_my_media_tool()
+        else:
+            app.logger.info('My Media is not properly configured')
+            raise
 
     def test_run_canvas_job_one(self):
         self.jobs_page.load_page()
@@ -728,12 +738,22 @@ class TestSignUp2:
         self.canvas_page.provision_site(self.section, [self.section.ccn], self.site_2)
 
     def test_enable_media_gallery_2(self):
-        self.canvas_page.enable_media_gallery(self.site_2)
-        self.canvas_page.click_media_gallery_tool()
+        if self.canvas_page.is_tool_configured(app.config['CANVAS_MEDIA_GALLERY_TOOL']):
+            self.canvas_page.load_site(self.site_2.site_id)
+            self.canvas_page.enable_media_gallery(self.site_2)
+            self.canvas_page.click_media_gallery_tool()
+        else:
+            app.logger.info('Media Gallery is not properly configured')
+            raise
 
     def test_enable_my_media_2(self):
-        self.canvas_page.enable_my_media(self.site_2)
-        self.canvas_page.click_my_media_tool()
+        if self.canvas_page.is_tool_configured(app.config['CANVAS_MY_MEDIA_TOOL']):
+            self.canvas_page.load_site(self.site_2.site_id)
+            self.canvas_page.enable_my_media(self.site_2)
+            self.canvas_page.click_my_media_tool()
+        else:
+            app.logger.info('My Media is not properly configured')
+            raise
 
     def test_run_canvas_job_site_two(self):
         self.sign_up_page.load_page(self.section)
