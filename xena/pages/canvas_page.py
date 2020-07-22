@@ -228,3 +228,10 @@ class CanvasPage(Page):
         tool_id = app.config['CANVAS_MY_MEDIA_TOOL']
         self.driver.get(f'{app.config["CANVAS_BASE_URL"]}/courses/{site.site_id}/external_tools/{tool_id}')
         Wait(self.driver, util.get_medium_timeout()).until(ec.presence_of_element_located(CanvasPage.kaltura_form_loc()))
+
+    def is_tool_configured(self, tool_id):
+        self.driver.get(f'{app.config["CANVAS_BASE_URL"]}/api/v1/accounts/{app.config["CANVAS_ROOT_ACCOUNT"]}/external_tools/{tool_id}')
+        loc = By.XPATH, '//pre'
+        Wait(self.driver, util.get_medium_timeout()).until(ec.presence_of_element_located(loc))
+        json_string = self.element(loc).text
+        return True if f'{app.config["KALTURA_TOOL_URL"]}' in json_string else False

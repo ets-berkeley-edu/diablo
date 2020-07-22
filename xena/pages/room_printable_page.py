@@ -40,7 +40,7 @@ class RoomPrintablePage(DiabloPages):
 
     def open_printable_schedule(self):
         app.logger.info('Opening the printable room schedule')
-        self.wait_for_element_and_click(RoomPrintablePage.PRINT_SCHED_LINK)
+        self.wait_for_page_and_click_js(RoomPrintablePage.PRINT_SCHED_LINK)
         time.sleep(1)
         windows = self.window_handles()
         self.switch_to_last_window(windows)
