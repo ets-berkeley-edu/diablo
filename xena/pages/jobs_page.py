@@ -51,9 +51,9 @@ class JobsPage(DiabloPages):
         self.driver.get(f'{app.config["BASE_URL"]}/jobs')
 
     def load_page(self):
-        app.logger.info('Loading the Jobs page')
+        app.logger.info("Loading the 'Engine Room' page")
         self.hit_url()
-        self.wait_for_diablo_title('Jobs')
+        self.wait_for_diablo_title('The Engine Room')
 
     def run_admin_emails_job(self):
         app.logger.info('Running the admin emails job')
@@ -112,7 +112,7 @@ class JobsPage(DiabloPages):
         self.wait_for_most_recent_job_success(AsyncJob.SIS_DATA_REFRESH)
 
     def wait_for_jobs_table(self):
-        locator = By.XPATH, '//h1[contains(., "Jobs")]/../../following-sibling::div//table'
+        locator = By.XPATH, '//h1[contains(., "The Engine Room")]/../../following-sibling::div//table'
         Wait(self.driver, util.get_short_timeout()).until(ec.presence_of_element_located(locator))
 
     @staticmethod

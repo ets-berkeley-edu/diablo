@@ -83,7 +83,7 @@ class DiabloPages(Page):
         self.wait_for_element_and_click(DiabloPages.EMAIL_TEMPLATES_LINK)
 
     def click_jobs_link(self):
-        app.logger.info('Clicking Jobs link')
+        app.logger.info("Clicking 'The Engine Room' link")
         self.open_menu()
         self.wait_for_element_and_click(DiabloPages.JOBS_LINK)
 

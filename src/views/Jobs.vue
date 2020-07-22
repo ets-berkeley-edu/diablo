@@ -2,7 +2,7 @@
   <div v-if="!loading" class="pt-3">
     <v-card outlined class="elevation-1 mb-6">
       <v-card-title class="align-start">
-        <PageTitle icon="mdi-engine-outline" text="Jobs" />
+        <PageTitle icon="mdi-engine-outline" text="The Engine Room" />
       </v-card-title>
       <v-card-text>
         <div class="mb-3">
@@ -165,7 +165,7 @@
       getJobSchedule().then(data => {
         this.jobSchedule = data
         this.refresh(true).then(() => {
-          this.$ready('Jobs')
+          this.$ready('The Engine Room')
         })
       })
     },
