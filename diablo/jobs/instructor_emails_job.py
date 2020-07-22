@@ -23,7 +23,6 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 from diablo.jobs.base_job import BaseJob
-from diablo.jobs.errors import BackgroundJobError
 from diablo.lib.interpolator import interpolate_content
 from diablo.merged.emailer import send_system_error_email
 from diablo.models.email_template import EmailTemplate
@@ -52,21 +51,21 @@ class InstructorEmailsJob(BaseJob):
 
     def _room_change_alert(self):
         template_type = 'room_change_no_longer_eligible'
-        email_template = EmailTemplate.get_template_by_type(template_type)
-        if email_template:
-            all_scheduled = list(
-                filter(
-                    lambda s: template_type not in (s.alerts or []),
-                    Scheduled.get_all_scheduled(term_id=self.term_id),
-                ),
-            )
-            if all_scheduled:
-                courses = SisSection.get_courses(term_id=self.term_id, section_ids=[s.section_id for s in all_scheduled])
-                courses_per_section_id = dict((course['sectionId'], course) for course in courses)
-                for scheduled in all_scheduled:
-                    course = courses_per_section_id.get(scheduled.section_id)
-                    if course:
-                        if _has_room_change(course, scheduled):
+        all_scheduled = list(
+            filter(
+                lambda s: template_type not in (s.alerts or []),
+                Scheduled.get_all_scheduled(term_id=self.term_id),
+            ),
+        )
+        if all_scheduled:
+            email_template = EmailTemplate.get_template_by_type(template_type)
+            courses = SisSection.get_courses(term_id=self.term_id, section_ids=[s.section_id for s in all_scheduled])
+            courses_per_section_id = dict((course['sectionId'], course) for course in courses)
+            for scheduled in all_scheduled:
+                course = courses_per_section_id.get(scheduled.section_id)
+                if course:
+                    if _has_room_change(course, scheduled):
+                        if email_template:
                             for instructor in course['instructors']:
                                 def _get_interpolate_content(template):
                                     return interpolate_content(
@@ -85,13 +84,16 @@ class InstructorEmailsJob(BaseJob):
                                     term_id=self.term_id,
                                 )
                             Scheduled.add_alert(scheduled_id=course['scheduled']['id'], template_type=template_type)
-                    else:
-                        subject = f'Scheduled course has no SIS data (section_id={scheduled.section_id})'
-                        message = f'{subject}\n\nScheduled:<pre>{scheduled}</pre>'
-                        app.logger.error(message)
-                        send_system_error_email(message=message, subject=subject)
-        else:
-            raise BackgroundJobError(f'No {template_type} email template is available.')
+                        else:
+                            send_system_error_email(f"""
+                                No '{template_type}' email template available.
+                                We are unable to notify {course['label']} instructors of room change.
+                            """)
+                else:
+                    subject = f'Scheduled course has no SIS data (section_id={scheduled.section_id})'
+                    message = f'{subject}\n\nScheduled:<pre>{scheduled}</pre>'
+                    app.logger.error(message)
+                    send_system_error_email(message=message, subject=subject)
 
 
 def _has_room_change(course, scheduled):

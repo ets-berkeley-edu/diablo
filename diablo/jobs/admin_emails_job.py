@@ -23,10 +23,9 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 from diablo.jobs.base_job import BaseJob
-from diablo.jobs.errors import BackgroundJobError
 from diablo.lib.berkeley import are_scheduled_dates_obsolete, are_scheduled_times_obsolete
 from diablo.lib.interpolator import interpolate_content
-from diablo.merged.emailer import get_admin_alert_recipient
+from diablo.merged.emailer import get_admin_alert_recipient, send_system_error_email
 from diablo.models.email_template import EmailTemplate
 from diablo.models.queued_email import QueuedEmail
 from diablo.models.scheduled import Scheduled
@@ -116,7 +115,7 @@ class AdminEmailsJob(BaseJob):
             )
             Scheduled.add_alert(scheduled_id=course['scheduled']['id'], template_type=template_type)
         else:
-            raise BackgroundJobError(f"""
+            send_system_error_email(f"""
                 No email template of type {template_type} is available.
                 Diablo admin NOT notified in regard to course {course['label']}.
             """)
