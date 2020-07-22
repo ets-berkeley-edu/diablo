@@ -30,7 +30,7 @@ from diablo import cachify, skip_when_pytest
 from diablo.lib.berkeley import get_first_matching_datetime_of_term, get_recording_end_date, get_recording_start_date, \
     term_name_for_sis_id
 from diablo.lib.kaltura_util import get_classification_name, get_recurrence_name, get_status_name
-from diablo.lib.util import default_timezone, epoch_time_to_isoformat, format_days, to_isoformat
+from diablo.lib.util import default_timezone, epoch_time_to_isoformat, format_days
 from flask import current_app as app
 from KalturaClient import KalturaClient, KalturaConfiguration
 from KalturaClient.exceptions import KalturaException
@@ -335,7 +335,7 @@ class Kaltura:
         base_entry = self._create_kaltura_base_entry(
             description=description,
             instructors=instructors,
-            name=f'{summary} recordings scheduled by Diablo on {to_isoformat(datetime.now())}',
+            name=summary,
         )
         for category_id in category_ids or []:
             self.add_to_kaltura_category(category_id=category_id, entry_id=base_entry.id)
@@ -348,7 +348,7 @@ class Kaltura:
         recurring_event = KalturaRecordScheduleEvent(
             # https://developer.kaltura.com/api-docs/General_Objects/Objects/KalturaScheduleEvent
             classificationType=KalturaScheduleEventClassificationType.PUBLIC_EVENT,
-            comment=f'{summary} recordings scheduled by Diablo on {to_isoformat(datetime.now())}',
+            comment=summary,
             contact=','.join(instructor['uid'] for instructor in instructors),
             description=description,
             duration=(end_time - start_time).seconds,
