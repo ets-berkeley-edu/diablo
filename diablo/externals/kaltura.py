@@ -335,7 +335,7 @@ class Kaltura:
         base_entry = self._create_kaltura_base_entry(
             description=description,
             instructors=instructors,
-            name=summary,
+            name=f'{summary} in {room.location}',
         )
         for category_id in category_ids or []:
             self.add_to_kaltura_category(category_id=category_id, entry_id=base_entry.id)
@@ -348,7 +348,7 @@ class Kaltura:
         recurring_event = KalturaRecordScheduleEvent(
             # https://developer.kaltura.com/api-docs/General_Objects/Objects/KalturaScheduleEvent
             classificationType=KalturaScheduleEventClassificationType.PUBLIC_EVENT,
-            comment=summary,
+            comment=f'{summary} in {room.location}',
             contact=','.join(instructor['uid'] for instructor in instructors),
             description=description,
             duration=(end_time - start_time).seconds,
