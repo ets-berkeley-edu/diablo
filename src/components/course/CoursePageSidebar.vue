@@ -1,11 +1,6 @@
 <template>
-  <v-card
-    aria-labelledby="course-page-sidebar-title"
-    class="pa-6"
-    outlined
-    tile
-  >
-    <h2 id="course-page-sidebar-title" class="sr-only">Summary of {{ course.label }} course</h2>
+  <v-container class="elevation-2 pa-6">
+    <h2 class="sr-only">Summary of {{ course.label }} course</h2>
     <v-row v-if="course.instructors.length" id="instructors">
       <v-col md="auto">
         <h3 class="sr-only">Instructors</h3>
@@ -167,7 +162,7 @@
         </v-dialog>
       </v-col>
     </v-row>
-  </v-card>
+  </v-container>
 </template>
 
 <script>
