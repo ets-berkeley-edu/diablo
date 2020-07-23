@@ -84,12 +84,7 @@ def cas_login():
     app.logger.info(f'Logged into CAS as user {uid}')
     user = User(uid)
     if not user.is_active:
-        app.logger.error(f'Sorry, user with UID {uid} is not authorized to use Diablo.')
-        param = ('error', f"""
-            Sorry, you are not registered to use Diablo.
-            Please <a href="mailto:{app.config['EMAIL_COURSE_CAPTURE_SUPPORT']}">email us</a> for assistance.
-        """)
-        redirect_url = add_param_to_url('/', param)
+        redirect_url = add_param_to_url('/', ('error', f'Sorry, {user.name} is not authorized to use Diablo.'))
     else:
         login_user(user)
         if _is_safe_url(request.args.get('next')):
@@ -98,7 +93,6 @@ def cas_login():
             redirect_url = target_url or '/'
         else:
             return abort(400)
-    app.logger.info(f'After CAS callback, redirect_url: {redirect_url}')
     return redirect(redirect_url)
 
 

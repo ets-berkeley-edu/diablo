@@ -94,7 +94,12 @@
       devAuthPassword: undefined
     }),
     created() {
-      this.alertScreenReader('Welcome to Course Capture. Please log in.')
+      const error = this.$_.get(this.$route, 'query.error')
+      if (error) {
+        this.reportError(error)
+      } else {
+        this.alertScreenReader('Welcome to Course Capture. Please log in.')
+      }
     },
     methods: {
       devAuth() {
@@ -106,10 +111,9 @@
                 const redirect = this.$_.get(this.$router, 'currentRoute.query.redirect')
                 this.$router.push({ path: redirect || '/home' }, this.$_.noop)
                 this.alertScreenReader('Welcome to Course Capture')
-              } else if (data.message) {
-                this.reportError(data.message)
               } else {
-                this.reportError('Sorry, authentication failed.')
+                const message = this.$_.get(data, 'response.data.message') || this.$_.get(data, 'message') || 'Authentication failed'
+                this.reportError(message)
               }
             },
             error => {
