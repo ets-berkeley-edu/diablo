@@ -101,10 +101,7 @@ def approve():
         if last_approver:
             notify_instructor_waiting_for_approval(course, last_approver, pending_instructors)
 
-    course = SisSection.get_course(term_id, section_id)
-    _after_approval(course=course)
-
-    return tolerant_jsonify(course)
+    return tolerant_jsonify(_after_approval(course=SisSection.get_course(term_id, section_id)))
 
 
 @app.route('/api/course/<term_id>/<section_id>')
@@ -288,3 +285,6 @@ def _after_approval(course):
                 all_approvals=approvals,
                 course=course,
             )
+        return SisSection.get_course(section_id=course['sectionId'], term_id=course['termId'])
+    else:
+        return course
