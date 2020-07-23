@@ -141,8 +141,8 @@ class TestCourseScheduleChanges:
         start = dates[0]
         end = dates[-1]
         dates = f'{start.strftime("%Y-%m-%d")} to {end.strftime("%Y-%m-%d")}'
-        days_times = f'{self.real_meeting.days.replace(",", "")}, {CourseChangesPage.meeting_time_str(self.real_meeting)}'
-        expected = f'{dates}\n{days_times}'.upper()
+        days_times = f'{self.real_meeting.days.replace(" ", "")}, {CourseChangesPage.meeting_time_str(self.real_meeting)}'
+        expected = f'{dates}{days_times}'.upper()
         actual = self.changes_page.scheduled_card_old_schedule(self.real_section).upper()
         app.logger.info(f'Expecting: {expected}')
         app.logger.info(f'Actual: {actual}')
@@ -153,8 +153,8 @@ class TestCourseScheduleChanges:
         start = dates[0]
         end = dates[-1]
         dates = f'{start.strftime("%Y-%m-%d")} to {end.strftime("%Y-%m-%d")}'
-        days_times = f'{self.real_meeting.days.replace(",", "")}, {CourseChangesPage.meeting_time_str(self.fake_meeting)}'
-        expected = f'{dates}\n{days_times}'.upper()
+        days_times = f'{self.real_meeting.days.replace(" ", "")}, {CourseChangesPage.meeting_time_str(self.fake_meeting)}'
+        expected = f'{dates}{days_times}'.upper()
         actual = self.changes_page.current_card_schedule(self.real_section, 1, 2).upper()
         app.logger.info(f'Expecting: {expected}')
         app.logger.info(f'Actual: {actual}')

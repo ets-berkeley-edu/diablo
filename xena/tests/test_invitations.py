@@ -52,6 +52,8 @@ class TestInvitations:
         self.email_page.delete_all_messages()
 
     def test_course_opt_out(self):
+        util.set_meeting_location(self.section_1, self.section_1.meetings[0])
+        util.set_meeting_location(self.section_2, self.section_2.meetings[0])
         self.ouija_page.load_page()
         self.ouija_page.search_for_course_code(self.section_2)
         self.ouija_page.filter_for_all()

@@ -107,6 +107,7 @@ class TestWeirdTypeD:
     # INSTRUCTOR LOGS IN
 
     def test_home_page(self):
+        self.ouija_page.load_page()
         self.ouija_page.log_out()
         self.login_page.dev_auth(self.section.instructors[0].uid)
         self.ouija_page.wait_for_title_containing(f'Your {self.section.term.name} Course')
@@ -142,7 +143,7 @@ class TestWeirdTypeD:
     def test_visible_meeting_1_days(self):
         term_dates = f'{SignUpPage.expected_term_date_str(self.meeting_1.start_date, self.meeting_1.end_date)}'
         last_date = f'(Final recording scheduled for {SignUpPage.expected_final_record_date_str(self.meeting_1, self.section.term)}.)'
-        assert self.sign_up_page.visible_meeting_days()[1] == f'{self.meeting_1.days}\n{term_dates}\n{last_date}'
+        assert self.sign_up_page.visible_meeting_days()[1] == f'{self.meeting_1.days}{term_dates}\n{last_date}'
 
     def test_visible_meeting_1_time(self):
         assert self.sign_up_page.visible_meeting_time()[1] == f'{self.meeting_1.start_time} - {self.meeting_1.end_time}'

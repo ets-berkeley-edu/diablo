@@ -246,7 +246,7 @@ class TestSignUp3:
     def test_visible_meeting_days(self):
         term_dates = f'{SignUpPage.expected_term_date_str(self.meeting.start_date, self.meeting.end_date)}'
         last_date = f'(Final recording scheduled for {SignUpPage.expected_final_record_date_str(self.meeting, self.section.term)}.)'
-        assert self.sign_up_page.visible_meeting_days()[0] == f'{self.meeting.days}\n{term_dates}\n{last_date}'
+        assert self.sign_up_page.visible_meeting_days()[0] == f'{self.meeting.days}\n\n{term_dates}\n{last_date}'
 
     def test_visible_meeting_time(self):
         assert self.sign_up_page.visible_meeting_time()[0] == f'{self.meeting.start_time} - {self.meeting.end_time}'
@@ -490,8 +490,9 @@ class TestSignUp3:
         assert self.room_printable_page.visible_days(self.section) == expected
 
     def test_printable_times(self):
-        expected = [f'{self.meeting.start_date} - {self.meeting.end_date}\n{self.meeting.start_time} - {self.meeting.end_time}']
-        assert self.room_printable_page.visible_times(self.section) == expected
+        dates = f'{self.meeting.start_date.strftime("%b %-d, %Y")} - {self.meeting.end_date.strftime("%b %-d, %Y")}'
+        times = f'{self.meeting.start_time} - {self.meeting.end_time}'
+        assert self.room_printable_page.visible_times(self.section) == [f'{dates}\n{times}']
 
     def test_printable_rec_type(self):
         expected = self.recording_schedule.recording_type.value['selection']
