@@ -195,18 +195,24 @@
     },
     data: () => ({
       displayMeetings: undefined,
-      offerSendInvite: undefined,
-      offerUnschedule: undefined,
       nowDate: undefined,
       showUnscheduleModal: false
     }),
-    created() {
-      if (this.$currentUser.isAdmin && this.course.termId === this.$config.currentTermId) {
-        this.offerSendInvite = this.course.instructors.length && !this.course.hasOptedOut && this.course.meetings.eligible.length === 1
-        this.offerUnschedule = this.course.scheduled || this.course.hasNecessaryApprovals
-      } else {
-        this.offerSendInvite = this.offerUnschedule = false
+    computed: {
+      offerSendInvite() {
+        return this.$currentUser.isAdmin
+          && this.course.termId === this.$config.currentTermId
+          && this.course.instructors.length
+          && !this.course.hasOptedOut
+          && this.course.meetings.eligible.length === 1
+      },
+      offerUnschedule() {
+        return this.$currentUser.isAdmin
+          && this.course.termId === this.$config.currentTermId
+          && (this.course.scheduled || this.course.hasNecessaryApprovals)
       }
+    },
+    created() {
       this.displayMeetings = this.getDisplayMeetings(this.course)
       this.nowDate = this.$moment().format('YYYY-MM-DD')
     },
