@@ -109,6 +109,7 @@ class User(UserMixin):
                 'isAuthenticated': is_active,
                 'isTeaching': bool(courses),
                 'courses': courses,
+                'name': calnet_profile.get('name') if calnet_profile else f'UID {uid}',
                 'uid': uid,
             },
         }
