@@ -54,6 +54,7 @@ class TestUnschedule:
 
     def test_delete_old_diablo_data(self):
         util.reset_sign_up_test_data(self.test_data)
+        util.set_meeting_location(self.section, self.section.meetings[0])
         self.recording_schedule.approval_status = RecordingApprovalStatus.NOT_INVITED
         self.recording_schedule.scheduling_status = RecordingSchedulingStatus.NOT_SCHEDULED
 

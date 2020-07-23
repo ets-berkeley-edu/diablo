@@ -168,7 +168,7 @@ class TestWeirdTypeB:
     def test_visible_meeting_days(self):
         term_dates = f'{SignUpPage.expected_term_date_str(self.meeting_physical.start_date, self.meeting_physical.end_date)}'
         last_date = f'(Final recording scheduled for {SignUpPage.expected_final_record_date_str(self.meeting_physical, self.section.term)}.)'
-        assert self.sign_up_page.visible_meeting_days()[0] == f'{self.meeting_physical.days}\n{term_dates}\n{last_date}'
+        assert self.sign_up_page.visible_meeting_days()[0] == f'{self.meeting_physical.days}\n\n{term_dates}\n{last_date}'
         assert len(self.sign_up_page.visible_meeting_days()) == 1
 
     def test_visible_meeting_time(self):
@@ -440,8 +440,8 @@ class TestWeirdTypeB:
         start = dates[0]
         end = dates[-1]
         dates = f'{start.strftime("%Y-%m-%d")} to {end.strftime("%Y-%m-%d")}'
-        days_times = f'{self.meeting_physical.days.replace(",", "")}, {CourseChangesPage.meeting_time_str(self.meeting_physical)}'
-        expected = f'{dates}\n{days_times}'.upper()
+        days_times = f'{self.meeting_physical.days.replace(" ", "")}, {CourseChangesPage.meeting_time_str(self.meeting_physical)}'
+        expected = f'{dates}{days_times}'.upper()
         actual = self.changes_page.scheduled_card_old_schedule(self.section).upper()
         app.logger.info(f'Expecting: {expected}')
         app.logger.info(f'Actual: {actual}')
@@ -459,9 +459,9 @@ class TestWeirdTypeB:
         start = dates[0]
         end = dates[-1]
         dates = f'{start.strftime("%Y-%m-%d")} to {end.strftime("%Y-%m-%d")}'
-        days = self.meeting_physical_changes.days.replace(',', '')
+        days = self.meeting_physical_changes.days.replace(' ', '')
         times = CourseChangesPage.meeting_time_str(self.meeting_physical_changes)
-        expected = f'{dates}\n{days}, {times}'.upper()
+        expected = f'{dates}{days}, {times}'.upper()
         actual = self.changes_page.current_card_schedule(self.section, 1, 2).upper()
         app.logger.info(f'Expecting: {expected}')
         app.logger.info(f'Actual: {actual}')
@@ -478,9 +478,9 @@ class TestWeirdTypeB:
         start = self.meeting_online_changes.start_date
         end = self.meeting_online_changes.end_date
         dates = f'{start.strftime("%Y-%m-%d")} to {end.strftime("%Y-%m-%d")}'
-        days = self.meeting_online_changes.days.replace(',', '')
+        days = self.meeting_online_changes.days.replace(' ', '')
         times = CourseChangesPage.meeting_time_str(self.meeting_online_changes)
-        expected = f'{dates}\n{days}, {times}'.upper()
+        expected = f'{dates}{days}, {times}'.upper()
         actual = self.changes_page.current_card_schedule(self.section, 2, 2).upper()
         app.logger.info(f'Expecting: {expected}')
         app.logger.info(f'Actual: {actual}')
