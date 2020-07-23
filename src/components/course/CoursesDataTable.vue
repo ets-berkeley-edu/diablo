@@ -64,15 +64,15 @@
                 <span v-if="!course.room">&mdash;</span>
               </td>
               <td :id="`meeting-days-${course.sectionId}-0`" :class="tdc(course)">
-                <Days v-if="meetings[0].daysNames.length" :names-of-days="meetings[0].daysNames" />
-                <span v-if="!meetings[0].daysNames.length">&mdash;</span>
+                <Days v-if="course.displayMeetings[0].daysNames.length" :names-of-days="course.displayMeetings[0].daysNames" />
+                <span v-if="!course.displayMeetings[0].daysNames.length">&mdash;</span>
               </td>
               <td :id="`meeting-times-${course.sectionId}-0`" :class="tdc(course)">
                 <div v-if="course.nonstandardMeetingDates">
-                  <span class="text-no-wrap">{{ meetings[0].startDate | moment('MMM D, YYYY') }} - </span>
-                  <span class="text-no-wrap">{{ meetings[0].endDate | moment('MMM D, YYYY') }}</span>
+                  <span class="text-no-wrap">{{ course.displayMeetings[0].startDate | moment('MMM D, YYYY') }} - </span>
+                  <span class="text-no-wrap">{{ course.displayMeetings[0].endDate | moment('MMM D, YYYY') }}</span>
                 </div>
-                <span class="text-no-wrap">{{ meetings[0].startTimeFormatted }} - {{ meetings[0].endTimeFormatted }}</span>
+                <span class="text-no-wrap">{{ course.displayMeetings[0].startTimeFormatted }} - {{ course.displayMeetings[0].endTimeFormatted }}</span>
               </td>
               <td :id="`course-${course.sectionId}-status`" :class="tdc(course)">
                 <v-tooltip v-if="course.wasApprovedByAdmin" :id="`tooltip-admin-approval-${course.sectionId}`" bottom>
@@ -116,29 +116,29 @@
                 />
               </td>
             </tr>
-            <tr v-for="index in meetings.length - 1" :key="`${course.sectionId}-${index}`">
+            <tr v-for="index in $_.size(course.displayMeetings) - 1" :key="`${course.sectionId}-${index}`">
               <td colspan="2" :class="mdc(course)"></td>
               <td v-if="includeRoomColumn" :class="mdc(course)">
                 <router-link
-                  v-if="meetings[index].room"
-                  :id="`course-${course.sectionId}-room-${meetings[index].room.id}`"
-                  :to="`/room/${meetings[index].room.id}`"
+                  v-if="course.displayMeetings[index].room"
+                  :id="`course-${course.sectionId}-room-${course.displayMeetings[index].room.id}`"
+                  :to="`/room/${course.displayMeetings[index].room.id}`"
                 >
-                  {{ meetings[index].room.location }}
+                  {{ course.displayMeetings[index].room.location }}
                 </router-link>
-                <span v-if="!meetings[index].room">&mdash;</span>
+                <span v-if="!course.displayMeetings[index].room">&mdash;</span>
               </td>
               <td class="text-no-wrap" :class="mdc(course)">
-                <Days v-if="meetings[index].daysNames.length" :names-of-days="meetings[index].daysNames" />
-                <span v-if="!meetings[index].daysNames.length">&mdash;</span>
+                <Days v-if="course.displayMeetings[index].daysNames.length" :names-of-days="course.displayMeetings[index].daysNames" />
+                <span v-if="!course.displayMeetings[index].daysNames.length">&mdash;</span>
               </td>
               <td class="text-no-wrap" :class="mdc(course)">
                 <div v-if="course.nonstandardMeetingDates">
-                  <span class="text-no-wrap">{{ meetings[index].startDate | moment('MMM D, YYYY') }} - </span>
-                  <span class="text-no-wrap">{{ meetings[index].endDate | moment('MMM D, YYYY') }}</span>
+                  <span class="text-no-wrap">{{ course.displayMeetings[index].startDate | moment('MMM D, YYYY') }} - </span>
+                  <span class="text-no-wrap">{{ course.displayMeetings[index].endDate | moment('MMM D, YYYY') }}</span>
                 </div>
-                <div :class="{'pb-2': course.nonstandardMeetingDates && index === meetings.length - 1}">
-                  {{ meetings[index].startTimeFormatted }} - {{ meetings[index].endTimeFormatted }}
+                <div :class="{'pb-2': course.nonstandardMeetingDates && index === course.displayMeetings.length - 1}">
+                  {{ course.displayMeetings[index].startTimeFormatted }} - {{ course.displayMeetings[index].endTimeFormatted }}
                 </div>
               </td>
               <td colspan="4" :class="mdc(course)"></td>
@@ -230,7 +230,6 @@
         {text: 'Publish', value: 'publishTypeNames', class: 'w-10'},
         {text: 'Opt out', value: 'hasOptedOut', sortable: false}
       ],
-      meetings: undefined,
       pageCount: undefined,
       pageCurrent: 1,
       selectedRows: [],
@@ -258,8 +257,9 @@
           course.instructorNames = this.$_.map(course.instructors, 'name')
           course.isSelectable = !course.hasOptedOut
           course.publishTypeNames = course.approvals.length ? this.$_.last(course.approvals).publishTypeName : null
-          this.meetings = this.getDisplayMeetings(course)
-          course.room = this.meetings.length && this.meetings[0].room ? this.meetings[0].room : null
+          const meetings = this.getDisplayMeetings(course)
+          course.displayMeetings = meetings
+          course.room = meetings.length && meetings[0].room ? meetings[0].room : null
         })
       },
       tdc(course) {
