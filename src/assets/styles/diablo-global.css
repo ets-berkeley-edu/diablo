@@ -25,6 +25,9 @@ abbr {
   height: 1px;
   overflow: hidden;
 }
+.sr-skip {
+  speak: none;
+}
 .w-10 {
   width: 10% !important;
 }
