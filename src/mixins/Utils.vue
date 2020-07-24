@@ -36,26 +36,12 @@
         const meetings = course.meetings.eligible.concat(course.meetings.ineligible)
         return _.includes(_.map(meetings, 'room.id'), room.id)
       },
-      onNextTick(callable) {
-        this.$nextTick(() => {
-          let counter = 0
-          const job = setInterval(() => (callable() || ++counter > 3) && clearInterval(job), 500)
-        })
-      },
       oxfordJoin: arr => {
         switch(arr.length) {
           case 1: return _.head(arr)
           case 2: return `${_.head(arr)} and ${_.last(arr)}`
           default: return _.join(_.concat(_.initial(arr), ` and ${_.last(arr)}`), ', ')
         }
-      },
-      putFocusNextTick(id, cssSelector = null) {
-        this.onNextTick(() => {
-            let el = document.getElementById(id)
-            el = el && cssSelector ? el.querySelector(cssSelector) : el
-            el && el.focus()
-            return !!el
-        })
       },
       stripAnchorRef: path => _.split(path, '#', 1)[0],
       stripHtmlAndTrim: html => {

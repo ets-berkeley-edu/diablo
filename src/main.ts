@@ -46,6 +46,19 @@ const axiosErrorHandler = error => {
   }
 }
 
+const putFocusNextTick = (id, cssSelector) => {
+  const callable = () => {
+      let el = document.getElementById(id)
+      el = el && cssSelector ? el.querySelector(cssSelector) : el
+      el && el.focus()
+      return !!el
+  }
+  Vue.prototype.$nextTick(() => {
+    let counter = 0
+    const job = setInterval(() => (callable() || ++counter > 3) && clearInterval(job), 500)
+  })
+}
+
 // Axios
 axios.defaults.withCredentials = true
 axios.interceptors.response.use(
@@ -80,6 +93,7 @@ Vue.config.errorHandler = function(error, vm, info) {
 // Vue prototype
 Vue.prototype.$_ = _
 Vue.prototype.$loading = () => store.dispatch('context/loadingStart')
+Vue.prototype.$putFocusNextTick = putFocusNextTick
 Vue.prototype.$ready = label => store.dispatch('context/loadingComplete', label)
 
 axios.get(`${apiBaseUrl}/api/user/my_profile`).then(data => {
