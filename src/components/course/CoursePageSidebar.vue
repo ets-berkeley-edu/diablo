@@ -114,10 +114,14 @@
     >
       <v-btn
         id="send-invite-btn"
+        :disabled="!isInviteTemplateAvailable"
         @click="sendInvite"
       >
         Send Invite
       </v-btn>
+      <div v-if="!isInviteTemplateAvailable" class="ml-12 mt-2 font-weight-light">
+        In order to send an invite, you must create an 'Invitation' email template.
+      </div>
     </v-row>
     <v-row v-if="offerUnschedule" id="unschedule" justify="center">
       <v-col md="auto">
@@ -172,7 +176,7 @@
   import OxfordJoin from '@/components/util/OxfordJoin'
   import Utils from '@/mixins/Utils'
   import {unschedule} from '@/api/course'
-  import {queueEmail} from '@/api/email'
+  import {getAllEmailTemplates, queueEmail} from '@/api/email'
 
   export default {
     name: 'CoursePageSidebar',
@@ -190,6 +194,7 @@
     },
     data: () => ({
       displayMeetings: undefined,
+      isInviteTemplateAvailable: undefined,
       nowDate: undefined,
       showUnscheduleModal: false
     }),
@@ -200,6 +205,7 @@
           && this.course.instructors.length
           && !this.course.hasOptedOut
           && this.course.meetings.eligible.length === 1
+          && !this.$_.isUndefined(this.isInviteTemplateAvailable)
       },
       offerUnschedule() {
         return this.$currentUser.isAdmin
@@ -210,6 +216,11 @@
     created() {
       this.displayMeetings = this.getDisplayMeetings(this.course)
       this.nowDate = this.$moment().format('YYYY-MM-DD')
+      if (this.$currentUser.isAdmin) {
+        getAllEmailTemplates().then(data => {
+          this.isInviteTemplateAvailable = this.$_.find(data, ['templateType', 'invitation']) || null
+        })
+      }
     },
     methods: {
       sendInvite() {

@@ -41,7 +41,7 @@
           <template v-slot:body="{ items }">
             <tbody>
               <tr v-if="!items.length">
-                <td colspan="6" class="pa-6 subtitle-1">
+                <td colspan="6" class="pt-4 subtitle-1">
                   You have no email templates. To get started, select a type of template from the "Create New Template" menu above.
                 </td>
               </tr>
