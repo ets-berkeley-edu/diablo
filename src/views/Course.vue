@@ -1,6 +1,6 @@
 <template>
   <div v-if="!loading">
-    <v-container fluid class="elevation-2">
+    <v-container fluid>
       <v-row class="pl-3">
         <PageTitle
           v-if="$config.currentTermId === this.course.termId"
