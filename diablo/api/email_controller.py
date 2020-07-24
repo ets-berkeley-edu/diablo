@@ -22,7 +22,6 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-
 from diablo.api.errors import BadRequestError, ResourceNotFoundError
 from diablo.api.util import admin_required
 from diablo.externals.b_connected import BConnected
@@ -32,7 +31,6 @@ from diablo.models.approval import get_all_publish_types, get_all_recording_type
     NAMES_PER_RECORDING_TYPE
 from diablo.models.email_template import EmailTemplate
 from diablo.models.queued_email import QueuedEmail
-from diablo.models.sent_email import SentEmail
 from diablo.models.sis_section import SisSection
 from flask import current_app as app, request
 from flask_login import current_user
@@ -42,12 +40,6 @@ from flask_login import current_user
 @admin_required
 def get_all_email_templates():
     return tolerant_jsonify([template.to_api_json() for template in EmailTemplate.all_templates()])
-
-
-@app.route('/api/email/templates/names')
-@admin_required
-def get_email_templates_names():
-    return tolerant_jsonify(EmailTemplate.get_all_templates_names())
 
 
 @app.route('/api/email/template/<template_id>')
@@ -174,9 +166,3 @@ def queue_emails():
     return tolerant_jsonify({
         'message': f"An email of type '{template_type}' has been queued.",
     })
-
-
-@app.route('/api/emails/sent/<uid>')
-@admin_required
-def get_emails_sent_to_uid(uid):
-    return tolerant_jsonify([e.to_api_json() for e in SentEmail.get_emails_sent_to(uid)])
