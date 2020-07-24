@@ -135,3 +135,7 @@ class TestUserPerms:
         util.change_course_instructor(self.section, self.instructor)
         self.sign_up_page.hit_url(self.section.term.id, self.section.ccn)
         self.login_page.wait_for_element(LoginPage.SIGN_IN_BUTTON, util.get_short_timeout())
+
+    def test_not_eligible_user(self):
+        self.login_page.dev_auth('61889')
+        self.login_page.wait_for_element(LoginPage.ALERT_MSG, util.get_short_timeout())
