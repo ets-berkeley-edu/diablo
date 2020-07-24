@@ -25,8 +25,8 @@
         </v-col>
         <v-col>
           <v-container v-if="isCurrentTerm && meeting.room.capability && !multipleEligibleMeetings" class="elevation-2 pa-6">
-            <v-row no-gutters>
-              <v-col id="approvals-described" class="font-weight-medium red--text pl-4 pt-4">
+            <v-row>
+              <v-col id="approvals-described" class="font-weight-medium red--text">
                 <span v-if="queuedForScheduling">This course is currently queued for scheduling. Recordings will be scheduled in an hour or less. </span>
                 <span v-if="approvedByInstructorNames.length">Approved by {{ oxfordJoin(approvedByInstructorNames) }}. </span>
                 <span v-if="approvalNeededNames.length">
@@ -48,7 +48,7 @@
             </v-row>
             <v-row v-if="hasCurrentUserApproved && !course.scheduled" no-gutters>
               <v-col>
-                <v-card tile>
+                <v-list>
                   <v-list-item two-line class="pa-3">
                     <v-list-item-content>
                       <v-list-item-title>Recording Type</v-list-item-title>
@@ -59,7 +59,7 @@
                       <v-list-item-subtitle id="publish-type-name">{{ mostRecentApproval.publishTypeName }}</v-list-item-subtitle>
                     </v-list-item-content>
                   </v-list-item>
-                </v-card>
+                </v-list>
               </v-col>
             </v-row>
             <v-row v-if="!hasCurrentUserApproved" no-gutters class="mb-4 mt-2">
