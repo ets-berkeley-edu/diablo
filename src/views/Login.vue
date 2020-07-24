@@ -10,7 +10,7 @@
         >
           <v-system-bar class="accent--text pa-8" color="secondary">
             <div class="header-bar text-center w-100">
-              <h1>Welcome to {{ $config.currentTermName }} Course Capture</h1>
+              <h1 id="page-title">Welcome to {{ $config.currentTermName }} Course Capture</h1>
             </div>
           </v-system-bar>
           <v-container fluid>
@@ -94,6 +94,7 @@
       devAuthPassword: undefined
     }),
     created() {
+      this.$putFocusNextTick('page-title')
       const error = this.$_.get(this.$route, 'query.error')
       if (error) {
         this.reportError(error)
@@ -122,10 +123,10 @@
           )
         } else if (uid) {
           this.reportError('Password required')
-          this.putFocusNextTick('dev-auth-password')
+          this.$putFocusNextTick('dev-auth-password')
         } else {
           this.reportError('Both UID and password are required')
-          this.putFocusNextTick('dev-auth-uid')
+          this.$putFocusNextTick('dev-auth-uid')
         }
       },
       logIn() {

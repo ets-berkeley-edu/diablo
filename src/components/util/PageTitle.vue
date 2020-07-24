@@ -19,7 +19,7 @@
           large
         >
           {{ icon }}
-        </v-icon> <span :class="{'text-h4': text.length > 40}"> {{ text }}</span>
+        </v-icon> <span id="page-title" :class="{'text-h4': text.length > 40}" tabindex="0"> {{ text }}</span>
       </span>
     </h1>
   </div>

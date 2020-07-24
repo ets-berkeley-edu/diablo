@@ -1,3 +1,4 @@
+import Vue from 'vue'
 
 const state = {
   loading: undefined,
@@ -24,6 +25,7 @@ const mutations = {
     if (pageTitle) {
       state.screenReaderAlert = `${pageTitle} page is ready`
     }
+    Vue.prototype.$putFocusNextTick('page-title')
   },
   loadingStart: (state: any) => (state.loading = true),
   setScreenReaderAlert: (state: any, alert: string) => (state.screenReaderAlert = alert),
