@@ -22,7 +22,11 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from diablo.lib.kaltura_util import get_classification_name, get_recurrence_name, get_status_name
+from diablo.lib.berkeley import term_name_for_sis_id
+from diablo.lib.kaltura_util import get_classification_name, get_recurrence_name, get_series_description, \
+    get_status_name
+from diablo.models.sis_section import SisSection
+from flask import current_app as app
 from KalturaClient.Plugins.Schedule import KalturaScheduleEventClassificationType, KalturaScheduleEventRecurrenceType, \
     KalturaScheduleEventStatus
 
@@ -49,3 +53,21 @@ class TestKalturaEnums:
         assert get_status_name(
             KalturaScheduleEventStatus(KalturaScheduleEventStatus.ACTIVE),
         ) == 'Active'
+
+    def test_series_description(self):
+        """Series description for cross-listed course."""
+        cross_listed_section_id = 50012
+        term_id = app.config['CURRENT_TERM_ID']
+        course = SisSection.get_course(
+            section_id=cross_listed_section_id,
+            term_id=term_id,
+        )
+        description = get_series_description(
+            course_label=course['label'],
+            instructors=course['instructors'],
+            term_name=term_name_for_sis_id(term_id),
+        )
+        assert 'MATH C51, LEC 001 | STAT C151, COL 001' in description
+        assert 'Fall 2020' in description
+        assert 'Rudolf Schündler and Arthur Storch' in description
+        assert '2020' in description

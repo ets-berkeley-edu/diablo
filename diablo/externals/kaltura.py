@@ -29,7 +29,8 @@ import dateutil.parser
 from diablo import cachify, skip_when_pytest
 from diablo.lib.berkeley import get_first_matching_datetime_of_term, get_recording_end_date, get_recording_start_date, \
     term_name_for_sis_id
-from diablo.lib.kaltura_util import get_classification_name, get_recurrence_name, get_status_name
+from diablo.lib.kaltura_util import get_classification_name, get_recurrence_name, get_series_description, \
+    get_status_name
 from diablo.lib.util import default_timezone, epoch_time_to_isoformat, format_days
 from flask import current_app as app
 from KalturaClient import KalturaClient, KalturaConfiguration
@@ -315,10 +316,11 @@ class Kaltura:
         recording_start_date = get_recording_start_date(meeting, return_today_if_past_start=True)
         recording_end_date = get_recording_end_date(meeting)
         summary = f'{course_label} ({term_name})'
-        description = f"""{course_label} ({term_name}) meets in {room.location},
+        app.logger.info(f"""
+            {course_label} ({term_name}) meets in {room.location},
             between {start_time.strftime('%H:%M')} and {end_time.strftime('%H:%M')}, on {days}.
-            Recordings of type {recording_type} will be published to {publish_type}."""
-        app.logger.info(description)
+            Recordings of type {recording_type} will be published to {publish_type}.
+        """)
 
         first_day_start = get_first_matching_datetime_of_term(
             meeting_days=days,
@@ -332,6 +334,7 @@ class Kaltura:
             time_hours=end_time.hour,
             time_minutes=end_time.minute,
         )
+        description = get_series_description(course_label, instructors, term_name)
         base_entry = self._create_kaltura_base_entry(
             description=description,
             instructors=instructors,
