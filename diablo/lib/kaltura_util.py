@@ -22,6 +22,9 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
+from datetime import datetime
+
+from diablo.lib.util import readable_join
 from KalturaClient.Plugins.Schedule import KalturaScheduleEventClassificationType, KalturaScheduleEventRecurrenceType, \
     KalturaScheduleEventStatus
 
@@ -48,3 +51,10 @@ def get_status_name(status_type):
         KalturaScheduleEventStatus.CANCELLED: 'Cancelled',
         KalturaScheduleEventStatus.DELETED: 'Deleted',
     }[status_type.value]
+
+
+def get_series_description(course_label, instructors, term_name):
+    names = [instructor['name'] for instructor in instructors]
+    summary = f'{course_label} ({term_name}) is taught by {readable_join(names)}.'
+    legalese = f"Copyright @{datetime.strftime(datetime.now(), '%Y')} UC Regents; all rights reserved."
+    return f'{summary} {legalese}'
