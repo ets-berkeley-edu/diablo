@@ -556,6 +556,14 @@ class TestSignUp3:
         expected = f'{self.section.code}, {self.section.number} ({self.term.name})'
         assert self.kaltura_page.visible_series_title() == expected
 
+    def test_series_desc(self):
+        course = f'{self.section.code}, {self.section.number} ({self.term.name})'
+        instr_1 = f'{self.section.instructors[0].first_name} {self.section.instructors[0].last_name}'
+        instr_2 = f'{self.section.instructors[1].first_name} {self.section.instructors[1].last_name}'
+        copy = f'Copyright ©{self.term.name[-4:]} UC Regents; all rights reserved.'
+        expected = f'{course} is taught by {instr_1} and {instr_2}. {copy}'
+        assert self.kaltura_page.visible_series_desc() == expected
+
     def test_series_collab_count(self):
         assert len(self.kaltura_page.collaborator_rows()) == len(self.section.instructors)
 

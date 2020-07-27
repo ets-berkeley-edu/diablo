@@ -40,6 +40,7 @@ class KalturaPage(Page):
     LOG_OUT_LINK = (By.XPATH, '//a[contains(@href, "/user/logout")]')
 
     SERIES_TITLE = (By.ID, 'CreateEvent-eventTitle')
+    SERIES_DESC = (By.ID, 'CreateEvent-eventDescription')
     SERIES_ORGANIZER = (By.ID, 'CreateEvent-eventOrganizer')
     SERIES_RECUR_DESC = (By.ID, 'CreateEvent-RecurrenceDescription')
     SERIES_COLLABORATOR_ROW = (By.XPATH, '//tr[contains(@id, "collaborator_")]')
@@ -127,6 +128,9 @@ class KalturaPage(Page):
 
     def visible_series_title(self):
         return self.element(KalturaPage.SERIES_TITLE).get_attribute('value')
+
+    def visible_series_desc(self):
+        return self.element(KalturaPage.SERIES_DESC).text
 
     def visible_series_organizer(self):
         return self.element(KalturaPage.SERIES_ORGANIZER).get_attribute('value')
