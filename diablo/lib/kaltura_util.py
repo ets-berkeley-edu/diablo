@@ -56,5 +56,5 @@ def get_status_name(status_type):
 def get_series_description(course_label, instructors, term_name):
     names = [instructor['name'] for instructor in instructors]
     summary = f'{course_label} ({term_name}) is taught by {readable_join(names)}.'
-    legalese = f"Copyright @{datetime.strftime(datetime.now(), '%Y')} UC Regents; all rights reserved."
+    legalese = f"Copyright ©{datetime.strftime(datetime.now(), '%Y')} UC Regents; all rights reserved."
     return f'{summary} {legalese}'
