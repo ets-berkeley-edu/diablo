@@ -59,7 +59,7 @@ def dev_auth_login():
             msg = f'The system failed to log in user with UID {uid}.'
             app.logger.error(msg)
             return tolerant_jsonify({'message': msg}, 403)
-        return tolerant_jsonify(current_user.to_api_json())
+        return tolerant_jsonify(current_user.to_api_json(include_courses=True))
     else:
         raise ResourceNotFoundError('Unknown path')
 

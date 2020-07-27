@@ -22,8 +22,7 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-
-from diablo.merged import calnet
+from diablo.merged.calnet import get_calnet_user_for_uid
 from diablo.models.admin_user import AdminUser
 from diablo.models.sis_section import SisSection
 from flask import current_app as app
@@ -40,7 +39,7 @@ class User(UserMixin):
                 self.uid = None
         else:
             self.uid = None
-        self.api_json = self._get_api_json(self.uid)
+        self.user = self._load_user(self.uid)
 
     def get_id(self):
         # Type 'int' is required for Flask-login user_id
@@ -51,65 +50,67 @@ class User(UserMixin):
 
     @property
     def email_address(self):
-        return self.api_json['emailAddress']
+        return self.user['emailAddress']
 
     @property
     def is_active(self):
-        return self.api_json['isActive']
+        return self.user['isActive']
 
     @property
     def is_authenticated(self):
-        return self.api_json['isAuthenticated']
+        return self.user['isAuthenticated']
 
     @property
     def is_anonymous(self):
-        return not self.api_json['isAnonymous']
+        return not self.user['isAnonymous']
 
     @property
     def is_admin(self):
-        return self.api_json['isAdmin']
+        return self.user['isAdmin']
 
     @property
-    def name(self):
-        return self.api_json['name']
-
-    def to_api_json(self):
-        return self.api_json
+    def is_teaching(self):
+        return self.user['isTeaching']
 
     @classmethod
     def load_user(cls, user_id):
-        return cls._get_api_json(uid=user_id)
+        return cls._load_user(uid=user_id)
+
+    @property
+    def name(self):
+        return self.user['name']
+
+    def to_api_json(self, include_courses=False):
+        def _load_courses():
+            return SisSection.get_courses_per_instructor_uid(
+                term_id=app.config['CURRENT_TERM_ID'],
+                instructor_uid=self.uid,
+            )
+        return {
+            **self.user,
+            **{
+                'courses': _load_courses() if include_courses else [],
+            },
+        }
 
     @classmethod
-    def _get_api_json(cls, uid=None):
-        calnet_profile = None
-        email_address = None
-        is_active = False
-        is_admin = False
-        courses = []
-        if uid:
-            calnet_profile = calnet.get_calnet_user_for_uid(app, uid)
-            is_active = not calnet_profile.get('isExpiredPerLdap', True)
-            if is_active:
-                email_address = calnet_profile.get('email')
-                is_admin = AdminUser.is_admin(uid)
-                courses = SisSection.get_courses_per_instructor_uid(
-                    term_id=app.config['CURRENT_TERM_ID'],
-                    instructor_uid=uid,
-                )
-                is_active = is_admin or bool(courses)
+    def _load_user(cls, uid=None):
+        calnet_profile = get_calnet_user_for_uid(app, uid) if uid else {}
+        expired = calnet_profile.get('isExpiredPerLdap', True)
+        is_admin = not expired and AdminUser.is_admin(uid)
+        is_teaching = not expired and SisSection.is_teaching(term_id=app.config['CURRENT_TERM_ID'], uid=uid)
+        is_active = is_teaching or is_admin
         return {
-            **(calnet_profile or {}),
+            **calnet_profile,
             **{
                 'id': uid,
-                'emailAddress': email_address,
+                'emailAddress': calnet_profile.get('email'),
                 'isActive': is_active,
                 'isAdmin': is_admin,
                 'isAnonymous': not is_active,
                 'isAuthenticated': is_active,
-                'isTeaching': bool(courses),
-                'courses': courses,
-                'name': calnet_profile.get('name') if calnet_profile else f'UID {uid}',
+                'isTeaching': is_teaching,
+                'name': calnet_profile.get('name') or f'UID {uid}',
                 'uid': uid,
             },
         }

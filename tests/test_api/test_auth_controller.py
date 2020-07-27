@@ -117,6 +117,8 @@ class TestDevAuth:
                 },
             )
             assert api_json['uid'] == admin_uid
+            assert api_json['isTeaching'] is False
+            assert len(api_json['courses']) == 0
             response = client.get('/api/auth/logout')
             assert response.status_code == 200
             assert response.json['isAnonymous']
@@ -132,6 +134,8 @@ class TestDevAuth:
                 },
             )
             assert api_json['uid'] == instructor_uid
+            assert api_json['isTeaching'] is True
+            assert len(api_json['courses']) > 0
             response = client.get('/api/auth/logout')
             assert response.status_code == 200
             assert response.json['isAnonymous']

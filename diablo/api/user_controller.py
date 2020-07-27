@@ -34,7 +34,7 @@ from flask_login import current_user
 
 @app.route('/api/user/my_profile')
 def my_profile():
-    return tolerant_jsonify(current_user.to_api_json())
+    return tolerant_jsonify(current_user.to_api_json(include_courses=True))
 
 
 @app.route('/api/user/<uid>')

@@ -641,6 +641,26 @@ class SisSection(db.Model):
         return cls.get_course(section_id=section_id, term_id=term_id)
 
     @classmethod
+    def is_teaching(cls, term_id, uid):
+        sql = """
+            SELECT id
+            FROM sis_sections
+            WHERE term_id = :term_id
+                AND is_primary IS TRUE
+                AND instructor_uid = :uid
+                AND instructor_role_code IN ('ICNT', 'PI', 'TNIC')
+            LIMIT 1
+        """
+        results = db.session.execute(
+            text(sql),
+            {
+                'uid': uid,
+                'term_id': term_id,
+            },
+        )
+        return results.rowcount > 0
+
+    @classmethod
     def _section_ids_with_nonstandard_dates(cls, term_id):
         if str(term_id) != str(app.config['CURRENT_TERM_ID']):
             app.logger.warn(f'Dates for term id {term_id} not configured; cannot query for nonstandard dates.')
