@@ -67,8 +67,9 @@ def _save_courses(sis_sections):
         )
         SELECT
             allowed_units, course_name, course_title, created_at, instruction_format, instructor_name,
-            instructor_role_code, instructor_uid, is_primary, meeting_days, meeting_end_date, meeting_end_time,
-            meeting_location, meeting_start_date, meeting_start_time, section_id, section_num, term_id
+            instructor_role_code, instructor_uid, is_primary::BOOLEAN, meeting_days, meeting_end_date::TIMESTAMP,
+            meeting_end_time, meeting_location, meeting_start_date::TIMESTAMP, meeting_start_time, section_id::INTEGER,
+            section_num, term_id::INTEGER
         FROM json_populate_recordset(null::sis_sections, :json_dumps)
     """
     data = [
