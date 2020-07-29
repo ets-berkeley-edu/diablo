@@ -195,7 +195,7 @@
         })
         startJob(job.key).then(() => {})
         const jobName = this.$_.find(this.jobSchedule.jobs, ['key', job.key]).name
-        this.snackbarOpen(`Job ${jobName} started`)
+        this.snackbarOpen(`${jobName} job started`)
       },
       scheduleEditCancel() {
         this.editJob = undefined
