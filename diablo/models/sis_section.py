@@ -668,11 +668,16 @@ class SisSection(db.Model):
         sql = """
             SELECT DISTINCT s.section_id
             FROM sis_sections s
+            JOIN scheduled d ON d.section_id = s.section_id
+                AND d.term_id = s.term_id
             WHERE s.term_id = :term_id
                 AND (s.instructor_uid IS NULL OR s.instructor_role_code IN ('ICNT', 'PI', 'TNIC'))
                 AND s.is_primary IS TRUE
                 AND s.is_principal_listing IS TRUE
-                AND (s.meeting_start_date::text NOT LIKE :term_begin OR s.meeting_end_date::text NOT LIKE :term_end)
+                AND (
+                    (s.meeting_start_date::text NOT LIKE :term_begin AND d.created_at < s.meeting_start_date)
+                    OR s.meeting_end_date::text NOT LIKE :term_end
+                )
             ORDER BY s.section_id
         """
         rows = db.session.execute(
