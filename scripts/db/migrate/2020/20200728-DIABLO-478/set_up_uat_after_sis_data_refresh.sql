@@ -25,18 +25,19 @@
 
 BEGIN;
 
+-- NOTE: Release instructions doc instructs us to back up the 'rooms' table BEFORE running this SQL script.
+
 DELETE FROM approvals;
 DELETE FROM course_preferences;
 DELETE FROM scheduled;
 DELETE FROM queued_emails;
 DELETE FROM sent_emails;
 DELETE FROM canvas_course_sites;
-DELETE FROM cross_listings;
+DELETE FROM cross_listings WHERE section_id < 1000000000;
 DELETE FROM sis_sections WHERE section_id < 1000000000;
 DELETE FROM instructors WHERE uid NOT IN (:'u1', :'u2', :'u3', :'u4', :'u5', :'u6', :'u7');
 
-UPDATE rooms SET capability = NULL WHERE location != 'Cory 277';
-
--- TODO: Canvas course sites for courses above
+UPDATE rooms SET capability = NULL;
+UPDATE rooms SET capability = 'screencast_and_video', is_auditorium = TRUE WHERE location = 'Cory 277';
 
 COMMIT;
