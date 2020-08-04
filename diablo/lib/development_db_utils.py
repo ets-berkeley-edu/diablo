@@ -27,12 +27,16 @@ import json
 from diablo import db, std_commit
 from diablo.lib.util import utc_now
 from diablo.models.sis_section import SisSection
+from sqlalchemy import text
 
 
 def save_mock_courses(json_file_path):
     courses = _load_mock_courses(json_file_path)
-    # Save mock data if not present in db
-    if courses and not SisSection.get_course(term_id=courses[0]['term_id'], section_id=courses[0]['section_id']):
+    if courses:
+        for course in courses:
+            section_id = course['section_id']
+            if SisSection.get_course(term_id=course['term_id'], section_id=section_id):
+                db.session.execute(text(f'DELETE FROM sis_sections WHERE section_id = {section_id}'))
         _save_courses(sis_sections=courses)
         std_commit(allow_test_environment=True)
 
