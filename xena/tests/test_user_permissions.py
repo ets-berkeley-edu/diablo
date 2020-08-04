@@ -29,6 +29,7 @@ import pytest
 from xena.models.meeting import Meeting
 from xena.models.section import Section
 from xena.pages.login_page import LoginPage
+from xena.pages.ouija_board_page import OuijaBoardPage
 from xena.pages.sign_up_page import SignUpPage
 from xena.test_utils import util
 
@@ -113,29 +114,38 @@ class TestUserPerms:
         assert self.sign_up_page.is_present(SignUpPage.APPROVE_BUTTON)
 
     def test_aprx_role(self):
+        self.sign_up_page.log_out()
         util.set_instructor_role(self.section, self.instructor, 'APRX')
+        self.login_page.dev_auth(self.instructor.uid)
+        self.ouija_page.wait_for_element(OuijaBoardPage.NO_COURSES_MSG, util.get_short_timeout())
         self.sign_up_page.hit_url(self.section.term.id, self.section.ccn)
-        self.login_page.wait_for_element(LoginPage.SIGN_IN_BUTTON, util.get_short_timeout())
+        self.sign_up_page.wait_for_diablo_title('Page not found')
 
     def test_invt_role(self):
+        self.sign_up_page.log_out()
         util.set_instructor_role(self.section, self.instructor, 'INVT')
+        self.login_page.dev_auth(self.instructor.uid)
+        self.ouija_page.wait_for_element(OuijaBoardPage.NO_COURSES_MSG, util.get_short_timeout())
         self.sign_up_page.hit_url(self.section.term.id, self.section.ccn)
-        self.login_page.wait_for_element(LoginPage.SIGN_IN_BUTTON, util.get_short_timeout())
+        self.sign_up_page.wait_for_diablo_title('Page not found')
 
     def test_ineligible_room(self):
+        self.sign_up_page.log_out()
         meet = {'room': {'name': 'Chavez 3'}}
         meeting = Meeting(meet)
         util.set_meeting_location(self.section, meeting)
         util.set_instructor_role(self.section, self.instructor, 'PI')
         self.login_page.dev_auth(self.instructor.uid)
+        self.ouija_page.wait_for_element(OuijaBoardPage.NO_COURSES_MSG, util.get_short_timeout())
         self.sign_up_page.load_page(self.section)
         assert self.sign_up_page.is_present(SignUpPage.NOT_ELIGIBLE_MSG)
 
     def test_not_course_instructor(self):
         util.change_course_instructor(self.section, self.instructor)
         self.sign_up_page.hit_url(self.section.term.id, self.section.ccn)
-        self.login_page.wait_for_element(LoginPage.SIGN_IN_BUTTON, util.get_short_timeout())
+        self.sign_up_page.wait_for_element(SignUpPage.not_authorized_msg_locator(self.section), util.get_short_timeout())
 
     def test_not_eligible_user(self):
+        self.sign_up_page.log_out()
         self.login_page.dev_auth('61889')
         self.login_page.wait_for_element(LoginPage.ALERT_MSG, util.get_short_timeout())
