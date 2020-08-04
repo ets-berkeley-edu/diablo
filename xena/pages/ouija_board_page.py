@@ -42,6 +42,8 @@ class OuijaBoardPage(DiabloPages):
 
     DOWNLOAD_CSV_BUTTON = (By.XPATH, '//button[contains(., "Download CSV")]')
 
+    NO_COURSES_MSG = (By.XPATH, '//div[text()=" No courses. "]')
+
     SEARCH_INPUT = (By.ID, 'input-search')
     SEARCH_SELECT_BUTTON = (By.XPATH, '//div[@aria-haspopup="listbox"]')
     SEARCH_SELECT_SELECTION = (By.XPATH, '//input[@id="ouija-filter-options"]/preceding-sibling::div')
