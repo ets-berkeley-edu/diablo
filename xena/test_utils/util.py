@@ -126,6 +126,8 @@ def get_kaltura_id(recording_schedule, term):
         recording_schedule.series_id = kaltura_id
         recording_schedule.scheduling_status = RecordingSchedulingStatus.SCHEDULED
         return kaltura_id
+    else:
+        return None
 
 
 def get_course_site_ids(section):
