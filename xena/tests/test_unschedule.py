@@ -81,8 +81,7 @@ class TestUnschedule:
     def test_unschedule_queued_job_run(self):
         self.ouija_page.click_jobs_link()
         self.jobs_page.run_kaltura_job()
-        with pytest.raises(AttributeError):
-            util.get_kaltura_id(self.recording_schedule, self.term)
+        assert not util.get_kaltura_id(self.recording_schedule, self.term)
 
     # VERIFY FILTERS
 
