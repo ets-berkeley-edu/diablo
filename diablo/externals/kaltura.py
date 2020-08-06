@@ -386,10 +386,12 @@ class Kaltura:
             instructors,
     ):
         instructor_uids = [instructor['uid'] for instructor in instructors]
+        uids = ','.join(_to_normalized_set(instructor_uids)) if instructor_uids else None
         base_entry = KalturaBaseEntry(
             description=description,
             displayInSearch=KalturaEntryDisplayInSearchType.PARTNER_ONLY,
-            entitledUsersEdit=','.join(_to_normalized_set(instructor_uids)) if instructor_uids else None,
+            entitledUsersEdit=uids,
+            entitledUsersPublish=uids,
             moderationStatus=KalturaEntryModerationStatus.AUTO_APPROVED,
             name=name,
             partnerId=self.kaltura_partner_id,
