@@ -30,8 +30,6 @@ BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 ALERT_INFREQUENT_ACTIVITY_ENABLED = False
 ALERT_WITHDRAWAL_ENABLED = False
 
-COURSE_CAPTURE_PILOT_JSON = f'{BASE_DIR}/fixtures/sis/course_capture_pilot.json'
-
 CURRENT_TERM_BEGIN = '2020-08-26'
 CURRENT_TERM_END = '2020-12-11'
 CURRENT_TERM_ID = 2208

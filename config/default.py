@@ -60,8 +60,6 @@ CAS_SERVER = 'https://auth-test.berkeley.edu/cas/'
 COURSE_CAPTURE_EXPLAINED_URL = 'https://www.ets.berkeley.edu/services-facilities/course-capture'
 COURSE_CAPTURE_POLICIES_URL = 'https://www.ets.berkeley.edu/services-facilities/course-capture/course-capture-instructors-getting-started/policies'
 
-# TODO: Remove when Summer 2020 pilot is done
-COURSE_CAPTURE_PILOT_JSON = f'{BASE_DIR}/config/course_capture_pilot.json'
 COURSE_CAPTURE_PREMIUM_COST = 2000
 
 # YYYY-MM-DD is expected date format. For example, '2020-01-21'
