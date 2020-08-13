@@ -24,6 +24,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 from diablo.externals.canvas import get_canvas_course_sites
 from diablo.jobs.base_job import BaseJob
+from diablo.merged.emailer import send_system_error_email
 from diablo.models.canvas_course_site import CanvasCourseSite
 from flask import current_app as app
 
@@ -31,11 +32,18 @@ from flask import current_app as app
 class CanvasJob(BaseJob):
 
     def _run(self):
-        canvas_course_sites = get_canvas_course_sites(app.config['CANVAS_ENROLLMENT_TERM_ID'])
-        CanvasCourseSite.refresh_term_data(
-            term_id=app.config['CURRENT_TERM_ID'],
-            canvas_course_sites=canvas_course_sites,
-        )
+        canvas_term_id = app.config['CANVAS_ENROLLMENT_TERM_ID']
+        canvas_course_sites = get_canvas_course_sites(canvas_term_id)
+        if canvas_course_sites:
+            CanvasCourseSite.refresh_term_data(
+                term_id=app.config['CURRENT_TERM_ID'],
+                canvas_course_sites=canvas_course_sites,
+            )
+        else:
+            send_system_error_email(
+                message='Please verify Canvas settings in Diablo config.',
+                subject=f'Canvas API call returned zero courses (canvas_term_id = {canvas_term_id})',
+            )
 
     @classmethod
     def description(cls):
