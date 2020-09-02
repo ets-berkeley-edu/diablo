@@ -22,6 +22,8 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
+import traceback
+
 from canvasapi.exceptions import CanvasException
 from diablo import db
 from diablo.externals.b_connected import BConnected
@@ -29,6 +31,7 @@ from diablo.externals.canvas import ping_canvas
 from diablo.externals.kaltura import Kaltura
 from diablo.externals.rds import log_db_error
 from diablo.lib.http import tolerant_jsonify
+from diablo.merged.emailer import send_system_error_email
 from flask import current_app as app
 import psycopg2
 from sqlalchemy.exc import SQLAlchemyError
@@ -36,13 +39,39 @@ from sqlalchemy.exc import SQLAlchemyError
 
 @app.route('/api/ping')
 def ping():
-    return tolerant_jsonify({
-        'app': True,
-        'canvas': _ping_canvas(),
-        'bConnected': BConnected().ping(),
-        'db': _db_status(),
-        'kaltura': Kaltura().ping(),
-    })
+    b_connected_ping = None
+    canvas_ping = None
+    db_ping = None
+    kaltura_ping = None
+    status = 200
+    try:
+        b_connected_ping = BConnected().ping()
+        canvas_ping = _ping_canvas()
+        db_ping = _db_status()
+        kaltura_ping = Kaltura().ping()
+    except Exception as e:
+        status = 500
+        subject = str(e)
+        subject = f'{subject[:50]}...' if len(subject) > 50 else subject
+        message = f'Error during /api/ping: {subject}'
+        app.logger.error(message)
+        app.logger.exception(e)
+        if app.config['EMAIL_IF_PING_HAS_ERROR']:
+            send_system_error_email(
+                message=f'{message}\n\n<pre>{traceback.format_exc()}</pre>',
+                subject=message,
+            )
+    finally:
+        return tolerant_jsonify(
+            {
+                'app': True,
+                'bConnected': b_connected_ping,
+                'canvas': canvas_ping,
+                'db': db_ping,
+                'kaltura': kaltura_ping,
+            },
+            status=status,
+        )
 
 
 def _db_status():
