@@ -167,7 +167,7 @@ class TestWeirdTypeC:
     def test_visible_meeting_days(self):
         term_dates = f'{SignUpPage.expected_term_date_str(self.meeting_0.start_date, self.meeting_0.end_date)}'
         last_date = f'(Final recording scheduled for {SignUpPage.expected_final_record_date_str(self.meeting_0, self.section.term)}.)'
-        assert self.sign_up_page.visible_meeting_days()[0] == f'{self.meeting_0.days}\n\n{term_dates}\n{last_date}'
+        assert f'{term_dates}\n{last_date}' in self.sign_up_page.visible_meeting_days()[0]
         assert len(self.sign_up_page.visible_meeting_days()) == 1
 
     def test_visible_meeting_time(self):

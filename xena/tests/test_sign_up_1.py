@@ -212,7 +212,7 @@ class TestSignUp1:
     def test_visible_meeting_days(self):
         term_dates = f'{SignUpPage.expected_term_date_str(self.meeting.start_date, self.meeting.end_date)}'
         last_date = f'(Final recording scheduled for {SignUpPage.expected_final_record_date_str(self.meeting, self.section.term)}.)'
-        assert self.sign_up_page.visible_meeting_days()[0] == f'{self.meeting.days}\n\n{term_dates}\n{last_date}'
+        assert f'{term_dates}\n{last_date}' in self.sign_up_page.visible_meeting_days()[0]
 
     def test_visible_meeting_time(self):
         assert self.sign_up_page.visible_meeting_time()[0] == f'{self.meeting.start_time} - {self.meeting.end_time}'

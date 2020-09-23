@@ -122,7 +122,9 @@ class SignUpPage(DiabloPages):
 
     def visible_meeting_days(self):
         els = self.elements(SignUpPage.MEETING_DAYS)
-        return [el.get_attribute('innerText').replace('Days of the week:', '').replace('Dates:', '').strip() for el in els]
+        vis = [el.get_attribute('innerText').replace('Days of the week:', '').replace('Dates:', '').strip() for el in els]
+        app.logger.info(f'Visible {vis}')
+        return vis
 
     def visible_meeting_time(self):
         els = self.elements(SignUpPage.MEETING_TIMES)
