@@ -57,7 +57,9 @@ module.exports = {
         allowFirstLine: false
       }
     }],
+    'vue/multiline-html-element-content-newline': 2,
     'vue/no-boolean-default': 2,
+    'vue/no-mutating-props': 1,
     'vue/no-restricted-syntax': 2,
     'vue/no-use-v-if-with-v-for': 2,
     'vue/no-v-html': 0,
@@ -67,6 +69,8 @@ module.exports = {
     'vue/require-prop-types': 2,
     'vue/script-indent': 0,
     'vue/singleline-html-element-content-newline': 0,
+    'vue/valid-v-slot': 1,
+    'vue/v-slot-style': 1,
     'vue/space-infix-ops': 2,
     'vue/space-unary-ops': 2,
     'vue/v-bind-style': 2,
