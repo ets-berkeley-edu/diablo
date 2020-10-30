@@ -6,17 +6,11 @@ phases:
       nodejs: 12
       python: 3.7
     commands:
-      - npm -v
       - npm install
-
-  pre_build:
-    commands:
-      - echo "pre_build phase"
 
   build:
     commands:
-      - npm install -g @vue/cli
-      - npm run build-vue
+      - npm --verbose run build-vue
 
   post_build:
     commands:
