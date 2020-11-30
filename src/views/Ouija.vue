@@ -43,9 +43,9 @@
             @change="refresh"
           >
             <span :id="`filter-option-${data.item.value}`" slot="item" slot-scope="data">{{ data.item }}</span>
-            <template v-slot:selection="{ item }">
+            <template #selection="{item}">
               <v-tooltip id="tooltip-ouija-filter" bottom>
-                <template v-slot:activator="{ on, attrs }">
+                <template #activator="{on, attrs}">
                   <v-icon
                     slot="prepend-item"
                     class="pb-1 pr-2"

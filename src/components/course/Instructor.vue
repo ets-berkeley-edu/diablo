@@ -5,7 +5,7 @@
       :id="`tooltip-course-${course.sectionId}-instructor-${instructor.uid}-approved`"
       bottom
     >
-      <template v-slot:activator="{ on, attrs }">
+      <template #activator="{on, attrs}">
         <v-icon
           class="pr-1"
           color="yellow darken-2"
@@ -22,7 +22,7 @@
       :id="`tooltip-course-${course.sectionId}-instructor-${instructor.uid}-not-invited`"
       bottom
     >
-      <template v-slot:activator="{ on, attrs }">
+      <template #activator="{on, attrs}">
         <v-icon
           class="pr-1"
           color="yellow darken-2"
@@ -39,7 +39,7 @@
       :id="`tooltip-course-${course.sectionId}-instructor-${instructor.uid}-no-approval`"
       bottom
     >
-      <template v-slot:activator="{ on, attrs }">
+      <template #activator="{on, attrs}">
         <v-icon
           class="pr-1"
           color="yellow darken-2"
@@ -56,7 +56,7 @@
       :id="`tooltip-course-${course.sectionId}-instructor-${instructor.uid}-approved`"
       bottom
     >
-      <template v-slot:activator="{ on, attrs }">
+      <template #activator="{on, attrs}">
         <v-icon
           class="pr-1"
           color="green"

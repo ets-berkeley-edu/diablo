@@ -14,7 +14,7 @@
       <v-row>
         <v-col class="pt-0">
           <v-simple-table class="mt-4">
-            <template v-slot:default>
+            <template #default>
               <thead>
                 <tr>
                   <th>Course</th>

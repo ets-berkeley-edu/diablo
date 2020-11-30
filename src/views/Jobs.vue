@@ -14,7 +14,7 @@
           hide-default-footer
           :items="jobSchedule.jobs"
         >
-          <template v-slot:body="{ items }">
+          <template #body="{items}">
             <tbody>
               <tr v-if="!items.length">
                 <td id="message-when-zero-jobs" class="pa-4 text-no-wrap title" :colspan="headers.length">

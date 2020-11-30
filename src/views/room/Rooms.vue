@@ -4,7 +4,7 @@
       <PageTitle icon="mdi-domain" :text="`${$_.size(rooms)} Rooms`" />
       <v-spacer></v-spacer>
       <v-tooltip v-model="adviseAgainstRoom237" bottom color="pink">
-        <template v-slot:activator="{ attrs }">
+        <template #activator="{attrs}">
           <v-text-field
             v-model="search"
             append-icon="mdi-magnify"
@@ -27,16 +27,16 @@
       :search="search"
       @page-count="pageCount = $event"
     >
-      <template v-slot:item.location="{ item }">
+      <template #item.location="{item}">
         <router-link :id="`room-${item.id}`" :to="`/room/${item.id}`">{{ item.location }}</router-link>
       </template>
-      <template v-slot:item.kalturaResourceId="{ item }">
+      <template #item.kalturaResourceId="{item}">
         {{ item.kalturaResourceId || '&mdash;' }}
       </template>
-      <template v-slot:item.capabilityName="{ item }">
+      <template #item.capabilityName="{item}">
         {{ item.capability ? item.capabilityName : '&mdash;' }}
       </template>
-      <template v-slot:item.isAuditorium="{ item }">
+      <template #item.isAuditorium="{item}">
         {{ item.isAuditorium ? 'Yes' : 'No' }}
       </template>
     </v-data-table>
