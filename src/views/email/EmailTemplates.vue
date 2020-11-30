@@ -38,7 +38,7 @@
           :loading="refreshing"
           no-results-text="No matching emailTemplates"
         >
-          <template v-slot:body="{ items }">
+          <template #body="{items}">
             <tbody>
               <tr v-if="!items.length">
                 <td colspan="6" class="pt-4 subtitle-1">

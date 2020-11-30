@@ -4,7 +4,7 @@
       v-model="dialog"
       width="500"
     >
-      <template v-slot:activator="{ on, attrs }">
+      <template #activator="{on, attrs}">
         <v-btn
           id="btn-email-template-codes"
           color="secondary"

@@ -5,7 +5,7 @@
       :id="`tooltip-course-${course.sectionId}-room-${room.id}-ineligible`"
       bottom
     >
-      <template v-slot:activator="{ on, attrs }">
+      <template #activator="{on, attrs}">
         <v-icon
           class="pr-1"
           :color="room.capability ? 'light-green' : 'yellow darken-2'"
@@ -22,7 +22,7 @@
       :id="`tooltip-course-${course.sectionId}-room-${room.id}-obsolete`"
       bottom
     >
-      <template v-slot:activator="{ on, attrs }">
+      <template #activator="{on, attrs}">
         <v-icon
           class="pr-1"
           color="yellow darken-2"

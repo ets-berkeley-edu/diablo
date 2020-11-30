@@ -26,7 +26,7 @@
       :search="search"
       @page-count="pageCount = $event"
     >
-      <template v-slot:item.failed="{ item }">
+      <template #item.failed="{item}">
         <v-icon v-if="item.finishedAt" :color="item.failed ? 'red' : 'light-green'">
           {{ item.failed ? 'mdi-exclamation-thick' : 'mdi-check-bold' }}
         </v-icon>
@@ -39,10 +39,10 @@
           color="orange"
         ></v-progress-circular>
       </template>
-      <template v-slot:item.startedAt="{ item }">
+      <template #item.startedAt="{item}">
         {{ item.startedAt | moment(dateFormat) }}
       </template>
-      <template v-slot:item.finishedAt="{ item }">
+      <template #item.finishedAt="{item}">
         <span v-if="item.finishedAt">{{ item.finishedAt | moment(dateFormat) }}</span>
       </template>
     </v-data-table>

@@ -59,7 +59,7 @@
                     :id="`tooltip-course-${course.sectionId}-obsolete-dates`"
                     bottom
                   >
-                    <template v-slot:activator="{ on, attrs }">
+                    <template #activator="{on, attrs}">
                       <v-icon
                         class="pr-1"
                         color="yellow darken-2"
@@ -81,7 +81,7 @@
                     :id="`tooltip-course-${course.sectionId}-obsolete-times`"
                     bottom
                   >
-                    <template v-slot:activator="{ on, attrs }">
+                    <template #activator="{on, attrs}">
                       <v-icon
                         class="pr-1"
                         color="yellow darken-2"

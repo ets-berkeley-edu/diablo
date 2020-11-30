@@ -43,7 +43,7 @@
             v-model="message"
             :extensions="extensions"
             placeholder="Message"
-            :toolbar-attributes="{ color: 'secondary' }"
+            :toolbar-attributes="{color: 'secondary'}"
           />
         </v-col>
       </v-row>

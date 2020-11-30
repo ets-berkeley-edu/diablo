@@ -20,7 +20,7 @@
       :search="searchText"
       @page-count="pageCount = $event"
     >
-      <template v-slot:body="{ items }">
+      <template #body="{items}">
         <tbody v-if="refreshing">
           <tr>
             <td class="pa-12 text-center" :colspan="headers.length + 1">
@@ -76,7 +76,7 @@
               </td>
               <td :id="`course-${course.sectionId}-status`" :class="tdc(course)">
                 <v-tooltip v-if="course.wasApprovedByAdmin" :id="`tooltip-admin-approval-${course.sectionId}`" bottom>
-                  <template v-slot:activator="{ on, attrs }">
+                  <template #activator="{on, attrs}">
                     <v-icon
                       color="green"
                       class="pa-0"

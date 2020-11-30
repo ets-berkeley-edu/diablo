@@ -7,7 +7,7 @@
         <v-icon aria-label="Mortarboard icon">mdi-school-outline</v-icon>
       </v-col>
       <v-col>
-        <OxfordJoin v-slot="{ item }" :items="course.instructors">
+        <OxfordJoin v-slot="{item}" :items="course.instructors">
           <router-link
             v-if="$currentUser.isAdmin"
             :id="`instructor-${item.uid}`"
@@ -93,7 +93,7 @@
         <v-icon aria-label="Bookmark icon">mdi-bookmark-outline</v-icon>
       </v-col>
       <v-col>
-        <OxfordJoin v-slot="{ item }" :items="course.canvasCourseSites">
+        <OxfordJoin v-slot="{item}" :items="course.canvasCourseSites">
           <CanvasCourseSite :site="item" />
         </OxfordJoin>
       </v-col>
@@ -126,7 +126,7 @@
     <v-row v-if="offerUnschedule" id="unschedule" justify="center">
       <v-col md="auto">
         <v-dialog v-model="showUnscheduleModal" persistent max-width="400">
-          <template v-slot:activator="{ on, attrs }">
+          <template #activator="{on, attrs}">
             <v-btn
               id="unschedule-course-btn"
               color="primary"

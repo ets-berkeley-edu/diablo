@@ -7,7 +7,7 @@
       hide-default-footer
       :items="configs"
     >
-      <template v-slot:body="{ items }">
+      <template #body="{items}">
         <tbody>
           <tr v-for="config in items" :key="config.key">
             <td>

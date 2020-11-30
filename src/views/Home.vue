@@ -13,7 +13,7 @@
         :items-per-page="100"
         class="elevation-1"
       >
-        <template v-slot:body="{ items }">
+        <template #body="{items}">
           <tbody>
             <template v-for="course in items" :id="`course-${course.sectionId}`">
               <tr :key="course.sectionId">

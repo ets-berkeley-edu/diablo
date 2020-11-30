@@ -4,14 +4,21 @@
     class="elevation-1 mt-3"
     disable-pagination
     disable-sort
-    :headers="headers"
+    :headers="[
+      {text: 'Id', value: 'id'},
+      {text: 'Summary', value: 'summary', class: 'w-30'},
+      {text: 'Start', value: 'startDate'},
+      {text: 'End', value: 'endDate'},
+      {text: 'Duration', value: 'duration'},
+      {text: 'Days', value: 'days'}
+    ]"
     hide-default-footer
     item-key="id"
     :items="events"
     show-expand
     :single-expand="true"
   >
-    <template v-slot:item.summary="{ item }">
+    <template #item.summary="{item}">
       <a
         :id="`kaltura-media-space-${item.id}`"
         :href="`${$config.kalturaMediaSpaceUrl}/recscheduling/index/edit-event/eventid/${item.id}`"
@@ -21,12 +28,12 @@
         {{ item.summary }} <v-icon small class="pl-2">mdi-open-in-new</v-icon>
       </a>
     </template>
-    <template v-slot:item.startDate="{ item }">
+    <template #item.startDate="{item}">
       <span v-if="item.startDate" class="text-no-wrap">
         {{ item.startDate | moment('ddd, MMM D, YYYY') }}
       </span>
     </template>
-    <template v-slot:item.endDate="{ item }">
+    <template #item.endDate="{item}">
       <span v-if="$_.get(item, 'recurrence.until')" class="text-no-wrap">
         {{ item.recurrence.until | moment('ddd, MMM D, YYYY') }}
       </span>
@@ -34,22 +41,22 @@
         &mdash;
       </span>
     </template>
-    <template v-slot:item.duration="{ item }">
+    <template #item.duration="{item}">
       <span v-if="item.durationFormatted" class="text-no-wrap">
         {{ item.durationFormatted }}
       </span>
     </template>
-    <template v-slot:item.days="{ item }">
+    <template #item.days="{item}">
       {{ $_.get(item.recurrence, 'byDay') || '&mdash;' }}
     </template>
-    <template v-slot:expanded-item="{ headers, item }">
+    <template #expanded-item="{headers, item}">
       <td :colspan="headers.length">
         <div v-if="item.recurrences" class="ma-5">
           <div class="title">
             Series
           </div>
           <v-simple-table>
-            <template v-slot:default>
+            <template #default>
               <thead>
                 <tr>
                   <th class="text-left">Id</th>
@@ -62,7 +69,7 @@
                 <tr v-for="event in item.recurrences" :key="event.id">
                   <td>
                     <v-tooltip v-if="$_.size(event.blackoutConflicts)" :id="`blackout-conflicts-${event.id}`" top>
-                      <template v-slot:activator="{ on, attrs }">
+                      <template #activator="{on, attrs}">
                         <v-icon
                           color="red"
                           class="pa-0"
@@ -95,7 +102,7 @@
           </v-simple-table>
         </div>
         <v-simple-table v-if="!item.recurrences" class="ma-5">
-          <template v-slot:default>
+          <template #default>
             <thead>
               <tr>
                 <th class="text-left">Key</th>
@@ -139,16 +146,6 @@
         required: true,
         type: Array
       }
-    },
-    data: () => ({
-      headers: [
-        {text: 'Id', value: 'id'},
-        {text: 'Summary', value: 'summary', class: 'w-30'},
-        {text: 'Start', value: 'startDate'},
-        {text: 'End', value: 'endDate'},
-        {text: 'Duration', value: 'duration'},
-        {text: 'Days', value: 'days'}
-      ]
-    }),
+    }
   }
 </script>
