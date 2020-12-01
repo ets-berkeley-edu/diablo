@@ -159,7 +159,7 @@ class TestApprove:
                 term_id=self.term_id,
                 section_id=section_1_id,
             )
-            assert api_json['meetings']['eligible'][0]['room']['location'] == 'Barrows 106'
+            assert api_json['meetings']['eligible'][0]['room']['location'] == "O'Brien 212"
             instructor_uids = [i['uid'] for i in api_json['instructors']]
             assert instructor_uids == instructor_uids
             approvals_ = api_json['approvals']
@@ -285,7 +285,7 @@ class TestGetCourse:
             assert api_json['approvalStatus'] == 'Partially Approved'
             assert api_json['schedulingStatus'] == 'Not Scheduled'
             assert api_json['meetings']['eligible'][0]['room']['id'] == room_id
-            assert api_json['meetings']['eligible'][0]['room']['location'] == 'Barrows 106'
+            assert api_json['meetings']['eligible'][0]['room']['location'] == "O'Brien 212"
 
     def test_date_time_format(self, client, fake_auth):
         """Dates and times are properly formatted for front-end display."""

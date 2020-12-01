@@ -23,6 +23,7 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 from itertools import islice
+import re
 import traceback
 
 from diablo import db, std_commit
@@ -93,11 +94,17 @@ def refresh_rooms():
         for location in new_locations:
             Room.create(location=location)
 
+    def _normalize(room_location):
+        return re.sub(r'[\W_]+', '', room_location).lower()
     kaltura_resource_ids_per_room = {}
+    all_rooms = Room.all_rooms()
     for resource in Kaltura().get_schedule_resources():
-        room = Room.find_room(location=resource['name'])
-        if room:
-            kaltura_resource_ids_per_room[room.id] = resource['id']
+        location = _normalize(resource['name'])
+        if location:
+            for room in all_rooms:
+                if _normalize(room.location) == location:
+                    kaltura_resource_ids_per_room[room.id] = resource['id']
+                    break
 
     if kaltura_resource_ids_per_room:
         Room.update_kaltura_resource_mappings(kaltura_resource_ids_per_room)
