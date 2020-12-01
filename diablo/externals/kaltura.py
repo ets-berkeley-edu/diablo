@@ -156,12 +156,16 @@ class Kaltura:
 
     @skip_when_pytest()
     def get_canvas_category_object(self, canvas_course_site_id):
+        return self.get_category_object(name=f'Canvas>site>channels>{canvas_course_site_id}')
+
+    @skip_when_pytest()
+    def get_category_object(self, name):
         response = self.kaltura_client.category.list(
-            filter=KalturaCategoryFilter(fullNameEqual=f'Canvas>site>channels>{canvas_course_site_id}'),
+            filter=KalturaCategoryFilter(fullNameEqual=name),
             pager=KalturaFilterPager(pageIndex=1, pageSize=1),
         )
-        canvas_category_objects = [_category_object_to_json(o) for o in response.objects]
-        return canvas_category_objects[0] if canvas_category_objects else None
+        category_objects = [_category_object_to_json(o) for o in response.objects]
+        return category_objects[0] if category_objects else None
 
     @skip_when_pytest(mock_object=int(datetime.now().timestamp()))
     def schedule_recording(
@@ -176,6 +180,9 @@ class Kaltura:
             term_id,
     ):
         category_ids = []
+        common_category = self.get_category_object(name=app.config['KALTURA_COMMON_CATEGORY'])
+        if common_category:
+            category_ids.append(common_category['id'])
 
         if publish_type == 'kaltura_media_gallery':
             for canvas_course_site_id in canvas_course_site_ids:
