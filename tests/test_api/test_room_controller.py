@@ -79,7 +79,7 @@ class TestGetAuditoriums:
     def test_authorized(self, client, instructor_session):
         """Instructors and admins have access."""
         rooms = self._api_auditoriums(client)
-        assert [room['location'] for room in rooms] == ['Barrows 106', 'Li Ka Shing 145']
+        assert [room['location'] for room in rooms] == ["O'Brien 212", 'Li Ka Shing 145']
 
 
 class TestGetRoom:
@@ -105,7 +105,7 @@ class TestGetRoom:
 
     def test_get_room(self, client, admin_session):
         """Admin user has access to room data."""
-        location = 'Barrows 106'
+        location = "O'Brien 212"
         room = next((r for r in Room.all_rooms() if r.location == location), None)
         assert room
         api_json = self._api_room(client, room.id)
@@ -145,7 +145,7 @@ class TestGetRoom:
         """Available recording types determined by values of capability and is_auditorium."""
         expected = {
             'Barker 101': ['presenter_presentation_audio'],
-            'Barrows 106': ['presentation_audio'],
+            "O'Brien 212": ['presentation_audio'],
             'Li Ka Shing 145': ALL_RECORDING_TYPES.keys(),
         }
         for location, expected_types in expected.items():

@@ -64,7 +64,7 @@ class TestKalturaJob:
             room_id = Room.find_room(course['meetings']['eligible'][0]['location']).id
 
             assert len(instructors) == 2
-            assert room_id == Room.find_room('Barrows 106').id
+            assert room_id == Room.find_room("O'Brien 212").id
             assert len(cross_listings) == 1
             assert len(course['canvasCourseSites']) == 2
 
