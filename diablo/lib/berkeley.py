@@ -105,6 +105,19 @@ def term_name_for_sis_id(sis_id=None):
         return f'{season_codes[sis_id[3:4]]} {year}'
 
 
+def get_canvas_sis_term_id(sis_id=None):
+    if sis_id:
+        sis_id = str(sis_id)
+        season_codes = {
+            '0': 'A',
+            '2': 'B',
+            '5': 'C',
+            '8': 'D',
+        }
+        year = f'19{sis_id[1:3]}' if sis_id.startswith('1') else f'20{sis_id[1:3]}'
+        return f'TERM:{year}-{season_codes[sis_id[3:4]]}'
+
+
 def are_scheduled_dates_obsolete(meeting, scheduled):
     if meeting:
         def _format(date):

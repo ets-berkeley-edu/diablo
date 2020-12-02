@@ -44,7 +44,6 @@ CANVAS_API_URL = 'https://hard_knocks_api.instructure.com'
 CANVAS_BASE_URL = 'https://ucberkeley.foo.instructure.com'
 CANVAS_BERKELEY_ACCOUNT_ID = 00000
 CANVAS_BERKELEY_SUB_ACCOUNTS = [00000]
-CANVAS_ENROLLMENT_TERM_ID = 0000
 
 CANVAS_LTI_EXTERNAL_TOOL_IDS = {
     'media_gallery': 1,

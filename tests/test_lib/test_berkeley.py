@@ -25,13 +25,25 @@ ENHANCEMENTS, OR MODIFICATIONS.
 from datetime import datetime, timedelta
 
 from diablo.lib.berkeley import are_scheduled_dates_obsolete, are_scheduled_times_obsolete, DAYS, \
-    get_first_matching_datetime_of_term, get_recording_end_date, get_recording_start_date
+    get_canvas_sis_term_id, get_first_matching_datetime_of_term, get_recording_end_date, get_recording_start_date, \
+    term_name_for_sis_id
 from diablo.lib.util import format_days
 from diablo.models.sis_section import SisSection
 from flask import current_app as app
 import pytz
 from tests.test_api.api_test_utils import mock_scheduled
 from tests.util import override_config, test_approvals_workflow
+
+
+class TestTermIds:
+
+    def test_term_name_for_sis_id(self):
+        assert term_name_for_sis_id('2208') == 'Fall 2020'
+        assert term_name_for_sis_id('2212') == 'Spring 2021'
+
+    def test_get_canvas_sis_term_id(self):
+        assert get_canvas_sis_term_id('2208') == 'TERM:2020-D'
+        assert get_canvas_sis_term_id('2212') == 'TERM:2021-B'
 
 
 class TestRecordingDates:
