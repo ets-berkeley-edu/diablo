@@ -168,7 +168,6 @@ class SisSection(db.Model):
             LEFT JOIN instructors i ON i.uid = s.instructor_uid
             WHERE
                 s.term_id = :term_id
-                AND s.is_primary IS TRUE
                 AND s.section_id = :section_id
                 AND (s.instructor_uid IS NULL OR s.instructor_role_code IN ('ICNT', 'PI', 'TNIC'))
                 AND s.is_principal_listing IS TRUE
@@ -204,7 +203,6 @@ class SisSection(db.Model):
             LEFT JOIN instructors i ON i.uid = s.instructor_uid
             WHERE
                 s.term_id = :term_id
-                AND s.is_primary IS TRUE
                 AND (s.instructor_uid IS NULL OR s.instructor_role_code IN ('ICNT', 'PI', 'TNIC'))
                 AND s.is_principal_listing IS TRUE
             ORDER BY s.course_name, s.section_id, s.instructor_uid, r.capability NULLS LAST
@@ -268,7 +266,6 @@ class SisSection(db.Model):
                 r.location = s.meeting_location
                 AND {course_filter}
                 AND s.term_id = :term_id
-                AND s.is_primary IS TRUE
                 AND (s.instructor_uid IS NULL OR s.instructor_role_code IN ('ICNT', 'PI', 'TNIC'))
                 AND s.is_principal_listing IS TRUE
             LEFT JOIN instructors i ON i.uid = s.instructor_uid
@@ -293,7 +290,6 @@ class SisSection(db.Model):
                 AND r.capability IS NOT NULL
                 AND s.term_id = :term_id
                 AND (s.instructor_uid IS NULL OR s.instructor_role_code IN ('ICNT', 'PI', 'TNIC'))
-                AND s.is_primary IS TRUE
                 AND s.is_principal_listing IS TRUE
             JOIN sent_emails e ON
                 e.section_id = s.section_id
@@ -339,7 +335,6 @@ class SisSection(db.Model):
                 AND s.section_id IN ({_sections_with_at_least_one_eligible_room()})
                 AND s.term_id = :term_id
                 AND (s.instructor_uid IS NULL OR s.instructor_role_code IN ('ICNT', 'PI', 'TNIC'))
-                AND s.is_primary IS TRUE
                 AND s.is_principal_listing IS TRUE
             LEFT JOIN instructors i ON i.uid = s.instructor_uid
             -- Omit sent invitations, approved courses, scheduled courses and opt-outs.
@@ -386,7 +381,6 @@ class SisSection(db.Model):
                 r.location = s.meeting_location
                 AND s.term_id = :term_id
                 AND (s.instructor_uid IS NULL OR s.instructor_role_code IN ('ICNT', 'PI', 'TNIC'))
-                AND s.is_primary IS TRUE
                 AND s.is_principal_listing IS TRUE
                 AND s.section_id IN ({_sections_with_at_least_one_eligible_room()})
             JOIN course_preferences c ON
@@ -428,7 +422,6 @@ class SisSection(db.Model):
             JOIN approvals a ON
                 s.term_id = :term_id
                 AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
-                AND s.is_primary IS TRUE
                 AND s.is_principal_listing IS TRUE
                 AND a.section_id = s.section_id
                 AND a.term_id = :term_id
@@ -478,7 +471,6 @@ class SisSection(db.Model):
             JOIN approvals a ON
                 s.term_id = :term_id
                 AND (s.instructor_uid IS NULL OR s.instructor_role_code IN ('ICNT', 'PI', 'TNIC'))
-                AND s.is_primary IS TRUE
                 AND s.is_principal_listing IS TRUE
                 AND a.section_id = s.section_id
                 AND a.term_id = :term_id
@@ -506,7 +498,7 @@ class SisSection(db.Model):
                             AND a.deleted_at IS NULL
                         WHERE s.term_id = :term_id
                             AND (s.instructor_uid IS NULL OR s.instructor_role_code IN ('ICNT', 'PI', 'TNIC'))
-                            AND s.is_primary IS TRUE AND s.is_principal_listing IS TRUE
+                            AND s.is_principal_listing IS TRUE
                             AND a.section_id IS NULL
                     )
                 )
@@ -534,7 +526,6 @@ class SisSection(db.Model):
             JOIN instructors i
                 ON i.uid = s.instructor_uid
                 AND s.term_id = :term_id
-                AND s.is_primary IS TRUE
                 AND s.instructor_uid = :instructor_uid
                 AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
         """
@@ -575,7 +566,6 @@ class SisSection(db.Model):
             JOIN rooms r ON r.location = s.meeting_location
                 AND s.term_id = :term_id
                 AND (s.instructor_uid IS NULL OR s.instructor_role_code IN ('ICNT', 'PI', 'TNIC'))
-                AND s.is_primary IS TRUE
                 AND s.is_principal_listing IS TRUE
                 AND s.meeting_location = :location
             LEFT JOIN instructors i ON i.uid = s.instructor_uid
@@ -646,7 +636,6 @@ class SisSection(db.Model):
             SELECT id
             FROM sis_sections
             WHERE term_id = :term_id
-                AND is_primary IS TRUE
                 AND instructor_uid = :uid
                 AND instructor_role_code IN ('ICNT', 'PI', 'TNIC')
             LIMIT 1
@@ -672,7 +661,6 @@ class SisSection(db.Model):
                 AND d.term_id = s.term_id
             WHERE s.term_id = :term_id
                 AND (s.instructor_uid IS NULL OR s.instructor_role_code IN ('ICNT', 'PI', 'TNIC'))
-                AND s.is_primary IS TRUE
                 AND s.is_principal_listing IS TRUE
                 AND (
                     (s.meeting_start_date::text NOT LIKE :term_begin AND d.created_at < s.meeting_start_date)
@@ -698,7 +686,6 @@ class SisSection(db.Model):
             JOIN rooms r ON r.location = s.meeting_location
                 AND s.term_id = :term_id
                 AND (s.instructor_uid IS NULL OR s.instructor_role_code IN ('ICNT', 'PI', 'TNIC'))
-                AND s.is_primary IS TRUE
                 AND s.is_principal_listing IS TRUE
             JOIN scheduled d ON d.section_id = s.section_id AND d.term_id = :term_id AND d.deleted_at IS NULL
             LEFT JOIN instructors i ON i.uid = s.instructor_uid
@@ -918,7 +905,6 @@ def _get_cross_listed_courses(section_ids, term_id, approvals, invited_uids):
         LEFT JOIN instructors i ON i.uid = s.instructor_uid
         WHERE
             s.term_id = :term_id
-            AND s.is_primary IS TRUE
             AND section_id = ANY(:all_cross_listing_ids)
         ORDER BY course_name, section_id
     """
@@ -989,7 +975,6 @@ def _sections_with_at_least_one_eligible_room():
             ON r2.location = s2.meeting_location
             AND r2.capability IS NOT NULL
             AND s2.term_id = :term_id
-            AND s2.is_primary IS TRUE
             AND (s2.instructor_uid IS NULL OR s2.instructor_role_code IN ('ICNT', 'PI', 'TNIC'))
             AND s2.is_principal_listing IS TRUE"""
 
