@@ -50,10 +50,19 @@ DEFAULT_KALTURA_PAGE_SIZE = 200
 
 class Kaltura:
 
+    @skip_when_pytest()
     def __init__(self):
-        self.kaltura_partner_id = app.config['KALTURA_PARTNER_ID']
-        if app.config['DIABLO_ENV'] == 'test':
-            return
+        config = KalturaConfiguration()
+        self.client = KalturaClient(config)
+        ks = self.client.session.start(
+            app.config['KALTURA_ADMIN_SECRET'],
+            app.config['KALTURA_UNIQUE_USER_ID'],
+            KalturaSessionType.ADMIN,
+            app.config['KALTURA_PARTNER_ID'],
+            app.config['KALTURA_EXPIRY'],
+            'appId:appName-appDomain',
+        )
+        self.client.setKs(ks)
 
     @skip_when_pytest()
     def add_to_kaltura_category(self, category_id, entry_id):
@@ -64,7 +73,7 @@ class Kaltura:
             status=KalturaCategoryEntryStatus.ACTIVE,
             creatorUserId=category_entry_user_id,
         )
-        self.kaltura_client.categoryEntry.add(category_entry)
+        self.client.categoryEntry.add(category_entry)
 
     @skip_when_pytest()
     def create_blackout_dates(self, blackout_dates):
@@ -81,13 +90,13 @@ class Kaltura:
                     startDate=blackout_start,
                     organizer=app.config['KALTURA_EVENT_ORGANIZER'],
                     ownerId=app.config['KALTURA_KMS_OWNER_ID'],
-                    partnerId=self.kaltura_partner_id,
+                    partnerId=app.config['KALTURA_PARTNER_ID'],
                     recurrenceType=KalturaScheduleEventRecurrenceType.NONE,
                     status=KalturaScheduleEventStatus.ACTIVE,
                     summary=f'Academic and Administrative Holiday: {blackout_date}',
                     tags=CREATED_BY_DIABLO_TAG,
                 )
-                events.append(self.kaltura_client.schedule.scheduleEvent.add(event))
+                events.append(self.client.schedule.scheduleEvent.add(event))
 
             except KalturaException as e:
                 app.logger.error(f'Failed to schedule blackout date {blackout_date} in Kaltura')
@@ -96,7 +105,7 @@ class Kaltura:
 
     @skip_when_pytest()
     def get_base_entry(self, entry_id):
-        entry = self.kaltura_client.baseEntry.get(entryId=entry_id)
+        entry = self.client.baseEntry.get(entryId=entry_id)
         if entry:
             return {
                 'createdAt': entry.createdAt,
@@ -148,7 +157,7 @@ class Kaltura:
     @cachify('kaltura/schedule_resources', timeout=30)
     def get_schedule_resources(self):
         def _fetch(page_index):
-            return self.kaltura_client.schedule.scheduleResource.list(
+            return self.client.schedule.scheduleResource.list(
                 filter=KalturaScheduleResourceFilter(),
                 pager=KalturaFilterPager(pageIndex=page_index, pageSize=DEFAULT_KALTURA_PAGE_SIZE),
             )
@@ -160,7 +169,7 @@ class Kaltura:
 
     @skip_when_pytest()
     def get_category_object(self, name):
-        response = self.kaltura_client.category.list(
+        response = self.client.category.list(
             filter=KalturaCategoryFilter(fullNameEqual=name),
             pager=KalturaFilterPager(pageIndex=1, pageSize=1),
         )
@@ -203,7 +212,7 @@ class Kaltura:
         recurrences_filter = KalturaScheduleEventFilter(parentIdEqual=kaltura_schedule.id)
         for recurrence in self._get_events(kaltura_event_filter=recurrences_filter):
             if recurrence['blackoutConflicts']:
-                self.kaltura_client.schedule.scheduleEvent.cancel(recurrence['id'])
+                self.client.schedule.scheduleEvent.cancel(recurrence['id'])
                 app.logger.warn(f"""
                     {course_label}: Event {recurrence['id']}), a child of Kaltura series {kaltura_schedule.id},
                     cancelled due to blackout conflict(s): {recurrence['blackoutConflicts']}
@@ -225,55 +234,35 @@ class Kaltura:
                 # This is a Kaltura series event.
                 if is_future(kaltura_event=event):
                     # Start date of the series in the future. Delete it all.
-                    self.kaltura_client.schedule.scheduleEvent.delete(event_id)
+                    self.client.schedule.scheduleEvent.delete(event_id)
                 else:
                     # Series started in the past. Delete only the future 'recurrences'.
                     recurrences_filter = KalturaScheduleEventFilter(parentIdEqual=event_id)
                     for recurrence in self._get_events(kaltura_event_filter=recurrences_filter):
                         if is_future(kaltura_event=recurrence):
-                            self.kaltura_client.schedule.scheduleEvent.cancel(recurrence['id'])
+                            self.client.schedule.scheduleEvent.cancel(recurrence['id'])
             else:
                 # This is not a series event. Delete it, whatever it is.
-                self.kaltura_client.schedule.scheduleEvent.delete(event_id)
+                self.client.schedule.scheduleEvent.delete(event_id)
 
     def ping(self):
         filter_ = KalturaMediaEntryFilter()
         filter_.nameLike = "Love is the drug I'm thinking of"
-        result = self.kaltura_client.baseEntry.list(
+        result = self.client.baseEntry.list(
             filter=filter_,
             pager=KalturaFilterPager(pageSize=1),
         )
         return result.totalCount is not None
 
     def update_base_entry(self, entitled_users, entry_id):
-        self.kaltura_client.baseEntry.update(
+        self.client.baseEntry.update(
             entryId=entry_id,
             baseEntry=KalturaBaseEntry(entitledUsersEdit=','.join(_to_normalized_set(entitled_users))),
         )
 
-    @property
-    def kaltura_client(self):
-        admin_secret = app.config['KALTURA_ADMIN_SECRET']
-        unique_user_id = app.config['KALTURA_UNIQUE_USER_ID']
-        partner_id = self.kaltura_partner_id
-        expiry = app.config['KALTURA_EXPIRY']
-
-        config = KalturaConfiguration()
-        client = KalturaClient(config)
-        ks = client.session.start(
-            admin_secret,
-            unique_user_id,
-            KalturaSessionType.ADMIN,
-            partner_id,
-            expiry,
-            'appId:appName-appDomain',
-        )
-        client.setKs(ks)
-        return client
-
     def _get_events(self, kaltura_event_filter):
         def _fetch(page_index):
-            return self.kaltura_client.schedule.scheduleEvent.list(
+            return self.client.schedule.scheduleEvent.list(
                 filter=kaltura_event_filter,
                 pager=KalturaFilterPager(pageIndex=page_index, pageSize=DEFAULT_KALTURA_PAGE_SIZE),
             )
@@ -281,7 +270,7 @@ class Kaltura:
 
     def _get_categories(self, kaltura_category_filter):
         def _fetch(page_index):
-            return self.kaltura_client.category.list(
+            return self.client.category.list(
                 filter=kaltura_category_filter,
                 pager=KalturaFilterPager(pageIndex=page_index, pageSize=DEFAULT_KALTURA_PAGE_SIZE),
             )
@@ -289,7 +278,7 @@ class Kaltura:
 
     def _get_category_entries(self, kaltura_category_entry_filter):
         def _fetch(page_index):
-            return self.kaltura_client.categoryEntry.list(
+            return self.client.categoryEntry.list(
                 filter=kaltura_category_entry_filter,
                 pager=KalturaFilterPager(pageIndex=page_index, pageSize=DEFAULT_KALTURA_PAGE_SIZE),
             )
@@ -365,7 +354,7 @@ class Kaltura:
             endDate=first_day_end.timestamp(),
             organizer=app.config['KALTURA_EVENT_ORGANIZER'],
             ownerId=app.config['KALTURA_KMS_OWNER_ID'],
-            partnerId=self.kaltura_partner_id,
+            partnerId=app.config['KALTURA_PARTNER_ID'],
             recurrence=KalturaScheduleEventRecurrence(
                 # https://developer.kaltura.com/api-docs/General_Objects/Objects/KalturaScheduleEventRecurrence
                 byDay=','.join(days),
@@ -384,7 +373,7 @@ class Kaltura:
             tags=CREATED_BY_DIABLO_TAG,
             templateEntryId=base_entry.id,
         )
-        return self.kaltura_client.schedule.scheduleEvent.add(recurring_event)
+        return self.client.schedule.scheduleEvent.add(recurring_event)
 
     def _create_kaltura_base_entry(
             self,
@@ -401,21 +390,21 @@ class Kaltura:
             entitledUsersPublish=uids,
             moderationStatus=KalturaEntryModerationStatus.AUTO_APPROVED,
             name=name,
-            partnerId=self.kaltura_partner_id,
+            partnerId=app.config['KALTURA_PARTNER_ID'],
             status=KalturaEntryStatus.NO_CONTENT,
             tags=CREATED_BY_DIABLO_TAG,
             type=KalturaEntryType.MEDIA_CLIP,
             userId='RecordScheduleGroup',
         )
-        return self.kaltura_client.baseEntry.add(base_entry)
+        return self.client.baseEntry.add(base_entry)
 
     def _attach_scheduled_recordings_to_room(self, kaltura_schedule, room):
         utc_now_timestamp = int(datetime.utcnow().timestamp())
-        event_resource = self.kaltura_client.schedule.scheduleEventResource.add(
+        event_resource = self.client.schedule.scheduleEventResource.add(
             KalturaScheduleEventResource(
                 eventId=kaltura_schedule.id,
                 resourceId=room.kaltura_resource_id,
-                partnerId=self.kaltura_partner_id,
+                partnerId=app.config['KALTURA_PARTNER_ID'],
                 createdAt=utc_now_timestamp,
                 updatedAt=utc_now_timestamp,
             ),

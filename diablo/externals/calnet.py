@@ -43,6 +43,7 @@ def client(app):
 
 
 class Client:
+
     def __init__(self, app):
         self.app = app
         self.host = app.config['LDAP_HOST']
