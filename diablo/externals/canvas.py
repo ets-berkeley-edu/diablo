@@ -27,6 +27,7 @@ import re
 from canvasapi import Canvas
 from canvasapi.external_tool import ExternalTool
 from diablo import skip_when_pytest
+from diablo.lib.berkeley import get_canvas_sis_term_id
 from diablo.lib.util import resolve_xml_template
 from flask import current_app as app
 
@@ -55,6 +56,17 @@ def get_canvas_course_sites(canvas_enrollment_term_id):
                         }
                     course_sites_by_id[course_site_id]['section_ids'].add(section_id)
     return list(course_sites_by_id.values())
+
+
+@skip_when_pytest(mock_object=type('EnrollmentTerm', (object,), {'id': 9999}))
+def get_canvas_enrollment_term(sis_term_id):
+    canvas_sis_term_id = get_canvas_sis_term_id(sis_term_id)
+    canvas_enrollment_term = None
+    for enrollment_term in _get_canvas().get_enrollment_terms():
+        if enrollment_term.sis_term_id == canvas_sis_term_id:
+            canvas_enrollment_term = enrollment_term
+            break
+    return canvas_enrollment_term
 
 
 def ping_canvas():
