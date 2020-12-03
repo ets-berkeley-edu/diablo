@@ -42,7 +42,7 @@
       color="header-background"
       dark
     >
-      <div class="display-1">
+      <div class="display-1" :class="{'mood-ring': $vuetify.theme.dark}">
         Course Capture
         <a
           id="skip-to-content-link"
@@ -162,3 +162,44 @@
     }
   }
 </script>
+
+<style scoped>
+.mood-ring {
+  -webkit-animation:colorchange 300s infinite alternate;
+}
+@-webkit-keyframes colorchange {
+  0% {
+    color: white;
+  }
+  10% {
+    color: #378dc5;
+  }
+  20% {
+    color: #1abc9c;
+  }
+  30% {
+    color: #d35400;
+  }
+  40% {
+    color: #378dc5;
+  }
+  50% {
+    color: white;
+  }
+  60% {
+    color: #378dc5;
+  }
+  70% {
+    color: #2980b9;
+  }
+  80% {
+    color: #f1c40f;
+  }
+  90% {
+    color: #2980b9;
+  }
+  100% {
+    color: pink;
+  }
+}
+</style>
