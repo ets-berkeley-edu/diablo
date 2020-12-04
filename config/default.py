@@ -101,7 +101,9 @@ INACTIVE_SESSION_LIFETIME = 20
 # These "INDEX_HTML" defaults are good in diablo-[dev|qa|prod]. See development.py for local configs.
 INDEX_HTML = 'dist/static/index.html'
 
-KALTURA_ADMIN_SECRET = 'secret'
+KALTURA_APP_TOKEN = None
+KALTURA_APP_TOKEN_ID = None
+KALTURA_APP_TOKEN_USER_ID = None
 KALTURA_BLACKOUT_DATES = ['2020-09-07', '2020-11-11', '2020-11-25', '2020-11-26', '2020-11-27']
 KALTURA_COMMON_CATEGORY = 'Course Capture'
 KALTURA_EVENT_ORGANIZER = '____at_berkeley.edu'
@@ -111,7 +113,6 @@ KALTURA_MEDIA_SPACE_URL = 'https://____.mediaspace.kaltura.com'
 KALTURA_PARTNER_ID = '0000000'
 KALTURA_RECORDING_OFFSET_END = 2
 KALTURA_RECORDING_OFFSET_START = 7
-KALTURA_UNIQUE_USER_ID = 'user_id'
 
 LDAP_HOST = 'ldap-test.berkeley.edu'
 LDAP_BIND = 'mybind'
