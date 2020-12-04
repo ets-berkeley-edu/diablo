@@ -23,6 +23,7 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 from datetime import date, datetime, time, timedelta
+import hashlib
 import json
 
 import dateutil.parser
@@ -52,17 +53,25 @@ class Kaltura:
 
     @skip_when_pytest()
     def __init__(self):
-        config = KalturaConfiguration()
-        self.client = KalturaClient(config)
-        ks = self.client.session.start(
-            app.config['KALTURA_ADMIN_SECRET'],
-            app.config['KALTURA_UNIQUE_USER_ID'],
-            KalturaSessionType.ADMIN,
-            app.config['KALTURA_PARTNER_ID'],
-            app.config['KALTURA_EXPIRY'],
-            'appId:appName-appDomain',
+        expiry = app.config['KALTURA_EXPIRY']
+        partner_id = app.config['KALTURA_PARTNER_ID']
+
+        self.client = KalturaClient(KalturaConfiguration())
+        result = self.client.session.startWidgetSession(
+            expiry=expiry,
+            widgetId=f'_{partner_id}',
         )
-        self.client.setKs(ks)
+        self.client.setKs(result.ks)
+
+        token_hash = hashlib.sha256((result.ks + app.config['KALTURA_APP_TOKEN']).encode('ascii')).hexdigest()
+        result = self.client.appToken.startSession(
+            expiry=expiry,
+            id=app.config['KALTURA_APP_TOKEN_ID'],
+            tokenHash=token_hash,
+            type=KalturaSessionType.ADMIN,
+            userId=app.config['KALTURA_APP_TOKEN_USER_ID'],
+        )
+        self.client.setKs(result.ks)
 
     @skip_when_pytest()
     def add_to_kaltura_category(self, category_id, entry_id):
