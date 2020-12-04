@@ -69,7 +69,6 @@ class Kaltura:
             id=app.config['KALTURA_APP_TOKEN_ID'],
             tokenHash=token_hash,
             type=KalturaSessionType.ADMIN,
-            userId=app.config['KALTURA_APP_TOKEN_USER_ID'],
         )
         self.client.setKs(result.ks)
 
