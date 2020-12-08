@@ -25,6 +25,10 @@
             "capability": "Screencast"
         },
         {
+            "name": "Barrows 20",
+            "capability": "Screencast"
+        },
+        {
             "name": "Barrows 56",
             "capability": "Screencast"
         },
@@ -66,7 +70,7 @@
         },
         {
             "name": "Dwinelle 219",
-            "capability": "Screencast"
+            "capability": "Screencast + Video"
         },
         {
             "name": "Etcheverry 3106",
@@ -110,7 +114,7 @@
         },
         {
             "name": "Hearst Field Annex A1",
-            "capability": "Screencast"
+            "capability": "Screencast + Video"
         },
         {
             "name": "Hearst Mining 390",
@@ -198,6 +202,10 @@
         },
         {
             "name": "North Gate 105",
+            "capability": "Screencast"
+        },
+        {
+            "name": "O'Brien 212",
             "capability": "Screencast"
         },
         {
