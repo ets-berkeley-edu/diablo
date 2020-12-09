@@ -32,9 +32,7 @@ class TestErrorHandler:
         """All users, even anonymous, can get version info."""
         fake_auth.login('90001')
         sent_email_count = _system_error_email_count()
-        # We expect '/api/ping' to fail in test environment.
-        response = client.get('/api/ping')
-        assert response.status_code == 500
+        assert client.get('/api/ping').status_code == 200
         assert _system_error_email_count() == sent_email_count + 1
 
     def test_no_system_error_email_when_404(self, app, client):

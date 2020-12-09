@@ -39,20 +39,18 @@ from sqlalchemy.exc import SQLAlchemyError
 
 @app.route('/api/ping')
 def ping():
-    b_connected_ping = None
-    canvas_ping = None
-    db_ping = None
-    kaltura_ping = None
-    status = 200
+    b_connected_ping = False
+    canvas_ping = False
+    db_ping = False
+    kaltura_ping = False
     try:
         b_connected_ping = BConnected().ping()
         canvas_ping = _ping_canvas()
         db_ping = _db_status()
         kaltura_ping = Kaltura().ping()
     except Exception as e:
-        status = 500
         subject = str(e)
-        subject = f'{subject[:50]}...' if len(subject) > 50 else subject
+        subject = f'{subject[:100]}...' if len(subject) > 100 else subject
         message = f'Error during /api/ping: {subject}'
         app.logger.error(message)
         app.logger.exception(e)
@@ -70,7 +68,6 @@ def ping():
                 'db': db_ping,
                 'kaltura': kaltura_ping,
             },
-            status=status,
         )
 
 
