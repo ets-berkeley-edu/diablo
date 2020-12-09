@@ -28,21 +28,10 @@
         </v-col>
         <v-col :class="{'pb-0': displayMeetings.length > 1}">
           <Days :names-of-days="meeting.daysNames" />
-          <div>
+          <div v-if="$config.currentTermId === course.termId">
             <span class="sr-only">Dates:</span>
-            {{ meeting.startDate | moment('MMM D, YYYY') }} to {{ meeting.endDate | moment('MMM D, YYYY') }}
-            <div v-if="meeting.recordingEndDate && meeting.endDate !== meeting.recordingEndDate" class="font-weight-light">
-              <div v-if="course.termId === $config.currentTermId">
-                (Final recording
-                <span v-if="meeting.recordingEndDate < nowDate">was on</span>
-                <span v-if="meeting.recordingEndDate > nowDate">scheduled for</span>
-                <span v-if="meeting.recordingEndDate === nowDate">is today, </span>
-                {{ meeting.recordingEndDate | moment('MMM D, YYYY') }}.)
-              </div>
-              <div v-if="course.termId < $config.currentTermId && course.scheduled">
-                (Final recording was on {{ meeting.recordingEndDate | moment('MMM D, YYYY') }}.)
-              </div>
-            </div>
+            {{ $config.currentTermRecordingsBegin | moment('MMM D, YYYY') }} to
+            {{ $config.currentTermRecordingsEnd | moment('MMM D, YYYY') }}
           </div>
         </v-col>
       </v-row>
@@ -195,7 +184,6 @@
     data: () => ({
       displayMeetings: undefined,
       isInviteTemplateAvailable: undefined,
-      nowDate: undefined,
       showUnscheduleModal: false
     }),
     computed: {
@@ -215,7 +203,6 @@
     },
     created() {
       this.displayMeetings = this.getDisplayMeetings(this.course)
-      this.nowDate = this.$moment().format('YYYY-MM-DD')
       if (this.$currentUser.isAdmin) {
         getAllEmailTemplates().then(data => {
           this.isInviteTemplateAvailable = this.$_.find(data, ['templateType', 'invitation']) || null
