@@ -150,7 +150,10 @@ class Kaltura:
 
     @skip_when_pytest()
     def get_events_by_location(self, kaltura_resource_id):
-        event_filter = KalturaScheduleEventFilter(resourceIdEqual=str(kaltura_resource_id))
+        event_filter = KalturaScheduleEventFilter(
+            orderBy='-startDate',
+            resourceIdEqual=str(kaltura_resource_id),
+        )
         return self._get_events(kaltura_event_filter=event_filter)
 
     @skip_when_pytest()
