@@ -441,7 +441,7 @@ def _category_entry_object_to_json(obj):
 def _category_object_to_json(obj):
     return {
         'id': obj.id,
-        'courseSiteId': obj.name,
+        'name': obj.name,
     }
 
 

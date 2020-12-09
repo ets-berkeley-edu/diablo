@@ -67,7 +67,7 @@ def _update_already_scheduled_events():
 
             for s in course['canvasCourseSites']:
                 canvas_course_site_id = str(s['courseSiteId'])
-                if canvas_course_site_id not in [c['courseSiteId'] for c in categories]:
+                if canvas_course_site_id not in [c['name'] for c in categories]:
                     _update_kaltura_category(canvas_course_site_id, course_name, kaltura, template_entry_id)
         else:
             app.logger.warn(f'The previously scheduled {course_name} has no schedule_event in Kaltura.')
