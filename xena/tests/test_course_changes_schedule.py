@@ -141,7 +141,8 @@ class TestCourseScheduleChanges:
         start = dates[0]
         end = dates[-1]
         dates = f'{start.strftime("%Y-%m-%d")} to {end.strftime("%Y-%m-%d")}'
-        days_times = f'{self.real_meeting.days.replace(" ", "")}, {CourseChangesPage.meeting_time_str(self.real_meeting)}'
+        days = self.real_meeting.days.replace(' ', '').replace(',', '')
+        days_times = f'{days}, {CourseChangesPage.meeting_time_str(self.real_meeting)}'
         expected = f'{dates}{days_times}'.upper()
         actual = self.changes_page.scheduled_card_old_schedule(self.real_section).upper()
         app.logger.info(f'Expecting: {expected}')
@@ -153,7 +154,8 @@ class TestCourseScheduleChanges:
         start = dates[0]
         end = dates[-1]
         dates = f'{start.strftime("%Y-%m-%d")} to {end.strftime("%Y-%m-%d")}'
-        days_times = f'{self.real_meeting.days.replace(" ", "")}, {CourseChangesPage.meeting_time_str(self.fake_meeting)}'
+        days = self.real_meeting.days.replace(' ', '').replace(',', '')
+        days_times = f'{days}, {CourseChangesPage.meeting_time_str(self.fake_meeting)}'
         expected = f'{dates}{days_times}'.upper()
         actual = self.changes_page.current_card_schedule(self.real_section, 1, 2).upper()
         app.logger.info(f'Expecting: {expected}')
@@ -204,11 +206,11 @@ class TestCourseScheduleChanges:
         wed_checked = self.kaltura_page.is_wed_checked()
         thu_checked = self.kaltura_page.is_thu_checked()
         fri_checked = self.kaltura_page.is_fri_checked()
-        assert mon_checked if 'MO' in self.fake_meeting.days else not mon_checked
-        assert tue_checked if 'TU' in self.fake_meeting.days else not tue_checked
-        assert wed_checked if 'WE' in self.fake_meeting.days else not wed_checked
-        assert thu_checked if 'TH' in self.fake_meeting.days else not thu_checked
-        assert fri_checked if 'FR' in self.fake_meeting.days else not fri_checked
+        assert mon_checked if 'MO' in self.real_meeting.days else not mon_checked
+        assert tue_checked if 'TU' in self.real_meeting.days else not tue_checked
+        assert wed_checked if 'WE' in self.real_meeting.days else not wed_checked
+        assert thu_checked if 'TH' in self.real_meeting.days else not thu_checked
+        assert fri_checked if 'FR' in self.real_meeting.days else not fri_checked
         assert not self.kaltura_page.is_sat_checked()
         assert not self.kaltura_page.is_sun_checked()
 

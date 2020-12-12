@@ -104,6 +104,9 @@ class RoomPage(DiabloPages):
         self.hide_diablo_footer()
         self.wait_for_element_and_click((By.XPATH, f'{RoomPage.series_row_xpath(recording_sched)}//button'))
 
+    def course_rows_present(self):
+        return any(self.elements(RoomPage.COURSE_LINK))
+
     def click_first_course_link(self):
         self.wait_for_element_and_click(RoomPage.COURSE_LINK)
 

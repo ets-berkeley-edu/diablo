@@ -26,6 +26,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 import time
 
 from flask import current_app as app
+from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.wait import WebDriverWait as Wait
@@ -35,9 +36,12 @@ from xena.test_utils import util
 
 class EmailPage(Page):
 
+    SIGN_IN_LINK = (By.XPATH, '//a[contains(., "Sign in")]')
     USERNAME_INPUT = (By.ID, 'login-username')
     NEXT_BUTTON = (By.ID, 'login-signin')
     PASSWORD_INPUT = (By.ID, 'login-passwd')
+    MAIL_LINK = (By.ID, 'ybarMailLink')
+    INBOX_LINK = (By.XPATH, '//div[@data-test-folder-container="Inbox"]')
     LOG_OUT_LINK = (By.ID, 'profile-signout-link')
     COMPOSE_BUTTON = (By.LINK_TEXT, 'Compose')
     SELECT_ALL_CBX = (By.XPATH, '//button[@data-test-id="checkbox"]')
@@ -53,21 +57,33 @@ class EmailPage(Page):
         return self.element(EmailPage.message_locator(message))
 
     def load_page(self):
-        app.logger.info('Loading email')
-        self.driver.get('https://mail.yahoo.com')
-        self.wait_for_element(EmailPage.COMPOSE_BUTTON, util.get_short_timeout())
-        # Pause then hit escape to dismiss any modals that appear
-        time.sleep(1)
-        self.hit_escape()
+        tries = 0
+        retries = 2
+        while tries <= retries:
+            tries += 1
+            try:
+                app.logger.info('Loading email')
+                self.driver.get('https://mail.yahoo.com')
+                self.wait_for_element(EmailPage.COMPOSE_BUTTON, util.get_short_timeout())
+                # Pause then hit escape to dismiss any modals that appear
+                time.sleep(1)
+                self.hit_escape()
+                tries = retries + 1
+            except TimeoutException:
+                if tries == retries:
+                    raise
+                else:
+                    time.sleep(1)
 
     def log_in(self):
         app.logger.info('Logging in to email')
-        self.driver.get('https://login.yahoo.com')
+        self.driver.get('https://mail.yahoo.com')
+        self.wait_for_page_and_click(EmailPage.SIGN_IN_LINK, 2)
         self.wait_for_element_and_type_js('login-username', app.config['XENA_EMAIL_USERNAME'])
         self.click_element_js(EmailPage.NEXT_BUTTON, 2)
         self.wait_for_element_and_type_js('login-passwd', app.config['XENA_EMAIL_PASSWORD'])
         self.click_element_js(EmailPage.NEXT_BUTTON, 2)
-        Wait(self.driver, util.get_medium_timeout()).until(ec.presence_of_element_located(EmailPage.LOG_OUT_LINK))
+        Wait(self.driver, util.get_medium_timeout()).until(ec.presence_of_element_located(EmailPage.INBOX_LINK))
         time.sleep(1)
 
     def is_message_present(self, message):
@@ -75,7 +91,8 @@ class EmailPage(Page):
 
     def is_message_delivered(self, message):
         app.logger.info(f'Waiting for email subject {message.subject}')
-        self.load_page()
+        if not self.is_present(EmailPage.INBOX_LINK):
+            self.load_page()
         tries = 0
         retries = app.config['XENA_EMAIL_DELIVERY_RETRIES']
         while tries <= retries:

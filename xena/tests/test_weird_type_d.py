@@ -130,9 +130,8 @@ class TestWeirdTypeD:
         assert self.sign_up_page.visible_instructors() == instructor_names
 
     def test_visible_meeting_0_days(self):
-        term_dates = f'{SignUpPage.expected_term_date_str(self.meeting_0.start_date, self.meeting_0.end_date)}'
-        last_date = f'(Final recording scheduled for {SignUpPage.expected_final_record_date_str(self.meeting_0, self.section.term)}.)'
-        assert f'{term_dates}\n{last_date}' in self.sign_up_page.visible_meeting_days()[0]
+        term_dates = f'{SignUpPage.expected_term_date_str(self.meeting_0.record_start, self.meeting_0.record_end)}'
+        assert term_dates in self.sign_up_page.visible_meeting_days()[0]
 
     def test_visible_meeting_0_time(self):
         assert self.sign_up_page.visible_meeting_time()[0] == f'{self.meeting_0.start_time} - {self.meeting_0.end_time}'
@@ -141,9 +140,8 @@ class TestWeirdTypeD:
         assert self.sign_up_page.visible_rooms()[0] == self.meeting_0.room.name
 
     def test_visible_meeting_1_days(self):
-        term_dates = f'{SignUpPage.expected_term_date_str(self.meeting_1.start_date, self.meeting_1.end_date)}'
-        last_date = f'(Final recording scheduled for {SignUpPage.expected_final_record_date_str(self.meeting_1, self.section.term)}.)'
-        assert f'{term_dates}\n{last_date}' in self.sign_up_page.visible_meeting_days()[1]
+        term_dates = f'{SignUpPage.expected_term_date_str(self.meeting_1.record_start, self.meeting_1.record_end)}'
+        assert term_dates in self.sign_up_page.visible_meeting_days()[1]
 
     def test_visible_meeting_1_time(self):
         assert self.sign_up_page.visible_meeting_time()[1] == f'{self.meeting_1.start_time} - {self.meeting_1.end_time}'

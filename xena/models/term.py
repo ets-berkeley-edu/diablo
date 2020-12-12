@@ -35,4 +35,5 @@ class Term(object):
         self.name = app.config['CURRENT_TERM_NAME']
         self.start_date = datetime.strptime(app.config['CURRENT_TERM_BEGIN'], '%Y-%m-%d')
         self.end_date = datetime.strptime(app.config['CURRENT_TERM_END'], '%Y-%m-%d')
+        self.first_record_date = datetime.strptime(app.config['CURRENT_TERM_RECORDINGS_BEGIN'], '%Y-%m-%d')
         self.last_record_date = datetime.strptime(app.config['CURRENT_TERM_RECORDINGS_END'], '%Y-%m-%d')

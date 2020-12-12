@@ -39,13 +39,29 @@ class Meeting(object):
     @property
     def start_date(self):
         date_str = self.data['start_date'] or app.config['CURRENT_TERM_BEGIN']
-        term_start = datetime.strptime(date_str, '%Y-%m-%d')
+        return datetime.strptime(date_str, '%Y-%m-%d')
+
+    @property
+    def record_start(self):
+        term_start_str = app.config['CURRENT_TERM_BEGIN']
+        term_record_start_str = app.config['CURRENT_TERM_RECORDINGS_BEGIN'] or term_start_str
+        meeting_start_str = self.data['start_date'] or term_start_str
+
+        term_record_start_date = datetime.strptime(term_record_start_str, '%Y-%m-%d')
+        meeting_start_date = datetime.strptime(meeting_start_str, '%Y-%m-%d')
         now = datetime.now()
-        return term_start if term_start > now else now
+
+        start_date = meeting_start_date if meeting_start_date > term_record_start_date else term_record_start_date
+        return start_date if start_date > now else now
 
     @property
     def end_date(self):
         date_str = self.data['end_date'] or app.config['CURRENT_TERM_END']
+        return datetime.strptime(date_str, '%Y-%m-%d')
+
+    @property
+    def record_end(self):
+        date_str = self.data['end_date'] or app.config['CURRENT_TERM_RECORDINGS_END']
         return datetime.strptime(date_str, '%Y-%m-%d')
 
     @property
@@ -94,7 +110,7 @@ class Meeting(object):
         weekday_indices = self.__weekday_indices(term)
         holidays = self.__holidays()
 
-        start = self.start_date.date()
+        start = self.record_start.date()
         end = term.last_record_date.date() if self.end_date > term.last_record_date else self.end_date.date()
         delta = end - start
 

@@ -83,9 +83,10 @@ class TestSignUp1:
         self.jobs_page.run_canvas_job()
 
     def test_delete_old_canvas_sites(self):
-        self.canvas_page.delete_section_sites(self.section)
-        self.jobs_page.load_page()
-        self.jobs_page.run_canvas_job()
+        site_ids = self.canvas_page.delete_section_sites(self.section)
+        if any(site_ids):
+            self.jobs_page.load_page()
+            self.jobs_page.run_canvas_job()
 
     def test_delete_old_email(self):
         self.email_page.log_in()
@@ -210,9 +211,8 @@ class TestSignUp1:
         assert self.sign_up_page.visible_instructors() == instructor_names
 
     def test_visible_meeting_days(self):
-        term_dates = f'{SignUpPage.expected_term_date_str(self.meeting.start_date, self.meeting.end_date)}'
-        last_date = f'(Final recording scheduled for {SignUpPage.expected_final_record_date_str(self.meeting, self.section.term)}.)'
-        assert f'{term_dates}\n{last_date}' in self.sign_up_page.visible_meeting_days()[0]
+        term_dates = f'{SignUpPage.expected_term_date_str(self.meeting.record_start, self.meeting.record_end)}'
+        assert term_dates in self.sign_up_page.visible_meeting_days()[0]
 
     def test_visible_meeting_time(self):
         assert self.sign_up_page.visible_meeting_time()[0] == f'{self.meeting.start_time} - {self.meeting.end_time}'
@@ -348,6 +348,7 @@ class TestSignUp1:
         visible = self.room_page.series_recording_start_dates(self.recording_schedule)
         app.logger.info(f'Missing: {list(set(expected) - set(visible))}')
         app.logger.info(f'Unexpected: {list(set(visible) - set(expected))} ')
+        expected.reverse()
         assert visible == expected
 
     def test_series_blackouts(self):
@@ -355,6 +356,7 @@ class TestSignUp1:
         visible = self.room_page.series_recording_blackout_dates(self.recording_schedule)
         app.logger.info(f'Missing: {list(set(expected) - set(visible))}')
         app.logger.info(f'Unexpected: {list(set(visible) - set(expected))} ')
+        expected.reverse()
         assert visible == expected
 
     def test_open_printable(self):
@@ -373,7 +375,7 @@ class TestSignUp1:
         assert self.room_printable_page.visible_days(self.section) == expected
 
     def test_printable_times(self):
-        dates = f'{self.meeting.start_date.strftime("%b %-d, %Y")} - {self.meeting.end_date.strftime("%b %-d, %Y")}'
+        dates = f'{self.section.term.start_date.strftime("%b %-d, %Y")} - {self.section.term.end_date.strftime("%b %-d, %Y")}'
         times = f'{self.meeting.start_time} - {self.meeting.end_time}'
         assert self.room_printable_page.visible_times(self.section) == [f'{dates}\n{times}']
 
@@ -442,7 +444,7 @@ class TestSignUp1:
     def test_series_desc(self):
         course = f'{self.section.code}, {self.section.number} ({self.term.name})'
         instr = f'{self.section.instructors[0].first_name} {self.section.instructors[0].last_name}'
-        copy = f'Copyright ©{self.term.name[-4:]} UC Regents; all rights reserved.'
+        copy = f"Copyright ©{datetime.strftime(datetime.now(), '%Y')} UC Regents; all rights reserved."
         expected = f'{course} is taught by {instr}. {copy}'
         assert self.kaltura_page.visible_series_desc() == expected
 
@@ -451,7 +453,7 @@ class TestSignUp1:
 
     def test_series_collab_rights(self):
         for instr in self.section.instructors:
-            assert self.kaltura_page.collaborator_perm(instr) == 'Co-Editor'
+            assert self.kaltura_page.collaborator_perm(instr) == 'Co-Editor, Co-Publisher'
 
     def test_series_publish_status(self):
         assert self.kaltura_page.is_private()
@@ -606,7 +608,6 @@ class TestSignUp1:
     # CREATE COURSE SITE
 
     def test_create_course_site(self):
-        self.canvas_page.log_in()
         self.canvas_page.provision_site(self.section, [self.section.ccn], self.site)
 
     def test_enable_media_gallery(self):

@@ -56,7 +56,9 @@ class Section(object):
 
     @property
     def instructors(self):
-        return [User(i) for i in self.data['instructors']]
+        instructors = [User(i) for i in self.data['instructors']]
+        instructors.sort(key=lambda x: x.uid)
+        return instructors
 
     @property
     def listings(self):

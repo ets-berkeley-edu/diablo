@@ -201,11 +201,13 @@ class SignUpPage(DiabloPages):
 
     def select_rec_type(self, recording_type):
         app.logger.info(f'Selecting recording type {recording_type}')
+        self.hit_escape()
         self.click_rec_type_input()
         self.click_menu_option(recording_type)
 
     def select_publish_type(self, publish_type):
         app.logger.info(f'Selecting publish type {publish_type}')
+        self.hit_escape()
         self.click_publish_type_input()
         self.click_menu_option(publish_type)
 

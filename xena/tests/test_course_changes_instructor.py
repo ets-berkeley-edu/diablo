@@ -222,4 +222,4 @@ class TestCourseInstructorChanges:
 
     def test_series_collab_rights(self):
         for instr in self.real_section.instructors:
-            assert self.kaltura_page.collaborator_perm(instr) == 'Co-Editor'
+            assert self.kaltura_page.collaborator_perm(instr) == 'Co-Editor, Co-Publisher'

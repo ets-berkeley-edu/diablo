@@ -86,6 +86,12 @@ class TestCrossListings:
     def test_move_course_location(self):
         util.set_meeting_location(self.section, self.meeting)
 
+    def test_set_instructors(self):
+        util.delete_sis_sections_rows(self.section)
+
+        for instructor in self.section.instructors:
+            util.change_course_instructor(self.section, None, instructor)
+
     def test_delete_old_email(self):
         self.email_page.log_in()
         self.email_page.delete_all_messages()

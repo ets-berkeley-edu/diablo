@@ -92,7 +92,6 @@ def get_all_eligible_section_ids():
               FROM sis_sections
               JOIN rooms ON rooms.location = sis_sections.meeting_location
               WHERE sis_sections.term_id = {app.config['CURRENT_TERM_ID']}
-                AND sis_sections.is_primary IS TRUE
                 AND rooms.capability IS NOT NULL
                 AND sis_sections.is_principal_listing IS TRUE
               ORDER BY section_id ASC;
@@ -170,7 +169,7 @@ def reset_sign_up_test_data(course_data):
 
 def set_meeting_location(section, meeting):
     sql = f"""UPDATE sis_sections
-              SET meeting_location = '{meeting.room.name}'
+              SET meeting_location = '{meeting.room.name.replace("'", "''")}'
               WHERE section_id = {section.ccn}
                 AND term_id = {section.term.id}
     """
@@ -208,7 +207,8 @@ def reset_invite_test_data(term, section, instructor=None):
 
 
 def get_room_id(room):
-    sql = f"SELECT id FROM rooms WHERE location = '{room.name}'"
+    room = room.name.replace("'", "''")
+    sql = f"SELECT id FROM rooms WHERE location = '{room}'"
     app.logger.info(sql)
     ids = []
     result = db.session.execute(text(sql))
@@ -219,8 +219,16 @@ def get_room_id(room):
 
 
 def change_course_room(section, old_room=None, new_room=None):
-    old = f"= '{old_room.name}'" if old_room else 'IS NULL'
-    new = f"'{new_room.name}'" if new_room else 'NULL'
+    if old_room:
+        old_name = old_room.name.replace("'", "''")
+        old = f"= '{old_name}'"
+    else:
+        old = 'IS NULL'
+    if new_room:
+        new_name = new_room.name.replace("'", "''")
+        new = f"'{new_name}'"
+    else:
+        new = 'NULL'
     sql = f"""UPDATE sis_sections
               SET meeting_location = {new}
               WHERE section_id = {section.ccn}
@@ -233,6 +241,7 @@ def change_course_room(section, old_room=None, new_room=None):
 
 
 def update_course_start_end_dates(section, room, start, end):
+    room_name = room.name.replace("'", "''")
     start_date = start.strftime('%Y-%m-%d %H:%M:%S')
     end_date = end.strftime('%Y-%m-%d %H:%M:%S')
     sql = f"""UPDATE sis_sections
@@ -240,7 +249,7 @@ def update_course_start_end_dates(section, room, start, end):
                   meeting_end_date = '{end_date}'
               WHERE section_id = {section.ccn}
                   AND term_id = {section.term.id}
-                  AND meeting_location = '{room.name}'
+                  AND meeting_location = '{room_name}'
     """
     app.logger.info(sql)
     db.session.execute(text(sql))
@@ -306,6 +315,7 @@ def add_sis_sections_rows(section):
     for instructor in section.instructors:
         instructor_name = f'{instructor.first_name} {instructor.last_name}'
         for meeting in section.meetings:
+            room = meeting.room.name.replace("'", "''")
             days = meeting.days.replace(',', '').replace(' ', '')
             start_date = meeting.start_date.strftime('%Y-%m-%d %H:%M:%S')
             end_date = meeting.end_date.strftime('%Y-%m-%d %H:%M:%S')
@@ -320,7 +330,7 @@ def add_sis_sections_rows(section):
                 SELECT
                     '4', '{section.code}', '{section.title}', now(), '{instruction_format}', '{instructor_name}',
                     '{instructor.role}', '{instructor.uid}', TRUE, '{days}', '{end_date}', '{end_time}',
-                    '{meeting.room.name}', '{start_date}', '{start_time}', {section.ccn}, '{section_num}', {section.term.id}
+                    '{room}', '{start_date}', '{start_time}', {section.ccn}, '{section_num}', {section.term.id}
             """
             app.logger.info(sql)
             db.session.execute(text(sql))
