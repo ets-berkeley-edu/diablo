@@ -165,9 +165,8 @@ class TestWeirdTypeC:
         assert self.sign_up_page.visible_instructors() == instructor_names
 
     def test_visible_meeting_days(self):
-        term_dates = f'{SignUpPage.expected_term_date_str(self.meeting_0.start_date, self.meeting_0.end_date)}'
-        last_date = f'(Final recording scheduled for {SignUpPage.expected_final_record_date_str(self.meeting_0, self.section.term)}.)'
-        assert f'{term_dates}\n{last_date}' in self.sign_up_page.visible_meeting_days()[0]
+        term_dates = f'{SignUpPage.expected_term_date_str(self.meeting_0.record_start, self.section.term.end_date)}'
+        assert term_dates in self.sign_up_page.visible_meeting_days()[0]
         assert len(self.sign_up_page.visible_meeting_days()) == 1
 
     def test_visible_meeting_time(self):
@@ -259,6 +258,7 @@ class TestWeirdTypeC:
         visible = self.room_page.series_recording_start_dates(self.recording_schedule)
         app.logger.info(f'Missing: {list(set(expected) - set(visible))}')
         app.logger.info(f'Unexpected: {list(set(visible) - set(expected))} ')
+        expected.reverse()
         assert visible == expected
 
     def test_series_blackouts(self):
@@ -304,7 +304,7 @@ class TestWeirdTypeC:
 
     def test_series_collab_rights(self):
         for instr in self.section.instructors:
-            assert self.kaltura_page.collaborator_perm(instr) == 'Co-Editor'
+            assert self.kaltura_page.collaborator_perm(instr) == 'Co-Editor, Co-Publisher'
 
     def test_recur_weekly(self):
         self.kaltura_page.open_recurrence_modal()
@@ -451,7 +451,8 @@ class TestWeirdTypeC:
         start = dates[0]
         end = dates[-1]
         dates = f'{start.strftime("%Y-%m-%d")} to {end.strftime("%Y-%m-%d")}'
-        days_times = f'{self.meeting_0.days.replace(" ", "")}, {CourseChangesPage.meeting_time_str(self.meeting_0)}'
+        times = CourseChangesPage.meeting_time_str(self.meeting_0)
+        days_times = f'{self.meeting_0.days.replace(" ", "").replace(",", "")}, {times}'
         expected = f'{dates}{days_times}'.upper()
         actual = self.changes_page.scheduled_card_old_schedule(self.section).upper()
         app.logger.info(f'Expecting: {expected}')
@@ -470,7 +471,7 @@ class TestWeirdTypeC:
         start = dates[0]
         end = dates[-1]
         dates = f'{start.strftime("%Y-%m-%d")} to {end.strftime("%Y-%m-%d")}'
-        days = self.meeting_0_changes.days.replace(' ', '')
+        days = self.meeting_0_changes.days.replace(' ', '').replace(',', '')
         times = CourseChangesPage.meeting_time_str(self.meeting_0_changes)
         expected = f'{dates}{days}, {times}'.upper()
         actual = self.changes_page.current_card_schedule(self.section, 1, 2).upper()
@@ -489,7 +490,7 @@ class TestWeirdTypeC:
         start = self.meeting_1.start_date
         end = self.meeting_1.end_date
         dates = f'{start.strftime("%Y-%m-%d")} to {end.strftime("%Y-%m-%d")}'
-        days = self.meeting_1.days.replace(' ', '')
+        days = self.meeting_1.days.replace(' ', '').replace(',', '')
         times = CourseChangesPage.meeting_time_str(self.meeting_1)
         expected = f'{dates}{days}, {times}'.upper()
         actual = self.changes_page.current_card_schedule(self.section, 2, 2).upper()

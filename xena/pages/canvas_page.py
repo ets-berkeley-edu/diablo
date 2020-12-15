@@ -57,13 +57,13 @@ class CanvasPage(Page):
     # JUNCTION
 
     CREATE_SITE_LINK = (By.LINK_TEXT, 'Create a Course Site')
-    SWITCH_TO_CCN_BUTTON = (By.XPATH, '//button[@data-ng-click="toggleAdminMode()"]')
+    SWITCH_TO_CCN_BUTTON = (By.XPATH, '//button[contains(.,"Switch to CCN input")]')
     CCN_TEXT_AREA = (By.ID, 'bc-page-create-course-site-ccn-list')
-    REVIEW_CCNS_BUTTON = (By.XPATH, '//button[text()="Review matching CCNs"]')
-    NEXT_BUTTON = (By.XPATH, '//button[text()="Next"]')
+    REVIEW_CCNS_BUTTON = (By.XPATH, '//button[contains(text(), "Review matching CCNs")]')
+    NEXT_BUTTON = (By.XPATH, '//button[contains(text(), "Next")]')
     SITE_NAME_INPUT = (By.ID, 'siteName')
     SITE_ABBREV_INPUT = (By.ID, 'siteAbbreviation')
-    CREATE_SITE_BUTTON = (By.XPATH, '//button[text()="Create Course Site"]')
+    CREATE_SITE_BUTTON = (By.XPATH, '//button[contains(text(), "Create Course Site")]')
 
     @staticmethod
     def junction_form_loc():
@@ -73,7 +73,7 @@ class CanvasPage(Page):
     @staticmethod
     def term_loc():
         current_term = app.config['CURRENT_TERM_NAME']
-        return By.XPATH, f'//label[text()="{current_term}"]/preceding-sibling::input'
+        return By.XPATH, f'//label[contains(., "{current_term}")]/..'
 
     def hit_homepage(self):
         self.driver.get(app.config['CANVAS_BASE_URL'])
@@ -130,17 +130,17 @@ class CanvasPage(Page):
 
         # Select sections by CCN
         self.wait_for_element(CanvasPage.SWITCH_TO_CCN_BUTTON, util.get_long_timeout())
-        self.wait_for_page_and_click_js(CanvasPage.SWITCH_TO_CCN_BUTTON)
-        self.wait_for_page_and_click_js(CanvasPage.term_loc())
+        self.wait_for_page_and_click(CanvasPage.SWITCH_TO_CCN_BUTTON)
+        self.wait_for_page_and_click(CanvasPage.term_loc())
         self.wait_for_element_and_type(CanvasPage.CCN_TEXT_AREA, ', '.join(section_ids))
-        self.wait_for_page_and_click_js(CanvasPage.REVIEW_CCNS_BUTTON)
-        self.wait_for_page_and_click_js(CanvasPage.NEXT_BUTTON)
+        self.wait_for_page_and_click(CanvasPage.REVIEW_CCNS_BUTTON)
+        self.wait_for_page_and_click(CanvasPage.NEXT_BUTTON)
 
         # Name and create site; store site ID
         self.scroll_to_bottom()
         self.wait_for_element_and_type(CanvasPage.SITE_NAME_INPUT, f'{site.name}')
         self.wait_for_element_and_type(CanvasPage.SITE_ABBREV_INPUT, f'{site.code}')
-        self.wait_for_page_and_click_js(CanvasPage.CREATE_SITE_BUTTON)
+        self.wait_for_page_and_click(CanvasPage.CREATE_SITE_BUTTON)
         Wait(self.driver, util.get_long_timeout()).until(ec.url_contains('/courses/'))
         parts = self.driver.current_url.split('/')
         site.site_id = [i for i in parts if i][-1]
@@ -148,7 +148,7 @@ class CanvasPage(Page):
         section.sites.append(site)
 
     def delete_site(self, site_id):
-        app.logger.info(f'Deleting course site ID #{site_id}')
+        app.logger.info(f'Deleting course site ID {site_id}')
         self.driver.get(f'{app.config["CANVAS_BASE_URL"]}/courses/{site_id}/confirm_action?event=delete')
         self.wait_for_page_and_click_js(CanvasPage.DELETE_COURSE_BUTTON)
         Wait(self.driver, util.get_medium_timeout()).until(ec.visibility_of_element_located(CanvasPage.DELETE_COURSE_SUCCESS))
@@ -157,6 +157,7 @@ class CanvasPage(Page):
         site_ids = util.get_course_site_ids(section)
         for site_id in site_ids:
             self.delete_site(site_id)
+        return site_ids
 
     # KALTURA
 

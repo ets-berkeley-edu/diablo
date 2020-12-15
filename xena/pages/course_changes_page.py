@@ -108,7 +108,7 @@ class CourseChangesPage(DiabloPages):
 
     def scheduled_card_old_schedule(self, section):
         xpath = CourseChangesPage.scheduled_card_detail_xpath(section, 'Meeting', 2)
-        return self.element((By.XPATH, xpath)).get_attribute('innerText').replace('Days of the week:', '').replace('\n', '')
+        return self.element((By.XPATH, xpath)).text.replace('Days of the week:', '').replace('\n', '')
 
     @staticmethod
     def current_card_xpath(section):
@@ -126,4 +126,4 @@ class CourseChangesPage(DiabloPages):
 
     def current_card_schedule(self, section, list_node, detail_node):
         xpath = CourseChangesPage.current_card_detail_xpath(section, 'All Meetings', list_node, detail_node)
-        return self.element((By.XPATH, xpath)).get_attribute('innerText').replace('Days of the week:', '').replace('\n', '')
+        return self.element((By.XPATH, xpath)).text.replace('Days of the week:', '').replace('\n', '')
