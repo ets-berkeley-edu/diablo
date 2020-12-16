@@ -962,8 +962,12 @@ def _get_cross_listed_courses(section_ids, term_id, approvals, invited_uids):
                         instructors_by_section_id[section_id].append(
                             _to_instructor_json(row, approvals_for_section, invited_uids=invited_uids_for_section),
                         )
+                canvas_course_ids = [c['courseSiteId'] for c in canvas_sites_by_section_id[section_id]]
                 for canvas_site in canvas_sites_by_cross_listing_id[cross_listing_id]:
-                    canvas_sites_by_section_id[section_id].append(canvas_site)
+                    canvas_course_id = canvas_site['courseSiteId']
+                    if canvas_course_id not in canvas_course_ids:
+                        canvas_sites_by_section_id[section_id].append(canvas_site)
+                        canvas_course_ids.append(canvas_course_id)
 
     return courses_by_section_id, instructors_by_section_id, canvas_sites_by_section_id
 
