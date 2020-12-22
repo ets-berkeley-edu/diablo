@@ -39,7 +39,7 @@ class TestCourseInstructorChanges:
 
     real_test_data = util.get_test_script_course('test_course_changes_real')
     fake_test_data = util.get_test_script_course('test_course_changes_fake')
-    real_section = Section(real_test_data)
+    real_section = util.get_test_section(real_test_data)
     real_meeting = real_section.meetings[0]
     fake_section = Section(fake_test_data)
     fake_meeting = fake_section.meetings[0]
@@ -54,15 +54,12 @@ class TestCourseInstructorChanges:
     def test_delete_old_diablo_and_kaltura(self):
         self.kaltura_page.log_in_via_calnet()
         self.kaltura_page.reset_test_data(self.term, self.recording_sched)
-        util.reset_sign_up_test_data(self.real_test_data)
+        util.reset_sign_up_test_data(self.real_section)
         self.recording_sched.approval_status = RecordingApprovalStatus.NOT_INVITED
         self.recording_sched.scheduling_status = RecordingSchedulingStatus.NOT_SCHEDULED
 
-    def test_sis_data_refresh_pre_run(self):
-        self.jobs_page.load_page()
-        self.jobs_page.run_sis_data_refresh_job()
-
     def test_admin_emails_pre_run(self):
+        self.jobs_page.load_page()
         self.jobs_page.run_admin_emails_job()
 
     def test_instructor_emails_pre_run(self):
@@ -77,17 +74,14 @@ class TestCourseInstructorChanges:
 
     # SCHEDULED COURSE CHANGES INSTRUCTOR
 
-    def test_set_room(self):
-        util.set_meeting_location(self.real_section, self.real_meeting)
-
     def test_set_fake_instr(self):
-        util.change_course_instructor(self.fake_section, self.real_section.instructors[0], self.fake_section.instructors[0])
+        util.change_course_instructor(self.real_section, self.real_section.instructors[0], self.fake_section.instructors[0])
 
     def test_sign_up_with_fake_instr(self):
         self.ouija_page.load_page()
         self.ouija_page.log_out()
         self.login_page.dev_auth(self.fake_section.instructors[0].uid)
-        self.ouija_page.click_sign_up_page_link(self.fake_section)
+        self.ouija_page.click_sign_up_page_link(self.real_section)
         self.sign_up_page.select_publish_type(PublishType.BCOURSES.value)
         self.sign_up_page.click_agree_checkbox()
         self.sign_up_page.click_approve_button()
@@ -99,8 +93,8 @@ class TestCourseInstructorChanges:
         self.jobs_page.run_kaltura_job()
         util.get_kaltura_id(self.recording_sched, self.term)
 
-    def test_run_sis_job_to_revert_to_real_instr(self):
-        self.jobs_page.run_sis_data_refresh_job()
+    def test_revert_to_real_instr(self):
+        util.change_course_instructor(self.real_section, self.fake_section.instructors[0], self.real_section.instructors[0])
 
     def test_reset_room(self):
         util.set_meeting_location(self.real_section, self.real_meeting)

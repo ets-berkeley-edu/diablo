@@ -26,7 +26,6 @@ ENHANCEMENTS, OR MODIFICATIONS.
 from flask import current_app as app
 import pytest
 from xena.models.email import Email
-from xena.models.section import Section
 from xena.pages.sign_up_page import SignUpPage
 from xena.test_utils import util
 
@@ -34,8 +33,8 @@ from xena.test_utils import util
 @pytest.mark.usefixtures('page_objects')
 class TestInvitations:
 
-    section_1 = Section(util.get_test_script_course('test_invitations_0'))
-    section_2 = Section(util.get_test_script_course('test_invitations_1'))
+    section_1 = util.get_test_section(util.get_test_script_course('test_invitations_0'))
+    section_2 = util.get_test_section(util.get_test_script_course('test_invitations_1'))
 
     def test_log_in_admin(self):
         self.login_page.load_page()
@@ -52,8 +51,8 @@ class TestInvitations:
         self.email_page.delete_all_messages()
 
     def test_course_opt_out(self):
-        util.set_meeting_location(self.section_1, self.section_1.meetings[0])
-        util.set_meeting_location(self.section_2, self.section_2.meetings[0])
+        util.reset_test_data(self.section_1)
+        util.reset_test_data(self.section_2)
         self.ouija_page.load_page()
         self.ouija_page.search_for_course_code(self.section_2)
         self.ouija_page.filter_for_all()

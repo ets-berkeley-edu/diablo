@@ -34,7 +34,6 @@ from xena.models.recording_approval_status import RecordingApprovalStatus
 from xena.models.recording_schedule import RecordingSchedule
 from xena.models.recording_scheduling_status import RecordingSchedulingStatus
 from xena.models.recording_type import RecordingType
-from xena.models.section import Section
 from xena.pages.sign_up_page import SignUpPage
 from xena.test_utils import util
 
@@ -51,7 +50,7 @@ SCENARIO:
 class TestSignUp3:
 
     test_data = util.get_test_script_course('test_sign_up_3')
-    section = Section(test_data)
+    section = util.get_test_section(test_data)
     meeting = section.meetings[0]
     recording_schedule = RecordingSchedule(section)
     site = CanvasSite(
@@ -76,8 +75,7 @@ class TestSignUp3:
     def test_delete_old_diablo_and_kaltura(self):
         self.kaltura_page.log_in_via_calnet()
         self.kaltura_page.reset_test_data(self.term, self.recording_schedule)
-        util.set_meeting_location(self.section, self.meeting)
-        util.reset_sign_up_test_data(self.test_data)
+        util.reset_sign_up_test_data(self.section)
         self.recording_schedule.approval_status = RecordingApprovalStatus.NOT_INVITED
         self.recording_schedule.scheduling_status = RecordingSchedulingStatus.NOT_SCHEDULED
 

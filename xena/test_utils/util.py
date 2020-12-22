@@ -31,6 +31,7 @@ from flask import current_app as app
 from sqlalchemy import text
 from xena.models.recording_scheduling_status import RecordingSchedulingStatus
 from xena.models.room import Room
+from xena.models.section import Section
 
 
 def get_xena_browser():
@@ -105,84 +106,131 @@ def get_all_eligible_section_ids():
     return ids
 
 
-def get_kaltura_id(recording_schedule, term):
-    section = recording_schedule.section
-    sql = f"""SELECT kaltura_schedule_id
-              FROM scheduled
-              WHERE term_id = {term.id}
-                AND section_id = {section.ccn}
-                AND deleted_at IS NULL
-    """
-    ids = []
-    app.logger.info(f'Checking for Kaltura ID for term {term.id} section {section.ccn}')
-    result = db.session.execute(text(sql))
-    std_commit(allow_test_environment=True)
-    for row in result:
-        ids.append(dict(row).get('kaltura_schedule_id'))
-    if len(ids) > 0:
-        kaltura_id = ids[0]
-        app.logger.info(f'ID is {kaltura_id}')
-        recording_schedule.series_id = kaltura_id
-        recording_schedule.scheduling_status = RecordingSchedulingStatus.SCHEDULED
-        return kaltura_id
-    else:
-        return None
+# SECTION TEST DATA
 
 
-def get_course_site_ids(section):
-    sql = f'SELECT canvas_course_site_id FROM canvas_course_sites WHERE term_id = {section.term.id} AND section_id = {section.ccn}'
-    app.logger.info(sql)
-    ids = []
-    result = db.session.execute(text(sql))
-    std_commit(allow_test_environment=True)
-    for row in result:
-        ids.append(dict(row).get('canvas_course_site_id'))
-    app.logger.info(f'Site IDs are {ids}')
-    return ids
-
-
-def delete_course_site(site_id):
-    sql = f'DELETE FROM canvas_course_sites WHERE canvas_course_site_id = {site_id}'
-    db.session.execute(text(sql))
-    std_commit(allow_test_environment=True)
-
-
-def reset_email_template_test_data(template_type):
-    sql = f"DELETE FROM email_templates WHERE template_type = '{template_type}'"
-    db.session.execute(text(sql))
-    std_commit(allow_test_environment=True)
-
-
-def reset_sign_up_test_data(course_data):
-    ccn = course_data['ccn']
-    term_id = app.config['CURRENT_TERM_ID']
-    sql = f'DELETE FROM approvals WHERE section_id = {ccn} AND term_id = {term_id}'
-    db.session.execute(text(sql))
-    sql = f'DELETE FROM scheduled WHERE section_id = {ccn} AND term_id = {term_id}'
-    db.session.execute(text(sql))
-    sql = f'DELETE FROM sent_emails WHERE section_id = {ccn} AND term_id = {term_id}'
-    db.session.execute(text(sql))
-    sql = f'DELETE FROM course_preferences WHERE section_id = {ccn} AND term_id = {term_id}'
-    db.session.execute(text(sql))
-    std_commit(allow_test_environment=True)
-
-
-def set_meeting_location(section, meeting):
-    sql = f"""UPDATE sis_sections
-              SET meeting_location = '{meeting.room.name.replace("'", "''")}'
-              WHERE section_id = {section.ccn}
-                AND term_id = {section.term.id}
+def get_test_section(test_data):
+    sql = f"""SELECT sis_sections.section_id AS ccn,
+                     sis_sections.course_name AS code,
+                     sis_sections.course_title AS title,
+                     sis_sections.instruction_format AS format,
+                     sis_sections.section_num AS num
+                FROM sis_sections
+               WHERE sis_sections.term_id = {app.config['CURRENT_TERM_ID']}
+                 AND sis_sections.course_name LIKE '{test_data["dept_code"]} %'
+                 AND sis_sections.course_name NOT LIKE '{test_data["dept_code"]} C%'
+                 AND sis_sections.instruction_format = 'LEC'
+                 AND sis_sections.is_principal_listing IS TRUE
+            ORDER BY code, ccn
+               LIMIT 1;
     """
     app.logger.info(sql)
+    result = db.session.execute(text(sql)).first()
+    std_commit(allow_test_environment=True)
+    app.logger.info(f'{result}')
+    sis_data = {
+        'ccn': f'{result["ccn"]}',
+        'code': result['code'],
+        'title': result['title'],
+        'number': f'{result["format"]} {result["num"]}',
+        'is_primary': 'TRUE',
+        'is_primary_listing': True,
+    }
+    test_data.update(sis_data)
+    return Section(test_data)
+
+
+def get_test_x_listed_sections(test_data):
+    sql = f"""SELECT sis_sections.section_id AS ccn,
+                     sis_sections.course_name AS code,
+                     sis_sections.course_title AS title,
+                     sis_sections.instruction_format AS format,
+                     sis_sections.section_num AS num,
+                     cross_listings.cross_listed_section_ids[1] AS listing_ccn
+                FROM sis_sections
+                JOIN cross_listings ON cross_listings.section_id = sis_sections.section_id
+               WHERE sis_sections.term_id = {app.config['CURRENT_TERM_ID']}
+                 AND sis_sections.instruction_format = 'LEC'
+                 AND sis_sections.is_principal_listing IS TRUE
+                 AND array_length(cross_listings.cross_listed_section_ids, 1) = 1
+            ORDER BY code, ccn
+               LIMIT 1;
+    """
+    app.logger.info(sql)
+    result = db.session.execute(text(sql)).first()
+    std_commit(allow_test_environment=True)
+    app.logger.info(f'{result}')
+
+    sql = f'SELECT course_name FROM sis_sections WHERE section_id = {result["listing_ccn"]};'
+    app.logger.info(sql)
+    listing_result = db.session.execute(text(sql)).first()
+    std_commit(allow_test_environment=True)
+    app.logger.info(f'{listing_result}')
+
+    sis_data = {
+        'ccn': f'{result["ccn"]}',
+        'code': result['code'],
+        'title': result['title'],
+        'number': f'{result["format"]} {result["num"]}',
+        'is_primary_listing': True,
+        'listings': [{'ccn': result['listing_ccn'], 'code': listing_result['course_name']}],
+    }
+    test_data.update(sis_data)
+    primary_listing_section = Section(test_data)
+
+    listing_sis_data = {
+        'ccn': f'{result["listing_ccn"]}',
+        'code': listing_result['course_name'],
+        'is_primary_listing': False,
+        'listings': [],
+    }
+    listing_test_data = test_data.copy()
+    listing_test_data.update(listing_sis_data)
+    secondary_listing_section = Section(listing_test_data)
+
+    return [primary_listing_section, secondary_listing_section]
+
+
+def delete_sis_sections_rows(section):
+    sql = f"DELETE FROM sis_sections WHERE section_id = {section.ccn} AND term_id = {app.config['CURRENT_TERM_ID']};"
+    app.logger.info(sql)
     db.session.execute(text(sql))
     std_commit(allow_test_environment=True)
 
 
-def get_next_date(start_date, day_index):
-    days_ahead = day_index - start_date.weekday()
-    if days_ahead < 0:
-        days_ahead += 7
-    return start_date + timedelta(days_ahead)
+def add_sis_sections_rows(section):
+    instruction_format = section.number.split(' ')[0]
+    section_num = section.number.split(' ')[1]
+    for instructor in section.instructors:
+        instructor_name = f'{instructor.first_name} {instructor.last_name}'
+        for meeting in section.meetings:
+            room = meeting.room.name.replace("'", "''")
+            days = meeting.days.replace(',', '').replace(' ', '')
+            start_date = meeting.start_date.strftime('%Y-%m-%d %H:%M:%S')
+            end_date = meeting.end_date.strftime('%Y-%m-%d %H:%M:%S')
+            start_time = datetime.strptime(meeting.start_time, '%I:%M %p').strftime('%H:%M')
+            end_time = datetime.strptime(meeting.end_time, '%I:%M %p').strftime('%H:%M')
+            sql = f"""
+                INSERT INTO sis_sections (
+                    allowed_units, course_name, course_title, created_at, instruction_format, instructor_name,
+                    instructor_role_code, instructor_uid, is_primary, meeting_days, meeting_end_date, meeting_end_time,
+                    meeting_location, meeting_start_date, meeting_start_time, section_id, section_num, term_id,
+                    is_principal_listing
+                )
+                SELECT
+                    '4', '{section.code}', '{section.title}', now(), '{instruction_format}', '{instructor_name}',
+                    '{instructor.role}', '{instructor.uid}', TRUE, '{days}', '{end_date}', '{end_time}', '{room}',
+                    '{start_date}', '{start_time}', {section.ccn}, '{section_num}', {section.term.id},
+                    {str(section.is_primary_listing).upper()}
+            """
+            app.logger.info(sql)
+            db.session.execute(text(sql))
+            std_commit(allow_test_environment=True)
+
+
+def reset_test_data(section):
+    delete_sis_sections_rows(section)
+    add_sis_sections_rows(section)
 
 
 def reset_invite_test_data(term, section, instructor=None):
@@ -206,16 +254,32 @@ def reset_invite_test_data(term, section, instructor=None):
     std_commit(allow_test_environment=True)
 
 
-def get_room_id(room):
-    room = room.name.replace("'", "''")
-    sql = f"SELECT id FROM rooms WHERE location = '{room}'"
-    app.logger.info(sql)
-    ids = []
-    result = db.session.execute(text(sql))
+def reset_sign_up_test_data(section):
+    reset_test_data(section)
+    term_id = app.config['CURRENT_TERM_ID']
+    sql = f'DELETE FROM approvals WHERE section_id = {section.ccn} AND term_id = {term_id}'
+    db.session.execute(text(sql))
+    sql = f'DELETE FROM scheduled WHERE section_id = {section.ccn} AND term_id = {term_id}'
+    db.session.execute(text(sql))
+    sql = f'DELETE FROM sent_emails WHERE section_id = {section.ccn} AND term_id = {term_id}'
+    db.session.execute(text(sql))
+    sql = f'DELETE FROM course_preferences WHERE section_id = {section.ccn} AND term_id = {term_id}'
+    db.session.execute(text(sql))
     std_commit(allow_test_environment=True)
-    for row in result:
-        ids.append(dict(row).get('id'))
-    return ids[0]
+
+
+# ADD/UPDATE LOCATION, SCHEDULE, INSTRUCTORS
+
+
+def set_meeting_location(section, meeting):
+    sql = f"""UPDATE sis_sections
+              SET meeting_location = '{meeting.room.name.replace("'", "''")}'
+              WHERE section_id = {section.ccn}
+                AND term_id = {section.term.id}
+    """
+    app.logger.info(sql)
+    db.session.execute(text(sql))
+    std_commit(allow_test_environment=True)
 
 
 def change_course_room(section, old_room=None, new_room=None):
@@ -309,36 +373,71 @@ def set_instructor_role(section, instructor, role):
     std_commit(allow_test_environment=True)
 
 
-def add_sis_sections_rows(section):
-    instruction_format = section.number.split(' ')[0]
-    section_num = section.number.split(' ')[1]
-    for instructor in section.instructors:
-        instructor_name = f'{instructor.first_name} {instructor.last_name}'
-        for meeting in section.meetings:
-            room = meeting.room.name.replace("'", "''")
-            days = meeting.days.replace(',', '').replace(' ', '')
-            start_date = meeting.start_date.strftime('%Y-%m-%d %H:%M:%S')
-            end_date = meeting.end_date.strftime('%Y-%m-%d %H:%M:%S')
-            start_time = datetime.strptime(meeting.start_time, '%I:%M %p').strftime('%H:%M')
-            end_time = datetime.strptime(meeting.end_time, '%I:%M %p').strftime('%H:%M')
-            sql = f"""
-                INSERT INTO sis_sections (
-                    allowed_units, course_name, course_title, created_at, instruction_format, instructor_name,
-                    instructor_role_code, instructor_uid, is_primary, meeting_days, meeting_end_date, meeting_end_time,
-                    meeting_location, meeting_start_date, meeting_start_time, section_id, section_num, term_id
-                )
-                SELECT
-                    '4', '{section.code}', '{section.title}', now(), '{instruction_format}', '{instructor_name}',
-                    '{instructor.role}', '{instructor.uid}', TRUE, '{days}', '{end_date}', '{end_time}',
-                    '{room}', '{start_date}', '{start_time}', {section.ccn}, '{section_num}', {section.term.id}
-            """
-            app.logger.info(sql)
-            db.session.execute(text(sql))
-            std_commit(allow_test_environment=True)
+def get_kaltura_id(recording_schedule, term):
+    section = recording_schedule.section
+    sql = f"""SELECT kaltura_schedule_id
+              FROM scheduled
+              WHERE term_id = {term.id}
+                AND section_id = {section.ccn}
+                AND deleted_at IS NULL
+    """
+    ids = []
+    app.logger.info(f'Checking for Kaltura ID for term {term.id} section {section.ccn}')
+    result = db.session.execute(text(sql))
+    std_commit(allow_test_environment=True)
+    for row in result:
+        ids.append(dict(row).get('kaltura_schedule_id'))
+    if len(ids) > 0:
+        kaltura_id = ids[0]
+        app.logger.info(f'ID is {kaltura_id}')
+        recording_schedule.series_id = kaltura_id
+        recording_schedule.scheduling_status = RecordingSchedulingStatus.SCHEDULED
+        return kaltura_id
+    else:
+        return None
 
 
-def delete_sis_sections_rows(section):
-    sql = f'DELETE FROM sis_sections WHERE section_id = {section.ccn}'
+# COURSE SITES
+
+
+def get_course_site_ids(section):
+    sql = f'SELECT canvas_course_site_id FROM canvas_course_sites WHERE term_id = {section.term.id} AND section_id = {section.ccn}'
     app.logger.info(sql)
+    ids = []
+    result = db.session.execute(text(sql))
+    std_commit(allow_test_environment=True)
+    for row in result:
+        ids.append(dict(row).get('canvas_course_site_id'))
+    app.logger.info(f'Site IDs are {ids}')
+    return ids
+
+
+def delete_course_site(site_id):
+    sql = f'DELETE FROM canvas_course_sites WHERE canvas_course_site_id = {site_id}'
     db.session.execute(text(sql))
     std_commit(allow_test_environment=True)
+
+
+def reset_email_template_test_data(template_type):
+    sql = f"DELETE FROM email_templates WHERE template_type = '{template_type}'"
+    db.session.execute(text(sql))
+    std_commit(allow_test_environment=True)
+
+
+def get_next_date(start_date, day_index):
+    days_ahead = day_index - start_date.weekday()
+    if days_ahead < 0:
+        days_ahead += 7
+    return start_date + timedelta(days_ahead)
+
+
+def get_room_id(room):
+    room = room.name.replace("'", "''")
+    sql = f"SELECT id FROM rooms WHERE location = '{room}'"
+    app.logger.info(sql)
+    ids = []
+    result = db.session.execute(text(sql))
+    std_commit(allow_test_environment=True)
+    for row in result:
+        ids.append(dict(row).get('id'))
+    return ids[0]

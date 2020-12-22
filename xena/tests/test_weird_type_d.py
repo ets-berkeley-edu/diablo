@@ -28,7 +28,6 @@ from xena.models.email import Email
 from xena.models.recording_approval_status import RecordingApprovalStatus
 from xena.models.recording_schedule import RecordingSchedule
 from xena.models.recording_scheduling_status import RecordingSchedulingStatus
-from xena.models.section import Section
 from xena.pages.sign_up_page import SignUpPage
 from xena.test_utils import util
 
@@ -44,7 +43,7 @@ SCENARIO:
 class TestWeirdTypeD:
 
     test_data = util.get_test_script_course('test_weird_type_d')
-    section = Section(test_data)
+    section = util.get_test_section(test_data)
     meeting_0 = section.meetings[0]
     meeting_1 = section.meetings[1]
     recording_schedule = RecordingSchedule(section)
@@ -59,13 +58,9 @@ class TestWeirdTypeD:
         if util.get_kaltura_id(self.recording_schedule, self.section.term):
             self.kaltura_page.log_in_via_calnet()
             self.kaltura_page.reset_test_data(self.term, self.recording_schedule)
-        util.reset_sign_up_test_data(self.test_data)
+        util.reset_sign_up_test_data(self.section)
         self.recording_schedule.approval_status = RecordingApprovalStatus.NOT_INVITED
         self.recording_schedule.scheduling_status = RecordingSchedulingStatus.NOT_SCHEDULED
-
-    def test_set_course_test_sections(self):
-        util.delete_sis_sections_rows(self.section)
-        util.add_sis_sections_rows(self.section)
 
     def test_delete_old_email(self):
         self.email_page.log_in()

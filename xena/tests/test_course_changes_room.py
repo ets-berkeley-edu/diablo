@@ -38,7 +38,7 @@ from xena.test_utils import util
 class TestCourseRoomChanges:
     real_test_data = util.get_test_script_course('test_course_changes_real')
     fake_test_data = util.get_test_script_course('test_course_changes_fake')
-    real_section = Section(real_test_data)
+    real_section = util.get_test_section(real_test_data)
     real_meeting = real_section.meetings[0]
     fake_section = Section(fake_test_data)
     fake_meeting = fake_section.meetings[0]
@@ -53,15 +53,12 @@ class TestCourseRoomChanges:
     def test_delete_old_diablo_and_kaltura(self):
         self.kaltura_page.log_in_via_calnet()
         self.kaltura_page.reset_test_data(self.term, self.recording_sched)
-        util.reset_sign_up_test_data(self.real_test_data)
+        util.reset_sign_up_test_data(self.real_section)
         self.recording_sched.approval_status = RecordingApprovalStatus.NOT_INVITED
         self.recording_sched.scheduling_status = RecordingSchedulingStatus.NOT_SCHEDULED
 
-    def test_sis_data_refresh_pre_run(self):
-        self.jobs_page.load_page()
-        self.jobs_page.run_sis_data_refresh_job()
-
     def test_admin_emails_pre_run(self):
+        self.jobs_page.load_page()
         self.jobs_page.run_admin_emails_job()
 
     def test_instructor_emails_pre_run(self):
@@ -73,9 +70,6 @@ class TestCourseRoomChanges:
     def test_delete_old_email(self):
         self.email_page.log_in()
         self.email_page.delete_all_messages()
-
-    def test_set_room(self):
-        util.set_meeting_location(self.real_section, self.real_meeting)
 
     def test_sign_up(self):
         self.ouija_page.load_page()
@@ -96,7 +90,7 @@ class TestCourseRoomChanges:
     # SCHEDULED COURSE MOVES TO INELIGIBLE ROOM
 
     def test_move_to_ineligible_room(self):
-        util.set_meeting_location(self.fake_section, self.fake_section.meetings[0])
+        util.set_meeting_location(self.real_section, self.fake_section.meetings[0])
 
     def test_run_admin_email_job_ineligible_room(self):
         self.jobs_page.run_admin_emails_job()

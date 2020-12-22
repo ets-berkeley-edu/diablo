@@ -31,7 +31,6 @@ from xena.models.publish_type import PublishType
 from xena.models.recording_approval_status import RecordingApprovalStatus
 from xena.models.recording_schedule import RecordingSchedule
 from xena.models.recording_scheduling_status import RecordingSchedulingStatus
-from xena.models.section import Section
 from xena.test_utils import util
 
 
@@ -39,9 +38,10 @@ from xena.test_utils import util
 class TestCrossListings:
 
     test_data = util.get_test_script_course('test_x_listings')
-    section = Section(test_data)
+    sections = util.get_test_x_listed_sections(test_data)
+    section = sections[0]
+    x_listed_section = sections[1]
     meeting = section.meetings[0]
-    x_listings = section.listings
     recording_schedule = RecordingSchedule(section)
     site_1 = CanvasSite(
         code=f'XENA X-Listing One - {section.code}',
@@ -49,8 +49,8 @@ class TestCrossListings:
         site_id=None,
     )
     site_2 = CanvasSite(
-        code=f'XENA X-Listing Two - {section.code}',
-        name=f'XENA X-Listing Two - {section.code}',
+        code=f'XENA X-Listing Two - {x_listed_section.code}',
+        name=f'XENA X-Listing Two - {x_listed_section.code}',
         site_id=None,
     )
 
@@ -68,29 +68,20 @@ class TestCrossListings:
         self.kaltura_page.log_in_via_calnet()
         self.kaltura_page.reset_test_data(self.term, self.recording_schedule)
 
-    def test_run_initial_canvas_job(self):
-        self.jobs_page.load_page()
-        self.jobs_page.run_canvas_job()
-
     def test_delete_old_canvas_sites(self):
-        for listing in self.section.listings:
-            self.canvas_page.delete_section_sites(listing)
-        self.jobs_page.load_page()
-        self.jobs_page.run_canvas_job()
+        ids = []
+        for section in self.sections:
+            ids.append(self.canvas_page.delete_section_sites(section))
+        if any(ids):
+            self.jobs_page.load_page()
+            self.jobs_page.run_canvas_job()
 
     def test_delete_old_diablo_data(self):
-        util.reset_sign_up_test_data(self.test_data)
+        util.reset_sign_up_test_data(self.section)
+        util.delete_sis_sections_rows(self.x_listed_section)
+        util.add_sis_sections_rows(self.x_listed_section)
         self.recording_schedule.approval_status = RecordingApprovalStatus.NOT_INVITED
         self.recording_schedule.scheduling_status = RecordingSchedulingStatus.NOT_SCHEDULED
-
-    def test_move_course_location(self):
-        util.set_meeting_location(self.section, self.meeting)
-
-    def test_set_instructors(self):
-        util.delete_sis_sections_rows(self.section)
-
-        for instructor in self.section.instructors:
-            util.change_course_instructor(self.section, None, instructor)
 
     def test_delete_old_email(self):
         self.email_page.log_in()
@@ -99,7 +90,7 @@ class TestCrossListings:
     # CREATE A COURSE SITE FOR EACH OF THE LISTINGS
 
     def test_create_course_site_one(self):
-        self.canvas_page.provision_site(self.section, [self.section.listings[0].ccn], self.site_1)
+        self.canvas_page.provision_site(self.section, [self.section.ccn], self.site_1)
 
     def test_enable_media_gallery_1(self):
         if self.canvas_page.is_tool_configured(app.config['CANVAS_MEDIA_GALLERY_TOOL']):
@@ -120,7 +111,7 @@ class TestCrossListings:
             raise
 
     def test_create_course_site_two(self):
-        self.canvas_page.provision_site(self.section, [self.section.listings[1].ccn], self.site_2)
+        self.canvas_page.provision_site(self.x_listed_section, [self.x_listed_section.ccn], self.site_2)
 
     def test_enable_media_gallery_2(self):
         if self.canvas_page.is_tool_configured(app.config['CANVAS_MEDIA_GALLERY_TOOL']):
@@ -146,7 +137,7 @@ class TestCrossListings:
 
     def test_visible_site_ids(self):
         self.sign_up_page.load_page(self.section)
-        assert self.sign_up_page.visible_course_site_ids() == [site.site_id for site in self.section.sites]
+        assert self.sign_up_page.visible_course_site_ids() == [self.site_1.site_id, self.site_2.site_id]
 
     # INSTRUCTORS FOLLOW SIGN UP WORKFLOW
 
@@ -154,12 +145,12 @@ class TestCrossListings:
         self.ouija_page.load_page()
         self.ouija_page.log_out()
         self.login_page.dev_auth(self.section.instructors[0].uid)
-        self.ouija_page.wait_for_course_result(self.section)
-        for listing in self.section.listings:
-            assert listing.code in self.ouija_page.course_row_code_el(self.section).get_attribute('innerText')
+        self.ouija_page.wait_for_course_results()
+        for section in self.sections:
+            assert section.code in self.ouija_page.course_row_code_el(self.section).get_attribute('innerText')
 
     def test_hit_listing(self):
-        self.sign_up_page.hit_url(self.section.term.id, self.section.listings[0].ccn)
+        self.sign_up_page.hit_url(self.x_listed_section.term.id, self.x_listed_section.ccn)
         self.sign_up_page.wait_for_404()
 
     def test_view_sign_up_page(self):
@@ -169,10 +160,8 @@ class TestCrossListings:
         assert self.sign_up_page.visible_heading() == f'{self.section.code}, {self.section.number}'
 
     def test_verify_sign_up_page_listings(self):
-        expected = [f'{listing.code}, {self.section.number}' for listing in self.section.listings]
-        expected.sort()
+        expected = [f'{self.x_listed_section.code}, {self.x_listed_section.number}']
         visible = self.sign_up_page.visible_cross_listing_codes()
-        visible.sort()
         assert visible == expected
 
     def test_approve_inst_1(self):
