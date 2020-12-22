@@ -53,7 +53,7 @@ class TestWeirdTypeC:
 
     # Initial course data
     test_data = util.get_test_script_course('test_weird_type_c')
-    section = Section(test_data)
+    section = util.get_test_section(test_data)
     meeting_0 = section.meetings[0]
     meeting_1 = section.meetings[1]
     instructor_0 = section.instructors[0]
@@ -89,13 +89,9 @@ class TestWeirdTypeC:
     def test_delete_old_diablo_and_kaltura(self):
         self.kaltura_page.log_in_via_calnet()
         self.kaltura_page.reset_test_data(self.term, self.recording_schedule)
-        util.reset_sign_up_test_data(self.test_data)
+        util.reset_sign_up_test_data(self.section)
         self.recording_schedule.approval_status = RecordingApprovalStatus.NOT_INVITED
         self.recording_schedule.scheduling_status = RecordingSchedulingStatus.NOT_SCHEDULED
-
-    def test_set_course_test_sections(self):
-        util.delete_sis_sections_rows(self.section)
-        util.add_sis_sections_rows(self.section)
 
     # COURSE APPEARS ON 'NOT INVITED' FILTER
 

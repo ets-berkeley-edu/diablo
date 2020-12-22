@@ -67,3 +67,7 @@ class Section(object):
     @property
     def meetings(self):
         return [Meeting(i) for i in self.data['meetings']]
+
+    @property
+    def is_primary_listing(self):
+        return self.data['is_primary_listing']

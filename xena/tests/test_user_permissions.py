@@ -27,7 +27,6 @@ import time
 
 import pytest
 from xena.models.meeting import Meeting
-from xena.models.section import Section
 from xena.pages.login_page import LoginPage
 from xena.pages.ouija_board_page import OuijaBoardPage
 from xena.pages.sign_up_page import SignUpPage
@@ -38,22 +37,15 @@ from xena.test_utils import util
 class TestUserPerms:
 
     test_data = util.get_test_script_course('test_user_permissions')
-    section = Section(test_data)
+    section = util.get_test_section(test_data)
     meeting = section.meetings[0]
     instructor = section.instructors[0]
 
-    def test_run_sis_data_job(self):
-        self.login_page.load_page()
-        self.login_page.dev_auth()
-        self.ouija_page.click_jobs_link()
-        self.jobs_page.run_sis_data_refresh_job()
-
     def test_set_room_and_role(self):
-        util.set_meeting_location(self.section, self.meeting)
-        util.set_instructor_role(self.section, self.instructor, 'PI')
+        util.reset_test_data(self.section)
 
     def test_instructor_login(self):
-        self.jobs_page.log_out()
+        self.login_page.load_page()
         self.login_page.dev_auth(self.instructor.uid)
         self.ouija_page.wait_for_title_containing(f'Your {self.section.term.name} Course')
 
