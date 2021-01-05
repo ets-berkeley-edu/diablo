@@ -29,7 +29,6 @@ from xena.models.recording_approval_status import RecordingApprovalStatus
 from xena.models.recording_schedule import RecordingSchedule
 from xena.models.recording_scheduling_status import RecordingSchedulingStatus
 from xena.models.recording_type import RecordingType
-from xena.models.section import Section
 from xena.test_utils import util
 
 
@@ -37,7 +36,7 @@ from xena.test_utils import util
 class TestUnschedule:
 
     test_data = util.get_test_script_course('test_unschedule')
-    section = Section(test_data)
+    section = util.get_test_section(test_data)
     recording_schedule = RecordingSchedule(section)
 
     # DELETE PRE-EXISTING DATA
@@ -53,8 +52,7 @@ class TestUnschedule:
         self.kaltura_page.reset_test_data(self.term, self.recording_schedule)
 
     def test_delete_old_diablo_data(self):
-        util.reset_sign_up_test_data(self.test_data)
-        util.set_meeting_location(self.section, self.section.meetings[0])
+        util.reset_sign_up_test_data(self.section)
         self.recording_schedule.approval_status = RecordingApprovalStatus.NOT_INVITED
         self.recording_schedule.scheduling_status = RecordingSchedulingStatus.NOT_SCHEDULED
 

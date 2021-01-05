@@ -84,7 +84,7 @@ class SignUpPage(DiabloPages):
 
     @staticmethod
     def not_authorized_msg_locator(section):
-        return By.XPATH, f'//span[text()="Sorry, you are unauthorized to view the course {section.code}, {section.number}."]'
+        return By.XPATH, f'//span[contains(text(), "Sorry, you are unauthorized to view the course {section.code}, {section.number}")]'
 
     @staticmethod
     def expected_term_date_str(start_date, end_date):

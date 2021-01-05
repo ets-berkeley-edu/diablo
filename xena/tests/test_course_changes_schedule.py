@@ -41,7 +41,7 @@ from xena.test_utils import util
 class TestCourseScheduleChanges:
     real_test_data = util.get_test_script_course('test_course_changes_real')
     fake_test_data = util.get_test_script_course('test_course_changes_fake')
-    real_section = Section(real_test_data)
+    real_section = util.get_test_section(real_test_data)
     real_meeting = real_section.meetings[0]
     fake_section = Section(fake_test_data)
     fake_meeting = fake_section.meetings[0]
@@ -56,15 +56,12 @@ class TestCourseScheduleChanges:
     def test_delete_old_diablo_and_kaltura(self):
         self.kaltura_page.log_in_via_calnet()
         self.kaltura_page.reset_test_data(self.term, self.recording_sched)
-        util.reset_sign_up_test_data(self.real_test_data)
+        util.reset_sign_up_test_data(self.real_section)
         self.recording_sched.approval_status = RecordingApprovalStatus.NOT_INVITED
         self.recording_sched.scheduling_status = RecordingSchedulingStatus.NOT_SCHEDULED
 
-    def test_sis_data_refresh_pre_run(self):
-        self.jobs_page.load_page()
-        self.jobs_page.run_sis_data_refresh_job()
-
     def test_admin_emails_pre_run(self):
+        self.jobs_page.load_page()
         self.jobs_page.run_admin_emails_job()
 
     def test_instructor_emails_pre_run(self):
@@ -76,9 +73,6 @@ class TestCourseScheduleChanges:
     def test_delete_old_email(self):
         self.email_page.log_in()
         self.email_page.delete_all_messages()
-
-    def test_set_room(self):
-        util.set_meeting_location(self.real_section, self.real_meeting)
 
     def test_sign_up(self):
         self.ouija_page.load_page()
@@ -96,22 +90,16 @@ class TestCourseScheduleChanges:
         self.jobs_page.run_kaltura_job()
         util.get_kaltura_id(self.recording_sched, self.term)
 
-    def test_run_sis_job_to_revert_to_real_instr(self):
-        self.jobs_page.run_sis_data_refresh_job()
-
-    def test_set_room_again(self):
-        util.set_meeting_location(self.real_section, self.real_meeting)
-
-    def test_run_admin_email_job_with_instr_change(self):
+    def test_run_admin_email_job_post_scheduling(self):
         self.jobs_page.run_admin_emails_job()
 
-    def test_run_queued_email_job_with_instr_change(self):
+    def test_run_queued_email_job_post_scheduling(self):
         self.jobs_page.run_queued_emails_job()
 
     # SCHEDULED COURSE CHANGES MEETING TIME
 
     def test_set_fake_meeting_time(self):
-        util.set_course_meeting_time(self.fake_section, self.fake_section.meetings[0])
+        util.set_course_meeting_time(self.real_section, self.fake_section.meetings[0])
 
     def test_run_admin_email_job_with_new_times(self):
         self.jobs_page.load_page()
@@ -150,7 +138,7 @@ class TestCourseScheduleChanges:
         assert expected in actual
 
     def test_changes_page_new_sched(self):
-        dates = self.real_meeting.expected_recording_dates(self.fake_section.term)
+        dates = self.real_meeting.expected_recording_dates(self.real_section.term)
         start = dates[0]
         end = dates[-1]
         dates = f'{start.strftime("%Y-%m-%d")} to {end.strftime("%Y-%m-%d")}'
