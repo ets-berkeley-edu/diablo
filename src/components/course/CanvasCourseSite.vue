@@ -13,25 +13,25 @@
 </template>
 
 <script>
-  import {getKalturaCategory} from '@/api/kaltura'
+import {getKalturaCategory} from '@/api/kaltura'
 
-  export default {
-    name: 'CanvasCourseSite',
-    props: {
-      site: {
-        required: true,
-        type: Object
-      }
-    },
-    data: () => ({
-      kalturaCategory: undefined
-    }),
-    mounted() {
-      if (this.$currentUser.isAdmin) {
-        getKalturaCategory(this.site.courseSiteId).then(category => {
-          this.kalturaCategory = category
-        })
-      }
+export default {
+  name: 'CanvasCourseSite',
+  props: {
+    site: {
+      required: true,
+      type: Object
+    }
+  },
+  data: () => ({
+    kalturaCategory: undefined
+  }),
+  mounted() {
+    if (this.$currentUser.isAdmin) {
+      getKalturaCategory(this.site.courseSiteId).then(category => {
+        this.kalturaCategory = category
+      })
     }
   }
+}
 </script>

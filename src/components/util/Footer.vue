@@ -36,10 +36,10 @@
 </template>
 
 <script>
-  import Context from '@/mixins/Context'
+import Context from '@/mixins/Context'
 
-  export default {
-    name: 'Footer',
-    mixins: [Context]
-  }
+export default {
+  name: 'Footer',
+  mixins: [Context]
+}
 </script>

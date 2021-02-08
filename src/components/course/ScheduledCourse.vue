@@ -82,46 +82,46 @@
 </template>
 
 <script>
-  import Context from '@/mixins/Context'
-  import TermsAgreementText from '@/components/util/TermsAgreementText'
-  import Utils from '@/mixins/Utils'
-  import {approve} from '@/api/course'
-  import CourseRoom from '@/components/course/CourseRoom'
+import Context from '@/mixins/Context'
+import TermsAgreementText from '@/components/util/TermsAgreementText'
+import Utils from '@/mixins/Utils'
+import {approve} from '@/api/course'
+import CourseRoom from '@/components/course/CourseRoom'
 
-  export default {
-    name: 'ScheduledCourse',
-    components: {CourseRoom, TermsAgreementText},
-    mixins: [Context, Utils],
-    props: {
-      afterApprove: {
-        required: true,
-        type: Function
-      },
-      course: {
-        required: true,
-        type: Object
-      }
+export default {
+  name: 'ScheduledCourse',
+  components: {CourseRoom, TermsAgreementText},
+  mixins: [Context, Utils],
+  props: {
+    afterApprove: {
+      required: true,
+      type: Function
     },
-    data: () => ({
-      adminAlerts: undefined,
-      agreedToTerms: false,
-      currentUserMustApprove: undefined,
-      isApproving: false
-    }),
-    created() {
-      const alertKeys = this.$_.filter(this.course.scheduled.alerts, alert => alert.includes('admin'))
-      this.adminAlerts = this.$_.map(alertKeys, key => this.$config.emailTemplateTypes[key].replace('Admin alert: ', ''))
-      this.currentUserMustApprove = !this.$currentUser.isAdmin && !this.$_.includes(this.$_.map(this.course.approvals, 'approvedBy.uid'), this.$currentUser.uid)
-    },
-    methods: {
-      approve() {
-        this.isApproving = true
-        approve(this.course.scheduled.publishType, this.course.scheduled.recordingType, this.course.sectionId).then(data => {
-          this.isApproving = this.currentUserMustApprove = false
-          this.afterApprove(data)
-          this.alertScreenReader('Approval received.')
-        })
-      }
+    course: {
+      required: true,
+      type: Object
+    }
+  },
+  data: () => ({
+    adminAlerts: undefined,
+    agreedToTerms: false,
+    currentUserMustApprove: undefined,
+    isApproving: false
+  }),
+  created() {
+    const alertKeys = this.$_.filter(this.course.scheduled.alerts, alert => alert.includes('admin'))
+    this.adminAlerts = this.$_.map(alertKeys, key => this.$config.emailTemplateTypes[key].replace('Admin alert: ', ''))
+    this.currentUserMustApprove = !this.$currentUser.isAdmin && !this.$_.includes(this.$_.map(this.course.approvals, 'approvedBy.uid'), this.$currentUser.uid)
+  },
+  methods: {
+    approve() {
+      this.isApproving = true
+      approve(this.course.scheduled.publishType, this.course.scheduled.recordingType, this.course.sectionId).then(data => {
+        this.isApproving = this.currentUserMustApprove = false
+        this.afterApprove(data)
+        this.alertScreenReader('Approval received.')
+      })
     }
   }
+}
 </script>

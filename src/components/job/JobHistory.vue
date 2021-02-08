@@ -73,41 +73,41 @@
 </template>
 
 <script>
-  import Context from '@/mixins/Context'
+import Context from '@/mixins/Context'
 
-  export default {
-    name: 'JobHistory',
-    mixins: [Context],
-    props: {
-      jobHistory: {
-        required: true,
-        type: Array
-      },
-      refreshing: {
-        required: true,
-        type: Boolean
-      }
+export default {
+  name: 'JobHistory',
+  mixins: [Context],
+  props: {
+    jobHistory: {
+      required: true,
+      type: Array
     },
-    data: () => ({
-      dateFormat: 'dddd, MMMM Do, h:mm:ss a',
-      headers: [
-        {text: 'Key', value: 'jobKey'},
-        {text: 'Status', value: 'failed'},
-        {text: 'Started', value: 'startedAt'},
-        {text: 'Finished', value: 'finishedAt'}
-      ],
-      options: {
-        page: 1,
-        itemsPerPage: 50
-      },
-      pageCount: undefined,
-      richardPryor: false,
-      search: undefined
-    }),
-    watch: {
-      search(value) {
-        this.richardPryor = value && value.toLowerCase() === 'the bed is on my foot'
-      }
+    refreshing: {
+      required: true,
+      type: Boolean
+    }
+  },
+  data: () => ({
+    dateFormat: 'dddd, MMMM Do, h:mm:ss a',
+    headers: [
+      {text: 'Key', value: 'jobKey'},
+      {text: 'Status', value: 'failed'},
+      {text: 'Started', value: 'startedAt'},
+      {text: 'Finished', value: 'finishedAt'}
+    ],
+    options: {
+      page: 1,
+      itemsPerPage: 50
+    },
+    pageCount: undefined,
+    richardPryor: false,
+    search: undefined
+  }),
+  watch: {
+    search(value) {
+      this.richardPryor = value && value.toLowerCase() === 'the bed is on my foot'
     }
   }
+}
 </script>

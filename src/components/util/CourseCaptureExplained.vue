@@ -15,7 +15,7 @@
 </template>
 
 <script>
-  export default {
-    name: 'CourseCaptureExplained'
-  }
+export default {
+  name: 'CourseCaptureExplained'
+}
 </script>

@@ -13,24 +13,24 @@
 </template>
 
 <script>
-  import Context from '@/mixins/Context'
-  import ObsoleteSchedule from '@/components/course/ObsoleteSchedule'
-  import PageTitle from '@/components/util/PageTitle'
-  import {getCourseChanges} from '@/api/course'
+import Context from '@/mixins/Context'
+import ObsoleteSchedule from '@/components/course/ObsoleteSchedule'
+import PageTitle from '@/components/util/PageTitle'
+import {getCourseChanges} from '@/api/course'
 
-  export default {
-    name: 'CourseChanges',
-    mixins: [Context],
-    components: {ObsoleteSchedule, PageTitle},
-    data: () => ({
-      courses: undefined
-    }),
-    created() {
-      this.$loading()
-      getCourseChanges(this.$config.currentTermId).then(data => {
-        this.courses = data
-        this.$ready('Course Changes')
-      })
-    }
+export default {
+  name: 'CourseChanges',
+  mixins: [Context],
+  components: {ObsoleteSchedule, PageTitle},
+  data: () => ({
+    courses: undefined
+  }),
+  created() {
+    this.$loading()
+    getCourseChanges(this.$config.currentTermId).then(data => {
+      this.courses = data
+      this.$ready('Course Changes')
+    })
   }
+}
 </script>

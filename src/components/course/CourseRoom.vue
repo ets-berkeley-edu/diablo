@@ -46,23 +46,23 @@
 </template>
 
 <script>
-  import Utils from '@/mixins/Utils'
+import Utils from '@/mixins/Utils'
 
-  export default {
-    name: 'CourseRoom',
-    mixins: [Utils],
-    props: {
-      course: {
-        required: true,
-        type: Object
-      },
-      hideEligibility: {
-        type: Boolean
-      },
-      room: {
-        required: true,
-        type: Object
-      }
+export default {
+  name: 'CourseRoom',
+  mixins: [Utils],
+  props: {
+    course: {
+      required: true,
+      type: Object
+    },
+    hideEligibility: {
+      type: Boolean
+    },
+    room: {
+      required: true,
+      type: Object
     }
   }
+}
 </script>

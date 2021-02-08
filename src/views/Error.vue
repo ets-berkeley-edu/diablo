@@ -21,14 +21,14 @@
 </template>
 
 <script>
-  export default {
-    name: 'Error',
-    data: () => ({
-      message: undefined
-    }),
-    mounted() {
-      this.message = this.$route.query.m
-      this.$ready('Error')
-    }
+export default {
+  name: 'Error',
+  data: () => ({
+    message: undefined
+  }),
+  mounted() {
+    this.message = this.$route.query.m
+    this.$ready('Error')
   }
+}
 </script>

@@ -77,33 +77,33 @@
 </template>
 
 <script>
-  export default {
-    name: 'Instructor',
-    props: {
-      course: {
-        required: true,
-        type: Object
-      },
-      id: {
-        default: null,
-        required: false,
-        type: String
-      },
-      instructor: {
-        required: true,
-        type: Object
-      }
+export default {
+  name: 'Instructor',
+  props: {
+    course: {
+      required: true,
+      type: Object
     },
-    data: () => ({
-      hasNotApprovedScheduled: undefined,
-      isEligibleCourse: undefined,
-      isStillTeachingCourse: undefined
-    }),
-    created() {
-      const uid = this.instructor.uid
-      this.hasNotApprovedScheduled = this.course.scheduled && this.instructor.wasSentInvite && !this.$_.includes(this.course.scheduled.instructorUids, uid)
-      this.isEligibleCourse = !!this.course.meetings.eligible.length
-      this.isStillTeachingCourse = this.$_.includes(this.$_.map(this.course.instructors, 'uid'), uid)
+    id: {
+      default: null,
+      required: false,
+      type: String
+    },
+    instructor: {
+      required: true,
+      type: Object
     }
+  },
+  data: () => ({
+    hasNotApprovedScheduled: undefined,
+    isEligibleCourse: undefined,
+    isStillTeachingCourse: undefined
+  }),
+  created() {
+    const uid = this.instructor.uid
+    this.hasNotApprovedScheduled = this.course.scheduled && this.instructor.wasSentInvite && !this.$_.includes(this.course.scheduled.instructorUids, uid)
+    this.isEligibleCourse = !!this.course.meetings.eligible.length
+    this.isStillTeachingCourse = this.$_.includes(this.$_.map(this.course.instructors, 'uid'), uid)
   }
+}
 </script>

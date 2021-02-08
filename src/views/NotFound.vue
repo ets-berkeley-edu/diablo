@@ -25,15 +25,15 @@
 </template>
 
 <script>
-  import Context from '@/mixins/Context'
-  import PageTitle from '@/components/util/PageTitle'
+import Context from '@/mixins/Context'
+import PageTitle from '@/components/util/PageTitle'
 
-  export default {
-    name: 'NotFound',
-    mixins: [Context],
-    components: {PageTitle},
-    mounted() {
-      this.$ready('Page not found')
-    }
+export default {
+  name: 'NotFound',
+  mixins: [Context],
+  components: {PageTitle},
+  mounted() {
+    this.$ready('Page not found')
   }
+}
 </script>

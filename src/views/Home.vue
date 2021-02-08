@@ -82,39 +82,39 @@
 </template>
 
 <script>
-  import Context from '@/mixins/Context'
-  import Days from '@/components/util/Days'
-  import PageTitle from '@/components/util/PageTitle'
-  import Utils from '@/mixins/Utils'
+import Context from '@/mixins/Context'
+import Days from '@/components/util/Days'
+import PageTitle from '@/components/util/PageTitle'
+import Utils from '@/mixins/Utils'
 
-  export default {
-    name: 'Home',
-    mixins: [Context, Utils],
-    components: {Days, PageTitle},
-    data: () => ({
-      courses: undefined,
-      headers: [
-        {text: 'Course', value: 'label'},
-        {text: 'Title', value: 'title'},
-        {text: 'Instructors', value: 'instructors'},
-        {text: 'Room', value: 'room'},
-        {text: 'Days', value: 'days'},
-        {text: 'Time', value: 'time'}
-      ],
-      pageTitle: undefined
-    }),
-    created() {
-      this.$loading()
-      this.courses = this.$_.filter(this.$currentUser.courses, course => {
-        course.courseCodes = this.getCourseCodes(course)
-        const isEligible = course.meetings.eligible.length
-        if (isEligible) {
-          course.meeting = this.getDisplayMeetings(course)[0]
-        }
-        return isEligible
-      })
-      this.pageTitle = `Your ${this.$config.currentTermName} Course${this.courses.length === 1 ? '' : 's'} Eligible for Capture`
-      this.$ready(this.pageTitle)
-    }
+export default {
+  name: 'Home',
+  mixins: [Context, Utils],
+  components: {Days, PageTitle},
+  data: () => ({
+    courses: undefined,
+    headers: [
+      {text: 'Course', value: 'label'},
+      {text: 'Title', value: 'title'},
+      {text: 'Instructors', value: 'instructors'},
+      {text: 'Room', value: 'room'},
+      {text: 'Days', value: 'days'},
+      {text: 'Time', value: 'time'}
+    ],
+    pageTitle: undefined
+  }),
+  created() {
+    this.$loading()
+    this.courses = this.$_.filter(this.$currentUser.courses, course => {
+      course.courseCodes = this.getCourseCodes(course)
+      const isEligible = course.meetings.eligible.length
+      if (isEligible) {
+        course.meeting = this.getDisplayMeetings(course)[0]
+      }
+      return isEligible
+    })
+    this.pageTitle = `Your ${this.$config.currentTermName} Course${this.courses.length === 1 ? '' : 's'} Eligible for Capture`
+    this.$ready(this.pageTitle)
   }
+}
 </script>

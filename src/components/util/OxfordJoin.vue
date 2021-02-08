@@ -9,13 +9,13 @@
 </template>
 
 <script>
-  export default {
-    name: 'OxfordJoin',
-    props: {
-      items: {
-        required: true,
-        type: Array
-      }
+export default {
+  name: 'OxfordJoin',
+  props: {
+    items: {
+      required: true,
+      type: Array
     }
   }
+}
 </script>

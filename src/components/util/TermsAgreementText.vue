@@ -15,7 +15,7 @@
 </template>
 
 <script>
-  export default {
-    name: 'CourseCaptureAgreement'
-  }
+export default {
+  name: 'CourseCaptureAgreement'
+}
 </script>

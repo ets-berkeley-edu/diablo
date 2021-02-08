@@ -52,40 +52,40 @@
 </template>
 
 <script>
-  import Context from '@/mixins/Context'
-  import PageTitle from '@/components/util/PageTitle'
-  import {getAllRooms} from '@/api/room'
+import Context from '@/mixins/Context'
+import PageTitle from '@/components/util/PageTitle'
+import {getAllRooms} from '@/api/room'
 
-  export default {
-    name: 'Rooms',
-    mixins: [Context],
-    components: {PageTitle},
-    data: () => ({
-      headers: [
-        {text: 'Room', value: 'location', class: 'w-50'},
-        {text: 'Kaltura Resource', value: 'kalturaResourceId', class: 'w-20'},
-        {text: 'Capability', value: 'capabilityName', class: 'w-20'},
-        {text: 'Auditorium', value: 'isAuditorium', class: 'w-10'}
-      ],
-      options: {
-        page: 1,
-        itemsPerPage: 50
-      },
-      pageCount: undefined,
-      rooms: undefined,
-      search: undefined
-    }),
-    computed: {
-      adviseAgainstRoom237() {
-        return this.$_.startsWith(this.search, '237 ') && this.$_.size(this.search) < 6
-      }
+export default {
+  name: 'Rooms',
+  mixins: [Context],
+  components: {PageTitle},
+  data: () => ({
+    headers: [
+      {text: 'Room', value: 'location', class: 'w-50'},
+      {text: 'Kaltura Resource', value: 'kalturaResourceId', class: 'w-20'},
+      {text: 'Capability', value: 'capabilityName', class: 'w-20'},
+      {text: 'Auditorium', value: 'isAuditorium', class: 'w-10'}
+    ],
+    options: {
+      page: 1,
+      itemsPerPage: 50
     },
-    mounted() {
-      this.$loading()
-      getAllRooms().then(data => {
-        this.rooms = data
-        this.$ready('Rooms')
-      })
+    pageCount: undefined,
+    rooms: undefined,
+    search: undefined
+  }),
+  computed: {
+    adviseAgainstRoom237() {
+      return this.$_.startsWith(this.search, '237 ') && this.$_.size(this.search) < 6
     }
+  },
+  mounted() {
+    this.$loading()
+    getAllRooms().then(data => {
+      this.rooms = data
+      this.$ready('Rooms')
+    })
   }
+}
 </script>

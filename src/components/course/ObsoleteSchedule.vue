@@ -156,75 +156,75 @@
 </template>
 
 <script>
-  import CourseRoom from '@/components/course/CourseRoom'
-  import Days from '@/components/util/Days'
-  import Instructor from '@/components/course/Instructor'
-  import Utils from '@/mixins/Utils'
-  import {getCalnetUser} from '@/api/user'
-  import {getLastSuccessfulRun} from '@/api/job'
+import CourseRoom from '@/components/course/CourseRoom'
+import Days from '@/components/util/Days'
+import Instructor from '@/components/course/Instructor'
+import Utils from '@/mixins/Utils'
+import {getCalnetUser} from '@/api/user'
+import {getLastSuccessfulRun} from '@/api/job'
 
-  export default {
-    name: 'ObsoleteSchedule',
-    mixins: [Utils],
-    components: {CourseRoom, Days, Instructor},
-    props: {
-      course: {
-        required: true,
-        type: Object
-      }
-    },
-    data: () => ({
-      instructorsNew: [],
-      instructorsObsolete: [],
-      isRoomObsolete: undefined,
-      meetings: undefined,
-      sisDataImportDate: undefined,
-      summary: undefined
-    }),
-    created() {
-      const hasObsoleteRoom = this.course.scheduled.hasObsoleteRoom
-      let considerations = {
-        instructors: this.course.scheduled.hasObsoleteInstructors,
-        room: hasObsoleteRoom
-      }
-      if (!hasObsoleteRoom) {
-        considerations = {...considerations, ...{
-          dates: this.course.scheduled.hasObsoleteDates,
-          times: this.course.scheduled.hasObsoleteTimes
-        }}
-      }
-      const obsoleteItems = this.$_.keys(this.$_.pickBy(considerations))
-      this.summary = this.$_.capitalize(`${this.oxfordJoin(obsoleteItems)} ${hasObsoleteRoom && obsoleteItems.length === 1 ? 'is' : 'are'} obsolete.`)
-      this.meetings = this.course.meetings.eligible.concat(this.course.meetings.ineligible)
-      this.isRoomObsolete = !this.isInRoom(this.course, this.course.scheduled.room)
-      getLastSuccessfulRun('sis_data_refresh').then(data => {
-        this.sisDataImportDate = data
+export default {
+  name: 'ObsoleteSchedule',
+  mixins: [Utils],
+  components: {CourseRoom, Days, Instructor},
+  props: {
+    course: {
+      required: true,
+      type: Object
+    }
+  },
+  data: () => ({
+    instructorsNew: [],
+    instructorsObsolete: [],
+    isRoomObsolete: undefined,
+    meetings: undefined,
+    sisDataImportDate: undefined,
+    summary: undefined
+  }),
+  created() {
+    const hasObsoleteRoom = this.course.scheduled.hasObsoleteRoom
+    let considerations = {
+      instructors: this.course.scheduled.hasObsoleteInstructors,
+      room: hasObsoleteRoom
+    }
+    if (!hasObsoleteRoom) {
+      considerations = {...considerations, ...{
+        dates: this.course.scheduled.hasObsoleteDates,
+        times: this.course.scheduled.hasObsoleteTimes
+      }}
+    }
+    const obsoleteItems = this.$_.keys(this.$_.pickBy(considerations))
+    this.summary = this.$_.capitalize(`${this.oxfordJoin(obsoleteItems)} ${hasObsoleteRoom && obsoleteItems.length === 1 ? 'is' : 'are'} obsolete.`)
+    this.meetings = this.course.meetings.eligible.concat(this.course.meetings.ineligible)
+    this.isRoomObsolete = !this.isInRoom(this.course, this.course.scheduled.room)
+    getLastSuccessfulRun('sis_data_refresh').then(data => {
+      this.sisDataImportDate = data
+    })
+    if (this.course.scheduled.hasObsoleteInstructors) {
+      const courseUids = this.$_.map(this.course.instructors, 'uid')
+      const scheduledUids = this.course.scheduled.instructorUids
+      this.addUsers(this.instructorsNew, courseUids.filter(uid => !scheduledUids.includes(uid)))
+      this.addUsers(this.instructorsObsolete, scheduledUids.filter(uid => !courseUids.includes(uid)))
+    }
+  },
+  methods: {
+    addUsers(list, uids) {
+      this.$_.each(uids, uid => {
+        this.fetchUser(uid).then(user => list.push(user))
       })
-      if (this.course.scheduled.hasObsoleteInstructors) {
-        const courseUids = this.$_.map(this.course.instructors, 'uid')
-        const scheduledUids = this.course.scheduled.instructorUids
-        this.addUsers(this.instructorsNew, courseUids.filter(uid => !scheduledUids.includes(uid)))
-        this.addUsers(this.instructorsObsolete, scheduledUids.filter(uid => !courseUids.includes(uid)))
-      }
     },
-    methods: {
-      addUsers(list, uids) {
-        this.$_.each(uids, uid => {
-          this.fetchUser(uid).then(user => list.push(user))
+    fetchUser(uid) {
+      return new Promise(resolve => {
+        this.$_.each(this.course.instructors, instructor => {
+          if (instructor.uid === uid) {
+            resolve(instructor)
+          }
         })
-      },
-      fetchUser(uid) {
-        return new Promise(resolve => {
-          this.$_.each(this.course.instructors, instructor => {
-            if (instructor.uid === uid) {
-              resolve(instructor)
-            }
-          })
-          getCalnetUser(uid).then(user => {
-            resolve(user)
-          })
+        getCalnetUser(uid).then(user => {
+          resolve(user)
         })
-      }
+      })
     }
   }
+}
 </script>

@@ -10,23 +10,23 @@
 </template>
 
 <script>
-  export default {
-    name: 'DisableJobToggle',
-    props: {
-      job: {
-        required: true,
-        type: Object
-      },
-      onChange: {
-        required: true,
-        type: Function
-      }
+export default {
+  name: 'DisableJobToggle',
+  props: {
+    job: {
+      required: true,
+      type: Object
     },
-    data: () => ({
-      enabled: undefined
-    }),
-    created() {
-      this.enabled = !this.job.disabled
+    onChange: {
+      required: true,
+      type: Function
     }
+  },
+  data: () => ({
+    enabled: undefined
+  }),
+  created() {
+    this.enabled = !this.job.disabled
   }
+}
 </script>

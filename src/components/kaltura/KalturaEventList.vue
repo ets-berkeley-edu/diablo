@@ -139,13 +139,13 @@
 </template>
 
 <script>
-  export default {
-    name: 'KalturaEventList',
-    props: {
-      events: {
-        required: true,
-        type: Array
-      }
+export default {
+  name: 'KalturaEventList',
+  props: {
+    events: {
+      required: true,
+      type: Array
     }
   }
+}
 </script>

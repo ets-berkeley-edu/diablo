@@ -52,24 +52,24 @@
 </template>
 
 <script>
-  import Utils from '@/mixins/Utils'
-  import {getEmailTemplateCodes} from '@/api/email'
+import Utils from '@/mixins/Utils'
+import {getEmailTemplateCodes} from '@/api/email'
 
-  export default {
-    name: 'TemplateCodesDialog',
-    mixins: [Utils],
-    data: () => ({
-      dialog: false,
-      columns: undefined
-    }),
-    created() {
-      getEmailTemplateCodes().then(codes => {
-        const chunk = Math.ceil(codes.length / 2)
-        this.columns = [
-          codes.slice(0, chunk),
-          codes.slice(chunk, chunk + codes.length)
-        ]
-      })
-    }
+export default {
+  name: 'TemplateCodesDialog',
+  mixins: [Utils],
+  data: () => ({
+    dialog: false,
+    columns: undefined
+  }),
+  created() {
+    getEmailTemplateCodes().then(codes => {
+      const chunk = Math.ceil(codes.length / 2)
+      this.columns = [
+        codes.slice(0, chunk),
+        codes.slice(chunk, chunk + codes.length)
+      ]
+    })
   }
+}
 </script>
