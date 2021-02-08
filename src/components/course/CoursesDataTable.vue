@@ -182,92 +182,92 @@
 </template>
 
 <script>
-  import Context from '@/mixins/Context'
-  import Days from '@/components/util/Days'
-  import Instructor from '@/components/course/Instructor'
-  import ToggleOptOut from '@/components/course/ToggleOptOut'
-  import Utils from '@/mixins/Utils'
+import Context from '@/mixins/Context'
+import Days from '@/components/util/Days'
+import Instructor from '@/components/course/Instructor'
+import ToggleOptOut from '@/components/course/ToggleOptOut'
+import Utils from '@/mixins/Utils'
 
-  export default {
-    name: 'CoursesDataTable',
-    components: {Days, Instructor, ToggleOptOut},
-    mixins: [Context, Utils],
-    props: {
-      courses: {
-        required: true,
-        type: Array
-      },
-      includeRoomColumn: {
-        required: true,
-        type: Boolean
-      },
-      messageForCourses: {
-        default: undefined,
-        type: String
-      },
-      onToggleOptOut: {
-        required: true,
-        type: Function
-      },
-      refreshing: {
-        required: true,
-        type: Boolean
-      },
-      searchText: {
-        default: undefined,
-        type: String
+export default {
+  name: 'CoursesDataTable',
+  components: {Days, Instructor, ToggleOptOut},
+  mixins: [Context, Utils],
+  props: {
+    courses: {
+      required: true,
+      type: Array
+    },
+    includeRoomColumn: {
+      required: true,
+      type: Boolean
+    },
+    messageForCourses: {
+      default: undefined,
+      type: String
+    },
+    onToggleOptOut: {
+      required: true,
+      type: Function
+    },
+    refreshing: {
+      required: true,
+      type: Boolean
+    },
+    searchText: {
+      default: undefined,
+      type: String
+    }
+  },
+  data: () => ({
+    headers: [
+      {text: 'Course', value: 'label'},
+      {text: 'Section', value: 'sectionId', class: 'w-10'},
+      {text: 'Room', value: 'room.location'},
+      {text: 'Days', sortable: false},
+      {text: 'Time', sortable: false},
+      {text: 'Status', class: 'w-10', sortable: false},
+      {text: 'Instructor(s)', value: 'instructorNames', sortable: false},
+      {text: 'Publish', value: 'publishTypeNames', class: 'w-10'},
+      {text: 'Opt out', value: 'hasOptedOut', sortable: false}
+    ],
+    pageCount: undefined,
+    pageCurrent: 1,
+    selectedRows: [],
+    selectedFilter: 'Not Invited'
+  }),
+  watch: {
+    refreshing(value) {
+      if (!value) {
+        // False value means that the refresh just ended in the parent component and we can proceed.
+        this.refresh()
       }
+    }
+  },
+  created() {
+    this.refresh()
+  },
+  methods: {
+    mdc(course) {
+      return {'border-bottom-zero': course.approvals.length}
     },
-    data: () => ({
-      headers: [
-        {text: 'Course', value: 'label'},
-        {text: 'Section', value: 'sectionId', class: 'w-10'},
-        {text: 'Room', value: 'room.location'},
-        {text: 'Days', sortable: false},
-        {text: 'Time', sortable: false},
-        {text: 'Status', class: 'w-10', sortable: false},
-        {text: 'Instructor(s)', value: 'instructorNames', sortable: false},
-        {text: 'Publish', value: 'publishTypeNames', class: 'w-10'},
-        {text: 'Opt out', value: 'hasOptedOut', sortable: false}
-      ],
-      pageCount: undefined,
-      pageCurrent: 1,
-      selectedRows: [],
-      selectedFilter: 'Not Invited'
-    }),
-    watch: {
-      refreshing(value) {
-        if (!value) {
-          // False value means that the refresh just ended in the parent component and we can proceed.
-          this.refresh()
-        }
-      }
+    refresh() {
+      this.pageCurrent = 1
+      this.headers = this.includeRoomColumn ? this.headers : this.$_.filter(this.headers, h => h.text !== 'Room')
+      this.$_.each(this.courses, course => {
+        course.instructorNames = this.$_.map(course.instructors, 'name')
+        course.isSelectable = !course.hasOptedOut
+        course.publishTypeNames = course.approvals.length ? this.$_.last(course.approvals).publishTypeName : null
+        const meetings = this.getDisplayMeetings(course)
+        course.displayMeetings = meetings
+        course.room = meetings.length && meetings[0].room ? meetings[0].room : null
+      })
     },
-    created() {
-      this.refresh()
-    },
-    methods: {
-      mdc(course) {
-        return {'border-bottom-zero': course.approvals.length}
-      },
-      refresh() {
-        this.pageCurrent = 1
-        this.headers = this.includeRoomColumn ? this.headers : this.$_.filter(this.headers, h => h.text !== 'Room')
-        this.$_.each(this.courses, course => {
-          course.instructorNames = this.$_.map(course.instructors, 'name')
-          course.isSelectable = !course.hasOptedOut
-          course.publishTypeNames = course.approvals.length ? this.$_.last(course.approvals).publishTypeName : null
-          const meetings = this.getDisplayMeetings(course)
-          course.displayMeetings = meetings
-          course.room = meetings.length && meetings[0].room ? meetings[0].room : null
-        })
-      },
-      tdc(course) {
-        return {
-          'border-bottom-zero': this.getDisplayMeetings(course).length > 1 || course.approvals.length,
-          'pt-3 pb-3': this.$_.size(course.courseCodes) > 1
-        }
+    tdc(course) {
+      return {
+        'border-bottom-zero': this.getDisplayMeetings(course).length > 1 || course.approvals.length,
+        'pt-3 pb-3': this.$_.size(course.courseCodes) > 1
       }
     }
   }
+}
 </script>

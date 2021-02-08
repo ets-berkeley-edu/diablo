@@ -86,63 +86,63 @@
 </template>
 
 <script>
-  import Context from '@/mixins/Context'
-  import PageTitle from '@/components/util/PageTitle'
-  import Utils from '@/mixins/Utils'
-  import {deleteTemplate, getAllEmailTemplates, sendTestEmail} from '@/api/email'
+import Context from '@/mixins/Context'
+import PageTitle from '@/components/util/PageTitle'
+import Utils from '@/mixins/Utils'
+import {deleteTemplate, getAllEmailTemplates, sendTestEmail} from '@/api/email'
 
-  export default {
-    name: 'EmailTemplates',
-    mixins: [Context, Utils],
-    components: {PageTitle},
-    data: () => ({
-      headers: [
-        {text: 'Name', value: 'name'},
-        {text: 'Subject Line', value: 'subjectLine'},
-        {text: 'Type', value: 'typeName'},
-        {text: 'Created', value: 'createdAt'},
-        {text: 'Test', class: 'pl-5 pr-0 mr-0'},
-        {text: 'Delete', class: 'pl-5 pr-0 mr-0'}
-      ],
-      emailTemplates: undefined,
-      emailTemplateTypes: undefined,
-      refreshing: false
-    }),
-    mounted() {
-      this.$loading()
-      this.loadAllEmailTemplates().then(() => {
-        this.$ready('Email Templates')
+export default {
+  name: 'EmailTemplates',
+  mixins: [Context, Utils],
+  components: {PageTitle},
+  data: () => ({
+    headers: [
+      {text: 'Name', value: 'name'},
+      {text: 'Subject Line', value: 'subjectLine'},
+      {text: 'Type', value: 'typeName'},
+      {text: 'Created', value: 'createdAt'},
+      {text: 'Test', class: 'pl-5 pr-0 mr-0'},
+      {text: 'Delete', class: 'pl-5 pr-0 mr-0'}
+    ],
+    emailTemplates: undefined,
+    emailTemplateTypes: undefined,
+    refreshing: false
+  }),
+  mounted() {
+    this.$loading()
+    this.loadAllEmailTemplates().then(() => {
+      this.$ready('Email Templates')
+    })
+  },
+  methods: {
+    createNewTemplate(type) {
+      this.goToPath(`/email/template/create/${type}`)
+    },
+    deleteEmailTemplate(templateId) {
+      this.refreshing = true
+      deleteTemplate(templateId).then(() => {
+        this.alertScreenReader('Email template deleted.')
+        this.loadAllEmailTemplates().then(() => {
+          this.refreshing = false
+        })
       })
     },
-    methods: {
-      createNewTemplate(type) {
-        this.goToPath(`/email/template/create/${type}`)
-      },
-      deleteEmailTemplate(templateId) {
-        this.refreshing = true
-        deleteTemplate(templateId).then(() => {
-          this.alertScreenReader('Email template deleted.')
-          this.loadAllEmailTemplates().then(() => {
-            this.refreshing = false
-          })
-        })
-      },
-      loadAllEmailTemplates() {
-        return getAllEmailTemplates().then(data => {
-          this.emailTemplates = data
-          this.emailTemplateTypes = []
-          const disableTheseTypes = this.$_.map(this.emailTemplates, 'templateType')
-          const isDisabled = type => {
-            return this.$_.includes(disableTheseTypes, type)
-          }
-          this.emailTemplateTypes = this.getSelectOptionsFromObject(this.$config.emailTemplateTypes, isDisabled)
-        })
-      },
-      sendTestEmail(templateId) {
-        sendTestEmail(templateId).then(() => {
-          this.snackbarOpen('Test email sent. Check your inbox.')
-        })
-      }
+    loadAllEmailTemplates() {
+      return getAllEmailTemplates().then(data => {
+        this.emailTemplates = data
+        this.emailTemplateTypes = []
+        const disableTheseTypes = this.$_.map(this.emailTemplates, 'templateType')
+        const isDisabled = type => {
+          return this.$_.includes(disableTheseTypes, type)
+        }
+        this.emailTemplateTypes = this.getSelectOptionsFromObject(this.$config.emailTemplateTypes, isDisabled)
+      })
+    },
+    sendTestEmail(templateId) {
+      sendTestEmail(templateId).then(() => {
+        this.snackbarOpen('Test email sent. Check your inbox.')
+      })
     }
   }
+}
 </script>

@@ -26,30 +26,30 @@
 </template>
 
 <script>
-  export default {
-    name: 'PageTitle',
-    props: {
-      icon: {
-        required: true,
-        type: String
-      },
-      text: {
-        required: true,
-        type: String
-      }
+export default {
+  name: 'PageTitle',
+  props: {
+    icon: {
+      required: true,
+      type: String
     },
-    data: () => ({
-      is420: undefined
-    }),
-    created() {
-      this.is420 = this.$moment().format('H:mm') === '16:20'
-    },
-    methods: {
-      smile() {
-        window.open(this.$config.easterEgg420, '_blank')
-      }
+    text: {
+      required: true,
+      type: String
+    }
+  },
+  data: () => ({
+    is420: undefined
+  }),
+  created() {
+    this.is420 = this.$moment().format('H:mm') === '16:20'
+  },
+  methods: {
+    smile() {
+      window.open(this.$config.easterEgg420, '_blank')
     }
   }
+}
 </script>
 
 <style scoped>

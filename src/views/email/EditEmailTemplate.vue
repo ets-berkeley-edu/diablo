@@ -77,90 +77,90 @@
 </template>
 
 <script>
-  import Context from '@/mixins/Context'
-  import PageTitle from '@/components/util/PageTitle'
-  import TemplateCodesDialog from '@/components/email/TemplateCodesDialog'
-  import Utils from '@/mixins/Utils'
-  import { TiptapVuetify, Heading, Bold, Italic, Strike, Underline, Code, Paragraph, BulletList, OrderedList, ListItem, Link, Blockquote, HardBreak, HorizontalRule, History } from 'tiptap-vuetify'
-  import {createEmailTemplate, getEmailTemplate, updateEmailTemplate} from '@/api/email'
+import Context from '@/mixins/Context'
+import PageTitle from '@/components/util/PageTitle'
+import TemplateCodesDialog from '@/components/email/TemplateCodesDialog'
+import Utils from '@/mixins/Utils'
+import { TiptapVuetify, Heading, Bold, Italic, Strike, Underline, Code, Paragraph, BulletList, OrderedList, ListItem, Link, Blockquote, HardBreak, HorizontalRule, History } from 'tiptap-vuetify'
+import {createEmailTemplate, getEmailTemplate, updateEmailTemplate} from '@/api/email'
 
-  export default {
-    name: 'CreateEmailTemplate',
-    components: {PageTitle, TemplateCodesDialog, TiptapVuetify},
-    mixins: [Context, Utils],
-    data: () => ({
-      extensions: [
-        History,
-        Blockquote,
-        Link,
-        Underline,
-        Strike,
-        Italic,
-        ListItem,
-        BulletList,
-        OrderedList,
-        [Heading, {
-          options: {
-            levels: [1, 2, 3]
-          }
-        }],
-        Bold,
-        Code,
-        HorizontalRule,
-        Paragraph,
-        HardBreak
-      ],
-      latest: false,
-      message: undefined,
-      name: undefined,
-      pageTitle: undefined,
-      subjectLine: undefined,
-      templateId: undefined,
-      templateType: undefined,
-      typeName: undefined
-    }),
-    computed: {
-      disableSave() {
-        return !this.$_.trim(this.subjectLine) || !this.$_.trim(this.name) || !this.stripHtmlAndTrim(this.message)
-      }
-    },
-    created() {
-      this.$loading()
-      this.templateType = this.$_.get(this.$route, 'params.type')
-      this.typeName = this.$_.get(this.$config.emailTemplateTypes, this.templateType)
-      this.templateId = this.$_.get(this.$route, 'params.id')
-      this.pageTitle = `${this.templateId ? 'Edit' : 'Create'} Email Template`
-      if (this.typeName) {
+export default {
+  name: 'CreateEmailTemplate',
+  components: {PageTitle, TemplateCodesDialog, TiptapVuetify},
+  mixins: [Context, Utils],
+  data: () => ({
+    extensions: [
+      History,
+      Blockquote,
+      Link,
+      Underline,
+      Strike,
+      Italic,
+      ListItem,
+      BulletList,
+      OrderedList,
+      [Heading, {
+        options: {
+          levels: [1, 2, 3]
+        }
+      }],
+      Bold,
+      Code,
+      HorizontalRule,
+      Paragraph,
+      HardBreak
+    ],
+    latest: false,
+    message: undefined,
+    name: undefined,
+    pageTitle: undefined,
+    subjectLine: undefined,
+    templateId: undefined,
+    templateType: undefined,
+    typeName: undefined
+  }),
+  computed: {
+    disableSave() {
+      return !this.$_.trim(this.subjectLine) || !this.$_.trim(this.name) || !this.stripHtmlAndTrim(this.message)
+    }
+  },
+  created() {
+    this.$loading()
+    this.templateType = this.$_.get(this.$route, 'params.type')
+    this.typeName = this.$_.get(this.$config.emailTemplateTypes, this.templateType)
+    this.templateId = this.$_.get(this.$route, 'params.id')
+    this.pageTitle = `${this.templateId ? 'Edit' : 'Create'} Email Template`
+    if (this.typeName) {
+      this.$ready(`${this.pageTitle} '${this.typeName}'`)
+    } else {
+      getEmailTemplate(this.templateId).then(data => {
+        this.name = data.name
+        this.subjectLine = data.subjectLine
+        this.message = data.message
+        this.templateType = data.templateType
+        this.typeName = this.$_.get(this.$config.emailTemplateTypes, data.templateType)
         this.$ready(`${this.pageTitle} '${this.typeName}'`)
-      } else {
-        getEmailTemplate(this.templateId).then(data => {
-          this.name = data.name
-          this.subjectLine = data.subjectLine
-          this.message = data.message
-          this.templateType = data.templateType
-          this.typeName = this.$_.get(this.$config.emailTemplateTypes, data.templateType)
-          this.$ready(`${this.pageTitle} '${this.typeName}'`)
-        })
-      }
+      })
+    }
+  },
+  methods: {
+    cancel() {
+      this.alertScreenReader('Cancelled.')
+      this.$router.push({ path: '/email/templates' })
     },
-    methods: {
-      cancel() {
-        this.alertScreenReader('Cancelled.')
+    createTemplate() {
+      const done = action => {
+        this.alertScreenReader(`Email template '${this.templateType}' ${action}.`)
         this.$router.push({ path: '/email/templates' })
-      },
-      createTemplate() {
-        const done = action => {
-          this.alertScreenReader(`Email template '${this.templateType}' ${action}.`)
-          this.$router.push({ path: '/email/templates' })
-        }
-        if (this.disableSave) {
-          this.reportError('You must complete the required form fields.')
-        } else if (this.templateId) {
-          updateEmailTemplate(this.templateId, this.templateType, this.name, this.subjectLine, this.message).then(() => done('updated'))
-        } else {
-          createEmailTemplate(this.templateType, this.name, this.subjectLine, this.message).then(() => done('created'))
-        }
+      }
+      if (this.disableSave) {
+        this.reportError('You must complete the required form fields.')
+      } else if (this.templateId) {
+        updateEmailTemplate(this.templateId, this.templateType, this.name, this.subjectLine, this.message).then(() => done('updated'))
+      } else {
+        createEmailTemplate(this.templateType, this.name, this.subjectLine, this.message).then(() => done('created'))
       }
     }
   }
+}
 </script>

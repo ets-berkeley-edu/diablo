@@ -84,30 +84,30 @@
 </template>
 
 <script>
-  import Context from '@/mixins/Context'
-  import Spinner from '@/components/util/Spinner'
-  import Utils from '@/mixins/Utils'
-  import {getRoom} from '@/api/room'
+import Context from '@/mixins/Context'
+import Spinner from '@/components/util/Spinner'
+import Utils from '@/mixins/Utils'
+import {getRoom} from '@/api/room'
 
-  export default {
-    name: 'PrintableRoom',
-    components: {Spinner},
-    mixins: [Context, Utils],
-    data: () => ({
-      courses: undefined,
-      room: undefined
-    }),
-    created() {
-      this.$loading()
-      let id = this.$_.get(this.$route, 'params.id')
-      getRoom(id).then(room => {
-        this.room = room
-        this.courses = this.$_.filter(this.room.courses, 'scheduled')
-        this.$_.each(this.courses, course => {
-          course.displayMeetings = this.getDisplayMeetings(course)
-        })
-        this.$ready(`${this.room.location} printable`)
+export default {
+  name: 'PrintableRoom',
+  components: {Spinner},
+  mixins: [Context, Utils],
+  data: () => ({
+    courses: undefined,
+    room: undefined
+  }),
+  created() {
+    this.$loading()
+    let id = this.$_.get(this.$route, 'params.id')
+    getRoom(id).then(room => {
+      this.room = room
+      this.courses = this.$_.filter(this.room.courses, 'scheduled')
+      this.$_.each(this.courses, course => {
+        course.displayMeetings = this.getDisplayMeetings(course)
       })
-    }
+      this.$ready(`${this.room.location} printable`)
+    })
   }
+}
 </script>

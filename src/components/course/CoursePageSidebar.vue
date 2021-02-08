@@ -159,70 +159,70 @@
 </template>
 
 <script>
-  import CanvasCourseSite from '@/components/course/CanvasCourseSite'
-  import Context from '@/mixins/Context'
-  import Days from '@/components/util/Days'
-  import OxfordJoin from '@/components/util/OxfordJoin'
-  import Utils from '@/mixins/Utils'
-  import {unschedule} from '@/api/course'
-  import {getAllEmailTemplates, queueEmail} from '@/api/email'
+import CanvasCourseSite from '@/components/course/CanvasCourseSite'
+import Context from '@/mixins/Context'
+import Days from '@/components/util/Days'
+import OxfordJoin from '@/components/util/OxfordJoin'
+import Utils from '@/mixins/Utils'
+import {unschedule} from '@/api/course'
+import {getAllEmailTemplates, queueEmail} from '@/api/email'
 
-  export default {
-    name: 'CoursePageSidebar',
-    components: {CanvasCourseSite, Days, OxfordJoin},
-    mixins: [Context, Utils],
-    props: {
-      afterUnschedule: {
-        required: true,
-        type: Function
-      },
-      course: {
-        required: true,
-        type: Object
-      }
+export default {
+  name: 'CoursePageSidebar',
+  components: {CanvasCourseSite, Days, OxfordJoin},
+  mixins: [Context, Utils],
+  props: {
+    afterUnschedule: {
+      required: true,
+      type: Function
     },
-    data: () => ({
-      displayMeetings: undefined,
-      isInviteTemplateAvailable: undefined,
-      showUnscheduleModal: false
-    }),
-    computed: {
-      offerSendInvite() {
-        return this.$currentUser.isAdmin
-          && this.course.termId === this.$config.currentTermId
-          && this.course.instructors.length
-          && !this.course.hasOptedOut
-          && this.course.meetings.eligible.length === 1
-          && !this.$_.isUndefined(this.isInviteTemplateAvailable)
-      },
-      offerUnschedule() {
-        return this.$currentUser.isAdmin
-          && this.course.termId === this.$config.currentTermId
-          && (this.course.scheduled || this.course.hasNecessaryApprovals)
-      }
+    course: {
+      required: true,
+      type: Object
+    }
+  },
+  data: () => ({
+    displayMeetings: undefined,
+    isInviteTemplateAvailable: undefined,
+    showUnscheduleModal: false
+  }),
+  computed: {
+    offerSendInvite() {
+      return this.$currentUser.isAdmin
+        && this.course.termId === this.$config.currentTermId
+        && this.course.instructors.length
+        && !this.course.hasOptedOut
+        && this.course.meetings.eligible.length === 1
+        && !this.$_.isUndefined(this.isInviteTemplateAvailable)
     },
-    created() {
-      this.displayMeetings = this.getDisplayMeetings(this.course)
-      if (this.$currentUser.isAdmin) {
-        getAllEmailTemplates().then(data => {
-          this.isInviteTemplateAvailable = this.$_.find(data, ['templateType', 'invitation']) || null
-        })
-      }
+    offerUnschedule() {
+      return this.$currentUser.isAdmin
+        && this.course.termId === this.$config.currentTermId
+        && (this.course.scheduled || this.course.hasNecessaryApprovals)
+    }
+  },
+  created() {
+    this.displayMeetings = this.getDisplayMeetings(this.course)
+    if (this.$currentUser.isAdmin) {
+      getAllEmailTemplates().then(data => {
+        this.isInviteTemplateAvailable = this.$_.find(data, ['templateType', 'invitation']) || null
+      })
+    }
+  },
+  methods: {
+    sendInvite() {
+      queueEmail('invitation', this.course.sectionId, this.course.termId).then(data => {
+        this.snackbarOpen(data.message)
+      })
     },
-    methods: {
-      sendInvite() {
-        queueEmail('invitation', this.course.sectionId, this.course.termId).then(data => {
-          this.snackbarOpen(data.message)
-        })
-      },
-      unscheduleCourse() {
-        this.$loading()
-        this.showUnscheduleModal = false
-        unschedule(this.course.termId, this.course.sectionId).then(data => {
-          this.alertScreenReader(`${this.course.label} unscheduled.`)
-          this.afterUnschedule(data)
-        })
-      }
+    unscheduleCourse() {
+      this.$loading()
+      this.showUnscheduleModal = false
+      unschedule(this.course.termId, this.course.sectionId).then(data => {
+        this.alertScreenReader(`${this.course.label} unscheduled.`)
+        this.afterUnschedule(data)
+      })
     }
   }
+}
 </script>

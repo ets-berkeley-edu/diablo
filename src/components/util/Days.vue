@@ -9,19 +9,19 @@
 </template>
 
 <script>
-  export default {
-    name: 'Days',
-    props: {
-      namesOfDays: {
-        required: true,
-        type: Array
-      },
-      omitComma: {
-        type: Boolean
-      }
+export default {
+  name: 'Days',
+  props: {
+    namesOfDays: {
+      required: true,
+      type: Array
     },
-    methods: {
-      showComma: (list, index) => list.length > 1 && index < list.length - 1
+    omitComma: {
+      type: Boolean
     }
+  },
+  methods: {
+    showComma: (list, index) => list.length > 1 && index < list.length - 1
   }
+}
 </script>

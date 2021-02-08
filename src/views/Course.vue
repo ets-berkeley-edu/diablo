@@ -230,118 +230,118 @@
 </template>
 
 <script>
-  import Context from '@/mixins/Context'
-  import CourseCaptureExplained from '@/components/util/CourseCaptureExplained'
-  import CoursePageSidebar from '@/components/course/CoursePageSidebar'
-  import PageTitle from '@/components/util/PageTitle'
-  import ScheduledCourse from '@/components/course/ScheduledCourse'
-  import TermsAgreementText from '@/components/util/TermsAgreementText'
-  import Utils from '@/mixins/Utils'
-  import {approve, getCourse} from '@/api/course'
-  import {getAuditoriums} from '@/api/room'
+import Context from '@/mixins/Context'
+import CourseCaptureExplained from '@/components/util/CourseCaptureExplained'
+import CoursePageSidebar from '@/components/course/CoursePageSidebar'
+import PageTitle from '@/components/util/PageTitle'
+import ScheduledCourse from '@/components/course/ScheduledCourse'
+import TermsAgreementText from '@/components/util/TermsAgreementText'
+import Utils from '@/mixins/Utils'
+import {approve, getCourse} from '@/api/course'
+import {getAuditoriums} from '@/api/room'
 
-  export default {
-    name: 'Course',
-    mixins: [Context, Utils],
-    components: {CourseCaptureExplained, CoursePageSidebar, PageTitle, ScheduledCourse, TermsAgreementText},
-    data: () => ({
-      agreedToTerms: false,
-      approvalNeededNames: undefined,
-      approvedByAdmins: undefined,
-      approvedByInstructorNames: undefined,
-      auditoriums: undefined,
-      course: undefined,
-      courseDisplayTitle: null,
-      hasCurrentUserApproved: undefined,
-      isApproving: false,
-      multipleEligibleMeetings: undefined,
-      publishType: undefined,
-      publishTypeOptions: undefined,
-      recordingType: undefined,
-      recordingTypeOptions: undefined
-    }),
-    computed: {
-      disableSubmit() {
-        return !this.agreedToTerms || !this.publishType || !this.recordingType
-      },
-      isCurrentTerm() {
-        return this.course.termId === this.$config.currentTermId
-      },
-      mostRecentApproval() {
-        return this.$_.last(this.course.approvals)
-      },
-      queuedForScheduling() {
-        return this.course.hasNecessaryApprovals && !this.course.scheduled
-      },
-      showSignUpForm() {
-        return !this.course.scheduled && !this.hasCurrentUserApproved
-      }
+export default {
+  name: 'Course',
+  mixins: [Context, Utils],
+  components: {CourseCaptureExplained, CoursePageSidebar, PageTitle, ScheduledCourse, TermsAgreementText},
+  data: () => ({
+    agreedToTerms: false,
+    approvalNeededNames: undefined,
+    approvedByAdmins: undefined,
+    approvedByInstructorNames: undefined,
+    auditoriums: undefined,
+    course: undefined,
+    courseDisplayTitle: null,
+    hasCurrentUserApproved: undefined,
+    isApproving: false,
+    multipleEligibleMeetings: undefined,
+    publishType: undefined,
+    publishTypeOptions: undefined,
+    recordingType: undefined,
+    recordingTypeOptions: undefined
+  }),
+  computed: {
+    disableSubmit() {
+      return !this.agreedToTerms || !this.publishType || !this.recordingType
     },
-    created() {
-      this.$loading()
-      const termId = this.$_.get(this.$route, 'params.termId')
-      const sectionId = this.$_.get(this.$route, 'params.sectionId')
-      getCourse(termId, sectionId).then(data => {
+    isCurrentTerm() {
+      return this.course.termId === this.$config.currentTermId
+    },
+    mostRecentApproval() {
+      return this.$_.last(this.course.approvals)
+    },
+    queuedForScheduling() {
+      return this.course.hasNecessaryApprovals && !this.course.scheduled
+    },
+    showSignUpForm() {
+      return !this.course.scheduled && !this.hasCurrentUserApproved
+    }
+  },
+  created() {
+    this.$loading()
+    const termId = this.$_.get(this.$route, 'params.termId')
+    const sectionId = this.$_.get(this.$route, 'params.sectionId')
+    getCourse(termId, sectionId).then(data => {
+      this.render(data)
+      this.publishTypeOptions = []
+      this.$_.each(this.$config.publishTypeOptions, (text, value) => {
+        this.publishTypeOptions.push({text, value})
+      })
+      getAuditoriums().then(data => {
+        this.auditoriums = data
+      })
+    })
+  },
+  methods: {
+    afterUnschedule(data) {
+      this.publishType = undefined
+      this.recordingType = undefined
+      this.render(data)
+    },
+    approve() {
+      this.isApproving = true
+      approve(this.publishType, this.recordingType, this.course.sectionId).then(data => {
         this.render(data)
-        this.publishTypeOptions = []
-        this.$_.each(this.$config.publishTypeOptions, (text, value) => {
-          this.publishTypeOptions.push({text, value})
-        })
-        getAuditoriums().then(data => {
-          this.auditoriums = data
-        })
+        this.isApproving = false
+        this.alertScreenReader(`You have approved ${this.courseDisplayTitle} for Course Capture.`)
       })
     },
-    methods: {
-      afterUnschedule(data) {
-        this.publishType = undefined
-        this.recordingType = undefined
-        this.render(data)
-      },
-      approve() {
-        this.isApproving = true
-        approve(this.publishType, this.recordingType, this.course.sectionId).then(data => {
-          this.render(data)
-          this.isApproving = false
-          this.alertScreenReader(`You have approved ${this.courseDisplayTitle} for Course Capture.`)
-        })
-      },
-      getApproverName(approval) {
-        return approval.approvedBy.uid === this.$currentUser.uid ? 'you' : approval.approvedBy.name
-      },
-      render(data) {
-        this.$loading()
-        this.agreedToTerms = this.$currentUser.isAdmin
-        this.course = data
-        this.meeting = this.course.meetings.eligible[0] || this.course.meetings.ineligible[0]
-        this.multipleEligibleMeetings = (this.course.meetings.eligible.length > 1)
-        const approvedByInstructors = this.$_.filter(this.course.approvals, a => !a.wasApprovedByAdmin)
-        const approvedByUIDs = this.$_.map(this.course.approvals, 'approvedBy.uid')
-        const approvedByInstructorUIDs = this.$_.map(approvedByInstructors, 'approvedBy.uid')
-        this.approvedByAdmins = this.$_.filter(this.course.approvals, a => a.wasApprovedByAdmin)
-        this.approvalNeededNames = []
-        this.$_.each(this.course.instructors, instructor => {
-          if (!this.$_.includes(approvedByInstructorUIDs, instructor.uid)) {
-            this.approvalNeededNames.push(instructor.uid === this.$currentUser.uid ? 'you' : instructor.name)
-          }
-        })
-        this.approvedByInstructorNames = this.$_.map(approvedByInstructors, approval => this.getApproverName(approval))
-        this.courseDisplayTitle = this.getCourseCodes(this.course)[0]
-        this.hasCurrentUserApproved = this.$_.includes(approvedByUIDs, this.$currentUser.uid)
-        this.recordingTypeOptions = this.$_.map(this.meeting.room.recordingTypeOptions, (text, value) => {
-          return {text, value}
-        })
-        if (this.course.approvals.length) {
-          const mostRecent = this.$_.last(this.course.approvals)
-          this.publishType = mostRecent.publishType
-          this.recordingType = mostRecent.recordingType
-        } else {
-          if (this.recordingTypeOptions.length === 1) {
-            this.recordingType = this.recordingTypeOptions[0].value
-          }
+    getApproverName(approval) {
+      return approval.approvedBy.uid === this.$currentUser.uid ? 'you' : approval.approvedBy.name
+    },
+    render(data) {
+      this.$loading()
+      this.agreedToTerms = this.$currentUser.isAdmin
+      this.course = data
+      this.meeting = this.course.meetings.eligible[0] || this.course.meetings.ineligible[0]
+      this.multipleEligibleMeetings = (this.course.meetings.eligible.length > 1)
+      const approvedByInstructors = this.$_.filter(this.course.approvals, a => !a.wasApprovedByAdmin)
+      const approvedByUIDs = this.$_.map(this.course.approvals, 'approvedBy.uid')
+      const approvedByInstructorUIDs = this.$_.map(approvedByInstructors, 'approvedBy.uid')
+      this.approvedByAdmins = this.$_.filter(this.course.approvals, a => a.wasApprovedByAdmin)
+      this.approvalNeededNames = []
+      this.$_.each(this.course.instructors, instructor => {
+        if (!this.$_.includes(approvedByInstructorUIDs, instructor.uid)) {
+          this.approvalNeededNames.push(instructor.uid === this.$currentUser.uid ? 'you' : instructor.name)
         }
-        this.$ready(this.courseDisplayTitle)
+      })
+      this.approvedByInstructorNames = this.$_.map(approvedByInstructors, approval => this.getApproverName(approval))
+      this.courseDisplayTitle = this.getCourseCodes(this.course)[0]
+      this.hasCurrentUserApproved = this.$_.includes(approvedByUIDs, this.$currentUser.uid)
+      this.recordingTypeOptions = this.$_.map(this.meeting.room.recordingTypeOptions, (text, value) => {
+        return {text, value}
+      })
+      if (this.course.approvals.length) {
+        const mostRecent = this.$_.last(this.course.approvals)
+        this.publishType = mostRecent.publishType
+        this.recordingType = mostRecent.recordingType
+      } else {
+        if (this.recordingTypeOptions.length === 1) {
+          this.recordingType = this.recordingTypeOptions[0].value
+        }
       }
+      this.$ready(this.courseDisplayTitle)
     }
   }
+}
 </script>

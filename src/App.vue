@@ -14,12 +14,12 @@
 </template>
 
 <script>
-  import Context from '@/mixins/Context'
+import Context from '@/mixins/Context'
 
-  export default {
-    name: 'App',
-    mixins: [Context]
-  }
+export default {
+  name: 'App',
+  mixins: [Context]
+}
 </script>
 
 <style>

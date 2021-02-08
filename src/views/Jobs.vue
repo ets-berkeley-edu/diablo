@@ -125,111 +125,111 @@
 </template>
 
 <script>
-  import Context from '@/mixins/Context'
-  import DisableJobToggle from '@/components/job/DisableJobToggle'
-  import JobHistory from '@/components/job/JobHistory'
-  import PageTitle from '@/components/util/PageTitle'
-  import Utils from '@/mixins/Utils'
-  import {getJobHistory, getJobSchedule, setJobDisabled, startJob, updateJobSchedule} from '@/api/job'
+import Context from '@/mixins/Context'
+import DisableJobToggle from '@/components/job/DisableJobToggle'
+import JobHistory from '@/components/job/JobHistory'
+import PageTitle from '@/components/util/PageTitle'
+import Utils from '@/mixins/Utils'
+import {getJobHistory, getJobSchedule, setJobDisabled, startJob, updateJobSchedule} from '@/api/job'
 
-  export default {
-    name: 'Jobs',
-    components: {DisableJobToggle, JobHistory, PageTitle},
-    mixins: [Context, Utils],
-    data: () => ({
-      disableScheduleSave: false,
-      editJob: undefined,
-      editJobDialog: false,
-      headers: [
-        {},
-        {text: 'Name', value: 'name'},
-        {text: 'Description', value: 'description'},
-        {text: 'Schedule', value: 'schedule'},
-        {text: 'Enabled'}
-      ],
-      jobHistory: undefined,
-      jobSchedule: undefined,
-      refresher: undefined,
-      refreshing: false
-    }),
-    watch: {
-      editJob: {
-        deep: true,
-        handler(job) {
-          this.disableScheduleSave = !this.$_.get(job, 'schedule.value') || parseInt(job.schedule.value) < 0
-        }
-      }
-    },
-    created() {
-      this.$loading()
-      getJobSchedule().then(data => {
-        this.jobSchedule = data
-        this.refresh(true).then(() => {
-          this.$ready('The Engine Room')
-        })
-      })
-    },
-    destroyed() {
-      clearTimeout(this.refresher)
-    },
-    methods: {
-      isRunning(jobKey) {
-        return !!this.$_.find(this.jobHistory, h => h.jobKey === jobKey && !h.finishedAt)
-      },
-      refresh(quietly) {
-        this.refreshing = true
-        return getJobHistory().then(data => {
-          this.jobHistory = data
-          this.refreshing = false
-          if (!quietly) {
-            this.alertScreenReader('Job History refreshed')
-          }
-          this.scheduleRefresh()
-        })
-      },
-      runJob(job) {
-        this.jobHistory.unshift({
-          jobKey: job.key,
-          failed: false,
-          startedAt: this.$moment()
-        })
-        startJob(job.key).then(() => {})
-        const jobName = this.$_.find(this.jobSchedule.jobs, ['key', job.key]).name
-        this.snackbarOpen(`${jobName} job started`)
-      },
-      scheduleEditCancel() {
-        this.editJob = undefined
-        this.editJobDialog = false
-        this.alertScreenReader('Cancelled')
-      },
-      scheduleEditOpen(job) {
-        this.editJob = this.$_.cloneDeep(job)
-        this.editJobDialog = true
-        this.alertScreenReader(`Opened dialog to edit job ${job.name}`)
-      },
-      scheduleEditSave() {
-        updateJobSchedule(
-          this.editJob.id,
-          this.editJob.schedule.type,
-          this.editJob.schedule.value
-        ).then(() => {
-          const match = this.$_.find(this.jobSchedule.jobs, ['id', this.editJob.id])
-          match.schedule = this.editJob.schedule
-          this.editJob = undefined
-          this.editJobDialog = false
-          this.alertScreenReader(`Job '${match.name}' was updated.`)
-        })
-      },
-      scheduleRefresh() {
-        clearTimeout(this.refresher)
-        this.refresher = setTimeout(this.refresh, 5000)
-      },
-      toggleDisabled(job, isDisabled) {
-        setJobDisabled(job.id, isDisabled).then(data => {
-          job.disabled = data.disabled
-          this.alertScreenReader(`Job '${job.name}' ${job.disabled ? 'disabled' : 'enabled'}`)
-        })
+export default {
+  name: 'Jobs',
+  components: {DisableJobToggle, JobHistory, PageTitle},
+  mixins: [Context, Utils],
+  data: () => ({
+    disableScheduleSave: false,
+    editJob: undefined,
+    editJobDialog: false,
+    headers: [
+      {},
+      {text: 'Name', value: 'name'},
+      {text: 'Description', value: 'description'},
+      {text: 'Schedule', value: 'schedule'},
+      {text: 'Enabled'}
+    ],
+    jobHistory: undefined,
+    jobSchedule: undefined,
+    refresher: undefined,
+    refreshing: false
+  }),
+  watch: {
+    editJob: {
+      deep: true,
+      handler(job) {
+        this.disableScheduleSave = !this.$_.get(job, 'schedule.value') || parseInt(job.schedule.value) < 0
       }
     }
+  },
+  created() {
+    this.$loading()
+    getJobSchedule().then(data => {
+      this.jobSchedule = data
+      this.refresh(true).then(() => {
+        this.$ready('The Engine Room')
+      })
+    })
+  },
+  destroyed() {
+    clearTimeout(this.refresher)
+  },
+  methods: {
+    isRunning(jobKey) {
+      return !!this.$_.find(this.jobHistory, h => h.jobKey === jobKey && !h.finishedAt)
+    },
+    refresh(quietly) {
+      this.refreshing = true
+      return getJobHistory().then(data => {
+        this.jobHistory = data
+        this.refreshing = false
+        if (!quietly) {
+          this.alertScreenReader('Job History refreshed')
+        }
+        this.scheduleRefresh()
+      })
+    },
+    runJob(job) {
+      this.jobHistory.unshift({
+        jobKey: job.key,
+        failed: false,
+        startedAt: this.$moment()
+      })
+      startJob(job.key).then(() => {})
+      const jobName = this.$_.find(this.jobSchedule.jobs, ['key', job.key]).name
+      this.snackbarOpen(`${jobName} job started`)
+    },
+    scheduleEditCancel() {
+      this.editJob = undefined
+      this.editJobDialog = false
+      this.alertScreenReader('Cancelled')
+    },
+    scheduleEditOpen(job) {
+      this.editJob = this.$_.cloneDeep(job)
+      this.editJobDialog = true
+      this.alertScreenReader(`Opened dialog to edit job ${job.name}`)
+    },
+    scheduleEditSave() {
+      updateJobSchedule(
+        this.editJob.id,
+        this.editJob.schedule.type,
+        this.editJob.schedule.value
+      ).then(() => {
+        const match = this.$_.find(this.jobSchedule.jobs, ['id', this.editJob.id])
+        match.schedule = this.editJob.schedule
+        this.editJob = undefined
+        this.editJobDialog = false
+        this.alertScreenReader(`Job '${match.name}' was updated.`)
+      })
+    },
+    scheduleRefresh() {
+      clearTimeout(this.refresher)
+      this.refresher = setTimeout(this.refresh, 5000)
+    },
+    toggleDisabled(job, isDisabled) {
+      setJobDisabled(job.id, isDisabled).then(data => {
+        job.disabled = data.disabled
+        this.alertScreenReader(`Job '${job.name}' ${job.disabled ? 'disabled' : 'enabled'}`)
+      })
+    }
   }
+}
 </script>

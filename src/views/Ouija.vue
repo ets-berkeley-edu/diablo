@@ -75,60 +75,60 @@
 </template>
 
 <script>
-  import CoursesDataTable from '@/components/course/CoursesDataTable'
-  import Context from '@/mixins/Context'
-  import PageTitle from '@/components/util/PageTitle'
-  import Utils from '@/mixins/Utils'
-  import {downloadCSV, getCourses} from '@/api/course'
+import CoursesDataTable from '@/components/course/CoursesDataTable'
+import Context from '@/mixins/Context'
+import PageTitle from '@/components/util/PageTitle'
+import Utils from '@/mixins/Utils'
+import {downloadCSV, getCourses} from '@/api/course'
 
-  export default {
-    name: 'Ouija',
-    mixins: [Context, Utils],
-    components: {CoursesDataTable, PageTitle},
-    data: () => ({
-      courses: undefined,
-      isDownloading: false,
-      refreshing: undefined,
-      searchText: '',
-      selectedFilter: 'Not Invited'
-    }),
-    created() {
-      this.$loading()
-      this.refresh().then(() => {
-        this.$ready('Ouija Board')
+export default {
+  name: 'Ouija',
+  mixins: [Context, Utils],
+  components: {CoursesDataTable, PageTitle},
+  data: () => ({
+    courses: undefined,
+    isDownloading: false,
+    refreshing: undefined,
+    searchText: '',
+    selectedFilter: 'Not Invited'
+  }),
+  created() {
+    this.$loading()
+    this.refresh().then(() => {
+      this.$ready('Ouija Board')
+    })
+  },
+  methods: {
+    downloadCSV() {
+      this.isDownloading = true
+      downloadCSV(this.selectedFilter, this.$config.currentTermId).then(() => {
+        this.snackbarOpen('The CSV file has been downloaded.')
+        this.isDownloading = false
       })
     },
-    methods: {
-      downloadCSV() {
-        this.isDownloading = true
-        downloadCSV(this.selectedFilter, this.$config.currentTermId).then(() => {
-          this.snackbarOpen('The CSV file has been downloaded.')
-          this.isDownloading = false
-        })
-      },
-      onToggleOptOut(course) {
-        if (!course.hasOptedOut && this.selectedFilter === 'Do Not Email') {
-          let indexOf = this.courses.findIndex(c => c.sectionId === course.sectionId)
-          if (indexOf >= 0) {
-            this.courses.splice(indexOf, 1)
-          }
-          this.snackbarOpen(`${course.label} removed from list.`)
+    onToggleOptOut(course) {
+      if (!course.hasOptedOut && this.selectedFilter === 'Do Not Email') {
+        let indexOf = this.courses.findIndex(c => c.sectionId === course.sectionId)
+        if (indexOf >= 0) {
+          this.courses.splice(indexOf, 1)
         }
-      },
-      refresh() {
-        this.refreshing = true
-        return getCourses(this.selectedFilter, this.$config.currentTermId).then(data => {
-          this.courses = data
-          this.$_.each(this.courses, course => {
-            // In support of search, we index nested course data
-            course.courseCodes = this.getCourseCodes(course)
-            course.instructorNames = this.$_.map(course.instructors, 'name')
-            course.publishTypeNames = course.approvals.length ? this.$_.last(course.approvals).publishTypeName : null
-            course.isSelectable = !course.hasOptedOut
-          })
-          this.refreshing = false
-        })
+        this.snackbarOpen(`${course.label} removed from list.`)
       }
+    },
+    refresh() {
+      this.refreshing = true
+      return getCourses(this.selectedFilter, this.$config.currentTermId).then(data => {
+        this.courses = data
+        this.$_.each(this.courses, course => {
+          // In support of search, we index nested course data
+          course.courseCodes = this.getCourseCodes(course)
+          course.instructorNames = this.$_.map(course.instructors, 'name')
+          course.publishTypeNames = course.approvals.length ? this.$_.last(course.approvals).publishTypeName : null
+          course.isSelectable = !course.hasOptedOut
+        })
+        this.refreshing = false
+      })
     }
   }
+}
 </script>

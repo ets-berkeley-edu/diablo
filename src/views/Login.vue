@@ -80,60 +80,60 @@
 </template>
 
 <script>
-  import Snackbar from '@/components/util/Snackbar'
-  import Utils from '@/mixins/Utils'
-  import { devAuthLogIn, getCasLoginURL } from '@/api/auth'
-  import Context from '@/mixins/Context'
+import Snackbar from '@/components/util/Snackbar'
+import Utils from '@/mixins/Utils'
+import { devAuthLogIn, getCasLoginURL } from '@/api/auth'
+import Context from '@/mixins/Context'
 
-  export default {
-    name: 'Login',
-    components: {Snackbar},
-    mixins: [Context, Utils],
-    data: () => ({
-      devAuthUid: undefined,
-      devAuthPassword: undefined
-    }),
-    created() {
-      this.$putFocusNextTick('page-title')
-      const error = this.$_.get(this.$route, 'query.error')
-      if (error) {
-        this.reportError(error)
+export default {
+  name: 'Login',
+  components: {Snackbar},
+  mixins: [Context, Utils],
+  data: () => ({
+    devAuthUid: undefined,
+    devAuthPassword: undefined
+  }),
+  created() {
+    this.$putFocusNextTick('page-title')
+    const error = this.$_.get(this.$route, 'query.error')
+    if (error) {
+      this.reportError(error)
+    } else {
+      this.alertScreenReader('Welcome to Course Capture. Please log in.')
+    }
+  },
+  methods: {
+    devAuth() {
+      let uid = this.$_.trim(this.devAuthUid)
+      let password = this.$_.trim(this.devAuthPassword)
+      if (uid && password) {
+        devAuthLogIn(uid, password).then(data => {
+                                           if (data.isAuthenticated) {
+                                             const redirect = this.$_.get(this.$router, 'currentRoute.query.redirect')
+                                             this.$router.push({ path: redirect || '/home' }, this.$_.noop)
+                                             this.alertScreenReader('Welcome to Course Capture')
+                                           } else {
+                                             const message = this.$_.get(data, 'response.data.message') || this.$_.get(data, 'message') || 'Authentication failed'
+                                             this.reportError(message)
+                                           }
+                                         },
+                                         error => {
+                                           this.reportError(error)
+                                         }
+        )
+      } else if (uid) {
+        this.reportError('Password required')
+        this.$putFocusNextTick('dev-auth-password')
       } else {
-        this.alertScreenReader('Welcome to Course Capture. Please log in.')
+        this.reportError('Both UID and password are required')
+        this.$putFocusNextTick('dev-auth-uid')
       }
     },
-    methods: {
-      devAuth() {
-        let uid = this.$_.trim(this.devAuthUid)
-        let password = this.$_.trim(this.devAuthPassword)
-        if (uid && password) {
-          devAuthLogIn(uid, password).then(data => {
-              if (data.isAuthenticated) {
-                const redirect = this.$_.get(this.$router, 'currentRoute.query.redirect')
-                this.$router.push({ path: redirect || '/home' }, this.$_.noop)
-                this.alertScreenReader('Welcome to Course Capture')
-              } else {
-                const message = this.$_.get(data, 'response.data.message') || this.$_.get(data, 'message') || 'Authentication failed'
-                this.reportError(message)
-              }
-            },
-            error => {
-              this.reportError(error)
-            }
-          )
-        } else if (uid) {
-          this.reportError('Password required')
-          this.$putFocusNextTick('dev-auth-password')
-        } else {
-          this.reportError('Both UID and password are required')
-          this.$putFocusNextTick('dev-auth-uid')
-        }
-      },
-      logIn() {
-        getCasLoginURL().then(data => window.location.href = data.casLoginUrl)
-      }
+    logIn() {
+      getCasLoginURL().then(data => window.location.href = data.casLoginUrl)
     }
   }
+}
 </script>
 
 <style scoped>

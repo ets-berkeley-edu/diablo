@@ -108,59 +108,59 @@
 </template>
 
 <script>
-  import Context from '@/mixins/Context'
-  import Footer from '@/components/util/Footer'
-  import Snackbar from '@/components/util/Snackbar'
-  import Spinner from '@/components/util/Spinner'
-  import Util from '@/mixins/Utils'
-  import {getCasLogoutUrl} from '@/api/auth'
+import Context from '@/mixins/Context'
+import Footer from '@/components/util/Footer'
+import Snackbar from '@/components/util/Snackbar'
+import Spinner from '@/components/util/Spinner'
+import Util from '@/mixins/Utils'
+import {getCasLogoutUrl} from '@/api/auth'
 
-  export default {
-    name: 'BaseView',
-    components: {Footer, Snackbar, Spinner},
-    mixins: [Context, Util],
-    data: () => ({
-      navItems: undefined,
-    }),
-    created() {
-      this.prefersColorScheme()
-      this.navItems = this.$currentUser.courses.length ? [{ title: 'Home', icon: 'mdi-home', path: '/home' }] : []
-      if (this.$currentUser.isAdmin) {
-        this.navItems = this.navItems.concat([
-          { title: 'Ouija Board', icon: 'mdi-auto-fix', path: '/ouija' },
-          { title: 'Rooms', icon: 'mdi-domain', path: '/rooms' },
-          { title: 'Course Changes', icon: 'mdi-directions-fork', path: '/changes' },
-          { title: 'The Attic', icon: 'mdi-candle', path: '/attic' }
-        ])
-      } else {
-        this.$_.each(this.$currentUser.courses, course => {
-          if (course.meetings.eligible.length) {
-            this.navItems.push({
-              title: this.getCourseCodes(course)[0],
-              icon: 'mdi-video-plus',
-              path: `/course/${this.$config.currentTermId}/${course.sectionId}`
-            })
-          }
-        })
+export default {
+  name: 'BaseView',
+  components: {Footer, Snackbar, Spinner},
+  mixins: [Context, Util],
+  data: () => ({
+    navItems: undefined,
+  }),
+  created() {
+    this.prefersColorScheme()
+    this.navItems = this.$currentUser.courses.length ? [{ title: 'Home', icon: 'mdi-home', path: '/home' }] : []
+    if (this.$currentUser.isAdmin) {
+      this.navItems = this.navItems.concat([
+        { title: 'Ouija Board', icon: 'mdi-auto-fix', path: '/ouija' },
+        { title: 'Rooms', icon: 'mdi-domain', path: '/rooms' },
+        { title: 'Course Changes', icon: 'mdi-directions-fork', path: '/changes' },
+        { title: 'The Attic', icon: 'mdi-candle', path: '/attic' }
+      ])
+    } else {
+      this.$_.each(this.$currentUser.courses, course => {
+        if (course.meetings.eligible.length) {
+          this.navItems.push({
+            title: this.getCourseCodes(course)[0],
+            icon: 'mdi-video-plus',
+            path: `/course/${this.$config.currentTermId}/${course.sectionId}`
+          })
+        }
+      })
+    }
+  },
+  methods: {
+    logOut() {
+      this.alertScreenReader('Logging out')
+      getCasLogoutUrl().then(data => window.location.href = data.casLogoutUrl)
+    },
+    prefersColorScheme() {
+      const mq = window.matchMedia('(prefers-color-scheme: dark)')
+      this.$vuetify.theme.dark = mq.matches
+      if (typeof mq.addEventListener === 'function') {
+        mq.addEventListener('change', e => this.$vuetify.theme.dark = e.matches)
       }
     },
-    methods: {
-      logOut() {
-        this.alertScreenReader('Logging out')
-        getCasLogoutUrl().then(data => window.location.href = data.casLogoutUrl)
-      },
-      prefersColorScheme() {
-        const mq = window.matchMedia('(prefers-color-scheme: dark)')
-        this.$vuetify.theme.dark = mq.matches
-        if (typeof mq.addEventListener === 'function') {
-          mq.addEventListener('change', e => this.$vuetify.theme.dark = e.matches)
-        }
-      },
-      toRoute(path) {
-        this.$router.push({ path }, this.$_.noop)
-      }
+    toRoute(path) {
+      this.$router.push({ path }, this.$_.noop)
     }
   }
+}
 </script>
 
 <style scoped>

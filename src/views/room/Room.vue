@@ -62,61 +62,61 @@
 </template>
 
 <script>
-  import Context from '@/mixins/Context'
-  import CoursesDataTable from '@/components/course/CoursesDataTable'
-  import KalturaEventList from '@/components/kaltura/KalturaEventList'
-  import PageTitle from '@/components/util/PageTitle'
-  import SelectRoomCapability from '@/components/room/SelectRoomCapability'
-  import Utils from '@/mixins/Utils'
-  import {getKalturaEventList, getRoom, setAuditorium} from '@/api/room'
+import Context from '@/mixins/Context'
+import CoursesDataTable from '@/components/course/CoursesDataTable'
+import KalturaEventList from '@/components/kaltura/KalturaEventList'
+import PageTitle from '@/components/util/PageTitle'
+import SelectRoomCapability from '@/components/room/SelectRoomCapability'
+import Utils from '@/mixins/Utils'
+import {getKalturaEventList, getRoom, setAuditorium} from '@/api/room'
 
-  export default {
-    name: 'Room',
-    mixins: [Context, Utils],
-    components: {KalturaEventList, CoursesDataTable, PageTitle, SelectRoomCapability},
-    data: () => ({
-      isAuditorium: undefined,
-      kalturaEventList: undefined,
-      offerPrintable: undefined,
-      room: undefined
-    }),
-    watch: {
-      isAuditorium(value) {
-        if (!this.loading) {
-          setAuditorium(this.room.id, value).then(() => {
-            this.room.isAuditorium = value
-          })
-        }
-      }
-    },
-    created() {
-      this.$loading()
-      let roomId = this.$_.get(this.$route, 'params.id')
-      getRoom(roomId).then(data => {
-        this.room = data
-        this.isAuditorium = data.isAuditorium
-        this.$_.each(this.room.courses, course => {
-          course.courseCodes = this.getCourseCodes(course)
+export default {
+  name: 'Room',
+  mixins: [Context, Utils],
+  components: {KalturaEventList, CoursesDataTable, PageTitle, SelectRoomCapability},
+  data: () => ({
+    isAuditorium: undefined,
+    kalturaEventList: undefined,
+    offerPrintable: undefined,
+    room: undefined
+  }),
+  watch: {
+    isAuditorium(value) {
+      if (!this.loading) {
+        setAuditorium(this.room.id, value).then(() => {
+          this.room.isAuditorium = value
         })
-        this.offerPrintable = !!this.$_.find(this.$_.filter(this.room.courses, 'scheduled'), c => c.scheduled.room.id === this.room.id)
-        this.$ready(data.location)
-        // The page is ready; Kaltura events will pop up in a sec.
-        if (this.room.kalturaResourceId) {
-          getKalturaEventList(this.room.kalturaResourceId).then(data => {
-            this.kalturaEventList = data
-          })
-        }
-      })
-    },
-    methods: {
-      onUpdateRoomCapability(capability) {
-        this.room.capability = capability
-        this.alertScreenReader(capability ? `'${capability}' selected` : 'Room capability removed.')
-      },
-      scrollToKalturaEvents() {
-        this.$vuetify.goTo('#kaltura-event-list', {duration: 300, offset: 100, easing: 'easeInOutCubic'})
-        this.alertScreenReader('Scrolled to Kaltura events.')
       }
     }
+  },
+  created() {
+    this.$loading()
+    let roomId = this.$_.get(this.$route, 'params.id')
+    getRoom(roomId).then(data => {
+      this.room = data
+      this.isAuditorium = data.isAuditorium
+      this.$_.each(this.room.courses, course => {
+        course.courseCodes = this.getCourseCodes(course)
+      })
+      this.offerPrintable = !!this.$_.find(this.$_.filter(this.room.courses, 'scheduled'), c => c.scheduled.room.id === this.room.id)
+      this.$ready(data.location)
+      // The page is ready; Kaltura events will pop up in a sec.
+      if (this.room.kalturaResourceId) {
+        getKalturaEventList(this.room.kalturaResourceId).then(data => {
+          this.kalturaEventList = data
+        })
+      }
+    })
+  },
+  methods: {
+    onUpdateRoomCapability(capability) {
+      this.room.capability = capability
+      this.alertScreenReader(capability ? `'${capability}' selected` : 'Room capability removed.')
+    },
+    scrollToKalturaEvents() {
+      this.$vuetify.goTo('#kaltura-event-list', {duration: 300, offset: 100, easing: 'easeInOutCubic'})
+      this.alertScreenReader('Scrolled to Kaltura events.')
+    }
   }
+}
 </script>

@@ -35,37 +35,37 @@
 </template>
 
 <script>
-  import Configs from '@/components/attic/Configs'
-  import Context from '@/mixins/Context'
-  import PageTitle from '@/components/util/PageTitle'
-  import Utils from '@/mixins/Utils'
-  import {getAdminUsers} from '@/api/user'
-  import {getCoursesReport} from '@/api/course'
+import Configs from '@/components/attic/Configs'
+import Context from '@/mixins/Context'
+import PageTitle from '@/components/util/PageTitle'
+import Utils from '@/mixins/Utils'
+import {getAdminUsers} from '@/api/user'
+import {getCoursesReport} from '@/api/course'
 
-  export default {
-    name: 'Attic',
-    mixins: [Context, Utils],
-    components: {Configs, PageTitle},
-    data: () => ({
-      adminUsers: undefined,
-      coursesReport: undefined
-    }),
-    created() {
-      this.$loading()
-      getCoursesReport(this.$config.currentTermId).then(report => {
-        this.coursesReport = []
-        this.$_.each(report, (value, key) => {
-          this.coursesReport.push({key: this.decamelize(key), value})
-        })
-        this.coursesReport = this.$_.sortBy(this.coursesReport, ['key'])
-
-        getAdminUsers().then(data => {
-          this.adminUsers = data
-          this.$ready('Attic')
-        })
+export default {
+  name: 'Attic',
+  mixins: [Context, Utils],
+  components: {Configs, PageTitle},
+  data: () => ({
+    adminUsers: undefined,
+    coursesReport: undefined
+  }),
+  created() {
+    this.$loading()
+    getCoursesReport(this.$config.currentTermId).then(report => {
+      this.coursesReport = []
+      this.$_.each(report, (value, key) => {
+        this.coursesReport.push({key: this.decamelize(key), value})
       })
-    },
-    methods: {
-    }
+      this.coursesReport = this.$_.sortBy(this.coursesReport, ['key'])
+
+      getAdminUsers().then(data => {
+        this.adminUsers = data
+        this.$ready('Attic')
+      })
+    })
+  },
+  methods: {
   }
+}
 </script>

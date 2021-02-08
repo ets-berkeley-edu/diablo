@@ -20,29 +20,29 @@
 </template>
 
 <script>
-  import Context from '@/mixins/Context'
-  import CoursesDataTable from '@/components/course/CoursesDataTable'
-  import PageTitle from '@/components/util/PageTitle'
-  import Utils from '@/mixins/Utils'
-  import {getUser} from '@/api/user'
+import Context from '@/mixins/Context'
+import CoursesDataTable from '@/components/course/CoursesDataTable'
+import PageTitle from '@/components/util/PageTitle'
+import Utils from '@/mixins/Utils'
+import {getUser} from '@/api/user'
 
-  export default {
-    name: 'Room',
-    mixins: [Context, Utils],
-    components: {CoursesDataTable, PageTitle},
-    data: () => ({
-      user: undefined
-    }),
-    created() {
-      this.$loading()
-      let uid = this.$_.get(this.$route, 'params.uid')
-      getUser(uid).then(user => {
-        this.user = user
-        this.$_.each(this.user.courses, course => {
-          course.courseCodes = this.getCourseCodes(course)
-        })
-        this.$ready(this.user.name)
+export default {
+  name: 'Room',
+  mixins: [Context, Utils],
+  components: {CoursesDataTable, PageTitle},
+  data: () => ({
+    user: undefined
+  }),
+  created() {
+    this.$loading()
+    let uid = this.$_.get(this.$route, 'params.uid')
+    getUser(uid).then(user => {
+      this.user = user
+      this.$_.each(this.user.courses, course => {
+        course.courseCodes = this.getCourseCodes(course)
       })
-    }
+      this.$ready(this.user.name)
+    })
   }
+}
 </script>

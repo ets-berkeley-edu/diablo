@@ -16,9 +16,12 @@ module.exports = {
   ],
   rules: {
     'eqeqeq': 2,
+    'key-spacing': 2,
     'multiline-html-element-content-newline': 0,
     'no-console': process.env.NODE_ENV === 'production' ? 'error' : 'off',
     'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'off',
+    'no-multi-spaces': 2,
+    'no-trailing-spaces': 2,
     'no-unexpected-multiline': 2,
     'quotes': [2, 'single'],
     'semi': [2, 'never'],
@@ -67,20 +70,20 @@ module.exports = {
     'vue/require-default-prop': 2,
     'vue/require-direct-export': 2,
     'vue/require-prop-types': 2,
-    'vue/script-indent': 0,
+    'vue/script-indent': 2,
     'vue/singleline-html-element-content-newline': 0,
+    'vue/space-infix-ops': 2,
+    'vue/space-unary-ops': 2,
     'vue/valid-v-slot': [
       'error',
       {
         allowModifiers: true
       }
     ],
-    'vue/v-slot-style': 2,
-    'vue/space-infix-ops': 2,
-    'vue/space-unary-ops': 2,
     'vue/v-bind-style': 2,
     'vue/v-on-function-call': 2,
-    'vue/v-on-style': 2
+    'vue/v-on-style': 2,
+    'vue/v-slot-style': 2
   },
   parserOptions: {
     parser: require.resolve('@typescript-eslint/parser')
