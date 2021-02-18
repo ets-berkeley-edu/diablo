@@ -61,7 +61,7 @@ const router = new Router({
           beforeEnter: (to: any, from: any, next: any) => {
             const currentUser = Vue.prototype.$currentUser
             if (currentUser.isAdmin && !currentUser.isTeaching) {
-              next({ path: '/ouija' })
+              next({path: '/ouija'})
             } else {
               next()
             }

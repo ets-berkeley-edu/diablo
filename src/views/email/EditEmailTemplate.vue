@@ -81,7 +81,7 @@ import Context from '@/mixins/Context'
 import PageTitle from '@/components/util/PageTitle'
 import TemplateCodesDialog from '@/components/email/TemplateCodesDialog'
 import Utils from '@/mixins/Utils'
-import { TiptapVuetify, Heading, Bold, Italic, Strike, Underline, Code, Paragraph, BulletList, OrderedList, ListItem, Link, Blockquote, HardBreak, HorizontalRule, History } from 'tiptap-vuetify'
+import {TiptapVuetify, Heading, Bold, Italic, Strike, Underline, Code, Paragraph, BulletList, OrderedList, ListItem, Link, Blockquote, HardBreak, HorizontalRule, History} from 'tiptap-vuetify'
 import {createEmailTemplate, getEmailTemplate, updateEmailTemplate} from '@/api/email'
 
 export default {
@@ -146,12 +146,12 @@ export default {
   methods: {
     cancel() {
       this.alertScreenReader('Cancelled.')
-      this.$router.push({ path: '/email/templates' })
+      this.$router.push({path: '/email/templates'})
     },
     createTemplate() {
       const done = action => {
         this.alertScreenReader(`Email template '${this.templateType}' ${action}.`)
-        this.$router.push({ path: '/email/templates' })
+        this.$router.push({path: '/email/templates'})
       }
       if (this.disableSave) {
         this.reportError('You must complete the required form fields.')
