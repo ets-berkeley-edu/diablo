@@ -17,7 +17,7 @@ export default {
       if (currentUser.isAdmin) {
         next()
       } else {
-        next({ path: '/404' })
+        next({path: '/404'})
       }
     } else {
       $_goToLogin(to, next)

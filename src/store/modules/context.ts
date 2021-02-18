@@ -47,12 +47,12 @@ const mutations = {
 }
 
 const actions = {
-  alertScreenReader: ({ commit }, alert) => commit('setScreenReaderAlert', alert),
-  loadingComplete: ({ commit }, pageTitle) => commit('loadingComplete', pageTitle),
-  loadingStart: ({ commit }) => commit('loadingStart'),
-  snackbarClose: ({ commit }) => commit('snackbarClose'),
-  snackbarOpen: ({ commit }, text) => commit('snackbarOpen', text),
-  snackbarReportError: ({ commit }, text) => commit('snackbarReportError', text)
+  alertScreenReader: ({commit}, alert) => commit('setScreenReaderAlert', alert),
+  loadingComplete: ({commit}, pageTitle) => commit('loadingComplete', pageTitle),
+  loadingStart: ({commit}) => commit('loadingStart'),
+  snackbarClose: ({commit}) => commit('snackbarClose'),
+  snackbarOpen: ({commit}, text) => commit('snackbarOpen', text),
+  snackbarReportError: ({commit}, text) => commit('snackbarReportError', text)
 }
 
 export default {

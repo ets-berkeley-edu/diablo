@@ -56,7 +56,7 @@ export default {
   mounted() {
     axios.get(`${Vue.prototype.$config.apiBaseUrl}/api/version`).then(data => {
       this.configs = []
-      this.$_.each({...data, ...this.$config }, (value, key) => this.pushConfig(key, value))
+      this.$_.each({...data, ...this.$config}, (value, key) => this.pushConfig(key, value))
       this.configs = this.$_.sortBy(this.configs, ['key'])
       this.$ready('Attic')
     })

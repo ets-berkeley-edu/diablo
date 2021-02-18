@@ -82,7 +82,7 @@
 <script>
 import Snackbar from '@/components/util/Snackbar'
 import Utils from '@/mixins/Utils'
-import { devAuthLogIn, getCasLoginURL } from '@/api/auth'
+import {devAuthLogIn, getCasLoginURL} from '@/api/auth'
 import Context from '@/mixins/Context'
 
 export default {
@@ -110,7 +110,7 @@ export default {
         devAuthLogIn(uid, password).then(data => {
                                            if (data.isAuthenticated) {
                                              const redirect = this.$_.get(this.$router, 'currentRoute.query.redirect')
-                                             this.$router.push({ path: redirect || '/home' }, this.$_.noop)
+                                             this.$router.push({path: redirect || '/home'}, this.$_.noop)
                                              this.alertScreenReader('Welcome to Course Capture')
                                            } else {
                                              const message = this.$_.get(data, 'response.data.message') || this.$_.get(data, 'message') || 'Authentication failed'

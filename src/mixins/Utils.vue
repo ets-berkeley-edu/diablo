@@ -30,7 +30,7 @@ export default {
       return termName
     },
     goToPath(path) {
-      this.$router.push({ path }, _.noop)
+      this.$router.push({path}, _.noop)
     },
     isInRoom(course, room) {
       const meetings = course.meetings.eligible.concat(course.meetings.ineligible)
