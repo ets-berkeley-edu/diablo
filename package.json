@@ -12,7 +12,7 @@
     "axios": "0.21.1",
     "core-js": "3.8.0",
     "js-file-download": "0.4.12",
-    "lodash": "4.17.20",
+    "lodash": "4.17.21",
     "moment-timezone": "0.5.33",
     "tiptap-vuetify": "2.24.0",
     "vue": "2.6.12",
