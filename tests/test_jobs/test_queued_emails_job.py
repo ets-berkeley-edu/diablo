@@ -110,7 +110,6 @@ class TestQueuedEmailsJob:
         QueuedEmail.create(section_id, email_template_type, term_id, recipient=recipient)
         std_commit(allow_test_environment=True)
 
-        before = utc_now()
         emails_sent_before = _emails_sent()
         # Run the job
         QueuedEmailsJob(simply_yield).run()
@@ -119,7 +118,7 @@ class TestQueuedEmailsJob:
         # Expect no emails sent
         emails_sent_after = _emails_sent()
         assert len(emails_sent_after) == len(emails_sent_before)
-        assert not next((e for e in emails_sent_after if e.section_id == section_id and e.sent_at > before), None)
+        assert list(map(lambda e: e.id, emails_sent_before)) == list(map(lambda e: e.id, emails_sent_after))
 
     def test_queued_email_for_admin(self):
         """Certain email template types are for admin recipients only."""
