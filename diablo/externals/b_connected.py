@@ -118,7 +118,8 @@ class BConnected:
             config_value = app.config['EMAIL_REDIRECT_WHEN_TESTING']
             return config_value if isinstance(config_value, list) else [config_value]
         else:
-            return [user['email']]
+            email = user.get('email')
+            return [email] if email and email.strip() else []
 
 
 def write_email_to_log(message, recipient, subject_line):
