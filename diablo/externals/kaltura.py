@@ -35,14 +35,13 @@ from diablo.lib.kaltura_util import get_classification_name, get_recurrence_name
 from diablo.lib.util import default_timezone, epoch_time_to_isoformat, format_days
 from flask import current_app as app
 from KalturaClient import KalturaClient, KalturaConfiguration
-from KalturaClient.exceptions import KalturaException
 from KalturaClient.Plugins.Core import KalturaBaseEntry, KalturaCategoryEntry, KalturaCategoryEntryFilter, \
     KalturaCategoryEntryStatus, KalturaCategoryFilter, KalturaEntryDisplayInSearchType, KalturaEntryModerationStatus, \
     KalturaEntryStatus, KalturaEntryType, KalturaFilterPager, KalturaMediaEntryFilter
-from KalturaClient.Plugins.Schedule import KalturaBlackoutScheduleEvent, KalturaBlackoutScheduleEventFilter, \
-    KalturaRecordScheduleEvent, KalturaScheduleEventClassificationType, KalturaScheduleEventFilter, \
-    KalturaScheduleEventRecurrence, KalturaScheduleEventRecurrenceFrequency, KalturaScheduleEventRecurrenceType, \
-    KalturaScheduleEventResource, KalturaScheduleEventStatus, KalturaScheduleResourceFilter, KalturaSessionType
+from KalturaClient.Plugins.Schedule import KalturaRecordScheduleEvent, KalturaScheduleEventClassificationType, \
+    KalturaScheduleEventFilter, KalturaScheduleEventRecurrence, KalturaScheduleEventRecurrenceFrequency, \
+    KalturaScheduleEventRecurrenceType, KalturaScheduleEventResource, KalturaScheduleEventStatus, \
+    KalturaScheduleResourceFilter, KalturaSessionType
 
 CREATED_BY_DIABLO_TAG = 'ets_course_capture'
 
@@ -84,34 +83,6 @@ class Kaltura:
         self.client.categoryEntry.add(category_entry)
 
     @skip_when_pytest()
-    def create_blackout_dates(self, blackout_dates):
-        events = []
-        for blackout_date in blackout_dates:
-            try:
-                blackout_start = datetime.strptime(blackout_date, '%Y-%m-%d').replace(hour=0, minute=0).timestamp()
-                one_day_in_seconds = 86400
-                event = KalturaBlackoutScheduleEvent(
-                    # https://developer.kaltura.com/api-docs/General_Objects/Objects/KalturaScheduleEvent
-                    classificationType=KalturaScheduleEventClassificationType.PUBLIC_EVENT,
-                    duration=one_day_in_seconds,
-                    endDate=blackout_start + one_day_in_seconds,
-                    startDate=blackout_start,
-                    organizer=app.config['KALTURA_EVENT_ORGANIZER'],
-                    ownerId=app.config['KALTURA_KMS_OWNER_ID'],
-                    partnerId=app.config['KALTURA_PARTNER_ID'],
-                    recurrenceType=KalturaScheduleEventRecurrenceType.NONE,
-                    status=KalturaScheduleEventStatus.ACTIVE,
-                    summary=f'Academic and Administrative Holiday: {blackout_date}',
-                    tags=CREATED_BY_DIABLO_TAG,
-                )
-                events.append(self.client.schedule.scheduleEvent.add(event))
-
-            except KalturaException as e:
-                app.logger.error(f'Failed to schedule blackout date {blackout_date} in Kaltura')
-                app.logger.exception(e)
-        return events
-
-    @skip_when_pytest()
     def get_base_entry(self, entry_id):
         entry = self.client.baseEntry.get(entryId=entry_id)
         if entry:
@@ -133,10 +104,6 @@ class Kaltura:
             }
         else:
             return None
-
-    @skip_when_pytest()
-    def get_blackout_dates(self, tags_like=CREATED_BY_DIABLO_TAG):
-        return self._get_events(kaltura_event_filter=KalturaBlackoutScheduleEventFilter(tagsLike=tags_like))
 
     @skip_when_pytest()
     def get_categories(self, template_entry_id):
@@ -484,62 +451,59 @@ def _events_to_api_json(events):
 
 
 def _event_to_json(event):
-    if isinstance(event, KalturaBlackoutScheduleEvent):
-        return _blackout_to_json(event)
-    else:
-        conflicts = [_blackout_to_json(e) for e in event.blackoutConflicts] if event.blackoutConflicts else None
-        api_json = {
-            'blackoutConflicts': conflicts,
-            'categoryIds': json.loads(event.categoryIds) if event.categoryIds else [],
-            'classificationType': get_classification_name(event.classificationType),
-            'comment': event.comment,
-            'contact': event.contact,
-            'createdAt': epoch_time_to_isoformat(event.createdAt),
-            'description': event.description,
-            'duration': event.duration,
-            'durationFormatted': str(timedelta(seconds=event.duration)) if event.duration else None,
-            'endDate': epoch_time_to_isoformat(event.endDate),
-            'entryIds': event.entryIds,
-            'geoLatitude': event.geoLatitude,
-            'geoLongitude': event.geoLongitude,
-            'id': event.id,
-            'location': event.location,
-            'organizer': event.organizer,
-            'ownerId': event.ownerId,
-            'parentId': event.parentId,
-            'partnerId': event.partnerId,
-            'priority': event.priority,
-            'recurrenceType': get_recurrence_name(event.recurrenceType),
-            'referenceId': event.referenceId,
-            'relatedObjects': event.relatedObjects,
-            'sequence': event.sequence,
-            'startDate': epoch_time_to_isoformat(event.startDate),
-            'status': get_status_name(event.status),
-            'summary': event.summary,
-            'tags': event.tags,
-            'templateEntryId': event.templateEntryId,
-            'updatedAt': epoch_time_to_isoformat(event.updatedAt),
+    conflicts = [_blackout_to_json(e) for e in event.blackoutConflicts] if event.blackoutConflicts else None
+    api_json = {
+        'blackoutConflicts': conflicts,
+        'categoryIds': json.loads(event.categoryIds) if event.categoryIds else [],
+        'classificationType': get_classification_name(event.classificationType),
+        'comment': event.comment,
+        'contact': event.contact,
+        'createdAt': epoch_time_to_isoformat(event.createdAt),
+        'description': event.description,
+        'duration': event.duration,
+        'durationFormatted': str(timedelta(seconds=event.duration)) if event.duration else None,
+        'endDate': epoch_time_to_isoformat(event.endDate),
+        'entryIds': event.entryIds,
+        'geoLatitude': event.geoLatitude,
+        'geoLongitude': event.geoLongitude,
+        'id': event.id,
+        'location': event.location,
+        'organizer': event.organizer,
+        'ownerId': event.ownerId,
+        'parentId': event.parentId,
+        'partnerId': event.partnerId,
+        'priority': event.priority,
+        'recurrenceType': get_recurrence_name(event.recurrenceType),
+        'referenceId': event.referenceId,
+        'relatedObjects': event.relatedObjects,
+        'sequence': event.sequence,
+        'startDate': epoch_time_to_isoformat(event.startDate),
+        'status': get_status_name(event.status),
+        'summary': event.summary,
+        'tags': event.tags,
+        'templateEntryId': event.templateEntryId,
+        'updatedAt': epoch_time_to_isoformat(event.updatedAt),
+    }
+    if event.recurrence:
+        api_json['recurrence'] = {
+            'byDay': event.recurrence.byDay,
+            'byHour': event.recurrence.byHour,
+            'byMinute': event.recurrence.byMinute,
+            'byMonth': event.recurrence.byMonth,
+            'byMonthDay': event.recurrence.byMonthDay,
+            'byOffset': event.recurrence.byOffset,
+            'bySecond': event.recurrence.bySecond,
+            'byWeekNumber': event.recurrence.byWeekNumber,
+            'byYearDay': event.recurrence.byYearDay,
+            'count': event.recurrence.count,
+            'frequency': event.recurrence.frequency.value.capitalize(),
+            'interval': event.recurrence.interval,
+            'name': event.recurrence.name,
+            'relatedObjects': event.recurrence.relatedObjects,
+            'timeZone': event.recurrence.timeZone,
+            'until': epoch_time_to_isoformat(event.recurrence.until),
         }
-        if event.recurrence:
-            api_json['recurrence'] = {
-                'byDay': event.recurrence.byDay,
-                'byHour': event.recurrence.byHour,
-                'byMinute': event.recurrence.byMinute,
-                'byMonth': event.recurrence.byMonth,
-                'byMonthDay': event.recurrence.byMonthDay,
-                'byOffset': event.recurrence.byOffset,
-                'bySecond': event.recurrence.bySecond,
-                'byWeekNumber': event.recurrence.byWeekNumber,
-                'byYearDay': event.recurrence.byYearDay,
-                'count': event.recurrence.count,
-                'frequency': event.recurrence.frequency.value.capitalize(),
-                'interval': event.recurrence.interval,
-                'name': event.recurrence.name,
-                'relatedObjects': event.recurrence.relatedObjects,
-                'timeZone': event.recurrence.timeZone,
-                'until': epoch_time_to_isoformat(event.recurrence.until),
-            }
-        return api_json
+    return api_json
 
 
 def _blackout_to_json(event):
