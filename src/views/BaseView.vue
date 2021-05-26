@@ -78,6 +78,14 @@
           </v-list-item>
           <v-list-item
             v-if="$currentUser.isAdmin"
+            id="menu-item-blackouts"
+            link
+            @click="goToPath('/blackouts')"
+          >
+            <v-list-item-content>Blackouts</v-list-item-content>
+          </v-list-item>
+          <v-list-item
+            v-if="$currentUser.isAdmin"
             id="menu-item-email-templates"
             link
             @click="goToPath('/email/templates')"
