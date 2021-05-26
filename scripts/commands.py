@@ -63,48 +63,6 @@ def delete_kaltura_events(rehearsal):
         _print('Have a nice day!')
 
 
-@application.cli.command('assign_kaltura_blackout_dates')
-@click.argument('rehearsal', default=False)
-def assign_blackout_dates(rehearsal):
-    """Prevent other events from being scheduled in these dates."""
-    with application.app_context():
-        from diablo.externals.kaltura import Kaltura
-
-        def _print(message):
-            print(f"""
-                {'[REHEARSAL MODE]: ' if rehearsal else ''}{message}
-            """)
-        blackout_dates = application.config['KALTURA_BLACKOUT_DATES']
-        if blackout_dates:
-            _print(f'Create blackout date(s) in Kaltura: {",".join(blackout_dates)}')
-            _print('Use control-C to abort.')
-            time.sleep(2)
-
-            kaltura = Kaltura()
-            existing_blackout_dates = kaltura.get_blackout_dates()
-            for existing_blackout_date in existing_blackout_dates:
-                for blackout_date in blackout_dates:
-                    print(f'blackout_date: {blackout_date}')
-                    print(f'existing_blackout_date: {existing_blackout_date}')
-                    if blackout_date in existing_blackout_date['startDate']:
-                        _print(f'[ERROR] Kaltura already has blackout_date {blackout_date}:\n{existing_blackout_date}')
-                        _print('Either delete existing blackout dates in Kaltura or change Diablo configs.')
-                        return
-
-            if rehearsal:
-                _print(f'kaltura.create_blackout_dates(blackout_dates=[{", ".join(blackout_dates)}])')
-            else:
-                kaltura_events = kaltura.create_blackout_dates(blackout_dates=blackout_dates)
-                if kaltura_events:
-                    _print('Blackout events created:')
-                    for event in kaltura_events:
-                        _print(event.summary)
-        else:
-            _print('Empty list of blackout_dates in Diablo config file.')
-
-        _print('Have a nice day!')
-
-
 @application.cli.command('update_lti')
 def update_lti():
     """Update Kaltura LTI configurations in Canvas to match local Diablo configs."""
