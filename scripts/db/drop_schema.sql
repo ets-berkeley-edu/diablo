@@ -43,6 +43,8 @@ ALTER TABLE IF EXISTS ONLY public.admin_users DROP CONSTRAINT IF EXISTS admin_us
 ALTER TABLE IF EXISTS ONLY public.admin_users DROP CONSTRAINT IF EXISTS admin_users_uid_key;
 ALTER TABLE IF EXISTS public.admin_users ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE IF EXISTS ONLY public.approvals DROP CONSTRAINT IF EXISTS approvals_pkey;
+ALTER TABLE IF EXISTS ONLY public.blackouts DROP CONSTRAINT IF EXISTS blackouts_name_unique_constraint;
+ALTER TABLE IF EXISTS ONLY public.blackouts DROP CONSTRAINT IF EXISTS blackouts_pkey;
 ALTER TABLE IF EXISTS ONLY public.canvas_course_sites DROP CONSTRAINT IF EXISTS canvas_course_sites_pkey;
 ALTER TABLE IF EXISTS ONLY public.course_preferences DROP CONSTRAINT IF EXISTS course_preferences_pkey;
 ALTER TABLE IF EXISTS ONLY public.cross_listings DROP CONSTRAINT IF EXISTS cross_listings_pkey;
@@ -72,6 +74,8 @@ DROP INDEX IF EXISTS public.sis_sections_term_id_section_id_idx;
 DROP TABLE IF EXISTS public.admin_users;
 DROP SEQUENCE IF EXISTS public.admin_users_id_seq;
 DROP TABLE IF EXISTS public.approvals;
+DROP TABLE IF EXISTS public.blackouts;
+DROP SEQUENCE IF EXISTS public.blackouts_id_seq;
 DROP TABLE IF EXISTS public.canvas_course_sites;
 DROP TABLE IF EXISTS public.course_preferences;
 DROP TABLE IF EXISTS public.cross_listings;

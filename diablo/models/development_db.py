@@ -33,6 +33,7 @@ from diablo.jobs.sis_data_refresh_job import SisDataRefreshJob
 from diablo.lib.development_db_utils import save_mock_courses
 from diablo.lib.util import utc_now
 from diablo.models.admin_user import AdminUser
+from diablo.models.blackout import Blackout
 from diablo.models.email_template import EmailTemplate
 from diablo.models.job import Job
 from diablo.models.room import Room
@@ -63,6 +64,7 @@ def load(create_test_data=True):
     cache.clear()
     _load_schemas()
     if create_test_data:
+        _create_blackouts()
         _create_email_templates()
         _create_users()
         _cache_externals()
@@ -92,6 +94,15 @@ def _load_courses():
     db.session.execute(SisSection.__table__.delete().where(SisSection.term_id == term_id))
     save_mock_courses(f"{app.config['FIXTURES_PATH']}/sis/courses.json")
     SisDataRefreshJob.after_sis_data_refresh(term_id=term_id)
+    std_commit(allow_test_environment=True)
+
+
+def _create_blackouts():
+    Blackout.create(
+        name='An excellent day for an exorcism',
+        start_date='12/25/2021',
+        end_date='12/25/2021',
+    )
     std_commit(allow_test_environment=True)
 
 

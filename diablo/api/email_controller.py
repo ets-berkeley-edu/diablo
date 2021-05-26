@@ -68,7 +68,7 @@ def get_template_codes():
 
 @app.route('/api/email/template/create', methods=['POST'])
 @admin_required
-def create():
+def create_template():
     params = request.get_json()
     template_type = params.get('templateType')
     name = params.get('name')
@@ -124,7 +124,7 @@ def test_email_template(template_id):
 
 @app.route('/api/email/template/update', methods=['POST'])
 @admin_required
-def update():
+def update_template():
     params = request.get_json()
     template_id = params.get('templateId')
     email_template = EmailTemplate.get_template(template_id) if template_id else None
