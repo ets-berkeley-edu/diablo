@@ -130,6 +130,31 @@ CREATE UNIQUE INDEX approvals_unique_idx ON approvals (approved_by_uid, section_
 
 --
 
+CREATE TABLE blackouts (
+    id INTEGER NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    start_date TIMESTAMP WITH TIME ZONE NOT NULL,
+    end_date TIMESTAMP WITH TIME ZONE NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL
+);
+ALTER TABLE blackouts OWNER TO diablo;
+CREATE SEQUENCE blackouts_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+ALTER TABLE blackouts_id_seq OWNER TO diablo;
+ALTER SEQUENCE blackouts_id_seq OWNED BY blackouts.id;
+ALTER TABLE ONLY blackouts ALTER COLUMN id SET DEFAULT nextval('blackouts_id_seq'::regclass);
+ALTER TABLE ONLY blackouts
+    ADD CONSTRAINT blackouts_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY blackouts
+    ADD CONSTRAINT blackouts_name_unique_constraint UNIQUE (name);
+
+--
+
 CREATE TABLE canvas_course_sites (
     canvas_course_site_id INTEGER NOT NULL,
     section_id INTEGER NOT NULL,
