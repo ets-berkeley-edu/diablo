@@ -5,7 +5,6 @@ import BaseView from '@/views/BaseView.vue'
 import Blackouts from '@/views/blackout/Blackouts.vue'
 import Course from '@/views/Course.vue'
 import CourseChanges from '@/views/CourseChanges.vue'
-import EditBlackout from '@/views/blackout/EditBlackout.vue'
 import EditEmailTemplate from '@/views/email/EditEmailTemplate.vue'
 import EmailTemplates from '@/views/email/EmailTemplates.vue'
 import Error from '@/views/Error.vue'
@@ -98,20 +97,6 @@ const router = new Router({
           component: Blackouts,
           meta: {
             title: 'Blackouts'
-          }
-        },
-        {
-          path: '/blackout',
-          component: EditBlackout,
-          meta: {
-            title: 'Create Blackout'
-          }
-        },
-        {
-          path: '/blackout/:id',
-          component: EditBlackout,
-          meta: {
-            title: 'Edit Blackout'
           }
         },
         {

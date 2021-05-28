@@ -63,8 +63,8 @@ def create_blackout():
     if None in [name, start_date, end_date]:
         raise BadRequestError('Required parameters are missing.')
 
-    start_date = _local_blackout_date_to_utc(start_date)
-    end_date = _local_blackout_date_to_utc(end_date)
+    start_date = _local_blackout_date_to_utc(f'{start_date}T00:00:00')
+    end_date = _local_blackout_date_to_utc(f'{end_date}T23:59:59')
     _validate_date_range(start_date, end_date)
 
     blackout = Blackout.create(name=name, start_date=start_date, end_date=end_date)
@@ -84,8 +84,8 @@ def update_blackout():
         if None in [name, start_date, end_date]:
             raise BadRequestError('Required parameters are missing.')
 
-        start_date = _local_blackout_date_to_utc(start_date)
-        end_date = _local_blackout_date_to_utc(end_date)
+        start_date = _local_blackout_date_to_utc(f'{start_date}T00:00:00')
+        end_date = _local_blackout_date_to_utc(f'{end_date}T23:59:59')
         _validate_date_range(start_date, end_date)
 
         blackout = Blackout.update(
@@ -112,8 +112,7 @@ def _validate_date_range(start_date, end_date, blackout_id=None):
 
 
 def _local_blackout_date_to_utc(blackout_date):
-    date_format = '%Y-%m-%d'
     try:
-        return localized_timestamp_to_utc(blackout_date, date_format=date_format)
+        return localized_timestamp_to_utc(blackout_date)
     except ValueError:
-        raise BadRequestError(f'{blackout_date} does not match expected date format: {date_format}')
+        raise BadRequestError(f'{blackout_date} does not match expected date format.')
