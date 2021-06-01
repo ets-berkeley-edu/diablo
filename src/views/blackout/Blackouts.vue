@@ -43,9 +43,6 @@
                   <td :id="`blackout-${blackout.id}-end-date`">
                     {{ blackout.endDate }}
                   </td>
-                  <td class="text-no-wrap">
-                    {{ blackout.createdAt | moment('MMM DD, YYYY') }}
-                  </td>
                   <td>
                     <v-btn
                       :id="`delete-blackout-${blackout.id}`"
@@ -82,7 +79,6 @@ export default {
       {text: 'Name', value: 'name'},
       {text: 'Start Date', value: 'startDate'},
       {text: 'End Date', value: 'endDate'},
-      {text: 'Created', value: 'createdAt'},
       {text: 'Delete', class: 'pl-5 pr-0 mr-0'}
     ],
     refreshing: false
