@@ -132,6 +132,20 @@ class Kaltura:
         events = self._get_events(kaltura_event_filter=KalturaScheduleEventFilter(idEqual=event_id))
         return events[0] if events else None
 
+    @skip_when_pytest()
+    def get_events_in_date_range(
+            self,
+            end_date,
+            start_date,
+            tags_like=CREATED_BY_DIABLO_TAG,
+    ):
+        event_filter = KalturaScheduleEventFilter(
+            endDateLessThanOrEqual=end_date.timestamp(),
+            startDateGreaterThanOrEqual=start_date.timestamp(),
+            tagsLike=tags_like,
+        )
+        return self._get_events(kaltura_event_filter=event_filter)
+
     @cachify('kaltura/schedule_resources', timeout=30)
     def get_schedule_resources(self):
         def _fetch(page_index):

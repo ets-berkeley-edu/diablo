@@ -53,6 +53,10 @@ def json_objects_to_dict(json_objects, field_name_of_key):
     return items_per_key
 
 
+def localize_datetime(dt):
+    return dt.astimezone(pytz.timezone(app.config['TIMEZONE']))
+
+
 def localized_timestamp_to_utc(_str, date_format='%Y-%m-%dT%H:%M:%S'):
     naive_datetime = datetime.strptime(_str, date_format)
     localized_datetime = pytz.timezone(app.config['TIMEZONE']).localize(naive_datetime)

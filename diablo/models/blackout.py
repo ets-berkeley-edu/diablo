@@ -22,9 +22,8 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from dateutil.tz import tzutc
 from diablo import db, std_commit
-from diablo.lib.util import to_isoformat
+from diablo.lib.util import localize_datetime, to_isoformat
 from diablo.models.base import Base
 
 
@@ -88,7 +87,7 @@ class Blackout(Base):
 
     def to_api_json(self):
         def _format(date):
-            return date.astimezone(tzutc()).strftime('%Y-%m-%d')
+            return localize_datetime(date).strftime('%Y-%m-%d')
         return {
             'id': self.id,
             'name': self.name,

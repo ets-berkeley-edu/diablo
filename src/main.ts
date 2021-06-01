@@ -7,16 +7,18 @@ import axios from 'axios'
 import moment from 'moment-timezone'
 import router from './router'
 import store from './store'
-import {TiptapVuetifyPlugin} from 'tiptap-vuetify'
+import VCalendar from 'v-calendar'
 import Vue from 'vue'
 import VueMoment from 'vue-moment'
 import vuetify from './plugins/vuetify'
+import {TiptapVuetifyPlugin} from 'tiptap-vuetify'
 
+Vue.use(VCalendar, {componentPrefix: 'c'})
+Vue.use(VueMoment, {moment})
 Vue.use(TiptapVuetifyPlugin, {
   vuetify,
   iconsGroup: 'md'
 })
-Vue.use(VueMoment, {moment})
 
 const apiBaseUrl = process.env.VUE_APP_API_BASE_URL
 const isDebugMode = _.trim(process.env.VUE_APP_DEBUG).toLowerCase() === 'true'

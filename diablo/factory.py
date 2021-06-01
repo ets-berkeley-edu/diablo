@@ -53,6 +53,7 @@ def create_app(standalone=False):
 
 def _register_jobs(app):
     from diablo.jobs.admin_emails_job import AdminEmailsJob  # noqa
+    from diablo.jobs.blackouts_job import BlackoutsJob  # noqa
     from diablo.jobs.canvas_job import CanvasJob  # noqa
     from diablo.jobs.house_keeping_job import HouseKeepingJob  # noqa
     from diablo.jobs.instructor_emails_job import InstructorEmailsJob  # noqa
