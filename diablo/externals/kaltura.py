@@ -38,10 +38,10 @@ from KalturaClient import KalturaClient, KalturaConfiguration
 from KalturaClient.Plugins.Core import KalturaBaseEntry, KalturaCategoryEntry, KalturaCategoryEntryFilter, \
     KalturaCategoryEntryStatus, KalturaCategoryFilter, KalturaEntryDisplayInSearchType, KalturaEntryModerationStatus, \
     KalturaEntryStatus, KalturaEntryType, KalturaFilterPager, KalturaMediaEntryFilter
-from KalturaClient.Plugins.Schedule import KalturaRecordScheduleEvent, KalturaScheduleEventClassificationType, \
-    KalturaScheduleEventFilter, KalturaScheduleEventRecurrence, KalturaScheduleEventRecurrenceFrequency, \
-    KalturaScheduleEventRecurrenceType, KalturaScheduleEventResource, KalturaScheduleEventStatus, \
-    KalturaScheduleResourceFilter, KalturaSessionType
+from KalturaClient.Plugins.Schedule import KalturaRecordScheduleEvent, KalturaRecordScheduleEventFilter, \
+    KalturaScheduleEventClassificationType, KalturaScheduleEventFilter, KalturaScheduleEventRecurrence, \
+    KalturaScheduleEventRecurrenceFrequency, KalturaScheduleEventRecurrenceType, KalturaScheduleEventResource, \
+    KalturaScheduleEventStatus, KalturaScheduleResourceFilter, KalturaSessionType
 
 CREATED_BY_DIABLO_TAG = 'ets_course_capture'
 
@@ -133,16 +133,10 @@ class Kaltura:
         return events[0] if events else None
 
     @skip_when_pytest()
-    def get_events_in_date_range(
-            self,
-            end_date,
-            start_date,
-            tags_like=CREATED_BY_DIABLO_TAG,
-    ):
-        event_filter = KalturaScheduleEventFilter(
-            endDateLessThanOrEqual=end_date.timestamp(),
-            startDateGreaterThanOrEqual=start_date.timestamp(),
-            tagsLike=tags_like,
+    def get_events_in_date_range(self, end_date, start_date):
+        event_filter = KalturaRecordScheduleEventFilter(
+            endDateLessThanOrEqual=int(end_date.timestamp()),
+            startDateGreaterThanOrEqual=int(start_date.timestamp()),
         )
         return self._get_events(kaltura_event_filter=event_filter)
 
@@ -222,7 +216,7 @@ class Kaltura:
 
         event = self.get_event(event_id)
         if event:
-            if 'recurrence' in event:
+            if event['recurrenceType'] == 'Recurring':
                 # This is a Kaltura series event.
                 if is_future(kaltura_event=event):
                     # Start date of the series in the future. Delete it all.
@@ -234,8 +228,8 @@ class Kaltura:
                         if is_future(kaltura_event=recurrence):
                             self.client.schedule.scheduleEvent.cancel(recurrence['id'])
             else:
-                # This is not a series event. Delete it, whatever it is.
-                self.client.schedule.scheduleEvent.delete(event_id)
+                # This is not a series event. Cancel it, whatever it is.
+                self.client.schedule.scheduleEvent.cancel(event_id)
 
     def ping(self):
         filter_ = KalturaMediaEntryFilter()
@@ -465,10 +459,10 @@ def _events_to_api_json(events):
 
 
 def _event_to_json(event):
-    conflicts = [_blackout_to_json(e) for e in event.blackoutConflicts] if event.blackoutConflicts else None
+    conflicts = [_blackout_to_json(e) for e in event.blackoutConflicts] if hasattr(event, 'blackoutConflicts') and event.blackoutConflicts else None
     api_json = {
         'blackoutConflicts': conflicts,
-        'categoryIds': json.loads(event.categoryIds) if event.categoryIds else [],
+        'categoryIds': json.loads(event.categoryIds) if hasattr(event, 'categoryIds') and event.categoryIds else [],
         'classificationType': get_classification_name(event.classificationType),
         'comment': event.comment,
         'contact': event.contact,
@@ -477,7 +471,6 @@ def _event_to_json(event):
         'duration': event.duration,
         'durationFormatted': str(timedelta(seconds=event.duration)) if event.duration else None,
         'endDate': epoch_time_to_isoformat(event.endDate),
-        'entryIds': event.entryIds,
         'geoLatitude': event.geoLatitude,
         'geoLongitude': event.geoLongitude,
         'id': event.id,
@@ -495,7 +488,7 @@ def _event_to_json(event):
         'status': get_status_name(event.status),
         'summary': event.summary,
         'tags': event.tags,
-        'templateEntryId': event.templateEntryId,
+        'templateEntryId': event.templateEntryId if hasattr(event, 'templateEntryId') else None,
         'updatedAt': epoch_time_to_isoformat(event.updatedAt),
     }
     if event.recurrence:

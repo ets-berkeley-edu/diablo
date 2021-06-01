@@ -6,12 +6,10 @@
       </v-card-title>
       <v-card-text class="pb-0">
         <div>
-          Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum
-          sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies
-          nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim.
+          The "Blackouts" job will delete Course Capture (Kaltura) events according to dates below.
         </div>
       </v-card-text>
-      <v-card-title class="pb-0 pt-0">
+      <v-card-title class="pb-0 pt-1">
         <v-spacer class="pb-0 pt-0 w-50"></v-spacer>
         <CreateBlackoutDialog :blackouts="blackouts" :on-close="onCloseDialog" />
       </v-card-title>
