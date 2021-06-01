@@ -24,7 +24,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 from datetime import date
 
-from diablo.externals.kaltura import Kaltura
+from diablo.externals.kaltura import CREATED_BY_DIABLO_TAG, Kaltura
 from diablo.jobs.base_job import BaseJob
 from diablo.models.blackout import Blackout
 from flask import current_app as app
@@ -42,8 +42,9 @@ class BlackoutsJob(BaseJob):
             else:
                 events = kaltura.get_events_in_date_range(end_date=blackout.end_date, start_date=blackout.start_date)
                 for event in events:
-                    kaltura.delete(event['id'])
-                    app.logger.info(f"'Event {event['summary']} deleted per {blackout}.")
+                    if CREATED_BY_DIABLO_TAG in event['tags']:
+                        kaltura.delete(event['id'])
+                        app.logger.info(f"'Event {event['summary']} deleted per {blackout}.")
 
     @classmethod
     def description(cls):
