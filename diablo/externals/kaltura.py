@@ -216,7 +216,8 @@ class Kaltura:
 
         event = self.get_event(event_id)
         if event:
-            if event['recurrenceType'] == 'Recurring':
+            recurrence_type = event['recurrenceType']
+            if recurrence_type == 'Recurring':
                 # This is a Kaltura series event.
                 if is_future(kaltura_event=event):
                     # Start date of the series in the future. Delete it all.
@@ -227,9 +228,12 @@ class Kaltura:
                     for recurrence in self._get_events(kaltura_event_filter=recurrences_filter):
                         if is_future(kaltura_event=recurrence):
                             self.client.schedule.scheduleEvent.cancel(recurrence['id'])
-            else:
-                # This is not a series event. Cancel it, whatever it is.
+            elif recurrence_type == 'Recurrence':
+                # Delete is not supported for "recurrence" events.
                 self.client.schedule.scheduleEvent.cancel(event_id)
+            else:
+                # This is not a series event. Delete it, whatever it is.
+                self.client.schedule.scheduleEvent.delete(event_id)
 
     def ping(self):
         filter_ = KalturaMediaEntryFilter()
