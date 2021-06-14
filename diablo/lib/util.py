@@ -77,12 +77,6 @@ def to_isoformat(value):
     return value and value.astimezone(tzutc()).isoformat()
 
 
-def email_subject_line(subject_line):
-    eb_env = get_eb_environment()
-    prefix = '' if 'prod' in (eb_env or '') else f"[{eb_env or 'diablo-local'}] "
-    return f'{prefix}{subject_line}'
-
-
 def epoch_time_to_isoformat(epoch_time):
     return epoch_time and datetime.fromtimestamp(epoch_time, tz=default_timezone()).isoformat()
 
@@ -133,3 +127,7 @@ def resolve_xml_template_string(template_string):
             'kmc_id': app.config['CANVAS_LTI_KEY'],
         },
     )
+
+
+def scrub_email_content(message):
+    return f"{message.split('KS')[0]} KS..." if 'KS' in message else message

@@ -28,7 +28,7 @@ import logging
 from smtplib import SMTP
 
 from diablo import skip_when_pytest
-from diablo.lib.util import email_subject_line
+from diablo.lib.util import get_eb_environment, scrub_email_content
 from diablo.models.sent_email import SentEmail
 from flask import current_app as app
 
@@ -55,7 +55,11 @@ class BConnected:
                 'Attempted to send a message without required fields: '
                 f'(recipient={recipient}, subject_line={subject_line}, message={message}')
             return False
-        subject_line = email_subject_line(subject_line)
+
+        eb_env = get_eb_environment()
+        prefix = '' if 'prod' in (eb_env or '') else f"[{eb_env or 'diablo-local'}] "
+        subject_line = f'{prefix}{scrub_email_content(subject_line)}'
+        message = scrub_email_content(message)
 
         @skip_when_pytest()
         def _send():

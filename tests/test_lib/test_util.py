@@ -22,19 +22,10 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from diablo.lib.util import email_subject_line, get_names_of_days, readable_join
-from flask import current_app as app
-from tests.util import override_config
+from diablo.lib.util import get_names_of_days, readable_join
 
 
 class TestUtils:
-
-    def test_email_subject_line_in_test(self):
-        assert email_subject_line('Surfer Rosa') == '[diablo-test] Surfer Rosa'
-
-    def test_email_subject_line_in_prod(self):
-        with override_config(app, 'EB_ENVIRONMENT', 'diablo-prod'):
-            assert email_subject_line('Trompe le Monde') == 'Trompe le Monde'
 
     def test_full_day_names(self):
         assert get_names_of_days([]) == []
