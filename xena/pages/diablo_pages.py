@@ -40,6 +40,7 @@ class DiabloPages(Page):
     COURSE_CHANGES_LINK = (By.ID, 'sidebar-link-Course Changes')
 
     MENU_BUTTON = (By.ID, 'btn-main-menu')
+    BLACKOUTS_LINK = (By.ID, 'menu-item-blackouts')
     EMAIL_TEMPLATES_LINK = (By.ID, 'menu-item-email-templates')
     JOBS_LINK = (By.ID, 'menu-item-jobs')
     JOB_HISTORY_LINK = (By.ID, 'menu-item-job-history')
@@ -76,6 +77,11 @@ class DiabloPages(Page):
         if not self.is_present(DiabloPages.LOG_OUT_LINK) or not self.element(DiabloPages.LOG_OUT_LINK).is_displayed():
             app.logger.info('Clicking header menu button')
             self.click_menu_button()
+
+    def click_blackouts_link(self):
+        app.logger.info('Clicking Blackouts link')
+        self.open_menu()
+        self.wait_for_page_and_click(DiabloPages.BLACKOUTS_LINK)
 
     def click_email_templates_link(self):
         app.logger.info('Clicking Email Templates link')

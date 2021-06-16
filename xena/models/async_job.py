@@ -29,6 +29,7 @@ from enum import Enum
 class AsyncJob(Enum):
 
     ADMIN_EMAILS = 'admin_emails'
+    BLACKOUTS = 'blackouts'
     CANVAS = 'canvas'
     HOUSEKEEPING = 'house_keeping'
     INSTRUCTOR_EMAILS = 'instructor_emails'

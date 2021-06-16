@@ -25,8 +25,10 @@ ENHANCEMENTS, OR MODIFICATIONS.
 
 from flask import current_app as app
 from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.options import Options as Coptions
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
+from selenium.webdriver.firefox.options import Options as Foptions
 from xena.test_utils import util
 
 
@@ -36,11 +38,15 @@ class WebDriverManager(object):
     def launch_browser(cls):
         app.logger.warning(f'Launching {util.get_xena_browser().capitalize()}')
         if util.get_xena_browser() == 'firefox':
-            return webdriver.Firefox()
+            p = FirefoxProfile()
+            p.set_preference(key='devtools.jsonview.enabled', value=False)
+            options = Foptions()
+            options.profile = p
+            return webdriver.Firefox(options=options)
         else:
             d = DesiredCapabilities.CHROME
             d['loggingPrefs'] = {'browser': 'ALL'}
-            options = Options()
+            options = Coptions()
             prefs = {
                 'profile.default_content_settings.popups': 0,
                 'download.default_directory': util.default_download_dir(),

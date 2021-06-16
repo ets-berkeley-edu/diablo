@@ -83,6 +83,11 @@ class TestWeirdTypeB:
     def test_queued_emails_pre_run(self):
         self.jobs_page.run_queued_emails_job()
 
+    def test_create_blackouts(self):
+        self.jobs_page.click_blackouts_link()
+        self.blackouts_page.delete_all_blackouts()
+        self.blackouts_page.create_all_blackouts()
+
     def test_delete_old_email(self):
         self.email_page.log_in()
         self.email_page.delete_all_messages()
@@ -220,6 +225,9 @@ class TestWeirdTypeB:
 
     def test_kaltura_schedule_id(self):
         util.get_kaltura_id(self.recording_schedule, self.term)
+
+    def test_kaltura_blackouts(self):
+        self.jobs_page.run_blackouts_job()
 
     # VERIFY SERIES IN DIABLO
 

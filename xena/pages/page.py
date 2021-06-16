@@ -101,9 +101,10 @@ class Page(object):
                     time.sleep(1)
 
     def wait_for_element(self, locator, timeout):
-        for entry in self.driver.get_log('browser'):
-            if app.config['BASE_URL'] in entry:
-                app.logger.warning(f'Console error: {entry}')
+        if util.get_xena_browser() == 'chrome':
+            for entry in self.driver.get_log('browser'):
+                if app.config['BASE_URL'] in entry:
+                    app.logger.warning(f'Console error: {entry}')
         Wait(self.driver, timeout).until(
             method=ec.presence_of_element_located(locator),
             message=f'Failed wait for presence_of_element_located: {str(locator)}',
@@ -145,28 +146,29 @@ class Page(object):
         time.sleep(addl_pause or sleep_default)
         self.element(locator).click()
 
-    def click_element_js(self, locator, addl_pause=0):
-        time.sleep(addl_pause)
+    def click_element_js(self, locator, addl_pause=None):
+        sleep_default = app.config['CLICK_SLEEP']
+        time.sleep(addl_pause or sleep_default)
         self.driver.execute_script('arguments[0].click();', self.element(locator))
 
-    def wait_for_page_and_click(self, locator, addl_pause=0):
+    def wait_for_page_and_click(self, locator, addl_pause=None):
         self.wait_for_element(locator, util.get_medium_timeout())
         self.click_element(locator, addl_pause)
 
-    def wait_for_page_and_click_js(self, locator, addl_pause=0):
+    def wait_for_page_and_click_js(self, locator, addl_pause=None):
         self.wait_for_element(locator, util.get_medium_timeout())
         self.click_element_js(locator, addl_pause)
 
-    def wait_for_element_and_click(self, locator, addl_pause=0):
+    def wait_for_element_and_click(self, locator, addl_pause=None):
         self.wait_for_element(locator, util.get_short_timeout())
         self.click_element(locator, addl_pause)
 
-    def wait_for_element_and_type(self, locator, string, addl_pause=0):
+    def wait_for_element_and_type(self, locator, string, addl_pause=None):
         self.wait_for_element_and_click(locator, addl_pause)
         self.element(locator).clear()
         self.element(locator).send_keys(string)
 
-    def wait_for_element_and_type_js(self, element_id, string, addl_pause=0):
+    def wait_for_element_and_type_js(self, element_id, string, addl_pause=None):
         self.wait_for_page_and_click_js((By.ID, element_id), addl_pause)
         self.driver.execute_script(f"document.getElementById('{element_id}').value='{string}'")
 
@@ -177,7 +179,7 @@ class Page(object):
 
     def wait_for_title(self, string):
         app.logger.info(f"'Waiting for page title '{string}'")
-        Wait(self.driver, util.get_medium_timeout()).until(
+        Wait(self.driver, util.get_short_timeout()).until(
             method=(ec.title_is(string)),
             message=f'Failed wait_for_title: {string}',
         )

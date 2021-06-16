@@ -68,6 +68,11 @@ class TestSignUp0:
         self.jobs_page.run_queued_emails_job()
         self.jobs_page.disable_all_jobs()
 
+    def test_create_blackouts(self):
+        self.jobs_page.click_blackouts_link()
+        self.blackouts_page.delete_all_blackouts()
+        self.blackouts_page.create_all_blackouts()
+
     def test_delete_old_diablo_and_kaltura(self):
         self.kaltura_page.log_in_via_calnet()
         self.kaltura_page.reset_test_data(self.term, self.recording_schedule)
@@ -369,6 +374,9 @@ class TestSignUp0:
 
     def test_kaltura_schedule_id(self):
         util.get_kaltura_id(self.recording_schedule, self.term)
+
+    def test_kaltura_blackouts(self):
+        self.jobs_page.run_blackouts_job()
 
     # VERIFY SERIES IN DIABLO
 

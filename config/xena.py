@@ -42,13 +42,14 @@ CANVAS_MY_MEDIA_TOOL = '24680'
 
 CLICK_SLEEP = 0.5
 
-CURRENT_TERM_NAME = 'Fall 2020'
+CURRENT_TERM_NAME = 'Fall 2021'
 
 INDEX_HTML = f'{BASE_DIR}/tests/static/test-index.html'
 
 JUNCTION_BASE_URL = 'https://junction-dev.berkeley.edu'
 
 KALTURA_TOOL_URL = 'https://kaltura.tool.url'
+KALTURA_BLACKOUT_DATES = []
 
 LOGGING_LEVEL = logging.INFO
 
@@ -63,4 +64,4 @@ TIMEOUT_SHORT = 10
 TIMEOUT_MEDIUM = 90
 TIMEOUT_LONG = 360
 
-XENA_BROWSER = 'chrome'
+XENA_BROWSER = 'firefox'

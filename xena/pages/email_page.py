@@ -78,7 +78,9 @@ class EmailPage(Page):
     def log_in(self):
         app.logger.info('Logging in to email')
         self.driver.get('https://mail.yahoo.com')
-        self.wait_for_page_and_click(EmailPage.SIGN_IN_LINK, 2)
+        time.sleep(3)
+        if self.is_present(EmailPage.SIGN_IN_LINK):
+            self.wait_for_page_and_click(EmailPage.SIGN_IN_LINK, 2)
         self.wait_for_element_and_type_js('login-username', app.config['XENA_EMAIL_USERNAME'])
         self.click_element_js(EmailPage.NEXT_BUTTON, 2)
         self.wait_for_element_and_type_js('login-passwd', app.config['XENA_EMAIL_PASSWORD'])
