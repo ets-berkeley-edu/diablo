@@ -66,7 +66,7 @@
               <v-col>
                 <CourseCaptureExplained />
                 <div class="font-italic font-weight-light pl-2 pt-4">
-                  <div v-if="meeting.room.isAuditorium">
+                  <div v-if="meeting.room.isAuditorium && $config.courseCapturePremiumCost > 0">
                     <v-icon class="pr-1">mdi-information-outline</v-icon>
                     <strong>Note:</strong> 'Presentation and Audio' recordings are free.
                     There will be a &#36;{{ $config.courseCapturePremiumCost }} operator fee, per semester, for
