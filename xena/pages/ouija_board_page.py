@@ -60,7 +60,7 @@ class OuijaBoardPage(DiabloPages):
 
     NO_RESULTS_MSG = (By.ID, 'message-when-zero-courses')
 
-    COURSE_ROW = (By.XPATH, '//div[@id="courses-data-table"]//tbody/tr/td[contains(@id, "course-name")]')
+    COURSE_ROW = (By.XPATH, '//a[contains(@id, "link-course-")]')
 
     def hit_url(self):
         self.driver.get(f'{app.config["BASE_URL"]}/ouija')

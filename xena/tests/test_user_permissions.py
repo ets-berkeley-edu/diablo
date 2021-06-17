@@ -109,7 +109,7 @@ class TestUserPerms:
         self.sign_up_page.log_out()
         util.set_instructor_role(self.section, self.instructor, 'APRX')
         self.login_page.dev_auth(self.instructor.uid)
-        self.ouija_page.wait_for_element(OuijaBoardPage.NO_COURSES_MSG, util.get_short_timeout())
+        self.ouija_page.wait_for_element(OuijaBoardPage.HOME_LINK, util.get_short_timeout())
         self.sign_up_page.hit_url(self.section.term.id, self.section.ccn)
         self.sign_up_page.wait_for_diablo_title('Page not found')
 
@@ -117,7 +117,7 @@ class TestUserPerms:
         self.sign_up_page.log_out()
         util.set_instructor_role(self.section, self.instructor, 'INVT')
         self.login_page.dev_auth(self.instructor.uid)
-        self.ouija_page.wait_for_element(OuijaBoardPage.NO_COURSES_MSG, util.get_short_timeout())
+        self.ouija_page.wait_for_element(OuijaBoardPage.HOME_LINK, util.get_short_timeout())
         self.sign_up_page.hit_url(self.section.term.id, self.section.ccn)
         self.sign_up_page.wait_for_diablo_title('Page not found')
 
@@ -128,7 +128,7 @@ class TestUserPerms:
         util.set_meeting_location(self.section, meeting)
         util.set_instructor_role(self.section, self.instructor, 'PI')
         self.login_page.dev_auth(self.instructor.uid)
-        self.ouija_page.wait_for_element(OuijaBoardPage.NO_COURSES_MSG, util.get_short_timeout())
+        self.ouija_page.wait_for_element(OuijaBoardPage.HOME_LINK, util.get_short_timeout())
         self.sign_up_page.load_page(self.section)
         assert self.sign_up_page.is_present(SignUpPage.NOT_ELIGIBLE_MSG)
 

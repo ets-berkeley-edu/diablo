@@ -35,6 +35,7 @@ from xena.test_utils import util
 
 class DiabloPages(Page):
 
+    HOME_LINK = (By.ID, 'sidebar-link-Home')
     OUIJA_BOARD_LINK = (By.ID, 'sidebar-link-Ouija Board')
     ROOMS_LINK = (By.ID, 'sidebar-link-Rooms')
     COURSE_CHANGES_LINK = (By.ID, 'sidebar-link-Course Changes')

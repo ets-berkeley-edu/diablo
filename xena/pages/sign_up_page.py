@@ -23,6 +23,8 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
+import time
+
 from flask import current_app as app
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
@@ -249,4 +251,5 @@ class SignUpPage(DiabloPages):
     def click_kaltura_series_link(self, recording_schedule):
         app.logger.info(f'Clicking the link to Kaltura series ID {recording_schedule.series_id}')
         self.wait_for_page_and_click(SignUpPage.kaltura_series_link(recording_schedule))
+        time.sleep(2)
         self.switch_to_last_window(self.window_handles())
