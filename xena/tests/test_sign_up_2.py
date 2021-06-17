@@ -362,6 +362,7 @@ class TestSignUp2:
     # CREATE COURSE SITE
 
     def test_create_course_site_one(self):
+        self.canvas_page.log_in()
         self.canvas_page.provision_site(self.section, [self.section.ccn], self.site_1)
 
     def test_enable_media_gallery(self):
@@ -714,7 +715,7 @@ class TestSignUp2:
         assert self.kaltura_page.is_published()
 
     def test_kaltura_course_site_count_one(self):
-        assert len(self.kaltura_page.publish_category_els()) == 1
+        assert len(self.kaltura_page.publish_category_els()) == 2
 
     def test_kaltura_course_site_one(self):
         assert self.kaltura_page.is_publish_category_present(self.site_1)
@@ -798,7 +799,7 @@ class TestSignUp2:
         assert self.kaltura_page.is_published()
 
     def test_kaltura_course_site_count_two(self):
-        assert len(self.kaltura_page.publish_category_els()) == 2
+        assert len(self.kaltura_page.publish_category_els()) == 3
 
     def test_kaltura_course_site_both(self):
         assert self.kaltura_page.is_publish_category_present(self.site_1)
@@ -827,7 +828,7 @@ class TestSignUp2:
 
     def test_kaltura_course_site_count_still_two(self):
         self.kaltura_page.wait_for_publish_category_el()
-        assert len(self.kaltura_page.publish_category_els()) == 2
+        assert len(self.kaltura_page.publish_category_els()) == 3
 
     def test_kaltura_course_site_still_both(self):
         assert self.kaltura_page.is_publish_category_present(self.site_1)

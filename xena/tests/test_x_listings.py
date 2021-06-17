@@ -201,7 +201,7 @@ class TestCrossListings:
         assert self.kaltura_page.is_published()
 
     def test_kaltura_course_site_count_two(self):
-        assert len(self.kaltura_page.publish_category_els()) == 2
+        assert len(self.kaltura_page.publish_category_els()) == 4
 
     def test_kaltura_course_sites(self):
         assert self.kaltura_page.is_publish_category_present(self.site_1)

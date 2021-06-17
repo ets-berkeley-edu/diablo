@@ -571,7 +571,7 @@ class TestSignUp0:
         assert self.kaltura_page.is_published()
 
     def test_kaltura_course_site_count(self):
-        assert len(self.kaltura_page.publish_category_els()) == 1
+        assert len(self.kaltura_page.publish_category_els()) == 2
 
     def test_kaltura_course_site(self):
         assert self.kaltura_page.is_publish_category_present(self.site)
