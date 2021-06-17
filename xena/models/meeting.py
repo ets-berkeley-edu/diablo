@@ -26,9 +26,9 @@ ENHANCEMENTS, OR MODIFICATIONS.
 from datetime import datetime
 from datetime import timedelta
 
-import dateutil.parser
 from flask import current_app as app
 from xena.models.room import Room
+from xena.test_utils import util
 
 
 class Meeting(object):
@@ -101,9 +101,10 @@ class Meeting(object):
     @staticmethod
     def __holidays():
         holidays = []
-        for i in app.config['KALTURA_BLACKOUT_DATES']:
-            day = dateutil.parser.parse(i).date()
-            holidays.append(day)
+        date_ranges = util.get_blackout_date_ranges()
+        for date_range in date_ranges:
+            for n in range(int((date_range[1] - date_range[0]).days) + 1):
+                holidays.append(date_range[0] + timedelta(n))
         return holidays
 
     def expected_recording_dates(self, term):

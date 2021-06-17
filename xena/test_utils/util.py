@@ -26,6 +26,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 from datetime import datetime, timedelta
 import json
 
+import dateutil.parser
 from diablo import db, std_commit
 from flask import current_app as app
 from sqlalchemy import text
@@ -36,6 +37,10 @@ from xena.models.section import Section
 
 def get_xena_browser():
     return app.config['XENA_BROWSER']
+
+
+def get_click_sleep():
+    return app.config['CLICK_SLEEP']
 
 
 def get_short_timeout():
@@ -441,3 +446,12 @@ def get_room_id(room):
     for row in result:
         ids.append(dict(row).get('id'))
     return ids[0]
+
+
+def get_blackout_date_ranges():
+    ranges = []
+    for i in app.config['KALTURA_BLACKOUT_DATES']:
+        pair = i.split(' - ')
+        date_pair = [dateutil.parser.parse(pair[0]).date(), dateutil.parser.parse(pair[1]).date()]
+        ranges.append(date_pair)
+    return ranges

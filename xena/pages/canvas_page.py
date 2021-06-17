@@ -125,7 +125,7 @@ class CanvasPage(Page):
         Wait(self.driver, util.get_medium_timeout()).until(ec.presence_of_element_located(CanvasPage.junction_form_loc()))
         self.hide_canvas_footer()
         Wait(self.driver, util.get_medium_timeout()).until(ec.frame_to_be_available_and_switch_to_it(CanvasPage.FRAME))
-        Wait(self.driver, util.get_long_timeout()).until(ec.visibility_of_element_located(CanvasPage.CREATE_SITE_LINK))
+        Wait(self.driver, util.get_medium_timeout()).until(ec.visibility_of_element_located(CanvasPage.CREATE_SITE_LINK))
         self.wait_for_element_and_click(CanvasPage.CREATE_SITE_LINK)
 
         # Select sections by CCN

@@ -29,6 +29,7 @@ from diablo.factory import create_app
 import pytest
 from xena.models.term import Term
 from xena.pages.attic_page import AtticPage
+from xena.pages.blackouts_page import BlackoutsPage
 from xena.pages.canvas_page import CanvasPage
 from xena.pages.course_changes_page import CourseChangesPage
 from xena.pages.email_page import EmailPage
@@ -61,6 +62,7 @@ def page_objects(request):
 
     # Define page objects
     attic_page = AtticPage(driver)
+    blackouts_page = BlackoutsPage(driver)
     canvas_page = CanvasPage(driver)
     changes_page = CourseChangesPage(driver)
     email_page = EmailPage(driver)
@@ -82,6 +84,7 @@ def page_objects(request):
             setattr(cls.obj, 'driver', driver)
             setattr(cls.obj, 'term', term)
             setattr(cls.obj, 'attic_page', attic_page)
+            setattr(cls.obj, 'blackouts_page', blackouts_page)
             setattr(cls.obj, 'canvas_page', canvas_page)
             setattr(cls.obj, 'changes_page', changes_page)
             setattr(cls.obj, 'email_page', email_page)
