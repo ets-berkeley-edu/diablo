@@ -22,10 +22,9 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from datetime import date
-
 from diablo.externals.kaltura import CREATED_BY_DIABLO_TAG, Kaltura
 from diablo.jobs.base_job import BaseJob
+from diablo.lib.util import utc_now
 from diablo.models.blackout import Blackout
 from flask import current_app as app
 
@@ -33,10 +32,9 @@ from flask import current_app as app
 class BlackoutsJob(BaseJob):
 
     def _run(self):
-        today = date.today()
         kaltura = Kaltura()
         for blackout in Blackout.all_blackouts():
-            if blackout.end_date.date() < today:
+            if blackout.end_date < utc_now():
                 app.logger.info(f'Removing past blackout: {blackout}')
                 Blackout.delete_blackout(blackout.id)
             else:
