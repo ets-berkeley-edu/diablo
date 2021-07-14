@@ -134,7 +134,7 @@ SECRET_KEY = 'secret'
 
 # SQLAlchemy
 SQLALCHEMY_COMMIT_ON_TEARDOWN = True
-SQLALCHEMY_DATABASE_URI = 'postgres://diablo:diablo@localhost:5432/pazuzu'
+SQLALCHEMY_DATABASE_URI = 'postgresql://diablo:diablo@localhost:5432/pazuzu'
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 # A common configuration; one request thread, one background worker thread.

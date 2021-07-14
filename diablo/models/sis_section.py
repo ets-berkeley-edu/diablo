@@ -794,7 +794,7 @@ def _to_api_json(term_id, rows, include_rooms=True):
 
         meeting = _to_meeting_json(row)
         if not next((m for m in (course['meetings']['eligible'] + course['meetings']['ineligible']) if meeting.items() <= m.items()), None):
-            room = rooms_by_id.get(row['room_id']) if 'room_id' in row else None
+            room = rooms_by_id.get(row['room_id']) if 'room_id' in row.keys() else None
             if room and room.capability:
                 meeting['eligible'] = True
                 meeting.update({
