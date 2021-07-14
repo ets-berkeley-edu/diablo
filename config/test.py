@@ -49,6 +49,6 @@ INDEX_HTML = f'{BASE_DIR}/tests/static/test-index.html'
 
 LOGGING_LOCATION = 'STDOUT'
 
-SQLALCHEMY_DATABASE_URI = 'postgres://diablo:diablo@localhost:5432/pazuzu_test'
+SQLALCHEMY_DATABASE_URI = 'postgresql://diablo:diablo@localhost:5432/pazuzu_test'
 
 TESTING = True
