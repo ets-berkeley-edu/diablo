@@ -225,7 +225,7 @@ class TestAdminEmailsJob:
                 queued_messages = QueuedEmail.query.filter_by(section_id=section_id).all()
                 assert len(queued_messages) == 1
                 for queued_message in queued_messages:
-                    assert '2020-08-26 to 2020-10-02' in queued_message.message
+                    assert '2021-08-26 to 2021-10-02' in queued_message.message
 
                 # Message sent.
                 QueuedEmailsJob(simply_yield).run()

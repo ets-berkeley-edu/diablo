@@ -38,7 +38,6 @@ from diablo.models.scheduled import Scheduled
 from diablo.models.sent_email import SentEmail
 from diablo.models.sis_section import SisSection
 from flask import current_app as app
-import pytest
 from tests.test_api.api_test_utils import api_approve, api_get_course, get_eligible_meeting, get_instructor_uids, \
     mock_scheduled
 from tests.util import override_config, simply_yield, test_approvals_workflow
@@ -59,13 +58,7 @@ section_with_canvas_course_sites = section_6_id
 eligible_course_with_no_instructors = section_8_id
 
 
-@pytest.fixture()
-def admin_session(fake_auth):
-    fake_auth.login(admin_uid)
-
-
 class TestApprove:
-    """Only admins and authorized instructors can sign a course up for Course Capture."""
 
     @property
     def term_id(self):
@@ -81,8 +74,9 @@ class TestApprove:
             expected_status_code=401,
         )
 
-    def test_invalid_publish_type(self, client, admin_session):
+    def test_invalid_publish_type(self, client, fake_auth):
         """Reject invalid publish types."""
+        fake_auth.login(admin_uid)
         api_approve(
             client,
             publish_type='youtube',
@@ -176,8 +170,9 @@ class TestApprove:
             assert api_json['hasNecessaryApprovals'] is True
             assert api_json['scheduled'] is None
 
-    def test_approval_by_admin(self, client, admin_session):
+    def test_approval_by_admin(self, client, fake_auth):
         """Admins can schedule recordings on behalf of any eligible course."""
+        fake_auth.login(admin_uid)
         with test_approvals_workflow(app):
             api_json = api_approve(
                 client,
@@ -210,7 +205,6 @@ class TestApprove:
 
 
 class TestGetCourse:
-    """Course can be viewed by its instructors and Diablo admin users."""
 
     @property
     def term_id(self):
@@ -246,8 +240,9 @@ class TestGetCourse:
             expected_status_code=401,
         )
 
-    def test_invalid_section_id(self, client, admin_session):
+    def test_invalid_section_id(self, client, fake_auth):
         """404 if section does not exist."""
+        fake_auth.login(admin_uid)
         api_get_course(
             client,
             term_id=self.term_id,
@@ -255,8 +250,9 @@ class TestGetCourse:
             expected_status_code=404,
         )
 
-    def test_course_with_partial_approval(self, client, admin_session):
+    def test_course_with_partial_approval(self, client, fake_auth):
         """Course with two instructors and one approval."""
+        fake_auth.login(admin_uid)
         with test_approvals_workflow(app):
             # If course has approvals but not scheduled then it will show up in the feed.
             approved_by_uid = get_instructor_uids(section_id=section_1_id, term_id=self.term_id)[0]
@@ -303,8 +299,9 @@ class TestGetCourse:
         assert api_json['nonstandardMeetingDates'] is False
         assert api_json['meetingType'] == 'A'
 
-    def test_li_ka_shing_recording_options(self, client, admin_session):
+    def test_li_ka_shing_recording_options(self, client, fake_auth):
         """Rooms designated as 'auditorium' offer ALL types of recording."""
+        fake_auth.login(admin_uid)
         api_json = api_get_course(
             client,
             term_id=self.term_id,
@@ -313,8 +310,9 @@ class TestGetCourse:
         assert api_json['meetings']['eligible'][0]['room']['location'] == 'Li Ka Shing 145'
         assert len(api_json['meetings']['eligible'][0]['room']['recordingTypeOptions']) == 3
 
-    def test_section_with_canvas_course_sites(self, client, admin_session):
+    def test_section_with_canvas_course_sites(self, client, fake_auth):
         """Canvas course site information is included in the API."""
+        fake_auth.login(admin_uid)
         CanvasJob(simply_yield).run()
         api_json = api_get_course(
             client,
@@ -363,8 +361,9 @@ class TestGetCourse:
         assert cross_listed_section_id == api_json['crossListings'][0]['sectionId']
         assert instructor_uid in [i['uid'] for i in api_json['instructors']]
 
-    def test_no_cross_listing(self, client, admin_session):
+    def test_no_cross_listing(self, client, fake_auth):
         """Course does not have cross-listing."""
+        fake_auth.login(admin_uid)
         api_json = api_get_course(
             client,
             term_id=self.term_id,
@@ -372,8 +371,9 @@ class TestGetCourse:
         )
         assert len(api_json['crossListings']) == 0
 
-    def test_no_instructors(self, client, admin_session):
+    def test_no_instructors(self, client, fake_auth):
         """Course with no instructors should be available."""
+        fake_auth.login(admin_uid)
         api_json = api_get_course(
             client,
             term_id=self.term_id,
@@ -381,8 +381,9 @@ class TestGetCourse:
         )
         assert len(api_json['instructors']) == 0
 
-    def test_dual_mode_instruction(self, client, admin_session):
+    def test_dual_mode_instruction(self, client, fake_auth):
         """Course is both online and in a physical location."""
+        fake_auth.login(admin_uid)
         api_json = api_get_course(
             client,
             term_id=self.term_id,
@@ -399,8 +400,9 @@ class TestGetCourse:
         assert api_json['nonstandardMeetingDates'] is True
         assert api_json['meetingType'] == 'C'
 
-    def test_hybrid_instruction(self, client, admin_session):
+    def test_hybrid_instruction(self, client, fake_auth):
         """Course exists in two concurrent physical locations."""
+        fake_auth.login(admin_uid)
         api_json = api_get_course(
             client,
             term_id=self.term_id,
@@ -418,23 +420,23 @@ class TestGetCourse:
         assert ineligible_meetings[0]['eligible'] is False
         assert api_json['meetingType'] == 'B'
 
-    def test_meeting_recording_end_date(self, client, admin_session):
+    def test_meeting_recording_end_date(self, client, fake_auth):
         # The term ends on a Tuesday
+        fake_auth.login(admin_uid)
         with override_config(app, 'CURRENT_TERM_END', '2020-11-24'):
             api_json = api_get_course(
                 client,
                 term_id=self.term_id,
                 section_id=50015,
             )
-            assert api_json['meetings']['eligible'][0]['endDate'] == '2020-12-11'
+            assert api_json['meetings']['eligible'][0]['endDate'] == '2021-12-11'
             # The course meets on ['MO', 'WE', 'FR']. The last recordings is on Wed preceding term_end
-            assert api_json['meetings']['eligible'][0]['recordingEndDate'] == '2020-11-23'
-            assert api_json['meetings']['ineligible'][0]['endDate'] == '2020-12-11'
+            assert api_json['meetings']['eligible'][0]['recordingEndDate'] == '2021-11-24'
+            assert api_json['meetings']['ineligible'][0]['endDate'] == '2021-12-11'
             assert 'recordingEndDate' not in api_json['meetings']['ineligible'][0]
 
 
 class TestGetCourses:
-    """Only admins can see who has been invited, who has signed up, etc."""
 
     @property
     def term_id(self):
@@ -453,25 +455,6 @@ class TestGetCourses:
         assert response.status_code == expected_status_code
         return response.json
 
-    def _send_invitation_email(self, section_id):
-        SentEmail.create(
-            section_id=section_id,
-            recipient_uid=get_instructor_uids(section_id=section_id, term_id=self.term_id)[0],
-            template_type='invitation',
-            term_id=self.term_id,
-        )
-
-    def _create_approval(self, section_id):
-        Approval.create(
-            approved_by_uid=get_instructor_uids(section_id=section_id, term_id=self.term_id)[0],
-            approver_type_='instructor',
-            publish_type_='kaltura_my_media',
-            recording_type_='presentation_audio',
-            room_id=Room.get_room_id(section_id=section_id, term_id=self.term_id),
-            section_id=section_id,
-            term_id=self.term_id,
-        )
-
     def test_not_authenticated(self, client):
         """Deny anonymous access."""
         self._api_courses(client, term_id=self.term_id, expected_status_code=401)
@@ -481,8 +464,9 @@ class TestGetCourses:
         fake_auth.login(instructor_uids[0])
         self._api_courses(client, term_id=self.term_id, expected_status_code=401)
 
-    def test_do_not_email_filter(self, client, admin_session):
+    def test_do_not_email_filter(self, client, fake_auth):
         """Do Not Email filter: Courses in eligible room; "opt out" is true; all stages of approval; not scheduled."""
+        fake_auth.login(admin_uid)
         with test_approvals_workflow(app):
             # Send invites them opt_out.
             for section_id in (section_1_id, section_in_ineligible_room, section_3_id, section_4_id):
@@ -494,10 +478,10 @@ class TestGetCourses:
                     assert not in_enabled_room
                 else:
                     assert in_enabled_room
-                    self._send_invitation_email(section_id)
+                    _send_invitation_email(section_id, term_id=self.term_id)
 
             # If course has approvals but not scheduled then it will show up in the feed.
-            self._create_approval(section_4_id)
+            _create_approval(section_4_id, term_id=self.term_id)
             # Feed will exclude scheduled.
             mock_scheduled(
                 section_id=section_3_id,
@@ -508,28 +492,35 @@ class TestGetCourses:
             api_json = self._api_courses(client, term_id=self.term_id, filter_='Do Not Email')
 
             # Opted-out courses are in the feed, whether approved or not
-            course_1 = _find_course(api_json=api_json, section_id=section_1_id)
+            course_1 = _find_course(api_json=api_json, section_id=section_1_id, term_id=self.term_id)
             assert course_1['approvalStatus'] == 'Invited'
             assert course_1['schedulingStatus'] == 'Not Scheduled'
-            course_4 = _find_course(api_json=api_json, section_id=section_4_id)
+            course_4 = _find_course(api_json=api_json, section_id=section_4_id, term_id=self.term_id)
             assert course_4['approvalStatus'] == 'Approved'
             assert course_4['schedulingStatus'] == 'Queued for Scheduling'
 
             for section_id in (section_3_id, section_in_ineligible_room):
                 # Excluded courses
-                assert not _find_course(api_json=api_json, section_id=section_id)
+                assert not _find_course(api_json=api_json, section_id=section_id, term_id=self.term_id)
 
-    def test_invited_filter(self, client, admin_session):
+    def test_invited_filter(self, client, fake_auth):
         """Invited filter: Course in an eligible room, have received invitation. No approvals. Not scheduled."""
+        fake_auth.login(admin_uid)
         with test_approvals_workflow(app):
+            # Past terms should be ignored
+            past_term = 2208
+            _send_invitation_email(section_id=section_4_id, term_id=past_term)
+            _send_invitation_email(section_id=section_5_id, term_id=past_term)
+
             # Course with approval is NOT expected in results
-            self._send_invitation_email(section_5_id)
-            self._create_approval(section_5_id)
+            _send_invitation_email(section_id=section_5_id, term_id=self.term_id)
+            _create_approval(section_id=section_5_id, term_id=self.term_id)
             # Course in ineligible room is NOT expected in results
-            self._send_invitation_email(section_2_id)
+            _send_invitation_email(section_id=section_2_id, term_id=self.term_id)
             # Course in eligible room
             eligible_section_id = section_4_id
-            self._send_invitation_email(eligible_section_id)
+            _send_invitation_email(section_id=eligible_section_id, term_id=self.term_id)
+
             std_commit(allow_test_environment=True)
 
             api_json = self._api_courses(client, term_id=self.term_id, filter_='Invited')
@@ -537,19 +528,21 @@ class TestGetCourses:
             assert api_json[0]['sectionId'] == eligible_section_id
 
             # Section with ZERO approvals will show up in search results
-            course = _find_course(api_json=api_json, section_id=section_4_id)
+            course = _find_course(api_json=api_json, section_id=section_4_id, term_id=self.term_id)
             assert course
             assert course['label'] == 'CHEM C110L, LAB 001'
             assert course['approvalStatus'] == 'Invited'
             assert course['schedulingStatus'] == 'Not Scheduled'
+            assert course['termId'] == self.term_id
             # The section with approval will NOT show up in search results
-            assert not _find_course(api_json=api_json, section_id=section_5_id)
+            assert not _find_course(api_json=api_json, section_id=section_5_id, term_id=self.term_id)
 
-    def test_not_invited_filter(self, client, admin_session):
+    def test_not_invited_filter(self, client, fake_auth):
         """Not-invited filter: Courses in eligible rooms, never sent an invitation. No approval. Not scheduled."""
+        fake_auth.login(admin_uid)
         with test_approvals_workflow(app):
             # The first course gets an invitation
-            self._send_invitation_email(section_1_id)
+            _send_invitation_email(section_1_id, term_id=self.term_id)
 
             # The second course did not receive an invitation BUT it does have approval.
             invite = SentEmail.get_emails_of_type(
@@ -559,28 +552,29 @@ class TestGetCourses:
             )
             assert not invite
 
-            self._create_approval(section_4_id)
+            _create_approval(section_4_id, term_id=self.term_id)
             std_commit(allow_test_environment=True)
             api_json = self._api_courses(client, term_id=self.term_id, filter_='Not Invited')
-            assert not _find_course(api_json=api_json, section_id=section_1_id)
-            assert not _find_course(api_json=api_json, section_id=section_4_id)
+            assert not _find_course(api_json=api_json, section_id=section_1_id, term_id=self.term_id)
+            assert not _find_course(api_json=api_json, section_id=section_4_id, term_id=self.term_id)
             # Zero instructors is acceptable
-            assert _find_course(api_json=api_json, section_id=eligible_course_with_no_instructors)
+            assert _find_course(api_json=api_json, section_id=eligible_course_with_no_instructors, term_id=self.term_id)
             # Third course is in enabled room and has not received an invite. Therefore, it is in the feed.
             assert _is_course_in_enabled_room(section_id=section_3_id, term_id=self.term_id)
-            course = _find_course(api_json=api_json, section_id=section_3_id)
+            course = _find_course(api_json=api_json, section_id=section_3_id, term_id=self.term_id)
             assert course['approvalStatus'] == 'Not Invited'
             assert course['schedulingStatus'] == 'Not Scheduled'
             assert course['label'] == 'BIO 1B, LEC 001'
 
-    def test_partially_approved_filter(self, client, admin_session):
+    def test_partially_approved_filter(self, client, fake_auth):
         """Partially approved: Eligible, invited course with 1+ approvals, but not ALL instructors have approved."""
+        fake_auth.login(admin_uid)
         with test_approvals_workflow(app):
             for section_id in [section_1_id, section_6_id, section_7_id]:
                 # Assert multiple instructors
                 assert len(get_instructor_uids(section_id=section_id, term_id=self.term_id)) > 1
                 # Send invites
-                self._send_invitation_email(section_id)
+                _send_invitation_email(section_id, term_id=self.term_id)
                 if section_id == section_1_id:
                     # If course is "approved" by admin only then it will NOT show up on the partially-approval list.
                     Approval.create(
@@ -594,7 +588,7 @@ class TestGetCourses:
                     )
                 else:
                     # Approval by first instructor only
-                    self._create_approval(section_id)
+                    _create_approval(section_id=section_id, term_id=self.term_id)
 
             # Feed will include both scheduled and not scheduled.
             for section_id in [section_1_id, section_7_id]:
@@ -607,19 +601,20 @@ class TestGetCourses:
             std_commit(allow_test_environment=True)
             api_json = self._api_courses(client, term_id=self.term_id, filter_='Partially Approved')
             assert len(api_json) == 1
-            course = _find_course(api_json=api_json, section_id=section_6_id)
+            course = _find_course(api_json=api_json, section_id=section_6_id, term_id=self.term_id)
             assert course
             assert course['label'] == 'LAW 23, LEC 002'
             assert course['approvalStatus'] == 'Partially Approved'
             assert course['schedulingStatus'] == 'Not Scheduled'
 
-    def test_scheduled_filter(self, client, admin_session):
+    def test_scheduled_filter(self, client, fake_auth):
         """Scheduled filter: Courses with recordings scheduled."""
+        fake_auth.login(admin_uid)
         with test_approvals_workflow(app):
             # Send invites
             for section_id in [section_1_id, section_6_id]:
-                self._send_invitation_email(section_id)
-                self._create_approval(section_id)
+                _send_invitation_email(section_id, term_id=self.term_id)
+                _create_approval(section_id, term_id=self.term_id)
 
             # Feed will only include courses that were scheduled.
             mock_scheduled(
@@ -635,18 +630,19 @@ class TestGetCourses:
             std_commit(allow_test_environment=True)
             api_json = self._api_courses(client, term_id=self.term_id, filter_='Scheduled')
             assert len(api_json) == 1
-            course = _find_course(api_json=api_json, section_id=section_1_id)
+            course = _find_course(api_json=api_json, section_id=section_1_id, term_id=self.term_id)
             assert course['approvalStatus'] == 'Partially Approved'
             assert course['schedulingStatus'] == 'Scheduled'
-            assert not _find_course(api_json=api_json, section_id=section_6_id)
+            assert not _find_course(api_json=api_json, section_id=section_6_id, term_id=self.term_id)
 
-    def test_all_filter(self, client, admin_session):
+    def test_all_filter(self, client, fake_auth):
         """The 'all' filter returns all courses in eligible rooms."""
+        fake_auth.login(admin_uid)
         with test_approvals_workflow(app):
             # Put courses in a few different states.
             for section_id in [section_1_id, section_6_id]:
-                self._send_invitation_email(section_id)
-                self._create_approval(section_id)
+                _send_invitation_email(section_id, term_id=self.term_id)
+                _create_approval(section_id, term_id=self.term_id)
             mock_scheduled(
                 section_id=section_1_id,
                 term_id=self.term_id,
@@ -656,12 +652,11 @@ class TestGetCourses:
             api_json = self._api_courses(client, term_id=self.term_id, filter_='All')
             assert len(api_json) == 11
             for section_id in [section_1_id, section_3_id, section_4_id, section_5_id, section_6_id]:
-                assert _find_course(api_json=api_json, section_id=section_id)
-            assert not _find_course(api_json=api_json, section_id=section_in_ineligible_room)
+                assert _find_course(api_json=api_json, section_id=section_id, term_id=self.term_id)
+            assert not _find_course(api_json=api_json, section_id=section_in_ineligible_room, term_id=self.term_id)
 
 
 class TestDownloadCoursesCsv:
-    """Only admins download courses CSV."""
 
     @staticmethod
     def _api_courses_csv(client, expected_status_code=200):
@@ -686,8 +681,9 @@ class TestDownloadCoursesCsv:
         fake_auth.login(instructor_uids[0])
         self._api_courses_csv(client, expected_status_code=401)
 
-    def test_download_csv(self, client, admin_session):
+    def test_download_csv(self, client, fake_auth):
         """Admin users can download courses CSV file."""
+        fake_auth.login(admin_uid)
         term_id = app.config['CURRENT_TERM_ID']
         csv_string = self._api_courses_csv(client).decode('utf-8')
         reader = csv.reader(StringIO(csv_string), delimiter=',')
@@ -729,7 +725,6 @@ class TestDownloadCoursesCsv:
 
 
 class TestCoursesChanges:
-    """Only admins can see course changes (e.g., room change) that might disrupt scheduled recordings."""
 
     @property
     def term_id(self):
@@ -751,12 +746,14 @@ class TestCoursesChanges:
         fake_auth.login(instructor_uids[0])
         self._api_course_changes(client, term_id=self.term_id, expected_status_code=401)
 
-    def test_empty_feed(self, client, admin_session):
+    def test_empty_feed(self, client, fake_auth):
         """The /course/changes feed will often be empty."""
+        fake_auth.login(admin_uid)
         assert len(self._api_course_changes(client, term_id=2192)) == 0
 
-    def test_has_obsolete_room(self, client, admin_session):
+    def test_has_obsolete_room(self, client, fake_auth):
         """Admins can see room changes that might disrupt scheduled recordings."""
+        fake_auth.login(admin_uid)
         course = SisSection.get_course(term_id=self.term_id, section_id=section_2_id)
         actual_room_id = course['meetings']['ineligible'][0]['room']['id']
         obsolete_room = Room.find_room('Barker 101')
@@ -770,15 +767,16 @@ class TestCoursesChanges:
             override_room_id=obsolete_room.id,
         )
         api_json = self._api_course_changes(client, term_id=self.term_id)
-        course = _find_course(api_json=api_json, section_id=section_2_id)
+        course = _find_course(api_json=api_json, section_id=section_2_id, term_id=self.term_id)
         assert course
         assert course['scheduled']['hasObsoleteRoom'] is True
         assert course['scheduled']['hasObsoleteDates'] is False
         assert course['scheduled']['hasObsoleteTimes'] is False
         assert course['scheduled']['hasObsoleteInstructors'] is False
 
-    def test_has_obsolete_meeting_times(self, client, admin_session):
+    def test_has_obsolete_meeting_times(self, client, fake_auth):
         """Admins can see meeting time changes that might disrupt scheduled recordings."""
+        fake_auth.login(admin_uid)
         with test_approvals_workflow(app):
             meeting = get_eligible_meeting(section_id=section_1_id, term_id=self.term_id)
             obsolete_meeting_days = 'MOWE'
@@ -801,15 +799,16 @@ class TestCoursesChanges:
             std_commit(allow_test_environment=True)
 
             api_json = self._api_course_changes(client, term_id=self.term_id)
-            course = _find_course(api_json=api_json, section_id=section_1_id)
+            course = _find_course(api_json=api_json, section_id=section_1_id, term_id=self.term_id)
             assert course
             assert course['scheduled']['hasObsoleteRoom'] is False
             assert course['scheduled']['hasObsoleteDates'] is False
             assert course['scheduled']['hasObsoleteTimes'] is True
             assert course['scheduled']['hasObsoleteInstructors'] is False
 
-    def test_has_obsolete_meeting_dates(self, client, admin_session):
+    def test_has_obsolete_meeting_dates(self, client, fake_auth):
         """Admins can see meeting date changes that might disrupt scheduled recordings."""
+        fake_auth.login(admin_uid)
         with test_approvals_workflow(app):
             meeting = get_eligible_meeting(section_id=section_1_id, term_id=self.term_id)
             obsolete_meeting_end_date = '2020-04-01'
@@ -832,15 +831,16 @@ class TestCoursesChanges:
             std_commit(allow_test_environment=True)
 
             api_json = self._api_course_changes(client, term_id=self.term_id)
-            course = _find_course(api_json=api_json, section_id=section_1_id)
+            course = _find_course(api_json=api_json, section_id=section_1_id, term_id=self.term_id)
             assert course
             assert course['scheduled']['hasObsoleteRoom'] is False
             assert course['scheduled']['hasObsoleteDates'] is True
             assert course['scheduled']['hasObsoleteTimes'] is False
             assert course['scheduled']['hasObsoleteInstructors'] is False
 
-    def test_has_obsolete_instructors(self, client, admin_session):
+    def test_has_obsolete_instructors(self, client, fake_auth):
         """Admins can see instructor changes that might disrupt scheduled recordings."""
+        fake_auth.login(admin_uid)
         with test_approvals_workflow(app):
             meeting = get_eligible_meeting(section_id=section_1_id, term_id=self.term_id)
             instructor_uids = get_instructor_uids(term_id=self.term_id, section_id=section_1_id)
@@ -864,7 +864,7 @@ class TestCoursesChanges:
             std_commit(allow_test_environment=True)
 
             api_json = self._api_course_changes(client, term_id=self.term_id)
-            course = _find_course(api_json=api_json, section_id=section_1_id)
+            course = _find_course(api_json=api_json, section_id=section_1_id, term_id=self.term_id)
             assert course
             assert course['scheduled']['hasObsoleteRoom'] is False
             assert course['scheduled']['hasObsoleteDates'] is False
@@ -876,22 +876,23 @@ class TestCoursesChanges:
 
 
 class TestCrossListedNameGeneration:
-    """Rules for collapsing cross-listed courses into a single name/title."""
 
     @property
     def term_id(self):
         return app.config['CURRENT_TERM_ID']
 
-    def test_different_course_names(self, admin_session, client):
+    def test_different_course_names(self, client, fake_auth):
         """Departments sharing catalog id and section code."""
+        fake_auth.login(admin_uid)
         self._verify_name_generation(
             client=client,
             section_id=section_7_id,
             expected_name='MATH C51, LEC 001 | STAT C51, LEC 003',
         )
 
-    def test_different_instruction_format(self, admin_session, client):
+    def test_different_instruction_format(self, client, fake_auth):
         """Departments share catalog id but not section code."""
+        fake_auth.login(admin_uid)
         self._verify_name_generation(
             client=client,
             section_id=50012,
@@ -918,7 +919,6 @@ class TestCrossListedNameGeneration:
 
 
 class TestUpdatePreferences:
-    """Only admins view and modify course preferences. For example, the 'do not email' preference."""
 
     @property
     def term_id(self):
@@ -966,8 +966,9 @@ class TestUpdatePreferences:
             expected_status_code=401,
         )
 
-    def test_authorized(self, client, admin_session):
+    def test_authorized(self, client, fake_auth):
         """Only admins can toggle the do-not-email preference of any given course."""
+        fake_auth.login(admin_uid)
         with test_approvals_workflow(app):
             section_ids_opted_out = CoursePreference.get_section_ids_opted_out(term_id=self.term_id)
             previously_opted_out = section_1_id not in section_ids_opted_out
@@ -986,7 +987,8 @@ class TestUpdatePreferences:
             else:
                 assert section_1_id not in section_ids_opted_out
 
-    def test_scheduling_removes_opt_out(self, client, admin_session):
+    def test_scheduling_removes_opt_out(self, client, fake_auth):
+        fake_auth.login(admin_uid)
         with test_approvals_workflow(app):
             self._api_opt_out_update(
                 client,
@@ -1010,7 +1012,6 @@ class TestUpdatePreferences:
 
 
 class TestUnscheduleCourse:
-    """Only admins can remove existing approvals and schedules for a course."""
 
     @property
     def term_id(self):
@@ -1054,8 +1055,9 @@ class TestUnscheduleCourse:
             expected_status_code=401,
         )
 
-    def test_not_found(self, client, admin_session):
+    def test_not_found(self, client, fake_auth):
         """A course cannot be unscheduled if can't be found."""
+        fake_auth.login(admin_uid)
         self._api_unschedule(
             client,
             term_id=self.term_id,
@@ -1063,8 +1065,9 @@ class TestUnscheduleCourse:
             expected_status_code=400,
         )
 
-    def test_not_scheduled(self, client, admin_session):
+    def test_not_scheduled(self, client, fake_auth):
         """A course cannot be unscheduled if it hasn't been scheduled or queued first."""
+        fake_auth.login(admin_uid)
         self._api_unschedule(
             client,
             term_id=self.term_id,
@@ -1072,7 +1075,8 @@ class TestUnscheduleCourse:
             expected_status_code=400,
         )
 
-    def test_authorized_unschedule_scheduled(self, client, admin_session):
+    def test_authorized_unschedule_scheduled(self, client, fake_auth):
+        fake_auth.login(admin_uid)
         with test_approvals_workflow(app):
             api_approve(
                 client,
@@ -1103,7 +1107,8 @@ class TestUnscheduleCourse:
             assert response['hasOptedOut'] is True
             assert response['schedulingStatus'] == 'Not Scheduled'
 
-    def test_authorized_unschedule_queued(self, client, admin_session):
+    def test_authorized_unschedule_queued(self, client, fake_auth):
+        fake_auth.login(admin_uid)
         with test_approvals_workflow(app):
             api_approve(
                 client,
@@ -1128,17 +1133,7 @@ class TestUnscheduleCourse:
             assert response['hasOptedOut'] is True
 
 
-def _is_course_in_enabled_room(section_id, term_id):
-    eligible_meetings = SisSection.get_course(term_id=term_id, section_id=section_id)['meetings']['eligible']
-    return eligible_meetings and eligible_meetings[0]['room']['capability'] is not None
-
-
-def _find_course(api_json, section_id):
-    return next((s for s in api_json if s['sectionId'] == section_id), None)
-
-
 class TestCoursesReport:
-    """Only admins can see courses report."""
 
     @property
     def term_id(self):
@@ -1160,7 +1155,38 @@ class TestCoursesReport:
         fake_auth.login(instructor_uids[0])
         self._api_courses_report(client, term_id=self.term_id, expected_status_code=401)
 
-    def test_total_scheduled_count(self, client, admin_session):
+    def test_total_scheduled_count(self, client, fake_auth):
         """The courses report includes valid total_scheduled_count."""
+        fake_auth.login(admin_uid)
         report = self._api_courses_report(client, term_id=self.term_id)
         assert report['totalScheduledCount'] == len(Scheduled.get_all_scheduled(self.term_id))
+
+
+def _create_approval(section_id, term_id):
+    Approval.create(
+        approved_by_uid=get_instructor_uids(section_id=section_id, term_id=term_id)[0],
+        approver_type_='instructor',
+        publish_type_='kaltura_my_media',
+        recording_type_='presentation_audio',
+        room_id=Room.get_room_id(section_id=section_id, term_id=term_id),
+        section_id=section_id,
+        term_id=term_id,
+    )
+
+
+def _find_course(api_json, section_id, term_id):
+    return next((s for s in api_json if s['sectionId'] == section_id and s['termId'] == term_id), None)
+
+
+def _is_course_in_enabled_room(section_id, term_id):
+    eligible_meetings = SisSection.get_course(term_id=term_id, section_id=section_id)['meetings']['eligible']
+    return eligible_meetings and eligible_meetings[0]['room']['capability'] is not None
+
+
+def _send_invitation_email(section_id, term_id):
+    SentEmail.create(
+        section_id=section_id,
+        recipient_uid=get_instructor_uids(section_id=section_id, term_id=term_id)[0],
+        template_type='invitation',
+        term_id=term_id,
+    )

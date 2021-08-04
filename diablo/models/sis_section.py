@@ -262,13 +262,13 @@ class SisSection(db.Model):
                 r.id AS room_id,
                 r.location AS room_location
             FROM sis_sections s
-            JOIN rooms r ON
-                r.location = s.meeting_location
-                AND {course_filter}
+            JOIN rooms r ON r.location = s.meeting_location
+            LEFT JOIN instructors i ON i.uid = s.instructor_uid
+            WHERE
+                {course_filter}
                 AND s.term_id = :term_id
                 AND (s.instructor_uid IS NULL OR s.instructor_role_code IN ('ICNT', 'PI', 'TNIC'))
                 AND s.is_principal_listing IS TRUE
-            LEFT JOIN instructors i ON i.uid = s.instructor_uid
             ORDER BY s.course_name, s.section_id, s.instructor_uid, r.capability NULLS LAST
         """
         rows = db.session.execute(text(sql), params)
@@ -286,13 +286,10 @@ class SisSection(db.Model):
                 r.id AS room_id,
                 r.location AS room_location
             FROM sis_sections s
-            JOIN rooms r ON r.location = s.meeting_location
-                AND r.capability IS NOT NULL
-                AND s.term_id = :term_id
-                AND (s.instructor_uid IS NULL OR s.instructor_role_code IN ('ICNT', 'PI', 'TNIC'))
-                AND s.is_principal_listing IS TRUE
+            JOIN rooms r ON r.location = s.meeting_location AND r.capability IS NOT NULL
             JOIN sent_emails e ON
                 e.section_id = s.section_id
+                AND e.term_id = s.term_id
                 AND e.template_type = 'invitation'
             LEFT JOIN instructors i ON i.uid = s.instructor_uid
             -- Omit approved courses, scheduled courses and opt-outs.
@@ -308,7 +305,13 @@ class SisSection(db.Model):
                 cp.section_id = s.section_id
                 AND cp.term_id = s.term_id
                 AND cp.has_opted_out IS TRUE
-            WHERE a.section_id IS NULL AND d.section_id IS NULL and cp.section_id IS NULL
+            WHERE
+                s.term_id = :term_id
+                AND (s.instructor_uid IS NULL OR s.instructor_role_code IN ('ICNT', 'PI', 'TNIC'))
+                AND s.is_principal_listing IS TRUE
+                AND a.section_id IS NULL
+                AND d.section_id IS NULL
+                AND cp.section_id IS NULL
             ORDER BY s.course_name, s.section_id, s.instructor_uid, r.capability NULLS LAST
         """
         rows = db.session.execute(
@@ -332,10 +335,6 @@ class SisSection(db.Model):
                 r.location AS room_location
             FROM sis_sections s
             JOIN rooms r ON r.location = s.meeting_location
-                AND s.section_id IN ({_sections_with_at_least_one_eligible_room()})
-                AND s.term_id = :term_id
-                AND (s.instructor_uid IS NULL OR s.instructor_role_code IN ('ICNT', 'PI', 'TNIC'))
-                AND s.is_principal_listing IS TRUE
             LEFT JOIN instructors i ON i.uid = s.instructor_uid
             -- Omit sent invitations, approved courses, scheduled courses and opt-outs.
             LEFT JOIN approvals a ON
@@ -354,7 +353,15 @@ class SisSection(db.Model):
                 cp.section_id = s.section_id
                 AND cp.term_id = s.term_id
                 AND cp.has_opted_out IS TRUE
-            WHERE a.section_id IS NULL AND d.section_id IS NULL AND e.section_id IS NULL AND cp.section_id IS NULL
+            WHERE
+                s.term_id = :term_id
+                AND s.section_id IN ({_sections_with_at_least_one_eligible_room()})
+                AND (s.instructor_uid IS NULL OR s.instructor_role_code IN ('ICNT', 'PI', 'TNIC'))
+                AND s.is_principal_listing IS TRUE
+                AND a.section_id IS NULL
+                AND d.section_id IS NULL
+                AND e.section_id IS NULL
+                AND cp.section_id IS NULL
             ORDER BY s.course_name, s.section_id, s.instructor_uid, r.capability NULLS LAST
         """
         rows = db.session.execute(
@@ -377,12 +384,7 @@ class SisSection(db.Model):
                 r.id AS room_id,
                 r.location AS room_location
             FROM sis_sections s
-            JOIN rooms r ON
-                r.location = s.meeting_location
-                AND s.term_id = :term_id
-                AND (s.instructor_uid IS NULL OR s.instructor_role_code IN ('ICNT', 'PI', 'TNIC'))
-                AND s.is_principal_listing IS TRUE
-                AND s.section_id IN ({_sections_with_at_least_one_eligible_room()})
+            JOIN rooms r ON r.location = s.meeting_location
             JOIN course_preferences c ON
                 c.section_id = s.section_id
                 AND c.term_id = :term_id
@@ -393,7 +395,12 @@ class SisSection(db.Model):
                 d.section_id = s.section_id
                 AND d.term_id = :term_id
                 AND d.deleted_at IS NULL
-            WHERE d.section_id IS NULL
+            WHERE
+                d.section_id IS NULL
+                AND s.term_id = :term_id
+                AND (s.instructor_uid IS NULL OR s.instructor_role_code IN ('ICNT', 'PI', 'TNIC'))
+                AND s.is_principal_listing IS TRUE
+                AND s.section_id IN ({_sections_with_at_least_one_eligible_room()})
             ORDER BY s.course_name, s.section_id, s.instructor_uid, r.capability NULLS LAST
         """
         rows = db.session.execute(
@@ -564,11 +571,12 @@ class SisSection(db.Model):
                 r.location AS room_location
             FROM sis_sections s
             JOIN rooms r ON r.location = s.meeting_location
-                AND s.term_id = :term_id
+            LEFT JOIN instructors i ON i.uid = s.instructor_uid
+            WHERE
+                s.term_id = :term_id
                 AND (s.instructor_uid IS NULL OR s.instructor_role_code IN ('ICNT', 'PI', 'TNIC'))
                 AND s.is_principal_listing IS TRUE
                 AND s.meeting_location = :location
-            LEFT JOIN instructors i ON i.uid = s.instructor_uid
             ORDER BY CASE LEFT(s.meeting_days, 2)
               WHEN 'MO' THEN 1
               WHEN 'TU' THEN 2
@@ -684,11 +692,12 @@ class SisSection(db.Model):
             SELECT DISTINCT s.section_id
             FROM sis_sections s
             JOIN rooms r ON r.location = s.meeting_location
-                AND s.term_id = :term_id
-                AND (s.instructor_uid IS NULL OR s.instructor_role_code IN ('ICNT', 'PI', 'TNIC'))
-                AND s.is_principal_listing IS TRUE
             JOIN scheduled d ON d.section_id = s.section_id AND d.term_id = :term_id AND d.deleted_at IS NULL
             LEFT JOIN instructors i ON i.uid = s.instructor_uid
+            WHERE
+                s.term_id = :term_id
+                AND (s.instructor_uid IS NULL OR s.instructor_role_code IN ('ICNT', 'PI', 'TNIC'))
+                AND s.is_principal_listing IS TRUE
             ORDER BY s.section_id
         """
         rows = db.session.execute(
