@@ -68,6 +68,6 @@ class TestKalturaEnums:
             term_name=term_name_for_sis_id(term_id),
         )
         assert 'MATH C51, LEC 001 | STAT C151, COL 001' in description
-        assert 'Fall 2020' in description
+        assert 'Fall 2021' in description
         assert 'Rudolf Schündler and Arthur Storch' in description
-        assert '2020' in description
+        assert '2021' in description

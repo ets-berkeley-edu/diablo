@@ -72,10 +72,10 @@ def _get_mock_recipient():
 def _get_expected_email():
     return """Hello Dick Hallorann,
 
-    Your Fall 2020 course PHYSICS 7A, "Fluid Dynamics", is eligible for Course Capture.
+    Your Fall 2021 course PHYSICS 7A, "Fluid Dynamics", is eligible for Course Capture.
     This course meets Monday, Wednesday and Friday from 3:00 pm to 3:59 pm.
 
-    Go to <a href="http://foo.berkeley.edu">https://manage-test.coursecapture.berkeley.edu/course/2208/50003</a> and sign up.
+    Go to <a href="http://foo.berkeley.edu">https://manage-test.coursecapture.berkeley.edu/course/2218/50003</a> and sign up.
 
     Thank you."""
 
