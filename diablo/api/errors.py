@@ -23,11 +23,10 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-
 from diablo.lib.http import tolerant_jsonify
 
 
-class JsonableException(Exception):
+class JsonableError(Exception):
     def __init__(self, message):
         Exception.__init__(self)
         self.message = message
@@ -39,21 +38,21 @@ class JsonableException(Exception):
             return ''
 
 
-class BadRequestError(JsonableException):
+class BadRequestError(JsonableError):
     pass
 
 
-class UnauthorizedRequestError(JsonableException):
+class UnauthorizedRequestError(JsonableError):
     pass
 
 
-class ForbiddenRequestError(JsonableException):
+class ForbiddenRequestError(JsonableError):
     pass
 
 
-class ResourceNotFoundError(JsonableException):
+class ResourceNotFoundError(JsonableError):
     pass
 
 
-class InternalServerError(JsonableException):
+class InternalServerError(JsonableError):
     pass
