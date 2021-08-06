@@ -25,7 +25,6 @@ ENHANCEMENTS, OR MODIFICATIONS.
 from urllib.parse import urlencode, urljoin, urlparse
 
 import cas
-from diablo import cache
 from diablo.api.errors import ResourceNotFoundError
 from diablo.lib.http import add_param_to_url, tolerant_jsonify
 from diablo.models.user import User
@@ -34,11 +33,16 @@ from flask_login import current_user, login_required, login_user, logout_user
 
 
 @app.route('/api/auth/cas_login_url', methods=['GET'])
-@cache.cached()
 def cas_login_url():
     target_url = request.referrer or None
+    cas_url = _cas_client(target_url).get_login_url()
+    app.logger.info(f"""
+        cas_login_url for UID {current_user.uid}:
+            target_url = {target_url}
+            cas_url = {cas_url}
+    """)
     return tolerant_jsonify({
-        'casLoginUrl': _cas_client(target_url).get_login_url(),
+        'casLoginUrl': cas_url,
     })
 
 
