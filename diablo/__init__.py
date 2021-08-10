@@ -32,7 +32,7 @@ from flask_caching import Cache
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import SQLAlchemyError
 
-__version__ = '1.2.1'
+__version__ = '1.2.2'
 
 cache = Cache()
 
@@ -73,6 +73,7 @@ def cachify(key_pattern, timeout=1440):
         cached = cache.get(key)
         if cached is None:
             cached = func(*args, **kw)
+            # timeout is in seconds
             cache.set(key, cached, timeout)
         return cached
 
