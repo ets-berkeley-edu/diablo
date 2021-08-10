@@ -73,6 +73,7 @@ def cachify(key_pattern, timeout=1440):
         cached = cache.get(key)
         if cached is None:
             cached = func(*args, **kw)
+            # timeout is in seconds
             cache.set(key, cached, timeout)
         return cached
 
