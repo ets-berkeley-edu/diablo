@@ -87,7 +87,7 @@ def utc_now():
 
 def format_days(days):
     n = 2
-    return [(days[i:i + n]) for i in range(0, len(days), n)] if days else None
+    return [(days[i:i + n]) for i in range(0, len(days), n)] if days else []
 
 
 def format_time(military_time):
