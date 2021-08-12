@@ -60,15 +60,16 @@ def _update_already_scheduled_events():
         course_name = course['label']
         scheduled = course['scheduled']
         kaltura_schedule = kaltura.get_event(event_id=scheduled['kalturaScheduleId'])
-        if kaltura_schedule and course['canvasCourseSites'] and scheduled['publishType'] == 'kaltura_media_gallery':
-            # From Kaltura, get Canvas course sites (categories) currently mapped to the course.
-            template_entry_id = kaltura_schedule['templateEntryId']
-            categories = kaltura.get_categories(template_entry_id)
+        if kaltura_schedule:
+            if course['canvasCourseSites'] and scheduled['publishType'] == 'kaltura_media_gallery':
+                # From Kaltura, get Canvas course sites (categories) currently mapped to the course.
+                template_entry_id = kaltura_schedule['templateEntryId']
+                categories = kaltura.get_categories(template_entry_id)
 
-            for s in course['canvasCourseSites']:
-                canvas_course_site_id = str(s['courseSiteId'])
-                if canvas_course_site_id not in [c['name'] for c in categories]:
-                    _update_kaltura_category(canvas_course_site_id, course_name, kaltura, template_entry_id)
+                for s in course['canvasCourseSites']:
+                    canvas_course_site_id = str(s['courseSiteId'])
+                    if canvas_course_site_id not in [c['name'] for c in categories]:
+                        _update_kaltura_category(canvas_course_site_id, course_name, kaltura, template_entry_id)
         else:
             app.logger.warn(f'The previously scheduled {course_name} has no schedule_event in Kaltura.')
 
