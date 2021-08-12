@@ -58,14 +58,15 @@ def get_first_matching_datetime_of_term(meeting_days, start_date, time_hours, ti
 
 def get_recording_end_date(meeting):
     term_end = datetime.strptime(app.config['CURRENT_TERM_RECORDINGS_END'], '%Y-%m-%d')
-    actual_end = datetime.strptime(meeting['endDate'].split()[0], '%Y-%m-%d')
-    end_date = actual_end if actual_end < term_end else term_end
+    actual_end_date = meeting['endDate']
+    actual_end = datetime.strptime(actual_end_date.split()[0], '%Y-%m-%d') if actual_end_date else None
+    end_date = (actual_end if actual_end < term_end else term_end) if actual_end else None
     # Determine first course meeting BEFORE end_date.
     last_recording = None
     meeting_day_indices = [DAYS.index(day) for day in format_days(meeting['days'])]
     for index in range(7):
         # Monday is 0 and Sunday is 6
-        day_index = (end_date.weekday() - index) % 7
+        day_index = ((end_date.weekday() - index) % 7) if end_date else None
         if day_index in meeting_day_indices:
             last_day = end_date - timedelta(days=index)
             last_recording = datetime(last_day.year, last_day.month, last_day.day)
@@ -75,16 +76,17 @@ def get_recording_end_date(meeting):
 
 def get_recording_start_date(meeting, return_today_if_past_start=False):
     term_begin = datetime.strptime(app.config['CURRENT_TERM_RECORDINGS_BEGIN'], '%Y-%m-%d')
-    actual_start = datetime.strptime(meeting['startDate'].split()[0], '%Y-%m-%d')
-    start_date = actual_start if actual_start > term_begin else term_begin
+    actual_start_date = meeting['startDate']
+    actual_start = datetime.strptime(actual_start_date.split()[0], '%Y-%m-%d') if actual_start_date else None
+    start_date = (actual_start if actual_start > term_begin else term_begin) if actual_start else None
     today = datetime.today()
-    start_date = today if start_date < today and return_today_if_past_start else start_date
+    start_date = today if (start_date and start_date < today and return_today_if_past_start) else start_date
     # Determine first course meeting AFTER start_date.
     first_recording = None
     meeting_day_indices = [DAYS.index(day) for day in format_days(meeting['days'])]
     for index in range(7):
         # Monday is 0 and Sunday is 6
-        day_index = (start_date.weekday() + index) % 7
+        day_index = (start_date.weekday() + index) % 7 if start_date else None
         if day_index in meeting_day_indices:
             first_day = start_date + timedelta(days=index)
             first_recording = datetime(first_day.year, first_day.month, first_day.day)
@@ -121,14 +123,15 @@ def get_canvas_sis_term_id(sis_id=None):
 def are_scheduled_dates_obsolete(meeting, scheduled):
     if meeting:
         def _format(date):
-            return datetime.strftime(date, '%Y-%m-%d')
+            return datetime.strftime(date, '%Y-%m-%d') if date else None
         expected_start_date = get_recording_start_date(meeting, return_today_if_past_start=False)
         expected_end_date = get_recording_end_date(meeting)
         # Is the schedule-of-recordings in Kaltura still valid?
-        start_date_mismatch = _format(expected_start_date) != scheduled['meetingStartDate']
+        formatted_start_date = _format(expected_start_date)
+        start_date_mismatch = formatted_start_date != scheduled['meetingStartDate']
         end_date_mismatch = _format(expected_end_date) != scheduled['meetingEndDate']
         # If recordings were scheduled AFTER the meeting_start_date then we will ignore start_date_mismatch
-        scheduled_after_start_date = scheduled['createdAt'][0:10] > _format(expected_start_date)
+        scheduled_after_start_date = formatted_start_date and scheduled['createdAt'][0:10] > formatted_start_date
         return end_date_mismatch if scheduled_after_start_date else (start_date_mismatch or end_date_mismatch)
     else:
         return True
