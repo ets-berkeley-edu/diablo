@@ -201,6 +201,30 @@ class TestObsoleteScheduledDates:
             override_start_time='14:59',
         )
 
+    def test_are_scheduled_dates_obsolete_handles_nulls(self):
+        with test_approvals_workflow(app):
+            meeting = _create_meeting(
+                days='MO',
+                end_date=_format(datetime.now() + timedelta(days=100)),
+                end_time='10:59',
+                start_date=_format(datetime.now() - timedelta(days=100)),
+                start_time='10:00',
+            )
+            with override_config(app, 'CURRENT_TERM_RECORDINGS_BEGIN', meeting['startDate']):
+                with override_config(app, 'CURRENT_TERM_RECORDINGS_END', meeting['endDate']):
+                    mock_scheduled(meeting=meeting, section_id=self.section_id, term_id=self.term_id)
+                    course = SisSection.get_course(section_id=self.section_id, term_id=self.term_id)
+                    scheduled = course['scheduled']
+
+                    meeting = _create_meeting(
+                        days=None,
+                        end_date=None,
+                        end_time=None,
+                        start_date=None,
+                        start_time=None,
+                    )
+            assert are_scheduled_dates_obsolete(meeting, scheduled) is True
+
     def _assert_schedule_is_obsolete(
             self,
             expect_obsolete_dates,
