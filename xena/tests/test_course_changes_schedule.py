@@ -41,10 +41,13 @@ from xena.test_utils import util
 class TestCourseScheduleChanges:
     real_test_data = util.get_test_script_course('test_course_changes_real')
     fake_test_data = util.get_test_script_course('test_course_changes_fake')
+    faker_test_data = util.get_test_script_course('test_course_changes_faker')
     real_section = util.get_test_section(real_test_data)
     real_meeting = real_section.meetings[0]
     fake_section = Section(fake_test_data)
     fake_meeting = fake_section.meetings[0]
+    faker_section = Section(faker_test_data)
+    faker_meeting = faker_section.meetings[0]
     recording_sched = RecordingSchedule(real_section)
 
     def test_disable_jobs(self):
@@ -70,6 +73,7 @@ class TestCourseScheduleChanges:
     def test_queued_emails_pre_run(self):
         self.jobs_page.run_queued_emails_job()
 
+    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_delete_old_email(self):
         self.email_page.log_in()
         self.email_page.delete_all_messages()
@@ -99,7 +103,7 @@ class TestCourseScheduleChanges:
     # SCHEDULED COURSE CHANGES MEETING TIME
 
     def test_set_fake_meeting_time(self):
-        util.set_course_meeting_time(self.real_section, self.fake_section.meetings[0])
+        util.set_course_meeting_time(self.real_section, self.fake_meeting)
 
     def test_run_admin_email_job_with_new_times(self):
         self.jobs_page.load_page()
@@ -150,6 +154,7 @@ class TestCourseScheduleChanges:
         app.logger.info(f'Actual: {actual}')
         assert expected in actual
 
+    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_admin_email_received(self):
         subj = f'Course Capture Admin: {self.real_section.code} schedule change'
         email = Email(msg_type=None, subject=subj, sender=None)
@@ -209,3 +214,70 @@ class TestCourseScheduleChanges:
         end = self.fake_meeting.get_berkeley_end_time()
         visible_end = datetime.strptime(self.kaltura_page.visible_end_time(), '%I:%M %p')
         assert visible_end == end
+
+    # SCHEDULED COURSE MEETING START/END AND MEETING DAYS/TIMES CHANGE TO NULL
+
+    def test_set_null_start_end_dates(self):
+        self.faker_meeting.start_date = None
+        self.faker_meeting.end_date = None
+        util.update_course_start_end_dates(self.real_section, self.real_meeting.room, start=None, end=None)
+
+    def test_set_null_meeting_days(self):
+        self.faker_meeting.days = None
+        util.set_course_meeting_days(self.real_section, self.faker_meeting)
+
+    def test_set_null_meeting_times(self):
+        self.faker_meeting.start_time = None
+        self.faker_meeting.end_time = None
+        util.set_course_meeting_time(self.real_section, self.faker_meeting)
+
+    def test_run_admin_email_job_with_null_dates(self):
+        self.jobs_page.load_page()
+        self.jobs_page.run_admin_emails_job()
+
+    def test_run_queued_email_job_with_null_dates(self):
+        self.jobs_page.run_queued_emails_job()
+
+    def test_changes_page_summary_with_null_dates(self):
+        self.jobs_page.click_course_changes_link()
+        self.changes_page.wait_for_course_row(self.real_section)
+        expected = 'Dates and times are obsolete.'
+        actual = self.changes_page.scheduled_card_summary(self.real_section)
+        app.logger.info(f'Expecting: {expected}')
+        app.logger.info(f'Actual: {actual}')
+        assert expected in actual
+
+    def test_changes_page_null_dates_old_sched(self):
+        dates = self.real_meeting.expected_recording_dates(self.real_section.term)
+        start = dates[0]
+        end = dates[-1]
+        dates = f'{start.strftime("%Y-%m-%d")} to {end.strftime("%Y-%m-%d")}'
+        days = self.real_meeting.days.replace(' ', '').replace(',', '')
+        days_times = f'{days}, {CourseChangesPage.meeting_time_str(self.fake_meeting)}'
+        expected = f'{dates}{days_times}'.upper()
+        actual = self.changes_page.scheduled_card_old_schedule(self.real_section).upper()
+        app.logger.info(f'Expecting: {expected}')
+        app.logger.info(f'Actual: {actual}')
+        assert expected in actual
+
+    def test_changes_page_null_dates_new_sched(self):
+        expected = 'TO, -'
+        actual = self.changes_page.current_card_schedule(self.real_section, 1, 2).upper()
+        app.logger.info(f'Expecting: {expected}')
+        app.logger.info(f'Actual: {actual}')
+        assert expected in actual
+
+    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
+    def test_null_dates_admin_email_received(self):
+        subj = f'Course Capture Admin: {self.real_section.code} schedule change'
+        email = Email(msg_type=None, subject=subj, sender=None)
+        assert self.email_page.is_message_delivered(email)
+
+    def test_admin_unsched_null_dates(self):
+        self.sign_up_page.load_page(self.real_section)
+        self.sign_up_page.confirm_unscheduling(self.recording_sched)
+
+    def test_changes_page_null_dates_unsched(self):
+        self.sign_up_page.click_course_changes_link()
+        self.changes_page.wait_for_results()
+        assert not self.changes_page.is_course_row_present(self.real_section)

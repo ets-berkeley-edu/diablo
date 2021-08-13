@@ -278,7 +278,7 @@ def reset_sign_up_test_data(section):
 
 def set_meeting_location(section, meeting):
     sql = f"""UPDATE sis_sections
-              SET meeting_location = '{meeting.room.name.replace("'", "''")}'
+              SET meeting_location = {"'" + meeting.room.name.replace("'", "''") + "'" if meeting.room else "NULL"}
               WHERE section_id = {section.ccn}
                 AND term_id = {section.term.id}
     """
@@ -311,11 +311,9 @@ def change_course_room(section, old_room=None, new_room=None):
 
 def update_course_start_end_dates(section, room, start, end):
     room_name = room.name.replace("'", "''")
-    start_date = start.strftime('%Y-%m-%d %H:%M:%S')
-    end_date = end.strftime('%Y-%m-%d %H:%M:%S')
     sql = f"""UPDATE sis_sections
-              SET meeting_start_date = '{start_date}',
-                  meeting_end_date = '{end_date}'
+              SET meeting_start_date = {"'" + start.strftime('%Y-%m-%d %H:%M:%S') + "'" if start else "NULL"},
+                  meeting_end_date = {"'" + end.strftime('%Y-%m-%d %H:%M:%S') + "'" if start else "NULL"}
               WHERE section_id = {section.ccn}
                   AND term_id = {section.term.id}
                   AND meeting_location = '{room_name}'
@@ -325,14 +323,23 @@ def update_course_start_end_dates(section, room, start, end):
     std_commit(allow_test_environment=True)
 
 
-def set_course_meeting_time(section, meeting):
-    start_time = datetime.strptime(meeting.start_time, '%I:%M %p')
-    start_time_str = start_time.strftime('%H:%M')
-    end_time = datetime.strptime(meeting.end_time, '%I:%M %p')
-    end_time_str = end_time.strftime('%H:%M')
+def set_course_meeting_days(section, meeting):
     sql = f"""UPDATE sis_sections
-              SET meeting_start_time = '{start_time_str}',
-                  meeting_end_time = '{end_time_str}'
+              SET meeting_days = {"'" + meeting.days + "'" if meeting.days else "NULL"}
+              WHERE section_id = {section.ccn}
+                  AND term_id = {section.term.id}
+    """
+    app.logger.info(sql)
+    db.session.execute(text(sql))
+    std_commit(allow_test_environment=True)
+
+
+def set_course_meeting_time(section, meeting):
+    start_time_str = datetime.strptime(meeting.start_time, '%I:%M %p').strftime('%H:%M') if meeting.start_time else None
+    end_time_str = datetime.strptime(meeting.end_time, '%I:%M %p').strftime('%H:%M') if meeting.end_time else None
+    sql = f"""UPDATE sis_sections
+              SET meeting_start_time = {"'" + start_time_str + "'" if start_time_str else "NULL"},
+                  meeting_end_time = {"'" + end_time_str + "'" if end_time_str else "NULL"}
               WHERE section_id = {section.ccn}
                   AND term_id = {section.term.id}
     """

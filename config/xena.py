@@ -53,6 +53,8 @@ KALTURA_BLACKOUT_DATES = []
 
 LOGGING_LEVEL = logging.INFO
 
+SKIP_EMAILS = True
+
 TESTING = True
 
 TEST_DATA_ROOMS = f'{BASE_DIR}/xena/fixtures/test-rooms.json'

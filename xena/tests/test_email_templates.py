@@ -46,6 +46,7 @@ class TestEmailTemplates:
         body='',
     )
 
+    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_delete_old_email(self):
         self.email_page.log_in()
         self.email_page.delete_all_messages()
@@ -101,6 +102,7 @@ class TestEmailTemplates:
         self.templates_page.click_edit_template_link(self.template)
         self.templates_page.click_save()
 
+    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_email_test_button(self):
         self.templates_page.click_send_test_email(self.template)
         subj = f'{self.template.subject} (To: {app.config["EMAIL_DIABLO_ADMIN"]})'

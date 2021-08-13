@@ -68,6 +68,7 @@ class TestCourseInstructorChanges:
     def test_queued_emails_pre_run(self):
         self.jobs_page.run_queued_emails_job()
 
+    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_delete_old_email(self):
         self.email_page.log_in()
         self.email_page.delete_all_messages()
@@ -174,6 +175,7 @@ class TestCourseInstructorChanges:
         self.ouija_page.filter_for_scheduled_weird()
         assert self.ouija_page.is_course_in_results(self.real_section) is False
 
+    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_admin_emails_with_instr_change(self):
         subj = f'Course Capture Admin: {self.real_section.code} Instructor changes'
         email = Email(msg_type=None, subject=subj, sender=None)

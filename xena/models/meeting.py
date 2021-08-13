@@ -41,6 +41,10 @@ class Meeting(object):
         date_str = self.data['start_date'] or app.config['CURRENT_TERM_BEGIN']
         return datetime.strptime(date_str, '%Y-%m-%d')
 
+    @start_date.setter
+    def start_date(self, value):
+        self.data['start_date'] = value
+
     @property
     def record_start(self):
         term_start_str = app.config['CURRENT_TERM_BEGIN']
@@ -59,6 +63,10 @@ class Meeting(object):
         date_str = self.data['end_date'] or app.config['CURRENT_TERM_END']
         return datetime.strptime(date_str, '%Y-%m-%d')
 
+    @end_date.setter
+    def end_date(self, value):
+        self.data['end_date'] = value
+
     @property
     def record_end(self):
         date_str = self.data['end_date'] or app.config['CURRENT_TERM_RECORDINGS_END']
@@ -68,17 +76,33 @@ class Meeting(object):
     def days(self):
         return self.data['days']
 
+    @days.setter
+    def days(self, value):
+        self.data['days'] = value
+
     @property
     def start_time(self):
         return self.data['start_time']
+
+    @start_time.setter
+    def start_time(self, value):
+        self.data['start_time'] = value
 
     @property
     def end_time(self):
         return self.data['end_time']
 
+    @end_time.setter
+    def end_time(self, value):
+        self.data['end_time'] = value
+
     @property
     def room(self):
         return Room(self.data['room'])
+
+    @room.setter
+    def room(self, value):
+        self.data['room'] = value
 
     @staticmethod
     def add_minutes(section_time_str, minutes):

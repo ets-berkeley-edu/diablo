@@ -88,6 +88,7 @@ class TestWeirdTypeB:
         self.blackouts_page.delete_all_blackouts()
         self.blackouts_page.create_all_blackouts()
 
+    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_delete_old_email(self):
         self.email_page.log_in()
         self.email_page.delete_all_messages()
@@ -122,6 +123,7 @@ class TestWeirdTypeB:
         self.jobs_page.run_queued_emails_job()
         self.recording_schedule.approval_status = RecordingApprovalStatus.INVITED
 
+    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_receive_invite_email(self):
         subj = f'Invitation {self.section.term.name} {self.section.code} (To: {self.section.instructors[0].email})'
         expected_message = Email(msg_type=None, sender=None, subject=subj)
