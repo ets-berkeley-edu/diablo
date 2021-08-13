@@ -26,9 +26,7 @@ from datetime import datetime
 
 from diablo import db, std_commit
 from diablo.lib.util import to_isoformat
-from diablo.merged.calnet import get_calnet_user_for_uid
 from diablo.models.room import Room
-from flask import current_app as app
 from sqlalchemy import and_, text
 from sqlalchemy.dialects.postgresql import ENUM
 
@@ -173,7 +171,7 @@ class Approval(db.Model):
             else:
                 room_feed = Room.get_room(self.room_id).to_api_json()
         return {
-            'approvedBy': get_calnet_user_for_uid(app, self.approved_by_uid),
+            'approvedBy': self.approved_by_uid,
             'wasApprovedByAdmin': self.approver_type == 'admin',
             'createdAt': to_isoformat(self.created_at),
             'publishType': self.publish_type,

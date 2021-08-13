@@ -159,10 +159,10 @@ class TestApprove:
             approvals_ = api_json['approvals']
             assert len(approvals_) == 2
 
-            assert approvals_[0]['approvedBy']['uid'] == instructor_uids[0]
+            assert approvals_[0]['approvedBy'] == instructor_uids[0]
             assert approvals_[0]['publishType'] == 'kaltura_my_media'
 
-            assert approvals_[1]['approvedBy']['uid'] == instructor_uids[1]
+            assert approvals_[1]['approvedBy'] == instructor_uids[1]
             assert approvals_[1]['publishType'] == 'kaltura_media_gallery'
             assert approvals_[1]['recordingType'] == 'presentation_audio'
             assert approvals_[1]['recordingTypeName'] == 'Presentation and Audio'
@@ -277,7 +277,7 @@ class TestGetCourse:
 
             approvals = api_json['approvals']
             assert len(approvals) == 1
-            assert approved_by_uid == approvals[0]['approvedBy']['uid']
+            assert approved_by_uid == approvals[0]['approvedBy']
             assert api_json['approvalStatus'] == 'Partially Approved'
             assert api_json['schedulingStatus'] == 'Not Scheduled'
             assert api_json['meetings']['eligible'][0]['room']['id'] == room_id

@@ -307,7 +307,7 @@ export default {
       })
     },
     getApproverName(approval) {
-      return approval.approvedBy.uid === this.$currentUser.uid ? 'you' : approval.approvedBy.name
+      return approval.approvedBy === this.$currentUser.uid ? 'you' : approval.approvedBy.name
     },
     render(data) {
       this.$loading()
@@ -316,8 +316,8 @@ export default {
       this.meeting = this.course.meetings.eligible[0] || this.course.meetings.ineligible[0]
       this.multipleEligibleMeetings = (this.course.meetings.eligible.length > 1)
       const approvedByInstructors = this.$_.filter(this.course.approvals, a => !a.wasApprovedByAdmin)
-      const approvedByUIDs = this.$_.map(this.course.approvals, 'approvedBy.uid')
-      const approvedByInstructorUIDs = this.$_.map(approvedByInstructors, 'approvedBy.uid')
+      const approvedByUIDs = this.$_.map(this.course.approvals, 'approvedBy')
+      const approvedByInstructorUIDs = this.$_.map(approvedByInstructors, 'approvedBy')
       this.approvedByAdmins = this.$_.filter(this.course.approvals, a => a.wasApprovedByAdmin)
       this.approvalNeededNames = []
       this.$_.each(this.course.instructors, instructor => {

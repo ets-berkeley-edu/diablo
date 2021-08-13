@@ -24,7 +24,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 from datetime import datetime, timedelta
 
-from diablo.lib.util import default_timezone, format_days
+from diablo.lib.util import default_timezone, format_days, safe_strftime
 from flask import current_app as app
 
 # This order of days is aligned with datetime module: https://pythontic.com/datetime/date/weekday
@@ -122,14 +122,13 @@ def get_canvas_sis_term_id(sis_id=None):
 
 def are_scheduled_dates_obsolete(meeting, scheduled):
     if meeting:
-        def _format(date):
-            return datetime.strftime(date, '%Y-%m-%d') if date else None
-        expected_start_date = get_recording_start_date(meeting, return_today_if_past_start=False)
-        expected_end_date = get_recording_end_date(meeting)
-        # Is the schedule-of-recordings in Kaltura still valid?
-        formatted_start_date = _format(expected_start_date)
+        recording_start_date = get_recording_start_date(meeting, return_today_if_past_start=False)
+        formatted_start_date = safe_strftime(recording_start_date, '%Y-%m-%d')
         start_date_mismatch = formatted_start_date != scheduled['meetingStartDate']
-        end_date_mismatch = _format(expected_end_date) != scheduled['meetingEndDate']
+
+        recording_end_date = get_recording_end_date(meeting)
+        end_date_mismatch = safe_strftime(recording_end_date, '%Y-%m-%d') != scheduled['meetingEndDate']
+
         # If recordings were scheduled AFTER the meeting_start_date then we will ignore start_date_mismatch
         scheduled_after_start_date = formatted_start_date and scheduled['createdAt'][0:10] > formatted_start_date
         return end_date_mismatch if scheduled_after_start_date else (start_date_mismatch or end_date_mismatch)
