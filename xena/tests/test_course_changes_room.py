@@ -38,10 +38,13 @@ from xena.test_utils import util
 class TestCourseRoomChanges:
     real_test_data = util.get_test_script_course('test_course_changes_real')
     fake_test_data = util.get_test_script_course('test_course_changes_fake')
+    faker_test_data = util.get_test_script_course('test_course_changes_faker')
     real_section = util.get_test_section(real_test_data)
     real_meeting = real_section.meetings[0]
     fake_section = Section(fake_test_data)
     fake_meeting = fake_section.meetings[0]
+    faker_section = Section(faker_test_data)
+    faker_meeting = faker_section.meetings[0]
     recording_sched = RecordingSchedule(real_section)
 
     def test_disable_jobs(self):
@@ -67,6 +70,7 @@ class TestCourseRoomChanges:
     def test_queued_emails_pre_run(self):
         self.jobs_page.run_queued_emails_job()
 
+    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_delete_old_email(self):
         self.email_page.log_in()
         self.email_page.delete_all_messages()
@@ -90,7 +94,7 @@ class TestCourseRoomChanges:
     # SCHEDULED COURSE MOVES TO INELIGIBLE ROOM
 
     def test_move_to_ineligible_room(self):
-        util.set_meeting_location(self.real_section, self.fake_section.meetings[0])
+        util.set_meeting_location(self.real_section, self.fake_meeting)
 
     def test_run_admin_email_job_ineligible_room(self):
         self.jobs_page.run_admin_emails_job()
@@ -137,12 +141,56 @@ class TestCourseRoomChanges:
         self.kaltura_page.load_event_edit_page(self.recording_sched.series_id)
         self.kaltura_page.wait_for_title('Access Denied - UC Berkeley - Test')
 
+    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_admin_email_ineligible_room(self):
         subj = f'Course Capture Admin: {self.real_section.code} has moved to {self.fake_meeting.room.name}'
         email = Email(msg_type=None, subject=subj, sender=None)
         assert self.email_page.is_message_delivered(email)
 
+    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_instructor_email_ineligible_room(self):
         subj = f'Your course {self.real_section.code} is no longer eligible for Course Capture'
         email = Email(msg_type=None, subject=subj, sender=None)
         assert self.email_page.is_message_delivered(email)
+
+    # ROOM REMOVED
+
+    def test_reset_data_null_test(self):
+        util.reset_sign_up_test_data(self.real_section)
+        self.recording_sched.approval_status = RecordingApprovalStatus.NOT_INVITED
+        self.recording_sched.scheduling_status = RecordingSchedulingStatus.NOT_SCHEDULED
+
+    def test_sign_up_null_test(self):
+        self.ouija_page.load_page()
+        self.ouija_page.log_out()
+        self.login_page.dev_auth(self.real_section.instructors[0].uid)
+        self.ouija_page.click_sign_up_page_link(self.real_section)
+        self.sign_up_page.select_publish_type(PublishType.BCOURSES.value)
+        self.sign_up_page.click_agree_checkbox()
+        self.sign_up_page.click_approve_button()
+
+    def test_schedule_recordings_null_test(self):
+        self.sign_up_page.log_out()
+        self.login_page.dev_auth()
+        self.ouija_page.click_jobs_link()
+        self.jobs_page.run_kaltura_job()
+        util.get_kaltura_id(self.recording_sched, self.term)
+
+    def test_move_to_null_room(self):
+        self.faker_meeting.room = None
+        util.change_course_room(self.real_section, old_room=self.real_meeting.room, new_room=None)
+
+    def test_run_admin_email_job_null_room(self):
+        self.jobs_page.load_page()
+        self.jobs_page.run_admin_emails_job()
+
+    def test_run_instr_email_job_null_room(self):
+        self.jobs_page.run_instructor_emails_job()
+
+    def test_run_queued_email_job_null_room(self):
+        self.jobs_page.run_queued_emails_job()
+
+    def test_null_room_changes_page_summary(self):
+        self.jobs_page.click_course_changes_link()
+        self.changes_page.wait_for_results()
+        assert not self.changes_page.is_course_row_present(self.real_section)

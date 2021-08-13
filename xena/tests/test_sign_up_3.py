@@ -90,6 +90,7 @@ class TestSignUp3:
             self.jobs_page.load_page()
             self.jobs_page.run_canvas_job()
 
+    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_delete_old_email(self):
         self.email_page.log_in()
         self.email_page.delete_all_messages()
@@ -171,13 +172,15 @@ class TestSignUp3:
         self.jobs_page.load_page()
         self.jobs_page.run_invitations_job()
         self.jobs_page.run_queued_emails_job()
-
-    def test_receive_invite_email_inst_1(self):
         self.recording_schedule.approval_status = RecordingApprovalStatus.INVITED
+
+    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
+    def test_receive_invite_email_inst_1(self):
         subj = f'Invitation {self.section.term.name} {self.section.code} (To: {self.section.instructors[0].email})'
         expected_message = Email(msg_type=None, sender=None, subject=subj)
         assert self.email_page.is_message_delivered(expected_message)
 
+    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_receive_invite_email_inst_2(self):
         subj = f'Invitation {self.section.term.name} {self.section.code} (To: {self.section.instructors[1].email})'
         expected_message = Email(msg_type=None, sender=None, subject=subj)
@@ -637,11 +640,13 @@ class TestSignUp3:
         self.jobs_page.load_page()
         self.jobs_page.run_queued_emails_job()
 
+    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_receive_schedule_conf_email_inst_1(self):
         subj = f'Your course, {self.section.code}, has been scheduled for Course Capture (To: {self.section.instructors[0].email})'
         expected_message = Email(msg_type=None, sender=None, subject=subj)
         assert self.email_page.is_message_delivered(expected_message)
 
+    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_receive_schedule_conf_email_inst_2(self):
         subj = f'Your course, {self.section.code}, has been scheduled for Course Capture (To: {self.section.instructors[1].email})'
         expected_message = Email(msg_type=None, sender=None, subject=subj)

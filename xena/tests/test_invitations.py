@@ -46,6 +46,7 @@ class TestInvitations:
         self.jobs_page.run_queued_emails_job()
         self.jobs_page.disable_all_jobs()
 
+    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_delete_old_email(self):
         self.email_page.log_in()
         self.email_page.delete_all_messages()
@@ -66,30 +67,39 @@ class TestInvitations:
         self.jobs_page.run_invitations_job()
         self.jobs_page.run_queued_emails_job()
 
+    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_course_auto_invites_delivered(self):
         subject = f'Invitation {self.section_1.term.name} {self.section_1.code} (To: {self.section_1.instructors[0].email})'
         email = Email(msg_type=None, sender=None, subject=subject)
         assert self.email_page.is_message_delivered(email) is True
 
+    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_course_auto_invites_not_delivered(self):
         subject = f'Invitation {self.section_2.term.name} {self.section_2.code} (To: {self.section_2.instructors[0].email})'
         email = Email(msg_type=None, sender=None, subject=subject)
         assert self.email_page.is_message_present(email) is False
 
+    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
+    def test_delete_emails(self):
+        self.email_page.delete_all_messages()
+
     def test_inst_auto_invite_run_jobs(self):
         util.reset_invite_test_data(self.term, self.section_1, self.section_1.instructors[0])
-        self.email_page.delete_all_messages()
         self.jobs_page.load_page()
         self.jobs_page.run_invitations_job()
         self.jobs_page.run_queued_emails_job()
 
+    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_inst_auto_invite_delivered(self):
         subject = f'Invitation {self.section_1.term.name} {self.section_1.code} (To: {self.section_1.instructors[0].email})'
         email = Email(msg_type=None, sender=None, subject=subject)
         assert self.email_page.is_message_delivered(email)
 
-    def test_course_manual_invite_send(self):
+    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
+    def test_delete_emails_again(self):
         self.email_page.delete_all_messages()
+
+    def test_course_manual_invite_send(self):
         self.sign_up_page.load_page(self.section_1)
         self.sign_up_page.click_send_invite_button()
 
@@ -116,6 +126,7 @@ class TestInvitations:
         self.jobs_page.run_invitations_job()
         self.jobs_page.run_queued_emails_job()
 
+    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_course_manual_invite_delivered(self):
         subject = f'Invitation {self.section_1.term.name} {self.section_1.code} (To: {self.section_1.instructors[0].email})'
         email = Email(msg_type=None, sender=None, subject=subject)

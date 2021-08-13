@@ -87,6 +87,7 @@ class TestSignUp0:
     def test_delete_old_canvas_sites(self):
         self.canvas_page.delete_section_sites(self.section)
 
+    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_delete_old_email(self):
         self.email_page.log_in()
         self.email_page.delete_all_messages()
@@ -168,9 +169,10 @@ class TestSignUp0:
         self.jobs_page.load_page()
         self.jobs_page.run_invitations_job()
         self.jobs_page.run_queued_emails_job()
-
-    def test_receive_invite_email(self):
         self.recording_schedule.approval_status = RecordingApprovalStatus.INVITED
+
+    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
+    def test_receive_invite_email(self):
         subj = f'Invitation {self.section.term.name} {self.section.code} (To: {self.section.instructors[0].email})'
         expected_message = Email(msg_type=None, sender=None, subject=subj)
         assert self.email_page.is_message_delivered(expected_message)
@@ -585,6 +587,7 @@ class TestSignUp0:
         self.jobs_page.load_page()
         self.jobs_page.run_queued_emails_job()
 
+    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_receive_schedule_conf_email(self):
         subj = f'Your course, {self.section.code}, has been scheduled for Course Capture'
         expected_message = Email(msg_type=None, sender=None, subject=subj)

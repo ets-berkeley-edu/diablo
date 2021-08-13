@@ -98,6 +98,7 @@ class TestSignUp2:
             self.jobs_page.load_page()
             self.jobs_page.run_canvas_job()
 
+    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_delete_old_email(self):
         self.email_page.log_in()
         self.email_page.delete_all_messages()
@@ -152,13 +153,15 @@ class TestSignUp2:
         self.jobs_page.load_page()
         self.jobs_page.run_invitations_job()
         self.jobs_page.run_queued_emails_job()
-
-    def test_receive_invite_email_1(self):
         self.recording_schedule.approval_status = RecordingApprovalStatus.INVITED
+
+    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
+    def test_receive_invite_email_1(self):
         subj = f'Invitation {self.section.term.name} {self.section.code} (To: {self.section.instructors[0].email})'
         expected_message = Email(msg_type=None, sender=None, subject=subj)
         assert self.email_page.is_message_delivered(expected_message)
 
+    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_receive_invite_email_2(self):
         subj = f'Invitation {self.section.term.name} {self.section.code} (To: {self.section.instructors[1].email})'
         expected_message = Email(msg_type=None, sender=None, subject=subj)
@@ -349,11 +352,13 @@ class TestSignUp2:
         self.ouija_page.click_jobs_link()
         self.jobs_page.run_queued_emails_job()
 
+    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_receive_awaiting_approval_email_inst_1(self):
         subj = f'Course Capture: {self.section.code} waiting on approval (To: {self.section.instructors[0].email})'
         expected_message = Email(msg_type=None, sender=None, subject=subj)
         assert self.email_page.is_message_delivered(expected_message)
 
+    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_no_receive_awaiting_approval_email_inst_2(self):
         subj = f'Course Capture: {self.section.code} waiting on approval (To: {self.section.instructors[1].email})'
         expected_message = Email(msg_type=None, sender=None, subject=subj)
@@ -496,11 +501,13 @@ class TestSignUp2:
         self.ouija_page.click_jobs_link()
         self.jobs_page.run_queued_emails_job()
 
+    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_receive_notify_of_changes_email_inst_1(self):
         subj = f'Changes to your Course Capture settings for {self.section.code} (To: {self.section.instructors[0].email})'
         expected_message = Email(msg_type=None, sender=None, subject=subj)
         self.email_page.is_message_delivered(expected_message)
 
+    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_no_receive_notify_of_changes_email_inst_2(self):
         subj = f'Changes to your Course Capture settings for {self.section.code} (To: {self.section.instructors[1].email})'
         expected_message = Email(msg_type=None, sender=None, subject=subj)
@@ -729,11 +736,13 @@ class TestSignUp2:
         self.jobs_page.load_page()
         self.jobs_page.run_queued_emails_job()
 
+    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_receive_schedule_conf_email_inst_1(self):
         subj = f'Your course, {self.section.code}, has been scheduled for Course Capture (To: {self.section.instructors[0].email})'
         expected_message = Email(msg_type=None, sender=None, subject=subj)
         assert self.email_page.is_message_delivered(expected_message)
 
+    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_receive_schedule_conf_email_inst_2(self):
         subj = f'Your course, {self.section.code}, has been scheduled for Course Capture (To: {self.section.instructors[1].email})'
         expected_message = Email(msg_type=None, sender=None, subject=subj)

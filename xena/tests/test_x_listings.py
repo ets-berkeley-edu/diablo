@@ -83,6 +83,7 @@ class TestCrossListings:
         self.recording_schedule.approval_status = RecordingApprovalStatus.NOT_INVITED
         self.recording_schedule.scheduling_status = RecordingSchedulingStatus.NOT_SCHEDULED
 
+    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_delete_old_email(self):
         self.email_page.log_in()
         self.email_page.delete_all_messages()
@@ -214,63 +215,75 @@ class TestCrossListings:
         self.jobs_page.run_invitations_job()
         self.jobs_page.run_instructor_emails_job()
         self.jobs_page.run_queued_emails_job()
-
-    def test_invite_inst_1(self):
         self.recording_schedule.approval_status = RecordingApprovalStatus.INVITED
+
+    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
+    def test_invite_inst_1(self):
         subj = f'Invitation {self.section.term.name} {self.section.code} (To: {self.section.instructors[0].email})'
         expected_message = Email(msg_type=None, sender=None, subject=subj)
         assert self.email_page.is_message_delivered(expected_message)
 
+    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_invite_inst_2(self):
         subj = f'Invitation {self.section.term.name} {self.section.code} (To: {self.section.instructors[1].email})'
         expected_message = Email(msg_type=None, sender=None, subject=subj)
         assert self.email_page.is_message_present(expected_message)
 
+    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_no_dupe_invite_inst_1(self):
         subj = f'Invitation {self.section.term.name} {self.section.listings[0].code} (To: {self.section.instructors[0].email})'
         expected_message = Email(msg_type=None, sender=None, subject=subj)
         assert not self.email_page.is_message_present(expected_message)
 
+    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_awaiting_approval_inst_1(self):
         subj = f'Course Capture: {self.section.code} waiting on approval (To: {self.section.instructors[0].email})'
         expected_message = Email(msg_type=None, sender=None, subject=subj)
         assert self.email_page.is_message_present(expected_message)
 
+    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_no_awaiting_approval_inst_2(self):
         subj = f'Course Capture: {self.section.code} waiting on approval (To: {self.section.instructors[1].email})'
         expected_message = Email(msg_type=None, sender=None, subject=subj)
         assert not self.email_page.is_message_present(expected_message)
 
+    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_no_dupe_awaiting_approval_inst_1(self):
         subj = f'Course Capture: {self.section.listings[0].code} waiting on approval (To: {self.section.instructors[0].email})'
         expected_message = Email(msg_type=None, sender=None, subject=subj)
         assert not self.email_page.is_message_present(expected_message)
 
+    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_notify_of_changes_inst_1(self):
         subj = f'Changes to your Course Capture settings for {self.section.code} (To: {self.section.instructors[0].email})'
         expected_message = Email(msg_type=None, sender=None, subject=subj)
         assert self.email_page.is_message_present(expected_message)
 
+    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_no_notify_of_changes_inst_2(self):
         subj = f'Changes to your Course Capture settings for {self.section.code} (To: {self.section.instructors[1].email})'
         expected_message = Email(msg_type=None, sender=None, subject=subj)
         assert not self.email_page.is_message_present(expected_message)
 
+    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_no_dupe_notify_of_changes_inst_1(self):
         subj = f'Changes to your Course Capture settings for {self.section.listings[0].code} (To: {self.section.instructors[0].email})'
         expected_message = Email(msg_type=None, sender=None, subject=subj)
         assert not self.email_page.is_message_present(expected_message)
 
+    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_schedule_conf_inst_1(self):
         subj = f'Your course, {self.section.code}, has been scheduled for Course Capture (To: {self.section.instructors[0].email})'
         expected_message = Email(msg_type=None, sender=None, subject=subj)
         assert self.email_page.is_message_present(expected_message)
 
+    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_schedule_conf_inst_2(self):
         subj = f'Your course, {self.section.code}, has been scheduled for Course Capture (To: {self.section.instructors[1].email})'
         expected_message = Email(msg_type=None, sender=None, subject=subj)
         assert self.email_page.is_message_present(expected_message)
 
+    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_no_dupe_schedule_conf_inst_1(self):
         subj = f'Your course, {self.section.listings[0].code}, has been scheduled for Course Capture (To: {self.section.instructors[0].email})'
         expected_message = Email(msg_type=None, sender=None, subject=subj)
