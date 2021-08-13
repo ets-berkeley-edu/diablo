@@ -87,7 +87,7 @@
                       mdi-account-check-outline
                     </v-icon>
                   </template>
-                  Course Capture Admin {{ $_.last(course.approvals).approvedBy.name }}
+                  Course Capture Admin <CalNetProfile :uid="$_.last(course.approvals).approvedBy" />
                   submitted approval on
                   {{ $_.last(course.approvals).createdAt | moment('MMM D, YYYY') }}.
                 </v-tooltip>
@@ -146,10 +146,10 @@
             <tr v-if="course.approvals.length" :key="`approvals-${course.sectionId}`">
               <td :colspan="headers.length + 1" class="pb-2">
                 <div v-if="course.approvals.length" class="pb-3">
-                  <span v-for="approval in course.approvals" :key="approval.approvedBy.uid">
-                    <router-link :id="`instructor-${approval.approvedBy.uid}-mailto`" :to="`/user/${approval.approvedBy.uid}`">
-                      {{ approval.approvedBy.name }}
-                    </router-link> ({{ approval.approvedBy.uid }}) selected "{{ approval.recordingTypeName }}".
+                  <span v-for="approval in course.approvals" :key="approval.approvedBy">
+                    <router-link :id="`instructor-${approval.approvedBy}-mailto`" :to="`/user/${approval.approvedBy}`">
+                      <CalNetProfile :uid="approval.approvedBy" />
+                    </router-link> ({{ approval.approvedBy }}) selected "{{ approval.recordingTypeName }}".
                   </span>
                   <span v-if="course.scheduled">
                     Recordings scheduled on {{ course.scheduled.createdAt | moment('MMM D, YYYY') }}.
@@ -182,6 +182,7 @@
 </template>
 
 <script>
+import CalNetProfile from '@/components/util/CalNetProfile'
 import Context from '@/mixins/Context'
 import Days from '@/components/util/Days'
 import Instructor from '@/components/course/Instructor'
@@ -190,7 +191,7 @@ import Utils from '@/mixins/Utils'
 
 export default {
   name: 'CoursesDataTable',
-  components: {Days, Instructor, ToggleOptOut},
+  components: {CalNetProfile, Days, Instructor, ToggleOptOut},
   mixins: [Context, Utils],
   props: {
     courses: {

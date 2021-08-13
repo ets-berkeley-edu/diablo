@@ -129,5 +129,9 @@ def resolve_xml_template_string(template_string):
     )
 
 
+def safe_strftime(date, date_format):
+    return datetime.strftime(date, date_format) if date else None
+
+
 def scrub_email_content(message):
     return f"{message.split('KS')[0]} KS..." if 'KS' in message else message

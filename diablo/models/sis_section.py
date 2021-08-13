@@ -27,7 +27,7 @@ from datetime import datetime
 from diablo import db
 from diablo.lib.berkeley import are_scheduled_dates_obsolete, are_scheduled_times_obsolete, get_recording_end_date, \
     get_recording_start_date
-from diablo.lib.util import format_days, format_time, get_names_of_days
+from diablo.lib.util import format_days, format_time, get_names_of_days, safe_strftime
 from diablo.models.approval import Approval
 from diablo.models.canvas_course_site import CanvasCourseSite
 from diablo.models.course_preference import CoursePreference
@@ -807,8 +807,8 @@ def _to_api_json(term_id, rows, include_rooms=True):
             if room and room.capability:
                 meeting['eligible'] = True
                 meeting.update({
-                    'recordingEndDate': datetime.strftime(get_recording_end_date(meeting), '%Y-%m-%d'),
-                    'recordingStartDate': datetime.strftime(get_recording_start_date(meeting), '%Y-%m-%d'),
+                    'recordingEndDate': safe_strftime(get_recording_end_date(meeting), '%Y-%m-%d'),
+                    'recordingStartDate': safe_strftime(get_recording_start_date(meeting), '%Y-%m-%d'),
                 })
                 course['meetings']['eligible'].append(meeting)
                 course['meetings']['eligible'].sort(key=lambda m: f"{m['startDate']} {m['startTime']}")
@@ -845,7 +845,7 @@ def _decorate_course_approvals(course):
 
     course['approvalStatus'] = 'Not Invited'
     if course['instructors']:
-        approval_uids = [a['approvedBy']['uid'] for a in course['approvals']]
+        approval_uids = [a['approvedBy'] for a in course['approvals']]
         necessary_approval_uids = [i['uid'] for i in course['instructors']]
         if all(uid in approval_uids for uid in necessary_approval_uids):
             course['approvalStatus'] = 'Approved'
@@ -995,7 +995,7 @@ def _sections_with_at_least_one_eligible_room():
 def _to_instructor_json(row, approvals, invited_uids):
     instructor_uid = row['instructor_uid']
     return {
-        'approval': next((a for a in approvals if a['approvedBy']['uid'] == instructor_uid), False),
+        'approval': next((a for a in approvals if a['approvedBy'] == instructor_uid), False),
         'deptCode': row['instructor_dept_code'],
         'email': row['instructor_email'],
         'name': row['instructor_name'],
