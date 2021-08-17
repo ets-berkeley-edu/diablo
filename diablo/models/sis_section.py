@@ -914,7 +914,8 @@ def _get_cross_listed_courses(section_ids, term_id, approvals, invited_uids):
         LEFT JOIN instructors i ON i.uid = s.instructor_uid
         WHERE
             s.term_id = :term_id
-            AND section_id = ANY(:all_cross_listing_ids)
+            AND s.section_id = ANY(:all_cross_listing_ids)
+            AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
         ORDER BY course_name, section_id
     """
     rows = db.session.execute(
