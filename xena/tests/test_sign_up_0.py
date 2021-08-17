@@ -270,7 +270,7 @@ class TestSignUp0:
         assert self.sign_up_page.is_present(SignUpPage.PUBLISH_TYPE_TEXT) is True
 
     def test_overview_link(self):
-        title = 'Course Capture | Educational Technology Services'
+        title = 'Course Capture | Research, Teaching, and Learning'
         assert self.sign_up_page.external_link_valid(SignUpPage.CC_EXPLAINED_LINK, title) is True
 
     def test_policies_link(self):

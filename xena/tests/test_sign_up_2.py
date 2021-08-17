@@ -214,8 +214,7 @@ class TestSignUp2:
     # INSTRUCTOR 1 LOGS IN
 
     def test_home_page_inst_1(self):
-        self.jobs_page.load_page()
-        self.jobs_page.log_out()
+        self.ouija_page.log_out()
         self.login_page.dev_auth(self.section.instructors[0].uid)
         self.ouija_page.wait_for_title_containing(f'Your {self.term.name} Course')
 
@@ -367,7 +366,6 @@ class TestSignUp2:
     # CREATE COURSE SITE
 
     def test_create_course_site_one(self):
-        self.canvas_page.log_in()
         self.canvas_page.provision_site(self.section, [self.section.ccn], self.site_1)
 
     def test_enable_media_gallery(self):

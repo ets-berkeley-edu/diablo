@@ -617,7 +617,6 @@ class TestSignUp1:
     # CREATE COURSE SITE
 
     def test_create_course_site(self):
-        self.canvas_page.log_in()
         self.canvas_page.provision_site(self.section, [self.section.ccn], self.site)
 
     def test_enable_media_gallery(self):
