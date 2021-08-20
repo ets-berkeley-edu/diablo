@@ -50,7 +50,7 @@ def dev_auth_login():
             return tolerant_jsonify({'message': 'Invalid credentials'}, 401)
         user = User(uid)
         if not user.is_active:
-            msg = f'UID {uid} is neither a Diablo admin-user nor active in CalNet.'
+            msg = f'UID {uid} is neither an Admin user nor active in CalNet.'
             app.logger.error(msg)
             return tolerant_jsonify({'message': msg}, 403)
         if not login_user(user, force=True, remember=True):
@@ -82,7 +82,7 @@ def cas_login():
     app.logger.info(f'Logged into CAS as user {uid}')
     user = User(uid)
     if not user.is_active:
-        redirect_url = add_param_to_url('/', ('error', f'Sorry, {user.name} is not authorized to use Diablo.'))
+        redirect_url = add_param_to_url('/', ('error', f'Sorry, {user.name} is not authorized to use this tool.'))
     else:
         login_user(user)
         if _is_safe_url(request.args.get('next')):
