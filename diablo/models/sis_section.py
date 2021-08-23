@@ -27,7 +27,7 @@ from datetime import datetime
 from diablo import db
 from diablo.lib.berkeley import are_scheduled_dates_obsolete, are_scheduled_times_obsolete, get_recording_end_date, \
     get_recording_start_date
-from diablo.lib.util import format_days, format_time, get_names_of_days
+from diablo.lib.util import format_days, format_time, get_names_of_days, safe_strftime
 from diablo.models.approval import Approval
 from diablo.models.canvas_course_site import CanvasCourseSite
 from diablo.models.course_preference import CoursePreference
@@ -798,8 +798,8 @@ def _to_api_json(term_id, rows, include_rooms=True):
             if room and room.capability:
                 meeting['eligible'] = True
                 meeting.update({
-                    'recordingEndDate': datetime.strftime(get_recording_end_date(meeting), '%Y-%m-%d'),
-                    'recordingStartDate': datetime.strftime(get_recording_start_date(meeting), '%Y-%m-%d'),
+                    'recordingEndDate': safe_strftime(get_recording_end_date(meeting), '%Y-%m-%d'),
+                    'recordingStartDate': safe_strftime(get_recording_start_date(meeting), '%Y-%m-%d'),
                 })
                 course['meetings']['eligible'].append(meeting)
                 course['meetings']['eligible'].sort(key=lambda m: f"{m['startDate']} {m['startTime']}")
@@ -1005,11 +1005,11 @@ def _to_meeting_json(row):
         'days': row['meeting_days'],
         'daysFormatted': formatted_days,
         'daysNames': get_names_of_days(formatted_days),
-        'endDate': end_date and datetime.strftime(end_date, '%Y-%m-%d'),
+        'endDate': safe_strftime(end_date, '%Y-%m-%d'),
         'endTime': row['meeting_end_time'],
         'endTimeFormatted': format_time(row['meeting_end_time']),
         'location': row['meeting_location'],
-        'startDate': start_date and datetime.strftime(start_date, '%Y-%m-%d'),
+        'startDate': safe_strftime(start_date, '%Y-%m-%d'),
         'startTime': row['meeting_start_time'],
         'startTimeFormatted': format_time(row['meeting_start_time']),
     }
