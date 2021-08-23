@@ -127,6 +127,10 @@ def resolve_xml_template(xml_filename):
     return resolve_xml_template_string(template_string)
 
 
+def safe_strftime(date, date_format):
+    return datetime.strftime(date, date_format) if date else None
+
+
 def resolve_xml_template_string(template_string):
     return template_string.format(
         **{
