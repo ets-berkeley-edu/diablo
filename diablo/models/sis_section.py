@@ -1014,11 +1014,11 @@ def _to_meeting_json(row):
         'days': row['meeting_days'],
         'daysFormatted': formatted_days,
         'daysNames': get_names_of_days(formatted_days),
-        'endDate': end_date and datetime.strftime(end_date, '%Y-%m-%d'),
+        'endDate': safe_strftime(end_date, '%Y-%m-%d'),
         'endTime': row['meeting_end_time'],
         'endTimeFormatted': format_time(row['meeting_end_time']),
         'location': row['meeting_location'],
-        'startDate': start_date and datetime.strftime(start_date, '%Y-%m-%d'),
+        'startDate': safe_strftime(start_date, '%Y-%m-%d'),
         'startTime': row['meeting_start_time'],
         'startTimeFormatted': format_time(row['meeting_start_time']),
     }
