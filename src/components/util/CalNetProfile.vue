@@ -1,5 +1,5 @@
 <template>
-  <span>{{ profile ? formatter(profile) : `UID ${uid}` }}</span>
+  <span>{{ (uid === $currentUser.uid) && sayYou ? 'you' : (profile ? formatter(profile) : `UID ${uid}`) }}</span>
 </template>
 
 <script>
@@ -12,6 +12,10 @@ export default {
       default: profile => profile.name,
       required: false,
       type: Function
+    },
+    sayYou: {
+      required: false,
+      type: Boolean
     },
     uid: {
       required: true,
