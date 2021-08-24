@@ -26,9 +26,14 @@
         <v-col>
           <v-container v-if="isCurrentTerm && meeting.room.capability && !multipleEligibleMeetings" class="elevation-2 pa-6">
             <v-row>
-              <v-col id="approvals-described" class="font-weight-medium red--text">
+              <v-col id="approvals-described" class="font-weight-medium mb-1 red--text">
                 <span v-if="queuedForScheduling">This course is currently queued for scheduling. Recordings will be scheduled in an hour or less. </span>
-                <span v-if="approvedByInstructorNames.length">Approved by {{ oxfordJoin(approvedByInstructorNames) }}. </span>
+                <span v-if="approvedByInstructorUIDs.length">
+                  Approved by
+                  <OxfordJoin v-slot="{item}" :items="approvedByInstructorUIDs">
+                    <CalNetProfile :say-you="true" :uid="item" />
+                  </OxfordJoin>
+                </span>
                 <span v-if="approvalNeededNames.length">
                   <span v-if="!course.scheduled && !queuedForScheduling">Recordings will be scheduled when we have</span>
                   <span v-if="course.scheduled">Recordings have been scheduled but we need</span>
@@ -36,7 +41,7 @@
                   {{ approvalNeededNames.length > 1 ? 'approvals' : 'approval' }}
                   from {{ oxfordJoin(approvalNeededNames) }}.
                 </span>
-                <span v-if="approvedByAdmins.length && !approvalNeededNames.length && !approvedByInstructorNames.length">
+                <span v-if="approvedByAdmins.length && !approvalNeededNames.length && !approvedByInstructorUIDs.length">
                   <span v-if="course.scheduled">{{ $currentUser.isAdmin ? 'The' : 'Your' }} course has been scheduled.</span>
                 </span>
               </v-col>
@@ -230,9 +235,11 @@
 </template>
 
 <script>
+import CalNetProfile from '@/components/util/CalNetProfile'
 import Context from '@/mixins/Context'
 import CourseCaptureExplained from '@/components/util/CourseCaptureExplained'
 import CoursePageSidebar from '@/components/course/CoursePageSidebar'
+import OxfordJoin from '@/components/util/OxfordJoin'
 import PageTitle from '@/components/util/PageTitle'
 import ScheduledCourse from '@/components/course/ScheduledCourse'
 import TermsAgreementText from '@/components/util/TermsAgreementText'
@@ -243,12 +250,20 @@ import {getAuditoriums} from '@/api/room'
 export default {
   name: 'Course',
   mixins: [Context, Utils],
-  components: {CourseCaptureExplained, CoursePageSidebar, PageTitle, ScheduledCourse, TermsAgreementText},
+  components: {
+    CalNetProfile,
+    CourseCaptureExplained,
+    CoursePageSidebar,
+    OxfordJoin,
+    PageTitle,
+    ScheduledCourse,
+    TermsAgreementText
+  },
   data: () => ({
     agreedToTerms: false,
     approvalNeededNames: undefined,
     approvedByAdmins: undefined,
-    approvedByInstructorNames: undefined,
+    approvedByInstructorUIDs: undefined,
     auditoriums: undefined,
     course: undefined,
     courseDisplayTitle: null,
@@ -306,33 +321,29 @@ export default {
         this.alertScreenReader(`You have approved ${this.courseDisplayTitle} for Course Capture.`)
       })
     },
-    getApproverName(approval) {
-      return approval.approvedBy === this.$currentUser.uid ? 'you' : approval.approvedBy.name
-    },
     render(data) {
       this.$loading()
       this.agreedToTerms = this.$currentUser.isAdmin
       this.course = data
       this.meeting = this.course.meetings.eligible[0] || this.course.meetings.ineligible[0]
       this.multipleEligibleMeetings = (this.course.meetings.eligible.length > 1)
-      const approvedByInstructors = this.$_.filter(this.course.approvals, a => !a.wasApprovedByAdmin)
-      const approvedByUIDs = this.$_.map(this.course.approvals, 'approvedBy')
-      const approvedByInstructorUIDs = this.$_.map(approvedByInstructors, 'approvedBy')
-      this.approvedByAdmins = this.$_.filter(this.course.approvals, a => a.wasApprovedByAdmin)
+
+      const approvals = this.course.approvals
+      this.approvedByInstructorUIDs = this.$_.map(this.$_.filter(approvals, a => !a.wasApprovedByAdmin), 'approvedBy')
+      this.approvedByAdmins = this.$_.filter(approvals, a => a.wasApprovedByAdmin)
       this.approvalNeededNames = []
       this.$_.each(this.course.instructors, instructor => {
-        if (!this.$_.includes(approvedByInstructorUIDs, instructor.uid)) {
+        if (!this.$_.includes(this.approvedByInstructorUIDs, instructor.uid)) {
           this.approvalNeededNames.push(instructor.uid === this.$currentUser.uid ? 'you' : instructor.name)
         }
       })
-      this.approvedByInstructorNames = this.$_.map(approvedByInstructors, approval => this.getApproverName(approval))
       this.courseDisplayTitle = this.getCourseCodes(this.course)[0]
-      this.hasCurrentUserApproved = this.$_.includes(approvedByUIDs, this.$currentUser.uid)
+      this.hasCurrentUserApproved = this.$_.includes(this.$_.map(approvals, 'approvedBy'), this.$currentUser.uid)
       this.recordingTypeOptions = this.$_.map(this.meeting.room.recordingTypeOptions, (text, value) => {
         return {text, value}
       })
-      if (this.course.approvals.length) {
-        const mostRecent = this.$_.last(this.course.approvals)
+      if (approvals.length) {
+        const mostRecent = this.$_.last(approvals)
         this.publishType = mostRecent.publishType
         this.recordingType = mostRecent.recordingType
       } else {
