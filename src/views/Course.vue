@@ -24,7 +24,7 @@
           <CoursePageSidebar :after-unschedule="afterUnschedule" :course="course" />
         </v-col>
         <v-col>
-          <v-container v-if="isCurrentTerm && meeting.room.capability && !multipleEligibleMeetings" class="elevation-2 pa-6">
+          <v-container v-if="isCurrentTerm && meeting.room.capability && hasValidMeetingTimes && !multipleEligibleMeetings" class="elevation-2 pa-6">
             <v-row>
               <v-col id="approvals-described" class="font-weight-medium mb-1 red--text">
                 <span v-if="queuedForScheduling">This course is currently queued for scheduling. Recordings will be scheduled in an hour or less. </span>
@@ -216,6 +216,18 @@
               </div>
             </v-row>
           </v-container>
+          <v-container v-if="isCurrentTerm && meeting.room.capability && !multipleEligibleMeetings && !hasValidMeetingTimes">
+            <v-row>
+              <div class="d-flex justify-start">
+                <div class="pr-2">
+                  <v-icon color="red">mdi-alert</v-icon>
+                </div>
+                <div id="invalid-meeting-times">
+                  This course is in a capture-enabled room but the meeting times are missing or invalid.
+                </div>
+              </div>
+            </v-row>
+          </v-container>
           <v-container v-if="!isCurrentTerm">
             <v-row>
               <div class="d-flex justify-start">
@@ -268,6 +280,7 @@ export default {
     course: undefined,
     courseDisplayTitle: null,
     hasCurrentUserApproved: undefined,
+    hasValidMeetingTimes: undefined,
     isApproving: false,
     multipleEligibleMeetings: undefined,
     publishType: undefined,
@@ -325,9 +338,15 @@ export default {
       this.$loading()
       this.agreedToTerms = this.$currentUser.isAdmin
       this.course = data
-      this.meeting = this.course.meetings.eligible[0] || this.course.meetings.ineligible[0]
-      this.multipleEligibleMeetings = (this.course.meetings.eligible.length > 1)
-
+      // Meetings
+      const eligibleMeetings = this.course.meetings.eligible
+      this.meeting = eligibleMeetings[0] || this.course.meetings.ineligible[0]
+      this.multipleEligibleMeetings = (eligibleMeetings.length > 1)
+      this.$_.each(['endDate', 'endTime', 'startDate', 'startTime'], key => {
+        this.hasValidMeetingTimes = !!this.$_.find(eligibleMeetings, key)
+        return this.hasValidMeetingTimes
+      })
+      // Approvals
       const approvals = this.course.approvals
       this.approvedByInstructorUIDs = this.$_.map(this.$_.filter(approvals, a => !a.wasApprovedByAdmin), 'approvedBy')
       this.approvedByAdmins = this.$_.filter(approvals, a => a.wasApprovedByAdmin)
