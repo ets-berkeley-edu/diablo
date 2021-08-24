@@ -25,7 +25,9 @@ ENHANCEMENTS, OR MODIFICATIONS.
 from diablo.jobs.base_job import BaseJob
 from diablo.lib.interpolator import interpolate_content
 from diablo.merged.emailer import send_system_error_email
+from diablo.models.approval import NAMES_PER_PUBLISH_TYPE, NAMES_PER_RECORDING_TYPE
 from diablo.models.email_template import EmailTemplate
+from diablo.models.instructor import Instructor
 from diablo.models.queued_email import QueuedEmail
 from diablo.models.scheduled import Scheduled
 from diablo.models.sis_section import SisSection
@@ -62,38 +64,48 @@ class InstructorEmailsJob(BaseJob):
             courses = SisSection.get_courses(term_id=self.term_id, section_ids=[s.section_id for s in all_scheduled])
             courses_per_section_id = dict((course['sectionId'], course) for course in courses)
             for scheduled in all_scheduled:
-                course = courses_per_section_id.get(scheduled.section_id)
-                if course:
-                    if _has_room_change(course, scheduled):
-                        if email_template:
+                section_id = scheduled.section_id
+                course = courses_per_section_id.get(section_id)
+                if not course or _has_room_change(course, scheduled):
+                    if email_template:
+                        Scheduled.add_alert(scheduled_id=scheduled.id, template_type=template_type)
+                        if not course:
+                            course_name = f'Section ID {section_id}'
+                            uids = scheduled.instructor_uids
+                            course = {
+                                'courseName': course_name,
+                                'courseTitle': course_name,
+                                'instructors': [i.to_api_json() for i in Instructor.get_instructors(uids=uids)],
+                                'sectionId': section_id,
+                            }
+                        if course['instructors']:
                             for instructor in course['instructors']:
                                 def _get_interpolate_content(template):
                                     return interpolate_content(
                                         course=course,
-                                        publish_type_name=course.get('scheduled', {}).get('publishTypeName'),
+                                        publish_type_name=NAMES_PER_PUBLISH_TYPE[scheduled.publish_type],
                                         recipient_name=instructor['name'],
-                                        recording_type_name=course.get('scheduled', {}).get('recordingTypeName'),
+                                        recording_type_name=NAMES_PER_RECORDING_TYPE[scheduled.recording_type],
                                         templated_string=template,
                                     )
                                 QueuedEmail.create(
                                     message=_get_interpolate_content(email_template.message),
                                     recipient=instructor,
-                                    section_id=course['sectionId'],
+                                    section_id=section_id,
                                     subject_line=_get_interpolate_content(email_template.subject_line),
                                     template_type=template_type,
                                     term_id=self.term_id,
                                 )
-                            Scheduled.add_alert(scheduled_id=course['scheduled']['id'], template_type=template_type)
                         else:
-                            send_system_error_email(f"""
-                                No '{template_type}' email template available.
-                                We are unable to notify {course['label']} instructors of room change.
-                            """)
-                else:
-                    subject = f'Scheduled course has no SIS data (section_id={scheduled.section_id})'
-                    message = f'{subject}\n\nScheduled:<pre>{scheduled}</pre>'
-                    app.logger.error(message)
-                    send_system_error_email(message=message, subject=subject)
+                            subject = f'No instructor data for scheduled course (section_id={section_id})'
+                            message = f'{subject}\n\nScheduled:<pre>{scheduled}</pre>'
+                            app.logger.error(message)
+                            send_system_error_email(message=message, subject=subject)
+                    else:
+                        send_system_error_email(f"""
+                            No '{template_type}' email template available.
+                            We are unable to notify {course['label']} instructors of room change.
+                        """)
 
 
 def _has_room_change(course, scheduled):

@@ -25,7 +25,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 import json
 
 from diablo import db
-from diablo.lib.util import utc_now
+from diablo.lib.util import to_isoformat, utc_now
 from diablo.models.base import Base
 
 
@@ -64,6 +64,10 @@ class Instructor(Base):
                 """
 
     @classmethod
+    def get_instructors(cls, uids):
+        return cls.query.filter(cls.uid.in_(uids)).all()
+
+    @classmethod
     def upsert(cls, rows):
         now = utc_now().strftime('%Y-%m-%dT%H:%M:%S+00')
         count_per_chunk = 10000
@@ -95,3 +99,15 @@ class Instructor(Base):
                 } for row in rows_subset
             ]
             db.session.execute(query, {'json_dumps': json.dumps(data)})
+
+    def to_api_json(self):
+        return {
+            'createdAt': to_isoformat(self.created_at),
+            'deptCode': self.dept_code,
+            'email': self.email,
+            'firstName': self.first_name,
+            'lastName': self.last_name,
+            'name': f'{self.first_name} {self.last_name}' if self.first_name or self.last_name else f'UID {self.uid}',
+            'uid': self.uid,
+            'updatedAt': to_isoformat(self.updated_at),
+        }
