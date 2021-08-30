@@ -22,6 +22,7 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
+from diablo import db
 from diablo.jobs.instructor_emails_job import InstructorEmailsJob
 from diablo.jobs.queued_emails_job import QueuedEmailsJob
 from diablo.models.room import Room
@@ -29,6 +30,7 @@ from diablo.models.scheduled import Scheduled
 from diablo.models.sent_email import SentEmail
 from diablo.models.sis_section import SisSection
 from flask import current_app as app
+from sqlalchemy import text
 from tests.test_api.api_test_utils import mock_scheduled
 from tests.util import enabled_job, simply_yield, test_approvals_workflow
 
@@ -39,6 +41,28 @@ class TestInstructorEmailsJob:
         term_id = app.config['CURRENT_TERM_ID']
         section_id = 50004
 
+        def _assert_email_count(template_type, expected_count):
+            emails_sent = SentEmail.get_emails_of_type(
+                section_ids=[section_id],
+                template_type=template_type,
+                term_id=term_id,
+            )
+            assert len(emails_sent) == expected_count
+
+        def _move_course(meeting_location):
+            db.session.execute(
+                text('UPDATE sis_sections SET meeting_location = :meeting_location WHERE term_id = :term_id AND section_id = :section_id'),
+                {
+                    'meeting_location': meeting_location,
+                    'section_id': section_id,
+                    'term_id': term_id,
+                },
+            )
+
+        def _run_instructor_emails_job():
+            InstructorEmailsJob(simply_yield).run()
+            QueuedEmailsJob(simply_yield).run()
+
         def _schedule(room_id):
             mock_scheduled(
                 override_room_id=room_id,
@@ -46,44 +70,40 @@ class TestInstructorEmailsJob:
                 term_id=term_id,
             )
 
-        def _assert_alert_count(template_type, count):
-            emails_sent = SentEmail.get_emails_of_type(
-                section_ids=[section_id],
-                template_type=template_type,
-                term_id=term_id,
-            )
-            assert len(emails_sent) == count
-
         with enabled_job(job_key=InstructorEmailsJob.key()):
             with test_approvals_workflow(app):
                 course = SisSection.get_course(section_id=section_id, term_id=term_id)
                 eligible_meetings = course.get('meetings', {}).get('eligible', [])
-                assert eligible_meetings
-                room_id = eligible_meetings[0]['room']['id']
+                assert len(eligible_meetings) == 1
+                original_room = eligible_meetings[0]['room']
+                assert original_room['location'] == 'Li Ka Shing 145'
 
                 # Schedule
-                _schedule(room_id)
-                InstructorEmailsJob(simply_yield).run()
-                QueuedEmailsJob(simply_yield).run()
-                _assert_alert_count('room_change_no_longer_eligible', 0)
+                _schedule(original_room['id'])
+                _run_instructor_emails_job()
+                _assert_email_count('room_change_no_longer_eligible', 0)
 
-                # Unschedule.
-                Scheduled.delete(section_id=section_id, term_id=term_id)
-                # Schedule to an eligible room.
-                _schedule(Room.find_room('Barker 101').id)
-                InstructorEmailsJob(simply_yield).run()
-                QueuedEmailsJob(simply_yield).run()
-                # Expect no email.
-                _assert_alert_count('room_change_no_longer_eligible', 0)
+                # Move course to some other eligible room.
+                _move_course('Barker 101')
+                _run_instructor_emails_job()
+                _assert_email_count('room_change_no_longer_eligible', 0)
 
-                # Unschedule.
+                # Move course to an ineligible room.
+                ineligible_room = 'Wheeler 150'
+                _move_course(ineligible_room)
+                _run_instructor_emails_job()
+                _assert_email_count('room_change_no_longer_eligible', 1)
+
+                # Move course back to its original location
+                _move_course(original_room['location'])
+
+                # Finally, let's pretend the course is scheduled to a room that was previously eligible.
                 Scheduled.delete(section_id=section_id, term_id=term_id)
-                # Schedule to an ineligible room.
-                _schedule(Room.find_room('Wheeler 150').id)
-                InstructorEmailsJob(simply_yield).run()
-                QueuedEmailsJob(simply_yield).run()
+                _schedule(Room.find_room(ineligible_room).id)
+                _run_instructor_emails_job()
                 # Expect email.
-                _assert_alert_count('room_change_no_longer_eligible', 1)
+                _assert_email_count('room_change_no_longer_eligible', 2)
+                Scheduled.delete(section_id=section_id, term_id=term_id)
 
 
 def _get_email_count(uid):

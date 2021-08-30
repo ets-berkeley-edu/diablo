@@ -100,4 +100,4 @@ class InstructorEmailsJob(BaseJob):
     def _has_moved_to_ineligible_room(self, course, scheduled):
         eligible_meetings = course.get('meetings', {}).get('eligible', [])
         has_room_change = scheduled.room_id not in [m.get('room', {}).get('id') for m in eligible_meetings]
-        return has_room_change and scheduled.room_id not in self.eligible_room_ids
+        return has_room_change and (not eligible_meetings or scheduled.room_id not in self.eligible_room_ids)
