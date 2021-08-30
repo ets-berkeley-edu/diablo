@@ -27,6 +27,7 @@ from diablo.lib.interpolator import interpolate_content
 from diablo.merged.emailer import send_system_error_email
 from diablo.models.email_template import EmailTemplate
 from diablo.models.queued_email import QueuedEmail
+from diablo.models.room import Room
 from diablo.models.scheduled import Scheduled
 from diablo.models.sis_section import SisSection
 from flask import current_app as app
@@ -36,6 +37,7 @@ class InstructorEmailsJob(BaseJob):
 
     def _run(self):
         self.term_id = app.config['CURRENT_TERM_ID']
+        self.eligible_room_ids = [room.id for room in Room.get_eligible_rooms()]
         self._room_change_alert()
 
     @classmethod
@@ -64,7 +66,7 @@ class InstructorEmailsJob(BaseJob):
             for scheduled in all_scheduled:
                 course = courses_per_section_id.get(scheduled.section_id)
                 if course:
-                    if _has_room_change(course, scheduled):
+                    if self._has_moved_to_ineligible_room(course, scheduled):
                         if email_template:
                             for instructor in course['instructors']:
                                 def _get_interpolate_content(template):
@@ -95,7 +97,7 @@ class InstructorEmailsJob(BaseJob):
                     app.logger.error(message)
                     send_system_error_email(message=message, subject=subject)
 
-
-def _has_room_change(course, scheduled):
-    eligible_meetings = course.get('meetings', {}).get('eligible', [])
-    return scheduled.room_id not in [meeting.get('room', {}).get('id') for meeting in eligible_meetings]
+    def _has_moved_to_ineligible_room(self, course, scheduled):
+        eligible_meetings = course.get('meetings', {}).get('eligible', [])
+        has_room_change = scheduled.room_id not in [m.get('room', {}).get('id') for m in eligible_meetings]
+        return has_room_change and scheduled.room_id not in self.eligible_room_ids

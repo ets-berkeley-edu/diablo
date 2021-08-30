@@ -36,44 +36,54 @@ from tests.util import enabled_job, simply_yield, test_approvals_workflow
 class TestInstructorEmailsJob:
 
     def test_room_change_no_longer_eligible(self, db_session):
+        term_id = app.config['CURRENT_TERM_ID']
+        section_id = 50004
+
+        def _schedule(room_id):
+            mock_scheduled(
+                override_room_id=room_id,
+                section_id=section_id,
+                term_id=term_id,
+            )
+
+        def _assert_alert_count(template_type, count):
+            emails_sent = SentEmail.get_emails_of_type(
+                section_ids=[section_id],
+                template_type=template_type,
+                term_id=term_id,
+            )
+            assert len(emails_sent) == count
+
         with enabled_job(job_key=InstructorEmailsJob.key()):
-            term_id = app.config['CURRENT_TERM_ID']
-            section_id = 50004
             with test_approvals_workflow(app):
-                def _run_jobs():
-                    InstructorEmailsJob(simply_yield).run()
-                    QueuedEmailsJob(simply_yield).run()
+                course = SisSection.get_course(section_id=section_id, term_id=term_id)
+                eligible_meetings = course.get('meetings', {}).get('eligible', [])
+                assert eligible_meetings
+                room_id = eligible_meetings[0]['room']['id']
 
-                def _schedule():
-                    mock_scheduled(
-                        override_room_id=Room.find_room('Barker 101').id,
-                        section_id=section_id,
-                        term_id=term_id,
-                    )
-                    course = SisSection.get_course(section_id=section_id, term_id=term_id)
-                    assert course['scheduled']['hasObsoleteRoom'] is True
+                # Schedule
+                _schedule(room_id)
+                InstructorEmailsJob(simply_yield).run()
+                QueuedEmailsJob(simply_yield).run()
+                _assert_alert_count('room_change_no_longer_eligible', 0)
 
-                def _assert_alert_count(count):
-                    emails_sent = SentEmail.get_emails_of_type(
-                        section_ids=[section_id],
-                        template_type='room_change_no_longer_eligible',
-                        term_id=term_id,
-                    )
-                    assert len(emails_sent) == count
-
-                # First time scheduled.
-                _schedule()
-                _run_jobs()
-                _assert_alert_count(1)
-                # Unschedule and schedule a second time.
+                # Unschedule.
                 Scheduled.delete(section_id=section_id, term_id=term_id)
-                _schedule()
-                _run_jobs()
-                # Another alert is emailed to admin because it is a new schedule.
-                _assert_alert_count(2)
-                # Run jobs again and expect no alerts.
-                _run_jobs()
-                _assert_alert_count(2)
+                # Schedule to an eligible room.
+                _schedule(Room.find_room('Barker 101').id)
+                InstructorEmailsJob(simply_yield).run()
+                QueuedEmailsJob(simply_yield).run()
+                # Expect no email.
+                _assert_alert_count('room_change_no_longer_eligible', 0)
+
+                # Unschedule.
+                Scheduled.delete(section_id=section_id, term_id=term_id)
+                # Schedule to an ineligible room.
+                _schedule(Room.find_room('Wheeler 150').id)
+                InstructorEmailsJob(simply_yield).run()
+                QueuedEmailsJob(simply_yield).run()
+                # Expect email.
+                _assert_alert_count('room_change_no_longer_eligible', 1)
 
 
 def _get_email_count(uid):
