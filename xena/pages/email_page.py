@@ -56,6 +56,9 @@ class EmailPage(Page):
     def message_row(self, message):
         return self.element(EmailPage.message_locator(message))
 
+    def message_rows(self, message):
+        return self.elements(EmailPage.message_locator(message))
+
     def load_page(self):
         tries = 0
         retries = 2
