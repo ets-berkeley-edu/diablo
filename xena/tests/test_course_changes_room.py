@@ -39,12 +39,15 @@ class TestCourseRoomChanges:
     real_test_data = util.get_test_script_course('test_course_changes_real')
     fake_test_data = util.get_test_script_course('test_course_changes_fake')
     faker_test_data = util.get_test_script_course('test_course_changes_faker')
+    fakest_test_data = util.get_test_script_course('test_course_changes_fakest')
     real_section = util.get_test_section(real_test_data)
     real_meeting = real_section.meetings[0]
     fake_section = Section(fake_test_data)
     fake_meeting = fake_section.meetings[0]
     faker_section = Section(faker_test_data)
     faker_meeting = faker_section.meetings[0]
+    fakest_section = Section(fakest_test_data)
+    fakest_meeting = fakest_section.meetings[0]
     recording_sched = RecordingSchedule(real_section)
 
     def test_disable_jobs(self):
@@ -90,6 +93,43 @@ class TestCourseRoomChanges:
         self.ouija_page.click_jobs_link()
         self.jobs_page.run_kaltura_job()
         util.get_kaltura_id(self.recording_sched, self.term)
+
+    # SCHEDULED COURSE MOVES TO ANOTHER ELIGIBLE ROOM
+
+    def test_move_to_alt_eligible_room(self):
+        util.set_meeting_location(self.real_section, self.fakest_meeting)
+
+    def test_run_admin_email_job_alt_eligible_room(self):
+        self.jobs_page.run_admin_emails_job()
+
+    def test_run_instr_email_job_alt_eligible_room(self):
+        self.jobs_page.run_instructor_emails_job()
+
+    def test_run_queued_email_job_alt_eligible_room(self):
+        self.jobs_page.run_queued_emails_job()
+
+    def test_changes_page_summary_alt_eligible_room(self):
+        self.jobs_page.click_course_changes_link()
+        self.changes_page.wait_for_course_row(self.real_section)
+        expected = 'Room is obsolete.'
+        actual = self.changes_page.scheduled_card_summary(self.real_section)
+        app.logger.info(f'Expecting: {expected}')
+        app.logger.info(f'Actual: {actual}')
+        assert expected in actual
+
+    def test_changes_page_old_elig_room(self):
+        expected = f'{self.real_meeting.room.name}'
+        actual = self.changes_page.scheduled_card_old_room(self.real_section)
+        app.logger.info(f'Expecting: {expected}')
+        app.logger.info(f'Actual: {actual}')
+        assert expected in actual
+
+    def test_changes_page_new_elig_room(self):
+        expected = f'{self.fakest_meeting.room.name}'
+        actual = self.changes_page.current_card_schedule(self.real_section, list_node=None, detail_node=None)
+        app.logger.info(f'Expecting: {expected}')
+        app.logger.info(f'Actual: {actual}')
+        assert expected in actual
 
     # SCHEDULED COURSE MOVES TO INELIGIBLE ROOM
 
@@ -152,6 +192,12 @@ class TestCourseRoomChanges:
         subj = f'Your course {self.real_section.code} is no longer eligible for Course Capture'
         email = Email(msg_type=None, subject=subj, sender=None)
         assert self.email_page.is_message_delivered(email)
+
+    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
+    def test_instructor_email_alt_eligible_room(self):
+        subj = f'Your course {self.real_section.code} is no longer eligible for Course Capture'
+        email = Email(msg_type=None, subject=subj, sender=None)
+        assert len(self.email_page.message_rows(email)) == 1
 
     # ROOM REMOVED
 
