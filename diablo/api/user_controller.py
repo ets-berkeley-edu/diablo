@@ -29,7 +29,7 @@ from diablo.merged.calnet import get_calnet_user_for_uid, get_calnet_users_for_u
 from diablo.models.admin_user import AdminUser
 from diablo.models.sis_section import SisSection
 from flask import current_app as app
-from flask_login import current_user
+from flask_login import current_user, login_required
 
 
 @app.route('/api/user/my_profile')
@@ -53,7 +53,7 @@ def get_user(uid):
 
 
 @app.route('/api/user/<uid>/calnet')
-@admin_required
+@login_required
 def get_calnet_user(uid):
     return tolerant_jsonify(get_calnet_user_for_uid(app=app, uid=uid))
 
