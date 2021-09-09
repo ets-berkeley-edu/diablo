@@ -28,11 +28,11 @@
             <v-row>
               <v-col id="approvals-described" class="font-weight-medium mb-1 red--text">
                 <span v-if="queuedForScheduling">This course is currently queued for scheduling. Recordings will be scheduled in an hour or less. </span>
-                <span v-if="approvedByInstructorUIDs.length">
+                <span v-if="approvedByInstructorUIDs.length" class="pr-1">
                   Approved by
                   <OxfordJoin v-slot="{item}" :items="approvedByInstructorUIDs">
                     <CalNetProfile :say-you="true" :uid="item" />
-                  </OxfordJoin>
+                  </OxfordJoin>.
                 </span>
                 <span v-if="approvalNeededNames.length">
                   <span v-if="!course.scheduled && !queuedForScheduling">Recordings will be scheduled when we have</span>
