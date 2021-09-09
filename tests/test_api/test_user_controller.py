@@ -166,12 +166,8 @@ class TestGetCalnetUser:
         """Denies anonymous access."""
         self._api_calnet_user(client, uid='10000', expected_status_code=401)
 
-    def test_unauthorized(self, client, instructor_session):
-        """Denies access if user is not an admin."""
-        self._api_calnet_user(client, uid='10000', expected_status_code=401)
-
-    def test_authorized(self, client, admin_session):
-        """Admin user has access."""
+    def test_authorized(self, client, instructor_session):
+        """Authenticated user has access."""
         uid = '10000'
         api_json = self._api_calnet_user(client, uid=uid)
         assert api_json['name'] == 'Father Karras'
