@@ -30,7 +30,7 @@ createdb pazuzu --owner=diablo
 createdb pazuzu_test --owner=diablo
 
 # Load schema
-export FLASK_APP=run.py
+export FLASK_APP=application.py
 flask initdb
 ```
 
