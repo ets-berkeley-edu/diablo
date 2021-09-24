@@ -69,66 +69,72 @@ class Approval(db.Model):
     __tablename__ = 'approvals'
 
     id = db.Column(db.Integer, nullable=False, primary_key=True)  # noqa: A003
-    term_id = db.Column(db.Integer, nullable=False)
-    section_id = db.Column(db.Integer, nullable=False)
     approved_by_uid = db.Column(db.String, nullable=False)
     approver_type = db.Column(approver_type, nullable=False)
-    room_id = db.Column(db.Integer, db.ForeignKey('rooms.id'), nullable=False)
-    publish_type = db.Column(publish_type, nullable=False)
-    recording_type = db.Column(recording_type, nullable=False)
+    course_display_name = db.Column(db.String, nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.now)
     deleted_at = db.Column(db.DateTime, nullable=True)
+    publish_type = db.Column(publish_type, nullable=False)
+    recording_type = db.Column(recording_type, nullable=False)
+    room_id = db.Column(db.Integer, db.ForeignKey('rooms.id'), nullable=False)
+    section_id = db.Column(db.Integer, nullable=False)
+    term_id = db.Column(db.Integer, nullable=False)
 
     def __init__(
             self,
-            term_id,
-            section_id,
             approved_by_uid,
             approver_type_,
-            room_id,
+            course_display_name,
             publish_type_,
             recording_type_,
+            room_id,
+            section_id,
+            term_id,
     ):
-        self.term_id = term_id
-        self.section_id = section_id
         self.approved_by_uid = approved_by_uid
         self.approver_type = approver_type_
-        self.room_id = room_id
+        self.course_display_name = course_display_name
         self.publish_type = publish_type_
         self.recording_type = recording_type_
+        self.room_id = room_id
+        self.section_id = section_id
+        self.term_id = term_id
 
     def __repr__(self):
         return f"""<Approval
                     id={self.id},
-                    term_id={self.term_id},
-                    section_id={self.section_id},
                     approved_by_uid={self.approved_by_uid},
                     approver_type={self.approver_type},
+                    course_display_name={self.course_display_name},
+                    created_at={self.created_at},
                     publish_type={self.publish_type},
                     recording_type={self.recording_type},
                     room_id={self.room_id},
-                    created_at={self.created_at}>
+                    section_id={self.section_id},
+                    term_id={self.term_id}>
                 """
 
     @classmethod
     def create(
             cls,
-            term_id,
-            section_id,
             approved_by_uid,
             approver_type_,
+            course_display_name,
             publish_type_,
             recording_type_,
             room_id,
+            section_id,
+            term_id,
     ):
         approval = cls(
-            term_id=term_id,
-            section_id=section_id,
             approved_by_uid=approved_by_uid,
             approver_type_=approver_type_,
+            course_display_name=course_display_name,
             publish_type_=publish_type_,
             recording_type_=recording_type_,
             room_id=room_id,
+            section_id=section_id,
+            term_id=term_id,
         )
         db.session.add(approval)
         std_commit()
@@ -172,7 +178,7 @@ class Approval(db.Model):
                 room_feed = Room.get_room(self.room_id).to_api_json()
         return {
             'approvedBy': self.approved_by_uid,
-            'wasApprovedByAdmin': self.approver_type == 'admin',
+            'courseDisplayName': self.course_display_name,
             'createdAt': to_isoformat(self.created_at),
             'publishType': self.publish_type,
             'publishTypeName': NAMES_PER_PUBLISH_TYPE[self.publish_type],
@@ -181,6 +187,7 @@ class Approval(db.Model):
             'room': room_feed,
             'sectionId': self.section_id,
             'termId': self.term_id,
+            'wasApprovedByAdmin': self.approver_type == 'admin',
         }
 
 

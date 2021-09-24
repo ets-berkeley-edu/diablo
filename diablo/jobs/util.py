@@ -233,6 +233,7 @@ def schedule_recordings(all_approvals, course):
                 term_id=term_id,
             )
             scheduled = Scheduled.create(
+                course_display_name=course['label'],
                 instructor_uids=instructor_uids,
                 kaltura_schedule_id=kaltura_schedule_id,
                 meeting_days=meeting['days'],

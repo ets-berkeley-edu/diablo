@@ -103,6 +103,7 @@ class TestAdminEmailsJob:
                 approval = Approval.create(
                     approved_by_uid=approved_by_uid,
                     approver_type_='instructor',
+                    course_display_name=f'term_id:{term_id} section_id:{section_id}',
                     publish_type_='kaltura_media_gallery',
                     recording_type_='presenter_audio',
                     room_id=scheduled_in_room.id,
@@ -111,6 +112,7 @@ class TestAdminEmailsJob:
                 )
                 meeting = get_eligible_meeting(section_id=section_id, term_id=term_id)
                 Scheduled.create(
+                    course_display_name=f'term_id:{term_id} section_id:{section_id}',
                     instructor_uids=get_instructor_uids(term_id=term_id, section_id=section_id),
                     kaltura_schedule_id=random.randint(1, 10),
                     meeting_days=meeting['days'],
@@ -146,6 +148,7 @@ class TestAdminEmailsJob:
                 approval = Approval.create(
                     approved_by_uid=instructor_1_uid,
                     approver_type_='instructor',
+                    course_display_name=f'term_id:{term_id} section_id:{section_id}',
                     publish_type_='kaltura_my_media',
                     recording_type_='presenter_audio',
                     room_id=room_id,
@@ -155,6 +158,7 @@ class TestAdminEmailsJob:
                 # Uh oh! Only one of them has been scheduled.
                 meeting = get_eligible_meeting(section_id=section_id, term_id=term_id)
                 Scheduled.create(
+                    course_display_name=f'term_id:{term_id} section_id:{section_id}',
                     instructor_uids=[instructor_1_uid],
                     kaltura_schedule_id=random.randint(1, 10),
                     meeting_days=meeting['days'],
@@ -193,6 +197,7 @@ class TestAdminEmailsJob:
                 approval = Approval.create(
                     approved_by_uid=instructor_uid,
                     approver_type_='instructor',
+                    course_display_name=f'term_id:{term_id} section_id:{section_id}',
                     publish_type_='kaltura_my_media',
                     recording_type_='presenter_audio',
                     room_id=room_id,
@@ -202,6 +207,7 @@ class TestAdminEmailsJob:
                 # Uh oh! Only one of them has been scheduled.
                 meeting = get_eligible_meeting(section_id=section_id, term_id=term_id)
                 Scheduled.create(
+                    course_display_name=f'{section_id}:{term_id}',
                     instructor_uids=[instructor_uid],
                     kaltura_schedule_id=random.randint(1, 10),
                     meeting_days=meeting['days'],
