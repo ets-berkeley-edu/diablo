@@ -92,6 +92,7 @@ def mock_scheduled(
 ):
     meeting = meeting or get_eligible_meeting(section_id=section_id, term_id=term_id)
     Scheduled.create(
+        course_display_name=f'term_id:{term_id} section_id:{section_id}',
         instructor_uids=get_instructor_uids(term_id=term_id, section_id=section_id),
         kaltura_schedule_id=random.randint(1, 10),
         meeting_days=override_days or meeting['days'],

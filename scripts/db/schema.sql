@@ -116,14 +116,15 @@ ALTER TABLE ONLY admin_users
 CREATE TABLE approvals (
     id SERIAL PRIMARY KEY,
     approved_by_uid VARCHAR(80) NOT NULL,
-    section_id INTEGER NOT NULL,
-    term_id INTEGER NOT NULL,
     approver_type approver_types,
+    course_display_name VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    deleted_at TIMESTAMP WITH TIME ZONE,
     publish_type publish_types NOT NULL,
     recording_type recording_types NOT NULL,
     room_id INTEGER NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL,
-    deleted_at TIMESTAMP WITH TIME ZONE
+    section_id INTEGER NOT NULL,
+    term_id INTEGER NOT NULL
 );
 ALTER TABLE approvals OWNER TO diablo;
 CREATE UNIQUE INDEX approvals_unique_idx ON approvals (approved_by_uid, section_id, term_id) WHERE deleted_at IS NULL;
@@ -337,9 +338,10 @@ CREATE INDEX rooms_location_idx ON rooms USING btree (location);
 
 CREATE TABLE scheduled (
     id SERIAL PRIMARY KEY,
-    section_id INTEGER NOT NULL,
-    term_id INTEGER NOT NULL,
     alerts email_template_types[],
+    course_display_name VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    deleted_at TIMESTAMP WITH TIME ZONE,
     instructor_uids VARCHAR(80)[] NOT NULL,
     kaltura_schedule_id INTEGER NOT NULL,
     meeting_days VARCHAR(80) NOT NULL,
@@ -350,8 +352,8 @@ CREATE TABLE scheduled (
     publish_type publish_types NOT NULL,
     recording_type recording_types NOT NULL,
     room_id INTEGER NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL,
-    deleted_at TIMESTAMP WITH TIME ZONE
+    section_id INTEGER NOT NULL,
+    term_id INTEGER NOT NULL
 );
 ALTER TABLE scheduled OWNER TO diablo;
 CREATE UNIQUE INDEX scheduled_unique_idx ON scheduled (section_id, term_id) WHERE deleted_at IS NULL;

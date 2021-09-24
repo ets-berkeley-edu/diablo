@@ -73,6 +73,7 @@ class TestKalturaJob:
                 Approval.create(
                     approved_by_uid=instructors[0]['uid'],
                     approver_type_='instructor',
+                    course_display_name=course['label'],
                     publish_type_='kaltura_my_media',
                     recording_type_='presentation_audio',
                     room_id=room_id,
@@ -90,6 +91,7 @@ class TestKalturaJob:
             final_approval = Approval.create(
                 approved_by_uid=instructors[1]['uid'],
                 approver_type_='instructor',
+                course_display_name=course['label'],
                 publish_type_='kaltura_media_gallery',
                 recording_type_='presenter_presentation_audio',
                 room_id=room_id,
@@ -140,6 +142,7 @@ class TestKalturaJob:
             Approval.create(
                 approved_by_uid=admin_uid,
                 approver_type_='admin',
+                course_display_name=course['label'],
                 publish_type_='kaltura_my_media',
                 recording_type_='presentation_audio',
                 room_id=Room.find_room('Barker 101').id,

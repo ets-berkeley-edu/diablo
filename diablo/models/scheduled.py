@@ -40,6 +40,7 @@ class Scheduled(db.Model):
     section_id = db.Column(db.Integer, nullable=False)
     term_id = db.Column(db.Integer, nullable=False)
     alerts = db.Column(ARRAY(email_template_type))
+    course_display_name = db.Column(db.String, nullable=False)
     instructor_uids = db.Column(ARRAY(db.String(80)), nullable=False)
     kaltura_schedule_id = db.Column(db.Integer, nullable=False)
     meeting_days = db.Column(db.String, nullable=False)
@@ -55,8 +56,7 @@ class Scheduled(db.Model):
 
     def __init__(
             self,
-            section_id,
-            term_id,
+            course_display_name,
             instructor_uids,
             kaltura_schedule_id,
             meeting_days,
@@ -67,9 +67,10 @@ class Scheduled(db.Model):
             publish_type_,
             recording_type_,
             room_id,
+            section_id,
+            term_id,
     ):
-        self.section_id = section_id
-        self.term_id = term_id
+        self.course_display_name = course_display_name
         self.instructor_uids = instructor_uids
         self.kaltura_schedule_id = kaltura_schedule_id
         self.meeting_days = meeting_days
@@ -80,13 +81,15 @@ class Scheduled(db.Model):
         self.publish_type = publish_type_
         self.recording_type = recording_type_
         self.room_id = room_id
+        self.section_id = section_id
+        self.term_id = term_id
 
     def __repr__(self):
         return f"""<Scheduled
                     id={self.id},
-                    section_id={self.section_id},
-                    term_id={self.term_id},
                     alerts={', '.join(self.alerts or [])},
+                    course_display_name={self.course_display_name},
+                    created_at={self.created_at},
                     instructor_uids={', '.join(self.instructor_uids)},
                     kaltura_schedule_id={self.kaltura_schedule_id}
                     meeting_days={self.meeting_days},
@@ -97,14 +100,14 @@ class Scheduled(db.Model):
                     publish_type={self.publish_type},
                     recording_type={self.recording_type},
                     room_id={self.room_id},
-                    created_at={self.created_at}>
+                    section_id={self.section_id},
+                    term_id={self.term_id}>
                 """
 
     @classmethod
     def create(
             cls,
-            section_id,
-            term_id,
+            course_display_name,
             instructor_uids,
             kaltura_schedule_id,
             meeting_days,
@@ -115,8 +118,11 @@ class Scheduled(db.Model):
             publish_type_,
             recording_type_,
             room_id,
+            section_id,
+            term_id,
     ):
         scheduled = cls(
+            course_display_name=course_display_name,
             instructor_uids=instructor_uids,
             kaltura_schedule_id=kaltura_schedule_id,
             meeting_days=meeting_days,
@@ -180,6 +186,7 @@ class Scheduled(db.Model):
         return {
             'id': self.id,
             'alerts': self.alerts or [],
+            'courseDisplayName': self.course_display_name,
             'createdAt': to_isoformat(self.created_at),
             'instructorUids': self.instructor_uids,
             'kalturaScheduleId': self.kaltura_schedule_id,

@@ -160,9 +160,11 @@ class TestApprove:
             assert len(approvals_) == 2
 
             assert approvals_[0]['approvedBy'] == instructor_uids[0]
+            assert approvals_[0]['courseDisplayName'] == api_json['label']
             assert approvals_[0]['publishType'] == 'kaltura_my_media'
 
             assert approvals_[1]['approvedBy'] == instructor_uids[1]
+            assert approvals_[1]['courseDisplayName'] == api_json['label']
             assert approvals_[1]['publishType'] == 'kaltura_media_gallery'
             assert approvals_[1]['recordingType'] == 'presentation_audio'
             assert approvals_[1]['recordingTypeName'] == 'Presentation and Audio'
@@ -183,6 +185,10 @@ class TestApprove:
             std_commit(allow_test_environment=True)
             assert api_json['hasNecessaryApprovals'] is True
             assert api_json['scheduled'] is None
+
+            approvals = api_json['approvals']
+            assert len(approvals) == 1
+            assert approvals[0]['courseDisplayName'] == api_json['label']
 
     def test_has_necessary_approvals_when_cross_listed(self, client, fake_auth):
         """If section X and Y are cross-listed then hasNecessaryApprovals is false until the Y instructor approves."""
@@ -260,6 +266,7 @@ class TestGetCourse:
             Approval.create(
                 approved_by_uid=approved_by_uid,
                 approver_type_='instructor',
+                course_display_name=f'term_id:{self.term_id} section_id:{section_1_id}',
                 publish_type_='kaltura_my_media',
                 recording_type_='presentation_audio',
                 room_id=room_id,
@@ -580,6 +587,7 @@ class TestGetCourses:
                     Approval.create(
                         approved_by_uid=admin_uid,
                         approver_type_='admin',
+                        course_display_name=f'term_id:{self.term_id} section_id:{section_id}',
                         publish_type_='kaltura_my_media',
                         recording_type_='presentation_audio',
                         room_id=Room.get_room_id(section_id=section_id, term_id=self.term_id),
@@ -783,6 +791,7 @@ class TestCoursesChanges:
             assert meeting['days'] != obsolete_meeting_days
 
             Scheduled.create(
+                course_display_name=f'term_id:{self.term_id} section_id:{section_1_id}',
                 instructor_uids=get_instructor_uids(term_id=self.term_id, section_id=section_1_id),
                 kaltura_schedule_id=random.randint(1, 10),
                 meeting_days=obsolete_meeting_days,
@@ -815,6 +824,7 @@ class TestCoursesChanges:
             assert meeting['endDate'] != obsolete_meeting_end_date
 
             Scheduled.create(
+                course_display_name=f'term_id:{self.term_id} section_id:{section_1_id}',
                 instructor_uids=get_instructor_uids(term_id=self.term_id, section_id=section_1_id),
                 kaltura_schedule_id=random.randint(1, 10),
                 meeting_days=meeting['days'],
@@ -848,6 +858,7 @@ class TestCoursesChanges:
             assert len(instructor_uids) > 1
             scheduled_with_uid = instructor_uids[0]
             Scheduled.create(
+                course_display_name=f'term_id:{self.term_id} section_id:{section_1_id}',
                 instructor_uids=[scheduled_with_uid],
                 kaltura_schedule_id=random.randint(1, 10),
                 meeting_days=meeting['days'],
@@ -1166,6 +1177,7 @@ def _create_approval(section_id, term_id):
     Approval.create(
         approved_by_uid=get_instructor_uids(section_id=section_id, term_id=term_id)[0],
         approver_type_='instructor',
+        course_display_name=f'term_id:{term_id} section_id:{section_id}',
         publish_type_='kaltura_my_media',
         recording_type_='presentation_audio',
         room_id=Room.get_room_id(section_id=section_id, term_id=term_id),
