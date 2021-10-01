@@ -42,6 +42,7 @@ recording_type = ENUM(
     'presentation_audio',
     'presenter_audio',
     'presenter_presentation_audio',
+    'presenter_presentation_audio_with_operator',
     name='recording_types',
     create_type=False,
 )
