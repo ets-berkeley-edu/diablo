@@ -77,7 +77,8 @@ CREATE TYPE publish_types AS ENUM (
 CREATE TYPE recording_types AS ENUM (
     'presentation_audio',
     'presenter_audio',
-    'presenter_presentation_audio'
+    'presenter_presentation_audio',
+    'presenter_presentation_audio_with_operator'
 );
 
 --

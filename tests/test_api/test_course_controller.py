@@ -315,7 +315,7 @@ class TestGetCourse:
             section_id=section_3_id,
         )
         assert api_json['meetings']['eligible'][0]['room']['location'] == 'Li Ka Shing 145'
-        assert len(api_json['meetings']['eligible'][0]['room']['recordingTypeOptions']) == 3
+        assert len(api_json['meetings']['eligible'][0]['room']['recordingTypeOptions']) == 2
 
     def test_section_with_canvas_course_sites(self, client, fake_auth):
         """Canvas course site information is included in the API."""

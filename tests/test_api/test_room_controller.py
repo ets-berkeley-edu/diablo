@@ -24,7 +24,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 import json
 
-from diablo.models.room import ALL_RECORDING_TYPES, Room
+from diablo.models.room import Room
 import pytest
 
 
@@ -136,7 +136,10 @@ class TestGetRoom:
         assert api_json['isAuditorium'] is True
         assert api_json['kalturaResourceId'] == 678
         assert api_json['location'] == location
-        assert api_json['recordingTypeOptions'] == ALL_RECORDING_TYPES
+        assert list(api_json['recordingTypeOptions'].keys()) == [
+            'presenter_presentation_audio_with_operator',
+            'presenter_presentation_audio',
+        ]
         # Feed includes courses but room-per-course would be redundant
         assert len(api_json['courses']) > 0
         assert 'room' not in api_json['courses'][0]
@@ -146,13 +149,15 @@ class TestGetRoom:
         expected = {
             'Barker 101': ['presenter_presentation_audio'],
             "O'Brien 212": ['presentation_audio'],
-            'Li Ka Shing 145': ALL_RECORDING_TYPES.keys(),
+            'Li Ka Shing 145': [
+                'presenter_presentation_audio_with_operator',
+                'presenter_presentation_audio',
+            ],
         }
-        for location, expected_types in expected.items():
+        for location, expected_options in expected.items():
             room = Room.find_room(location=location)
             api_json = self._api_room(client, room.id)
-            actual_types = api_json['recordingTypeOptions'].keys()
-            assert list(actual_types) == list(expected_types)
+            assert list(api_json['recordingTypeOptions'].keys()) == expected_options
 
 
 class TestUpdateRoomCapability:

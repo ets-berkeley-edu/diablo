@@ -27,6 +27,7 @@ from datetime import datetime
 
 from diablo import db, std_commit
 from diablo.lib.util import to_isoformat
+from flask import current_app as app
 from sqlalchemy import func, text
 from sqlalchemy.dialects.postgresql import ENUM
 
@@ -37,12 +38,6 @@ room_capability_type = ENUM(
     name='room_capability_types',
     create_type=False,
 )
-
-ALL_RECORDING_TYPES = {
-    'presentation_audio': 'Presentation + Audio',
-    'presenter_audio': 'Presenter + Audio',
-    'presenter_presentation_audio': 'Presenter + Presentation + Audio',
-}
 
 
 class Room(db.Model):
@@ -181,9 +176,20 @@ class Room(db.Model):
 
     def to_api_json(self):
         if self.capability == 'screencast':
-            recording_types = ['presentation_audio']
+            recording_type_options = {'presentation_audio': 'Audio + Projection'}
         else:
-            recording_types = ALL_RECORDING_TYPES.keys() if self.is_auditorium else ['presenter_presentation_audio']
+            premium_cost = app.config['COURSE_CAPTURE_PREMIUM_COST']
+            camera_with_operator_label = f'Audio + Projection + Camera with Operator (${premium_cost})'
+            camera_without_operator_label = 'Audio + Projection + Camera without Operator'
+            if self.is_auditorium:
+                recording_type_options = {
+                    'presenter_presentation_audio_with_operator': camera_with_operator_label,
+                    'presenter_presentation_audio': camera_without_operator_label,
+                }
+            else:
+                recording_type_options = {
+                    'presenter_presentation_audio': camera_without_operator_label,
+                }
         return {
             'id': self.id,
             'location': self.location,
@@ -192,5 +198,5 @@ class Room(db.Model):
             'createdAt': to_isoformat(self.created_at),
             'isAuditorium': self.is_auditorium,
             'kalturaResourceId': self.kaltura_resource_id,
-            'recordingTypeOptions': {type_: ALL_RECORDING_TYPES[type_] for type_ in recording_types},
+            'recordingTypeOptions': recording_type_options,
         }
