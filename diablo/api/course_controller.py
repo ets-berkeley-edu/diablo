@@ -139,15 +139,18 @@ def download_courses_csv():
         return f'{name} <{email}>' if email else name
 
     def _course_csv_row(c):
-        section_id = c.get('sectionId')
+        course_name = c.get('courseName')
+        instruction_format = c.get('instructionFormat')
+        eligible_meetings = c.get('meetings', {}).get('eligible', [])
         scheduled = c.get('scheduled') or {}
+        section_id = c.get('sectionId')
         return {
-            'Course Name': c.get('courseName'),
+            'Course Name': f"{course_name}, {instruction_format} {c.get('sectionNum')}" if instruction_format else course_name,
             'Section Id': section_id,
-            'Room': ' / '.join(m.get('location', '') for m in c.get('meetings', {}).get('eligible', [])),
-            'Days': ' / '.join(', '.join(m.get('daysFormatted') or []) for m in c.get('meetings', {}).get('eligible', [])),
-            'Start Time': ' / '.join((m.get('startTimeFormatted') or '') for m in c.get('meetings', {}).get('eligible', [])),
-            'End Time': ' / '.join((m.get('endTimeFormatted') or '') for m in c.get('meetings', {}).get('eligible', [])),
+            'Room': ' / '.join(m.get('location', '') for m in eligible_meetings),
+            'Days': ' / '.join(', '.join(m.get('daysFormatted') or []) for m in eligible_meetings),
+            'Start Time': ' / '.join((m.get('startTimeFormatted') or '') for m in eligible_meetings),
+            'End Time': ' / '.join((m.get('endTimeFormatted') or '') for m in eligible_meetings),
             'Meeting Type': c.get('meetingType'),
             'Publish Type': scheduled.get('publishTypeName'),
             'Recording Type': scheduled.get('recordingTypeName'),
