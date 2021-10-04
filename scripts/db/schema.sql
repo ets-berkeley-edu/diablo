@@ -390,6 +390,8 @@ CREATE TABLE sis_sections (
     allowed_units VARCHAR(80),
     course_name VARCHAR(80),
     course_title TEXT,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    deleted_at TIMESTAMP WITH TIME ZONE,
     instruction_format VARCHAR(80),
     instructor_name TEXT,
     instructor_role_code VARCHAR(80),
@@ -404,8 +406,7 @@ CREATE TABLE sis_sections (
     meeting_start_time VARCHAR(80),
     section_id INTEGER NOT NULL,
     section_num VARCHAR(80),
-    term_id INTEGER NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL
+    term_id INTEGER NOT NULL
 );
 ALTER TABLE sis_sections OWNER TO diablo;
 CREATE SEQUENCE sis_sections_id_seq

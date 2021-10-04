@@ -23,6 +23,8 @@
  * ENHANCEMENTS, OR MODIFICATIONS.
  */
 
+CREATE TABLE tmp_sis_sections AS SELECT * FROM sis_sections WHERE term_id = '{term_id}';
+
 DELETE FROM sis_sections WHERE term_id = '{term_id}';
 
 --
@@ -62,3 +64,20 @@ INSERT INTO sis_sections (allowed_units, course_name, course_title, instruction_
 
 -- Our source data may use blank spaces for UIDs that should be null.
 UPDATE sis_sections SET instructor_uid = NULL WHERE instructor_uid = '';
+
+-- Restore deleted sections, with deleted_at set to now().
+INSERT INTO sis_sections (allowed_units, course_name, course_title, deleted_at, instruction_format, instructor_name,
+                          instructor_role_code, instructor_uid, is_primary, meeting_days, meeting_end_date,
+                          meeting_end_time, meeting_location, meeting_start_date, meeting_start_time, section_id,
+                          section_num, term_id)
+(
+  SELECT
+    t.allowed_units, t.course_name, t.course_title, now(), t.instruction_format, t.instructor_name,
+    t.instructor_role_code, t.instructor_uid, t.is_primary, t.meeting_days, t.meeting_end_date, t.meeting_end_time,
+    t.meeting_location, t.meeting_start_date, t.meeting_start_time, t.section_id, t.section_num, t.term_id
+  FROM tmp_sis_sections t
+  LEFT JOIN sis_sections s2 ON s2.section_id = t.section_id AND s2.term_id = t.term_id
+  WHERE t.term_id = {term_id} AND s2.section_id IS NULL AND s2.term_id IS NULL
+);
+
+DROP TABLE tmp_sis_sections;
