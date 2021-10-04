@@ -100,6 +100,7 @@ def get_all_eligible_section_ids():
               WHERE sis_sections.term_id = {app.config['CURRENT_TERM_ID']}
                 AND rooms.capability IS NOT NULL
                 AND sis_sections.is_principal_listing IS TRUE
+                AND deleted_at IS NULL
               ORDER BY section_id ASC;
     """
     app.logger.info(sql)
@@ -126,6 +127,7 @@ def get_test_section(test_data):
                  AND sis_sections.course_name NOT LIKE '{test_data["dept_code"]} C%'
                  AND sis_sections.instruction_format = 'LEC'
                  AND sis_sections.is_principal_listing IS TRUE
+                 AND sis_sections.deleted_at IS NULL
             ORDER BY code, ccn
                LIMIT 1;
     """
@@ -158,6 +160,7 @@ def get_test_x_listed_sections(test_data):
                  AND sis_sections.instruction_format = 'LEC'
                  AND sis_sections.is_principal_listing IS TRUE
                  AND array_length(cross_listings.cross_listed_section_ids, 1) = 1
+                 AND sis_sections.deleted_at IS NULL
             ORDER BY code, ccn
                LIMIT 1;
     """

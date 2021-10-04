@@ -65,12 +65,12 @@ def _save_courses(sis_sections):
     now = utc_now().strftime('%Y-%m-%dT%H:%M:%S+00')
     query = """
         INSERT INTO sis_sections (
-            allowed_units, course_name, course_title, created_at, instruction_format, instructor_name,
+            allowed_units, course_name, course_title, created_at, deleted_at, instruction_format, instructor_name,
             instructor_role_code, instructor_uid, is_primary, meeting_days, meeting_end_date, meeting_end_time,
             meeting_location, meeting_start_date, meeting_start_time, section_id, section_num, term_id
         )
         SELECT
-            allowed_units, course_name, course_title, created_at, instruction_format, instructor_name,
+            allowed_units, course_name, course_title, created_at, deleted_at, instruction_format, instructor_name,
             instructor_role_code, instructor_uid, is_primary::BOOLEAN, meeting_days, meeting_end_date::TIMESTAMP,
             meeting_end_time, meeting_location, meeting_start_date::TIMESTAMP, meeting_start_time, section_id::INTEGER,
             section_num, term_id::INTEGER
@@ -82,6 +82,7 @@ def _save_courses(sis_sections):
             'course_name': row['course_name'],
             'course_title': row['course_title'],
             'created_at': now,
+            'deleted_at': now if row.get('is_deleted') else None,
             'instruction_format': row['instruction_format'],
             'instructor_name': row['instructor_name'],
             'instructor_role_code': row['instructor_role_code'],

@@ -129,7 +129,8 @@ def refresh_cross_listings(term_id):
                         meeting_start_time
                     )) as schedule
                 FROM sis_sections
-                WHERE term_id = :term_id
+                WHERE
+                    term_id = :term_id
                     AND meeting_days <> ''
                     AND meeting_end_date IS NOT NULL
                     AND meeting_end_time <> ''
@@ -137,6 +138,7 @@ def refresh_cross_listings(term_id):
                     AND meeting_location NOT IN ('', 'Internet/Online', 'Off Campus', 'Requested General Assignment')
                     AND meeting_start_date IS NOT NULL
                     AND meeting_start_time <> ''
+                    AND deleted_at IS NULL
                 ORDER BY schedule, section_id
             """
     rows = db.session.execute(

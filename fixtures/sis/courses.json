@@ -370,6 +370,21 @@
       "term_id": 2218
     },
     {
+      "allowed_units": "3.0",
+      "is_deleted": true,
+      "instructor_uid": null,
+      "meeting_days": "TUTH",
+      "meeting_end_date": "2021-12-11",
+      "meeting_end_time": "11:59",
+      "meeting_location": "Barker 101",
+      "meeting_start_date": "2021-08-26",
+      "meeting_start_time": "11:00",
+      "course_name": "MUSIC 25",
+      "course_title": "Introduction to Music Theory",
+      "section_id": 50018,
+      "term_id": 2218
+    },
+    {
       "allowed_units": "2.0",
       "instructor_uid": "10005",
       "meeting_days": "MOWEFR",

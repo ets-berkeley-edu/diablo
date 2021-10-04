@@ -44,6 +44,7 @@ from tests.util import override_config, simply_yield, test_approvals_workflow
 
 admin_uid = '90001'
 deleted_admin_user_uid = '910001'
+deleted_section_id = 50018
 section_1_id = 50000
 section_2_id = 50001
 section_3_id = 50002
@@ -253,6 +254,18 @@ class TestGetCourse:
             client,
             term_id=self.term_id,
             section_id=999999,
+            expected_status_code=404,
+        )
+
+    def test_deleted_section(self, client, fake_auth):
+        """404 if section does not exist."""
+        fake_auth.login(admin_uid)
+        assert SisSection.get_course(term_id=self.term_id, section_id=deleted_section_id, include_deleted=True)
+        assert not SisSection.get_course(term_id=self.term_id, section_id=deleted_section_id)
+        api_get_course(
+            client,
+            term_id=self.term_id,
+            section_id=deleted_section_id,
             expected_status_code=404,
         )
 

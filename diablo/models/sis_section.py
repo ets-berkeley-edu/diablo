@@ -46,6 +46,8 @@ class SisSection(db.Model):
     allowed_units = db.Column(db.String)
     course_name = db.Column(db.String)
     course_title = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.now)
+    deleted_at = db.Column(db.DateTime)
     instruction_format = db.Column(db.String)
     instructor_name = db.Column(db.Text)
     instructor_role_code = db.Column(db.String)
@@ -61,7 +63,6 @@ class SisSection(db.Model):
     section_id = db.Column(db.Integer, nullable=False)
     section_num = db.Column(db.String)
     term_id = db.Column(db.Integer, nullable=False)
-    created_at = db.Column(db.DateTime, nullable=False, default=datetime.now)
 
     def __init__(
             self,
@@ -153,8 +154,8 @@ class SisSection(db.Model):
         return [row['instructor_uid'] for row in db.session.execute(text(sql))]
 
     @classmethod
-    def get_course(cls, term_id, section_id):
-        sql = """
+    def get_course(cls, term_id, section_id, include_deleted=False):
+        sql = f"""
             SELECT
                 s.*,
                 i.dept_code AS instructor_dept_code,
@@ -171,6 +172,7 @@ class SisSection(db.Model):
                 AND s.section_id = :section_id
                 AND (s.instructor_uid IS NULL OR s.instructor_role_code IN ('ICNT', 'PI', 'TNIC'))
                 AND s.is_principal_listing IS TRUE
+                {'' if include_deleted else ' AND s.deleted_at IS NULL '}
             ORDER BY s.course_name, s.section_id, s.instructor_uid, r.capability NULLS LAST
         """
         rows = db.session.execute(
@@ -269,6 +271,7 @@ class SisSection(db.Model):
                 AND s.term_id = :term_id
                 AND (s.instructor_uid IS NULL OR s.instructor_role_code IN ('ICNT', 'PI', 'TNIC'))
                 AND s.is_principal_listing IS TRUE
+                AND s.deleted_at IS NULL
             ORDER BY s.course_name, s.section_id, s.instructor_uid, r.capability NULLS LAST
         """
         rows = db.session.execute(text(sql), params)
@@ -312,6 +315,7 @@ class SisSection(db.Model):
                 AND a.section_id IS NULL
                 AND d.section_id IS NULL
                 AND cp.section_id IS NULL
+                AND s.deleted_at IS NULL
             ORDER BY s.course_name, s.section_id, s.instructor_uid, r.capability NULLS LAST
         """
         rows = db.session.execute(
@@ -362,6 +366,7 @@ class SisSection(db.Model):
                 AND d.section_id IS NULL
                 AND e.section_id IS NULL
                 AND cp.section_id IS NULL
+                AND s.deleted_at IS NULL
             ORDER BY s.course_name, s.section_id, s.instructor_uid, r.capability NULLS LAST
         """
         rows = db.session.execute(
@@ -401,6 +406,7 @@ class SisSection(db.Model):
                 AND (s.instructor_uid IS NULL OR s.instructor_role_code IN ('ICNT', 'PI', 'TNIC'))
                 AND s.is_principal_listing IS TRUE
                 AND s.section_id IN ({_sections_with_at_least_one_eligible_room()})
+                AND s.deleted_at IS NULL
             ORDER BY s.course_name, s.section_id, s.instructor_uid, r.capability NULLS LAST
         """
         rows = db.session.execute(
@@ -453,6 +459,8 @@ class SisSection(db.Model):
                 AND s3.section_id = s2.section_id
                 AND s3.instructor_uid = a.approved_by_uid
             JOIN rooms r ON r.location = s.meeting_location
+            WHERE
+                s.deleted_at IS NULL
             ORDER BY s.course_name, s.section_id, s.instructor_uid, r.capability NULLS LAST
         """
         rows = db.session.execute(
@@ -513,7 +521,9 @@ class SisSection(db.Model):
             LEFT JOIN instructors i ON i.uid = s.instructor_uid
             -- Omit scheduled courses.
             LEFT JOIN scheduled d ON d.section_id = s.section_id AND d.term_id = :term_id AND d.deleted_at IS NULL
-            WHERE d.section_id IS NULL
+            WHERE
+                d.section_id IS NULL
+                AND s.deleted_at IS NULL
             ORDER BY s.course_name, s.section_id, s.instructor_uid, r.capability NULLS LAST
         """
         rows = db.session.execute(
@@ -535,6 +545,7 @@ class SisSection(db.Model):
                 AND s.term_id = :term_id
                 AND s.instructor_uid = :instructor_uid
                 AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
+            WHERE s.deleted_at IS NULL
         """
         non_principal_section_ids = []
         section_ids = []
@@ -577,6 +588,7 @@ class SisSection(db.Model):
                 AND (s.instructor_uid IS NULL OR s.instructor_role_code IN ('ICNT', 'PI', 'TNIC'))
                 AND s.is_principal_listing IS TRUE
                 AND s.meeting_location = :location
+                AND s.deleted_at IS NULL
             ORDER BY CASE LEFT(s.meeting_days, 2)
               WHEN 'MO' THEN 1
               WHEN 'TU' THEN 2
@@ -625,7 +637,9 @@ class SisSection(db.Model):
                     SELECT s.section_id, s.instructor_uid
                     FROM sis_sections s
                     {'JOIN rooms r ON r.location = s.meeting_location' if in_eligible_room else ''}
-                    WHERE s.term_id = :term_id
+                    WHERE
+                        s.term_id = :term_id
+                        AND s.deleted_at IS NULL
                     AND s.is_principal_listing IS TRUE
                     {'AND r.capability IS NOT NULL' if in_eligible_room else ''}
                     GROUP BY s.section_id, s.instructor_uid
@@ -646,6 +660,7 @@ class SisSection(db.Model):
             WHERE term_id = :term_id
                 AND instructor_uid = :uid
                 AND instructor_role_code IN ('ICNT', 'PI', 'TNIC')
+                AND deleted_at IS NULL
             LIMIT 1
         """
         results = db.session.execute(
@@ -667,13 +682,15 @@ class SisSection(db.Model):
             FROM sis_sections s
             JOIN scheduled d ON d.section_id = s.section_id
                 AND d.term_id = s.term_id
-            WHERE s.term_id = :term_id
+            WHERE
+                s.term_id = :term_id
                 AND (s.instructor_uid IS NULL OR s.instructor_role_code IN ('ICNT', 'PI', 'TNIC'))
                 AND s.is_principal_listing IS TRUE
                 AND (
                     (s.meeting_start_date::text NOT LIKE :term_begin AND d.created_at < s.meeting_start_date)
                     OR s.meeting_end_date::text NOT LIKE :term_end
                 )
+                AND s.deleted_at IS NULL
             ORDER BY s.section_id
         """
         rows = db.session.execute(
@@ -698,6 +715,7 @@ class SisSection(db.Model):
                 s.term_id = :term_id
                 AND (s.instructor_uid IS NULL OR s.instructor_role_code IN ('ICNT', 'PI', 'TNIC'))
                 AND s.is_principal_listing IS TRUE
+                AND s.deleted_at IS NULL
             ORDER BY s.section_id
         """
         rows = db.session.execute(
@@ -767,6 +785,7 @@ def _to_api_json(term_id, rows, include_rooms=True):
                 'courseName': row['course_name'],
                 'courseTitle': row['course_title'],
                 'crossListings': cross_listed_courses,
+                'deletedAt': safe_strftime(row['deleted_at'], '%Y-%m-%d'),
                 'hasOptedOut': section_id in section_ids_opted_out,
                 'instructionFormat': row['instruction_format'],
                 'instructors': instructors,
@@ -802,7 +821,9 @@ def _to_api_json(term_id, rows, include_rooms=True):
             )
 
         meeting = _to_meeting_json(row)
-        if not next((m for m in (course['meetings']['eligible'] + course['meetings']['ineligible']) if meeting.items() <= m.items()), None):
+        eligible_meetings = course['meetings']['eligible']
+        ineligible_meetings = course['meetings']['ineligible']
+        if not next((m for m in (eligible_meetings + ineligible_meetings) if meeting.items() <= m.items()), None):
             room = rooms_by_id.get(row['room_id']) if 'room_id' in row.keys() else None
             if room and room.capability:
                 meeting['eligible'] = True
@@ -810,14 +831,14 @@ def _to_api_json(term_id, rows, include_rooms=True):
                     'recordingEndDate': safe_strftime(get_recording_end_date(meeting), '%Y-%m-%d'),
                     'recordingStartDate': safe_strftime(get_recording_start_date(meeting), '%Y-%m-%d'),
                 })
-                course['meetings']['eligible'].append(meeting)
-                course['meetings']['eligible'].sort(key=lambda m: f"{m['startDate']} {m['startTime']}")
+                eligible_meetings.append(meeting)
+                eligible_meetings.sort(key=lambda m: f"{m['startDate']} {m['startTime']}")
                 if meeting['startDate'] != app.config['CURRENT_TERM_BEGIN'] or meeting['endDate'] != app.config['CURRENT_TERM_END']:
                     course['nonstandardMeetingDates'] = True
             else:
                 meeting['eligible'] = False
-                course['meetings']['ineligible'].append(meeting)
-                course['meetings']['ineligible'].sort(key=lambda m: f"{m['startDate']} {m['startTime']}")
+                ineligible_meetings.append(meeting)
+                ineligible_meetings.sort(key=lambda m: f"{m['startDate']} {m['startTime']}")
             if include_rooms:
                 meeting['room'] = room.to_api_json() if room else None
 
@@ -916,6 +937,7 @@ def _get_cross_listed_courses(section_ids, term_id, approvals, invited_uids):
             s.term_id = :term_id
             AND s.section_id = ANY(:all_cross_listing_ids)
             AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
+            AND s.deleted_at IS NULL
         ORDER BY course_name, section_id
     """
     rows = db.session.execute(
@@ -990,7 +1012,9 @@ def _sections_with_at_least_one_eligible_room():
             AND r2.capability IS NOT NULL
             AND s2.term_id = :term_id
             AND (s2.instructor_uid IS NULL OR s2.instructor_role_code IN ('ICNT', 'PI', 'TNIC'))
-            AND s2.is_principal_listing IS TRUE"""
+            AND s2.is_principal_listing IS TRUE
+            AND s2.deleted_at IS NULL
+    """
 
 
 def _to_instructor_json(row, approvals, invited_uids):
