@@ -67,13 +67,13 @@ def api_get_course(client, term_id, section_id, expected_status_code=200):
 
 
 def get_eligible_meeting(section_id, term_id):
-    feed = SisSection.get_course(term_id=term_id, section_id=section_id)
+    feed = SisSection.get_course(term_id=term_id, section_id=section_id, include_deleted=True)
     return (feed['meetings']['eligible'] + feed['meetings']['ineligible'])[0]
 
 
 @cachify('instructor_uids_{section_id}_{term_id}')
 def get_instructor_uids(section_id, term_id):
-    course = SisSection.get_course(section_id=section_id, term_id=term_id)
+    course = SisSection.get_course(section_id=section_id, term_id=term_id, include_deleted=True)
     return [instructor['uid'] for instructor in course['instructors']]
 
 

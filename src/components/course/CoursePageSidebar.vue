@@ -1,7 +1,7 @@
 <template>
   <v-container class="elevation-2 pa-6">
     <h2 class="sr-only">Summary of {{ course.label }} course</h2>
-    <v-row v-if="course.instructors.length" id="instructors">
+    <v-row v-if="course.instructors.length" id="instructors" :class="{'line-through': course.deletedAt}">
       <v-col md="auto">
         <h3 class="sr-only">Instructors</h3>
         <v-icon aria-label="Mortarboard icon">mdi-school-outline</v-icon>
@@ -22,7 +22,7 @@
     </v-row>
     <div v-for="(meeting, index) in displayMeetings" :key="index">
       <h3 class="sr-only">Meeting {{ displayMeetings.length > 1 ? `#${index}` : '' }}</h3>
-      <v-row v-if="meeting.daysNames" :id="`meeting-days-${index}`">
+      <v-row v-if="meeting.daysNames" :id="`meeting-days-${index}`" :class="{'line-through': course.deletedAt}">
         <v-col md="auto" :class="{'pb-0': displayMeetings.length > 1}">
           <v-icon aria-label="Calendar icon">mdi-calendar</v-icon>
         </v-col>
@@ -35,7 +35,7 @@
           </div>
         </v-col>
       </v-row>
-      <v-row v-if="meeting.startTimeFormatted" :id="`meeting-times-${index}`">
+      <v-row v-if="meeting.startTimeFormatted" :id="`meeting-times-${index}`" :class="{'line-through': course.deletedAt}">
         <v-col md="auto" :class="{'pb-1 pt-1': displayMeetings.length > 1}">
           <v-icon aria-label="Clock icon">mdi-clock-outline</v-icon>
         </v-col>
@@ -44,7 +44,7 @@
           {{ meeting.startTimeFormatted }} - {{ meeting.endTimeFormatted }}
         </v-col>
       </v-row>
-      <v-row v-if="meeting.room" :id="`rooms-${index}`">
+      <v-row v-if="meeting.room" :id="`rooms-${index}`" :class="{'line-through': course.deletedAt}">
         <v-col md="auto" :class="{'pb-5 pt-1': displayMeetings.length > 1}">
           <v-icon aria-label="Map icon">mdi-map-marker</v-icon>
         </v-col>
@@ -191,6 +191,7 @@ export default {
       return this.$currentUser.isAdmin
         && this.course.termId === this.$config.currentTermId
         && this.course.instructors.length
+        && !this.course.deletedAt
         && !this.course.hasOptedOut
         && this.course.meetings.eligible.length === 1
         && !this.$_.isUndefined(this.isInviteTemplateAvailable)

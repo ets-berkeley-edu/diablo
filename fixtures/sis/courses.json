@@ -371,8 +371,8 @@
     },
     {
       "allowed_units": "3.0",
+      "instructor_uid": "10005",
       "is_deleted": true,
-      "instructor_uid": null,
       "meeting_days": "TUTH",
       "meeting_end_date": "2021-12-11",
       "meeting_end_time": "11:59",

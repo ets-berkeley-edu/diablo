@@ -108,7 +108,7 @@ def approve():
 @app.route('/api/course/<term_id>/<section_id>')
 @login_required
 def get_course(term_id, section_id):
-    course = SisSection.get_course(term_id, section_id)
+    course = SisSection.get_course(term_id, section_id, include_deleted=True)
     if not course:
         raise ResourceNotFoundError(f'No section for term_id = {term_id} and section_id = {section_id}')
     if not current_user.is_admin and current_user.uid not in [i['uid'] for i in course['instructors']]:
@@ -177,7 +177,7 @@ def unschedule():
     params = request.get_json()
     term_id = params.get('termId')
     section_id = params.get('sectionId')
-    course = SisSection.get_course(term_id, section_id) if (term_id and section_id) else None
+    course = SisSection.get_course(term_id, section_id, include_deleted=True) if (term_id and section_id) else None
 
     if not course:
         raise BadRequestError('Required params missing or invalid')
@@ -206,7 +206,7 @@ def unschedule():
         section_id=section_id,
         opt_out=True,
     )
-    return tolerant_jsonify(SisSection.get_course(term_id, section_id))
+    return tolerant_jsonify(SisSection.get_course(term_id, section_id, include_deleted=True))
 
 
 @app.route('/api/courses/changes/<term_id>')
