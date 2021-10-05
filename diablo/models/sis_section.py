@@ -246,7 +246,7 @@ class SisSection(db.Model):
         return courses
 
     @classmethod
-    def get_courses(cls, term_id, section_ids=None):
+    def get_courses(cls, term_id, include_deleted=False, section_ids=None):
         params = {'term_id': term_id}
         if section_ids is None:
             # If no section IDs are specified, return any section with at least one eligible room.
@@ -271,7 +271,7 @@ class SisSection(db.Model):
                 AND s.term_id = :term_id
                 AND (s.instructor_uid IS NULL OR s.instructor_role_code IN ('ICNT', 'PI', 'TNIC'))
                 AND s.is_principal_listing IS TRUE
-                AND s.deleted_at IS NULL
+                {'' if include_deleted else ' AND s.deleted_at IS NULL '}
             ORDER BY s.course_name, s.section_id, s.instructor_uid, r.capability NULLS LAST
         """
         rows = db.session.execute(text(sql), params)
@@ -613,21 +613,21 @@ class SisSection(db.Model):
     @classmethod
     def get_courses_scheduled(cls, term_id):
         scheduled_section_ids = list(cls._section_ids_scheduled(term_id))
-        return cls.get_courses(term_id, scheduled_section_ids)
+        return cls.get_courses(term_id, include_deleted=True, section_ids=scheduled_section_ids)
 
     @classmethod
     def get_courses_scheduled_standard_dates(cls, term_id):
         scheduled_section_ids = cls._section_ids_scheduled(term_id)
         nonstandard_dates_section_ids = cls._section_ids_with_nonstandard_dates(term_id)
         section_ids = list(scheduled_section_ids - nonstandard_dates_section_ids)
-        return cls.get_courses(term_id, section_ids)
+        return cls.get_courses(term_id, include_deleted=True, section_ids=section_ids)
 
     @classmethod
     def get_courses_scheduled_nonstandard_dates(cls, term_id):
         scheduled_section_ids = cls._section_ids_scheduled(term_id)
         nonstandard_dates_section_ids = cls._section_ids_with_nonstandard_dates(term_id)
         section_ids = list(scheduled_section_ids.intersection(nonstandard_dates_section_ids))
-        return cls.get_courses(term_id, section_ids)
+        return cls.get_courses(term_id, include_deleted=True, section_ids=section_ids)
 
     @classmethod
     def get_random_co_taught_course(cls, term_id):
@@ -715,7 +715,6 @@ class SisSection(db.Model):
                 s.term_id = :term_id
                 AND (s.instructor_uid IS NULL OR s.instructor_role_code IN ('ICNT', 'PI', 'TNIC'))
                 AND s.is_principal_listing IS TRUE
-                AND s.deleted_at IS NULL
             ORDER BY s.section_id
         """
         rows = db.session.execute(

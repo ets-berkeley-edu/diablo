@@ -262,12 +262,12 @@ class TestGetCourse:
         fake_auth.login(admin_uid)
         assert SisSection.get_course(term_id=self.term_id, section_id=deleted_section_id, include_deleted=True)
         assert not SisSection.get_course(term_id=self.term_id, section_id=deleted_section_id)
-        api_get_course(
+        course = api_get_course(
             client,
             term_id=self.term_id,
             section_id=deleted_section_id,
-            expected_status_code=404,
         )
+        assert course['deletedAt']
 
     def test_course_with_partial_approval(self, client, fake_auth):
         """Course with two instructors and one approval."""
@@ -531,6 +531,8 @@ class TestGetCourses:
             past_term = 2208
             _send_invitation_email(section_id=section_4_id, term_id=past_term)
             _send_invitation_email(section_id=section_5_id, term_id=past_term)
+            # Deleted course should be ignored
+            _send_invitation_email(section_id=deleted_section_id, term_id=self.term_id)
 
             # Course with approval is NOT expected in results
             _send_invitation_email(section_id=section_5_id, term_id=self.term_id)
@@ -577,6 +579,7 @@ class TestGetCourses:
             api_json = self._api_courses(client, term_id=self.term_id, filter_='Not Invited')
             assert not _find_course(api_json=api_json, section_id=section_1_id, term_id=self.term_id)
             assert not _find_course(api_json=api_json, section_id=section_4_id, term_id=self.term_id)
+            assert not _find_course(api_json=api_json, section_id=deleted_section_id, term_id=self.term_id)
             # Zero instructors is acceptable
             assert _find_course(api_json=api_json, section_id=eligible_course_with_no_instructors, term_id=self.term_id)
             # Third course is in enabled room and has not received an invite. Therefore, it is in the feed.
@@ -642,7 +645,11 @@ class TestGetCourses:
                 section_id=section_1_id,
                 term_id=self.term_id,
             )
-            # Deleted records will be ignored
+            mock_scheduled(
+                section_id=deleted_section_id,
+                term_id=self.term_id,
+            )
+            # Ignore if 'scheduled' record is deleted.
             mock_scheduled(
                 section_id=section_2_id,
                 term_id=self.term_id,
@@ -650,7 +657,7 @@ class TestGetCourses:
             Scheduled.delete(section_id=section_2_id, term_id=self.term_id)
             std_commit(allow_test_environment=True)
             api_json = self._api_courses(client, term_id=self.term_id, filter_='Scheduled')
-            assert len(api_json) == 1
+            assert len(api_json) == 2
             course = _find_course(api_json=api_json, section_id=section_1_id, term_id=self.term_id)
             assert course['approvalStatus'] == 'Partially Approved'
             assert course['schedulingStatus'] == 'Scheduled'

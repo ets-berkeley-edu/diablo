@@ -1,7 +1,7 @@
 <template>
   <div class="pl-2 pt-4">
     <h1>
-      <span v-if="is420">
+      <span v-if="is420" :class="classForH1">
         <v-icon
           aria-label="Play entertaining video clip (opens a new tab)"
           class="icon-padding"
@@ -10,7 +10,7 @@
           @click="smile"
         >
           mdi-weather-tornado
-        </v-icon> <span :class="{'text-h4': text.length > 40}"> {{ text }}</span>
+        </v-icon> <span :class="clazz()"> {{ text }}</span>
       </span>
       <span v-if="!is420">
         <v-icon
@@ -19,7 +19,7 @@
           large
         >
           {{ icon }}
-        </v-icon> <span id="page-title" :class="{'text-h4': text.length > 40}" tabindex="0"> {{ text }}</span>
+        </v-icon> <span id="page-title" :class="clazz()" tabindex="0"> {{ text }}</span>
       </span>
     </h1>
   </div>
@@ -29,6 +29,11 @@
 export default {
   name: 'PageTitle',
   props: {
+    classForH1: {
+      default: undefined,
+      required: false,
+      type: String
+    },
     icon: {
       required: true,
       type: String
@@ -45,6 +50,9 @@ export default {
     this.is420 = this.$moment().format('H:mm') === '16:20'
   },
   methods: {
+    clazz() {
+      return this.text.length > 40 ? `${this.classForH1} text-h4` : this.classForH1
+    },
     smile() {
       window.open(this.$config.easterEgg420, '_blank')
     }

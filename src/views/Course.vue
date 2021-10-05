@@ -4,11 +4,13 @@
       <v-row class="pl-3">
         <PageTitle
           v-if="$config.currentTermId === this.course.termId"
+          class-for-h1="line-through"
           icon="mdi-book-multiple-outline"
           :text="courseDisplayTitle"
         />
         <PageTitle
           v-if="$config.currentTermId !== this.course.termId"
+          class-for-h1="line-through"
           icon="mdi-book-multiple-outline"
           :text="`${courseDisplayTitle} (${getTermName(course.termId)})`"
         />
@@ -27,14 +29,15 @@
           <v-container v-if="isCurrentTerm && meeting.room.capability && hasValidMeetingTimes && !multipleEligibleMeetings" class="elevation-2 pa-6">
             <v-row>
               <v-col id="approvals-described" class="font-weight-medium mb-1 red--text">
-                <span v-if="queuedForScheduling">This course is currently queued for scheduling. Recordings will be scheduled in an hour or less. </span>
+                <span v-if="course.deletedAt">Canceled course</span>
+                <span v-if="queuedForScheduling && !course.deletedAt">This course is currently queued for scheduling. Recordings will be scheduled in an hour or less. </span>
                 <span v-if="approvedByInstructorUIDs.length" class="pr-1">
                   Approved by
                   <OxfordJoin v-slot="{item}" :items="approvedByInstructorUIDs">
                     <CalNetProfile :say-you="true" :uid="item" />
                   </OxfordJoin>.
                 </span>
-                <span v-if="approvalNeededNames.length">
+                <span v-if="approvalNeededNames.length && !course.deletedAt">
                   <span v-if="!course.scheduled && !queuedForScheduling">Recordings will be scheduled when we have</span>
                   <span v-if="course.scheduled">Recordings have been scheduled but we need</span>
                   <span v-if="queuedForScheduling">We need</span>
@@ -302,7 +305,7 @@ export default {
       return this.course.hasNecessaryApprovals && !this.course.scheduled
     },
     showSignUpForm() {
-      return !this.course.scheduled && !this.hasCurrentUserApproved
+      return !this.course.scheduled && !this.hasCurrentUserApproved && !this.course.deletedAt
     }
   },
   created() {
