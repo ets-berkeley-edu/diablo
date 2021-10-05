@@ -205,8 +205,13 @@ class SisSection(db.Model):
             LEFT JOIN instructors i ON i.uid = s.instructor_uid
             WHERE
                 s.term_id = :term_id
-                AND (s.instructor_uid IS NULL OR s.instructor_role_code IN ('ICNT', 'PI', 'TNIC'))
-                AND s.is_principal_listing IS TRUE
+                AND (
+                    s.deleted_at IS NOT NULL
+                    OR (
+                        (s.instructor_uid IS NULL OR s.instructor_role_code IN ('ICNT', 'PI', 'TNIC'))
+                        AND s.is_principal_listing IS TRUE
+                    )
+                )
             ORDER BY s.course_name, s.section_id, s.instructor_uid, r.capability NULLS LAST
         """
         rows = db.session.execute(
@@ -223,7 +228,8 @@ class SisSection(db.Model):
             if scheduled['hasObsoleteRoom'] \
                     or scheduled['hasObsoleteInstructors'] \
                     or scheduled['hasObsoleteDates'] \
-                    or scheduled['hasObsoleteTimes']:
+                    or scheduled['hasObsoleteTimes'] \
+                    or course['deletedAt']:
                 courses.append(course)
             if scheduled['hasObsoleteInstructors']:
                 obsolete_instructor_uids.update(scheduled['instructorUids'])
@@ -523,7 +529,6 @@ class SisSection(db.Model):
             LEFT JOIN scheduled d ON d.section_id = s.section_id AND d.term_id = :term_id AND d.deleted_at IS NULL
             WHERE
                 d.section_id IS NULL
-                AND s.deleted_at IS NULL
             ORDER BY s.course_name, s.section_id, s.instructor_uid, r.capability NULLS LAST
         """
         rows = db.session.execute(

@@ -46,14 +46,14 @@
                     class="subtitle-1"
                     :to="`/course/${$config.currentTermId}/${course.sectionId}`"
                   >
-                    {{ courseCode }}
+                    <span :class="{'line-through': course.deletedAt}">{{ courseCode }}</span>
                   </router-link>
                   <span v-if="index > 0" class="subtitle-1">{{ courseCode }}</span>
                 </div>
               </td>
               <td :id="`section-id-${course.sectionId}`" :class="tdc(course)">{{ course.sectionId }}</td>
               <td v-if="includeRoomColumn" :class="tdc(course)">
-                <div v-if="course.room">
+                <div v-if="course.room" :class="{'line-through': course.deletedAt}">
                   <router-link
                     :id="`course-${course.sectionId}-room-${course.room.id}`"
                     :to="`/room/${course.room.id}`"
@@ -64,35 +64,52 @@
                 <span v-if="!course.room">&mdash;</span>
               </td>
               <td :id="`meeting-days-${course.sectionId}-0`" :class="tdc(course)">
-                <Days v-if="course.displayMeetings[0].daysNames.length" :names-of-days="course.displayMeetings[0].daysNames" />
-                <span v-if="!course.displayMeetings[0].daysNames.length">&mdash;</span>
+                <div :class="{'line-through': course.deletedAt}">
+                  <Days v-if="course.displayMeetings[0].daysNames.length" :names-of-days="course.displayMeetings[0].daysNames" />
+                  <span v-if="!course.displayMeetings[0].daysNames.length">&mdash;</span>
+                </div>
               </td>
               <td :id="`meeting-times-${course.sectionId}-0`" :class="tdc(course)">
-                <div v-if="course.nonstandardMeetingDates">
-                  <span class="text-no-wrap">{{ course.displayMeetings[0].startDate | moment('MMM D, YYYY') }} - </span>
-                  <span class="text-no-wrap">{{ course.displayMeetings[0].endDate | moment('MMM D, YYYY') }}</span>
+                <div :class="{'line-through': course.deletedAt}">
+                  <div v-if="course.nonstandardMeetingDates">
+                    <span class="text-no-wrap">{{ course.displayMeetings[0].startDate | moment('MMM D, YYYY') }} - </span>
+                    <span class="text-no-wrap">{{ course.displayMeetings[0].endDate | moment('MMM D, YYYY') }}</span>
+                  </div>
+                  <span class="text-no-wrap">{{ course.displayMeetings[0].startTimeFormatted }} - {{ course.displayMeetings[0].endTimeFormatted }}</span>
                 </div>
-                <span class="text-no-wrap">{{ course.displayMeetings[0].startTimeFormatted }} - {{ course.displayMeetings[0].endTimeFormatted }}</span>
               </td>
               <td :id="`course-${course.sectionId}-status`" :class="tdc(course)">
-                <v-tooltip v-if="course.wasApprovedByAdmin" :id="`tooltip-admin-approval-${course.sectionId}`" bottom>
-                  <template #activator="{on, attrs}">
-                    <v-icon
-                      color="green"
-                      class="pa-0"
-                      dark
-                      v-bind="attrs"
-                      v-on="on"
-                    >
-                      mdi-account-check-outline
-                    </v-icon>
-                  </template>
-                  Course Capture Admin <CalNetProfile :uid="$_.last(course.approvals).approvedBy" />
-                  submitted approval on
-                  {{ $_.last(course.approvals).createdAt | moment('MMM D, YYYY') }}.
-                </v-tooltip>
-                <div :id="`course-${course.sectionId}-approval-status`">{{ course.approvalStatus || '&mdash;' }}</div>
-                <div :id="`course-${course.sectionId}-scheduling-status`">{{ course.schedulingStatus || '&mdash;' }}</div>
+                <div v-if="course.deletedAt">
+                  <v-icon
+                    color="red"
+                    class="font-weight-bold pb-1 pl-0"
+                    v-bind="attrs"
+                    v-on="on"
+                  >
+                    mdi-close
+                  </v-icon>
+                  <span class="font-weight-bold red--text">Canceled</span>
+                </div>
+                <div v-if="!course.deletedAt">
+                  <v-tooltip v-if="course.wasApprovedByAdmin" :id="`tooltip-admin-approval-${course.sectionId}`" bottom>
+                    <template #activator="{on, attrs}">
+                      <v-icon
+                        color="green"
+                        class="pa-0"
+                        dark
+                        v-bind="attrs"
+                        v-on="on"
+                      >
+                        mdi-account-check-outline
+                      </v-icon>
+                    </template>
+                    Course Capture Admin <CalNetProfile :uid="$_.last(course.approvals).approvedBy" />
+                    submitted approval on
+                    {{ $_.last(course.approvals).createdAt | moment('MMM D, YYYY') }}.
+                  </v-tooltip>
+                  <div :id="`course-${course.sectionId}-approval-status`">{{ course.approvalStatus || '&mdash;' }}</div>
+                  <div :id="`course-${course.sectionId}-scheduling-status`">{{ course.schedulingStatus || '&mdash;' }}</div>
+                </div>
               </td>
               <td :class="tdc(course)">
                 <div v-if="course.instructors.length">

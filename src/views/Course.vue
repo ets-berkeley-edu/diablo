@@ -4,19 +4,22 @@
       <v-row class="pl-3">
         <PageTitle
           v-if="$config.currentTermId === this.course.termId"
-          class-for-h1="line-through"
+          :class-for-h1="course.deletedAt ? 'line-through' : ''"
           icon="mdi-book-multiple-outline"
           :text="courseDisplayTitle"
         />
         <PageTitle
           v-if="$config.currentTermId !== this.course.termId"
-          class-for-h1="line-through"
+          :class-for-h1="course.deletedAt ? 'line-through' : ''"
           icon="mdi-book-multiple-outline"
           :text="`${courseDisplayTitle} (${getTermName(course.termId)})`"
         />
       </v-row>
       <v-row class="ml-8 pl-7">
-        <h2 id="course-title" class="primary--text">{{ course.courseTitle }}</h2>
+        <span v-if="course.deletedAt" class="subtitle-1">
+          <span class="font-weight-bold red--text">UC Berkeley has canceled this section.</span>
+        </span>
+        <h2 v-if="!course.deletedAt" id="course-title" class="primary--text">{{ course.courseTitle }}</h2>
       </v-row>
       <v-row class="body-1 ml-8 pl-7">
         Section ID: <span id="section-id">{{ course.sectionId }}</span>
@@ -29,7 +32,6 @@
           <v-container v-if="isCurrentTerm && meeting.room.capability && hasValidMeetingTimes && !multipleEligibleMeetings" class="elevation-2 pa-6">
             <v-row>
               <v-col id="approvals-described" class="font-weight-medium mb-1 red--text">
-                <span v-if="course.deletedAt">Canceled course</span>
                 <span v-if="queuedForScheduling && !course.deletedAt">This course is currently queued for scheduling. Recordings will be scheduled in an hour or less. </span>
                 <span v-if="approvedByInstructorUIDs.length" class="pr-1">
                   Approved by
