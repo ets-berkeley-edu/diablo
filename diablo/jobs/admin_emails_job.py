@@ -89,7 +89,7 @@ class AdminEmailsJob(BaseJob):
     def _room_change_alerts(self):
         template_type = 'admin_alert_room_change'
         for course in self._get_courses_except_notified(template_type):
-            if course['scheduled']['hasObsoleteRoom']:
+            if course['scheduled']['hasObsoleteRoom'] or course['deletedAt']:
                 self._notify(course=course, template_type=template_type)
 
     def _notify(self, course, template_type):
