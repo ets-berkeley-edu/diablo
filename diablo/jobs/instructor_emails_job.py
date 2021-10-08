@@ -61,12 +61,16 @@ class InstructorEmailsJob(BaseJob):
         )
         if all_scheduled:
             email_template = EmailTemplate.get_template_by_type(template_type)
-            courses = SisSection.get_courses(term_id=self.term_id, section_ids=[s.section_id for s in all_scheduled])
+            courses = SisSection.get_courses(
+                term_id=self.term_id,
+                section_ids=[s.section_id for s in all_scheduled],
+                include_deleted=True,
+            )
             courses_per_section_id = dict((course['sectionId'], course) for course in courses)
             for scheduled in all_scheduled:
                 course = courses_per_section_id.get(scheduled.section_id)
                 if course:
-                    if self._has_moved_to_ineligible_room(course, scheduled):
+                    if self._has_moved_to_ineligible_room(course, scheduled) or course['deletedAt']:
                         if email_template:
                             for instructor in course['instructors']:
                                 def _get_interpolate_content(template):

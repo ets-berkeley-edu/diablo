@@ -76,7 +76,7 @@ class QueuedEmail(db.Model):
 
     @classmethod
     def create(cls, section_id, template_type, term_id, recipient, message=None, subject_line=None):
-        course = SisSection.get_course(term_id, section_id)
+        course = SisSection.get_course(term_id, section_id, include_deleted=True)
         if not course:
             app.logger.error(f'Attempt to queue email for unknown course (term_id={term_id}, section_id={section_id})')
             return
@@ -91,7 +91,7 @@ class QueuedEmail(db.Model):
             message=message,
             subject_line=subject_line,
         )
-        course = SisSection.get_course(term_id, queued_email.section_id)
+        course = SisSection.get_course(term_id, queued_email.section_id, include_deleted=True)
         if not queued_email.is_interpolated() and not queued_email.interpolate(course):
             app.logger.error(f'Failed to interpolate all required values for queued email ({queued_email})')
             return

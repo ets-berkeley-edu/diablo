@@ -42,6 +42,8 @@ from flask import current_app as app
 from tests.test_api.api_test_utils import get_eligible_meeting, get_instructor_uids, mock_scheduled
 from tests.util import enabled_job, override_config, simply_yield, test_approvals_workflow
 
+deleted_section_id = 50018
+
 
 class TestAdminEmailsJob:
 
@@ -95,46 +97,55 @@ class TestAdminEmailsJob:
         """Emails admin when a scheduled course gets a room change."""
         with test_approvals_workflow(app):
             with enabled_job(job_key=AdminEmailsJob.key()):
+                admin_uid = app.config['EMAIL_DIABLO_ADMIN_UID']
                 term_id = app.config['CURRENT_TERM_ID']
-                section_id = 50004
+                assert SisSection.get_course(term_id=term_id, section_id=deleted_section_id, include_deleted=True)['deletedAt']
+                lab_section_id = 50004
                 approved_by_uid = '10004'
                 the_old_room = 'Wheeler 150'
                 scheduled_in_room = Room.find_room(the_old_room)
-                approval = Approval.create(
-                    approved_by_uid=approved_by_uid,
-                    approver_type_='instructor',
-                    course_display_name=f'term_id:{term_id} section_id:{section_id}',
-                    publish_type_='kaltura_media_gallery',
-                    recording_type_='presenter_audio',
-                    room_id=scheduled_in_room.id,
-                    section_id=section_id,
-                    term_id=term_id,
-                )
-                meeting = get_eligible_meeting(section_id=section_id, term_id=term_id)
-                Scheduled.create(
-                    course_display_name=f'term_id:{term_id} section_id:{section_id}',
-                    instructor_uids=get_instructor_uids(term_id=term_id, section_id=section_id),
-                    kaltura_schedule_id=random.randint(1, 10),
-                    meeting_days=meeting['days'],
-                    meeting_end_date=get_recording_end_date(meeting),
-                    meeting_end_time=meeting['endTime'],
-                    meeting_start_date=get_recording_start_date(meeting, return_today_if_past_start=True),
-                    meeting_start_time=meeting['startTime'],
-                    publish_type_=approval.publish_type,
-                    recording_type_=approval.recording_type,
-                    room_id=scheduled_in_room.id,
-                    section_id=section_id,
-                    term_id=term_id,
-                )
 
-                admin_uid = app.config['EMAIL_DIABLO_ADMIN_UID']
+                approvals = {
+                    lab_section_id: approved_by_uid,
+                    deleted_section_id: admin_uid,
+                }
+                for section_id, approver_uid in approvals.items():
+                    approval = Approval.create(
+                        approved_by_uid=approver_uid,
+                        approver_type_='instructor',
+                        course_display_name=f'term_id:{term_id} section_id:{section_id}',
+                        publish_type_='kaltura_media_gallery',
+                        recording_type_='presenter_audio',
+                        room_id=scheduled_in_room.id,
+                        section_id=section_id,
+                        term_id=term_id,
+                    )
+                    meeting = get_eligible_meeting(section_id=section_id, term_id=term_id)
+                    Scheduled.create(
+                        course_display_name=f'term_id:{term_id} section_id:{section_id}',
+                        instructor_uids=get_instructor_uids(term_id=term_id, section_id=section_id),
+                        kaltura_schedule_id=random.randint(1, 10),
+                        meeting_days=meeting['days'],
+                        meeting_end_date=get_recording_end_date(meeting),
+                        meeting_end_time=meeting['endTime'],
+                        meeting_start_date=get_recording_start_date(meeting, return_today_if_past_start=True),
+                        meeting_start_time=meeting['startTime'],
+                        publish_type_=approval.publish_type,
+                        recording_type_=approval.recording_type,
+                        room_id=scheduled_in_room.id,
+                        section_id=section_id,
+                        term_id=term_id,
+                    )
+
                 # Message queued, then sent.
                 AdminEmailsJob(simply_yield).run()
                 QueuedEmailsJob(simply_yield).run()
                 emails_sent = SentEmail.get_emails_sent_to(uid=admin_uid)
-                assert len(emails_sent) == 1
-                assert emails_sent[0].section_id == section_id
+                assert len(emails_sent) == 2
+                assert emails_sent[0].section_id == lab_section_id
                 assert emails_sent[0].template_type == 'admin_alert_room_change'
+                assert emails_sent[1].section_id == deleted_section_id
+                assert emails_sent[1].template_type == 'admin_alert_room_change'
 
     def test_alert_admin_of_instructor_change(self):
         """Emails admin when a scheduled course gets a new instructor."""
