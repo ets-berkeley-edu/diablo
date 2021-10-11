@@ -76,12 +76,6 @@
               <v-col>
                 <CourseCaptureExplained />
                 <div class="font-italic font-weight-light pl-2 pt-4">
-                  <div v-if="meeting.room.isAuditorium && $config.courseCapturePremiumCost > 0">
-                    <v-icon class="pr-1">mdi-information-outline</v-icon>
-                    <strong>Note:</strong> 'Presentation and Audio' recordings are free.
-                    There will be a &#36;{{ $config.courseCapturePremiumCost }} operator fee, per semester, for
-                    'Presenter' recordings in {{ oxfordJoin($_.map(auditoriums, 'location')) }}.
-                  </div>
                   <div :class="{'pt-2': meeting.room.isAuditorium}">
                     <v-icon v-if="!meeting.room.isAuditorium">mdi-information-outline</v-icon>
                     Instructors will now be able to review and edit their Course Capture recordings prior to releasing them to students.
