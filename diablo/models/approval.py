@@ -63,6 +63,7 @@ NAMES_PER_RECORDING_TYPE = {
     'presentation_audio': 'Presentation and Audio',
     'presenter_audio': 'Presenter and Audio',
     'presenter_presentation_audio': 'Presenter, Presentation, and Audio',
+    'presenter_presentation_audio_with_operator': 'Presenter, Presentation and Audio, with operator',
 }
 
 
