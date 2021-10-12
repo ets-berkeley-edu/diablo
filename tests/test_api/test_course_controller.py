@@ -168,7 +168,7 @@ class TestApprove:
             assert approvals_[1]['courseDisplayName'] == api_json['label']
             assert approvals_[1]['publishType'] == 'kaltura_media_gallery'
             assert approvals_[1]['recordingType'] == 'presentation_audio'
-            assert approvals_[1]['recordingTypeName'] == 'Presentation and Audio'
+            assert approvals_[1]['recordingTypeName'] == 'Audio + Projection'
 
             assert api_json['hasNecessaryApprovals'] is True
             assert api_json['scheduled'] is None
