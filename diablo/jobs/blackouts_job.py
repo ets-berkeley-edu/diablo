@@ -27,6 +27,7 @@ from diablo.jobs.base_job import BaseJob
 from diablo.lib.util import utc_now
 from diablo.models.blackout import Blackout
 from flask import current_app as app
+from KalturaClient.Plugins.Schedule import KalturaScheduleEventRecurrenceType
 
 
 class BlackoutsJob(BaseJob):
@@ -40,7 +41,8 @@ class BlackoutsJob(BaseJob):
             else:
                 events = kaltura.get_events_in_date_range(end_date=blackout.end_date, start_date=blackout.start_date)
                 for event in events:
-                    if CREATED_BY_DIABLO_TAG in event['tags']:
+                    created_by_diablo = CREATED_BY_DIABLO_TAG in event['tags']
+                    if created_by_diablo and event['recurrenceType'] != KalturaScheduleEventRecurrenceType.RECURRING:
                         kaltura.delete(event['id'])
                         app.logger.info(f"'Event {event['summary']} deleted per {blackout}.")
 
