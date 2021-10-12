@@ -58,3 +58,7 @@ def get_series_description(course_label, instructors, term_name):
     summary = f'{course_label} ({term_name}) is taught by {readable_join(names)}.'
     legalese = f"Copyright ©{datetime.strftime(datetime.now(), '%Y')} UC Regents; all rights reserved."
     return f'{summary} {legalese}'
+
+
+def represents_recording_series(event):
+    return event.get('recurrenceType', '').lower() == 'recurring'

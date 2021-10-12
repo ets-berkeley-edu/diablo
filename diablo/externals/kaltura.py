@@ -31,7 +31,7 @@ from diablo import cachify, skip_when_pytest
 from diablo.lib.berkeley import get_first_matching_datetime_of_term, get_recording_end_date, get_recording_start_date, \
     term_name_for_sis_id
 from diablo.lib.kaltura_util import get_classification_name, get_recurrence_name, get_series_description, \
-    get_status_name
+    get_status_name, represents_recording_series
 from diablo.lib.util import default_timezone, epoch_time_to_isoformat, format_days
 from flask import current_app as app
 from KalturaClient import KalturaClient, KalturaConfiguration
@@ -445,7 +445,7 @@ def _events_to_api_json(events):
     recurring_events = []
     miscellanea = []
     for event in [_event_to_json(event) for event in events]:
-        if event.get('recurrenceType', '').lower() == 'recurring':
+        if represents_recording_series(event):
             recurring_events.append(event)
         else:
             miscellanea.append(event)
