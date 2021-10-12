@@ -48,7 +48,6 @@ SCENARIO:
 
 @pytest.mark.usefixtures('page_objects')
 class TestSignUp0:
-
     test_data = util.get_test_script_course('test_sign_up_0')
     section = util.get_test_section(test_data)
     meeting = section.meetings[0]
@@ -282,7 +281,10 @@ class TestSignUp0:
     def test_rec_type_options(self):
         self.sign_up_page.click_rec_type_input()
         visible_opts = self.sign_up_page.visible_menu_options()
-        expected = [RecordingType.SCREENCAST.value['option'], RecordingType.VIDEO.value['option'], RecordingType.SCREENCAST_AND_VIDEO.value['option']]
+        expected = [
+            RecordingType.SCREENCAST.value['option'], RecordingType.VIDEO_SANS_OPERATOR.value['option'],
+            RecordingType.VIDEO_WITH_OPERATOR.value['option'],
+        ]
         assert visible_opts == expected
 
     def test_publish_options(self):
@@ -298,8 +300,8 @@ class TestSignUp0:
     # SELECT OPTIONS, APPROVE
 
     def test_choose_rec_type(self):
-        self.sign_up_page.select_rec_type(RecordingType.SCREENCAST_AND_VIDEO.value['option'])
-        self.recording_schedule.recording_type = RecordingType.SCREENCAST_AND_VIDEO
+        self.sign_up_page.select_rec_type(RecordingType.VIDEO_WITH_OPERATOR.value['option'])
+        self.recording_schedule.recording_type = RecordingType.VIDEO_WITH_OPERATOR
 
     def test_approve_disabled_no_pub_no_terms(self):
         assert self.sign_up_page.element(SignUpPage.APPROVE_BUTTON).get_attribute('disabled') == 'true'

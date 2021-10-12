@@ -388,6 +388,28 @@ def set_instructor_role(section, instructor, role):
     std_commit(allow_test_environment=True)
 
 
+def delete_section(section):
+    sql = f"""UPDATE sis_sections
+              SET deleted_at = NOW()
+              WHERE section_id = {section.ccn}
+                AND term_id = {section.term.id}
+    """
+    app.logger.info(sql)
+    db.session.execute(text(sql))
+    std_commit(allow_test_environment=True)
+
+
+def restore_section(section):
+    sql = f"""UPDATE sis_sections
+              SET deleted_at = NULL
+              WHERE section_id = {section.ccn}
+                AND term_id = {section.term.id}
+    """
+    app.logger.info(sql)
+    db.session.execute(text(sql))
+    std_commit(allow_test_environment=True)
+
+
 def get_kaltura_id(recording_schedule, term):
     section = recording_schedule.section
     sql = f"""SELECT kaltura_schedule_id

@@ -86,7 +86,7 @@ class TestEnableRooms:
                 self.room_page.click_first_course_link()
                 self.sign_up_page.click_rec_type_input()
                 visible_opts = self.sign_up_page.visible_menu_options()
-                expected = [RecordingType.SCREENCAST_AND_VIDEO.value['option']]
+                expected = [RecordingType.VIDEO_WITH_OPERATOR.value['option']]
                 assert visible_opts == expected
 
     def test_video_and_auditorium_true(self, room):
@@ -98,7 +98,7 @@ class TestEnableRooms:
                 self.sign_up_page.click_rec_type_input()
                 visible_opts = self.sign_up_page.visible_menu_options()
                 expected = [
-                    RecordingType.SCREENCAST.value['option'], RecordingType.VIDEO.value['option'],
-                    RecordingType.SCREENCAST_AND_VIDEO.value['option'],
+                    RecordingType.SCREENCAST.value['option'], RecordingType.VIDEO_SANS_OPERATOR.value['option'],
+                    RecordingType.VIDEO_WITH_OPERATOR.value['option'],
                 ]
                 assert visible_opts == expected

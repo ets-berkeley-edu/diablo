@@ -184,6 +184,13 @@ class Page(object):
             message=f'Failed wait_for_title: {string}',
         )
 
+    def wait_for_title_contains(self, string):
+        app.logger.info(f"Waiting for page title containing '{string}")
+        Wait(self.driver, util.get_short_timeout()).until(
+            method=(ec.title_contains(string)),
+            message=f'Failed wait_for_title_contains: {string}',
+        )
+
     def visible_heading(self):
         return self.element(Page.PAGE_HEADING).text
 
