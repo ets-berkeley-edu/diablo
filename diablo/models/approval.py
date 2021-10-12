@@ -60,10 +60,10 @@ NAMES_PER_PUBLISH_TYPE = {
 }
 
 NAMES_PER_RECORDING_TYPE = {
-    'presentation_audio': 'Presentation and Audio',
-    'presenter_audio': 'Presenter and Audio',
-    'presenter_presentation_audio': 'Presenter, Presentation, and Audio',
-    'presenter_presentation_audio_with_operator': 'Presenter, Presentation and Audio, with operator',
+    'presentation_audio': 'Audio + Projection',
+    'presenter_audio': 'Audio + Camera',
+    'presenter_presentation_audio': 'Audio + Projection + Camera without Operator',
+    'presenter_presentation_audio_with_operator': 'Audio + Projection + Camera with Operator',
 }
 
 
