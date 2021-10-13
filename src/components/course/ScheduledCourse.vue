@@ -111,7 +111,9 @@ export default {
   created() {
     const alertKeys = this.$_.filter(this.course.scheduled.alerts, alert => alert.includes('admin'))
     this.adminAlerts = this.$_.map(alertKeys, key => this.$config.emailTemplateTypes[key].replace('Admin alert: ', ''))
-    this.currentUserMustApprove = !this.$currentUser.isAdmin && !this.$_.includes(this.$_.map(this.course.approvals, 'approvedBy'), this.$currentUser.uid)
+    this.currentUserMustApprove = !this.course.deletedAt
+      && !this.$currentUser.isAdmin
+      && !this.$_.includes(this.$_.map(this.course.approvals, 'approvedBy'), this.$currentUser.uid)
   },
   methods: {
     approve() {
