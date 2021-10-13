@@ -195,6 +195,10 @@ class OuijaBoardPage(DiabloPages):
     def course_row_locator(section):
         return By.XPATH, f'//tr[contains(., "{section.code}") and contains(., "{section.ccn}")]'
 
+    @staticmethod
+    def course_row_link_locator(section):
+        return By.ID, f'link-course-{section.ccn}'
+
     def wait_for_course_results(self):
         Wait(self.driver, util.get_short_timeout()).until(
             ec.visibility_of_any_elements_located(OuijaBoardPage.COURSE_ROW),
@@ -206,7 +210,7 @@ class OuijaBoardPage(DiabloPages):
         )
 
     def course_row_link(self, section):
-        return self.element((By.ID, f'link-course-{section.ccn}'))
+        return self.element((OuijaBoardPage.course_row_link_locator(section)))
 
     def course_row_code_el(self, section):
         return self.element((By.XPATH, f'//tr[contains(., "{section.code}")]/td[1]'))
@@ -225,6 +229,9 @@ class OuijaBoardPage(DiabloPages):
 
     def course_row_time_el(self, section):
         return self.element((By.XPATH, f'//tr[contains(., "{section.code}")]/td[6]'))
+
+    def course_row_status_el(self, section):
+        return self.element((By.ID, f'course-{section.ccn}-status'))
 
     def course_row_approval_status_el(self, section):
         return self.element((By.ID, f'course-{section.ccn}-approval-status'))

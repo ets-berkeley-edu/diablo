@@ -69,6 +69,10 @@ class CourseChangesPage(DiabloPages):
     def is_course_row_present(self, section):
         return self.is_present((By.XPATH, CourseChangesPage.course_container_xpath(section)))
 
+    def is_course_canceled(self, section):
+        text = 'UC Berkeley has canceled this section.'
+        return self.is_present((By.XPATH, f'{CourseChangesPage.course_container_xpath(section)}//span[text()="{text}"]'))
+
     def wait_for_results(self):
         Wait(self.driver, util.get_short_timeout()).until(ec.visibility_of_element_located(CourseChangesPage.PAGE_HEADING))
 

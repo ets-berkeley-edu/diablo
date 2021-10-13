@@ -130,7 +130,7 @@ class TestUnschedule:
         self.ouija_page.click_sign_up_page_link(self.section)
 
     def test_sign_up(self):
-        self.sign_up_page.select_rec_type(RecordingType.VIDEO.value['option'])
+        self.sign_up_page.select_rec_type(RecordingType.VIDEO_SANS_OPERATOR.value['option'])
         self.sign_up_page.select_publish_type(PublishType.BCOURSES.value)
         self.sign_up_page.click_agree_checkbox()
         self.sign_up_page.click_approve_button()

@@ -50,7 +50,6 @@ SCENARIO:
 
 @pytest.mark.usefixtures('page_objects')
 class TestSignUp2:
-
     test_data = util.get_test_script_course('test_sign_up_2')
     section = util.get_test_section(test_data)
     meeting = section.meetings[0]
@@ -262,7 +261,10 @@ class TestSignUp2:
     def test_rec_type_options_inst_1(self):
         self.sign_up_page.click_rec_type_input()
         visible_opts = self.sign_up_page.visible_menu_options()
-        expected = [RecordingType.SCREENCAST.value['option'], RecordingType.VIDEO.value['option'], RecordingType.SCREENCAST_AND_VIDEO.value['option']]
+        expected = [
+            RecordingType.SCREENCAST.value['option'], RecordingType.VIDEO_SANS_OPERATOR.value['option'],
+            RecordingType.VIDEO_WITH_OPERATOR.value['option'],
+        ]
         assert visible_opts == expected
 
     def test_publish_options_inst_1(self):
@@ -416,7 +418,10 @@ class TestSignUp2:
     def test_rec_type_options_inst_2(self):
         self.sign_up_page.click_rec_type_input()
         visible_opts = self.sign_up_page.visible_menu_options()
-        expected = [RecordingType.SCREENCAST.value['option'], RecordingType.VIDEO.value['option'], RecordingType.SCREENCAST_AND_VIDEO.value['option']]
+        expected = [
+            RecordingType.SCREENCAST.value['option'], RecordingType.VIDEO_SANS_OPERATOR.value['option'],
+            RecordingType.VIDEO_WITH_OPERATOR.value['option'],
+        ]
         assert visible_opts == expected
 
     def test_publish_options_inst_2(self):
@@ -428,8 +433,8 @@ class TestSignUp2:
     # CHANGE OPTIONS, APPROVE
 
     def test_choose_rec_type_inst_2(self):
-        self.sign_up_page.select_rec_type(RecordingType.VIDEO.value['option'])
-        self.recording_schedule.recording_type = RecordingType.VIDEO
+        self.sign_up_page.select_rec_type(RecordingType.VIDEO_SANS_OPERATOR.value['option'])
+        self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
 
     def test_choose_publish_type_inst_2(self):
         self.sign_up_page.select_publish_type(PublishType.BCOURSES.value)

@@ -288,3 +288,50 @@ class TestCrossListings:
         subj = f'Your course, {self.section.listings[0].code}, has been scheduled for Course Capture (To: {self.section.instructors[0].email})'
         expected_message = Email(msg_type=None, sender=None, subject=subj)
         assert not self.email_page.is_message_present(expected_message)
+
+    # DELETE SECONDARY LISTING
+
+    def test_delete_secondary_listing(self):
+        util.delete_section(self.x_listed_section)
+
+    def test_not_canceled(self):
+        self.sign_up_page.load_page(self.section)
+        assert not self.sign_up_page.is_canceled()
+
+    def test_no_x_listing(self):
+        assert not self.sign_up_page.visible_cross_listing_ccns()
+
+    def test_no_course_changes(self):
+        self.changes_page.load_page()
+        self.changes_page.wait_for_results()
+        assert not self.changes_page.is_course_row_present(self.section)
+
+    # RESTORE SECONDARY LISTING
+
+    def test_restore_secondary(self):
+        util.restore_section(self.x_listed_section)
+
+    def test_restored_x_listing(self):
+        self.sign_up_page.load_page(self.section)
+        expected = [f'{self.x_listed_section.code}, {self.x_listed_section.number}']
+        visible = self.sign_up_page.visible_cross_listing_codes()
+        assert visible == expected
+
+    # DELETE PRIMARY LISTING
+
+    def test_delete_primary_listing(self):
+        util.delete_section(self.section)
+
+    def test_canceled(self):
+        self.sign_up_page.load_page(self.section)
+        assert self.sign_up_page.is_canceled()
+
+    def test_x_listing(self):
+        expected = [f'{self.x_listed_section.code}, {self.x_listed_section.number}']
+        visible = self.sign_up_page.visible_cross_listing_codes()
+        assert visible == expected
+
+    def test_course_changes(self):
+        self.changes_page.load_page()
+        self.changes_page.wait_for_results()
+        assert self.changes_page.is_course_row_present(self.section)

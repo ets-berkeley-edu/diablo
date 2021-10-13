@@ -112,6 +112,9 @@ class SignUpPage(DiabloPages):
 
     # SIS DATA
 
+    def is_canceled(self):
+        return self.is_present((By.XPATH, '//span[text()="UC Berkeley has canceled this section."]'))
+
     def visible_ccn(self):
         return self.element(SignUpPage.SECTION_ID).text
 
