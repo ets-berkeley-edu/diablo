@@ -27,12 +27,18 @@ from enum import Enum
 
 
 class RecordingType(Enum):
-    SCREENCAST = {'option': 'Audio + Projection', 'selection': 'Audio + Projection'}
+    SCREENCAST = {
+        'option': 'Audio + Projection',
+        'selection': 'Audio + Projection',
+        'printable': 'Audio + Projection',
+    }
     VIDEO_WITH_OPERATOR = {
         'option': 'Audio + Projection + Camera with Operator ($1000)',
         'selection': 'Audio + Projection + Camera with Operator ($1000)',
+        'printable': 'Audio + Projection + Camera with Operator',
     }
     VIDEO_SANS_OPERATOR = {
         'option': 'Audio + Projection + Camera without Operator',
         'selection': 'Audio + Projection + Camera without Operator',
+        'printable': 'Audio + Projection + Camera without Operator',
     }

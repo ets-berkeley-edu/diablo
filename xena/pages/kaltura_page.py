@@ -119,7 +119,7 @@ class KalturaPage(Page):
     def open_recurrence_modal(self):
         app.logger.info('Clicking recurrence button')
         self.wait_for_element_and_click(KalturaPage.SERIES_RECUR_BUTTON)
-        self.wait_for_element(KalturaPage.RECUR_MODAL_H3, util.get_short_timeout())
+        self.wait_for_element(KalturaPage.RECUR_MODAL_H3, util.get_medium_timeout())
 
     def close_recurrence_modal(self):
         app.logger.info('Closing recurrence modal')

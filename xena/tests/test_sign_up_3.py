@@ -497,7 +497,7 @@ class TestSignUp3:
         assert self.room_printable_page.visible_times(self.section) == [f'{dates}\n{times}']
 
     def test_printable_rec_type(self):
-        expected = self.recording_schedule.recording_type.value['selection']
+        expected = self.recording_schedule.recording_type.value['printable']
         assert self.room_printable_page.visible_recording_type(self.section) == expected
 
     def test_close_printable(self):

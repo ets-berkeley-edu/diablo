@@ -106,7 +106,7 @@ class EmailTemplatesPage(DiabloPages):
         time.sleep(0.25)
         self.click_element_js(EmailTemplatesPage.CODE_BUTTON)
         time.sleep(0.25)
-        self.element(EmailTemplatesPage.TEMPLATE_BODY_INPUT).send_keys('\n')
+        self.hit_enter()
 
     def enter_all_codes_in_body(self):
         codes = EmailTemplatesPage.template_codes()

@@ -234,9 +234,6 @@ class TestSignUp1:
 
     # VERIFY AVAILABLE OPTIONS
 
-    def test_rec_type_text(self):
-        assert self.sign_up_page.is_present(SignUpPage.RECORDING_TYPE_TEXT) is False
-
     def test_publish_type_text(self):
         assert self.sign_up_page.is_present(SignUpPage.PUBLISH_TYPE_TEXT) is True
 
@@ -388,7 +385,7 @@ class TestSignUp1:
         assert self.room_printable_page.visible_times(self.section) == [f'{dates}\n{times}']
 
     def test_printable_rec_type(self):
-        expected = self.recording_schedule.recording_type.value['selection']
+        expected = self.recording_schedule.recording_type.value['printable']
         assert self.room_printable_page.visible_recording_type(self.section) == expected
 
     def test_close_printable(self):
