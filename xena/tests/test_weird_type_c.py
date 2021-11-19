@@ -24,6 +24,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 
 from datetime import datetime
+from datetime import timedelta
 
 from flask import current_app as app
 import pytest
@@ -59,6 +60,11 @@ class TestWeirdTypeC:
     instructor_0 = section.instructors[0]
     recording_schedule = RecordingSchedule(section)
 
+    end_0 = (meeting_0.start_date + timedelta(days=14)).strftime('%Y-%m-%d')
+    meeting_0.end_date = end_0
+    start_1 = (meeting_0.start_date + timedelta(days=15)).strftime('%Y-%m-%d')
+    meeting_1.start_date = start_1
+
     # Course changes data
     test_data_changes = util.get_test_script_course('test_weird_type_c_changes')
     section_changes = Section(test_data_changes)
@@ -66,6 +72,11 @@ class TestWeirdTypeC:
     meeting_1_changes = section_changes.meetings[1]
     instructor_1 = section_changes.instructors[0]
     recording_schedule_changes = RecordingSchedule(section_changes)
+
+    end_0 = (meeting_0.end_date + timedelta(days=7)).strftime('%Y-%m-%d')
+    meeting_0_changes.end_date = end_0
+    start_1 = (meeting_1.start_date + timedelta(days=7)).strftime('%Y-%m-%d')
+    meeting_1_changes.start_date = start_1
 
     def test_disable_jobs(self):
         self.login_page.load_page()

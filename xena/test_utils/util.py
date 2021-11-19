@@ -148,20 +148,21 @@ def get_test_section(test_data):
 
 
 def get_test_x_listed_sections(test_data):
-    sql = f"""SELECT sis_sections.section_id AS ccn,
+    sql = f"""SELECT cross_listings.section_id AS ccn,
+                     cross_listings.cross_listed_section_ids[1] AS listing_ccn,
                      sis_sections.course_name AS code,
-                     sis_sections.course_title AS title,
                      sis_sections.instruction_format AS format,
                      sis_sections.section_num AS num,
-                     cross_listings.cross_listed_section_ids[1] AS listing_ccn
-                FROM sis_sections
-                JOIN cross_listings ON cross_listings.section_id = sis_sections.section_id
-               WHERE sis_sections.term_id = {app.config['CURRENT_TERM_ID']}
-                 AND sis_sections.instruction_format = 'LEC'
-                 AND sis_sections.is_principal_listing IS TRUE
+                     sis_sections.course_title AS title
+                FROM cross_listings
+                JOIN sis_sections ON cross_listings.section_id = sis_sections.section_id
+               WHERE cross_listings.term_id = {app.config['CURRENT_TERM_ID']}
+                 AND sis_sections.term_id = {app.config['CURRENT_TERM_ID']}
                  AND array_length(cross_listings.cross_listed_section_ids, 1) = 1
+                 AND sis_sections.instruction_format = 'LEC'
+                 AND sis_sections.meeting_location != 'Internet/Online'
                  AND sis_sections.deleted_at IS NULL
-            ORDER BY code, ccn
+            ORDER BY ccn, code
                LIMIT 1;
     """
     app.logger.info(sql)

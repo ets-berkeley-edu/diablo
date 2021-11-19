@@ -252,9 +252,6 @@ class TestSignUp2:
 
     # VERIFY AVAILABLE OPTIONS
 
-    def test_rec_type_text(self):
-        assert self.sign_up_page.is_present(SignUpPage.RECORDING_TYPE_TEXT) is True
-
     def test_publish_type_text(self):
         assert self.sign_up_page.is_present(SignUpPage.PUBLISH_TYPE_TEXT) is True
 
@@ -262,8 +259,8 @@ class TestSignUp2:
         self.sign_up_page.click_rec_type_input()
         visible_opts = self.sign_up_page.visible_menu_options()
         expected = [
-            RecordingType.SCREENCAST.value['option'], RecordingType.VIDEO_SANS_OPERATOR.value['option'],
             RecordingType.VIDEO_WITH_OPERATOR.value['option'],
+            RecordingType.VIDEO_SANS_OPERATOR.value['option'],
         ]
         assert visible_opts == expected
 
@@ -282,7 +279,7 @@ class TestSignUp2:
 
     def test_choose_rec_type_inst_1(self):
         self.sign_up_page.select_rec_type(RecordingType.SCREENCAST.value['option'])
-        self.recording_schedule.recording_type = RecordingType.SCREENCAST
+        self.recording_schedule.recording_type = RecordingType.VIDEO_WITH_OPERATOR
 
     def test_choose_publish_type_inst_1(self):
         self.sign_up_page.select_publish_type(PublishType.KALTURA.value)
@@ -419,8 +416,8 @@ class TestSignUp2:
         self.sign_up_page.click_rec_type_input()
         visible_opts = self.sign_up_page.visible_menu_options()
         expected = [
-            RecordingType.SCREENCAST.value['option'], RecordingType.VIDEO_SANS_OPERATOR.value['option'],
             RecordingType.VIDEO_WITH_OPERATOR.value['option'],
+            RecordingType.VIDEO_SANS_OPERATOR.value['option'],
         ]
         assert visible_opts == expected
 
@@ -592,7 +589,7 @@ class TestSignUp2:
         assert self.room_printable_page.visible_times(self.section) == [f'{dates}\n{times}']
 
     def test_printable_rec_type(self):
-        expected = self.recording_schedule.recording_type.value['selection']
+        expected = self.recording_schedule.recording_type.value['printable']
         assert self.room_printable_page.visible_recording_type(self.section) == expected
 
     def test_close_printable(self):

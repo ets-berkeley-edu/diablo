@@ -262,9 +262,6 @@ class TestSignUp0:
 
     # VERIFY VARIABLE CONTENT AND EXTERNAL LINKS
 
-    def test_rec_type_text(self):
-        assert self.sign_up_page.is_present(SignUpPage.RECORDING_TYPE_TEXT) is True
-
     def test_publish_type_text(self):
         assert self.sign_up_page.is_present(SignUpPage.PUBLISH_TYPE_TEXT) is True
 
@@ -282,8 +279,8 @@ class TestSignUp0:
         self.sign_up_page.click_rec_type_input()
         visible_opts = self.sign_up_page.visible_menu_options()
         expected = [
-            RecordingType.SCREENCAST.value['option'], RecordingType.VIDEO_SANS_OPERATOR.value['option'],
             RecordingType.VIDEO_WITH_OPERATOR.value['option'],
+            RecordingType.VIDEO_SANS_OPERATOR.value['option'],
         ]
         assert visible_opts == expected
 
@@ -443,7 +440,7 @@ class TestSignUp0:
         assert self.room_printable_page.visible_times(self.section) == [f'{dates}\n{times}']
 
     def test_printable_rec_type(self):
-        expected = self.recording_schedule.recording_type.value['selection']
+        expected = self.recording_schedule.recording_type.value['printable']
         assert self.room_printable_page.visible_recording_type(self.section) == expected
 
     def test_close_printable(self):

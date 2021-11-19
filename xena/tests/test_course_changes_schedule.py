@@ -215,6 +215,9 @@ class TestCourseScheduleChanges:
         visible_end = datetime.strptime(self.kaltura_page.visible_end_time(), '%I:%M %p')
         assert visible_end == end
 
+    def test_close_kaltura_window(self):
+        self.kaltura_page.close_window_and_switch()
+
     # SCHEDULED COURSE MEETING START/END AND MEETING DAYS/TIMES CHANGE TO NULL
 
     def test_set_null_start_end_dates(self):
@@ -275,7 +278,7 @@ class TestCourseScheduleChanges:
 
     def test_admin_unsched_null_dates(self):
         self.sign_up_page.load_page(self.real_section)
-        self.sign_up_page.confirm_unscheduling(self.recording_sched)
+        self.sign_up_page.confirm_unscheduling_ineligible(self.recording_sched)
 
     def test_changes_page_null_dates_unsched(self):
         self.sign_up_page.click_course_changes_link()

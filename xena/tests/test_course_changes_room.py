@@ -137,6 +137,7 @@ class TestCourseRoomChanges:
         util.set_meeting_location(self.real_section, self.fake_meeting)
 
     def test_run_admin_email_job_ineligible_room(self):
+        self.jobs_page.load_page()
         self.jobs_page.run_admin_emails_job()
 
     def test_run_instr_email_job_ineligible_room(self):

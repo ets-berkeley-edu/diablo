@@ -23,7 +23,6 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-from datetime import datetime
 import time
 
 from flask import current_app as app
@@ -37,6 +36,7 @@ from xena.test_utils import util
 class BlackoutsPage(DiabloPages):
     CREATE_NEW_BUTTON = (By.XPATH, '//button[contains(., "Create New")]')
     NAME_INPUT = (By.ID, 'input-blackout-name')
+    CALENDAR_MONTH = (By.XPATH, '//div[@class="vc-title"]')
     CALENDAR_BACK_BUTTON = (By.XPATH, '//div[@class="vc-arrow is-left"]')
     CALENDAR_FORWARD_BUTTON = (By.XPATH, '//div[@class="vc-arrow is-right"]')
     DELETE_BUTTON = (By.XPATH, '//button[contains(@id, "delete-blackout")]')
@@ -47,24 +47,17 @@ class BlackoutsPage(DiabloPages):
     def blackout_delete_loc(blackout_date):
         return By.XPATH, f'//tr[contains(., "{blackout_date.strftime("%Y-%m-%d")}")]//button'
 
+    def navigate_to_datepicker_month(self, month):
+        while month != self.element(BlackoutsPage.CALENDAR_MONTH).text:
+            self.wait_for_element_and_click(BlackoutsPage.CALENDAR_FORWARD_BUTTON)
+            time.sleep(util.get_click_sleep())
+
     def select_blackout_date(self, blackout_date_pair):
         start_date_str = blackout_date_pair[0].strftime('%Y-%m-%d')
         end_date_str = blackout_date_pair[1].strftime('%Y-%m-%d')
-        tries = 0
-        current_month = int(datetime.today().strftime('%m'))
-        blackout_start_month = int(blackout_date_pair[0].strftime('%m'))
-        while tries < (blackout_start_month - current_month):
-            tries += 1
-            app.logger.info('Navigating to the next month')
-            self.wait_for_element_and_click(BlackoutsPage.CALENDAR_FORWARD_BUTTON)
+        self.navigate_to_datepicker_month(blackout_date_pair[0].strftime('%B %Y'))
         self.wait_for_element_and_click((By.XPATH, f'//div[contains(@class, "id-{start_date_str}")]'))
-        blackout_end_month = int(blackout_date_pair[1].strftime('%m'))
-        if blackout_end_month != blackout_start_month:
-            tries = 0
-            while tries < (blackout_end_month - blackout_start_month):
-                tries += 1
-                app.logger.info('Navigating to the next month')
-                self.wait_for_element_and_click(BlackoutsPage.CALENDAR_FORWARD_BUTTON)
+        self.navigate_to_datepicker_month(blackout_date_pair[1].strftime('%B %Y'))
         self.wait_for_element_and_click((By.XPATH, f'//div[contains(@class, "id-{end_date_str}")]'))
 
     def create_blackout_date(self, blackout_date_pair):
