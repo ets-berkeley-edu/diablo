@@ -25,7 +25,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 from diablo.externals.kaltura import CREATED_BY_DIABLO_TAG, Kaltura
 from diablo.jobs.base_job import BaseJob
 from diablo.lib.kaltura_util import represents_recording_series
-from diablo.lib.util import utc_now
+from diablo.lib.util import localized_timestamp_to_utc, utc_now
 from diablo.models.blackout import Blackout
 from flask import current_app as app
 
@@ -39,7 +39,10 @@ class BlackoutsJob(BaseJob):
                 app.logger.info(f'Removing past blackout: {blackout}')
                 Blackout.delete_blackout(blackout.id)
             else:
-                events = kaltura.get_events_in_date_range(end_date=blackout.end_date, start_date=blackout.start_date)
+                events = kaltura.get_events_in_date_range(
+                    end_date=localized_timestamp_to_utc(blackout.end_date),
+                    start_date=localized_timestamp_to_utc(blackout.start_date),
+                )
                 for event in events:
                     created_by_diablo = CREATED_BY_DIABLO_TAG in event['tags']
                     if created_by_diablo and not represents_recording_series(event):
