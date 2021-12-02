@@ -133,11 +133,20 @@ class Kaltura:
         return events[0] if events else None
 
     @skip_when_pytest()
-    def get_events_in_date_range(self, end_date, start_date):
-        event_filter = KalturaRecordScheduleEventFilter(
-            endDateLessThanOrEqual=int(end_date.timestamp()),
-            startDateGreaterThanOrEqual=int(start_date.timestamp()),
-        )
+    def get_events_in_date_range(self, end_date, start_date, recurrence_type=None):
+        end_date_timestamp = int(end_date.timestamp())
+        start_date_timestamp = int(start_date.timestamp())
+        if recurrence_type is None:
+            event_filter = KalturaRecordScheduleEventFilter(
+                endDateLessThanOrEqual=end_date_timestamp,
+                startDateGreaterThanOrEqual=start_date_timestamp,
+            )
+        else:
+            event_filter = KalturaRecordScheduleEventFilter(
+                endDateLessThanOrEqual=end_date_timestamp,
+                recurrenceTypeEqual=recurrence_type,
+                startDateGreaterThanOrEqual=start_date_timestamp,
+            )
         return self._get_events(kaltura_event_filter=event_filter)
 
     @cachify('kaltura/schedule_resources', timeout=30)
