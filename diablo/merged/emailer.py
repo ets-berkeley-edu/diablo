@@ -35,18 +35,25 @@ def get_admin_alert_recipient():
 
 
 def send_system_error_email(message, subject=None):
+    def _scrub(content):
+        # Omit Kaltura session key
+        marker = 'Invalid KS'
+        scrubbed = ''
+        for line in (content.splitlines(True) if content else []):
+            scrubbed += f'{line.split(marker)[0]} {marker}...\n' if marker in line else line
+        return scrubbed
     if subject is None:
         subject = f'{message[:50]}...' if len(message) > 50 else message
     config_value = app.config['EMAIL_SYSTEM_ERRORS']
     email_addresses = config_value if isinstance(config_value, list) else [config_value]
     for email_address in email_addresses:
         BConnected().send(
-            message=message,
+            message=_scrub(message),
             recipient={
                 'email': email_address,
                 'name': 'Course Capture Errors',
                 'uid': '0',
             },
-            subject_line=f'Alert: {subject}',
+            subject_line=f'Alert: {_scrub(subject)}',
         )
     app.logger.error(f'Alert: {message}')
