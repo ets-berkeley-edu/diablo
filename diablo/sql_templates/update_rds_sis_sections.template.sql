@@ -33,15 +33,15 @@ INSERT INTO sis_sections (allowed_units, course_name, course_title, instruction_
                           instructor_role_code, instructor_uid, is_primary, meeting_days, meeting_end_date,
                           meeting_end_time, meeting_location, meeting_start_date, meeting_start_time, section_id,
                           section_num, term_id)
-   (SELECT * FROM dblink('{rds_dblink_to_redshift}',$REDSHIFT$
+   (SELECT * FROM dblink('{data_loch_dblink}',$REDSHIFT$
     SELECT
-       allowed_units, course_display_name, course_title, instruction_format, instructor_name, instructor_role_code,
-       instructor_uid, is_primary::BOOLEAN, meeting_days, meeting_end_date::TIMESTAMP, meeting_end_time, meeting_location,
-       meeting_start_date::TIMESTAMP, meeting_start_time, section_id::INTEGER, section_num, term_id::INTEGER
-    FROM {redshift_schema_sis}.courses
-    WHERE term_id='{term_id}'
+       allowed_units, sis_course_name, sis_course_title, sis_instruction_format, instructor_name, instructor_role_code,
+       instructor_uid, is_primary, meeting_days, meeting_end_date::TIMESTAMP, meeting_end_time, meeting_location,
+       meeting_start_date::TIMESTAMP, meeting_start_time, sis_section_id::INTEGER, sis_section_num, sis_term_id::INTEGER
+    FROM {data_loch_sis_schema}.sis_sections
+    WHERE sis_term_id='{term_id}'
   $REDSHIFT$)
-  AS redshift_sis_sections (
+  AS data_loch_sis_sections (
     allowed_units DOUBLE PRECISION,
     course_name VARCHAR(80),
     course_title TEXT,
