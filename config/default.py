@@ -68,6 +68,9 @@ CURRENT_TERM_ID = None
 CURRENT_TERM_RECORDINGS_BEGIN = None
 CURRENT_TERM_RECORDINGS_END = None
 
+DATA_LOCH_DB_LINK = ''
+DATA_LOCH_SIS_SCHEMA = 'sis_data'
+
 DEV_AUTH_ENABLED = False
 DEV_AUTH_PASSWORD = 'another secret'
 
@@ -121,9 +124,6 @@ LOGGING_FORMAT = '[%(asctime)s] - %(levelname)s: %(message)s [in %(pathname)s:%(
 LOGGING_LOCATION = 'diablo.log'
 LOGGING_LEVEL = logging.DEBUG
 LOGGING_PROPAGATION_LEVEL = logging.WARN
-
-REDSHIFT_DATABASE = '__nessie__'
-REDSHIFT_SCHEMA_SIS = '__sis_data_ext__'
 
 REMEMBER_COOKIE_NAME = 'remember_diablo_token'
 
