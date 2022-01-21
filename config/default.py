@@ -68,8 +68,7 @@ CURRENT_TERM_ID = None
 CURRENT_TERM_RECORDINGS_BEGIN = None
 CURRENT_TERM_RECORDINGS_END = None
 
-DATA_LOCH_DB_LINK = 'ro_sis_data_role'
-DATA_LOCH_SIS_SCHEMA = 'sis_data'
+DBLINK_NESSIE_RDS = 'Nessie database name'
 
 DEV_AUTH_ENABLED = False
 DEV_AUTH_PASSWORD = 'another secret'
