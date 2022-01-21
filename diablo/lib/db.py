@@ -66,8 +66,7 @@ def resolve_sql_template(sql_filename):
 def resolve_sql_template_string(template_string):
     return template_string.format(
         **{
-            'data_loch_dblink': app.config['DATA_LOCH_DB_LINK'],
-            'data_loch_sis_schema': app.config['DATA_LOCH_SIS_SCHEMA'],
+            'dblink_nessie_rds': app.config['DBLINK_NESSIE_RDS'],
             'term_id': app.config['CURRENT_TERM_ID'],
         },
     )
