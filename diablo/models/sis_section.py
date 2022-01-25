@@ -34,7 +34,6 @@ from diablo.models.course_preference import CoursePreference
 from diablo.models.cross_listing import CrossListing
 from diablo.models.room import Room
 from diablo.models.scheduled import Scheduled
-from diablo.models.sent_email import SentEmail
 from flask import current_app as app
 from sqlalchemy import text
 
@@ -738,11 +737,7 @@ def _to_api_json(term_id, rows, include_rooms=True):
 
     # Perform bulk queries and build data structures for feed generation.
     section_ids_opted_out = CoursePreference.get_section_ids_opted_out(term_id=term_id)
-
-    invited_uids_by_section_id = {section_id: [] for section_id in section_ids}
-    for invite in SentEmail.get_emails_of_type(section_ids=section_ids, template_type='invitation', term_id=term_id):
-        if invite.recipient_uid not in invited_uids_by_section_id[invite.section_id]:
-            invited_uids_by_section_id[invite.section_id].append(invite.recipient_uid)
+    invited_uids_by_section_id = get_invited_uids_by_section_id(section_ids, term_id)
 
     approval_results = Approval.get_approvals_per_section_ids(section_ids=section_ids, term_id=term_id)
     scheduled_results = Scheduled.get_scheduled_per_section_ids(section_ids=section_ids, term_id=term_id)
@@ -1006,6 +1001,28 @@ def _get_cross_listed_courses(section_ids, term_id, approvals, invited_uids):
                         canvas_course_ids.append(canvas_course_id)
 
     return courses_by_section_id, instructors_by_section_id, canvas_sites_by_section_id
+
+
+def get_invited_uids_by_section_id(section_ids, term_id):
+    sql = """
+        SELECT section_id, recipient ->> 'uid' AS recipient_uid FROM queued_emails
+        WHERE term_id = :term_id AND section_id = ANY(:section_ids) AND template_type = :template_type
+        UNION
+        SELECT section_id, recipient_uid FROM sent_emails
+        WHERE term_id = :term_id AND section_id = ANY(:section_ids) AND template_type = :template_type
+    """
+    args = {
+        'section_ids': section_ids,
+        'template_type': 'invitation',
+        'term_id': term_id,
+    }
+    invited_uids_by_section_id = {section_id: [] for section_id in section_ids}
+    for row in db.session.execute(text(sql), args):
+        recipient_uid = row['recipient_uid']
+        section_id = row['section_id']
+        if recipient_uid not in invited_uids_by_section_id[section_id]:
+            invited_uids_by_section_id[section_id].append(recipient_uid)
+    return invited_uids_by_section_id
 
 
 def _sections_with_at_least_one_eligible_room():

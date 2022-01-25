@@ -22,13 +22,14 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from diablo import std_commit
+from diablo import db, std_commit
 from diablo.jobs.invitation_job import InvitationJob
 from diablo.jobs.queued_emails_job import QueuedEmailsJob
 from diablo.lib.util import utc_now
 from diablo.models.course_preference import CoursePreference
 from diablo.models.sent_email import SentEmail
 from diablo.models.sis_section import SisSection
+from sqlalchemy import text
 from sqlalchemy.orm.session import make_transient
 from tests.util import simply_yield, test_approvals_workflow
 
@@ -99,6 +100,35 @@ class TestInvitationJob:
             invitations = _get_invitations_since(term_id, timestamp)
             assert len(invitations) == 15
             assert not next((e for e in invitations if e.section_id == section_id), None)
+
+    def test_no_duplicate_invites(self, app):
+        """Do not send the same invite twice."""
+        with test_approvals_workflow(app):
+            # First, get expected number of emails sent.
+            term_id = app.config['CURRENT_TERM_ID']
+            timestamp = utc_now()
+            InvitationJob(simply_yield).run()
+            QueuedEmailsJob(simply_yield).run()
+            expected_count = len(_get_invitations_since(term_id, timestamp))
+
+            # Clean up
+            db.session.execute(text('DELETE FROM queued_emails; DELETE FROM sent_emails;'))
+
+            # Next, run invitation_job twice before running queued_emails_job. Expect no duplicate emails.
+            timestamp = utc_now()
+            InvitationJob(simply_yield).run()
+            InvitationJob(simply_yield).run()
+            std_commit(allow_test_environment=True)
+            # Nothing is sent until we run the queued_emails_job.
+            assert len(_get_invitations_since(term_id, timestamp)) == 0
+            # Send queued emails.
+            QueuedEmailsJob(simply_yield).run()
+            std_commit(allow_test_environment=True)
+            assert len(_get_invitations_since(term_id, timestamp)) == expected_count
+            # Verify no dupe emails.
+            emails_sent = _get_invitations_since(term_id, timestamp)
+            recipients = [f'{e.template_type}_{e.recipient_uid}_{e.term_id}_{e.section_id}' for e in emails_sent]
+            assert len(set(recipients)) == len(recipients)
 
 
 def _get_invitations_since(term_id, timestamp):
