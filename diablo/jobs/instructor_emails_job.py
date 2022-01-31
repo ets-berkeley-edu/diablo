@@ -96,11 +96,11 @@ class InstructorEmailsJob(BaseJob):
                                 We are unable to notify {course['label']} instructors of room change.
                             """)
                 else:
-                    kaltura_url = f'{app.config["KALTURA_MEDIA_SPACE_URL"]}/recscheduling/index/edit-event/eventid/{scheduled.kalturaScheduleId}'
+                    kaltura_url = f'{app.config["KALTURA_MEDIA_SPACE_URL"]}/recscheduling/index/edit-event/eventid/{scheduled.kaltura_schedule_id}'
                     message = f"""\n
                         Course: {scheduled.course_display_name} (section_id={scheduled.section_id})\n\n
                         Instructor UIDs: {', '.join(scheduled.instructor_uids if scheduled.instructor_uids else '&mdash;')}\n\n
-                        Kaltura schedule ID: {scheduled.kalturaScheduleId}\n\n
+                        Kaltura schedule ID: {scheduled.kaltura_schedule_id}\n\n
                         Edit Kaltura series: {kaltura_url}\n\n
                     """
                     subject = f'Scheduled course has no SIS data (section_id={scheduled.section_id})'
