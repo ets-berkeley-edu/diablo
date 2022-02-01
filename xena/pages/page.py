@@ -50,33 +50,33 @@ class Page(object):
         strategy = locator[0]
         target = locator[1]
         if strategy == 'id':
-            return self.driver.find_element_by_id(target)
+            return self.driver.find_element(By.ID, target)
         elif strategy == 'name':
-            return self.driver.find_element_by_name(target)
+            return self.driver.find_element(By.NAME, target)
         elif strategy == 'class name':
-            return self.driver.find_element_by_class_name(target)
+            return self.driver.find_element(By.CLASS_NAME, target)
         elif strategy == 'link text':
-            return self.driver.find_element_by_link_text(target)
+            return self.driver.find_element(By.LINK_TEXT, target)
         elif strategy == 'partial link text':
-            return self.driver.find_element_by_partial_link_text(target)
+            return self.driver.find_element(By.PARTIAL_LINK_TEXT, target)
         elif strategy == 'xpath':
-            return self.driver.find_element_by_xpath(target)
+            return self.driver.find_element(By.XPATH, target)
 
     def elements(self, locator):
         strategy = locator[0]
         target = locator[1]
         if strategy == 'id':
-            return self.driver.find_elements_by_id(target)
+            return self.driver.find_elements(By.ID, target)
         elif strategy == 'name':
-            return self.driver.find_elements_by_name(target)
+            return self.driver.find_elements(By.NAME, target)
         elif strategy == 'class name':
-            return self.driver.find_elements_by_class_name(target)
+            return self.driver.find_elements(By.CLASS_NAME, target)
         elif strategy == 'link text':
-            return self.driver.find_elements_by_link_text(target)
+            return self.driver.find_elements(By.LINK_TEXT, target)
         elif strategy == 'partial link text':
-            return self.driver.find_elements_by_partial_link_text(target)
+            return self.driver.find_elements(By.PARTIAL_LINK_TEXT, target)
         elif strategy == 'xpath':
-            return self.driver.find_elements_by_xpath(target)
+            return self.driver.find_elements(By.XPATH, target)
 
     # METHODS TO INTERACT WITH ELEMENTS USING A LOCATOR RATHER THAN AN ELEMENT, WHICH HELPS AVOID STALE ELEMENT ERRORS.
 

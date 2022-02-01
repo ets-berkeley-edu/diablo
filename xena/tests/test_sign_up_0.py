@@ -241,7 +241,7 @@ class TestSignUp0:
         assert self.sign_up_page.visible_instructors() == instructor_names
 
     def test_visible_meeting_days(self):
-        term_dates = f'{SignUpPage.expected_term_date_str(self.meeting.record_start, self.meeting.record_end)}'
+        term_dates = f'{SignUpPage.expected_term_date_str(self.meeting.start_date, self.meeting.end_date)}'
         assert term_dates in self.sign_up_page.visible_meeting_days()[0]
 
     def test_visible_meeting_time(self):
@@ -270,7 +270,7 @@ class TestSignUp0:
         assert self.sign_up_page.external_link_valid(SignUpPage.CC_EXPLAINED_LINK, title) is True
 
     def test_policies_link(self):
-        title = 'Policies | Educational Technology Services'
+        title = 'Policies | Research, Teaching, and Learning'
         assert self.sign_up_page.external_link_valid(SignUpPage.CC_POLICIES_LINK, title) is True
 
     # VERIFY AVAILABLE OPTIONS AND DISABLED APPROVE BUTTON

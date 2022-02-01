@@ -70,8 +70,8 @@ class TestWeirdTypeB:
     recording_schedule_changes = RecordingSchedule(section_changes)
 
     # Set changed physical meeting start/end dates relative to original dates
-    start_date = (meeting_physical.start_date + timedelta(days=7)).strftime('%Y-%m-%d')
-    end_date = (meeting_physical.start_date + timedelta(days=21)).strftime('%Y-%m-%d')
+    start_date = (meeting_physical.end_date - timedelta(days=14)).strftime('%Y-%m-%d')
+    end_date = (meeting_physical.end_date - timedelta(days=28)).strftime('%Y-%m-%d')
     meeting_physical_changes.start_date = start_date
     meeting_physical_changes.end_date = end_date
 
@@ -176,7 +176,7 @@ class TestWeirdTypeB:
         assert self.sign_up_page.visible_instructors() == instructor_names
 
     def test_visible_meeting_days(self):
-        term_dates = f'{SignUpPage.expected_term_date_str(self.meeting_physical.record_start, self.meeting_physical.record_end)}'
+        term_dates = f'{SignUpPage.expected_term_date_str(self.meeting_physical.start_date, self.meeting_physical.end_date)}'
         assert term_dates in self.sign_up_page.visible_meeting_days()[0]
         assert len(self.sign_up_page.visible_meeting_days()) == 1
 
