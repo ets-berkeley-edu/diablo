@@ -22,38 +22,21 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from diablo.jobs.base_job import BaseJob
-from diablo.models.email_template import EmailTemplate
-from diablo.models.queued_email import QueuedEmail
-from diablo.models.sis_section import SisSection
-from flask import current_app as app
+from diablo.jobs.errors import BackgroundTaskError
 
 
-class InvitationJob(BaseJob):
+class BaseTask:
+
+    def __init__(self, app_context):
+        self.app_context = app_context
+
+    def run(self):
+        with self.app_context():
+            self._run()
 
     def _run(self):
-        self.term_id = app.config['CURRENT_TERM_ID']
-        self.email_new_invites()
+        raise BackgroundTaskError('Implement this method in Task sub-class')
 
     @classmethod
     def description(cls):
-        return f"""
-            Queues up '{EmailTemplate.get_template_type_options()['invitation']}' emails.
-            Emails are sent when the when the 'Queued Emails' job runs.
-        """
-
-    @classmethod
-    def key(cls):
-        return 'invitations'
-
-    def email_new_invites(self):
-        for course in SisSection.get_courses(term_id=self.term_id):
-            if not course['hasOptedOut'] and len(course.get('meetings', {}).get('eligible', [])) == 1:
-                for i in course['instructors']:
-                    if not i['wasSentInvite']:
-                        QueuedEmail.create(
-                            recipient=i,
-                            section_id=course['sectionId'],
-                            template_type='invitation',
-                            term_id=self.term_id,
-                        )
+        raise BackgroundTaskError('Implement this method in Task sub-class')

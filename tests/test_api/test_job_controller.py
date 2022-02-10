@@ -26,14 +26,13 @@ import json
 import time
 
 from diablo import std_commit
-from diablo.jobs.admin_emails_job import AdminEmailsJob
 from diablo.jobs.canvas_job import CanvasJob
 from diablo.jobs.house_keeping_job import HouseKeepingJob
 from diablo.models.job import Job
 from diablo.models.job_history import JobHistory
 from flask import current_app as app
 import pytest
-from tests.util import enabled_job, simply_yield
+from tests.util import scheduled_job, simply_yield
 
 admin_uid = '90001'
 instructor_uid = '10001'
@@ -59,11 +58,11 @@ class TestStartJob:
 
     def test_anonymous(self, client):
         """Denies anonymous access."""
-        self._api_start_job(client, job_key='queued_emails', expected_status_code=401)
+        self._api_start_job(client, job_key='emails', expected_status_code=401)
 
     def test_unauthorized(self, client, instructor_session):
         """Denies access if user is not an admin."""
-        self._api_start_job(client, job_key='queued_emails', expected_status_code=401)
+        self._api_start_job(client, job_key='emails', expected_status_code=401)
 
     def test_job_not_found(self, client, admin_session):
         """404 if job key is unrecognized."""
@@ -71,7 +70,7 @@ class TestStartJob:
 
     def test_authorized(self, client, admin_session):
         """Admin can start a job."""
-        job_key = 'queued_emails'
+        job_key = 'canvas'
         self._api_start_job(client, job_key=job_key)
         # Now verify
         response = client.get('/api/job/history')
@@ -85,7 +84,7 @@ class TestStartJob:
 
     def test_force_run_of_disabled_job(self, client, admin_session):
         """Disabled job will run if run on-demand."""
-        job_key = 'admin_emails'
+        job_key = 'blackouts'
         self._api_start_job(client, job_key=job_key)
         time.sleep(0.7)
         # Now verify
@@ -150,17 +149,17 @@ class TestDisableJob:
 
     def test_authorized(self, client, admin_session):
         """Admin can access available jobs."""
-        job = Job.get_job_by_key('admin_emails')
-        expected_value = not job.disabled
-        api_json = self._api_job_disable(client, job_id=job.id, disable=expected_value)
-        assert api_json['disabled'] is expected_value
-        std_commit(allow_test_environment=True)
+        with scheduled_job('blackouts') as job:
+            expected_value = not job.disabled
+            api_json = self._api_job_disable(client, job_id=job.id, disable=expected_value)
+            assert api_json['disabled'] is expected_value
+            std_commit(allow_test_environment=True)
 
-        # Reset the value
-        expected_value = not expected_value
-        api_json = self._api_job_disable(client, job_id=job.id, disable=expected_value)
-        assert api_json['disabled'] is expected_value
-        std_commit(allow_test_environment=True)
+            # Reset the value
+            expected_value = not expected_value
+            api_json = self._api_job_disable(client, job_id=job.id, disable=expected_value)
+            assert api_json['disabled'] is expected_value
+            std_commit(allow_test_environment=True)
 
 
 class TestUpdateJobSchedule:
@@ -221,51 +220,55 @@ class TestUpdateJobSchedule:
 
     def test_edit_schedule_of_enabled_job(self, client, admin_session):
         """You cannot edit job schedule if the job is enabled."""
-        with enabled_job(job_key=AdminEmailsJob.key()):
+        with scheduled_job(job_key=CanvasJob.key()) as job:
+            Job.update_disabled(job_id=job.id, disable=False)
+            std_commit(allow_test_environment=True)
             self._api_job_update_schedule(
                 client,
                 expected_status_code=400,
-                job_id=Job.get_job_by_key('admin_emails').id,
+                job_id=Job.get_job_by_key('canvas').id,
                 schedule_type='minutes',
                 schedule_value=3,
             )
 
     def test_edit_schedule_of_running_job(self, client, admin_session):
         """You cannot edit job schedule if the job is running."""
-        job = Job.get_job_by_key('admin_emails')
-        job_history = JobHistory.job_started(job_key=job.key)
-        self._api_job_update_schedule(
-            client,
-            expected_status_code=400,
-            job_id=Job.get_job_by_key('admin_emails').id,
-            schedule_type='minutes',
-            schedule_value=3,
-        )
-        JobHistory.job_finished(id_=job_history.id, failed=False)
+        with scheduled_job('emails') as job:
+            job_history = JobHistory.job_started(job_key=job.key)
+            self._api_job_update_schedule(
+                client,
+                expected_status_code=400,
+                job_id=job.id,
+                schedule_type='minutes',
+                schedule_value=3,
+            )
+            JobHistory.job_finished(id_=job_history.id, failed=False)
 
     def test_authorized(self, client, admin_session):
         """Admin can edit job schedule."""
-        job = Job.get_job_by_key('admin_emails')
-        api_json = self._api_job_update_schedule(
-            client,
-            job_id=job.id,
-            schedule_type='minutes',
-            schedule_value=3,
-        )
-        assert api_json['schedule'] == {
-            'type': 'minutes',
-            'value': 3,
-        }
-        api_json = self._api_job_update_schedule(
-            client,
-            job_id=job.id,
-            schedule_type='day_at',
-            schedule_value='15:30',
-        )
-        assert api_json['schedule'] == {
-            'type': 'day_at',
-            'value': '15:30',
-        }
+        with scheduled_job('emails') as job:
+            # Job must be disabled in order to update schedule
+            Job.update_disabled(job_id=job.id, disable=True)
+            api_json = self._api_job_update_schedule(
+                client,
+                job_id=job.id,
+                schedule_type='minutes',
+                schedule_value=3,
+            )
+            assert api_json['schedule'] == {
+                'type': 'minutes',
+                'value': 3,
+            }
+            api_json = self._api_job_update_schedule(
+                client,
+                job_id=job.id,
+                schedule_type='day_at',
+                schedule_value='15:30',
+            )
+            assert api_json['schedule'] == {
+                'type': 'day_at',
+                'value': '15:30',
+            }
 
 
 class TestJobSchedule:
@@ -289,22 +292,20 @@ class TestJobSchedule:
         api_json = self._api_job_schedule(client)
         assert api_json['autoStart'] is app.config['JOBS_AUTO_START']
         assert api_json['secondsBetweenJobsCheck'] == app.config['JOBS_SECONDS_BETWEEN_PENDING_CHECK']
-
         first_job = api_json['jobs'][0]
-        assert first_job['key'] == 'admin_emails'
-        assert first_job['name'] == 'Admin Emails'
+        assert first_job['key'] == 'blackouts'
+        assert first_job['name'] == 'Blackouts'
         assert first_job['disabled'] is True
         assert first_job['schedule'] == {
             'type': 'minutes',
             'value': 120,
         }
-
         last_job = api_json['jobs'][-1]
-        assert last_job['key'] == 'queued_emails'
+        assert last_job['key'] == 'kaltura'
         assert last_job['disabled'] is False
         assert last_job['schedule'] == {
             'type': 'day_at',
-            'value': '04:30',
+            'value': '15:00',
         }
 
 

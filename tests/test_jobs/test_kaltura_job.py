@@ -24,7 +24,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 from diablo import std_commit
 from diablo.jobs.kaltura_job import KalturaJob
-from diablo.jobs.queued_emails_job import QueuedEmailsJob
+from diablo.jobs.tasks.queued_emails_task import QueuedEmailsTask
 from diablo.models.approval import Approval
 from diablo.models.room import Room
 from diablo.models.scheduled import Scheduled
@@ -113,7 +113,7 @@ class TestKalturaJob:
             assert scheduled.term_id == term_id
 
             # Verify emails sent
-            QueuedEmailsJob(app.app_context).run()
+            QueuedEmailsTask(app.app_context).run()
             emails_sent = _get_emails_sent()
             assert len(emails_sent) == email_count + 2
             assert [emails_sent[-1].recipient_uid, emails_sent[-2].recipient_uid] == ['10009', '10010']
