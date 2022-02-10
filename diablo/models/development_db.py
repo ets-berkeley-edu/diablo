@@ -185,11 +185,9 @@ def _create_users():
 
 def _set_up_and_run_jobs():
     Job.create(job_schedule_type='day_at', job_schedule_value='15:00', key='kaltura')
-    Job.create(job_schedule_type='day_at', job_schedule_value='04:30', key='queued_emails')
+    Job.create(job_schedule_type='minutes', job_schedule_value='60', key='emails')
     Job.create(job_schedule_type='day_at', job_schedule_value='22:00', key='house_keeping')
-    Job.create(job_schedule_type='minutes', job_schedule_value='120', key='instructor_emails')
-    Job.create(job_schedule_type='minutes', job_schedule_value='120', key='invitations')
-    Job.create(disabled=True, job_schedule_type='minutes', job_schedule_value='120', key='admin_emails')
+    Job.create(disabled=True, job_schedule_type='minutes', job_schedule_value='120', key='blackouts')
     Job.create(job_schedule_type='day_at', job_schedule_value='16:00', key='canvas')
     Job.create(disabled=True, job_schedule_type='minutes', job_schedule_value='5', key='doomed_to_fail')
 

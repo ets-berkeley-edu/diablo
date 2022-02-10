@@ -23,7 +23,7 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 from diablo import std_commit
-from diablo.jobs.queued_emails_job import QueuedEmailsJob
+from diablo.jobs.tasks.queued_emails_task import QueuedEmailsTask
 from diablo.lib.util import utc_now
 from diablo.models.course_preference import CoursePreference
 from diablo.models.queued_email import QueuedEmail
@@ -33,17 +33,17 @@ from flask import current_app as app
 from tests.util import simply_yield
 
 
-class TestQueuedEmailsJob:
+class TestQueuedEmailsTask:
 
     def test_no_email_queued(self):
         """Do nothing if 'queued_emails' table is empty."""
         term_id = app.config['CURRENT_TERM_ID']
-        QueuedEmailsJob(simply_yield).run()
+        QueuedEmailsTask(simply_yield).run()
         std_commit(allow_test_environment=True)
         # Verify that the next job run will have zero queued emails.
         assert len(QueuedEmail.get_all(term_id=term_id)) == 0
 
-        QueuedEmailsJob(simply_yield).run()
+        QueuedEmailsTask(simply_yield).run()
         std_commit(allow_test_environment=True)
         # If we reach this point then no error occurred.
 
@@ -73,7 +73,7 @@ class TestQueuedEmailsJob:
         before = utc_now()
         emails_sent_before = _get_emails_to_courses()
         # Run the job
-        QueuedEmailsJob(simply_yield).run()
+        QueuedEmailsTask(simply_yield).run()
         std_commit(allow_test_environment=True)
 
         # Expect one email per instructor
@@ -112,7 +112,7 @@ class TestQueuedEmailsJob:
 
         emails_sent_before = _emails_sent()
         # Run the job
-        QueuedEmailsJob(simply_yield).run()
+        QueuedEmailsTask(simply_yield).run()
         std_commit(allow_test_environment=True)
 
         # Expect no emails sent
@@ -128,17 +128,22 @@ class TestQueuedEmailsJob:
         term_id = app.config['CURRENT_TERM_ID']
         section_id = 50005
         email_template_type = 'admin_alert_room_change'
-        recipient = {
-            'name': 'Course Capture Admin',
-            'uid': app.config['EMAIL_DIABLO_ADMIN_UID'],
-        }
-        QueuedEmail.create(section_id, email_template_type, term_id, recipient=recipient)
+        recipient_uid = app.config['EMAIL_DIABLO_ADMIN_UID']
+        QueuedEmail.create(
+            section_id,
+            email_template_type,
+            term_id,
+            recipient={
+                'name': 'Course Capture Admin',
+                'uid': recipient_uid,
+            },
+        )
         std_commit(allow_test_environment=True)
 
         before = utc_now()
         emails_sent_before = _emails_sent()
         # Run the job
-        QueuedEmailsJob(simply_yield).run()
+        QueuedEmailsTask(simply_yield).run()
         std_commit(allow_test_environment=True)
 
         # Expect email to admin email address
@@ -148,7 +153,7 @@ class TestQueuedEmailsJob:
         sent_email = next((e for e in emails_sent_after if e.section_id == section_id and e.sent_at > before), None)
         assert sent_email
         email_json = sent_email.to_api_json()
-        assert email_json['recipientUid'] == app.config['EMAIL_DIABLO_ADMIN_UID']
+        assert email_json['recipientUid'] == recipient_uid
         assert email_json['sectionId'] == section_id
         assert email_json['templateType'] == email_template_type
         assert email_json['termId'] == term_id

@@ -26,3 +26,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 
 class BackgroundJobError(Exception):
     pass
+
+
+class BackgroundTaskError(Exception):
+    pass

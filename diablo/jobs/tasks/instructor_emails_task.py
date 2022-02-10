@@ -22,7 +22,7 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from diablo.jobs.base_job import BaseJob
+from diablo.jobs.tasks.base_task import BaseTask
 from diablo.lib.interpolator import interpolate_content
 from diablo.merged.emailer import send_system_error_email
 from diablo.models.email_template import EmailTemplate
@@ -33,7 +33,7 @@ from diablo.models.sis_section import SisSection
 from flask import current_app as app
 
 
-class InstructorEmailsJob(BaseJob):
+class InstructorEmailsTask(BaseTask):
 
     def _run(self):
         self.term_id = app.config['CURRENT_TERM_ID']
@@ -42,14 +42,7 @@ class InstructorEmailsJob(BaseJob):
 
     @classmethod
     def description(cls):
-        return f"""
-            Queues up '{EmailTemplate.get_template_type_options()['room_change_no_longer_eligible']}' emails.
-            Emails are sent when the when the 'Queued Emails' job runs.
-        """
-
-    @classmethod
-    def key(cls):
-        return 'instructor_emails'
+        return f"Queues up '{EmailTemplate.get_template_type_options()['room_change_no_longer_eligible']}' emails."
 
     def _room_change_alert(self):
         template_type = 'room_change_no_longer_eligible'
