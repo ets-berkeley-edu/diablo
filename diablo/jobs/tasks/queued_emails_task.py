@@ -23,15 +23,15 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 from diablo.externals.b_connected import BConnected
-from diablo.jobs.base_job import BaseJob
+from diablo.jobs.tasks.base_task import BaseTask
 from diablo.models.queued_email import QueuedEmail
 from diablo.models.sis_section import SisSection
 from flask import current_app as app
 
 
-class QueuedEmailsJob(BaseJob):
+class QueuedEmailsTask(BaseTask):
 
-    def _run(self, args=None):
+    def _run(self):
         term_id = app.config['CURRENT_TERM_ID']
         for queued_email in QueuedEmail.get_all(term_id):
             course = SisSection.get_course(term_id, queued_email.section_id, include_deleted=True)
@@ -56,8 +56,4 @@ class QueuedEmailsJob(BaseJob):
 
     @classmethod
     def description(cls):
-        return 'Send all email that is queued.'
-
-    @classmethod
-    def key(cls):
-        return 'queued_emails'
+        return 'Sends all queued emails.'

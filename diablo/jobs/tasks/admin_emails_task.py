@@ -22,7 +22,7 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from diablo.jobs.base_job import BaseJob
+from diablo.jobs.tasks.base_task import BaseTask
 from diablo.lib.berkeley import are_scheduled_dates_obsolete, are_scheduled_times_obsolete
 from diablo.lib.interpolator import interpolate_content
 from diablo.merged.emailer import get_admin_alert_recipient, send_system_error_email
@@ -33,7 +33,7 @@ from diablo.models.sis_section import SisSection
 from flask import current_app as app
 
 
-class AdminEmailsJob(BaseJob):
+class AdminEmailsTask(BaseTask):
 
     def _run(self):
         self.term_id = app.config['CURRENT_TERM_ID']
@@ -46,22 +46,13 @@ class AdminEmailsJob(BaseJob):
     @classmethod
     def description(cls):
         names_by_type = EmailTemplate.get_template_type_options()
-        template_types = [
+        template_names = ', '.join(names_by_type.get(template_type) for template_type in [
             'admin_alert_date_change',
             'admin_alert_instructor_change',
             'admin_alert_multiple_meeting_patterns',
             'admin_alert_room_change',
-        ]
-        return f"""
-            Queues up admin notifications. Email templates used:
-            <ul>
-                {''.join(f'<li>{names_by_type.get(template_type)}</li>' for template_type in template_types)}
-            </ul>
-        """
-
-    @classmethod
-    def key(cls):
-        return 'admin_emails'
+        ])
+        return f'Queues up admin notifications. Email templates used: {template_names}'
 
     def _date_change_alerts(self):
         template_type = 'admin_alert_date_change'

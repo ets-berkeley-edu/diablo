@@ -31,16 +31,20 @@ from sqlalchemy import text
 
 
 @contextmanager
-def enabled_job(job_key):
+def scheduled_job(job_key):
     """Temporarily enabled job."""
     all_jobs = Job.get_all(include_disabled=True)
     job = next((j for j in all_jobs if j.key == job_key))
-    Job.update_disabled(job_id=job.id, disable=False)
-    std_commit(allow_test_environment=True)
+    disabled = job.disabled
+    schedule_type = job.job_schedule_type
+    schedule_value = job.job_schedule_value
     try:
-        yield
+        yield job
     finally:
-        Job.update_disabled(job_id=job.id, disable=True)
+        if disabled is not job.disabled:
+            Job.update_disabled(job_id=job.id, disable=True)
+        if schedule_type != job.job_schedule_type or schedule_value != job.job_schedule_value:
+            Job.update_schedule(job_id=job.id, schedule_type=schedule_type, schedule_value=schedule_value)
         std_commit(allow_test_environment=True)
 
 
