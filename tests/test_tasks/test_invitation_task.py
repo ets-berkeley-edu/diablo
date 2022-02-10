@@ -23,8 +23,8 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 from diablo import db, std_commit
-from diablo.jobs.invitation_job import InvitationJob
-from diablo.jobs.queued_emails_job import QueuedEmailsJob
+from diablo.jobs.tasks.invitation_emails_task import InvitationEmailsTask
+from diablo.jobs.tasks.queued_emails_task import QueuedEmailsTask
 from diablo.lib.util import utc_now
 from diablo.models.course_preference import CoursePreference
 from diablo.models.sent_email import SentEmail
@@ -34,7 +34,7 @@ from sqlalchemy.orm.session import make_transient
 from tests.util import simply_yield, test_approvals_workflow
 
 
-class TestInvitationJob:
+class TestInvitationEmailsTask:
 
     def test_invite_new_instructors(self, app, db_session):
         """Invite all assigned instructors who haven't yet received an invitation."""
@@ -43,10 +43,10 @@ class TestInvitationJob:
             # The job creates many new invitations.
             timestamp = utc_now()
             # Emails are queued but not sent.
-            InvitationJob(simply_yield).run()
+            InvitationEmailsTask(simply_yield).run()
             assert len(_get_invitations_since(term_id, timestamp)) == 0
             # Emails are sent. We have more emails than courses since some courses have multiple instructors.
-            QueuedEmailsJob(simply_yield).run()
+            QueuedEmailsTask(simply_yield).run()
             invitations = _get_invitations_since(term_id, timestamp)
             assert len(invitations) == 14
 
@@ -75,8 +75,8 @@ class TestInvitationJob:
 
             # Re-run the job. An email is sent to the new instructor only.
             timestamp = utc_now()
-            InvitationJob(simply_yield).run()
-            QueuedEmailsJob(simply_yield).run()
+            InvitationEmailsTask(simply_yield).run()
+            QueuedEmailsTask(simply_yield).run()
             invitations = _get_invitations_since(term_id, timestamp)
             assert len(invitations) == 1
             invitation = invitations[0].to_api_json()
@@ -93,10 +93,10 @@ class TestInvitationJob:
 
             timestamp = utc_now()
             # Emails are queued but not sent.
-            InvitationJob(simply_yield).run()
+            InvitationEmailsTask(simply_yield).run()
             assert len(_get_invitations_since(term_id, timestamp)) == 0
             # Emails are sent.
-            QueuedEmailsJob(simply_yield).run()
+            QueuedEmailsTask(simply_yield).run()
             invitations = _get_invitations_since(term_id, timestamp)
             assert len(invitations) == 15
             assert not next((e for e in invitations if e.section_id == section_id), None)
@@ -107,22 +107,22 @@ class TestInvitationJob:
             # First, get expected number of emails sent.
             term_id = app.config['CURRENT_TERM_ID']
             timestamp = utc_now()
-            InvitationJob(simply_yield).run()
-            QueuedEmailsJob(simply_yield).run()
+            InvitationEmailsTask(simply_yield).run()
+            QueuedEmailsTask(simply_yield).run()
             expected_count = len(_get_invitations_since(term_id, timestamp))
 
             # Clean up
             db.session.execute(text('DELETE FROM queued_emails; DELETE FROM sent_emails;'))
 
-            # Next, run invitation_job twice before running queued_emails_job. Expect no duplicate emails.
+            # Next, run invitation_task twice before running queued_emails_task. Expect no duplicate emails.
             timestamp = utc_now()
-            InvitationJob(simply_yield).run()
-            InvitationJob(simply_yield).run()
+            InvitationEmailsTask(simply_yield).run()
+            InvitationEmailsTask(simply_yield).run()
             std_commit(allow_test_environment=True)
-            # Nothing is sent until we run the queued_emails_job.
+            # Nothing is sent until we run the queued_emails_task.
             assert len(_get_invitations_since(term_id, timestamp)) == 0
             # Send queued emails.
-            QueuedEmailsJob(simply_yield).run()
+            QueuedEmailsTask(simply_yield).run()
             std_commit(allow_test_environment=True)
             assert len(_get_invitations_since(term_id, timestamp)) == expected_count
             # Verify no dupe emails.

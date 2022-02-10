@@ -29,7 +29,7 @@ import random
 
 from diablo import std_commit
 from diablo.jobs.canvas_job import CanvasJob
-from diablo.jobs.queued_emails_job import QueuedEmailsJob
+from diablo.jobs.tasks.queued_emails_task import QueuedEmailsTask
 from diablo.lib.berkeley import get_recording_end_date, get_recording_start_date
 from diablo.models.approval import Approval
 from diablo.models.course_preference import CoursePreference
@@ -134,7 +134,7 @@ class TestApprove:
             )
             std_commit(allow_test_environment=True)
 
-            QueuedEmailsJob(app.app_context).run()
+            QueuedEmailsTask(app.app_context).run()
 
             # First instructor was notified 1) that second instructor needed to approve; 2) that second instructor made changes.
             emails_sent = SentEmail.get_emails_sent_to(instructor_uids[0])
