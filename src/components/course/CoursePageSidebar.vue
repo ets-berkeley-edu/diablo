@@ -30,8 +30,7 @@
           <Days :names-of-days="meeting.daysNames" />
           <div v-if="$config.currentTermId === course.termId">
             <span class="sr-only">Dates:</span>
-            {{ $config.currentTermRecordingsBegin | moment('MMM D, YYYY') }} to
-            {{ $config.currentTermRecordingsEnd | moment('MMM D, YYYY') }}
+            {{ meeting.startDate | moment('MMM D, YYYY') }} to {{ meeting.endDate | moment('MMM D, YYYY') }}
           </div>
         </v-col>
       </v-row>
