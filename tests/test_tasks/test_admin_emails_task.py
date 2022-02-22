@@ -56,8 +56,8 @@ class TestAdminEmailsTask:
             with override_config(app, 'CURRENT_TERM_RECORDINGS_BEGIN', meeting['startDate']):
                 with override_config(app, 'CURRENT_TERM_RECORDINGS_END', meeting['endDate']):
                     def _run_jobs():
-                        AdminEmailsTask(simply_yield).run()
-                        QueuedEmailsTask(simply_yield).run()
+                        AdminEmailsTask().run()
+                        QueuedEmailsTask().run()
 
                     def _schedule():
                         mock_scheduled(
@@ -136,8 +136,8 @@ class TestAdminEmailsTask:
                 )
 
             # Message queued, then sent.
-            AdminEmailsTask(simply_yield).run()
-            QueuedEmailsTask(simply_yield).run()
+            AdminEmailsTask().run()
+            QueuedEmailsTask().run()
             emails_sent = SentEmail.get_emails_sent_to(uid=admin_uid)
             assert len(emails_sent) == 2
             assert emails_sent[0].section_id == lab_section_id
@@ -183,14 +183,14 @@ class TestAdminEmailsTask:
             admin_uid = app.config['EMAIL_DIABLO_ADMIN_UID']
             email_count = _get_email_count(admin_uid)
             # Message queued but not sent.
-            AdminEmailsTask(simply_yield).run()
+            AdminEmailsTask().run()
             assert _get_email_count(admin_uid) == email_count
             queued_messages = QueuedEmail.query.filter_by(template_type='admin_alert_instructor_change').all()
             assert len(queued_messages) == 1
             for snippet in ['LAW 23', 'Old instructor(s) Regan MacNeil', 'New instructor(s) Regan MacNeil, Burke Dennings']:
                 assert snippet in queued_messages[0].message
             # Message sent.
-            QueuedEmailsTask(simply_yield).run()
+            QueuedEmailsTask().run()
             assert _get_email_count(admin_uid) == email_count + 1
 
     def test_admin_alert_multiple_meeting_patterns(self):
@@ -234,14 +234,14 @@ class TestAdminEmailsTask:
 
             # Message queued but not sent.
             admin_uid = app.config['EMAIL_DIABLO_ADMIN_UID']
-            AdminEmailsTask(simply_yield).run()
+            AdminEmailsTask().run()
             queued_messages = QueuedEmail.query.filter_by(section_id=section_id).all()
             assert len(queued_messages) == 1
             for queued_message in queued_messages:
                 assert '2021-08-26 to 2021-10-02' in queued_message.message
 
             # Message sent.
-            QueuedEmailsTask(simply_yield).run()
+            QueuedEmailsTask().run()
             emails_sent = SentEmail.get_emails_sent_to(uid=admin_uid)
             assert len(emails_sent) == 1
             assert emails_sent[0].template_type == 'admin_alert_multiple_meeting_patterns'

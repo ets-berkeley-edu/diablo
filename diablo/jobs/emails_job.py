@@ -31,21 +31,17 @@ from diablo.jobs.tasks.queued_emails_task import QueuedEmailsTask
 
 class EmailsJob(BaseJob):
 
-    def __init__(self, app_context):
-        super().__init__(app_context)
+    def _run(self):
         # Why do we run QueuedEmailsTask twice? Answer: reduce risk of duplicate emails.
         # If this job crashes or gets stuck on the initial QueuedEmailsTask then nothing else happens.
-        queued_emails_task = QueuedEmailsTask(app_context)
-        self.tasks = [
-            queued_emails_task,
-            AdminEmailsTask(app_context),
-            InstructorEmailsTask(app_context),
-            InvitationEmailsTask(app_context),
-            queued_emails_task,
+        tasks = [
+            QueuedEmailsTask(),
+            AdminEmailsTask(),
+            InstructorEmailsTask(),
+            InvitationEmailsTask(),
+            QueuedEmailsTask(),
         ]
-
-    def _run(self):
-        for task in self.tasks:
+        for task in tasks:
             task.run()
 
     @classmethod
