@@ -81,14 +81,8 @@ class TestWeirdTypeB:
         self.ouija_page.click_jobs_link()
         self.jobs_page.disable_all_jobs()
 
-    def test_admin_emails_pre_run(self):
-        self.jobs_page.run_admin_emails_job()
-
-    def test_instructor_emails_pre_run(self):
-        self.jobs_page.run_instructor_emails_job()
-
-    def test_queued_emails_pre_run(self):
-        self.jobs_page.run_queued_emails_job()
+    def test_emails_pre_run(self):
+        self.jobs_page.run_emails_job()
 
     def test_create_blackouts(self):
         self.jobs_page.click_blackouts_link()
@@ -126,8 +120,7 @@ class TestWeirdTypeB:
 
     def test_send_invite_email(self):
         self.jobs_page.load_page()
-        self.jobs_page.run_invitations_job()
-        self.jobs_page.run_queued_emails_job()
+        self.jobs_page.run_emails_job()
         self.recording_schedule.approval_status = RecordingApprovalStatus.INVITED
 
     @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')

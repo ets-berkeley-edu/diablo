@@ -28,12 +28,9 @@ from enum import Enum
 
 class AsyncJob(Enum):
 
-    ADMIN_EMAILS = 'admin_emails'
     BLACKOUTS = 'blackouts'
     CANVAS = 'canvas'
     HOUSEKEEPING = 'house_keeping'
-    INSTRUCTOR_EMAILS = 'instructor_emails'
-    INVITATIONS = 'invitations'
     KALTURA = 'kaltura'
-    QUEUED_EMAILS = 'queued_emails'
+    EMAILS = 'emails'
     SIS_DATA_REFRESH = 'sis_data_refresh'
