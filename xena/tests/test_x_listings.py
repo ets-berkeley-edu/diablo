@@ -60,7 +60,7 @@ class TestCrossListings:
         self.login_page.load_page()
         self.login_page.dev_auth()
         self.ouija_page.click_jobs_link()
-        self.jobs_page.run_queued_emails_job()
+        self.jobs_page.run_emails_job()
         self.jobs_page.run_canvas_job()
         self.jobs_page.disable_all_jobs()
 
@@ -212,9 +212,7 @@ class TestCrossListings:
 
     def test_send_emails(self):
         self.jobs_page.load_page()
-        self.jobs_page.run_invitations_job()
-        self.jobs_page.run_instructor_emails_job()
-        self.jobs_page.run_queued_emails_job()
+        self.jobs_page.run_emails_job()
         self.recording_schedule.approval_status = RecordingApprovalStatus.INVITED
 
     @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')

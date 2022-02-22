@@ -58,15 +58,9 @@ class TestCourseInstructorChanges:
         self.recording_sched.approval_status = RecordingApprovalStatus.NOT_INVITED
         self.recording_sched.scheduling_status = RecordingSchedulingStatus.NOT_SCHEDULED
 
-    def test_admin_emails_pre_run(self):
+    def test_emails_pre_run(self):
         self.jobs_page.load_page()
-        self.jobs_page.run_admin_emails_job()
-
-    def test_instructor_emails_pre_run(self):
-        self.jobs_page.run_instructor_emails_job()
-
-    def test_queued_emails_pre_run(self):
-        self.jobs_page.run_queued_emails_job()
+        self.jobs_page.run_emails_job()
 
     @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_delete_old_email(self):
@@ -100,11 +94,8 @@ class TestCourseInstructorChanges:
     def test_reset_room(self):
         util.set_meeting_location(self.real_section, self.real_meeting)
 
-    def test_run_admin_email_job_with_instr_change(self):
-        self.jobs_page.run_admin_emails_job()
-
-    def test_run_queued_email_job_with_instr_change(self):
-        self.jobs_page.run_queued_emails_job()
+    def test_run_email_job_with_instr_change(self):
+        self.jobs_page.run_emails_job()
 
     def test_changes_page_summary(self):
         self.jobs_page.click_course_changes_link()

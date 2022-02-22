@@ -71,8 +71,7 @@ class TestSignUp2:
         self.login_page.load_page()
         self.login_page.dev_auth()
         self.ouija_page.click_jobs_link()
-        self.jobs_page.run_queued_emails_job()
-        self.jobs_page.run_canvas_job()
+        self.jobs_page.run_emails_job()
         self.jobs_page.disable_all_jobs()
 
     def test_create_blackouts(self):
@@ -150,8 +149,7 @@ class TestSignUp2:
 
     def test_send_invite_email(self):
         self.jobs_page.load_page()
-        self.jobs_page.run_invitations_job()
-        self.jobs_page.run_queued_emails_job()
+        self.jobs_page.run_emails_job()
         self.recording_schedule.approval_status = RecordingApprovalStatus.INVITED
 
     @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
@@ -348,7 +346,7 @@ class TestSignUp2:
 
     def test_send_awaiting_approval_email(self):
         self.ouija_page.click_jobs_link()
-        self.jobs_page.run_queued_emails_job()
+        self.jobs_page.run_emails_job()
 
     @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_receive_awaiting_approval_email_inst_1(self):
@@ -499,7 +497,7 @@ class TestSignUp2:
 
     def test_send_notify_of_changes_email(self):
         self.ouija_page.click_jobs_link()
-        self.jobs_page.run_queued_emails_job()
+        self.jobs_page.run_emails_job()
 
     @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_receive_notify_of_changes_email_inst_1(self):
@@ -734,7 +732,7 @@ class TestSignUp2:
 
     def test_send_schedule_conf_email(self):
         self.jobs_page.load_page()
-        self.jobs_page.run_queued_emails_job()
+        self.jobs_page.run_emails_job()
 
     @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_receive_schedule_conf_email_inst_1(self):

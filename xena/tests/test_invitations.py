@@ -43,7 +43,7 @@ class TestInvitations:
 
     def test_disable_jobs(self):
         self.ouija_page.click_jobs_link()
-        self.jobs_page.run_queued_emails_job()
+        self.jobs_page.run_emails_job()
         self.jobs_page.disable_all_jobs()
 
     @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
@@ -64,8 +64,7 @@ class TestInvitations:
         util.reset_invite_test_data(self.term, self.section_1)
         util.reset_invite_test_data(self.term, self.section_2)
         self.jobs_page.load_page()
-        self.jobs_page.run_invitations_job()
-        self.jobs_page.run_queued_emails_job()
+        self.jobs_page.run_emails_job()
 
     @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_course_auto_invites_delivered(self):
@@ -86,8 +85,7 @@ class TestInvitations:
     def test_inst_auto_invite_run_jobs(self):
         util.reset_invite_test_data(self.term, self.section_1, self.section_1.instructors[0])
         self.jobs_page.load_page()
-        self.jobs_page.run_invitations_job()
-        self.jobs_page.run_queued_emails_job()
+        self.jobs_page.run_emails_job()
 
     @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_inst_auto_invite_delivered(self):
@@ -123,8 +121,7 @@ class TestInvitations:
 
     def test_course_manual_invite_run_jobs(self):
         self.jobs_page.load_page()
-        self.jobs_page.run_invitations_job()
-        self.jobs_page.run_queued_emails_job()
+        self.jobs_page.run_emails_job()
 
     @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_course_manual_invite_delivered(self):

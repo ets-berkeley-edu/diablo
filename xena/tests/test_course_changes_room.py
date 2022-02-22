@@ -63,15 +63,9 @@ class TestCourseRoomChanges:
         self.recording_sched.approval_status = RecordingApprovalStatus.NOT_INVITED
         self.recording_sched.scheduling_status = RecordingSchedulingStatus.NOT_SCHEDULED
 
-    def test_admin_emails_pre_run(self):
+    def test_emails_pre_run(self):
         self.jobs_page.load_page()
-        self.jobs_page.run_admin_emails_job()
-
-    def test_instructor_emails_pre_run(self):
-        self.jobs_page.run_instructor_emails_job()
-
-    def test_queued_emails_pre_run(self):
-        self.jobs_page.run_queued_emails_job()
+        self.jobs_page.run_emails_job()
 
     @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_delete_old_email(self):
@@ -99,14 +93,8 @@ class TestCourseRoomChanges:
     def test_move_to_alt_eligible_room(self):
         util.set_meeting_location(self.real_section, self.fakest_meeting)
 
-    def test_run_admin_email_job_alt_eligible_room(self):
-        self.jobs_page.run_admin_emails_job()
-
-    def test_run_instr_email_job_alt_eligible_room(self):
-        self.jobs_page.run_instructor_emails_job()
-
-    def test_run_queued_email_job_alt_eligible_room(self):
-        self.jobs_page.run_queued_emails_job()
+    def test_run_email_job_alt_eligible_room(self):
+        self.jobs_page.run_emails_job()
 
     def test_changes_page_summary_alt_eligible_room(self):
         self.jobs_page.click_course_changes_link()
@@ -136,15 +124,9 @@ class TestCourseRoomChanges:
     def test_move_to_ineligible_room(self):
         util.set_meeting_location(self.real_section, self.fake_meeting)
 
-    def test_run_admin_email_job_ineligible_room(self):
+    def test_run_email_job_ineligible_room(self):
         self.jobs_page.load_page()
-        self.jobs_page.run_admin_emails_job()
-
-    def test_run_instr_email_job_ineligible_room(self):
-        self.jobs_page.run_instructor_emails_job()
-
-    def test_run_queued_email_job_ineligible_room(self):
-        self.jobs_page.run_queued_emails_job()
+        self.jobs_page.run_emails_job()
 
     def test_changes_page_summary(self):
         self.jobs_page.click_course_changes_link()
@@ -227,15 +209,9 @@ class TestCourseRoomChanges:
         self.faker_meeting.room = None
         util.change_course_room(self.real_section, old_room=self.real_meeting.room, new_room=None)
 
-    def test_run_admin_email_job_null_room(self):
+    def test_run_email_job_null_room(self):
         self.jobs_page.load_page()
-        self.jobs_page.run_admin_emails_job()
-
-    def test_run_instr_email_job_null_room(self):
-        self.jobs_page.run_instructor_emails_job()
-
-    def test_run_queued_email_job_null_room(self):
-        self.jobs_page.run_queued_emails_job()
+        self.jobs_page.run_emails_job()
 
     def test_null_room_changes_page_summary(self):
         self.jobs_page.click_course_changes_link()

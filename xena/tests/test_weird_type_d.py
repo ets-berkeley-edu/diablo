@@ -92,8 +92,7 @@ class TestWeirdTypeD:
 
     def test_send_invite_email(self):
         self.jobs_page.load_page()
-        self.jobs_page.run_invitations_job()
-        self.jobs_page.run_queued_emails_job()
+        self.jobs_page.run_emails_job()
         self.recording_schedule.approval_status = RecordingApprovalStatus.INVITED
 
     @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')

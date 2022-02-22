@@ -36,14 +36,11 @@ from xena.test_utils import util
 
 
 class JobsPage(DiabloPages):
-    RUN_ADMIN_EMAILS_JOB_BUTTON = (By.ID, 'run-job-admin_emails')
     RUN_BLACKOUTS_JOB_BUTTON = (By.ID, 'run-job-blackouts')
     RUN_CANVAS_JOB_BUTTON = (By.ID, 'run-job-canvas')
     RUN_HOUSEKEEPING_JOB_BUTTON = (By.ID, 'run-job-house_keeping')
-    RUN_INSTRUCTOR_EMAILS_JOB_BUTTON = (By.ID, 'run-job-instructor_emails')
-    RUN_INVITATIONS_JOB = (By.ID, 'run-job-invitations')
     RUN_KALTURA_JOB_BUTTON = (By.ID, 'run-job-kaltura')
-    RUN_QUEUED_EMAILS_JOB_BUTTON = (By.ID, 'run-job-queued_emails')
+    RUN_EMAILS_JOB_BUTTON = (By.ID, 'run-job-emails')
     RUN_SIS_DATA_REFRESH_JOB_BUTTON = (By.ID, 'run-job-sis_data_refresh')
 
     SEARCH_HISTORY_INPUT = (By.XPATH, '//label[text()="Search History"]/following-sibling::input')
@@ -55,13 +52,6 @@ class JobsPage(DiabloPages):
         app.logger.info("Loading the 'Engine Room' page")
         self.hit_url()
         self.wait_for_diablo_title('The Engine Room')
-
-    def run_admin_emails_job(self):
-        app.logger.info('Running the admin emails job')
-        self.scroll_to_top()
-        time.sleep(1)
-        self.wait_for_page_and_click(JobsPage.RUN_ADMIN_EMAILS_JOB_BUTTON)
-        self.wait_for_most_recent_job_success(AsyncJob.ADMIN_EMAILS)
 
     def run_blackouts_job(self):
         app.logger.info('Running the Blackouts job')
@@ -84,20 +74,6 @@ class JobsPage(DiabloPages):
         self.wait_for_page_and_click(JobsPage.RUN_HOUSEKEEPING_JOB_BUTTON)
         self.wait_for_most_recent_job_success(AsyncJob.HOUSEKEEPING)
 
-    def run_instructor_emails_job(self):
-        app.logger.info('Running instructor emails job')
-        self.scroll_to_top()
-        time.sleep(1)
-        self.wait_for_page_and_click(JobsPage.RUN_INSTRUCTOR_EMAILS_JOB_BUTTON)
-        self.wait_for_most_recent_job_success(AsyncJob.INSTRUCTOR_EMAILS)
-
-    def run_invitations_job(self):
-        app.logger.info('Running invitations job')
-        self.scroll_to_top()
-        time.sleep(1)
-        self.wait_for_page_and_click(JobsPage.RUN_INVITATIONS_JOB)
-        self.wait_for_most_recent_job_success(AsyncJob.INVITATIONS)
-
     def run_kaltura_job(self):
         app.logger.info('Running Kaltura job')
         self.scroll_to_top()
@@ -105,12 +81,12 @@ class JobsPage(DiabloPages):
         self.wait_for_page_and_click(JobsPage.RUN_KALTURA_JOB_BUTTON)
         self.wait_for_most_recent_job_success(AsyncJob.KALTURA)
 
-    def run_queued_emails_job(self):
+    def run_emails_job(self):
         app.logger.info('Running queued emails job')
         self.scroll_to_top()
         time.sleep(1)
-        self.wait_for_page_and_click(JobsPage.RUN_QUEUED_EMAILS_JOB_BUTTON)
-        self.wait_for_most_recent_job_success(AsyncJob.QUEUED_EMAILS)
+        self.wait_for_page_and_click(JobsPage.RUN_EMAILS_JOB_BUTTON)
+        self.wait_for_most_recent_job_success(AsyncJob.EMAILS)
 
     def run_sis_data_refresh_job(self):
         app.logger.info('Running SIS data refresh job')
