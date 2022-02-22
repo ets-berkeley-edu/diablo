@@ -113,7 +113,7 @@ class TestKalturaJob:
             assert scheduled.term_id == term_id
 
             # Verify emails sent
-            QueuedEmailsTask(app.app_context).run()
+            QueuedEmailsTask().run()
             emails_sent = _get_emails_sent()
             assert len(emails_sent) == email_count + 2
             assert [emails_sent[-1].recipient_uid, emails_sent[-2].recipient_uid] == ['10009', '10010']
