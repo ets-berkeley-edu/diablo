@@ -134,7 +134,7 @@ class TestApprove:
             )
             std_commit(allow_test_environment=True)
 
-            QueuedEmailsTask(app.app_context).run()
+            QueuedEmailsTask().run()
 
             # First instructor was notified 1) that second instructor needed to approve; 2) that second instructor made changes.
             emails_sent = SentEmail.get_emails_sent_to(instructor_uids[0])

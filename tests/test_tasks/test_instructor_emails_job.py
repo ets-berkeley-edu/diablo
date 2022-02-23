@@ -32,7 +32,7 @@ from diablo.models.sis_section import SisSection
 from flask import current_app as app
 from sqlalchemy import text
 from tests.test_api.api_test_utils import mock_scheduled
-from tests.util import simply_yield, test_approvals_workflow
+from tests.util import test_approvals_workflow
 
 deleted_section_id = 50018
 
@@ -111,8 +111,8 @@ def _get_email_count(uid):
 
 
 def _run_instructor_emails_task():
-    InstructorEmailsTask(simply_yield).run()
-    QueuedEmailsTask(simply_yield).run()
+    InstructorEmailsTask().run()
+    QueuedEmailsTask().run()
 
 
 def _schedule(room_id, section_id):
