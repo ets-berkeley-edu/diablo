@@ -23,16 +23,20 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 from diablo.jobs.errors import BackgroundTaskError
+from flask import current_app as app
 
 
 class BaseTask:
 
-    def __init__(self, app_context):
-        self.app_context = app_context
-
     def run(self):
-        with self.app_context():
+        task_name = type(self).__name__
+        try:
             self._run()
+            app.logger.info(f'Task {task_name} finished successfully.')
+        except Exception as e:
+            summary = f'Task {task_name} failed due to {str(e)}'
+            app.logger.error(summary)
+            raise e
 
     def _run(self):
         raise BackgroundTaskError('Implement this method in Task sub-class')

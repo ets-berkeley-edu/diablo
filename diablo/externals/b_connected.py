@@ -95,7 +95,8 @@ class BConnected:
 
                     emails_sent_to.add(email_address)
 
-            app.logger.info(f'\'{template_type}\' email sent to {", ".join(list(emails_sent_to))}')
+            phrase = f"email sent to {', '.join(list(emails_sent_to))}"
+            app.logger.info(f'{template_type} ${phrase}' if template_type else f'Alert ${phrase}')
             # Disconnect
             smtp.quit()
 
