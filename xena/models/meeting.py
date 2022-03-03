@@ -136,8 +136,8 @@ class Meeting(object):
         holidays = self.__holidays()
 
         # Don't expect a recording for today if it's past the start time when you schedule it
-        start_time = datetime.strptime(self.start_time, '%I:%M %p')
-        now_time = datetime.strptime(datetime.now().strftime('%I:%M %p'), '%I:%M %p')
+        start_time = datetime.strptime(f'{self.record_start.date()} {self.start_time}', '%Y-%m-%d %I:%M %p')
+        now_time = datetime.now()
         start = self.record_start.date() if now_time < start_time else (self.record_start.date() + timedelta(days=1))
 
         end = term.last_record_date.date() if self.end_date > term.last_record_date else self.end_date.date()

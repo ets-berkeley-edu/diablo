@@ -793,7 +793,11 @@ class TestSignUp2:
 
     def test_two_visible_site_ids(self):
         self.sign_up_page.load_page(self.section)
-        assert self.sign_up_page.visible_course_site_ids() == [site.site_id for site in self.section.sites]
+        actual = self.sign_up_page.visible_course_site_ids()
+        actual.sort()
+        expected = [site.site_id for site in self.section.sites]
+        expected.sort()
+        assert actual == expected
 
     # VERIFY SITES IN KALTURA SERIES
 
