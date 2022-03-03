@@ -172,7 +172,7 @@ class TestWeirdTypeC:
         assert self.sign_up_page.visible_instructors() == instructor_names
 
     def test_visible_meeting_days(self):
-        term_dates = f'{SignUpPage.expected_term_date_str(self.meeting_0.start_date, self.section.term.end_date)}'
+        term_dates = f'{SignUpPage.expected_term_date_str(self.meeting_0.start_date, self.meeting_0.end_date)}'
         assert term_dates in self.sign_up_page.visible_meeting_days()[0]
         assert len(self.sign_up_page.visible_meeting_days()) == 1
 

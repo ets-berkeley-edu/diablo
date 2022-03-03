@@ -22,7 +22,7 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-
+import datetime
 import time
 
 from flask import current_app as app
@@ -61,14 +61,20 @@ class BlackoutsPage(DiabloPages):
         self.wait_for_element_and_click((By.XPATH, f'//div[contains(@class, "id-{end_date_str}")]'))
 
     def create_blackout_date(self, blackout_date_pair):
-        start_date_str = blackout_date_pair[0].strftime('%Y-%m-%d')
-        end_date_str = blackout_date_pair[1].strftime('%Y-%m-%d')
-        app.logger.info(f'Creating blackout called "{start_date_str}" starting "{start_date_str}" ending "{end_date_str}"')
-        self.reload_page()
-        self.wait_for_element_and_click(BlackoutsPage.CREATE_NEW_BUTTON)
-        self.wait_for_element_and_type(BlackoutsPage.NAME_INPUT, start_date_str)
-        self.select_blackout_date(blackout_date_pair)
-        self.wait_for_element_and_click(BlackoutsPage.SAVE_BUTTON)
+        today = datetime.date.today()
+        if blackout_date_pair[1] < today:
+            app.logger.info('Skipping blackout date since the end date is in the past')
+        else:
+            if blackout_date_pair[0] < today:
+                blackout_date_pair[0] = today
+            start_date_str = blackout_date_pair[0].strftime('%Y-%m-%d')
+            end_date_str = blackout_date_pair[1].strftime('%Y-%m-%d')
+            app.logger.info(f'Creating blackout called "{start_date_str}" starting "{start_date_str}" ending "{end_date_str}"')
+            self.reload_page()
+            self.wait_for_element_and_click(BlackoutsPage.CREATE_NEW_BUTTON)
+            self.wait_for_element_and_type(BlackoutsPage.NAME_INPUT, start_date_str)
+            self.select_blackout_date(blackout_date_pair)
+            self.wait_for_element_and_click(BlackoutsPage.SAVE_BUTTON)
 
     def delete_blackout(self, blackout_date):
         app.logger.info(f'Deleting a blackout on "{blackout_date.strftime("%Y-%m-%d")}"')
