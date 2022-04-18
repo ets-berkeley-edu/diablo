@@ -98,7 +98,7 @@ JOBS_AUTO_START = False
 JOBS_SECONDS_BETWEEN_PENDING_CHECK = 60
 
 # Minutes of inactivity before session cookie is destroyed
-INACTIVE_SESSION_LIFETIME = 20
+INACTIVE_SESSION_LIFETIME = 120
 
 # These "INDEX_HTML" defaults are good in diablo-[dev|qa|prod]. See development.py for local configs.
 INDEX_HTML = 'dist/static/index.html'
