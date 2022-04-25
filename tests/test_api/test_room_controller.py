@@ -26,6 +26,7 @@ import json
 
 from diablo.models.room import Room
 import pytest
+from tests.util import override_config
 
 
 @pytest.fixture()
@@ -76,10 +77,21 @@ class TestGetAuditoriums:
         """Denies anonymous access."""
         self._api_auditoriums(client, expected_status_code=401)
 
-    def test_authorized(self, client, instructor_session):
+    def test_authorized(self, app, client, instructor_session):
         """Instructors and admins have access."""
-        rooms = self._api_auditoriums(client)
-        assert [room['location'] for room in rooms] == ["O'Brien 212", 'Li Ka Shing 145']
+        li_ka_shing = 'Li Ka Shing 145'
+        expected_locations = ["O'Brien 212", li_ka_shing]
+        for cost in [None, 1000]:
+            with override_config(app, 'COURSE_CAPTURE_PREMIUM_COST', cost):
+                for index, room in enumerate(self._api_auditoriums(client)):
+                    assert room['location'] == expected_locations[index]
+                    if room['location'] == li_ka_shing:
+                        with_operator = room['recordingTypeOptions']['presenter_presentation_audio_with_operator']
+                        if cost:
+                            assert f'${cost}' in with_operator
+                        else:
+                            # No dollar sign present
+                            assert '$' not in with_operator
 
 
 class TestGetRoom:
