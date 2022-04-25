@@ -179,7 +179,8 @@ class Room(db.Model):
             recording_type_options = {'presentation_audio': 'Audio + Projection'}
         else:
             premium_cost = app.config['COURSE_CAPTURE_PREMIUM_COST']
-            camera_with_operator_label = f'Audio + Projection + Camera with Operator (${premium_cost})'
+            suffix = f' (${premium_cost})' if premium_cost else ''
+            camera_with_operator_label = f'Audio + Projection + Camera with Operator{suffix}'
             camera_without_operator_label = 'Audio + Projection + Camera without Operator'
             if self.is_auditorium:
                 recording_type_options = {
