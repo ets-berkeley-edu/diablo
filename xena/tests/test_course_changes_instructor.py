@@ -96,6 +96,7 @@ class TestCourseInstructorChanges:
 
     def test_run_email_job_with_instr_change(self):
         self.jobs_page.run_emails_job()
+        self.recording_sched.approval_status = RecordingApprovalStatus.INVITED
 
     def test_changes_page_summary(self):
         self.jobs_page.click_course_changes_link()
@@ -124,45 +125,45 @@ class TestCourseInstructorChanges:
 
     # CHECK FILTERS AND ADMIN EMAIL
 
-    def test_not_invited_filter_all(self):
+    def test_filter_all(self):
         self.ouija_page.load_page()
         self.ouija_page.search_for_course_code(self.real_section)
         self.ouija_page.filter_for_all()
         assert self.ouija_page.is_course_in_results(self.real_section) is True
 
-    def test_not_invited_approval_status(self):
+    def test_approval_status(self):
         visible_status = self.ouija_page.course_row_approval_status_el(self.real_section).text.strip()
         assert visible_status == self.recording_sched.approval_status.value
 
-    def test_not_invited_sched_status(self):
+    def test_sched_status(self):
         visible_status = self.ouija_page.course_row_sched_status_el(self.real_section).text.strip()
         assert visible_status == self.recording_sched.scheduling_status.value
 
-    def test_not_invited_filter_no_email(self):
+    def test_filter_no_email(self):
         self.ouija_page.filter_for_do_not_email()
         assert self.ouija_page.is_course_in_results(self.real_section) is False
 
-    def test_not_invited_filter_not_invited(self):
+    def test_filter_not_invited(self):
         self.ouija_page.filter_for_not_invited()
         assert self.ouija_page.is_course_in_results(self.real_section) is False
 
-    def test_not_invited_filter_invited(self):
+    def test_filter_invited(self):
         self.ouija_page.filter_for_invited()
         assert self.ouija_page.is_course_in_results(self.real_section) is False
 
-    def test_not_invited_filter_partial_approve(self):
+    def test_filter_partial_approve(self):
         self.ouija_page.filter_for_partially_approved()
         assert self.ouija_page.is_course_in_results(self.real_section) is False
 
-    def test_not_invited_filter_queued(self):
+    def test_filter_queued(self):
         self.ouija_page.filter_for_queued_for_scheduling()
         assert self.ouija_page.is_course_in_results(self.real_section) is False
 
-    def test_not_invited_filter_scheduled(self):
+    def test_filter_scheduled(self):
         self.ouija_page.filter_for_scheduled()
         assert self.ouija_page.is_course_in_results(self.real_section) is True
 
-    def test_note_invited_filter_weird(self):
+    def test_filter_weird(self):
         self.ouija_page.filter_for_scheduled_weird()
         assert self.ouija_page.is_course_in_results(self.real_section) is False
 

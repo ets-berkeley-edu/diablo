@@ -582,7 +582,7 @@ class TestSignUp2:
         assert self.room_printable_page.visible_days(self.section) == expected
 
     def test_printable_times(self):
-        dates = f'{self.section.term.start_date.strftime("%b %-d, %Y")} - {self.section.term.end_date.strftime("%b %-d, %Y")}'
+        dates = f'{self.meeting.start_date.strftime("%b %-d, %Y")} - {self.meeting.end_date.strftime("%b %-d, %Y")}'
         times = f'{self.meeting.start_time} - {self.meeting.end_time}'
         assert self.room_printable_page.visible_times(self.section) == [f'{dates}\n{times}']
 

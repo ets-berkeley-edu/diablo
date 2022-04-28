@@ -60,9 +60,9 @@ class TestWeirdTypeC:
     instructor_0 = section.instructors[0]
     recording_schedule = RecordingSchedule(section)
 
-    end_0 = (meeting_0.start_date + timedelta(days=28)).strftime('%Y-%m-%d')
+    end_0 = (meeting_0.start_date + timedelta(days=14)).strftime('%Y-%m-%d')
     meeting_0.end_date = end_0
-    start_1 = (meeting_0.start_date + timedelta(days=29)).strftime('%Y-%m-%d')
+    start_1 = (meeting_0.start_date + timedelta(days=15)).strftime('%Y-%m-%d')
     meeting_1.start_date = start_1
 
     # Course changes data
