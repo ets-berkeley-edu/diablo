@@ -5,8 +5,9 @@
 ## Installation
 
 Xena requires:
-* [chromedriver version 83](https://chromedriver.chromium.org/downloads)
-
+* [chromedriver](https://chromedriver.chromium.org/downloads)
+or 
+* [geckodriver](https://github.com/mozilla/geckodriver/releases)
 ## Run
 
 ```

@@ -33,8 +33,8 @@ class RecordingType(Enum):
         'printable': 'Audio + Projection',
     }
     VIDEO_WITH_OPERATOR = {
-        'option': 'Audio + Projection + Camera with Operator ($1000)',
-        'selection': 'Audio + Projection + Camera with Operator ($1000)',
+        'option': 'Audio + Projection + Camera with Operator',
+        'selection': 'Audio + Projection + Camera with Operator',
         'printable': 'Audio + Projection + Camera with Operator',
     }
     VIDEO_SANS_OPERATOR = {

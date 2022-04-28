@@ -71,7 +71,7 @@ class TestWeirdTypeB:
 
     # Set changed physical meeting start/end dates relative to original dates
     start_date = (meeting_physical.end_date - timedelta(days=14)).strftime('%Y-%m-%d')
-    end_date = (meeting_physical.end_date - timedelta(days=28)).strftime('%Y-%m-%d')
+    end_date = (meeting_physical.end_date - timedelta(days=7)).strftime('%Y-%m-%d')
     meeting_physical_changes.start_date = start_date
     meeting_physical_changes.end_date = end_date
 

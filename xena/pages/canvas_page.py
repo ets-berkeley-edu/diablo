@@ -134,7 +134,7 @@ class CanvasPage(Page):
         self.wait_for_page_and_click(CanvasPage.term_loc())
         self.wait_for_element_and_type(CanvasPage.CCN_TEXT_AREA, ', '.join(section_ids))
         self.wait_for_page_and_click(CanvasPage.REVIEW_CCNS_BUTTON)
-        self.wait_for_page_and_click(CanvasPage.NEXT_BUTTON)
+        self.wait_for_page_and_click_js(CanvasPage.NEXT_BUTTON)
 
         # Name and create site; store site ID
         self.scroll_to_bottom()
