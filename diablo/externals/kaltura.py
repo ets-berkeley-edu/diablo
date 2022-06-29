@@ -43,7 +43,7 @@ from KalturaClient.Plugins.Schedule import KalturaRecordScheduleEvent, KalturaRe
     KalturaScheduleEventRecurrenceFrequency, KalturaScheduleEventRecurrenceType, KalturaScheduleEventResource, \
     KalturaScheduleEventStatus, KalturaScheduleResourceFilter, KalturaSessionType
 
-CREATED_BY_DIABLO_TAG = 'ets_course_capture'
+CREATED_BY_DIABLO_TAG = 'rtl_course_capture'
 
 DEFAULT_KALTURA_PAGE_SIZE = 200
 
