@@ -24,8 +24,8 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 import json
 
-from diablo import __version__ as version
-from diablo.api.util import get_search_filter_options
+from diablo import __version__ as version, cache
+from diablo.api.util import admin_required, get_search_filter_options
 from diablo.lib.berkeley import term_name_for_sis_id
 from diablo.lib.http import tolerant_jsonify
 from diablo.lib.util import get_eb_environment
@@ -58,6 +58,12 @@ PUBLIC_CONFIGS = [
     'SEARCH_ITEMS_PER_PAGE',
     'TIMEZONE',
 ]
+
+
+@app.route('/api/cache/clear')
+@admin_required
+def clear_cache():
+    return tolerant_jsonify(cache.clear())
 
 
 @app.route('/api/config')
