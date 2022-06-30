@@ -97,7 +97,7 @@
                   <label id="select-recording-type-label" for="select-recording-type">Recording Type</label>
                 </h4>
               </v-col>
-              <v-col md="6">
+              <v-col md="7">
                 <div v-if="course.hasNecessaryApprovals" id="approved-recording-type" class="mb-5">
                   {{ mostRecentApproval.recordingTypeName }}
                 </div>
@@ -111,9 +111,9 @@
                       id="select-recording-type"
                       v-model="recordingType"
                       :disabled="isApproving"
+                      :full-width="true"
                       item-text="text"
                       item-value="value"
-                      :full-width="true"
                       :items="recordingTypeOptions"
                       label="Select..."
                       solo
@@ -135,7 +135,7 @@
                   <label id="select-publish-type-label" for="select-publish-type">Publish</label>
                 </h4>
               </v-col>
-              <v-col md="6">
+              <v-col md="7">
                 <div v-if="course.hasNecessaryApprovals" id="approved-publish-type" class="mb-5">
                   {{ mostRecentApproval.publishTypeName }}
                 </div>
@@ -144,6 +144,7 @@
                   id="select-publish-type"
                   v-model="publishType"
                   :disabled="isApproving"
+                  :full-width="true"
                   item-text="text"
                   item-value="value"
                   :items="publishTypeOptions"
@@ -358,7 +359,11 @@ export default {
       this.courseDisplayTitle = this.getCourseCodes(this.course)[0]
       this.hasCurrentUserApproved = this.$_.includes(this.$_.map(approvals, 'approvedBy'), this.$currentUser.uid)
       this.recordingTypeOptions = this.$_.map(this.meeting.room.recordingTypeOptions, (text, value) => {
-        return {text, value}
+        const premiumCost = this.$config.courseCapturePremiumCost
+        return {
+          text: text.includes('with_operator') && premiumCost ? `${text} ($${premiumCost})` : text,
+          value
+        }
       })
       if (approvals.length) {
         const mostRecent = this.$_.last(approvals)
