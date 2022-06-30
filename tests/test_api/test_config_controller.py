@@ -51,8 +51,28 @@ class TestVersion:
         assert 'build' in response.json
 
 
+class TestCacheClear:
+
+    @staticmethod
+    def _api_clear_cache(client, expected_status_code=200):
+        response = client.get('/api/cache/clear')
+        assert response.status_code == expected_status_code
+        return response.json
+
+    def test_anonymous(self, client):
+        """Deny anonymous access."""
+        self._api_clear_cache(client, expected_status_code=401)
+
+    def test_unauthorized(self, client, instructor_session):
+        """Deny access if user is not an admin."""
+        self._api_clear_cache(client, expected_status_code=401)
+
+    def test_authorized(self, client, admin_session):
+        """Admin user has access."""
+        assert self._api_clear_cache(client) is True
+
+
 class TestConfigController:
-    """Config API."""
 
     def test_anonymous(self, client):
         """All users, even anonymous, can get configs."""
