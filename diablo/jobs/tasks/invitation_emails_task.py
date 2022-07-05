@@ -41,7 +41,7 @@ class InvitationEmailsTask(BaseTask):
 
     def email_new_invites(self):
         for course in SisSection.get_courses(term_id=self.term_id):
-            if not course['hasOptedOut'] and len(course.get('meetings', {}).get('eligible', [])) == 1:
+            if not course['hasOptedOut'] and len(course.get('meetings', {}).get('eligible', [])) >= 1:
                 for i in course['instructors']:
                     if not i['wasSentInvite']:
                         QueuedEmail.create(
