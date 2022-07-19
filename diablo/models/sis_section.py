@@ -812,6 +812,7 @@ def _to_api_json(term_id, rows, include_rooms=True):
 
         # Note: Instructors associated with cross-listings are slurped up separately.
         instructor_uid = row['instructor_uid']
+        instructor_uid = instructor_uid.strip() if instructor_uid else None
         if instructor_uid and instructor_uid not in [i['uid'] for i in course['instructors']]:
             course['instructors'].append(
                 _to_instructor_json(
