@@ -28,6 +28,7 @@ import os
 from diablo.factory import create_app
 import pytest
 from xena.models.term import Term
+from xena.pages.api_page import ApiPage
 from xena.pages.attic_page import AtticPage
 from xena.pages.blackouts_page import BlackoutsPage
 from xena.pages.canvas_page import CanvasPage
@@ -61,6 +62,7 @@ def page_objects(request):
     term = Term()
 
     # Define page objects
+    api_page = ApiPage(driver)
     attic_page = AtticPage(driver)
     blackouts_page = BlackoutsPage(driver)
     canvas_page = CanvasPage(driver)
@@ -83,6 +85,7 @@ def page_objects(request):
             cls = item.getparent(pytest.Class)
             setattr(cls.obj, 'driver', driver)
             setattr(cls.obj, 'term', term)
+            setattr(cls.obj, 'api_page', api_page)
             setattr(cls.obj, 'attic_page', attic_page)
             setattr(cls.obj, 'blackouts_page', blackouts_page)
             setattr(cls.obj, 'canvas_page', canvas_page)

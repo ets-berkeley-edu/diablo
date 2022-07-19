@@ -99,7 +99,7 @@ class TestWeirdTypeD:
     def test_receive_invite_email(self):
         subj = f'Invitation {self.section.term.name} {self.section.code} (To: {self.section.instructors[0].email})'
         expected_message = Email(msg_type=None, sender=None, subject=subj)
-        assert not self.email_page.is_message_delivered(expected_message)
+        assert self.email_page.is_message_delivered(expected_message)
 
     # INSTRUCTOR LOGS IN
 

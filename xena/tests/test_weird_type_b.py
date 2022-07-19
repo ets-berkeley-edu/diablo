@@ -463,9 +463,8 @@ class TestWeirdTypeB:
         assert expected in actual
 
     def test_dates_changed_current_physical_dates(self):
-        dates = self.meeting_physical_changes.expected_recording_dates(self.section.term)
-        start = dates[0]
-        end = dates[-1]
+        start = self.meeting_physical_changes.start_date
+        end = self.meeting_physical_changes.end_date
         dates = f'{start.strftime("%Y-%m-%d")} to {end.strftime("%Y-%m-%d")}'
         days = self.meeting_physical_changes.days.replace(' ', '').replace(',', '')
         times = CourseChangesPage.meeting_time_str(self.meeting_physical_changes)
