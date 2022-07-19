@@ -23,22 +23,11 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-from enum import Enum
+from flask import current_app as app
+from xena.pages.diablo_pages import DiabloPages
 
 
-class RecordingType(Enum):
-    SCREENCAST = {
-        'option': 'Audio + Projection',
-        'selection': 'Audio + Projection',
-        'printable': 'Audio + Projection',
-    }
-    VIDEO_WITH_OPERATOR = {
-        'option': 'Audio + Projection + Camera with Operator ($1500)',
-        'selection': 'Audio + Projection + Camera with Operator',
-        'printable': 'Audio + Projection + Camera with Operator',
-    }
-    VIDEO_SANS_OPERATOR = {
-        'option': 'Audio + Projection + Camera without Operator',
-        'selection': 'Audio + Projection + Camera without Operator',
-        'printable': 'Audio + Projection + Camera without Operator',
-    }
+class ApiPage(DiabloPages):
+
+    def hit_cache_clear(self):
+        self.driver.get(f'{app.config["BASE_URL"]}/api/cache/clear')

@@ -26,6 +26,9 @@ ENHANCEMENTS, OR MODIFICATIONS.
 import time
 
 import pytest
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as ec
+from selenium.webdriver.support.wait import WebDriverWait as Wait
 from xena.models.meeting import Meeting
 from xena.pages.login_page import LoginPage
 from xena.pages.ouija_board_page import OuijaBoardPage
@@ -88,6 +91,12 @@ class TestUserPerms:
         self.attic_page.hit_url()
         time.sleep(1)
         self.attic_page.wait_for_diablo_title('Page not found')
+
+    def test_api_cache(self):
+        self.api_page.hit_cache_clear()
+        Wait(self.driver, util.get_short_timeout()).until(
+            ec.presence_of_element_located((By.XPATH, '//*[contains(text(), "Unauthorized")]')),
+        )
 
     def test_pi_role(self):
         self.sign_up_page.load_page(self.section)

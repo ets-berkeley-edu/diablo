@@ -47,7 +47,7 @@ class CanvasPage(Page):
     ACCEPT_INVITE_BUTTON = (By.NAME, 'accept')
 
     DELETE_COURSE_BUTTON = (By.XPATH, '//button[text()="Delete Course"]')
-    DELETE_COURSE_SUCCESS = (By.XPATH, '//li[contains(.,"successfully deleted")]')
+    DELETE_COURSE_SUCCESS = (By.XPATH, '//*[contains(.,"successfully deleted")]')
 
     NAVIGATION_LINK = (By.LINK_TEXT, 'Navigation')
     TOOL_SAVE_BUTTON = (By.XPATH, '//button[text()="Save"]')
