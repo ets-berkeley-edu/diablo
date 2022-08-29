@@ -113,7 +113,7 @@ class QueuedEmail(db.Model):
         return [row.section_id for row in cls.query.filter_by(template_type=template_type, term_id=term_id).all()]
 
     def is_interpolated(self):
-        return not(self.subject_line is None or self.message is None or self.recipient is None)
+        return not (self.subject_line is None or self.message is None or self.recipient is None)
 
     def interpolate(self, course):
         template = _get_email_template(course=course, template_type=self.template_type)
