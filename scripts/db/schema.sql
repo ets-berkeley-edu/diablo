@@ -388,6 +388,7 @@ CREATE INDEX sent_emails_section_id_idx ON sent_emails USING btree (section_id);
 CREATE TABLE sis_sections (
     id INTEGER NOT NULL,
     allowed_units VARCHAR(80),
+    can_edit_recordings BOOLEAN DEFAULT TRUE NOT NULL,
     course_name VARCHAR(80),
     course_title TEXT,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL,

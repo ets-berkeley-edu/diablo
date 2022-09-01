@@ -46,6 +46,7 @@ class SisSection(db.Model):
 
     id = db.Column(db.Integer, nullable=False, primary_key=True)  # noqa: A003
     allowed_units = db.Column(db.String)
+    can_edit_recordings = db.Column(db.Boolean, nullable=False, default=True)
     course_name = db.Column(db.String)
     course_title = db.Column(db.Text)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.now)
@@ -85,8 +86,10 @@ class SisSection(db.Model):
             section_id,
             section_num,
             term_id,
+            can_edit_recordings=True,
     ):
         self.allowed_units = allowed_units
+        self.can_edit_recordings = can_edit_recordings
         self.course_name = course_name
         self.course_title = course_title
         self.instruction_format = instruction_format
@@ -108,6 +111,7 @@ class SisSection(db.Model):
         return f"""<SisSection
                     id={self.id}
                     allowed_units={self.allowed_units},
+                    can_edit_recordings={self.can_edit_recordings}
                     course_name={self.course_name},
                     course_title={self.course_title},
                     instruction_format={self.instruction_format},
@@ -1076,6 +1080,7 @@ def _to_instructor_json(row, approvals, invited_uids):
     instructor_uid = row['instructor_uid']
     return {
         'approval': next((a for a in approvals if a['approvedBy'] == instructor_uid), False),
+        'canEditRecordings': row['can_edit_recordings'],
         'deptCode': row['instructor_dept_code'],
         'email': row['instructor_email'],
         'name': row['instructor_name'],

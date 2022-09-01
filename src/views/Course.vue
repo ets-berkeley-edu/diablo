@@ -25,7 +25,7 @@
         Section ID: <span id="section-id">{{ course.sectionId }}</span>
       </v-row>
       <v-row>
-        <v-col lg="3" md="3" sm="3">
+        <v-col lg="3" cols="3" sm="3">
           <CoursePageSidebar :after-unschedule="afterUnschedule" :course="course" />
         </v-col>
         <v-col>
@@ -51,12 +51,12 @@
                 </span>
               </v-col>
             </v-row>
-            <v-row v-if="course.scheduled" no-gutters>
+            <v-row v-if="course.scheduled">
               <v-col>
                 <ScheduledCourse :after-approve="render" :course="course" />
               </v-col>
             </v-row>
-            <v-row v-if="hasCurrentUserApproved && !course.scheduled" no-gutters>
+            <v-row v-if="hasCurrentUserApproved && !course.scheduled">
               <v-col>
                 <v-list>
                   <v-list-item two-line class="pa-3">
@@ -72,8 +72,8 @@
                 </v-list>
               </v-col>
             </v-row>
-            <v-row v-if="!hasCurrentUserApproved" no-gutters class="mb-4 mt-2">
-              <v-col>
+            <v-row v-if="!hasCurrentUserApproved">
+              <v-col cols="12">
                 <CourseCaptureExplained />
                 <div class="font-italic font-weight-light pl-2 pt-4">
                   <div :class="{'pt-2': meeting.room.isAuditorium}">
@@ -90,19 +90,18 @@
               v-if="showSignUpForm"
               align="center"
               justify="start"
-              no-gutters
             >
-              <v-col md="3" class="mb-6">
+              <v-col cols="3">
                 <h4>
                   <label id="select-recording-type-label" for="select-recording-type">Recording Type</label>
                 </h4>
               </v-col>
-              <v-col md="7">
-                <div v-if="course.hasNecessaryApprovals" id="approved-recording-type" class="mb-5">
+              <v-col cols="9">
+                <div v-if="course.hasNecessaryApprovals" id="approved-recording-type">
                   {{ mostRecentApproval.recordingTypeName }}
                 </div>
                 <div v-if="!course.hasNecessaryApprovals">
-                  <div v-if="recordingTypeOptions.length === 1" id="recording-type" class="mb-5">
+                  <div v-if="recordingTypeOptions.length === 1" id="recording-type">
                     {{ recordingTypeOptions[0].text }}
                     <input type="hidden" name="recordingType" :value="recordingTypeOptions[0].value">
                   </div>
@@ -128,15 +127,14 @@
               v-if="showSignUpForm"
               align="center"
               justify="start"
-              no-gutters
             >
-              <v-col md="3" class="mb-6">
+              <v-col cols="3">
                 <h4>
                   <label id="select-publish-type-label" for="select-publish-type">Publish</label>
                 </h4>
               </v-col>
-              <v-col md="7">
-                <div v-if="course.hasNecessaryApprovals" id="approved-publish-type" class="mb-5">
+              <v-col cols="9">
+                <div v-if="course.hasNecessaryApprovals" id="approved-publish-type">
                   {{ mostRecentApproval.publishTypeName }}
                 </div>
                 <v-select
@@ -145,6 +143,7 @@
                   v-model="publishType"
                   :disabled="isApproving"
                   :full-width="true"
+                  hide-details
                   item-text="text"
                   item-value="value"
                   :items="publishTypeOptions"
@@ -155,7 +154,42 @@
                 </v-select>
               </v-col>
             </v-row>
-            <v-row v-if="showSignUpForm && !$currentUser.isAdmin" no-gutters align="start">
+            <v-row
+              v-if="instructorProxies.length"
+              align="center"
+              class="mt-6"
+              justify="start"
+            >
+              <v-col cols="12">
+                <span class="font-weight-medium mb-1 red--text">
+                  Allow Admin {{ instructorProxies.length === 1 ? 'Proxy' : 'Proxies' }} to edit recordings?
+                </span>
+              </v-col>
+            </v-row>
+            <v-row
+              v-for="instructorProxy in instructorProxies"
+              :key="instructorProxy.uid"
+              align="center"
+              justify="start"
+              no-gutters
+            >
+              <v-col cols="4">
+                <h4>{{ instructorProxy.name }}</h4>
+              </v-col>
+              <v-col cols="8">
+                <v-switch
+                  :id="`aprx-privilege-${instructorProxy.uid}`"
+                  v-model="instructorProxy.canEditRecordings"
+                  :label="instructorProxy.canEditRecordings ? 'Yes' : 'No'"
+                />
+              </v-col>
+            </v-row>
+            <v-row
+              v-if="mustAgreeToTerms"
+              align="start"
+              class="mt-6"
+              no-gutters
+            >
               <v-col order="12">
                 <TermsAgreementText class="pt-1" />
               </v-col>
@@ -281,6 +315,9 @@ export default {
     courseDisplayTitle: null,
     hasCurrentUserApproved: undefined,
     hasValidMeetingTimes: undefined,
+    instructors: undefined,
+    instructorProxies: undefined,
+    instructorProxyPrivileges: undefined,
     isApproving: false,
     multipleEligibleMeetings: undefined,
     publishType: undefined,
@@ -294,6 +331,9 @@ export default {
     },
     isCurrentTerm() {
       return this.course.termId === this.$config.currentTermId
+    },
+    mustAgreeToTerms() {
+      return this.showSignUpForm && !this.$currentUser.isAdmin
     },
     mostRecentApproval() {
       return this.$_.last(this.course.approvals)
@@ -338,6 +378,8 @@ export default {
       this.$loading()
       this.agreedToTerms = this.$currentUser.isAdmin
       this.course = data
+      this.instructors = this.$_.filter(this.course.instructors, i => i.roleCode !== 'APRX')
+      this.instructorProxies = this.$_.filter(this.course.instructors, i => i.roleCode === 'APRX')
       // Meetings
       const eligibleMeetings = this.course.meetings.eligible
       this.meeting = eligibleMeetings[0] || this.course.meetings.ineligible[0]
@@ -351,7 +393,7 @@ export default {
       this.approvedByInstructorUIDs = this.$_.map(this.$_.filter(approvals, a => !a.wasApprovedByAdmin), 'approvedBy')
       this.approvedByAdmins = this.$_.filter(approvals, a => a.wasApprovedByAdmin)
       this.approvalNeededNames = []
-      this.$_.each(this.course.instructors, instructor => {
+      this.$_.each(this.instructors, instructor => {
         if (!this.$_.includes(this.approvedByInstructorUIDs, instructor.uid)) {
           this.approvalNeededNames.push(instructor.uid === this.$currentUser.uid ? 'you' : instructor.name)
         }

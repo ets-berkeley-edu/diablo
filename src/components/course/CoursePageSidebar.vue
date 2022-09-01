@@ -20,12 +20,10 @@
           <span v-if="item.roleCode === 'APRX'" :id="`instructor-${item.uid}-is-proxy`"> (administrative proxy)</span>
         </OxfordJoin>
         <div v-if="instructorProxies.length" class="text--secondary subtitle-2">
-          <div>
-            <OxfordJoin v-slot="{item}" :items="instructorProxies">
-              <span :id="`instructor-proxy-${item.uid}`">{{ item.name }}</span>
-            </OxfordJoin>
-            {{ instructorProxies.length === 1 ? 'has' : 'have' }} APRX role.
-          </div>
+          (<OxfordJoin v-slot="{item}" :items="instructorProxies">
+            <span :id="`instructor-proxy-${item.uid}`">{{ item.name }}</span>
+          </OxfordJoin>
+          {{ instructorProxies.length === 1 ? 'is an Admin Proxy' : 'are Admin Proxies' }}.)
         </div>
       </v-col>
     </v-row>

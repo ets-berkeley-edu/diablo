@@ -29,13 +29,15 @@ DELETE FROM sis_sections WHERE term_id = '{term_id}';
 
 --
 
-INSERT INTO sis_sections (allowed_units, course_name, course_title, instruction_format, instructor_name,
+INSERT INTO sis_sections (allowed_units, can_edit_recordings, course_name, course_title, instruction_format, instructor_name,
                           instructor_role_code, instructor_uid, is_primary, meeting_days, meeting_end_date,
                           meeting_end_time, meeting_location, meeting_start_date, meeting_start_time, section_id,
                           section_num, term_id)
    (SELECT * FROM dblink('{dblink_nessie_rds}',$NESSIE$
     SELECT
-       allowed_units, sis_course_name, sis_course_title, sis_instruction_format, instructor_name, instructor_role_code,
+       allowed_units,
+       case when instructor_role_code IN ('APRX', 'ICNT', 'PI', 'TNIC') then TRUE else FALSE end as can_edit_recordings,
+       sis_course_name, sis_course_title, sis_instruction_format, instructor_name, instructor_role_code,
        instructor_uid, is_primary, meeting_days, meeting_end_date::TIMESTAMP, meeting_end_time, meeting_location,
        meeting_start_date::TIMESTAMP, meeting_start_time, sis_section_id::INTEGER, sis_section_num, sis_term_id::INTEGER
     FROM sis_data.sis_sections
@@ -43,6 +45,7 @@ INSERT INTO sis_sections (allowed_units, course_name, course_title, instruction_
   $NESSIE$)
   AS data_loch_sis_sections (
     allowed_units DOUBLE PRECISION,
+    can_edit_recordings BOOLEAN,
     course_name VARCHAR(80),
     course_title TEXT,
     instruction_format VARCHAR(80),
@@ -66,13 +69,13 @@ INSERT INTO sis_sections (allowed_units, course_name, course_title, instruction_
 UPDATE sis_sections SET instructor_uid = NULL WHERE instructor_uid = '';
 
 -- Restore deleted sections, with deleted_at set to now().
-INSERT INTO sis_sections (allowed_units, course_name, course_title, deleted_at, instruction_format, instructor_name,
+INSERT INTO sis_sections (allowed_units, can_edit_recordings, course_name, course_title, deleted_at, instruction_format, instructor_name,
                           instructor_role_code, instructor_uid, is_primary, meeting_days, meeting_end_date,
                           meeting_end_time, meeting_location, meeting_start_date, meeting_start_time, section_id,
                           section_num, term_id)
 (
   SELECT
-    t.allowed_units, t.course_name, t.course_title, now(), t.instruction_format, t.instructor_name,
+    t.allowed_units, t.can_edit_recordings, t.course_name, t.course_title, now(), t.instruction_format, t.instructor_name,
     t.instructor_role_code, t.instructor_uid, t.is_primary, t.meeting_days, t.meeting_end_date, t.meeting_end_time,
     t.meeting_location, t.meeting_start_date, t.meeting_start_time, t.section_id, t.section_num, t.term_id
   FROM tmp_sis_sections t
