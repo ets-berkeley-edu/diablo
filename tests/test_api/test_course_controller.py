@@ -341,6 +341,16 @@ class TestGetCourse:
         )
         assert len(api_json['canvasCourseSites']) == 3
 
+    def test_administrative_proxy_for_course_page(self, client, fake_auth):
+        """Course page includes instructors with APRX role."""
+        fake_auth.login(uid=admin_uid)
+        api_json = api_get_course(
+            client,
+            term_id=self.term_id,
+            section_id=50006,
+        )
+        assert next((i for i in api_json['instructors'] if i['roleCode'] == 'APRX'), None)
+
     def test_cross_listing(self, client, fake_auth):
         """Course has cross-listings."""
         section_id = 50007

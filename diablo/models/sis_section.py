@@ -37,6 +37,9 @@ from diablo.models.scheduled import Scheduled
 from flask import current_app as app
 from sqlalchemy import text
 
+AUTHORIZED_INSTRUCTOR_ROLE_CODES = ['ICNT', 'PI', 'TNIC']
+ALL_INSTRUCTOR_ROLE_CODES = ['APRX'] + AUTHORIZED_INSTRUCTOR_ROLE_CODES
+
 
 class SisSection(db.Model):
     __tablename__ = 'sis_sections'
@@ -142,10 +145,11 @@ class SisSection(db.Model):
             WHERE
                 meeting_location IS NOT NULL
                 AND meeting_location != ''
-                AND instructor_role_code IN ('ICNT', 'PI', 'TNIC')
+                AND instructor_role_code = ANY(:instructor_role_codes)
             ORDER BY meeting_location
         """
-        return [row['meeting_location'] for row in db.session.execute(text(sql))]
+        args = {'instructor_role_codes': AUTHORIZED_INSTRUCTOR_ROLE_CODES}
+        return [row['meeting_location'] for row in db.session.execute(text(sql), args)]
 
     @classmethod
     def get_distinct_instructor_uids(cls):
@@ -153,7 +157,13 @@ class SisSection(db.Model):
         return [row['instructor_uid'] for row in db.session.execute(text(sql))]
 
     @classmethod
-    def get_course(cls, term_id, section_id, include_deleted=False):
+    def get_course(
+            cls,
+            term_id,
+            section_id,
+            include_administrative_proxies=False,
+            include_deleted=False,
+    ):
         sql = f"""
             SELECT
                 s.*,
@@ -169,14 +179,16 @@ class SisSection(db.Model):
             WHERE
                 s.term_id = :term_id
                 AND s.section_id = :section_id
-                AND (s.instructor_uid IS NULL OR s.instructor_role_code IN ('ICNT', 'PI', 'TNIC'))
+                AND (s.instructor_uid IS NULL OR s.instructor_role_code = ANY(:instructor_role_codes))
                 AND s.is_principal_listing IS TRUE
                 {'' if include_deleted else ' AND s.deleted_at IS NULL '}
             ORDER BY s.course_name, s.section_id, s.instructor_uid, r.capability NULLS LAST
         """
+        instructor_role_codes = ALL_INSTRUCTOR_ROLE_CODES if include_administrative_proxies else AUTHORIZED_INSTRUCTOR_ROLE_CODES
         rows = db.session.execute(
             text(sql),
             {
+                'instructor_role_codes': instructor_role_codes,
                 'section_id': section_id,
                 'term_id': term_id,
             },
@@ -207,7 +219,7 @@ class SisSection(db.Model):
                 AND (
                     s.deleted_at IS NOT NULL
                     OR (
-                        (s.instructor_uid IS NULL OR s.instructor_role_code IN ('ICNT', 'PI', 'TNIC'))
+                        (s.instructor_uid IS NULL OR s.instructor_role_code = ANY(:instructor_role_codes))
                         AND s.is_principal_listing IS TRUE
                     )
                 )
@@ -216,6 +228,7 @@ class SisSection(db.Model):
         rows = db.session.execute(
             text(sql),
             {
+                'instructor_role_codes': AUTHORIZED_INSTRUCTOR_ROLE_CODES,
                 'term_id': term_id,
             },
         )
@@ -254,7 +267,10 @@ class SisSection(db.Model):
 
     @classmethod
     def get_courses(cls, term_id, include_deleted=False, section_ids=None):
-        params = {'term_id': term_id}
+        params = {
+            'instructor_role_codes': AUTHORIZED_INSTRUCTOR_ROLE_CODES,
+            'term_id': term_id,
+        }
         if section_ids is None:
             # If no section IDs are specified, return any section with at least one eligible room.
             course_filter = f's.section_id IN ({_sections_with_at_least_one_eligible_room()})'
@@ -276,7 +292,7 @@ class SisSection(db.Model):
             WHERE
                 {course_filter}
                 AND s.term_id = :term_id
-                AND (s.instructor_uid IS NULL OR s.instructor_role_code IN ('ICNT', 'PI', 'TNIC'))
+                AND (s.instructor_uid IS NULL OR s.instructor_role_code = ANY(:instructor_role_codes))
                 AND s.is_principal_listing IS TRUE
                 {'' if include_deleted else ' AND s.deleted_at IS NULL '}
             ORDER BY s.course_name, s.section_id, s.instructor_uid, r.capability NULLS LAST
@@ -317,7 +333,7 @@ class SisSection(db.Model):
                 AND cp.has_opted_out IS TRUE
             WHERE
                 s.term_id = :term_id
-                AND (s.instructor_uid IS NULL OR s.instructor_role_code IN ('ICNT', 'PI', 'TNIC'))
+                AND (s.instructor_uid IS NULL OR s.instructor_role_code = ANY(:instructor_role_codes))
                 AND s.is_principal_listing IS TRUE
                 AND a.section_id IS NULL
                 AND d.section_id IS NULL
@@ -328,6 +344,7 @@ class SisSection(db.Model):
         rows = db.session.execute(
             text(sql),
             {
+                'instructor_role_codes': AUTHORIZED_INSTRUCTOR_ROLE_CODES,
                 'term_id': term_id,
             },
         )
@@ -367,7 +384,7 @@ class SisSection(db.Model):
             WHERE
                 s.term_id = :term_id
                 AND s.section_id IN ({_sections_with_at_least_one_eligible_room()})
-                AND (s.instructor_uid IS NULL OR s.instructor_role_code IN ('ICNT', 'PI', 'TNIC'))
+                AND (s.instructor_uid IS NULL OR s.instructor_role_code = ANY(:instructor_role_codes))
                 AND s.is_principal_listing IS TRUE
                 AND a.section_id IS NULL
                 AND d.section_id IS NULL
@@ -379,6 +396,7 @@ class SisSection(db.Model):
         rows = db.session.execute(
             text(sql),
             {
+                'instructor_role_codes': AUTHORIZED_INSTRUCTOR_ROLE_CODES,
                 'term_id': term_id,
             },
         )
@@ -410,7 +428,7 @@ class SisSection(db.Model):
             WHERE
                 d.section_id IS NULL
                 AND s.term_id = :term_id
-                AND (s.instructor_uid IS NULL OR s.instructor_role_code IN ('ICNT', 'PI', 'TNIC'))
+                AND (s.instructor_uid IS NULL OR s.instructor_role_code = ANY(:instructor_role_codes))
                 AND s.is_principal_listing IS TRUE
                 AND s.section_id IN ({_sections_with_at_least_one_eligible_room()})
                 AND s.deleted_at IS NULL
@@ -419,6 +437,7 @@ class SisSection(db.Model):
         rows = db.session.execute(
             text(sql),
             {
+                'instructor_role_codes': AUTHORIZED_INSTRUCTOR_ROLE_CODES,
                 'term_id': term_id,
             },
         )
@@ -441,7 +460,7 @@ class SisSection(db.Model):
             FROM sis_sections s
             JOIN approvals a ON
                 s.term_id = :term_id
-                AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
+                AND s.instructor_role_code = ANY(:instructor_role_codes)
                 AND s.is_principal_listing IS TRUE
                 AND a.section_id = s.section_id
                 AND a.term_id = :term_id
@@ -452,7 +471,7 @@ class SisSection(db.Model):
             JOIN sis_sections s2 ON
                 s.term_id = s2.term_id
                 AND s.section_id = s2.section_id
-                AND s2.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
+                AND s2.instructor_role_code = ANY(:instructor_role_codes)
             JOIN instructors i2 ON
                 i2.uid = s2.instructor_uid
                 AND i2.uid NOT IN (
@@ -473,6 +492,7 @@ class SisSection(db.Model):
         rows = db.session.execute(
             text(sql),
             {
+                'instructor_role_codes': AUTHORIZED_INSTRUCTOR_ROLE_CODES,
                 'term_id': term_id,
             },
         )
@@ -492,7 +512,7 @@ class SisSection(db.Model):
             FROM sis_sections s
             JOIN approvals a ON
                 s.term_id = :term_id
-                AND (s.instructor_uid IS NULL OR s.instructor_role_code IN ('ICNT', 'PI', 'TNIC'))
+                AND (s.instructor_uid IS NULL OR s.instructor_role_code = ANY(:instructor_role_codes))
                 AND s.is_principal_listing IS TRUE
                 AND a.section_id = s.section_id
                 AND a.term_id = :term_id
@@ -519,7 +539,7 @@ class SisSection(db.Model):
                             AND a.approved_by_uid = s.instructor_uid
                             AND a.deleted_at IS NULL
                         WHERE s.term_id = :term_id
-                            AND (s.instructor_uid IS NULL OR s.instructor_role_code IN ('ICNT', 'PI', 'TNIC'))
+                            AND (s.instructor_uid IS NULL OR s.instructor_role_code = ANY(:instructor_role_codes))
                             AND s.is_principal_listing IS TRUE
                             AND a.section_id IS NULL
                     )
@@ -535,6 +555,7 @@ class SisSection(db.Model):
         rows = db.session.execute(
             text(sql),
             {
+                'instructor_role_codes': AUTHORIZED_INSTRUCTOR_ROLE_CODES,
                 'term_id': term_id,
             },
         )
@@ -550,12 +571,17 @@ class SisSection(db.Model):
                 ON i.uid = s.instructor_uid
                 AND s.term_id = :term_id
                 AND s.instructor_uid = :instructor_uid
-                AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
+                AND s.instructor_role_code = ANY(:instructor_role_codes)
             WHERE s.deleted_at IS NULL
         """
         non_principal_section_ids = []
         section_ids = []
-        for row in db.session.execute(text(sql), {'instructor_uid': instructor_uid, 'term_id': term_id}):
+        args = {
+            'instructor_role_codes': AUTHORIZED_INSTRUCTOR_ROLE_CODES,
+            'instructor_uid': instructor_uid,
+            'term_id': term_id,
+        }
+        for row in db.session.execute(text(sql), args):
             if row['is_principal_listing'] is False:
                 non_principal_section_ids.append(row['section_id'])
             else:
@@ -591,7 +617,7 @@ class SisSection(db.Model):
             LEFT JOIN instructors i ON i.uid = s.instructor_uid
             WHERE
                 s.term_id = :term_id
-                AND (s.instructor_uid IS NULL OR s.instructor_role_code IN ('ICNT', 'PI', 'TNIC'))
+                AND (s.instructor_uid IS NULL OR s.instructor_role_code = ANY(:instructor_role_codes))
                 AND s.is_principal_listing IS TRUE
                 AND s.meeting_location = :location
                 AND s.deleted_at IS NULL
@@ -610,6 +636,7 @@ class SisSection(db.Model):
         rows = db.session.execute(
             text(sql),
             {
+                'instructor_role_codes': AUTHORIZED_INSTRUCTOR_ROLE_CODES,
                 'location': location,
                 'term_id': term_id,
             },
@@ -665,15 +692,16 @@ class SisSection(db.Model):
             FROM sis_sections
             WHERE term_id = :term_id
                 AND instructor_uid = :uid
-                AND instructor_role_code IN ('ICNT', 'PI', 'TNIC')
+                AND instructor_role_code = ANY(:instructor_role_codes)
                 AND deleted_at IS NULL
             LIMIT 1
         """
         results = db.session.execute(
             text(sql),
             {
-                'uid': uid,
+                'instructor_role_codes': AUTHORIZED_INSTRUCTOR_ROLE_CODES,
                 'term_id': term_id,
+                'uid': uid,
             },
         )
         return results.rowcount > 0
@@ -690,7 +718,7 @@ class SisSection(db.Model):
                 AND d.term_id = s.term_id
             WHERE
                 s.term_id = :term_id
-                AND (s.instructor_uid IS NULL OR s.instructor_role_code IN ('ICNT', 'PI', 'TNIC'))
+                AND (s.instructor_uid IS NULL OR s.instructor_role_code = ANY(:instructor_role_codes))
                 AND s.is_principal_listing IS TRUE
                 AND (
                     (s.meeting_start_date::text NOT LIKE :term_begin AND d.created_at < s.meeting_start_date)
@@ -702,9 +730,10 @@ class SisSection(db.Model):
         rows = db.session.execute(
             text(sql),
             {
-                'term_id': term_id,
+                'instructor_role_codes': AUTHORIZED_INSTRUCTOR_ROLE_CODES,
                 'term_begin': f"{app.config['CURRENT_TERM_BEGIN']}%",
                 'term_end': f"{app.config['CURRENT_TERM_END']}%",
+                'term_id': term_id,
             },
         )
         return set([row['section_id'] for row in rows])
@@ -719,13 +748,14 @@ class SisSection(db.Model):
             LEFT JOIN instructors i ON i.uid = s.instructor_uid
             WHERE
                 s.term_id = :term_id
-                AND (s.instructor_uid IS NULL OR s.instructor_role_code IN ('ICNT', 'PI', 'TNIC'))
+                AND (s.instructor_uid IS NULL OR s.instructor_role_code = ANY(:instructor_role_codes))
                 AND s.is_principal_listing IS TRUE
             ORDER BY s.section_id
         """
         rows = db.session.execute(
             text(sql),
             {
+                'instructor_role_codes': AUTHORIZED_INSTRUCTOR_ROLE_CODES,
                 'term_id': term_id,
             },
         )
@@ -938,7 +968,7 @@ def _get_cross_listed_courses(section_ids, term_id, approvals, invited_uids):
         WHERE
             s.term_id = :term_id
             AND s.section_id = ANY(:all_cross_listing_ids)
-            AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
+            AND s.instructor_role_code = ANY(:instructor_role_codes)
             AND s.deleted_at IS NULL
         ORDER BY course_name, section_id
     """
@@ -946,6 +976,7 @@ def _get_cross_listed_courses(section_ids, term_id, approvals, invited_uids):
         text(sql),
         {
             'all_cross_listing_ids': all_cross_listing_ids,
+            'instructor_role_codes': AUTHORIZED_INSTRUCTOR_ROLE_CODES,
             'term_id': term_id,
         },
     )
@@ -1035,7 +1066,7 @@ def _sections_with_at_least_one_eligible_room():
             ON r2.location = s2.meeting_location
             AND r2.capability IS NOT NULL
             AND s2.term_id = :term_id
-            AND (s2.instructor_uid IS NULL OR s2.instructor_role_code IN ('ICNT', 'PI', 'TNIC'))
+            AND (s2.instructor_uid IS NULL OR s2.instructor_role_code = ANY(:instructor_role_codes))
             AND s2.is_principal_listing IS TRUE
             AND s2.deleted_at IS NULL
     """

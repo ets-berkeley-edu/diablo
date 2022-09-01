@@ -1,13 +1,13 @@
 <template>
   <v-container class="elevation-2 pa-6">
     <h2 class="sr-only">Summary of {{ course.label }} course</h2>
-    <v-row v-if="course.instructors.length" id="instructors" :class="{'line-through': course.deletedAt}">
+    <v-row v-if="instructors.length" id="instructors" :class="{'line-through': course.deletedAt}">
       <v-col md="auto">
         <h3 class="sr-only">Instructors</h3>
         <v-icon aria-label="Mortarboard icon">mdi-school-outline</v-icon>
       </v-col>
       <v-col>
-        <OxfordJoin v-slot="{item}" :items="course.instructors">
+        <OxfordJoin v-slot="{item}" :items="instructors">
           <router-link
             v-if="$currentUser.isAdmin"
             :id="`instructor-${item.uid}`"
@@ -17,7 +17,16 @@
             {{ item.name }}
           </router-link>
           <span v-if="!$currentUser.isAdmin" :id="`instructor-${item.uid}`">{{ item.name }}</span>
+          <span v-if="item.roleCode === 'APRX'" :id="`instructor-${item.uid}-is-proxy`"> (administrative proxy)</span>
         </OxfordJoin>
+        <div v-if="instructorProxies.length" class="text--secondary subtitle-2">
+          <div>
+            <OxfordJoin v-slot="{item}" :items="instructorProxies">
+              <span :id="`instructor-proxy-${item.uid}`">{{ item.name }}</span>
+            </OxfordJoin>
+            {{ instructorProxies.length === 1 ? 'has' : 'have' }} APRX role.
+          </div>
+        </div>
       </v-col>
     </v-row>
     <div v-for="(meeting, index) in displayMeetings" :key="index">
@@ -194,6 +203,8 @@ export default {
   },
   data: () => ({
     displayMeetings: undefined,
+    instructors: undefined,
+    instructorProxies: undefined,
     isInviteTemplateAvailable: undefined,
     nowDate: undefined,
     showUnscheduleModal: false
@@ -216,6 +227,8 @@ export default {
   },
   created() {
     this.displayMeetings = this.getDisplayMeetings(this.course)
+    this.instructors = this.$_.filter(this.course.instructors, i => i.roleCode !== 'APRX')
+    this.instructorProxies = this.$_.filter(this.course.instructors, i => i.roleCode === 'APRX')
     this.nowDate = this.$moment().format('YYYY-MM-DD')
     if (this.$currentUser.isAdmin) {
       getAllEmailTemplates().then(data => {

@@ -102,13 +102,23 @@ def approve():
         if last_approver:
             notify_instructor_waiting_for_approval(course, last_approver, pending_instructors)
 
-    return tolerant_jsonify(_after_approval(course=SisSection.get_course(term_id, section_id)))
+    course = SisSection.get_course(
+        term_id,
+        section_id,
+        include_administrative_proxies=True,
+    )
+    return tolerant_jsonify(_after_approval(course=course))
 
 
 @app.route('/api/course/<term_id>/<section_id>')
 @login_required
 def get_course(term_id, section_id):
-    course = SisSection.get_course(term_id, section_id, include_deleted=True)
+    course = SisSection.get_course(
+        term_id,
+        section_id,
+        include_administrative_proxies=True,
+        include_deleted=True,
+    )
     if not course:
         raise ResourceNotFoundError(f'No section for term_id = {term_id} and section_id = {section_id}')
     if not current_user.is_admin and current_user.uid not in [i['uid'] for i in course['instructors']]:
