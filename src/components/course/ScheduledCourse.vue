@@ -118,7 +118,11 @@ export default {
   methods: {
     approve() {
       this.isApproving = true
-      approve(this.course.scheduled.publishType, this.course.scheduled.recordingType, this.course.sectionId).then(data => {
+      approve(
+        this.course.scheduled.publishType,
+        this.course.scheduled.recordingType,
+        this.course.sectionId
+      ).then(data => {
         this.isApproving = this.currentUserMustApprove = false
         this.afterApprove(data)
         this.alertScreenReader('Approval received.')
