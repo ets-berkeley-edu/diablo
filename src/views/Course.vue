@@ -59,10 +59,10 @@
             <v-row v-if="hasCurrentUserApproved && !course.scheduled">
               <v-col>
                 <v-list>
-                  <v-list-item two-line class="pa-3">
+                  <v-list-item two-line>
                     <v-list-item-content>
-                      <v-list-item-title>Recording Type</v-list-item-title>
-                      <v-list-item-subtitle id="recording-type-name">{{ mostRecentApproval.recordingTypeName }}</v-list-item-subtitle>
+                      <v-list-item-title class="pl-3">Recording Type</v-list-item-title>
+                      <v-list-item-subtitle id="recording-type-name" class="pl-3">{{ mostRecentApproval.recordingTypeName }}</v-list-item-subtitle>
                     </v-list-item-content>
                     <v-list-item-content>
                       <v-list-item-title>Publish Type</v-list-item-title>
@@ -155,7 +155,7 @@
               </v-col>
             </v-row>
             <v-row
-              v-if="instructorProxies.length"
+              v-if="showSignUpForm && instructorProxies.length"
               align="center"
               class="mt-6"
               justify="start"
@@ -167,7 +167,7 @@
               </v-col>
             </v-row>
             <v-row
-              v-for="instructorProxy in instructorProxies"
+              v-for="instructorProxy in (showSignUpForm ? instructorProxies : [])"
               :key="instructorProxy.uid"
               align="center"
               justify="start"

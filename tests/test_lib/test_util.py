@@ -22,7 +22,10 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from diablo.lib.util import get_names_of_days, readable_join
+import random
+
+from diablo.jobs.util import get_instructors_who_can_edit_recordings
+from diablo.lib.util import get_names_of_days, readable_join, utc_now
 
 
 class TestUtils:
@@ -39,3 +42,33 @@ class TestUtils:
         assert readable_join(['Moe']) == 'Moe'
         assert readable_join(['Moe', 'Larry']) == 'Moe and Larry'
         assert readable_join(['Moe', 'Larry', 'Curly']) == 'Moe, Larry and Curly'
+
+    def test_get_instructors_who_can_edit_recordings(self):
+        def course(instructors):
+            return {'instructors': instructors}
+
+        def instructor(can_edit_recordings=True, deleted_at=None):
+            return {
+                'canEditRecordings': can_edit_recordings,
+                'deletedAt': deleted_at,
+                'uid': random.randint(1, 99999),
+            }
+        instructor_who_edits = instructor()
+        deleted_lecturer = instructor(deleted_at=utc_now())
+        assistant = instructor(can_edit_recordings=False)
+
+        assert get_instructors_who_can_edit_recordings(course([])) == []
+        assert get_instructors_who_can_edit_recordings(course([instructor_who_edits])) == [instructor_who_edits]
+
+        actual = get_instructors_who_can_edit_recordings(course([
+            deleted_lecturer,
+            instructor_who_edits,
+        ]))
+        assert [i['uid'] for i in actual] == [instructor_who_edits['uid']]
+
+        actual = get_instructors_who_can_edit_recordings(course([
+            assistant,
+            deleted_lecturer,
+            instructor_who_edits,
+        ]))
+        assert [i['uid'] for i in actual] == [instructor_who_edits['uid']]
