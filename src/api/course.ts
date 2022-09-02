@@ -4,12 +4,14 @@ import moment from 'moment-timezone'
 import utils from '@/api/api-utils'
 
 export function approve(
+    instructorProxies: any,
     publishType: string,
     recordingType: string,
     sectionId: string
 ) {
   return axios
     .post(`${utils.apiBaseUrl()}/api/course/approve`, {
+      instructorProxies,
       publishType,
       recordingType,
       sectionId
