@@ -115,29 +115,44 @@ class TestApprove:
     def test_approval_by_instructors(self, app, client, fake_auth):
         """Instructor can submit approval if s/he is teaching the requested course."""
         with test_approvals_workflow(app):
-            instructor_uids = get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
-            fake_auth.login(instructor_uids[0])
-            api_approve(
+            course = SisSection.get_course(section_id=section_1_id, term_id=self.term_id, include_administrative_proxies=True)
+            instructors = course['instructors']
+            fake_auth.login(instructors[0]['uid'])
+            api_json = api_approve(
                 client,
+                instructor_proxies=[{
+                    'canEditRecordings': False,
+                    'uid': '10003',
+                }],
                 publish_type='kaltura_my_media',
                 recording_type='presentation_audio',
                 section_id=section_1_id,
             )
             std_commit(allow_test_environment=True)
 
-            fake_auth.login(instructor_uids[1])
-            api_approve(
+            instructor_proxy = next((i for i in api_json['instructors'] if i['roleCode'] == 'APRX'), None)
+            assert instructor_proxy['canEditRecordings'] is False
+
+            fake_auth.login(instructors[1]['uid'])
+            api_json = api_approve(
                 client,
+                instructor_proxies=[{
+                    'canEditRecordings': True,
+                    'uid': '10003',
+                }],
                 publish_type='kaltura_media_gallery',
                 recording_type='presentation_audio',
                 section_id=section_1_id,
             )
             std_commit(allow_test_environment=True)
 
+            instructor_proxy = next((i for i in api_json['instructors'] if i['roleCode'] == 'APRX'), None)
+            assert instructor_proxy['canEditRecordings'] is True
+
             QueuedEmailsTask().run()
 
             # First instructor was notified 1) that second instructor needed to approve; 2) that second instructor made changes.
-            emails_sent = SentEmail.get_emails_sent_to(instructor_uids[0])
+            emails_sent = SentEmail.get_emails_sent_to(instructors[0]['uid'])
             assert len(emails_sent) == 2
             for email in emails_sent:
                 assert email.section_id == section_1_id
@@ -146,7 +161,7 @@ class TestApprove:
             assert emails_sent[1].template_type == 'notify_instructor_of_changes'
 
             # Second instructor received no notifications.
-            assert len(SentEmail.get_emails_sent_to(instructor_uids[1])) == 0
+            assert len(SentEmail.get_emails_sent_to(instructors[1]['uid'])) == 0
 
             fake_auth.login(admin_uid)
             api_json = api_get_course(
@@ -293,7 +308,7 @@ class TestGetCourse:
                 term_id=self.term_id,
                 section_id=section_1_id,
             )
-            assert [i['uid'] for i in api_json['instructors']] == ['10001', '10002']
+            assert [i['uid'] for i in api_json['instructors']] == ['10001', '10002', '10003']
 
             approvals = api_json['approvals']
             assert len(approvals) == 1

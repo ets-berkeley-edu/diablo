@@ -68,6 +68,10 @@ INSERT INTO sis_sections (allowed_units, can_edit_recordings, course_name, cours
 -- Our source data may use blank spaces for UIDs that should be null.
 UPDATE sis_sections SET instructor_uid = NULL WHERE instructor_uid = '';
 
+UPDATE sis_sections SET can_edit_recordings = FALSE
+FROM sis_sections s JOIN tmp_sis_sections t ON s.section_id = t.section_id AND s.term_id = t.term_id
+WHERE t.can_edit_recordings IS FALSE;
+
 -- Restore deleted sections, with deleted_at set to now().
 INSERT INTO sis_sections (allowed_units, can_edit_recordings, course_name, course_title, deleted_at, instruction_format, instructor_name,
                           instructor_role_code, instructor_uid, is_primary, meeting_days, meeting_end_date,

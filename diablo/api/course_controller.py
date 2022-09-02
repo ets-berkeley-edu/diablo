@@ -51,6 +51,7 @@ def approve():
     term_name = term_name_for_sis_id(term_id)
 
     params = request.get_json()
+    instructor_proxies = params.get('instructorProxies', [])
     publish_type = params.get('publishType')
     recording_type = params.get('recordingType')
     section_id = params.get('sectionId')
@@ -76,6 +77,13 @@ def approve():
     if not room:
         raise BadRequestError(f'{location} is not eligible for Course Capture.')
 
+    for instructor in instructor_proxies:
+        SisSection.update_can_edit_recordings(
+            can_edit_recordings=instructor['canEditRecordings'],
+            instructor_uid=instructor['uid'],
+            section_id=section_id,
+            term_id=term_id,
+        )
     previous_approvals = Approval.get_approvals_per_section_ids(section_ids=[section_id], term_id=term_id)
     approval = Approval.create(
         approved_by_uid=current_user.uid,
@@ -299,6 +307,10 @@ def _after_approval(course):
                 all_approvals=approvals,
                 course=course,
             )
-        return SisSection.get_course(section_id=course['sectionId'], term_id=course['termId'])
+        return SisSection.get_course(
+            include_administrative_proxies=True,
+            section_id=course['sectionId'],
+            term_id=course['termId'],
+        )
     else:
         return course

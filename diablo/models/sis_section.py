@@ -711,6 +711,23 @@ class SisSection(db.Model):
         return results.rowcount > 0
 
     @classmethod
+    def update_can_edit_recordings(cls, instructor_uid, can_edit_recordings, section_id, term_id):
+        sql = """
+            UPDATE sis_sections
+            SET can_edit_recordings = :can_edit_recordings
+            WHERE instructor_uid = :instructor_uid AND term_id = :term_id AND section_id = :section_id
+        """
+        db.session.execute(
+            text(sql),
+            {
+                'can_edit_recordings': can_edit_recordings,
+                'instructor_uid': instructor_uid,
+                'section_id': section_id,
+                'term_id': term_id,
+            },
+        )
+
+    @classmethod
     def _section_ids_with_nonstandard_dates(cls, term_id):
         if str(term_id) != str(app.config['CURRENT_TERM_ID']):
             app.logger.warn(f'Dates for term id {term_id} not configured; cannot query for nonstandard dates.')
@@ -901,9 +918,10 @@ def _decorate_course_approvals(course):
         course['hasNecessaryApprovals'] = True
 
     course['approvalStatus'] = 'Not Invited'
-    if course['instructors']:
+    instructors = filter(lambda instructor: instructor['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES, course['instructors'])
+    if instructors:
         approval_uids = [a['approvedBy'] for a in course['approvals']]
-        necessary_approval_uids = [i['uid'] for i in course['instructors']]
+        necessary_approval_uids = [i['uid'] for i in instructors]
         if all(uid in approval_uids for uid in necessary_approval_uids):
             course['approvalStatus'] = 'Approved'
             course['hasNecessaryApprovals'] = True

@@ -37,11 +37,13 @@ def api_approve(
         publish_type,
         recording_type,
         section_id,
+        instructor_proxies=[],
         expected_status_code=200,
 ):
     response = client.post(
         '/api/course/approve',
         data=json.dumps({
+            'instructorProxies': instructor_proxies,
             'publishType': publish_type,
             'recordingType': recording_type,
             'sectionId': section_id,

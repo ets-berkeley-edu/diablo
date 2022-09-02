@@ -368,7 +368,12 @@ export default {
     },
     approve() {
       this.isApproving = true
-      approve(this.publishType, this.recordingType, this.course.sectionId).then(data => {
+      approve(
+        this.instructorProxies,
+        this.publishType,
+        this.recordingType,
+        this.course.sectionId
+      ).then(data => {
         this.render(data)
         this.isApproving = false
         this.alertScreenReader(`You have approved ${this.courseDisplayTitle} for Course Capture.`)
