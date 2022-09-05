@@ -38,7 +38,7 @@ from diablo.models.instructor import Instructor
 from diablo.models.queued_email import notify_instructors_recordings_scheduled
 from diablo.models.room import Room
 from diablo.models.scheduled import Scheduled
-from diablo.models.sis_section import SisSection
+from diablo.models.sis_section import AUTHORIZED_INSTRUCTOR_ROLE_CODES, SisSection
 from flask import current_app as app
 from KalturaClient.exceptions import KalturaClientException, KalturaException
 from sqlalchemy import text
@@ -50,7 +50,11 @@ def get_courses_ready_to_schedule(approvals, term_id):
     unscheduled_approvals = [approval for approval in approvals if approval.section_id not in scheduled_section_ids]
 
     if unscheduled_approvals:
-        courses = SisSection.get_courses(section_ids=[a.section_id for a in unscheduled_approvals], term_id=term_id)
+        courses = SisSection.get_courses(
+            include_administrative_proxies=True,
+            section_ids=[a.section_id for a in unscheduled_approvals],
+            term_id=term_id,
+        )
         courses_per_section_id = dict((int(course['sectionId']), course) for course in courses)
         admin_user_uids = set([user.uid for user in AdminUser.all_admin_users(include_deleted=True)])
 
@@ -64,11 +68,16 @@ def get_courses_ready_to_schedule(approvals, term_id):
             if admin_user_uids.intersection(set(approved_by_uids)):
                 ready_to_schedule.append(course)
             else:
-                necessary_uids = [i['uid'] for i in course['instructors']]
+                instructors = filter(lambda i: i['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES, course['instructors'])
+                necessary_uids = [i['uid'] for i in instructors]
                 if all(uid in approved_by_uids for uid in necessary_uids):
                     ready_to_schedule.append(course)
 
     return ready_to_schedule
+
+
+def get_instructors_who_can_edit_recordings(course):
+    return list(filter(lambda i: i.get('canEditRecordings') and not i.get('deletedAt'), course['instructors']))
 
 
 def insert_or_update_instructors(instructor_uids):
@@ -224,10 +233,11 @@ def schedule_recordings(all_approvals, course):
     scheduled = None
     if room.kaltura_resource_id:
         try:
+            instructors = get_instructors_who_can_edit_recordings(course)
             kaltura_schedule_id = Kaltura().schedule_recording(
                 canvas_course_site_ids=[c['courseSiteId'] for c in course['canvasCourseSites']],
                 course_label=course['label'],
-                instructors=course['instructors'],
+                instructors=instructors,
                 meeting=meeting,
                 publish_type=latest_approval.publish_type,
                 recording_type=latest_approval.recording_type,

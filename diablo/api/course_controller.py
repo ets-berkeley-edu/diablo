@@ -224,7 +224,13 @@ def unschedule():
         section_id=section_id,
         opt_out=True,
     )
-    return tolerant_jsonify(SisSection.get_course(term_id, section_id, include_deleted=True))
+    course = SisSection.get_course(
+        section_id=section_id,
+        term_id=term_id,
+        include_administrative_proxies=True,
+        include_deleted=True,
+    )
+    return tolerant_jsonify(course)
 
 
 @app.route('/api/courses/changes/<term_id>')

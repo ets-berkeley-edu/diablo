@@ -24,7 +24,9 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 from diablo.externals.kaltura import Kaltura
 from diablo.jobs.base_job import BaseJob
-from diablo.jobs.util import get_courses_ready_to_schedule, schedule_recordings
+from diablo.jobs.util import get_courses_ready_to_schedule, get_instructors_who_can_edit_recordings, schedule_recordings
+from diablo.lib.berkeley import term_name_for_sis_id
+from diablo.lib.kaltura_util import get_series_description
 from diablo.lib.util import objects_to_dict_organized_by_section_id
 from diablo.models.approval import Approval
 from diablo.models.email_template import EmailTemplate
@@ -56,27 +58,43 @@ class KalturaJob(BaseJob):
 
 def _update_already_scheduled_events():
     kaltura = Kaltura()
-    for course in SisSection.get_courses_scheduled(term_id=app.config['CURRENT_TERM_ID']):
+    term_id = app.config['CURRENT_TERM_ID']
+    for course in SisSection.get_courses_scheduled(term_id=term_id):
         course_name = course['label']
         scheduled = course['scheduled']
         kaltura_schedule = kaltura.get_event(event_id=scheduled['kalturaScheduleId'])
         if kaltura_schedule:
+            template_entry_id = kaltura_schedule['templateEntryId']
             if course['canvasCourseSites'] and scheduled['publishType'] == 'kaltura_media_gallery':
                 # From Kaltura, get Canvas course sites (categories) currently mapped to the course.
-                template_entry_id = kaltura_schedule['templateEntryId']
                 categories = kaltura.get_categories(template_entry_id)
 
                 for s in course['canvasCourseSites']:
                     canvas_course_site_id = str(s['courseSiteId'])
                     if canvas_course_site_id not in [c['name'] for c in categories]:
-                        _update_kaltura_category(canvas_course_site_id, course_name, kaltura, template_entry_id)
+                        _update_kaltura_category(
+                            canvas_course_site_id=canvas_course_site_id,
+                            course_name=course_name,
+                            kaltura=kaltura,
+                            template_entry_id=template_entry_id,
+                        )
+            # Update Kaltura edit permissions per UID.
+            instructors_who_can_edit_recordings = get_instructors_who_can_edit_recordings(course)
+            uids_entitled_to_edit = [i['uids'] for i in instructors_who_can_edit_recordings]
+            description = get_series_description(
+                course_label=course_name,
+                instructors=instructors_who_can_edit_recordings,
+                term_name=term_name_for_sis_id(term_id),
+            )
+            kaltura.update_base_entry(
+                description=description,
+                entry_id=template_entry_id,
+                name=kaltura_schedule.get('name'),
+                uids_entitled_to_edit=uids_entitled_to_edit,
+                uids_entitled_to_publish=uids_entitled_to_edit,
+            )
         else:
             app.logger.warn(f'The previously scheduled {course_name} has no schedule_event in Kaltura.')
-
-
-def _get_entitled_users(kaltura_base_entry):
-    entitled_users = kaltura_base_entry['entitledUsersEdit']
-    return entitled_users.split(',') if entitled_users else []
 
 
 def _update_kaltura_category(canvas_course_site_id, course_name, kaltura, template_entry_id):

@@ -270,9 +270,16 @@ class SisSection(db.Model):
         return courses
 
     @classmethod
-    def get_courses(cls, term_id, include_deleted=False, section_ids=None):
+    def get_courses(
+            cls,
+            term_id,
+            include_administrative_proxies=False,
+            include_deleted=False,
+            section_ids=None,
+    ):
+        instructor_role_codes = ALL_INSTRUCTOR_ROLE_CODES if include_administrative_proxies else AUTHORIZED_INSTRUCTOR_ROLE_CODES
         params = {
-            'instructor_role_codes': AUTHORIZED_INSTRUCTOR_ROLE_CODES,
+            'instructor_role_codes': instructor_role_codes,
             'term_id': term_id,
         }
         if section_ids is None:
@@ -648,9 +655,14 @@ class SisSection(db.Model):
         return _to_api_json(term_id=term_id, rows=rows, include_rooms=False)
 
     @classmethod
-    def get_courses_scheduled(cls, term_id):
+    def get_courses_scheduled(cls, term_id, include_administrative_proxies=False):
         scheduled_section_ids = list(cls._section_ids_scheduled(term_id))
-        return cls.get_courses(term_id, include_deleted=True, section_ids=scheduled_section_ids)
+        return cls.get_courses(
+            include_administrative_proxies=include_administrative_proxies,
+            include_deleted=True,
+            section_ids=scheduled_section_ids,
+            term_id=term_id,
+        )
 
     @classmethod
     def get_courses_scheduled_standard_dates(cls, term_id):
@@ -1099,6 +1111,7 @@ def _to_instructor_json(row, approvals, invited_uids):
     return {
         'approval': next((a for a in approvals if a['approvedBy'] == instructor_uid), False),
         'canEditRecordings': row['can_edit_recordings'],
+        'deletedAt': safe_strftime(row['deleted_at'], '%Y-%m-%d'),
         'deptCode': row['instructor_dept_code'],
         'email': row['instructor_email'],
         'name': row['instructor_name'],

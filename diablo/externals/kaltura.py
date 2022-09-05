@@ -253,10 +253,29 @@ class Kaltura:
         )
         return result.totalCount is not None
 
-    def update_base_entry(self, entitled_users, entry_id):
+    def update_base_entry(
+            self,
+            description,
+            entry_id,
+            name,
+            uids_entitled_to_edit,
+            uids_entitled_to_publish,
+    ):
         self.client.baseEntry.update(
             entryId=entry_id,
-            baseEntry=KalturaBaseEntry(entitledUsersEdit=','.join(_to_normalized_set(entitled_users))),
+            baseEntry=KalturaBaseEntry(
+                description=description,
+                displayInSearch=KalturaEntryDisplayInSearchType.PARTNER_ONLY,
+                entitledUsersEdit=','.join(_to_normalized_set(uids_entitled_to_edit)),
+                entitledUsersPublish=','.join(_to_normalized_set(uids_entitled_to_publish)),
+                moderationStatus=KalturaEntryModerationStatus.AUTO_APPROVED,
+                name=name,
+                partnerId=app.config['KALTURA_PARTNER_ID'],
+                status=KalturaEntryStatus.NO_CONTENT,
+                tags=CREATED_BY_DIABLO_TAG,
+                type=KalturaEntryType.MEDIA_CLIP,
+                userId='RecordScheduleGroup',
+            ),
         )
 
     def _get_events(self, kaltura_event_filter):
@@ -488,6 +507,7 @@ def _event_to_json(event):
         'geoLongitude': event.geoLongitude,
         'id': event.id,
         'location': event.location,
+        'name': event.name if hasattr(event, 'name') else None,
         'organizer': event.organizer,
         'ownerId': event.ownerId,
         'parentId': event.parentId,
