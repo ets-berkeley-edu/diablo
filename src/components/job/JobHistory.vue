@@ -1,8 +1,8 @@
 <template>
   <v-card outlined class="elevation-1">
-    <v-card-title class="align-start">
+    <v-card-title class="align-start px-4 py-8">
       <div class="pt-2">
-        <h2><v-icon class="pb-1" large>mdi-history</v-icon> History</h2>
+        <h2><v-icon class="pb-1" :color="$vuetify.theme.dark ? 'white' : 'primary'" large>mdi-history</v-icon> History</h2>
       </div>
       <v-spacer></v-spacer>
       <v-text-field

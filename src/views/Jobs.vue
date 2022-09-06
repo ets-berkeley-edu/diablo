@@ -1,19 +1,19 @@
 <template>
-  <div v-if="!loading" class="pt-3">
-    <v-card outlined class="elevation-1 mb-6">
+  <div v-if="!loading" class="pt-2">
+    <v-card outlined class="elevation-1">
       <v-card-title class="align-start">
         <PageTitle icon="mdi-engine-outline" text="The Engine Room" />
       </v-card-title>
       <v-card-text>
-        <div class="mb-3">
-          NOTE: You cannot edit a job schedule if the job is either enabled or running.
-        </div>
         <v-data-table
           disable-sort
           :headers="headers"
           hide-default-footer
           :items="jobSchedule.jobs"
         >
+          <template #header.schedule>
+            <div class="pl-4">Schedule</div>
+          </template>
           <template #body="{items}">
             <tbody>
               <tr v-if="!items.length">
@@ -22,24 +22,34 @@
                 </td>
               </tr>
               <tr v-for="job in items" :key="job.key">
-                <td class="pb-2 pl-5 pt-2 text-center">
+                <td class="pl-5 py-4 text-center">
                   <v-btn
                     v-if="!isRunning(job.key)"
                     :id="`run-job-${job.key}`"
                     :aria-label="`Run job ${job.key}`"
+                    color="transparent"
+                    fab
+                    large
                     @click="runJob(job)"
                   >
-                    Run <span class="sr-only">job {{ job.name }}</span><v-icon class="pl-2" small>mdi-run-fast</v-icon>
+                    <span class="sr-only">Run job {{ job.name }}</span>
+                    <v-icon color="light-green" large>mdi-play</v-icon>
                   </v-btn>
-                  <v-progress-circular
-                    v-if="isRunning(job.key)"
-                    indeterminate
-                    size="24"
-                    width="4"
-                  ></v-progress-circular>
+                  <div v-if="isRunning(job.key)" class="progress-spinner-height pr-1 pt-2">
+                    <v-progress-circular
+                      color="light-green"
+                      indeterminate
+                      large
+                      size="48"
+                      width="8"
+                    />
+                  </div>
                 </td>
-                <td class="pr-4 text-no-wrap">
-                  {{ job.name }}
+                <td
+                  class="pr-4 text-no-wrap"
+                  :class="$vuetify.theme.dark ? 'job-name-dark-mode' : 'job-name'"
+                >
+                  <span class="font-weight-bold subtitle-1 white--text">{{ job.name }}</span>
                 </td>
                 <td class="pb-2 pt-2">
                   <span v-html="job.description"></span>
@@ -142,7 +152,7 @@ export default {
     editJobDialog: false,
     headers: [
       {},
-      {text: 'Name', value: 'name'},
+      {text: '', value: 'name'},
       {text: 'Description', value: 'description'},
       {text: 'Schedule', value: 'schedule'},
       {text: 'Enabled'}
@@ -233,3 +243,18 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+.job-name {
+  background-color: rgba(55, 141, 197, 0.6);
+}
+.job-name-dark-mode {
+  background-color: rgba(55, 141, 197, 0.3);
+}
+.progress-spinner-height {
+  max-height: 64px;
+  max-width: 64px;
+  max-height: 64px;
+  min-height: 64px;
+}
+</style>
