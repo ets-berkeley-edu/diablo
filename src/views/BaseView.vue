@@ -37,12 +37,13 @@
     </v-navigation-drawer>
     <v-app-bar
       v-if="!$route.meta.printable"
+      v-wave="waveOptions"
       app
       :clipped-left="$vuetify.breakpoint.lgAndUp"
       color="header-background"
       dark
     >
-      <div class="display-1" :class="{'mood-ring': $vuetify.theme.dark}">
+      <div class="display-1 not-selectable" :class="{'mood-ring': $vuetify.theme.dark}">
         Course Capture
         <a
           id="skip-to-content-link"
@@ -129,6 +130,17 @@ export default {
   mixins: [Context, Util],
   data: () => ({
     navItems: undefined,
+    waveOptions: {
+      cancellationPeriod: 75,
+      color: ['#1abc9c', '#2980b9', '#2980b9', '#378dc5', '#378dc5', '#378dc5', '#d35400', '#f1c40f'][Math.floor(Math.random() * 8)],
+      dissolveDuration: 0.4,
+      duration: 1.8,
+      easing: 'ease-out',
+      finalOpacity: 0.1,
+      initialOpacity: 0.2,
+      tagName: 'div',
+      trigger: 'auto'
+    }
   }),
   created() {
     this.prefersColorScheme()

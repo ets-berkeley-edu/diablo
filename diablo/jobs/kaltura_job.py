@@ -80,7 +80,7 @@ def _update_already_scheduled_events():
                         )
             # Update Kaltura edit permissions per UID.
             instructors_who_can_edit_recordings = get_instructors_who_can_edit_recordings(course)
-            uids_entitled_to_edit = [i['uids'] for i in instructors_who_can_edit_recordings]
+            uids_entitled_to_edit = [i['uid'] for i in instructors_who_can_edit_recordings]
             description = get_series_description(
                 course_label=course_name,
                 instructors=instructors_who_can_edit_recordings,
