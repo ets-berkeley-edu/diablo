@@ -27,6 +27,7 @@ import os
 
 from diablo import cache
 import diablo.factory
+from flask_login import logout_user
 from moto import mock_sts
 import pytest
 from tests.util import override_config
@@ -87,6 +88,11 @@ def db(app):
     _db = development_db.load()
 
     return _db
+
+
+@pytest.fixture(autouse=True, scope='function')
+def logout():
+    logout_user()
 
 
 @pytest.fixture(scope='function', autouse=True)
