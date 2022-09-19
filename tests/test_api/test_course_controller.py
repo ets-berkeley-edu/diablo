@@ -27,7 +27,7 @@ from io import StringIO
 import json
 import random
 
-from diablo import std_commit
+from diablo import db, std_commit
 from diablo.jobs.canvas_job import CanvasJob
 from diablo.jobs.tasks.queued_emails_task import QueuedEmailsTask
 from diablo.lib.berkeley import get_recording_end_date, get_recording_start_date
@@ -38,6 +38,7 @@ from diablo.models.scheduled import Scheduled
 from diablo.models.sent_email import SentEmail
 from diablo.models.sis_section import SisSection
 from flask import current_app as app
+from sqlalchemy import text
 from tests.test_api.api_test_utils import api_approve, api_get_course, get_eligible_meeting, get_instructor_uids, \
     mock_scheduled
 from tests.util import override_config, simply_yield, test_approvals_workflow
@@ -821,6 +822,42 @@ class TestCoursesChanges:
         )
         api_json = self._api_course_changes(client, term_id=self.term_id)
         course = _find_course(api_json=api_json, section_id=section_2_id, term_id=self.term_id)
+        assert course
+        assert course['scheduled']['hasObsoleteRoom'] is True
+        assert course['scheduled']['hasObsoleteDates'] is False
+        assert course['scheduled']['hasObsoleteTimes'] is False
+        assert course['scheduled']['hasObsoleteInstructors'] is False
+
+    def test_room_change_to_null(self, client, fake_auth):
+        """Admins can see room changes when course has no meeting location whatsoever."""
+        fake_auth.login(admin_uid)
+        section_id = 50019
+        course = SisSection.get_course(term_id=self.term_id, section_id=section_id)
+        all_meetings = course['meetings']['eligible'] + course['meetings']['ineligible']
+        all_rooms = [m['room'] for m in all_meetings if m['room']]
+        assert not all_rooms
+
+        def _update(meeting_location):
+            sql = 'UPDATE sis_sections SET meeting_location = :meeting_location WHERE term_id = :term_id AND section_id = :section_id'
+            args = {
+                'meeting_location': meeting_location,
+                'section_id': section_id,
+                'term_id': self.term_id,
+            }
+            db.session.execute(text(sql), args)
+            std_commit(allow_test_environment=True)
+        # In order to schedule recordings, we assign the course a room temporarily.
+        temporary_meeting_location = 'Barker 101'
+        _update(temporary_meeting_location)
+        api_json = api_get_course(client, section_id=section_id, term_id=self.term_id)
+        assert api_json['meetings']['eligible'][0]['location'] == temporary_meeting_location
+        # Schedule recordings
+        mock_scheduled(section_id=section_id, term_id=self.term_id)
+        # Remove the room assignment
+        _update(None)
+        # Verify that course shows up in the 'Changes' feed.
+        api_json = self._api_course_changes(client, term_id=self.term_id)
+        course = _find_course(api_json=api_json, section_id=section_id, term_id=self.term_id)
         assert course
         assert course['scheduled']['hasObsoleteRoom'] is True
         assert course['scheduled']['hasObsoleteDates'] is False

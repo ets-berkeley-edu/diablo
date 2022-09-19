@@ -29,7 +29,7 @@
           <CoursePageSidebar :after-unschedule="afterUnschedule" :course="course" />
         </v-col>
         <v-col>
-          <v-container v-if="isCurrentTerm && meeting.room.capability && hasValidMeetingTimes && !multipleEligibleMeetings" class="elevation-2 pa-6">
+          <v-container v-if="isCurrentTerm && capability && hasValidMeetingTimes && !multipleEligibleMeetings" class="elevation-2 pa-6">
             <v-row>
               <v-col id="approvals-described" class="font-weight-medium mb-1 red--text">
                 <span v-if="queuedForScheduling && !course.deletedAt">This course is currently queued for scheduling. Recordings will be scheduled in an hour or less. </span>
@@ -75,7 +75,7 @@
             <v-row v-if="!hasCurrentUserApproved">
               <v-col cols="12">
                 <CourseCaptureExplained />
-                <div class="font-italic font-weight-light pl-2 pt-4">
+                <div v-if="meeting.room" class="font-italic font-weight-light pl-2 pt-4">
                   <div :class="{'pt-2': meeting.room.isAuditorium}">
                     <v-icon v-if="!meeting.room.isAuditorium">mdi-information-outline</v-icon>
                     Instructors will now be able to review and edit their Course Capture recordings prior to releasing them to students.
@@ -224,14 +224,16 @@
               </v-col>
             </v-row>
           </v-container>
-          <v-container v-if="isCurrentTerm && !meeting.room.capability">
+          <v-container v-if="isCurrentTerm && !capability">
             <v-row>
               <div class="d-flex justify-start">
                 <div class="pr-2">
                   <v-icon color="red">mdi-alert</v-icon>
                 </div>
                 <div id="course-not-eligible">
-                  This course is not eligible for Course Capture because {{ meeting.room.location }} is not capture-enabled.
+                  This course is not eligible for Course Capture because
+                  <span v-if="location">{{ location }} is not capture-enabled.</span>
+                  <span v-if="!location">it has no meeting location.</span>
                 </div>
               </div>
             </v-row>
@@ -250,7 +252,7 @@
               </div>
             </v-row>
           </v-container>
-          <v-container v-if="isCurrentTerm && meeting.room.capability && !multipleEligibleMeetings && !hasValidMeetingTimes">
+          <v-container v-if="isCurrentTerm && capability && !multipleEligibleMeetings && !hasValidMeetingTimes">
             <v-row>
               <div class="d-flex justify-start">
                 <div class="pr-2">
@@ -311,6 +313,7 @@ export default {
     approvedByAdmins: undefined,
     approvedByInstructorUIDs: undefined,
     auditoriums: undefined,
+    capability: undefined,
     course: undefined,
     courseDisplayTitle: null,
     hasCurrentUserApproved: undefined,
@@ -319,6 +322,7 @@ export default {
     instructorProxies: undefined,
     instructorProxyPrivileges: undefined,
     isApproving: false,
+    location: undefined,
     multipleEligibleMeetings: undefined,
     publishType: undefined,
     publishTypeOptions: undefined,
@@ -388,6 +392,10 @@ export default {
       // Meetings
       const eligibleMeetings = this.course.meetings.eligible
       this.meeting = eligibleMeetings[0] || this.course.meetings.ineligible[0]
+      if (this.meeting.room) {
+        this.capability = this.meeting.room.capability
+        this.location = this.meeting.room.location
+      }
       this.multipleEligibleMeetings = (eligibleMeetings.length > 1)
       this.$_.each(['endDate', 'endTime', 'startDate', 'startTime'], key => {
         this.hasValidMeetingTimes = !!this.$_.find(eligibleMeetings, key)
@@ -405,7 +413,8 @@ export default {
       })
       this.courseDisplayTitle = this.getCourseCodes(this.course)[0]
       this.hasCurrentUserApproved = this.$_.includes(this.$_.map(approvals, 'approvedBy'), this.$currentUser.uid)
-      this.recordingTypeOptions = this.$_.map(this.meeting.room.recordingTypeOptions, (text, value) => {
+      const recordingTypeOptions = this.meeting.room ? this.meeting.room.recordingTypeOptions : []
+      this.recordingTypeOptions = this.$_.map(recordingTypeOptions, (text, value) => {
         const premiumCost = this.$config.courseCapturePremiumCost
         return {
           text: text.includes('with_operator') && premiumCost ? `${text} ($${premiumCost})` : text,

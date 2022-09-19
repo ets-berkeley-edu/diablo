@@ -127,7 +127,8 @@
               v-if="(isRoomObsolete || course.scheduled.hasObsoleteDates || course.scheduled.hasObsoleteTimes) && !course.deletedAt"
               :class="{'pt-2': course.scheduled.hasObsoleteInstructors}"
             >
-              <h5>All Meetings</h5>
+              <h5 v-if="this.$_.some(meetings, m => !!m.room)">All Meetings</h5>
+              <h5 v-if="!this.$_.some(meetings, m => !!m.room)">{{ course.label }} currently has no meeting locations.</h5>
               <div v-for="(meeting, index) in meetings" :key="index">
                 <CourseRoom :course="course" :room="meeting.room" />
                 <div v-if="!isRoomObsolete && (course.scheduled.hasObsoleteDates || course.scheduled.hasObsoleteTimes)" class="pb-2">

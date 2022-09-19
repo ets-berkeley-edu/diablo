@@ -55,14 +55,23 @@ class InstructorEmailsTask(BaseTask):
         if all_scheduled:
             email_template = EmailTemplate.get_template_by_type(template_type)
             courses = SisSection.get_courses(
-                term_id=self.term_id,
-                section_ids=[s.section_id for s in all_scheduled],
                 include_deleted=True,
+                include_null_meeting_locations=True,
+                section_ids=[s.section_id for s in all_scheduled],
+                term_id=self.term_id,
             )
             courses_per_section_id = dict((course['sectionId'], course) for course in courses)
             for scheduled in all_scheduled:
-                course = courses_per_section_id.get(scheduled.section_id)
+                section_id = scheduled.section_id
+                course = courses_per_section_id.get(section_id)
                 if course:
+                    all_meetings = course['meetings']['eligible'] + course['meetings']['ineligible']
+                    all_rooms = [m['room'] for m in all_meetings if m['room']]
+                    if not all_rooms:
+                        _send_system_error_email(
+                            scheduled=scheduled,
+                            subject=f'Scheduled course no longer has meeting location (section_id={section_id})',
+                        )
                     if self._has_moved_to_ineligible_room(course, scheduled) or course['deletedAt']:
                         if email_template:
                             for instructor in course['instructors']:
@@ -77,33 +86,44 @@ class InstructorEmailsTask(BaseTask):
                                 QueuedEmail.create(
                                     message=_get_interpolate_content(email_template.message),
                                     recipient=instructor,
-                                    section_id=course['sectionId'],
+                                    section_id=section_id,
                                     subject_line=_get_interpolate_content(email_template.subject_line),
                                     template_type=template_type,
                                     term_id=self.term_id,
                                 )
-                            Scheduled.add_alert(scheduled_id=course['scheduled']['id'], template_type=template_type)
+                            Scheduled.add_alert(
+                                scheduled_id=course['scheduled']['id'],
+                                template_type=template_type,
+                            )
                         else:
                             send_system_error_email(f"""
                                 No '{template_type}' email template available.
                                 We are unable to notify {course['label']} instructors of room change.
                             """)
                 else:
-                    kaltura_url = f'{app.config["KALTURA_MEDIA_SPACE_URL"]}/recscheduling/index/edit-event/eventid/{scheduled.kaltura_schedule_id}'
-                    message = f"""\n
-                        Course: {scheduled.course_display_name} (section_id={scheduled.section_id})\n\n
-                        Instructor UIDs: {', '.join(scheduled.instructor_uids if scheduled.instructor_uids else '&mdash;')}\n\n
-                        Kaltura schedule ID: {scheduled.kaltura_schedule_id}\n\n
-                        Edit Kaltura series: {kaltura_url}\n\n
-                    """
-                    subject = f'Scheduled course has no SIS data (section_id={scheduled.section_id})'
-                    app.logger.error(subject)
-                    send_system_error_email(
-                        message=message,
-                        subject=subject,
+                    _send_system_error_email(
+                        scheduled=scheduled,
+                        subject=f'Scheduled course has no SIS data (section_id={section_id})',
                     )
 
     def _has_moved_to_ineligible_room(self, course, scheduled):
-        eligible_meetings = course.get('meetings', {}).get('eligible', [])
+        eligible_meetings = course['meetings']['eligible']
         has_room_change = scheduled.room_id not in [m.get('room', {}).get('id') for m in eligible_meetings]
         return has_room_change and (not eligible_meetings or scheduled.room_id not in self.eligible_room_ids)
+
+
+def _send_system_error_email(scheduled, subject):
+    base_url = app.config['KALTURA_MEDIA_SPACE_URL']
+    kaltura_schedule_id = scheduled.kaltura_schedule_id
+    kaltura_url = f'{base_url}/recscheduling/index/edit-event/eventid/{kaltura_schedule_id}'
+    message = f"""\n
+        Course: {scheduled.course_display_name} (section_id={scheduled.section_id})\n\n
+        Instructor UIDs: {', '.join(scheduled.instructor_uids if scheduled.instructor_uids else '&mdash;')}\n\n
+        Kaltura schedule ID: {kaltura_schedule_id}\n\n
+        Edit Kaltura series: {kaltura_url}\n\n
+    """
+    app.logger.error(subject)
+    send_system_error_email(
+        message=message,
+        subject=subject,
+    )

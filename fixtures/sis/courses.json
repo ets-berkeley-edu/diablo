@@ -399,6 +399,21 @@
       "term_id": 2218
     },
     {
+      "allowed_units": "4.0",
+      "instructor_uid": "10004",
+      "meeting_days": "MOWE",
+      "meeting_end_date": "2021-12-11",
+      "meeting_end_time": "13:59",
+      "meeting_location": null,
+      "meeting_start_date": "2021-08-26",
+      "meeting_start_time": "13:00",
+      "course_name": "CHEM C110",
+      "course_title": "General Biochemistry and Molecular Biology",
+      "instruction_format": "LEC",
+      "section_id": 50019,
+      "term_id": 2218
+    },
+    {
       "allowed_units": "2.0",
       "instructor_uid": "10005",
       "meeting_days": "MOWEFR",

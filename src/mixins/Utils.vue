@@ -34,7 +34,7 @@ export default {
     },
     isInRoom(course, room) {
       const meetings = course.meetings.eligible.concat(course.meetings.ineligible)
-      return _.includes(_.map(meetings, 'room.id'), room.id)
+      return room && _.includes(_.map(meetings, 'room.id'), room.id)
     },
     oxfordJoin: arr => {
       switch(arr.length) {

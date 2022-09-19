@@ -178,7 +178,7 @@ class SisSection(db.Model):
                 r.id AS room_id,
                 r.location AS room_location
             FROM sis_sections s
-            JOIN rooms r ON r.location = s.meeting_location
+            LEFT JOIN rooms r ON r.location = s.meeting_location
             LEFT JOIN instructors i ON i.uid = s.instructor_uid
             WHERE
                 s.term_id = :term_id
@@ -212,7 +212,7 @@ class SisSection(db.Model):
                 r.id AS room_id,
                 r.location AS room_location
             FROM sis_sections s
-            JOIN rooms r ON r.location = s.meeting_location
+            LEFT JOIN rooms r ON r.location = s.meeting_location
             JOIN scheduled d ON
                 d.section_id = s.section_id
                 AND d.term_id = :term_id
@@ -275,6 +275,7 @@ class SisSection(db.Model):
             term_id,
             include_administrative_proxies=False,
             include_deleted=False,
+            include_null_meeting_locations=False,
             section_ids=None,
     ):
         instructor_role_codes = ALL_INSTRUCTOR_ROLE_CODES if include_administrative_proxies else AUTHORIZED_INSTRUCTOR_ROLE_CODES
@@ -298,7 +299,7 @@ class SisSection(db.Model):
                 r.id AS room_id,
                 r.location AS room_location
             FROM sis_sections s
-            JOIN rooms r ON r.location = s.meeting_location
+            {'LEFT' if include_null_meeting_locations else ''} JOIN rooms r ON r.location = s.meeting_location
             LEFT JOIN instructors i ON i.uid = s.instructor_uid
             WHERE
                 {course_filter}
@@ -954,7 +955,7 @@ def _decorate_course_scheduling(course):
 def _decorate_course_changes(course):
     meetings = course['meetings']['eligible'] + course['meetings']['ineligible']
     meeting = meetings[0] if meetings else None
-    room_id = meeting.get('room', {}).get('id') if meeting else None
+    room_id = meeting['room']['id'] if meeting and meeting.get('room') else None
 
     scheduled = course['scheduled']
     if scheduled:
