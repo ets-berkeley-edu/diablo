@@ -29,6 +29,7 @@ from smtplib import SMTP
 
 from diablo import skip_when_pytest
 from diablo.lib.util import get_eb_environment
+from diablo.models.cross_listing import CrossListing
 from diablo.models.sent_email import SentEmail
 from flask import current_app as app
 
@@ -103,12 +104,26 @@ class BConnected:
         # Send emails
         _send()
 
+        recipient_uid = recipient['uid']
+        term_id = term_id or app.config['CURRENT_TERM_ID']
         SentEmail.create(
-            recipient_uid=recipient['uid'],
+            recipient_uid=recipient_uid,
             section_id=section_id,
             template_type=template_type,
-            term_id=term_id or app.config['CURRENT_TERM_ID'],
+            term_id=term_id,
         )
+        for cross_listed_section_id, instructor_uids in CrossListing.get_instructor_uids_of_cross_listed_sections(
+            section_id=section_id,
+            term_id=term_id,
+        ).items():
+            if recipient_uid in instructor_uids:
+                SentEmail.create(
+                    recipient_uid=recipient_uid,
+                    section_id=cross_listed_section_id,
+                    template_type=template_type,
+                    term_id=term_id,
+                )
+
         return True
 
     def ping(self):

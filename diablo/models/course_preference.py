@@ -57,7 +57,7 @@ class CoursePreference(db.Model):
 
     @classmethod
     def update_opt_out(cls, term_id, section_id, opt_out):
-        section_ids = CrossListing.get_cross_listed_sections(section_id=section_id, term_id=term_id) + [section_id]
+        section_ids = CrossListing.get_cross_listed_section_ids(section_id=section_id, term_id=term_id) + [section_id]
         criteria = and_(cls.section_id.in_(section_ids), cls.term_id == term_id)
         for row in cls.query.filter(criteria).all():
             row.has_opted_out = opt_out
