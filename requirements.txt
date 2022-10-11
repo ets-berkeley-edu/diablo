@@ -6,7 +6,7 @@ Flask-Cors==3.0.10
 Flask-Login==0.6.2
 Flask-SQLAlchemy==2.5.1
 Flask==2.2.2
-KalturaApiClient==18.12.0
+KalturaApiClient==18.15.1
 ldap3==2.7
 pprintpp==0.4.0
 psycopg2-binary==2.9.3

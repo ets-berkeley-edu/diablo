@@ -36,6 +36,30 @@ from tests.util import test_approvals_workflow
 
 class TestInvitationEmailsTask:
 
+    def test_course_opted_out(self, app):
+        """Do not send email to courses that have opted out."""
+        term_id = app.config['CURRENT_TERM_ID']
+        with test_approvals_workflow(app):
+            section_id = 50006
+            CoursePreference.update_opt_out(term_id=term_id, section_id=section_id, opt_out=True)
+            std_commit(allow_test_environment=True)
+
+            timestamp = utc_now()
+            # Emails are queued but not sent.
+            InvitationEmailsTask().run()
+            assert len(_get_invitations_since(term_id, timestamp)) == 0
+            # Emails are sent.
+            QueuedEmailsTask().run()
+            invitations = _get_invitations_since(term_id, timestamp)
+            assert len(invitations) == 18
+            # Assert that cross-listings are accounted for in the 'sent_emails' table.
+            _assert_coverage_of_cross_listings(
+                expected_cross_listing_count=4,
+                sent_emails=invitations,
+                term_id=term_id,
+            )
+            assert not next((e for e in invitations if e.section_id == section_id), None)
+
     def test_invite_new_instructors(self, app, db_session):
         """Invite all assigned instructors who haven't yet received an invitation."""
         term_id = app.config['CURRENT_TERM_ID']
@@ -48,8 +72,13 @@ class TestInvitationEmailsTask:
             # Emails are sent. We have more emails than courses since some courses have multiple instructors.
             QueuedEmailsTask().run()
             invitations = _get_invitations_since(term_id, timestamp)
-            assert len(invitations) == 14
-
+            assert len(invitations) == 18
+            # Assert that cross-listings are accounted for in the 'sent_emails' table.
+            _assert_coverage_of_cross_listings(
+                expected_cross_listing_count=4,
+                sent_emails=invitations,
+                term_id=term_id,
+            )
             # Each eligible course has an invitation.
             eligible_courses = [c for c in SisSection.get_courses(term_id=term_id) if len(c['meetings']['eligible']) == 1]
             assert len(eligible_courses) == 11
@@ -83,24 +112,6 @@ class TestInvitationEmailsTask:
             assert invitation['sectionId'] == 50002
             assert invitation['recipientUid'] == '10008'
 
-    def test_course_opted_out(self, app):
-        """Do not send email to courses that have opted out."""
-        term_id = app.config['CURRENT_TERM_ID']
-        with test_approvals_workflow(app):
-            section_id = 50006
-            CoursePreference.update_opt_out(term_id=term_id, section_id=section_id, opt_out=True)
-            std_commit(allow_test_environment=True)
-
-            timestamp = utc_now()
-            # Emails are queued but not sent.
-            InvitationEmailsTask().run()
-            assert len(_get_invitations_since(term_id, timestamp)) == 0
-            # Emails are sent.
-            QueuedEmailsTask().run()
-            invitations = _get_invitations_since(term_id, timestamp)
-            assert len(invitations) == 15
-            assert not next((e for e in invitations if e.section_id == section_id), None)
-
     def test_no_duplicate_invites(self, app):
         """Do not send the same invite twice."""
         with test_approvals_workflow(app):
@@ -129,6 +140,19 @@ class TestInvitationEmailsTask:
             emails_sent = _get_invitations_since(term_id, timestamp)
             recipients = [f'{e.template_type}_{e.recipient_uid}_{e.term_id}_{e.section_id}' for e in emails_sent]
             assert len(set(recipients)) == len(recipients)
+
+
+def _assert_coverage_of_cross_listings(expected_cross_listing_count, sent_emails, term_id):
+    cross_listing_count = 0
+    section_ids = [e.section_id for e in sent_emails]
+    for course in SisSection.get_courses(section_ids=section_ids, term_id=term_id):
+        for cross_listing in course['crossListings']:
+            cross_listed_section_id = cross_listing['sectionId']
+            invitation = next(
+                (e for e in sent_emails if e.section_id == cross_listed_section_id and e.term_id == term_id), None)
+            assert invitation
+            cross_listing_count += 1
+    assert cross_listing_count == expected_cross_listing_count
 
 
 def _get_invitations_since(term_id, timestamp):
