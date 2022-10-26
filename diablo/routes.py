@@ -101,8 +101,11 @@ def register_routes(app):
             response.headers['Access-Control-Allow-Credentials'] = 'true'
             response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS, PUT, DELETE'
         if request.full_path.startswith('/api'):
+            forwarded_for = request.headers.get('X-Forwarded-For')
+            forwarded_for = forwarded_for.split(',')[0] if forwarded_for else None
+
             log_message = ' '.join([
-                request.remote_addr,
+                forwarded_for or request.remote_addr,
                 request.method,
                 request.full_path,
                 response.status,
