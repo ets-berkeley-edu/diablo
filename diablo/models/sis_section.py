@@ -931,7 +931,7 @@ def _decorate_course_approvals(course):
         course['hasNecessaryApprovals'] = True
 
     course['approvalStatus'] = 'Not Invited'
-    instructors = filter(lambda instructor: instructor['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES, course['instructors'])
+    instructors = list(filter(lambda instructor: instructor['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES, course['instructors']))
     if instructors:
         approval_uids = [a['approvedBy'] for a in course['approvals']]
         necessary_approval_uids = [i['uid'] for i in instructors]
