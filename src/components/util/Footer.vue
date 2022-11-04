@@ -8,16 +8,7 @@
     <v-container fluid class="pa-1">
       <v-row no-gutters justify="space-between">
         <v-col>
-          Problem? Question? Email us at
-          <a
-            id="diablo-support-mailto"
-            aria-label="Open new window to send email"
-            class="white--text"
-            :href="`mailto:${$config.emailCourseCaptureSupport}`"
-            target="_blank"
-          >
-            {{ $config.emailCourseCaptureSupport }}
-          </a>
+          <ContactUsPrompt href-mailto-class="white--text" />
         </v-col>
         <v-col>
           <div class="float-right">
@@ -36,10 +27,12 @@
 </template>
 
 <script>
+import ContactUsPrompt from '@/components/util/ContactUsPrompt'
 import Context from '@/mixins/Context'
 
 export default {
   name: 'Footer',
-  mixins: [Context]
+  mixins: [Context],
+  components: {ContactUsPrompt}
 }
 </script>
