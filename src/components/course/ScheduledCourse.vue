@@ -44,12 +44,12 @@
     </v-list-item>
     <v-card-text v-if="currentUserMustApprove">
       <v-container>
-        <v-row class="pb-2">
-          <h4 class="title">We need your approval</h4>
+        <v-row class="pb-4">
+          <h4 class="ml-3 title">We need your approval</h4>
         </v-row>
         <v-row no-gutters align="start">
           <v-col md="auto">
-            <v-checkbox id="agree-to-terms-checkbox" v-model="agreedToTerms" class="mt-0"></v-checkbox>
+            <v-checkbox id="agree-to-terms-checkbox" v-model="agreedToTerms" class="mt-0" />
           </v-col>
           <v-col>
             <TermsAgreementText />
