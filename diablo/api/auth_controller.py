@@ -50,7 +50,7 @@ def dev_auth_login():
             return tolerant_jsonify({'message': 'Invalid credentials'}, 401)
         user = User(uid)
         if not user.is_active:
-            msg = f'UID {uid} is neither an Admin user nor active in CalNet.'
+            msg = f'Sorry, {uid} is not authorized to use this tool.'
             app.logger.error(msg)
             return tolerant_jsonify({'message': msg}, 403)
         if not login_user(user, force=True, remember=True):
