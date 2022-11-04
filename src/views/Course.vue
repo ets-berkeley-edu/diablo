@@ -51,9 +51,13 @@
                 </span>
               </v-col>
             </v-row>
-            <v-row v-if="course.scheduled">
+            <v-row v-if="course.scheduled" no-gutters>
               <v-col>
-                <ScheduledCourse :after-approve="render" :course="course" />
+                <ScheduledCourse
+                  :after-approve="render"
+                  class="px-2"
+                  :course="course"
+                />
               </v-col>
             </v-row>
             <v-row v-if="hasCurrentUserApproved && !course.scheduled">
@@ -376,10 +380,10 @@ export default {
     approve() {
       this.isApproving = true
       approve(
-        this.instructorProxies,
         this.publishType,
         this.recordingType,
-        this.course.sectionId
+        this.course.sectionId,
+        this.instructorProxies
       ).then(data => {
         this.render(data)
         this.isApproving = false
