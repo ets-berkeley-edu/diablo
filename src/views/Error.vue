@@ -13,16 +13,18 @@
         <span id="error-message" aria-live="polite" role="alert">{{ message || 'Uh oh, there was a problem.' }}</span>
       </div>
       <div>
-        Problem? Question?
-        Email us at <a id="help-mailto" :href="`mailto:${$config.emailCourseCaptureSupport}`" target="_blank">{{ $config.emailCourseCaptureSupport }}</a>.
+        <ContactUsPrompt />
       </div>
     </div>
   </v-banner>
 </template>
 
 <script>
+import ContactUsPrompt from '@/components/util/ContactUsPrompt'
+
 export default {
   name: 'Error',
+  components: {ContactUsPrompt},
   data: () => ({
     message: undefined
   }),

@@ -111,6 +111,7 @@
                       v-model="recordingType"
                       :disabled="isApproving"
                       :full-width="true"
+                      hide-details
                       item-text="text"
                       item-value="value"
                       :items="recordingTypeOptions"
@@ -346,7 +347,9 @@ export default {
       return this.course.hasNecessaryApprovals && !this.course.scheduled
     },
     showSignUpForm() {
-      return !this.course.scheduled && !this.hasCurrentUserApproved && !this.course.deletedAt
+      let show = !this.course.scheduled && !this.hasCurrentUserApproved && !this.course.deletedAt
+      show &&= (this.$currentUser.isAdmin || this.$_.map(this.instructors, 'uid').includes(this.$currentUser.uid))
+      return show
     }
   },
   created() {

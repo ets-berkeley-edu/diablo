@@ -14,6 +14,10 @@
         role="alert"
       >
         {{ snackbar.text }}
+        <ContactUsPrompt
+          v-if="includeContactUsPrompt"
+          href-mailto-class="white--text"
+        />
       </div>
       <div>
         <v-btn
@@ -30,10 +34,18 @@
 </template>
 
 <script>
+import ContactUsPrompt from '@/components/util/ContactUsPrompt'
 import Context from '@/mixins/Context'
 
 export default {
   name: 'Snackbar',
-  mixins: [Context]
+  mixins: [Context],
+  components: {ContactUsPrompt},
+  props: {
+    includeContactUsPrompt: {
+      required: false,
+      type: Boolean,
+    }
+  }
 }
 </script>

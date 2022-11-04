@@ -1,6 +1,6 @@
 <template>
   <v-app :id="$vuetify.theme.dark ? 'dark' : 'light'">
-    <Snackbar />
+    <Snackbar include-contact-us-prompt />
     <v-container class="background-splash" fill-height fluid>
       <v-main>
         <v-card
