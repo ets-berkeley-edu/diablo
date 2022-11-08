@@ -25,6 +25,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 from datetime import datetime
 
 from diablo.lib.util import readable_join
+from diablo.models.sis_section import AUTHORIZED_INSTRUCTOR_ROLE_CODES
 from KalturaClient.Plugins.Schedule import KalturaScheduleEventClassificationType, KalturaScheduleEventRecurrenceType, \
     KalturaScheduleEventStatus
 
@@ -54,7 +55,8 @@ def get_status_name(status_type):
 
 
 def get_series_description(course_label, instructors, term_name):
-    names = [instructor['name'] for instructor in instructors]
+    instructors_who_teach = list(filter(lambda i: i['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES, instructors))
+    names = [instructor['name'] for instructor in instructors_who_teach]
     summary = f'{course_label} ({term_name}) is taught by {readable_join(names)}.'
     legalese = f"Copyright ©{datetime.strftime(datetime.now(), '%Y')} UC Regents; all rights reserved."
     return f'{summary} {legalese}'

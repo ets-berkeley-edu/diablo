@@ -33,7 +33,6 @@ from diablo.lib.berkeley import get_first_matching_datetime_of_term, get_recordi
 from diablo.lib.kaltura_util import get_classification_name, get_recurrence_name, get_series_description, \
     get_status_name, represents_recording_series
 from diablo.lib.util import default_timezone, epoch_time_to_isoformat, format_days
-from diablo.models.sis_section import AUTHORIZED_INSTRUCTOR_ROLE_CODES
 from flask import current_app as app
 from KalturaClient import KalturaClient, KalturaConfiguration
 from KalturaClient.Plugins.Core import KalturaBaseEntry, KalturaCategoryEntry, KalturaCategoryEntryFilter, \
@@ -351,7 +350,7 @@ class Kaltura:
         )
         description = get_series_description(
             course_label=course_label,
-            instructors=list(filter(lambda i: i['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES, instructors)),
+            instructors=instructors,
             term_name=term_name,
         )
         base_entry = self._create_kaltura_base_entry(
