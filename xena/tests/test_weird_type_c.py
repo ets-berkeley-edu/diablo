@@ -530,9 +530,9 @@ class TestWeirdTypeC:
 
     def test_room_removed_current_card(self):
         actual = self.changes_page.current_card_schedule(self.section, list_node=None, detail_node=1)
-        app.logger.info(f'Expecting: {self.meeting_1.room.name}')
-        app.logger.info(f'Actual: {actual}')
-        assert self.meeting_1.room.name in actual
+        app.logger.info('Expecting: ""')
+        app.logger.info(f'Actual: "{actual}"')
+        assert not actual
 
     # ROOM ADDED
 

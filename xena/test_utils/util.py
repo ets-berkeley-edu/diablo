@@ -210,7 +210,8 @@ def delete_sis_sections_rows(section):
 def add_sis_sections_rows(section):
     instruction_format = section.number.split(' ')[0]
     section_num = section.number.split(' ')[1]
-    for instructor in section.instructors:
+    all_instructors = section.instructors + section.proxies
+    for instructor in all_instructors:
         instructor_name = f'{instructor.first_name} {instructor.last_name}'
         for meeting in section.meetings:
             room = meeting.room.name.replace("'", "''")

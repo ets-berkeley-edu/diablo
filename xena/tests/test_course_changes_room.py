@@ -216,4 +216,17 @@ class TestCourseRoomChanges:
     def test_null_room_changes_page_summary(self):
         self.jobs_page.click_course_changes_link()
         self.changes_page.wait_for_results()
+        assert self.changes_page.is_course_row_present(self.real_section)
+
+    def test_admin_unsched_null_room(self):
+        self.sign_up_page.load_page(self.real_section)
+        self.sign_up_page.confirm_unscheduling_ineligible(self.recording_sched)
+
+    def test_changes_page_null_room_unsched(self):
+        self.sign_up_page.click_course_changes_link()
+        self.changes_page.wait_for_results()
         assert not self.changes_page.is_course_row_present(self.real_section)
+
+    def test_no_kaltura_series_null_room(self):
+        self.kaltura_page.load_event_edit_page(self.recording_sched.series_id)
+        self.kaltura_page.wait_for_title('Access Denied - UC Berkeley - Test')

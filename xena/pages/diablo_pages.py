@@ -39,6 +39,7 @@ class DiabloPages(Page):
     OUIJA_BOARD_LINK = (By.ID, 'sidebar-link-Ouija Board')
     ROOMS_LINK = (By.ID, 'sidebar-link-Rooms')
     COURSE_CHANGES_LINK = (By.ID, 'sidebar-link-Course Changes')
+    DARK_MODE = (By.XPATH, '//div[text()="Dark mode"]')
 
     MENU_BUTTON = (By.ID, 'btn-main-menu')
     BLACKOUTS_LINK = (By.ID, 'menu-item-blackouts')

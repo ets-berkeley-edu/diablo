@@ -118,15 +118,16 @@ class TestUserPerms:
         self.sign_up_page.log_out()
         util.set_instructor_role(self.section, self.instructor, 'APRX')
         self.login_page.dev_auth(self.instructor.uid)
-        self.ouija_page.wait_for_element(OuijaBoardPage.HOME_LINK, util.get_short_timeout())
+        self.ouija_page.wait_for_element(OuijaBoardPage.DARK_MODE, util.get_short_timeout())
         self.sign_up_page.hit_url(self.section.term.id, self.section.ccn)
-        self.sign_up_page.wait_for_diablo_title('Page not found')
+        self.sign_up_page.load_page(self.section)
+        assert not self.sign_up_page.is_present(SignUpPage.APPROVE_BUTTON)
 
     def test_invt_role(self):
         self.sign_up_page.log_out()
         util.set_instructor_role(self.section, self.instructor, 'INVT')
         self.login_page.dev_auth(self.instructor.uid)
-        self.ouija_page.wait_for_element(OuijaBoardPage.HOME_LINK, util.get_short_timeout())
+        self.ouija_page.wait_for_element(OuijaBoardPage.DARK_MODE, util.get_short_timeout())
         self.sign_up_page.hit_url(self.section.term.id, self.section.ccn)
         self.sign_up_page.wait_for_diablo_title('Page not found')
 
