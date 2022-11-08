@@ -98,8 +98,22 @@ class TestCourseInstructorChanges:
         self.jobs_page.run_emails_job()
         self.recording_sched.approval_status = RecordingApprovalStatus.INVITED
 
+    def test_run_kaltura_no_change(self):
+        self.jobs_page.run_kaltura_job()
+        self.sign_up_page.load_page(self.real_section)
+        self.sign_up_page.click_kaltura_series_link(self.recording_sched)
+        self.kaltura_page.wait_for_delete_button()
+        course = f'{self.real_section.code}, {self.real_section.number} ({self.term.name})'
+        assert self.kaltura_page.visible_series_title() == course
+        instr = f'{self.fake_section.instructors[0].first_name} {self.fake_section.instructors[0].last_name}'
+        expected_desc = f'{course} is taught by {instr}.'
+        assert expected_desc in self.kaltura_page.visible_series_desc()
+        assert len(self.kaltura_page.collaborator_rows()) == 1
+        assert self.kaltura_page.collaborator_perm(self.fake_section.instructors[0]) == 'Co-Editor, Co-Publisher'
+        self.kaltura_page.close_window_and_switch()
+
     def test_changes_page_summary(self):
-        self.jobs_page.click_course_changes_link()
+        self.sign_up_page.click_course_changes_link()
         self.changes_page.wait_for_course_row(self.real_section)
         expected = 'Instructors are obsolete.'
         actual = self.changes_page.scheduled_card_summary(self.real_section)

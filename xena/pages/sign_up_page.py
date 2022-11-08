@@ -39,7 +39,8 @@ class SignUpPage(DiabloPages):
     SECTION_ID = (By.ID, 'section-id')
     COURSE_TITLE = (By.ID, 'course-title')
     INSTRUCTORS = (By.ID, 'instructors')
-    INSTRUCTOR = (By.XPATH, '//*[contains(@id, "instructor-")]')
+    INSTRUCTOR = (By.XPATH, '//*[contains(@id, "instructor-")][not(contains(@id, "proxy"))]')
+    PROXY = (By.XPATH, '//span[contains(@id, "instructor-proxy-")]')
     MEETING_DAYS = (By.XPATH, '//*[contains(@id, "meeting-days-")]')
     MEETING_TIMES = (By.XPATH, '//*[contains(@id, "meeting-times-")]')
     ROOMS = (By.XPATH, '//*[contains(@id, "rooms-")]')
@@ -125,6 +126,10 @@ class SignUpPage(DiabloPages):
         els = self.elements(SignUpPage.INSTRUCTOR)
         return [el.text for el in els]
 
+    def visible_proxies(self):
+        els = self.elements(SignUpPage.PROXY)
+        return [el.text for el in els]
+
     def visible_meeting_days(self):
         els = self.elements(SignUpPage.MEETING_DAYS)
         vis = [el.get_attribute('innerText').replace('Days of the week:', '').replace('Dates:', '').strip() for el in els]
@@ -177,6 +182,7 @@ class SignUpPage(DiabloPages):
         self.wait_for_element_and_click(SignUpPage.UNSCHEDULE_CONFIRM_BUTTON)
         Wait(self.driver, util.get_medium_timeout()).until(ec.visibility_of_element_located(SignUpPage.OPTED_OUT))
         recording_schedule.scheduling_status = RecordingSchedulingStatus.NOT_SCHEDULED
+        time.sleep(util.get_short_timeout())
 
     def cancel_unscheduling(self):
         self.click_unschedule_button()
@@ -220,6 +226,20 @@ class SignUpPage(DiabloPages):
         app.logger.info('Clicking the agree-to-terms checkbox')
         self.wait_for_element_and_click(SignUpPage.AGREE_TO_TERMS_CBX)
 
+    def aprx_editor_cbx(self, aprx_user):
+        return By.ID, f'aprx-privilege-{aprx_user.uid}'
+
+    def aprx_editor_checked(self, aprx_user):
+        return self.element(self.aprx_editor_cbx(aprx_user)).get_attribute('aria-checked') == 'true'
+
+    def select_aprx_editor(self, aprx_user):
+        if not self.aprx_editor_checked(aprx_user):
+            self.wait_for_element_and_click(self.aprx_editor_cbx(aprx_user))
+
+    def deselect_aprx_editor(self, aprx_user):
+        if self.aprx_editor_checked(aprx_user):
+            self.wait_for_element_and_click(self.aprx_editor_cbx(aprx_user))
+
     def click_approve_button(self):
         app.logger.info('Clicking the approve button')
         self.wait_for_element_and_click(SignUpPage.APPROVE_BUTTON)
@@ -228,7 +248,7 @@ class SignUpPage(DiabloPages):
         Wait(self.driver, util.get_short_timeout()).until(ec.visibility_of_element_located(SignUpPage.QUEUED_MSG))
 
     def wait_for_approvals_msg(self, string=None):
-        Wait(self.driver, util.get_short_timeout()).until(ec.visibility_of_element_located(SignUpPage.APPROVALS_MSG))
+        Wait(self.driver, util.get_medium_timeout()).until(ec.visibility_of_element_located(SignUpPage.APPROVALS_MSG))
         if string:
             app.logger.info(f'Visible: {self.element(SignUpPage.APPROVALS_MSG).get_attribute("innerText")}')
             self.wait_for_text_in_element(SignUpPage.APPROVALS_MSG, string)
