@@ -76,17 +76,40 @@
                 </v-list>
               </v-col>
             </v-row>
-            <v-row v-if="!hasCurrentUserApproved">
+            <v-row v-if="!hasCurrentUserApproved" no-gutters>
               <v-col cols="12">
                 <CourseCaptureExplained />
-                <div v-if="meeting.room" class="font-italic font-weight-light pl-2 pt-4">
-                  <div :class="{'pt-2': meeting.room.isAuditorium}">
-                    <v-icon v-if="!meeting.room.isAuditorium">mdi-information-outline</v-icon>
-                    Instructors will now be able to review and edit their Course Capture recordings prior to releasing them to students.
-                    If you choose 'Instructor moderation', only the instructors listed on this page will be able to release lecture capture videos to your students.
-                    If you choose 'GSI/TA moderation', then in addition to instructors, GSI and TA roles will be able to release your lecture capture video to your students.
-                    Only instructors listed will be able to edit Course Capture recordings.
-                  </div>
+              </v-col>
+            </v-row>
+            <v-row
+              v-if="showSignUpForm"
+              align="center"
+              justify="start"
+              no-gutters
+            >
+              <v-col cols="10">
+                <h4>Allow users with the Admin Proxy role to edit and publish recordings?</h4>
+              </v-col>
+              <v-col cols="2">
+                <v-switch
+                  id="can-aprx-instructors-edit-recordings"
+                  v-model="canAprxInstructorsEditRecordings"
+                  :label="canAprxInstructorsEditRecordings ? 'Yes' : 'No'"
+                  @change="v => updateCanAprxInstructorsEditRecordings(v)"
+                />
+              </v-col>
+            </v-row>
+            <v-row v-if="meeting.room && !hasCurrentUserApproved" no-gutters>
+              <v-col cols="12">
+                <div
+                  class="font-italic font-weight-light py-2"
+                  :class="{'pt-2': meeting.room.isAuditorium}"
+                >
+                  <v-icon v-if="!meeting.room.isAuditorium">mdi-information-outline</v-icon>
+                  Instructors will now be able to review and edit their Course Capture recordings prior to releasing them to students.
+                  If you choose 'Instructor moderation', only the instructors listed on this page will be able to release lecture capture videos to your students.
+                  If you choose 'GSI/TA moderation', then in addition to instructors, GSI and TA roles will be able to release your lecture capture video to your students.
+                  Only instructors listed will be able to edit Course Capture recordings.
                 </div>
               </v-col>
             </v-row>
@@ -169,24 +192,6 @@
                 <span class="font-weight-medium mb-1 red--text">
                   Allow Admin {{ instructorProxies.length === 1 ? 'Proxy' : 'Proxies' }} to edit recordings?
                 </span>
-              </v-col>
-            </v-row>
-            <v-row
-              v-for="instructorProxy in (showSignUpForm ? instructorProxies : [])"
-              :key="instructorProxy.uid"
-              align="center"
-              justify="start"
-              no-gutters
-            >
-              <v-col cols="4">
-                <h4>{{ instructorProxy.name }}</h4>
-              </v-col>
-              <v-col cols="8">
-                <v-switch
-                  :id="`aprx-privilege-${instructorProxy.uid}`"
-                  v-model="instructorProxy.canEditRecordings"
-                  :label="instructorProxy.canEditRecordings ? 'Yes' : 'No'"
-                />
               </v-col>
             </v-row>
             <v-row
@@ -297,7 +302,7 @@ import PageTitle from '@/components/util/PageTitle'
 import ScheduledCourse from '@/components/course/ScheduledCourse'
 import TermsAgreementText from '@/components/util/TermsAgreementText'
 import Utils from '@/mixins/Utils'
-import {approve, getCourse} from '@/api/course'
+import {approve, getCourse, updateCanAprxInstructorsEditRecordings} from '@/api/course'
 import {getAuditoriums} from '@/api/room'
 
 export default {
@@ -318,6 +323,7 @@ export default {
     approvedByAdmins: undefined,
     approvedByInstructorUIDs: undefined,
     auditoriums: undefined,
+    canAprxInstructorsEditRecordings: undefined,
     capability: undefined,
     course: undefined,
     courseDisplayTitle: null,
@@ -394,6 +400,7 @@ export default {
       this.$loading()
       this.agreedToTerms = this.$currentUser.isAdmin
       this.course = data
+      this.canAprxInstructorsEditRecordings = this.course.canAprxInstructorsEditRecordings
       this.instructors = this.$_.filter(this.course.instructors, i => i.roleCode !== 'APRX')
       this.instructorProxies = this.$_.filter(this.course.instructors, i => i.roleCode === 'APRX')
       // Meetings
@@ -438,6 +445,15 @@ export default {
         }
       }
       this.$ready(this.courseDisplayTitle)
+    },
+    updateCanAprxInstructorsEditRecordings(value) {
+      updateCanAprxInstructorsEditRecordings(
+        value,
+        this.course.sectionId,
+        this.course.termId,
+      ).then(() => {
+        this.alertScreenReader(`You have approved ${this.courseDisplayTitle} for Course Capture.`)
+      })
     }
   }
 }

@@ -46,7 +46,6 @@ class SisSection(db.Model):
 
     id = db.Column(db.Integer, nullable=False, primary_key=True)  # noqa: A003
     allowed_units = db.Column(db.String)
-    can_edit_recordings = db.Column(db.Boolean, nullable=False, default=True)
     course_name = db.Column(db.String)
     course_title = db.Column(db.Text)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.now)
@@ -86,10 +85,8 @@ class SisSection(db.Model):
             section_id,
             section_num,
             term_id,
-            can_edit_recordings=True,
     ):
         self.allowed_units = allowed_units
-        self.can_edit_recordings = can_edit_recordings
         self.course_name = course_name
         self.course_title = course_title
         self.instruction_format = instruction_format
@@ -111,7 +108,6 @@ class SisSection(db.Model):
         return f"""<SisSection
                     id={self.id}
                     allowed_units={self.allowed_units},
-                    can_edit_recordings={self.can_edit_recordings}
                     course_name={self.course_name},
                     course_title={self.course_title},
                     instruction_format={self.instruction_format},
@@ -724,23 +720,6 @@ class SisSection(db.Model):
         return results.rowcount > 0
 
     @classmethod
-    def update_can_edit_recordings(cls, instructor_uid, can_edit_recordings, section_id, term_id):
-        sql = """
-            UPDATE sis_sections
-            SET can_edit_recordings = :can_edit_recordings
-            WHERE instructor_uid = :instructor_uid AND term_id = :term_id AND section_id = :section_id
-        """
-        db.session.execute(
-            text(sql),
-            {
-                'can_edit_recordings': can_edit_recordings,
-                'instructor_uid': instructor_uid,
-                'section_id': section_id,
-                'term_id': term_id,
-            },
-        )
-
-    @classmethod
     def _section_ids_with_nonstandard_dates(cls, term_id):
         if str(term_id) != str(app.config['CURRENT_TERM_ID']):
             app.logger.warn(f'Dates for term id {term_id} not configured; cannot query for nonstandard dates.')
@@ -802,7 +781,8 @@ def _to_api_json(term_id, rows, include_rooms=True):
     courses_per_id = {}
 
     # Perform bulk queries and build data structures for feed generation.
-    section_ids_opted_out = CoursePreference.get_section_ids_opted_out(term_id=term_id)
+    all_course_preferences = CoursePreference.get_all_course_preferences(term_id=term_id)
+    course_preferences_by_section_id = dict((p.section_id, p) for p in all_course_preferences)
     invited_uids_by_section_id = get_invited_uids_by_section_id(section_ids, term_id)
 
     approval_results = Approval.get_approvals_per_section_ids(section_ids=section_ids, term_id=term_id)
@@ -843,15 +823,17 @@ def _to_api_json(term_id, rows, include_rooms=True):
             cross_listed_courses = cross_listings_per_section_id.get(section_id, [])
             instructors = instructors_per_section_id.get(section_id, [])
             # Construct course
+            preferences = course_preferences_by_section_id.get(section_id)
             course = {
                 'allowedUnits': row['allowed_units'],
                 'approvals': approvals,
+                'canAprxInstructorsEditRecordings': preferences and preferences.can_aprx_instructors_edit_recordings,
                 'canvasCourseSites': canvas_sites_by_section_id.get(section_id, []),
                 'courseName': row['course_name'],
                 'courseTitle': row['course_title'],
                 'crossListings': cross_listed_courses,
                 'deletedAt': safe_strftime(row['deleted_at'], '%Y-%m-%d'),
-                'hasOptedOut': section_id in section_ids_opted_out,
+                'hasOptedOut': True if preferences and preferences.has_opted_out else False,
                 'instructionFormat': row['instruction_format'],
                 'instructors': instructors,
                 'invitees': invited_uids_by_section_id.get(section_id),
@@ -1111,7 +1093,6 @@ def _to_instructor_json(row, approvals, invited_uids):
     instructor_uid = row['instructor_uid']
     return {
         'approval': next((a for a in approvals if a['approvedBy'] == instructor_uid), False),
-        'canEditRecordings': row['can_edit_recordings'],
         'deletedAt': safe_strftime(row['deleted_at'], '%Y-%m-%d'),
         'deptCode': row['instructor_dept_code'],
         'email': row['instructor_email'],

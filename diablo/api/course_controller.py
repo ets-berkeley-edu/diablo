@@ -51,14 +51,15 @@ def approve():
     term_name = term_name_for_sis_id(term_id)
 
     params = request.get_json()
-    instructor_proxies = params.get('instructorProxies', [])
     publish_type = params.get('publishType')
     recording_type = params.get('recordingType')
     section_id = params.get('sectionId')
 
     course = SisSection.get_course(term_id, section_id) if section_id else None
 
-    if not course or publish_type not in get_all_publish_types() or recording_type not in get_all_recording_types():
+    if not course \
+            or publish_type not in get_all_publish_types() \
+            or recording_type not in get_all_recording_types():
         raise BadRequestError('One or more required params are missing or invalid')
 
     if not current_user.is_admin and current_user.uid not in [i['uid'] for i in course['instructors']]:
@@ -77,13 +78,6 @@ def approve():
     if not room:
         raise BadRequestError(f'{location} is not eligible for Course Capture.')
 
-    for instructor in instructor_proxies:
-        SisSection.update_can_edit_recordings(
-            can_edit_recordings=instructor['canEditRecordings'],
-            instructor_uid=instructor['uid'],
-            section_id=section_id,
-            term_id=term_id,
-        )
     previous_approvals = Approval.get_approvals_per_section_ids(section_ids=[section_id], term_id=term_id)
     approval = Approval.create(
         approved_by_uid=current_user.uid,
@@ -237,6 +231,26 @@ def unschedule():
 @admin_required
 def course_changes(term_id):
     return tolerant_jsonify(SisSection.get_course_changes(term_id))
+
+
+@app.route('/api/course/can_aprx_instructors_edit_recordings', methods=['POST'])
+@login_required
+def update_can_aprx_instructors_edit_recordings():
+    params = request.get_json()
+    can_aprx_instructors_edit_recordings = params.get('canAprxInstructorsEditRecordings')
+    section_id = params.get('sectionId')
+    term_id = params.get('termId')
+
+    course = SisSection.get_course(term_id, section_id) if (term_id and section_id) else None
+    if not course or can_aprx_instructors_edit_recordings is None:
+        raise BadRequestError('Required params missing or invalid')
+
+    preferences = CoursePreference.update_can_aprx_instructors_edit_recordings(
+        can_aprx_instructors_edit_recordings=can_aprx_instructors_edit_recordings,
+        term_id=term_id,
+        section_id=section_id,
+    )
+    return tolerant_jsonify(preferences.to_api_json())
 
 
 @app.route('/api/course/opt_out/update', methods=['POST'])

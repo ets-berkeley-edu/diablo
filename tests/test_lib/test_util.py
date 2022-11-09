@@ -44,31 +44,44 @@ class TestUtils:
         assert readable_join(['Moe', 'Larry', 'Curly']) == 'Moe, Larry and Curly'
 
     def test_get_instructors_who_can_edit_recordings(self):
-        def course(instructors):
-            return {'instructors': instructors}
-
-        def instructor(can_edit_recordings=True, deleted_at=None):
+        def course(instructors, can_aprx_instructors_edit_recordings=False):
             return {
-                'canEditRecordings': can_edit_recordings,
+                'canAprxInstructorsEditRecordings': can_aprx_instructors_edit_recordings,
+                'instructors': instructors,
+            }
+
+        def instructor(role_code, deleted_at=None):
+            return {
                 'deletedAt': deleted_at,
+                'roleCode': role_code,
                 'uid': random.randint(1, 99999),
             }
-        instructor_who_edits = instructor()
-        deleted_lecturer = instructor(deleted_at=utc_now())
-        assistant = instructor(can_edit_recordings=False)
+        aprx_instructor = instructor(role_code='APRX')
+        deleted_instructor = instructor(role_code='PI', deleted_at=utc_now())
+        teaching_instructor = instructor(role_code='PI')
 
-        assert get_instructors_who_can_edit_recordings(course([])) == []
-        assert get_instructors_who_can_edit_recordings(course([instructor_who_edits])) == [instructor_who_edits]
+        def _assert_who_can_edit_recordings(course_, instructors_expected):
+            instructors_actual = get_instructors_who_can_edit_recordings(course_)
+            actual_uids = [instructor['uid'] for instructor in instructors_actual]
+            expected_uids = [instructor['uid'] for instructor in instructors_expected]
+            assert set(actual_uids) == set(expected_uids)
 
-        actual = get_instructors_who_can_edit_recordings(course([
-            deleted_lecturer,
-            instructor_who_edits,
-        ]))
-        assert [i['uid'] for i in actual] == [instructor_who_edits['uid']]
-
-        actual = get_instructors_who_can_edit_recordings(course([
-            assistant,
-            deleted_lecturer,
-            instructor_who_edits,
-        ]))
-        assert [i['uid'] for i in actual] == [instructor_who_edits['uid']]
+        _assert_who_can_edit_recordings(
+            course_=course([]),
+            instructors_expected=[],
+        )
+        _assert_who_can_edit_recordings(
+            course_=course(instructors=[teaching_instructor]),
+            instructors_expected=[teaching_instructor],
+        )
+        _assert_who_can_edit_recordings(
+            course_=course(instructors=[deleted_instructor, teaching_instructor]),
+            instructors_expected=[teaching_instructor],
+        )
+        _assert_who_can_edit_recordings(
+            course_=course(
+                can_aprx_instructors_edit_recordings=True,
+                instructors=[aprx_instructor, deleted_instructor, teaching_instructor],
+            ),
+            instructors_expected=[aprx_instructor, teaching_instructor],
+        )

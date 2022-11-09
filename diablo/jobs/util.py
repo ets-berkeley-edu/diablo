@@ -38,7 +38,7 @@ from diablo.models.instructor import Instructor
 from diablo.models.queued_email import notify_instructors_recordings_scheduled
 from diablo.models.room import Room
 from diablo.models.scheduled import Scheduled
-from diablo.models.sis_section import AUTHORIZED_INSTRUCTOR_ROLE_CODES, SisSection
+from diablo.models.sis_section import ALL_INSTRUCTOR_ROLE_CODES, AUTHORIZED_INSTRUCTOR_ROLE_CODES, SisSection
 from flask import current_app as app
 from KalturaClient.exceptions import KalturaClientException, KalturaException
 from sqlalchemy import text
@@ -77,7 +77,9 @@ def get_courses_ready_to_schedule(approvals, term_id):
 
 
 def get_instructors_who_can_edit_recordings(course):
-    return list(filter(lambda i: i.get('canEditRecordings') and not i.get('deletedAt'), course['instructors']))
+    can_aprx_instructors_edit_recordings = course['canAprxInstructorsEditRecordings']
+    instructor_role_codes = ALL_INSTRUCTOR_ROLE_CODES if can_aprx_instructors_edit_recordings else AUTHORIZED_INSTRUCTOR_ROLE_CODES
+    return list(filter(lambda i: i['roleCode'] in instructor_role_codes and not i['deletedAt'], course['instructors']))
 
 
 def insert_or_update_instructors(instructor_uids):
@@ -260,7 +262,8 @@ def schedule_recordings(all_approvals, course):
                 term_id=term_id,
             )
             # Turn off opt-out setting if present.
-            if section_id in CoursePreference.get_section_ids_opted_out(term_id=term_id):
+            course_preferences = CoursePreference.get_course_preferences(section_id=section_id, term_id=term_id)
+            if course_preferences and course_preferences.has_opted_out:
                 CoursePreference.update_opt_out(
                     term_id=term_id,
                     section_id=section_id,
