@@ -44,6 +44,19 @@ export function getCourseChanges(termId) {
   return axios.get(`${utils.apiBaseUrl()}/api/courses/changes/${termId}`)
 }
 
+export function updateCanAprxInstructorsEditRecordings(
+    canAprxInstructorsEditRecordings: boolean,
+    sectionId: string,
+    termId: string
+) {
+  return axios
+    .post(`${utils.apiBaseUrl()}/api/course/can_aprx_instructors_edit_recordings`, {
+      canAprxInstructorsEditRecordings,
+      sectionId,
+      termId
+    })
+}
+
 export function unschedule(
     termId: string,
     sectionId: string
