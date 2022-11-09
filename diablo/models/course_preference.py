@@ -35,25 +35,61 @@ class CoursePreference(db.Model):
 
     term_id = db.Column(db.Integer, nullable=False, primary_key=True)
     section_id = db.Column(db.Integer, nullable=False, primary_key=True)
+    can_aprx_instructors_edit_recordings = db.Column(db.Boolean, nullable=False, default=True)
     has_opted_out = db.Column(db.Boolean, nullable=False, default=False)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.now)
 
-    def __init__(self, term_id, section_id, has_opted_out):
+    def __init__(
+            self,
+            term_id,
+            section_id,
+            can_aprx_instructors_edit_recordings=False,
+            has_opted_out=False,
+    ):
+        self.can_aprx_instructors_edit_recordings = can_aprx_instructors_edit_recordings
+        self.has_opted_out = has_opted_out
         self.term_id = term_id
         self.section_id = section_id
-        self.has_opted_out = has_opted_out
 
     def __repr__(self):
         return f"""<CoursePreferences
                     term_id={self.term_id},
                     section_id={self.section_id},
+                    can_aprx_instructors_edit_recordings={self.can_aprx_instructors_edit_recordings}
                     has_opted_out={self.has_opted_out}
                     created_at={self.created_at}
                 """
 
     @classmethod
-    def get_section_ids_opted_out(cls, term_id):
-        return [p.section_id for p in cls.query.filter_by(term_id=term_id, has_opted_out=True).all()]
+    def get_all_course_preferences(cls, term_id):
+        return cls.query.filter_by(term_id=term_id).all()
+
+    @classmethod
+    def get_course_preferences(cls, section_id, term_id):
+        return cls.query.filter_by(section_id=section_id, term_id=term_id).first()
+
+    @classmethod
+    def update_can_aprx_instructors_edit_recordings(
+            cls,
+            can_aprx_instructors_edit_recordings,
+            section_id,
+            term_id,
+    ):
+        cross_listed_section_ids = CrossListing.get_cross_listed_section_ids(section_id=section_id, term_id=term_id)
+        section_ids = cross_listed_section_ids + [section_id]
+        criteria = and_(cls.section_id.in_(section_ids), cls.term_id == term_id)
+        for row in cls.query.filter(criteria).all():
+            row.can_aprx_instructors_edit_recordings = can_aprx_instructors_edit_recordings
+            section_ids.remove(row.section_id)
+        for section_id in section_ids:
+            preferences = cls(
+                term_id=term_id,
+                section_id=section_id,
+                can_aprx_instructors_edit_recordings=can_aprx_instructors_edit_recordings,
+            )
+            db.session.add(preferences)
+        std_commit()
+        return cls.query.filter_by(term_id=term_id, section_id=section_id).first()
 
     @classmethod
     def update_opt_out(cls, term_id, section_id, opt_out):
@@ -76,6 +112,7 @@ class CoursePreference(db.Model):
         return {
             'termId': self.term_id,
             'sectionId': self.section_id,
+            'canAprxInstructorsEditRecordings': self.can_aprx_instructors_edit_recordings,
             'hasOptedOut': self.has_opted_out,
             'createdAt': to_isoformat(self.created_at),
         }
