@@ -81,25 +81,7 @@
                 <CourseCaptureExplained />
               </v-col>
             </v-row>
-            <v-row
-              v-if="showSignUpForm"
-              align="center"
-              justify="start"
-              no-gutters
-            >
-              <v-col cols="10">
-                <h4>Allow users with the Admin Proxy role to edit and publish recordings?</h4>
-              </v-col>
-              <v-col cols="2">
-                <v-switch
-                  id="can-aprx-instructors-edit-recordings"
-                  v-model="canAprxInstructorsEditRecordings"
-                  :label="canAprxInstructorsEditRecordings ? 'Yes' : 'No'"
-                  @change="v => updateCanAprxInstructorsEditRecordings(v)"
-                />
-              </v-col>
-            </v-row>
-            <v-row v-if="meeting.room && !hasCurrentUserApproved" no-gutters>
+            <v-row v-if="meeting.room && !hasCurrentUserApproved">
               <v-col cols="12">
                 <div
                   class="font-italic font-weight-light py-2"
@@ -183,15 +165,21 @@
               </v-col>
             </v-row>
             <v-row
-              v-if="showSignUpForm && instructorProxies.length"
+              v-if="showSignUpForm"
               align="center"
-              class="mt-6"
+              class="mt-0"
               justify="start"
             >
-              <v-col cols="12">
-                <span class="font-weight-medium mb-1 red--text">
-                  Allow Admin {{ instructorProxies.length === 1 ? 'Proxy' : 'Proxies' }} to edit recordings?
-                </span>
+              <v-col cols="10">
+                <h4>Allow users with the Admin Proxy role to edit and publish recordings?</h4>
+              </v-col>
+              <v-col cols="2">
+                <v-switch
+                  id="can-aprx-instructors-edit-recordings"
+                  v-model="canAprxInstructorsEditRecordings"
+                  :label="canAprxInstructorsEditRecordings ? 'Yes' : 'No'"
+                  @change="v => updateCanAprxInstructorsEditRecordings(v)"
+                />
               </v-col>
             </v-row>
             <v-row
@@ -452,7 +440,8 @@ export default {
         this.course.sectionId,
         this.course.termId,
       ).then(() => {
-        this.alertScreenReader(`You have approved ${this.courseDisplayTitle} for Course Capture.`)
+        const message = `Admin Proxies can${value ? '' : 'not'} edit and publish recordings.`
+        this.alertScreenReader(message)
       })
     }
   }
