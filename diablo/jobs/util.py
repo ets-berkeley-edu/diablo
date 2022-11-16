@@ -235,11 +235,11 @@ def schedule_recordings(all_approvals, course):
     scheduled = None
     if room.kaltura_resource_id:
         try:
-            instructors = get_instructors_who_can_edit_recordings(course)
+            instructors_who_can_edit_recordings = get_instructors_who_can_edit_recordings(course)
             kaltura_schedule_id = Kaltura().schedule_recording(
                 canvas_course_site_ids=[c['courseSiteId'] for c in course['canvasCourseSites']],
                 course_label=course['label'],
-                instructors=instructors,
+                instructors=instructors_who_can_edit_recordings,
                 meeting=meeting,
                 publish_type=latest_approval.publish_type,
                 recording_type=latest_approval.recording_type,
@@ -248,7 +248,7 @@ def schedule_recordings(all_approvals, course):
             )
             scheduled = Scheduled.create(
                 course_display_name=course['label'],
-                instructor_uids=instructor_uids,
+                instructor_uids=[instructor['uid'] for instructor in instructors_who_can_edit_recordings],
                 kaltura_schedule_id=kaltura_schedule_id,
                 meeting_days=meeting['days'],
                 meeting_end_date=get_recording_end_date(meeting),

@@ -676,6 +676,17 @@ class SisSection(db.Model):
         return cls.get_courses(term_id, include_deleted=True, section_ids=section_ids)
 
     @classmethod
+    def get_instructors(cls, uids, include_deleted=False):
+        sql = f"""
+            SELECT *
+            FROM sis_sections
+            WHERE instructor_uid = ANY(:uids)
+            {'' if include_deleted else ' AND deleted_at IS NULL '}
+        """
+        rows = db.session.execute(text(sql), {'uids': uids})
+        return [_to_instructor_json(row=row) for row in rows]
+
+    @classmethod
     def get_random_co_taught_course(cls, term_id):
         def _get_section_id(in_eligible_room=True):
             sql = f"""
@@ -1089,18 +1100,21 @@ def _sections_with_at_least_one_eligible_room():
     """
 
 
-def _to_instructor_json(row, approvals, invited_uids):
+def _to_instructor_json(row, approvals=None, invited_uids=None):
     instructor_uid = row['instructor_uid']
-    return {
-        'approval': next((a for a in approvals if a['approvedBy'] == instructor_uid), False),
+    instructor_json = {
         'deletedAt': safe_strftime(row['deleted_at'], '%Y-%m-%d'),
         'deptCode': row['instructor_dept_code'],
         'email': row['instructor_email'],
         'name': row['instructor_name'],
         'roleCode': row['instructor_role_code'],
         'uid': instructor_uid,
-        'wasSentInvite': instructor_uid in invited_uids,
     }
+    if approvals is not None:
+        instructor_json['approval'] = next((a for a in approvals if a['approvedBy'] == instructor_uid), False)
+    if invited_uids is not None:
+        instructor_json['wasSentInvite'] = instructor_uid in invited_uids
+    return instructor_json
 
 
 def _to_meeting_json(row):
