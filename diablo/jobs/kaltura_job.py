@@ -24,7 +24,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 from diablo.externals.kaltura import Kaltura
 from diablo.jobs.base_job import BaseJob
-from diablo.jobs.util import get_courses_ready_to_schedule, get_instructors_who_can_edit_recordings, schedule_recordings
+from diablo.jobs.util import get_courses_ready_to_schedule, schedule_recordings
 from diablo.lib.berkeley import term_name_for_sis_id
 from diablo.lib.kaltura_util import get_series_description
 from diablo.lib.util import objects_to_dict_organized_by_section_id
@@ -79,11 +79,16 @@ def _update_already_scheduled_events():
                             template_entry_id=template_entry_id,
                         )
             # Update Kaltura edit permissions per UID.
-            instructors_who_can_edit_recordings = get_instructors_who_can_edit_recordings(course)
-            uids_entitled_to_edit = [i['uid'] for i in instructors_who_can_edit_recordings]
+            uids_entitled_to_edit = set(scheduled['instructorUids'])
+            if course['canAprxInstructorsEditRecordings']:
+                instructors = course['instructors']
+                aprx_uids = list(filter(lambda i: i['roleCode'] == 'APRX' and not i['deletedAt'], instructors))
+                uids_entitled_to_edit.update(aprx_uids)
+            uids_entitled_to_edit = list(uids_entitled_to_edit)
+            instructors_entitled_to_edit = SisSection.get_instructors(include_deleted=True, uids=uids_entitled_to_edit)
             description = get_series_description(
                 course_label=course_name,
-                instructors=instructors_who_can_edit_recordings,
+                instructors=instructors_entitled_to_edit,
                 term_name=term_name_for_sis_id(term_id),
             )
             kaltura.update_base_entry(
