@@ -56,6 +56,15 @@ class KalturaJob(BaseJob):
         return 'kaltura'
 
 
+def _get_subset_of_instructors(section_id, term_id, uids, include_deleted=False):
+    course = SisSection.get_course(
+        include_deleted=include_deleted,
+        section_id=section_id,
+        term_id=term_id,
+    )
+    return list(filter(lambda instructor: instructor['uid'] in uids, course['instructors']))
+
+
 def _update_already_scheduled_events():
     kaltura = Kaltura()
     term_id = app.config['CURRENT_TERM_ID']
@@ -85,7 +94,12 @@ def _update_already_scheduled_events():
                 aprx_uids = list(filter(lambda i: i['roleCode'] == 'APRX' and not i['deletedAt'], instructors))
                 uids_entitled_to_edit.update(aprx_uids)
             uids_entitled_to_edit = list(uids_entitled_to_edit)
-            instructors_entitled_to_edit = SisSection.get_instructors(include_deleted=True, uids=uids_entitled_to_edit)
+            instructors_entitled_to_edit = _get_subset_of_instructors(
+                include_deleted=True,
+                section_id=course['sectionId'],
+                term_id=term_id,
+                uids=uids_entitled_to_edit,
+            )
             description = get_series_description(
                 course_label=course_name,
                 instructors=instructors_entitled_to_edit,

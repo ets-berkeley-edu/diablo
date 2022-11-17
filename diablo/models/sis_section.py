@@ -676,17 +676,6 @@ class SisSection(db.Model):
         return cls.get_courses(term_id, include_deleted=True, section_ids=section_ids)
 
     @classmethod
-    def get_instructors(cls, uids, include_deleted=False):
-        sql = f"""
-            SELECT *
-            FROM sis_sections
-            WHERE instructor_uid = ANY(:uids)
-            {'' if include_deleted else ' AND deleted_at IS NULL '}
-        """
-        rows = db.session.execute(text(sql), {'uids': uids})
-        return [_to_instructor_json(row=row) for row in rows]
-
-    @classmethod
     def get_random_co_taught_course(cls, term_id):
         def _get_section_id(in_eligible_room=True):
             sql = f"""
