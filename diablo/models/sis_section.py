@@ -860,13 +860,16 @@ def _to_api_json(term_id, rows, include_rooms=True):
         instructor_uid = row['instructor_uid']
         instructor_uid = instructor_uid.strip() if instructor_uid else None
         if instructor_uid and instructor_uid not in [i['uid'] for i in course['instructors']]:
-            course['instructors'].append(
-                _to_instructor_json(
-                    row=row,
-                    approvals=course['approvals'],
-                    invited_uids=course['invitees'],
-                ),
+            instructor_json = _to_instructor_json(
+                row=row,
+                approvals=course['approvals'],
+                invited_uids=course['invitees'],
             )
+            # Note:
+            # 1. If the course IS NOT DELETED then include only non-deleted instructors.
+            # 2. If the course IS DELETED then include deleted instructors.
+            if not instructor_json['deletedAt'] or course['deletedAt']:
+                course['instructors'].append(instructor_json)
 
         meeting = _to_meeting_json(row)
         eligible_meetings = course['meetings']['eligible']
@@ -1043,7 +1046,7 @@ def _get_cross_listed_courses(section_ids, term_id, approvals, invited_uids):
                     if row['instructor_uid'] and row['instructor_uid'] not in [i['uid'] for i in instructors_by_section_id[section_id]]:
                         instructor_json = _to_instructor_json(row, approvals_for_section, invited_uids=invited_uids_for_section)
                         uid = (instructor_json['uid'] or '').strip() if instructor_json else None
-                        if uid:
+                        if uid and not instructor_json['deletedAt']:
                             instructors_by_section_id[section_id].append(instructor_json)
                 canvas_course_ids = [c['courseSiteId'] for c in canvas_sites_by_section_id[section_id]]
                 for canvas_site in canvas_sites_by_cross_listing_id[cross_listing_id]:
