@@ -68,7 +68,7 @@ def _get_subset_of_instructors(section_id, term_id, uids, include_deleted=False)
 def _update_already_scheduled_events():
     kaltura = Kaltura()
     term_id = app.config['CURRENT_TERM_ID']
-    for course in SisSection.get_courses_scheduled(term_id=term_id):
+    for course in SisSection.get_courses_scheduled(include_administrative_proxies=True, term_id=term_id):
         course_name = course['label']
         scheduled = course['scheduled']
         kaltura_schedule = kaltura.get_event(event_id=scheduled['kalturaScheduleId'])
@@ -91,8 +91,8 @@ def _update_already_scheduled_events():
             uids_entitled_to_edit = set(scheduled['instructorUids'])
             if course['canAprxInstructorsEditRecordings']:
                 instructors = course['instructors']
-                aprx_uids = list(filter(lambda i: i['roleCode'] == 'APRX' and not i['deletedAt'], instructors))
-                uids_entitled_to_edit.update(aprx_uids)
+                aprx_instructors = list(filter(lambda i: i['roleCode'] == 'APRX' and not i['deletedAt'], instructors))
+                uids_entitled_to_edit.update([i['uid'] for i in aprx_instructors])
             uids_entitled_to_edit = list(uids_entitled_to_edit)
             instructors_entitled_to_edit = _get_subset_of_instructors(
                 include_deleted=True,
