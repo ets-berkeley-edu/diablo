@@ -225,7 +225,8 @@ def schedule_recordings(all_approvals, course):
 
     has_admin_approval = next((a for a in all_approvals if a.approver_type == 'admin'), None)
     approved_by_uids = set(a.approved_by_uid for a in all_approvals)
-    instructor_uids = set([i['uid'] for i in course['instructors']])
+    instructors_who_teach = list(filter(lambda i: i['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES, course['instructors']))
+    instructor_uids = set([i['uid'] for i in instructors_who_teach])
     if not has_admin_approval and not instructor_uids.issubset(approved_by_uids):
         _report_error(subject=f"{course['label']} not scheduled. We are missing instructor approval(s).")
         return None
