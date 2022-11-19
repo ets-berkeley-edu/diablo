@@ -378,6 +378,17 @@ def change_course_instructor(section, old_instructor=None, new_instructor=None):
     std_commit(allow_test_environment=True)
 
 
+def delete_course_instructor_row(section, instructor):
+    sql = f"""DELETE FROM sis_sections
+                    WHERE section_id = {section.ccn}
+                      AND term_id = {section.term.id}
+                      AND instructor_uid = '{instructor.uid}'
+    """
+    app.logger.info(sql)
+    db.session.execute(text(sql))
+    std_commit(allow_test_environment=True)
+
+
 def set_instructor_role(section, instructor, role):
     sql = f"""UPDATE sis_sections
               SET instructor_role_code = '{role}'
@@ -409,6 +420,33 @@ def restore_section(section):
     """
     app.logger.info(sql)
     db.session.execute(text(sql))
+    std_commit(allow_test_environment=True)
+
+
+def switch_principal_listing(old_primary, new_primary):
+    sql_1 = f"""UPDATE sis_sections
+                   SET is_principal_listing = FALSE
+                 WHERE section_id = {old_primary.ccn}
+                   AND term_id = {old_primary.term.id}
+    """
+    app.logger.info(sql_1)
+    db.session.execute(text(sql_1))
+    std_commit(allow_test_environment=True)
+    sql_2 = f"""UPDATE sis_sections
+                   SET is_principal_listing = TRUE
+                 WHERE section_id = {new_primary.ccn}
+                   AND term_id = {new_primary.term.id}
+    """
+    app.logger.info(sql_2)
+    db.session.execute(text(sql_2))
+    std_commit(allow_test_environment=True)
+    sql_3 = f"""UPDATE cross_listings
+                   SET section_id = {new_primary.ccn}, cross_listed_section_ids = ARRAY [{old_primary.ccn}]
+                 WHERE section_id = {old_primary.ccn}
+                   AND term_id = {old_primary.term.id}
+    """
+    app.logger.info(sql_3)
+    db.session.execute(text(sql_3))
     std_commit(allow_test_environment=True)
 
 

@@ -59,6 +59,7 @@ class SignUpPage(DiabloPages):
     SELECT_RECORDING_TYPE_INPUT = (By.XPATH, '//label[@id="select-recording-type-label"]')
     SELECT_PUBLISH_TYPE_INPUT = (By.XPATH, '//input[@id="select-publish-type"]/..')
     AGREE_TO_TERMS_CBX = (By.XPATH, '//input[@id="agree-to-terms-checkbox"]/..')
+    APRX_CAN_EDIT_CBX = (By.ID, 'can-aprx-instructors-edit-recordings')
     CC_POLICIES_LINK = (By.ID, 'link-to-course-capture-policies')
     APPROVE_BUTTON = (By.ID, 'btn-approve')
     QUEUED_MSG = (By.XPATH, '//span[contains(text(), "This course is currently queued for scheduling")]')
@@ -226,19 +227,16 @@ class SignUpPage(DiabloPages):
         app.logger.info('Clicking the agree-to-terms checkbox')
         self.wait_for_element_and_click(SignUpPage.AGREE_TO_TERMS_CBX)
 
-    def aprx_editor_cbx(self, aprx_user):
-        return By.ID, f'aprx-privilege-{aprx_user.uid}'
+    def aprx_editor_checked(self):
+        return self.element(SignUpPage.APRX_CAN_EDIT_CBX).get_attribute('aria-checked') == 'true'
 
-    def aprx_editor_checked(self, aprx_user):
-        return self.element(self.aprx_editor_cbx(aprx_user)).get_attribute('aria-checked') == 'true'
+    def select_aprx_editor(self):
+        if not self.aprx_editor_checked():
+            self.click_element_js(SignUpPage.APRX_CAN_EDIT_CBX)
 
-    def select_aprx_editor(self, aprx_user):
-        if not self.aprx_editor_checked(aprx_user):
-            self.wait_for_element_and_click(self.aprx_editor_cbx(aprx_user))
-
-    def deselect_aprx_editor(self, aprx_user):
-        if self.aprx_editor_checked(aprx_user):
-            self.wait_for_element_and_click(self.aprx_editor_cbx(aprx_user))
+    def deselect_aprx_editor(self):
+        if self.aprx_editor_checked():
+            self.click_element_js(SignUpPage.APRX_CAN_EDIT_CBX)
 
     def click_approve_button(self):
         app.logger.info('Clicking the approve button')

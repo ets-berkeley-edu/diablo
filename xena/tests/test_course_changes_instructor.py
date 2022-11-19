@@ -91,9 +91,6 @@ class TestCourseInstructorChanges:
     def test_revert_to_real_instr(self):
         util.change_course_instructor(self.real_section, self.fake_section.instructors[0], self.real_section.instructors[0])
 
-    def test_reset_room(self):
-        util.set_meeting_location(self.real_section, self.real_meeting)
-
     def test_run_email_job_with_instr_change(self):
         self.jobs_page.run_emails_job()
         self.recording_sched.approval_status = RecordingApprovalStatus.INVITED

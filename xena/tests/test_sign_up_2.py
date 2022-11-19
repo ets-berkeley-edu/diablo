@@ -250,6 +250,9 @@ class TestSignUp2:
 
     # VERIFY AVAILABLE OPTIONS
 
+    def test_aprx_checkbox(self):
+        assert not self.sign_up_page.aprx_editor_checked()
+
     def test_publish_type_text(self):
         assert self.sign_up_page.is_present(SignUpPage.PUBLISH_TYPE_TEXT) is True
 
