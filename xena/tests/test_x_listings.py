@@ -287,6 +287,18 @@ class TestCrossListings:
         expected_message = Email(msg_type=None, sender=None, subject=subj)
         assert not self.email_page.is_message_present(expected_message)
 
+    # CHANGE PRIMARY LISTING
+
+    def test_switch_primary_listing(self):
+        util.switch_principal_listing(self.section, self.x_listed_section)
+
+    def test_run_email_job(self):
+        self.jobs_page.load_page()
+        self.jobs_page.run_emails_job()
+
+    def test_revert_primary_listing(self):
+        util.switch_principal_listing(self.x_listed_section, self.section)
+
     # DELETE SECONDARY LISTING
 
     def test_delete_secondary_listing(self):

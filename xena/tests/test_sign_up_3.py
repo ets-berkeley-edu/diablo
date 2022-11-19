@@ -273,6 +273,9 @@ class TestSignUp3:
         msg = f'Recordings will be scheduled when we have approvals from you and {name}.'
         self.sign_up_page.wait_for_approvals_msg(msg)
 
+    def test_aprx_checkbox(self):
+        assert not self.sign_up_page.aprx_editor_checked()
+
     def test_publish_type_text(self):
         assert self.sign_up_page.is_present(SignUpPage.PUBLISH_TYPE_TEXT) is True
 
@@ -294,6 +297,9 @@ class TestSignUp3:
 
     def test_agree_terms_inst_1(self):
         self.sign_up_page.click_agree_checkbox()
+
+    def test_select_aprx_editors(self):
+        self.sign_up_page.select_aprx_editor()
 
     def test_approve_inst_1(self):
         self.sign_up_page.click_approve_button()
@@ -364,6 +370,9 @@ class TestSignUp3:
 
     def test_no_agree_terms_admin(self):
         assert self.sign_up_page.is_present(SignUpPage.AGREE_TO_TERMS_CBX) is False
+
+    def test_aprx_checkbox_admin(self):
+        assert self.sign_up_page.aprx_editor_checked()
 
     def test_approve_admin(self):
         self.sign_up_page.click_approve_button()
@@ -669,6 +678,9 @@ class TestSignUp3:
         self.sign_up_page.wait_for_approvals_msg(msg)
 
     # VERIFY SELECTED OPTIONS
+
+    def test_aprx_checkbox_inst_2(self):
+        assert not self.sign_up_page.is_present(SignUpPage.APRX_CAN_EDIT_CBX)
 
     def test_rec_type_selections_inst_2(self):
         assert self.sign_up_page.scheduled_rec_type() == self.recording_schedule.recording_type.value['selection']
