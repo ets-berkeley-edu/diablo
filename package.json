@@ -8,20 +8,20 @@
     "serve-vue": "vue-cli-service serve --open"
   },
   "dependencies": {
-    "@mdi/font": "6.9.96",
+    "@mdi/font": "7.0.96",
     "axios": "0.27.2",
-    "core-js": "3.19.1",
+    "core-js": "3.26.1",
     "js-file-download": "0.4.12",
     "lodash": "4.17.21",
     "moment": "2.29.4",
-    "moment-timezone": "0.5.37",
+    "moment-timezone": "0.5.39",
     "tiptap-vuetify": "2.24.0",
     "v-calendar": "2.4.1",
     "v-wave": "^1.5.0",
-    "vue": "2.7.10",
+    "vue": "2.7.14",
     "vue-moment": "4.1.0",
-    "vue-router": "3.6.4",
-    "vuetify": "2.6.9",
+    "vue-router": "3.6.5",
+    "vuetify": "2.6.12",
     "vuex": "3.6.2"
   },
   "devDependencies": {
