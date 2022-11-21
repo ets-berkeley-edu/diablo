@@ -76,15 +76,14 @@ def register_routes(app):
     def handle_exception(e):
         subject = str(e)
         if isinstance(e, HTTPException):
-            # No Ops notification when HTTP error
-            app.logger.exception(e)
+            app.logger.warn(f'HTTPException: {subject} (Ops will not be notified)')
         else:
             # Notify Diablo Ops teams
             send_system_error_email(
                 message=f'{subject}\n\n<pre>{traceback.format_exc()}</pre>',
                 subject=f'{subject[:50]}...' if len(subject) > 50 else subject,
             )
-        return {'message': subject}, 500
+        return {'message': subject}, 400
 
     @app.before_request
     def before_request():
