@@ -22,6 +22,7 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
+from collections import OrderedDict
 import json
 
 from diablo import __version__ as version, cache
@@ -71,19 +72,19 @@ def app_config():
     def _to_api_key(key):
         chunks = key.split('_')
         return f"{chunks[0].lower()}{''.join(chunk.title() for chunk in chunks[1:])}"
-    return tolerant_jsonify(
-        {
-            **dict((_to_api_key(key), app.config[key]) for key in PUBLIC_CONFIGS),
-            **{
-                'currentTermName': term_name_for_sis_id(app.config['CURRENT_TERM_ID']),
-                'ebEnvironment': get_eb_environment(),
-                'emailTemplateTypes': EmailTemplate.get_template_type_options(),
-                'publishTypeOptions': NAMES_PER_PUBLISH_TYPE,
-                'roomCapabilityOptions': Room.get_room_capability_options(),
-                'searchFilterOptions': get_search_filter_options(),
-            },
+
+    api_json = {
+        **dict((_to_api_key(key), app.config[key]) for key in PUBLIC_CONFIGS),
+        **{
+            'currentTermName': term_name_for_sis_id(app.config['CURRENT_TERM_ID']),
+            'ebEnvironment': get_eb_environment(),
+            'emailTemplateTypes': EmailTemplate.get_template_type_options(),
+            'publishTypeOptions': NAMES_PER_PUBLISH_TYPE,
+            'roomCapabilityOptions': Room.get_room_capability_options(),
+            'searchFilterOptions': get_search_filter_options(),
         },
-    )
+    }
+    return tolerant_jsonify(OrderedDict(sorted(api_json.items())))
 
 
 @app.route('/api/version')

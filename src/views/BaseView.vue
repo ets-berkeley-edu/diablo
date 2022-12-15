@@ -44,7 +44,7 @@
       dark
     >
       <div class="display-1 not-selectable" :class="{'mood-ring': $vuetify.theme.dark}">
-        Course Capture
+        <CourseCaptureBanner />
         <a
           id="skip-to-content-link"
           href="#content"
@@ -118,6 +118,7 @@
 
 <script>
 import Context from '@/mixins/Context'
+import CourseCaptureBanner from '@/components/util/CourseCaptureBanner'
 import Footer from '@/components/util/Footer'
 import Snackbar from '@/components/util/Snackbar'
 import Spinner from '@/components/util/Spinner'
@@ -126,7 +127,7 @@ import {getCasLogoutUrl} from '@/api/auth'
 
 export default {
   name: 'BaseView',
-  components: {Footer, Snackbar, Spinner},
+  components: {CourseCaptureBanner, Footer, Snackbar, Spinner},
   mixins: [Context, Util],
   data: () => ({
     navItems: undefined,
