@@ -249,7 +249,7 @@ def schedule_recordings(all_approvals, course):
             )
             scheduled = Scheduled.create(
                 course_display_name=course['label'],
-                instructor_uids=[instructor['uid'] for instructor in instructors_who_can_edit_recordings],
+                instructor_uids=[instructor['uid'] for instructor in instructors_who_teach],
                 kaltura_schedule_id=kaltura_schedule_id,
                 meeting_days=meeting['days'],
                 meeting_end_date=get_recording_end_date(meeting),
