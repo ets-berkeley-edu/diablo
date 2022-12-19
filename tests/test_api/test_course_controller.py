@@ -736,8 +736,8 @@ class TestDownloadCoursesCsv:
             section_id = row[1]
             meeting_type = row[6]
             sign_up_url = row[9]
-            instructors = row[-2]
-            instructor_uids = row[-1]
+            instructors = row[-3]
+            instructor_uids = row[-2]
             if index == 0:
                 assert section_id == 'Section Id'
                 assert meeting_type == 'Meeting Type'
