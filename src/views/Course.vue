@@ -55,26 +55,35 @@
               <v-col>
                 <ScheduledCourse
                   :after-approve="render"
-                  class="px-2"
                   :course="course"
                 />
               </v-col>
             </v-row>
             <v-row v-if="hasCurrentUserApproved && !course.scheduled">
-              <v-col>
+              <v-row>
                 <v-list>
                   <v-list-item two-line>
                     <v-list-item-content>
                       <v-list-item-title class="pl-3">Recording Type</v-list-item-title>
                       <v-list-item-subtitle id="recording-type-name" class="pl-3">{{ mostRecentApproval.recordingTypeName }}</v-list-item-subtitle>
                     </v-list-item-content>
-                    <v-list-item-content>
-                      <v-list-item-title>Publish Type</v-list-item-title>
-                      <v-list-item-subtitle id="publish-type-name">{{ mostRecentApproval.publishTypeName }}</v-list-item-subtitle>
-                    </v-list-item-content>
                   </v-list-item>
                 </v-list>
-              </v-col>
+              </v-row>
+              <v-row>
+                <v-list>
+                  <v-list-item-content>
+                    <v-list-item-title>Publish Type</v-list-item-title>
+                    <v-list-item-subtitle id="publish-type-name">{{ mostRecentApproval.publishTypeName }}</v-list-item-subtitle>
+                  </v-list-item-content>
+                  <v-list-item-content>
+                    <v-list-item-title>Admin Proxy Publish</v-list-item-title>
+                    <v-list-item-subtitle id="admin-proxy-status">
+                      {{ course.canAprxInstructorsEditRecordings ? 'Yes' : 'No' }}
+                    </v-list-item-subtitle>
+                  </v-list-item-content>
+                </v-list>
+              </v-row>
             </v-row>
             <v-row v-if="!hasCurrentUserApproved" no-gutters>
               <v-col cols="12">

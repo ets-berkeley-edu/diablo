@@ -90,6 +90,7 @@ def get_template_substitutions(
         meeting = None
 
     return {
+        'course.aprx': 'True' if course and course['canAprxInstructorsEditRecordings'] else 'False',
         'course.date.end': meeting and meeting['endDate'],
         'course.date.start': meeting and meeting['startDate'],
         'course.days': days and readable_join(days),

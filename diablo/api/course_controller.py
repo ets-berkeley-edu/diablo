@@ -170,6 +170,7 @@ def download_courses_csv():
             'Canvas URLs': [f"{app.config['CANVAS_BASE_URL']}/courses/{s['courseSiteId']}" for s in c.get('canvasCourseSites') or []],
             'Instructors': ', '.join([_get_email_with_label(instructor) for instructor in c.get('instructors') or []]),
             'Instructor UIDs': ', '.join([instructor.get('uid') for instructor in c.get('instructors') or []]),
+            'Admin Proxy': 'True' if c.get('canAprxInstructorsEditRecordings') else 'False',
         }
 
     params = request.get_json()

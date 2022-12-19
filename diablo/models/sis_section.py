@@ -827,7 +827,7 @@ def _to_api_json(term_id, rows, include_rooms=True):
             course = {
                 'allowedUnits': row['allowed_units'],
                 'approvals': approvals,
-                'canAprxInstructorsEditRecordings': preferences and preferences.can_aprx_instructors_edit_recordings,
+                'canAprxInstructorsEditRecordings': True if preferences and preferences.can_aprx_instructors_edit_recordings else False,
                 'canvasCourseSites': canvas_sites_by_section_id.get(section_id, []),
                 'courseName': row['course_name'],
                 'courseTitle': row['course_title'],
