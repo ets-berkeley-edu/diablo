@@ -259,6 +259,9 @@ class TestSignUp1:
     def test_no_agree_terms(self):
         assert not self.sign_up_page.is_present(SignUpPage.AGREE_TO_TERMS_CBX)
 
+    def test_set_aprx_edit_true(self):
+        self.sign_up_page.select_aprx_editor()
+
     def test_queue_for_schedule(self):
         self.sign_up_page.click_approve_button()
         self.recording_schedule.scheduling_status = RecordingSchedulingStatus.QUEUED_FOR_SCHEDULING
@@ -554,6 +557,10 @@ class TestSignUp1:
 
     def test_selected_pub_type(self):
         assert self.sign_up_page.scheduled_publish_type() == self.recording_schedule.publish_type.value
+
+    def test_selected_aprx_edit_rights(self):
+        assert not self.sign_up_page.is_present(SignUpPage.APRX_CAN_EDIT_CBX)
+        assert self.sign_up_page.aprx_can_edit_flag() == 'Yes'
 
     def test_instructor_agree_terms(self):
         self.sign_up_page.click_agree_checkbox()
