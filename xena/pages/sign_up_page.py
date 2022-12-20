@@ -68,6 +68,8 @@ class SignUpPage(DiabloPages):
     NO_AUTO_SCHED_MSG = (By.XPATH, '//div[contains(text(), "cannot be scheduled automatically")]')
     NOT_ELIGIBLE_MSG = (By.ID, 'course-not-eligible')
 
+    APRX_CAN_EDIT_FLAG = (By.ID, 'admin-proxy-status')
+
     RECORDING_TYPE_APPROVED = (By.XPATH, '//h4[contains(., "Recording Type")]/../following-sibling::div/div')
     PUBLISH_TYPE_APPROVED = (By.ID, 'approved-publish-type')
 
@@ -256,6 +258,9 @@ class SignUpPage(DiabloPages):
 
     def default_rec_type(self):
         return self.element(SignUpPage.RECORDING_TYPE_STATIC).text.strip()
+
+    def aprx_can_edit_flag(self):
+        return self.element(SignUpPage.APRX_CAN_EDIT_FLAG).text.strip()
 
     def approved_rec_type(self):
         return self.element(SignUpPage.RECORDING_TYPE_APPROVED).text.strip()

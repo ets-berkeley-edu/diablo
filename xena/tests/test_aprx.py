@@ -131,6 +131,9 @@ class TestAPRX:
         self.sign_up_page.click_approve_button()
         self.sign_up_page.wait_for_approvals_msg('This course is currently queued for scheduling')
 
+    def test_scenario_0_aprx_flag(self):
+        assert self.sign_up_page.aprx_can_edit_flag() == 'Yes'
+
     def test_scenario_0_schedule_recordings(self):
         self.sign_up_page.log_out()
         self.login_page.dev_auth()
@@ -161,6 +164,11 @@ class TestAPRX:
     def test_scenario_0_close_kaltura_window(self):
         self.kaltura_page.close_window_and_switch()
 
+    def test_scenario_0_changes_page(self):
+        self.changes_page.load_page()
+        self.changes_page.wait_for_results()
+        assert not self.changes_page.is_course_row_present(self.scenario_0_section)
+
     # SCENARIO 1
 
     # Instructor signs up and grants proxy rights
@@ -189,6 +197,9 @@ class TestAPRX:
     def test_scenario_1_sign_up(self):
         self.sign_up_page.click_approve_button()
         self.sign_up_page.wait_for_approvals_msg('This course is currently queued for scheduling')
+
+    def test_scenario_1_aprx_flag(self):
+        assert self.sign_up_page.aprx_can_edit_flag() == 'Yes'
 
     def test_scenario_1_schedule_recordings(self):
         self.sign_up_page.log_out()
@@ -221,7 +232,7 @@ class TestAPRX:
     # Proxy added in SIS data and added to Kaltura series
 
     def test_scenario_1_add_proxy(self):
-        util.delete_section(self.scenario_1_section)
+        util.delete_sis_sections_rows(self.scenario_1_section)
         util.add_sis_sections_rows(self.scenario_1_section)
 
     def test_scenario_1_rerun_kaltura(self):
@@ -257,6 +268,11 @@ class TestAPRX:
         proxy_names = [f'{p.first_name} {p.last_name}' for p in self.scenario_1_section.proxies]
         assert self.sign_up_page.visible_proxies() == proxy_names
 
+    def test_scenario_1_no_proxy_on_changes(self):
+        self.changes_page.load_page()
+        self.changes_page.wait_for_results()
+        assert not self.changes_page.is_course_row_present(self.scenario_1_section)
+
     # Admin reschedules to revoke proxy perms
 
     def test_scenario_1_unschedule(self):
@@ -271,6 +287,9 @@ class TestAPRX:
         self.sign_up_page.select_publish_type(PublishType.BCOURSES.value)
         self.sign_up_page.click_approve_button()
         self.sign_up_page.wait_for_approvals_msg('This course is currently queued for scheduling')
+
+    def test_scenario_1_aprx_flag_revoked(self):
+        assert self.sign_up_page.aprx_can_edit_flag() == 'No'
 
     def test_scenario_1_reschedule_recordings(self):
         self.sign_up_page.log_out()
@@ -299,6 +318,11 @@ class TestAPRX:
     def test_scenario_1_re_close_kaltura_window(self):
         self.kaltura_page.close_window_and_switch()
 
+    def test_scenario_1_changes_page(self):
+        self.changes_page.load_page()
+        self.changes_page.wait_for_results()
+        assert not self.changes_page.is_course_row_present(self.scenario_1_section)
+
     # SCENARIO 2
 
     # Instructor signs up and grants no rights to proxies
@@ -326,6 +350,9 @@ class TestAPRX:
         self.sign_up_page.click_agree_checkbox()
         self.sign_up_page.click_approve_button()
         self.sign_up_page.wait_for_approvals_msg('This course is currently queued for scheduling')
+
+    def test_scenario_2_aprx_flag(self):
+        assert self.sign_up_page.aprx_can_edit_flag() == 'No'
 
     def test_scenario_2_schedule_recordings(self):
         self.sign_up_page.log_out()
@@ -379,6 +406,9 @@ class TestAPRX:
         self.sign_up_page.click_approve_button()
         self.sign_up_page.wait_for_approvals_msg('This course is currently queued for scheduling')
 
+    def test_scenario_2_aprx_flag_granted(self):
+        assert self.sign_up_page.aprx_can_edit_flag() == 'Yes'
+
     def test_scenario_2_reschedule_recordings(self):
         self.sign_up_page.log_out()
         self.login_page.dev_auth()
@@ -425,6 +455,11 @@ class TestAPRX:
         self.jobs_page.load_page()
         self.jobs_page.run_kaltura_job()
 
+    def test_scenario_2_changes_page(self):
+        self.changes_page.load_page()
+        self.changes_page.wait_for_results()
+        assert not self.changes_page.is_course_row_present(self.scenario_2_section)
+
     def test_scenario_2_verify_kaltura_series(self):
         self.sign_up_page.load_page(self.scenario_2_section)
         self.sign_up_page.click_kaltura_series_link(self.recording_sched_2)
@@ -438,7 +473,7 @@ class TestAPRX:
     def test_scenario_2_verify_proxy_removed(self):
         assert len(self.kaltura_page.collaborator_rows()) == 3
 
-    def test_scenario_1_verify_instructor_not_removed(self):
+    def test_scenario_2_verify_instructor_not_removed(self):
         assert self.kaltura_page.collaborator_perm(self.scenario_1_section.instructors[0]) == 'Co-Editor, Co-Publisher'
         assert self.kaltura_page.collaborator_perm(self.scenario_2_section.proxies[0]) == 'Co-Editor, Co-Publisher'
         assert self.kaltura_page.collaborator_perm(self.scenario_2_section.proxies[1]) == 'Co-Editor, Co-Publisher'

@@ -48,10 +48,10 @@ class EmailTemplatesPage(DiabloPages):
     @staticmethod
     def template_codes():
         return [
-            'course.days', 'course.format', 'course.name', 'course.room', 'course.section', 'course.time.end',
-            'course.time.start', 'course.title', 'instructors.all', 'instructors.pending', 'publish.type',
-            'publish.type.previous', 'recipient.name', 'recording.type', 'recording.type.previous', 'signup.url',
-            'term.name',
+            'course.aprx', 'course.days', 'course.format', 'course.name', 'course.room', 'course.section',
+            'course.time.end', 'course.time.start', 'course.title', 'instructors.all', 'instructors.pending',
+            'publish.type', 'publish.type.previous', 'recipient.name', 'recording.type', 'recording.type.previous',
+            'signup.url', 'term.name',
         ]
 
     @staticmethod

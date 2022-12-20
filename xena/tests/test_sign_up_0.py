@@ -269,7 +269,7 @@ class TestSignUp0:
         assert self.sign_up_page.external_link_valid(SignUpPage.CC_EXPLAINED_LINK, title) is True
 
     def test_policies_link(self):
-        title = 'Policies | Research, Teaching, and Learning'
+        title = 'Course Capture Policies | Research, Teaching, and Learning'
         assert self.sign_up_page.external_link_valid(SignUpPage.CC_POLICIES_LINK, title) is True
 
     # VERIFY AVAILABLE OPTIONS AND DISABLED APPROVE BUTTON
