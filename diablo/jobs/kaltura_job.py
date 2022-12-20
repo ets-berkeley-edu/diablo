@@ -105,12 +105,18 @@ def _update_already_scheduled_events():
                 instructors=instructors_entitled_to_edit,
                 term_name=term_name_for_sis_id(term_id),
             )
+            # Preserve existing UIDs, added manually or otherwise, in Kaltura.
+            base_entry = kaltura.get_base_entry(template_entry_id)
+            existing_uids = {
+                'entitled_users_edit': base_entry['entitledUsersEdit'].split(','),
+                'entitled_users_publish': base_entry['entitledUsersPublish'].split(','),
+            }
             kaltura.update_base_entry(
                 description=description,
                 entry_id=template_entry_id,
                 name=kaltura_schedule.get('name'),
-                uids_entitled_to_edit=uids_entitled_to_edit,
-                uids_entitled_to_publish=uids_entitled_to_edit,
+                uids_entitled_to_edit=list(set(uids_entitled_to_edit + existing_uids['entitled_users_edit'])),
+                uids_entitled_to_publish=list(set(uids_entitled_to_edit + existing_uids['entitled_users_publish'])),
             )
         else:
             app.logger.warn(f'The previously scheduled {course_name} has no schedule_event in Kaltura.')
