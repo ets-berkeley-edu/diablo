@@ -1,6 +1,6 @@
 <template>
   <v-list>
-    <v-list-item-title class="pl-4 pt-4">
+    <v-list-item-title class="pl-4 pt-3">
       <h4 class="title">Recordings scheduled</h4>
       <div v-if="$currentUser.isAdmin" class="d-flex align-bottom">
         <div>
@@ -15,7 +15,7 @@
         </div>
       </div>
     </v-list-item-title>
-    <v-list-item two-line class="pb-3">
+    <v-list-item two-line>
       <v-list-item-content v-if="course.scheduled.hasObsoleteRoom">
         <v-list-item-title>
           <CourseRoom :course="course" :hide-eligibility="true" :room="course.scheduled.room" />
@@ -29,9 +29,17 @@
         <v-list-item-title>Recording Type</v-list-item-title>
         <v-list-item-subtitle>{{ course.scheduled.recordingTypeName }}</v-list-item-subtitle>
       </v-list-item-content>
+    </v-list-item>
+    <v-list-item two-line>
       <v-list-item-content>
         <v-list-item-title>Publish Type</v-list-item-title>
         <v-list-item-subtitle>{{ course.scheduled.publishTypeName }}</v-list-item-subtitle>
+      </v-list-item-content>
+      <v-list-item-content>
+        <v-list-item-title>Admin Proxy Publish</v-list-item-title>
+        <v-list-item-subtitle id="admin-proxy-status">
+          {{ course.canAprxInstructorsEditRecordings ? 'Yes' : 'No' }}
+        </v-list-item-subtitle>
       </v-list-item-content>
     </v-list-item>
     <v-list-item v-if="$currentUser.isAdmin && adminAlerts.length" two-line class="pb-3">
