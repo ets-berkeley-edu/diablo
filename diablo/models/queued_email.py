@@ -30,7 +30,7 @@ from diablo.lib.util import to_isoformat
 from diablo.merged.emailer import send_system_error_email
 from diablo.models.approval import NAMES_PER_PUBLISH_TYPE, NAMES_PER_RECORDING_TYPE
 from diablo.models.email_template import email_template_type, EmailTemplate
-from diablo.models.sis_section import SisSection
+from diablo.models.sis_section import AUTHORIZED_INSTRUCTOR_ROLE_CODES, SisSection
 from flask import current_app as app
 from sqlalchemy.dialects.postgresql import JSONB
 
@@ -219,7 +219,8 @@ def notify_instructors_recordings_scheduled(course, scheduled):
     if email_template:
         publish_type_name = NAMES_PER_PUBLISH_TYPE[scheduled.publish_type]
         recording_type_name = NAMES_PER_RECORDING_TYPE[scheduled.recording_type]
-        for instructor in course['instructors']:
+        instructors = list(filter(lambda i: i['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES, course['instructors']))
+        for instructor in instructors:
             message = interpolate_content(
                 templated_string=email_template.message,
                 course=course,
