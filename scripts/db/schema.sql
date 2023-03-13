@@ -264,6 +264,7 @@ CREATE TABLE job_runner (
 CREATE TABLE jobs (
     id INTEGER NOT NULL,
     disabled BOOLEAN NOT NULL,
+    is_schedulable BOOLEAN NOT NULL,
     job_schedule_type job_schedule_types NOT NULL,
     job_schedule_value VARCHAR(80) NOT NULL,
     key VARCHAR(80) NOT NULL,

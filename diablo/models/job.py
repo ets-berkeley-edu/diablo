@@ -42,27 +42,32 @@ class Job(Base):
 
     id = db.Column(db.Integer, nullable=False, primary_key=True)  # noqa: A003
     disabled = db.Column(db.Boolean, nullable=False)
+    is_schedulable = db.Column(db.Boolean, nullable=False)
     job_schedule_type = db.Column(job_schedule_types, nullable=False)
     job_schedule_value = db.Column(db.String(80), nullable=False)
     key = db.Column(db.String(80), nullable=False, unique=True)
 
-    def __init__(self, disabled, job_schedule_type, job_schedule_value, key):
+    def __init__(self, disabled, is_schedulable, job_schedule_type, job_schedule_value, key):
         self.disabled = disabled
+        self.is_schedulable = is_schedulable
         self.job_schedule_type = job_schedule_type
         self.job_schedule_value = job_schedule_value
         self.key = key
 
     def __repr__(self):
         return f"""<Job
+                    id={self.id},
                     disabled={self.disabled},
+                    is_schedulable={self.is_schedulable},
                     job_schedule_type={self.job_schedule_type},
                     job_schedule_value={self.job_schedule_value},
                     key={self.key}>
                 """
 
     @classmethod
-    def create(cls, job_schedule_type, job_schedule_value, key, disabled=False):
+    def create(cls, job_schedule_type, job_schedule_value, key, disabled=False, is_schedulable=True):
         job = cls(
+            is_schedulable=is_schedulable,
             job_schedule_type=job_schedule_type,
             job_schedule_value=job_schedule_value,
             key=key,
@@ -108,6 +113,7 @@ class Job(Base):
         return {
             'id': self.id,
             'disabled': self.disabled,
+            'isSchedulable': self.is_schedulable,
             'key': self.key,
             'schedule': {
                 'type': self.job_schedule_type,
