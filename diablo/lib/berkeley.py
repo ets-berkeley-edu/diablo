@@ -103,8 +103,13 @@ def term_name_for_sis_id(sis_id=None):
             '5': 'Summer',
             '8': 'Fall',
         }
-        year = f'19{sis_id[1:3]}' if sis_id.startswith('1') else f'20{sis_id[1:3]}'
-        return f'{season_codes[sis_id[3:4]]} {year}'
+        return f'{season_codes[sis_id[3:4]]} {term_year_for_sis_id(sis_id)}'
+
+
+def term_year_for_sis_id(sis_id=None):
+    if sis_id:
+        sis_id = str(sis_id)
+        return f'19{sis_id[1:3]}' if sis_id.startswith('1') else f'20{sis_id[1:3]}'
 
 
 def get_canvas_sis_term_id(sis_id=None):
