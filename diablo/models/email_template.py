@@ -36,6 +36,7 @@ email_template_type = ENUM(
     'invitation',
     'notify_instructor_of_changes',
     'recordings_scheduled',
+    'remind_invitees',
     'room_change_no_longer_eligible',
     'waiting_for_approval',
     name='email_template_types',
@@ -104,7 +105,7 @@ class EmailTemplate(Base):
 
     @classmethod
     def all_templates(cls):
-        return cls.query.order_by().all()
+        return cls.query.order_by(cls.name).all()
 
     @classmethod
     def update(cls, template_id, template_type, name, subject_line, message):
@@ -127,6 +128,7 @@ class EmailTemplate(Base):
             'invitation': 'Invitation',
             'notify_instructor_of_changes': 'Notify instructor of changes',
             'recordings_scheduled': 'Recordings scheduled',
+            'remind_invitees': 'Remind Invitees',
             'room_change_no_longer_eligible': 'Room change: No longer eligible',
             'waiting_for_approval': 'Waiting for approval',
         }

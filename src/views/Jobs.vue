@@ -55,7 +55,7 @@
                   <span v-html="job.description"></span>
                 </td>
                 <td :id="`job-schedule-${job.key}`" class="text-no-wrap">
-                  <div class="d-flex align-center">
+                  <div v-if="job.isSchedulable" class="d-flex align-center">
                     <div>
                       <v-btn
                         :id="`edit-job-schedule-${job.key}`"
@@ -78,9 +78,22 @@
                       </span>
                     </div>
                   </div>
+                  <div v-if="!job.isSchedulable" class="d-flex justify-start">
+                    <div class="pr-2">
+                      <v-icon color="red">mdi-alert</v-icon>
+                    </div>
+                    <div id="course-not-eligible">
+                      This job is not schedulable.
+                    </div>
+                  </div>
                 </td>
                 <td>
-                  <DisableJobToggle :key="job.disabled" :job="job" :on-change="toggleDisabled" />
+                  <DisableJobToggle
+                    v-if="job.isSchedulable"
+                    :key="job.disabled"
+                    :job="job"
+                    :on-change="toggleDisabled"
+                  />
                 </td>
               </tr>
             </tbody>
