@@ -22,10 +22,10 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from datetime import datetime
-
+from diablo.lib.berkeley import term_year_for_sis_id
 from diablo.lib.util import readable_join
 from diablo.models.sis_section import AUTHORIZED_INSTRUCTOR_ROLE_CODES
+from flask import current_app as app
 from KalturaClient.Plugins.Schedule import KalturaScheduleEventClassificationType, KalturaScheduleEventRecurrenceType, \
     KalturaScheduleEventStatus
 
@@ -58,7 +58,8 @@ def get_series_description(course_label, instructors, term_name):
     instructors_who_teach = list(filter(lambda i: i['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES, instructors))
     names = [instructor['name'] for instructor in instructors_who_teach]
     summary = f'{course_label} ({term_name}) is taught by {readable_join(names)}.'
-    legalese = f"Copyright ©{datetime.strftime(datetime.now(), '%Y')} UC Regents; all rights reserved."
+    copyright_year = term_year_for_sis_id(app.config['CURRENT_TERM_ID'])
+    legalese = f'Copyright ©{copyright_year} UC Regents; all rights reserved.'
     return f'{summary} {legalese}'
 
 
