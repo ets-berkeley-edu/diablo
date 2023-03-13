@@ -22,43 +22,18 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-import os
-
-from diablo import cache, db
-from diablo.configs import load_configs
-from diablo.jobs.background_job_manager import BackgroundJobManager
-from diablo.logger import initialize_logger
-from diablo.routes import register_routes
-from flask import Flask
-
-background_job_manager = BackgroundJobManager()
+from diablo.jobs.base_job import BaseJob
 
 
-def create_app(standalone=False):
-    """Initialize app with configs."""
-    app = Flask(__name__.split('.')[0])
-    load_configs(app)
-    initialize_logger(app)
-    cache.init_app(app)
-    cache.clear()
-    db.init_app(app)
+class RemindInviteesJob(BaseJob):
 
-    if not standalone:
-        with app.app_context():
-            register_routes(app)
-            _register_jobs(app)
+    def _run(self):
+        pass
 
-    return app
+    @classmethod
+    def description(cls):
+        return 'Email reminder to invitees who have not RSVPed.'
 
-
-def _register_jobs(app):
-    from diablo.jobs.blackouts_job import BlackoutsJob  # noqa
-    from diablo.jobs.canvas_job import CanvasJob  # noqa
-    from diablo.jobs.house_keeping_job import HouseKeepingJob  # noqa
-    from diablo.jobs.kaltura_job import KalturaJob  # noqa
-    from diablo.jobs.emails_job import EmailsJob  # noqa
-    from diablo.jobs.remind_invitees_job import RemindInviteesJob  # noqa
-    from diablo.jobs.sis_data_refresh_job import SisDataRefreshJob  # noqa
-
-    if app.config['JOBS_AUTO_START'] and (not app.debug or os.environ.get('WERKZEUG_RUN_MAIN') == 'true'):
-        background_job_manager.start(app)
+    @classmethod
+    def key(cls):
+        return 'remind_invitees'
