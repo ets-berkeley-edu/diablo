@@ -142,6 +142,12 @@ def _create_email_templates():
         message='<code>course.name</code> has changed to a new room: <code>course.room</code>',
     )
     EmailTemplate.create(
+        template_type='remind_invitees',
+        name='Reminder to invitees who have yet to approve',
+        subject_line='Here is a friendly reminder',
+        message='This service needs you. Please sign up!',
+    )
+    EmailTemplate.create(
         template_type='room_change_no_longer_eligible',
         name='Instructor alert when room change',
         subject_line='Room change alert',
@@ -190,7 +196,7 @@ def _set_up_and_run_jobs():
     Job.create(disabled=True, job_schedule_type='minutes', job_schedule_value='120', key='blackouts')
     Job.create(job_schedule_type='day_at', job_schedule_value='16:00', key='canvas')
     Job.create(disabled=True, job_schedule_type='minutes', job_schedule_value='5', key='doomed_to_fail')
-
+    Job.create(is_schedulable=False, job_schedule_type='day_at', job_schedule_value='16:00', key='remind_invitees')
     background_job_manager.start(app)
     HouseKeepingJob(app_context=simply_yield).run()
     CanvasJob(app_context=simply_yield).run()
