@@ -42,7 +42,7 @@ class BaseJob:
     def run(self, force_run=False):
         with self.app_context():
             job = Job.get_job_by_key(self.key())
-            if job and job.is_schedulable:
+            if job:
                 current_instance_id = os.environ.get('EC2_INSTANCE_ID')
                 job_runner_id = fetch_job_runner_id()
 
@@ -72,8 +72,6 @@ class BaseJob:
                             message=f'{summary}\n\n<pre>{traceback.format_exc()}</pre>',
                             subject=f'{summary[:50]}...' if len(summary) > 50 else summary,
                         )
-            elif job and not job.is_schedulable:
-                app.logger.warn(f'Skipping job {self.key()} because job is NOT schedulable.')
             else:
                 raise BackgroundJobError(f'Job {self.key()} is not registered in the database')
 

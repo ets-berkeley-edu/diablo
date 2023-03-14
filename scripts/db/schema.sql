@@ -53,6 +53,7 @@ CREATE TYPE email_template_types AS ENUM (
     'invitation',
     'notify_instructor_of_changes',
     'recordings_scheduled',
+    'remind_invitees',
     'room_change_no_longer_eligible',
     'waiting_for_approval'
 );

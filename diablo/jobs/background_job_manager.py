@@ -72,13 +72,13 @@ class BackgroundJobManager:
                 cls.active = False
 
         interval = app.config['JOBS_SECONDS_BETWEEN_PENDING_CHECK']
-        all_jobs = Job.get_all()
+        all_schedulable_jobs = list(filter(lambda job: job.is_schedulable, Job.get_all()))
         app.logger.info(f"""
 
             Starting background job manager.
             Seconds between pending jobs check = {interval}
             Jobs:
-                {[job.to_api_json() for job in all_jobs]}
+                {[job.to_api_json() for job in all_schedulable_jobs]}
 
             """)
 
@@ -93,8 +93,8 @@ class BackgroundJobManager:
         # Clean up history for any older jobs that got lost.
         JobHistory.fail_orphans()
 
-        if all_jobs:
-            for job_config in all_jobs:
+        if all_schedulable_jobs:
+            for job_config in all_schedulable_jobs:
                 self._load_job(
                     app=app,
                     job_key=job_config.key,
