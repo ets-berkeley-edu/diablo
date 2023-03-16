@@ -82,7 +82,7 @@ class BlackoutsPage(DiabloPages):
         self.when_not_present(BlackoutsPage.blackout_delete_loc(blackout_date), util.get_short_timeout())
 
     def delete_all_blackouts(self):
-        Wait(self.driver, util.get_short_timeout()).until(ec.visibility_of_element_located(BlackoutsPage.CREATE_NEW_BUTTON))
+        Wait(self.driver, util.get_short_timeout()).until(ec.presence_of_element_located(BlackoutsPage.CREATE_NEW_BUTTON))
         for el in self.elements(BlackoutsPage.DELETE_BUTTON):
             app.logger.info('Deleting a blackout')
             el.click()

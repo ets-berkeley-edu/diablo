@@ -27,7 +27,6 @@ from flask import current_app as app
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.wait import WebDriverWait as Wait
-from xena.pages.calnet_page import CalNetPage
 from xena.pages.page import Page
 from xena.test_utils import util
 
@@ -69,18 +68,12 @@ class KalturaPage(Page):
     RECUR_TIME_END = (By.ID, 'EventRecurrence-endTime')
     RECUR_MODAL_CANCEL_BUTTON = (By.LINK_TEXT, 'Cancel')
 
-    def log_in(self):
+    def log_in_via_calnet(self, calnet_page):
         app.logger.info('Logging in to Kaltura')
         self.driver.get(f'{app.config["KALTURA_MEDIA_SPACE_URL"]}/user/login')
-        self.wait_for_element_and_type(KalturaPage.USERNAME_INPUT, app.config['XENA_KALTURA_USERNAME'])
-        self.wait_for_element_and_type(KalturaPage.PASSWORD_INPUT, app.config['XENA_KALTURA_PASSWORD'])
-        self.wait_for_element_and_click(KalturaPage.LOG_IN_BUTTON)
-        Wait(self.driver, util.get_short_timeout()).until(ec.presence_of_element_located(KalturaPage.LOG_OUT_LINK))
-
-    def log_in_via_calnet(self):
-        app.logger.info('Logging in to Kaltura')
-        self.driver.get(f'{app.config["KALTURA_MEDIA_SPACE_URL"]}/user/login')
-        self.wait_for_element_and_type(CalNetPage.USERNAME_INPUT, 'PLEASE LOG IN MANUALLY')
+        username = util.get_username()
+        password = util.get_password()
+        calnet_page.log_in(username, password)
         Wait(self.driver, util.get_medium_timeout()).until(ec.presence_of_element_located(KalturaPage.LOG_OUT_LINK))
 
     def load_event_edit_page(self, series_id):

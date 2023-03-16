@@ -30,7 +30,6 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.wait import WebDriverWait as Wait
 from xena.models.kaltura_lti_tool import KalturaLTITool
-from xena.pages.calnet_page import CalNetPage
 from xena.pages.page import Page
 from xena.test_utils import util
 
@@ -83,12 +82,6 @@ class CanvasPage(Page):
         el_loc = By.ID, el_id
         if self.is_present(el_loc) and self.element(el_loc):
             self.driver.execute_script('document.getElementById("element_toggler_0").style.display="none";')
-
-    def log_in(self):
-        app.logger.info('Logging in to Canvas')
-        self.hit_homepage()
-        self.wait_for_element_and_type(CalNetPage.USERNAME_INPUT, 'PLEASE LOG IN MANUALLY')
-        Wait(self.driver, util.get_long_timeout()).until(ec.presence_of_element_located(CanvasPage.ADMIN_LINK))
 
     def masquerade_as(self, user, site_id=None):
         app.logger.info(f'Masquerading as Canvas ID {user.canvas_id}')

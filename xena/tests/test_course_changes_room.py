@@ -57,7 +57,7 @@ class TestCourseRoomChanges:
         self.jobs_page.disable_all_jobs()
 
     def test_delete_old_diablo_and_kaltura(self):
-        self.kaltura_page.log_in_via_calnet()
+        self.kaltura_page.log_in_via_calnet(self.calnet_page)
         self.kaltura_page.reset_test_data(self.term, self.recording_sched)
         util.reset_sign_up_test_data(self.real_section)
         self.recording_sched.approval_status = RecordingApprovalStatus.NOT_INVITED

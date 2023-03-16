@@ -23,9 +23,15 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
+import time
+
 from flask import current_app as app
+import pytest
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as ec
+from selenium.webdriver.support.wait import WebDriverWait as Wait
 from xena.pages.page import Page
+from xena.test_utils import util
 
 
 class CalNetPage(Page):
@@ -33,13 +39,35 @@ class CalNetPage(Page):
     USERNAME_INPUT = (By.ID, 'username')
     PASSWORD_INPUT = (By.ID, 'password')
     SUBMIT_BUTTON = (By.ID, 'submit')
+    TRUST_BROWSER_BUTTON = (By.ID, 'trust-browser-button')
+    BAD_CREDS = (By.XPATH, '//span[contains(text(), "Authentication attempt has failed")]')
 
-    def log_in(self, username, password):
-        app.logger.info(f'Logging in username {username}')
-        self.wait_for_element_and_type(CalNetPage.USERNAME_INPUT, username)
-        self.wait_for_element_and_type(CalNetPage.PASSWORD_INPUT, password)
-        self.wait_for_element_and_click(CalNetPage.SUBMIT_BUTTON)
-
-    def wait_for_manual_login(self):
-        app.logger.info('Waiting for manual login')
-        self.wait_for_element_and_type(CalNetPage.USERNAME_INPUT, 'PLEASE LOG IN MANUALLY')
+    def log_in(self, username=None, password=None):
+        Wait(self.driver, util.get_medium_timeout()).until(ec.title_contains('Central Authentication Service'))
+        if username and password:
+            app.logger.info(f'{username} is logging in')
+            self.wait_for_element_and_type(self.USERNAME_INPUT, username)
+            self.wait_for_element_and_type(self.PASSWORD_INPUT, password)
+            self.wait_for_element_and_click(self.SUBMIT_BUTTON)
+        else:
+            if self.headless:
+                pytest.exit('Browser is running in headless mode, manual login is not supported')
+            else:
+                app.logger.info('Waiting for manual login')
+                self.wait_for_element_and_type(self.USERNAME_INPUT, 'PLEASE LOG IN MANUALLY')
+        tries = 0
+        max_tries = util.get_long_timeout()
+        while tries <= max_tries:
+            tries += 1
+            try:
+                assert self.is_present(self.TRUST_BROWSER_BUTTON) or self.is_present(self.BAD_CREDS)
+                break
+            except AssertionError:
+                if tries == max_tries:
+                    raise
+                else:
+                    time.sleep(1)
+        if self.is_present(self.TRUST_BROWSER_BUTTON):
+            self.wait_for_element_and_click(self.TRUST_BROWSER_BUTTON)
+        elif self.is_present(self.BAD_CREDS):
+            pytest.exit('Invalid credentials')

@@ -35,18 +35,27 @@ from xena.test_utils import util
 class WebDriverManager(object):
 
     @classmethod
-    def launch_browser(cls):
-        app.logger.warning(f'Launching {util.get_xena_browser().capitalize()}')
-        if util.get_xena_browser() == 'firefox':
+    def launch_browser(cls, browser=None, headless=None):
+        _browser = browser or util.get_xena_browser()
+        if headless:
+            _headless = True if headless == 'true' else False
+        else:
+            _headless = util.get_xena_browser_headless()
+        app.logger.warning(f'Launching {_browser.capitalize()}')
+        app.logger.info(f'Headless is {_headless}')
+
+        if _browser == 'firefox':
             p = FirefoxProfile()
             p.set_preference(key='devtools.jsonview.enabled', value=False)
             options = Foptions()
             options.profile = p
+            options.headless = _headless
             return webdriver.Firefox(options=options)
         else:
             d = DesiredCapabilities.CHROME
             d['loggingPrefs'] = {'browser': 'ALL'}
             options = Coptions()
+            options.headless = _headless
             prefs = {
                 'profile.default_content_settings.popups': 0,
                 'download.default_directory': util.default_download_dir(),

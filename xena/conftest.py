@@ -31,6 +31,7 @@ from xena.models.term import Term
 from xena.pages.api_page import ApiPage
 from xena.pages.attic_page import AtticPage
 from xena.pages.blackouts_page import BlackoutsPage
+from xena.pages.calnet_page import CalNetPage
 from xena.pages.canvas_page import CanvasPage
 from xena.pages.course_changes_page import CourseChangesPage
 from xena.pages.email_page import EmailPage
@@ -56,28 +57,37 @@ ctx = _app.app_context()
 ctx.push()
 
 
+def pytest_addoption(parser):
+    parser.addoption('--browser', action='store', default=_app.config['XENA_BROWSER'])
+    parser.addoption('--headless', action='store')
+
+
 @pytest.fixture(scope='session')
 def page_objects(request):
-    driver = WebDriverManager.launch_browser()
+    browser = request.config.getoption('--browser')
+    headless = request.config.getoption('--headless')
+    driver = WebDriverManager.launch_browser(browser=browser, headless=headless)
+
     term = Term()
 
     # Define page objects
-    api_page = ApiPage(driver)
-    attic_page = AtticPage(driver)
-    blackouts_page = BlackoutsPage(driver)
-    canvas_page = CanvasPage(driver)
-    changes_page = CourseChangesPage(driver)
-    email_page = EmailPage(driver)
-    instructor_page = InstructorPage(driver)
-    jobs_page = JobsPage(driver)
-    login_page = LoginPage(driver)
-    ouija_page = OuijaBoardPage(driver)
-    room_page = RoomPage(driver)
-    room_printable_page = RoomPrintablePage(driver)
-    rooms_page = RoomsPage(driver)
-    sign_up_page = SignUpPage(driver)
-    templates_page = EmailTemplatesPage(driver)
-    kaltura_page = KalturaPage(driver)
+    api_page = ApiPage(driver, headless)
+    attic_page = AtticPage(driver, headless)
+    blackouts_page = BlackoutsPage(driver, headless)
+    calnet_page = CalNetPage(driver, headless)
+    canvas_page = CanvasPage(driver, headless)
+    changes_page = CourseChangesPage(driver, headless)
+    email_page = EmailPage(driver, headless)
+    instructor_page = InstructorPage(driver, headless)
+    jobs_page = JobsPage(driver, headless)
+    login_page = LoginPage(driver, headless)
+    ouija_page = OuijaBoardPage(driver, headless)
+    room_page = RoomPage(driver, headless)
+    room_printable_page = RoomPrintablePage(driver, headless)
+    rooms_page = RoomsPage(driver, headless)
+    sign_up_page = SignUpPage(driver, headless)
+    templates_page = EmailTemplatesPage(driver, headless)
+    kaltura_page = KalturaPage(driver, headless)
 
     session = request.node
     try:
@@ -88,6 +98,7 @@ def page_objects(request):
             setattr(cls.obj, 'api_page', api_page)
             setattr(cls.obj, 'attic_page', attic_page)
             setattr(cls.obj, 'blackouts_page', blackouts_page)
+            setattr(cls.obj, 'calnet_page', calnet_page)
             setattr(cls.obj, 'canvas_page', canvas_page)
             setattr(cls.obj, 'changes_page', changes_page)
             setattr(cls.obj, 'email_page', email_page)

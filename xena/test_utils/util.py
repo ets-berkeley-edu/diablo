@@ -25,6 +25,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 
 from datetime import datetime, timedelta
 import json
+import os
 
 import dateutil.parser
 from diablo import db, std_commit
@@ -37,6 +38,10 @@ from xena.models.section import Section
 
 def get_xena_browser():
     return app.config['XENA_BROWSER']
+
+
+def get_xena_browser_headless():
+    return app.config['XENA_BROWSER_HEADLESS']
 
 
 def get_click_sleep():
@@ -63,12 +68,12 @@ def get_admin_uid():
     return app.config['ADMIN_UID']
 
 
-def get_kaltura_username():
-    return app.config['KALTURA_USERNAME']
+def get_username():
+    return os.getenv('USERNAME')
 
 
-def get_kaltura_password():
-    return app.config['KALTURA_PASSWORD']
+def get_password():
+    return os.getenv('PASSWORD')
 
 
 def get_kaltura_term_date_str(date):
