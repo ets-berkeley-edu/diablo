@@ -147,8 +147,6 @@ VUE_LOCALHOST_BASE_URL = None
 XENA_EMAIL_USERNAME = 'xena@amphipolis.gov'
 XENA_EMAIL_PASSWORD = 'shhh'
 XENA_EMAIL_DELIVERY_RETRIES = 15
-XENA_KALTURA_USERNAME = 'some-user-name@domain.com'
-XENA_KALTURA_PASSWORD = 'some-complicated-string'
 
 # We keep these out of alphabetical sort above for readability's sake.
 HOST = '0.0.0.0'

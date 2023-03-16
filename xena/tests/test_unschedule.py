@@ -48,7 +48,7 @@ class TestUnschedule:
         self.jobs_page.disable_all_jobs()
 
     def test_delete_old_kaltura_series(self):
-        self.kaltura_page.log_in_via_calnet()
+        self.kaltura_page.log_in_via_calnet(self.calnet_page)
         self.kaltura_page.reset_test_data(self.term, self.recording_schedule)
 
     def test_delete_old_diablo_data(self):

@@ -37,8 +37,9 @@ from xena.test_utils import util
 
 class Page(object):
 
-    def __init__(self, driver):
+    def __init__(self, driver, headless):
         self.driver = driver
+        self.headless = headless
 
     PAGE_HEADING = (By.XPATH, '//h1')
     H4_HEADING = (By.XPATH, '//h4')
