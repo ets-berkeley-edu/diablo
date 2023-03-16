@@ -56,6 +56,7 @@ class InstructorEmailsTask(BaseTask):
             email_template = EmailTemplate.get_template_by_type(template_type)
             courses = SisSection.get_courses(
                 include_deleted=True,
+                include_non_principal_sections=True,
                 include_null_meeting_locations=True,
                 section_ids=[s.section_id for s in all_scheduled],
                 term_id=self.term_id,
