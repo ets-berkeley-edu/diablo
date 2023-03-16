@@ -271,6 +271,7 @@ class SisSection(db.Model):
             term_id,
             include_administrative_proxies=False,
             include_deleted=False,
+            include_non_principal_sections=False,
             include_null_meeting_locations=False,
             section_ids=None,
     ):
@@ -301,7 +302,7 @@ class SisSection(db.Model):
                 {course_filter}
                 AND s.term_id = :term_id
                 AND (s.instructor_uid IS NULL OR s.instructor_role_code = ANY(:instructor_role_codes))
-                AND s.is_principal_listing IS TRUE
+                {'' if include_non_principal_sections else 'AND s.is_principal_listing IS TRUE'}
                 {'' if include_deleted else ' AND s.deleted_at IS NULL '}
             ORDER BY s.course_name, s.section_id, s.instructor_uid, r.capability NULLS LAST
         """
