@@ -57,7 +57,7 @@ class RemindInviteesJob(BaseJob):
 
     @classmethod
     def description(cls):
-        return 'Email reminder to invitees who have not RSVPed.'
+        return 'Queues up reminder emails for invitees who have not RSVPed.'
 
     @classmethod
     def key(cls):
