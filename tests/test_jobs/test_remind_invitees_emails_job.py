@@ -40,24 +40,29 @@ from tests.util import simply_yield, test_approvals_workflow
 
 class TestInvitationEmailsTask:
 
-    def test_remind_invitee(self, app, db_session):
+    def test_remind_invitee(self, app):
         """Send reminder to instructors who have not RSVPed to original invitation."""
-        _assert_reminder_to_invitees(
-            app=app,
-            db_session=db_session,
-            schedule_recordings_before_assert=False,
-        )
+        _assert_reminder_to_invitees(app=app, schedule_recordings_before_assert=False)
 
-    def test_no_reminder_invitee_when_scheduled(self, app, db_session):
+    def test_no_reminder_invitee_when_scheduled(self, app):
         """Send reminder to instructors who have not RSVPed to original invitation."""
-        _assert_reminder_to_invitees(
-            app=app,
-            db_session=db_session,
-            schedule_recordings_before_assert=True,
-        )
+        _assert_reminder_to_invitees(app=app, schedule_recordings_before_assert=True)
+
+    def test_no_reminder_before_invites_sent(self, app):
+        """Send reminder to instructors who have not RSVPed to original invitation."""
+        with test_approvals_workflow(app):
+            timestamp = utc_now()
+            # Send reminders. Expect only one sent for target section.
+            RemindInviteesJob(simply_yield).run()
+            QueuedEmailsTask().run()
+            assert not _get_emails_sent_since(
+                template_type='remind_invitees',
+                term_id=app.config['CURRENT_TERM_ID'],
+                timestamp=timestamp,
+            )
 
 
-def _assert_reminder_to_invitees(app, db_session, schedule_recordings_before_assert):
+def _assert_reminder_to_invitees(app, schedule_recordings_before_assert):
     with test_approvals_workflow(app):
         timestamp = utc_now()
         # Send invitations
@@ -111,9 +116,9 @@ def _assert_reminder_to_invitees(app, db_session, schedule_recordings_before_ass
 
 
 def _get_emails_sent_since(template_type, term_id, timestamp):
-    return SentEmail.query\
-        .filter_by(template_type=template_type, term_id=term_id)\
-        .filter(SentEmail.sent_at >= timestamp)\
+    return SentEmail.query \
+        .filter_by(template_type=template_type, term_id=term_id) \
+        .filter(SentEmail.sent_at >= timestamp) \
         .order_by(SentEmail.sent_at).all()
 
 
