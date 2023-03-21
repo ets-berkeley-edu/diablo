@@ -26,6 +26,7 @@ from diablo.jobs.base_job import BaseJob
 from diablo.models.approval import Approval
 from diablo.models.queued_email import QueuedEmail
 from diablo.models.scheduled import Scheduled
+from diablo.models.sent_email import SentEmail
 from diablo.models.sis_section import SisSection
 from flask import current_app as app
 
@@ -35,8 +36,13 @@ class RemindInviteesJob(BaseJob):
     def _run(self):
         term_id = app.config['CURRENT_TERM_ID']
         courses = SisSection.get_courses(term_id=term_id)
+        section_ids = list(set([c['sectionId'] for c in courses]))
         approvals_by_section_id = _get_approvals_by_section_id(
-            section_ids=list(set([c['sectionId'] for c in courses])),
+            section_ids=section_ids,
+            term_id=term_id,
+        )
+        invitation_recipient_uids = _get_invitation_recipient_uids(
+            section_ids=section_ids,
             term_id=term_id,
         )
         scheduled_by_section_id = {s.section_id: s for s in Scheduled.get_all_scheduled(term_id=term_id)}
@@ -47,7 +53,8 @@ class RemindInviteesJob(BaseJob):
                     approvals = approvals_by_section_id.get(section_id) or []
                     approved_by_uids = [a.approved_by_uid for a in approvals]
                     for i in course['instructors']:
-                        if i['uid'] not in approved_by_uids:
+                        uid = i['uid']
+                        if uid not in approved_by_uids and uid in invitation_recipient_uids:
                             QueuedEmail.create(
                                 recipient=i,
                                 section_id=section_id,
@@ -72,3 +79,18 @@ def _get_approvals_by_section_id(section_ids, term_id):
             approvals_by_section_id[section_id] = []
         approvals_by_section_id[section_id].append(approval)
     return approvals_by_section_id
+
+
+def _get_invitation_recipient_uids(section_ids, term_id):
+    sent_emails = SentEmail.get_emails_of_type(
+        section_ids=section_ids,
+        template_type='invitation',
+        term_id=term_id,
+    )
+    recipient_uids = [e.recipient_uid for e in sent_emails]
+    # Queued email
+    for queued_email in QueuedEmail.get_all(term_id=term_id):
+        if queued_email.template_type == 'invitation' and queued_email.section_id in section_ids:
+            if 'uid' in queued_email.recipient:
+                recipient_uids.append(queued_email.recipient['uid'])
+    return recipient_uids
