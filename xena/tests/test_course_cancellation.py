@@ -23,9 +23,8 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-from flask import current_app as app
 import pytest
-from xena.models.email import Email
+from xena.models.email_template_type import EmailTemplateType
 from xena.models.publish_type import PublishType
 from xena.models.recording_approval_status import RecordingApprovalStatus
 from xena.models.recording_schedule import RecordingSchedule
@@ -63,10 +62,8 @@ class TestCourseCancellation:
         self.jobs_page.load_page()
         self.jobs_page.run_emails_job()
 
-    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_delete_old_email(self):
-        self.email_page.log_in()
-        self.email_page.delete_all_messages()
+        util.reset_sent_email_test_data(self.section)
 
     # COURSE IS CANCELLED BEFORE SIGN-UP
 
@@ -174,14 +171,9 @@ class TestCourseCancellation:
         self.ouija_page.filter_for_all()
         assert self.ouija_page.is_course_in_results(self.section) is False
 
-    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_admin_email_canceled_ineligible(self):
-        subj = f'Course Capture Admin: {self.section.code} has moved to CANCELED'
-        email = Email(msg_type=None, subject=subj, sender=None)
-        assert self.email_page.is_message_delivered(email)
+        assert util.get_sent_email_count(EmailTemplateType.ADMIN_ROOM_CHANGE, self.section) == 1
 
-    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_instructor_email_canceled_ineligible(self):
-        subj = f'Your course {self.section.code} is no longer eligible for Course Capture'
-        email = Email(msg_type=None, subject=subj, sender=None)
-        assert self.email_page.is_message_delivered(email)
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_ROOM_CHANGE_INELIGIBLE, self.section,
+                                         self.section.instructors[0]) == 1

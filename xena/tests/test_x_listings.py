@@ -26,7 +26,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 from flask import current_app as app
 import pytest
 from xena.models.canvas_site import CanvasSite
-from xena.models.email import Email
+from xena.models.email_template_type import EmailTemplateType
 from xena.models.publish_type import PublishType
 from xena.models.recording_approval_status import RecordingApprovalStatus
 from xena.models.recording_schedule import RecordingSchedule
@@ -83,10 +83,9 @@ class TestCrossListings:
         self.recording_schedule.approval_status = RecordingApprovalStatus.NOT_INVITED
         self.recording_schedule.scheduling_status = RecordingSchedulingStatus.NOT_SCHEDULED
 
-    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_delete_old_email(self):
-        self.email_page.log_in()
-        self.email_page.delete_all_messages()
+        util.reset_sent_email_test_data(self.section)
+        util.reset_sent_email_test_data(self.x_listed_section)
 
     # CREATE A COURSE SITE FOR EACH OF THE LISTINGS
 
@@ -212,80 +211,73 @@ class TestCrossListings:
 
     def test_send_emails(self):
         self.jobs_page.load_page()
+        self.jobs_page.run_remind_invitees_job()
         self.jobs_page.run_emails_job()
         self.recording_schedule.approval_status = RecordingApprovalStatus.INVITED
 
-    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_invite_inst_1(self):
-        subj = f'Invitation {self.section.term.name} {self.section.code} (To: {self.section.instructors[0].email})'
-        expected_message = Email(msg_type=None, sender=None, subject=subj)
-        assert self.email_page.is_message_delivered(expected_message)
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_INVITATION, self.section,
+                                         self.section.instructors[0]) == 1
 
-    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_invite_inst_2(self):
-        subj = f'Invitation {self.section.term.name} {self.section.code} (To: {self.section.instructors[1].email})'
-        expected_message = Email(msg_type=None, sender=None, subject=subj)
-        assert self.email_page.is_message_present(expected_message)
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_INVITATION, self.section,
+                                         self.section.instructors[1]) == 1
 
-    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_no_dupe_invite_inst_1(self):
-        subj = f'Invitation {self.section.term.name} {self.section.listings[0].code} (To: {self.section.instructors[0].email})'
-        expected_message = Email(msg_type=None, sender=None, subject=subj)
-        assert not self.email_page.is_message_present(expected_message)
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_INVITATION, self.section.listings[0],
+                                         self.section.instructors[0]) == 1
 
-    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
+    def test_no_reminder_inst_1(self):
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_INVITATION_REMINDER, self.section,
+                                         self.section.instructors[0]) == 0
+
+    def test_no_reminder_inst_2(self):
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_INVITATION_REMINDER, self.section,
+                                         self.section.instructors[1]) == 0
+
+    def test_no_reminder_inst_1_x_list(self):
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_INVITATION_REMINDER, self.section.listings[0],
+                                         self.section.instructors[0]) == 0
+
+    def test_no_reminder_inst_2_x_list(self):
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_INVITATION_REMINDER, self.section.listings[0],
+                                         self.section.instructors[1]) == 0
+
     def test_awaiting_approval_inst_1(self):
-        subj = f'Course Capture: {self.section.code} waiting on approval (To: {self.section.instructors[0].email})'
-        expected_message = Email(msg_type=None, sender=None, subject=subj)
-        assert self.email_page.is_message_present(expected_message)
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_AWAITING_APPROVAL, self.section,
+                                         self.section.instructors[0]) == 1
 
-    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_no_awaiting_approval_inst_2(self):
-        subj = f'Course Capture: {self.section.code} waiting on approval (To: {self.section.instructors[1].email})'
-        expected_message = Email(msg_type=None, sender=None, subject=subj)
-        assert not self.email_page.is_message_present(expected_message)
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_AWAITING_APPROVAL, self.section,
+                                         self.section.instructors[1]) == 0
 
-    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
-    def test_no_dupe_awaiting_approval_inst_1(self):
-        subj = f'Course Capture: {self.section.listings[0].code} waiting on approval (To: {self.section.instructors[0].email})'
-        expected_message = Email(msg_type=None, sender=None, subject=subj)
-        assert not self.email_page.is_message_present(expected_message)
+    def test_listing_awaiting_approval_inst_1(self):
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_AWAITING_APPROVAL, self.section.listings[0],
+                                         self.section.instructors[0]) == 1
 
-    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_notify_of_changes_inst_1(self):
-        subj = f'Changes to your Course Capture settings for {self.section.code} (To: {self.section.instructors[0].email})'
-        expected_message = Email(msg_type=None, sender=None, subject=subj)
-        assert self.email_page.is_message_present(expected_message)
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_SETTINGS_CHANGE, self.section,
+                                         self.section.instructors[0]) == 1
 
-    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_no_notify_of_changes_inst_2(self):
-        subj = f'Changes to your Course Capture settings for {self.section.code} (To: {self.section.instructors[1].email})'
-        expected_message = Email(msg_type=None, sender=None, subject=subj)
-        assert not self.email_page.is_message_present(expected_message)
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_SETTINGS_CHANGE, self.section,
+                                         self.section.instructors[1]) == 0
 
-    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
-    def test_no_dupe_notify_of_changes_inst_1(self):
-        subj = f'Changes to your Course Capture settings for {self.section.listings[0].code} (To: {self.section.instructors[0].email})'
-        expected_message = Email(msg_type=None, sender=None, subject=subj)
-        assert not self.email_page.is_message_present(expected_message)
+    def test_listing_notify_of_changes_inst_1(self):
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_SETTINGS_CHANGE, self.section.listings[0],
+                                         self.section.instructors[0]) == 1
 
-    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_schedule_conf_inst_1(self):
-        subj = f'Your course, {self.section.code}, has been scheduled for Course Capture (To: {self.section.instructors[0].email})'
-        expected_message = Email(msg_type=None, sender=None, subject=subj)
-        assert self.email_page.is_message_present(expected_message)
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_RECORDINGS_SCHEDULED, self.section,
+                                         self.section.instructors[0]) == 1
 
-    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_schedule_conf_inst_2(self):
-        subj = f'Your course, {self.section.code}, has been scheduled for Course Capture (To: {self.section.instructors[1].email})'
-        expected_message = Email(msg_type=None, sender=None, subject=subj)
-        assert self.email_page.is_message_present(expected_message)
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_RECORDINGS_SCHEDULED, self.section,
+                                         self.section.instructors[1]) == 1
 
-    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
-    def test_no_dupe_schedule_conf_inst_1(self):
-        subj = f'Your course, {self.section.listings[0].code}, has been scheduled for Course Capture (To: {self.section.instructors[0].email})'
-        expected_message = Email(msg_type=None, sender=None, subject=subj)
-        assert not self.email_page.is_message_present(expected_message)
+    def test_listing_schedule_conf_inst_1(self):
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_RECORDINGS_SCHEDULED, self.section.listings[0],
+                                         self.section.instructors[0]) == 1
 
     # CHANGE PRIMARY LISTING
 
@@ -294,7 +286,12 @@ class TestCrossListings:
 
     def test_run_email_job(self):
         self.jobs_page.load_page()
+        self.jobs_page.run_remind_invitees_job()
         self.jobs_page.run_emails_job()
+
+    def test_listing_reminder_new_primary(self):
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_INVITATION_REMINDER, self.x_listed_section,
+                                         self.section.instructors[0]) == 1
 
     def test_revert_primary_listing(self):
         util.switch_principal_listing(self.x_listed_section, self.section)

@@ -41,6 +41,7 @@ class JobsPage(DiabloPages):
     RUN_HOUSEKEEPING_JOB_BUTTON = (By.ID, 'run-job-house_keeping')
     RUN_KALTURA_JOB_BUTTON = (By.ID, 'run-job-kaltura')
     RUN_EMAILS_JOB_BUTTON = (By.ID, 'run-job-emails')
+    RUN_REMIND_INVITEES_BUTTON = (By.ID, 'run-job-remind_invitees')
     RUN_SIS_DATA_REFRESH_JOB_BUTTON = (By.ID, 'run-job-sis_data_refresh')
 
     SEARCH_HISTORY_INPUT = (By.XPATH, '//label[text()="Search History"]/following-sibling::input')
@@ -87,6 +88,13 @@ class JobsPage(DiabloPages):
         time.sleep(1)
         self.wait_for_page_and_click(JobsPage.RUN_EMAILS_JOB_BUTTON)
         self.wait_for_most_recent_job_success(AsyncJob.EMAILS)
+
+    def run_remind_invitees_job(self):
+        app.logger.info('Running reminder invites job')
+        self.scroll_to_top()
+        time.sleep(1)
+        self.wait_for_page_and_click(JobsPage.RUN_REMIND_INVITEES_BUTTON)
+        self.wait_for_most_recent_job_success(AsyncJob.REMIND_INVITEES)
 
     def run_sis_data_refresh_job(self):
         app.logger.info('Running SIS data refresh job')
@@ -137,7 +145,10 @@ class JobsPage(DiabloPages):
 
     def disable_all_jobs(self):
         for job in AsyncJob:
-            self.disable_job(job)
+            if job == AsyncJob.REMIND_INVITEES:
+                app.logger.info(f'Skipping #{job.value}')
+            else:
+                self.disable_job(job)
 
     def search_job_history(self, async_job):
         app.loggerinfo(f'Searching for {async_job.value}')

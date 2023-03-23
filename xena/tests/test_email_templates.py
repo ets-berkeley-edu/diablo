@@ -60,17 +60,17 @@ class TestEmailTemplates:
         self.templates_page.click_template_select()
         options = self.templates_page.visible_menu_options()
         options.sort()
-        types = [templ.value for templ in EmailTemplateType]
+        types = [templ.value['desc'] for templ in EmailTemplateType]
         types.sort()
         assert options == types
 
     def test_create_template_cancel(self):
-        self.templates_page.click_menu_option(self.template.template_type.value)
+        self.templates_page.click_menu_option(self.template.template_type.value['desc'])
         self.templates_page.click_cancel()
 
     def test_create_template_name_input(self):
         self.templates_page.click_template_select()
-        self.templates_page.click_menu_option(self.template.template_type.value)
+        self.templates_page.click_menu_option(self.template.template_type.value['desc'])
         self.templates_page.enter_template_name('Invitation')
 
     def test_create_template_subj_input(self):
@@ -91,7 +91,7 @@ class TestEmailTemplates:
 
     def test_pre_existing_template(self):
         self.templates_page.click_template_select()
-        assert self.templates_page.is_menu_option_disabled(self.template.template_type.value)
+        assert self.templates_page.is_menu_option_disabled(self.template.template_type).value['desc']
 
     def test_edit_template_cancel(self):
         self.templates_page.hit_escape()
@@ -163,6 +163,15 @@ class TestEmailTemplates:
         template = EmailTemplate(
             template_type=EmailTemplateType.INSTR_AWAITING_APPROVAL,
             subject='Course Capture: <code>course.name</code> waiting on approval',
+            body='',
+        )
+        self.templates_page.create_template(template)
+
+    def test_instr_reminder_invite(self):
+        util.reset_email_template_test_data('remind_invitees')
+        template = EmailTemplate(
+            template_type=EmailTemplateType.INSTR_INVITATION_REMINDER,
+            subject='Your course, <code>course.name</code>, still has not RSVPd for the party!',
             body='',
         )
         self.templates_page.create_template(template)

@@ -56,7 +56,7 @@ class EmailTemplatesPage(DiabloPages):
 
     @staticmethod
     def template_row_xpath(template):
-        return f'//tr[contains(., "{template.template_type.value}")]'
+        return f"//a[text()='{template.template_type.value['desc']}']/ancestor::tr"
 
     @staticmethod
     def edit_template_link_locator(template):
@@ -139,26 +139,24 @@ class EmailTemplatesPage(DiabloPages):
         self.click_element_js(EmailTemplatesPage.SAVE_BUTTON)
 
     def click_edit_template_link(self, template):
-        app.logger.info(f'Clicking link to edit template type "{template.template_type.value}"')
-        self.wait_for_page_and_click_js(
-            EmailTemplatesPage.edit_template_link_locator(template), util.get_short_timeout(),
-        )
+        app.logger.info(f"Clicking link to edit template type '{template.template_type.value['desc']}'")
+        self.wait_for_page_and_click_js(EmailTemplatesPage.edit_template_link_locator(template))
 
     def click_send_test_email(self, template):
-        app.logger.info(f'Clicking test email button for template type "{template.template_type.value}"')
+        app.logger.info(f"Clicking test email button for template type '{template.template_type.value['desc']}'")
         self.wait_for_page_and_click_js(EmailTemplatesPage.test_email_button_locator(template))
 
     def click_delete_template_button(self, template):
-        app.logger.info(f'Clicking delete button for template type "{template.template_type.value}"')
+        app.logger.info(f"Clicking delete button for template type '{template.template_type.value['desc']}'")
         self.wait_for_page_and_click_js(EmailTemplatesPage.delete_email_button_locator(template))
         time.sleep(1)
 
     def create_template(self, template):
-        app.logger.info(f'Creating a template of type "{template.template_type.value}"')
+        app.logger.info(f"Creating a template of type '{template.template_type.value['desc']}'")
         self.load_page()
         self.click_template_select()
-        self.click_menu_option(template.template_type.value)
-        self.enter_template_name(template.template_type.value)
+        self.click_menu_option(template.template_type.value['desc'])
+        self.enter_template_name(template.template_type.value['desc'])
         self.enter_subject(template.subject)
         self.enter_all_codes_in_body()
         self.click_save()

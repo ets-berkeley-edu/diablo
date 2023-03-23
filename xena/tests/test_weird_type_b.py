@@ -28,7 +28,7 @@ from datetime import timedelta
 
 from flask import current_app as app
 import pytest
-from xena.models.email import Email
+from xena.models.email_template_type import EmailTemplateType
 from xena.models.publish_type import PublishType
 from xena.models.recording_approval_status import RecordingApprovalStatus
 from xena.models.recording_schedule import RecordingSchedule
@@ -89,10 +89,8 @@ class TestWeirdTypeB:
         self.blackouts_page.delete_all_blackouts()
         self.blackouts_page.create_all_blackouts()
 
-    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_delete_old_email(self):
-        self.email_page.log_in()
-        self.email_page.delete_all_messages()
+        util.reset_sent_email_test_data(self.section)
 
     def test_delete_old_diablo_and_kaltura(self):
         self.kaltura_page.log_in_via_calnet(self.calnet_page)
@@ -123,11 +121,9 @@ class TestWeirdTypeB:
         self.jobs_page.run_emails_job()
         self.recording_schedule.approval_status = RecordingApprovalStatus.INVITED
 
-    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_receive_invite_email(self):
-        subj = f'Invitation {self.section.term.name} {self.section.code} (To: {self.section.instructors[0].email})'
-        expected_message = Email(msg_type=None, sender=None, subject=subj)
-        assert self.email_page.is_message_delivered(expected_message)
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_INVITATION, self.section,
+                                         self.section.instructors[0]) == 1
 
     # COURSE APPEARS ON 'INVITED' FILTER
 

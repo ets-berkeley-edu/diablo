@@ -28,12 +28,43 @@ from enum import Enum
 
 class EmailTemplateType(Enum):
 
-    ADMIN_DATE_CHANGE = 'Admin alert: Date change'
-    ADMIN_INSTR_CHANGE = 'Admin alert: Instructor change'
-    ADMIN_ROOM_CHANGE = 'Admin alert: Room change'
-    ADMIN_WEIRD_DATES = 'Admin alert: Weird start/end dates'
-    INSTR_AWAITING_APPROVAL = 'Waiting for approval'
-    INSTR_INVITATION = 'Invitation'
-    INSTR_RECORDINGS_SCHEDULED = 'Recordings scheduled'
-    INSTR_ROOM_CHANGE_INELIGIBLE = 'Room change: No longer eligible'
-    INSTR_SETTINGS_CHANGE = 'Notify instructor of changes'
+    ADMIN_DATE_CHANGE = {
+        'desc': 'Admin alert: Date change',
+        'type': 'admin_alert_date_change',
+    }
+    ADMIN_INSTR_CHANGE = {
+        'desc': 'Admin alert: Instructor change',
+        'type': 'admin_alert_instructor_change',
+    }
+    ADMIN_ROOM_CHANGE = {
+        'desc': 'Admin alert: Room change',
+        'type': 'admin_alert_room_change',
+    }
+    ADMIN_WEIRD_DATES = {
+        'desc': 'Admin alert: Weird start/end dates',
+        'type': 'admin_alert_multiple_meeting_patterns',
+    }
+    INSTR_AWAITING_APPROVAL = {
+        'desc': 'Waiting for approval',
+        'type': 'waiting_for_approval',
+    }
+    INSTR_INVITATION = {
+        'desc': 'Invitation',
+        'type': 'invitation',
+    }
+    INSTR_INVITATION_REMINDER = {
+        'desc': 'Remind Invitees',
+        'type': 'remind_invitees',
+    }
+    INSTR_RECORDINGS_SCHEDULED = {
+        'desc': 'Recordings scheduled',
+        'type': 'recordings_scheduled',
+    }
+    INSTR_ROOM_CHANGE_INELIGIBLE = {
+        'desc': 'Room change: No longer eligible',
+        'type': 'room_change_no_longer_eligible',
+    }
+    INSTR_SETTINGS_CHANGE = {
+        'desc': 'Notify instructor of changes',
+        'type': 'notify_instructor_of_changes',
+    }
