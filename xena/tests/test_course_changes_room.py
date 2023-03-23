@@ -25,7 +25,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 
 from flask import current_app as app
 import pytest
-from xena.models.email import Email
+from xena.models.email_template_type import EmailTemplateType
 from xena.models.publish_type import PublishType
 from xena.models.recording_approval_status import RecordingApprovalStatus
 from xena.models.recording_schedule import RecordingSchedule
@@ -67,10 +67,8 @@ class TestCourseRoomChanges:
         self.jobs_page.load_page()
         self.jobs_page.run_emails_job()
 
-    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_delete_old_email(self):
-        self.email_page.log_in()
-        self.email_page.delete_all_messages()
+        util.reset_sent_email_test_data(self.real_section)
 
     def test_sign_up(self):
         self.ouija_page.load_page()
@@ -164,23 +162,12 @@ class TestCourseRoomChanges:
         self.kaltura_page.load_event_edit_page(self.recording_sched.series_id)
         self.kaltura_page.wait_for_title('Access Denied - UC Berkeley - Test')
 
-    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_admin_email_ineligible_room(self):
-        subj = f'Course Capture Admin: {self.real_section.code} has moved to {self.fake_meeting.room.name}'
-        email = Email(msg_type=None, subject=subj, sender=None)
-        assert self.email_page.is_message_delivered(email)
+        assert util.get_sent_email_count(EmailTemplateType.ADMIN_ROOM_CHANGE, self.real_section) == 1
 
-    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_instructor_email_ineligible_room(self):
-        subj = f'Your course {self.real_section.code} is no longer eligible for Course Capture'
-        email = Email(msg_type=None, subject=subj, sender=None)
-        assert self.email_page.is_message_delivered(email)
-
-    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
-    def test_instructor_email_alt_eligible_room(self):
-        subj = f'Your course {self.real_section.code} is no longer eligible for Course Capture'
-        email = Email(msg_type=None, subject=subj, sender=None)
-        assert len(self.email_page.message_rows(email)) == 1
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_ROOM_CHANGE_INELIGIBLE, self.real_section,
+                                         self.real_section.instructors[0]) == 1
 
     # ROOM REMOVED
 

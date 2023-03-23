@@ -25,14 +25,13 @@ ENHANCEMENTS, OR MODIFICATIONS.
 
 from flask import current_app as app
 import pytest
-from xena.models.email import Email
+from xena.models.email_template_type import EmailTemplateType
 from xena.pages.sign_up_page import SignUpPage
 from xena.test_utils import util
 
 
 @pytest.mark.usefixtures('page_objects')
 class TestInvitations:
-
     section_1 = util.get_test_section(util.get_test_script_course('test_invitations_0'))
     section_2 = util.get_test_section(util.get_test_script_course('test_invitations_1'))
 
@@ -46,11 +45,6 @@ class TestInvitations:
         self.jobs_page.run_emails_job()
         self.jobs_page.disable_all_jobs()
 
-    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
-    def test_delete_old_email(self):
-        self.email_page.log_in()
-        self.email_page.delete_all_messages()
-
     def test_course_opt_out(self):
         util.reset_test_data(self.section_1)
         util.reset_test_data(self.section_2)
@@ -61,41 +55,37 @@ class TestInvitations:
         self.ouija_page.set_course_opt_out(self.section_2)
 
     def test_course_auto_invites_run_jobs(self):
-        util.reset_invite_test_data(self.term, self.section_1)
-        util.reset_invite_test_data(self.term, self.section_2)
+        util.reset_sent_email_test_data(self.section_1)
+        util.reset_sent_email_test_data(self.section_2)
         self.jobs_page.load_page()
         self.jobs_page.run_emails_job()
 
-    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_course_auto_invites_delivered(self):
-        subject = f'Invitation {self.section_1.term.name} {self.section_1.code} (To: {self.section_1.instructors[0].email})'
-        email = Email(msg_type=None, sender=None, subject=subject)
-        assert self.email_page.is_message_delivered(email) is True
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_INVITATION, self.section_1,
+                                         self.section_1.instructors[0]) == 1
 
-    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_course_auto_invites_not_delivered(self):
-        subject = f'Invitation {self.section_2.term.name} {self.section_2.code} (To: {self.section_2.instructors[0].email})'
-        email = Email(msg_type=None, sender=None, subject=subject)
-        assert self.email_page.is_message_present(email) is False
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_INVITATION, self.section_2,
+                                         self.section_2.instructors[0]) == 0
 
-    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
-    def test_delete_emails(self):
-        self.email_page.delete_all_messages()
+    def test_no_reminder_invites_delivered(self):
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_INVITATION_REMINDER, self.section_1,
+                                         self.section_1.instructors[0]) == 0
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_INVITATION_REMINDER, self.section_1,
+                                         self.section_2.instructors[0]) == 0
 
     def test_inst_auto_invite_run_jobs(self):
-        util.reset_invite_test_data(self.term, self.section_1, self.section_1.instructors[0])
+        util.reset_sent_email_test_data(
+            section=self.section_1,
+            templates=[EmailTemplateType.INSTR_INVITATION],
+            instructor=self.section_1.instructors[0],
+        )
         self.jobs_page.load_page()
         self.jobs_page.run_emails_job()
 
-    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_inst_auto_invite_delivered(self):
-        subject = f'Invitation {self.section_1.term.name} {self.section_1.code} (To: {self.section_1.instructors[0].email})'
-        email = Email(msg_type=None, sender=None, subject=subject)
-        assert self.email_page.is_message_delivered(email)
-
-    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
-    def test_delete_emails_again(self):
-        self.email_page.delete_all_messages()
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_INVITATION, self.section_1,
+                                         self.section_1.instructors[0]) == 1
 
     def test_course_manual_invite_send(self):
         self.sign_up_page.load_page(self.section_1)
@@ -123,11 +113,9 @@ class TestInvitations:
         self.jobs_page.load_page()
         self.jobs_page.run_emails_job()
 
-    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_course_manual_invite_delivered(self):
-        subject = f'Invitation {self.section_1.term.name} {self.section_1.code} (To: {self.section_1.instructors[0].email})'
-        email = Email(msg_type=None, sender=None, subject=subject)
-        assert self.email_page.is_message_delivered(email) is True
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_INVITATION, self.section_1,
+                                         self.section_1.instructors[0]) == 2
 
     def test_verify_csv_export_sections(self):
         # Not currently testable on Firefox

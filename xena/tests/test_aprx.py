@@ -23,7 +23,6 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-from flask import current_app as app
 import pytest
 from xena.models.publish_type import PublishType
 from xena.models.recording_approval_status import RecordingApprovalStatus
@@ -99,10 +98,10 @@ class TestAPRX:
         self.jobs_page.load_page()
         self.jobs_page.run_emails_job()
 
-    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_delete_old_email(self):
-        self.email_page.log_in()
-        self.email_page.delete_all_messages()
+        util.reset_sent_email_test_data(self.scenario_0_section)
+        util.reset_sent_email_test_data(self.scenario_1_section)
+        util.reset_sent_email_test_data(self.scenario_2_section)
 
     # SCENARIO 0
 

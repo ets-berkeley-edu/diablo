@@ -248,25 +248,49 @@ def reset_test_data(section):
     add_sis_sections_rows(section)
 
 
-def reset_invite_test_data(term, section, instructor=None):
-    # So that invitation will be sent to one instructor on a course
-    if instructor:
-        sql = f"""DELETE FROM sent_emails
-                  WHERE term_id = {term.id}
-                    AND section_id = {section.ccn}
-                    AND recipient_uid = '{instructor.uid}'
-                    AND template_type = 'invitation'
-        """
-    # So that invitations will be sent to all instructors on a course
+def reset_sent_email_test_data(section, instructor=None, templates=None):
+    if templates:
+        temps = [t.value['type'] for t in templates]
+        sql_templates = ''
+        for t in temps:
+            sql_templates += f"'{t}', "
+        temp_clause = f' AND template_type IN ({sql_templates[0:-2]})'
     else:
-        sql = f"""DELETE FROM sent_emails
-                  WHERE term_id = {term.id}
-                    AND section_id = {section.ccn}
-                    AND template_type = 'invitation'
-        """
+        temp_clause = ''
+    if instructor:
+        inst_clause = f" AND recipient_uid = '{instructor.uid}'"
+    else:
+        inst_clause = ''
+    sql = f"""DELETE FROM sent_emails
+                    WHERE term_id = {section.term.id}
+                      AND section_id = {section.ccn}{temp_clause}{inst_clause}
+    """
     app.logger.info(sql)
     db.session.execute(text(sql))
     std_commit(allow_test_environment=True)
+
+
+def get_sent_email_count(template, section, instructor=None):
+    if instructor:
+        sql = f"""SELECT COUNT(*)
+                    FROM sent_emails
+                   WHERE term_id = {section.term.id}
+                     AND section_id = {section.ccn}
+                     AND recipient_uid = '{instructor.uid}'
+                     AND template_type = '{template.value['type']}'
+        """
+    else:
+        sql = f"""SELECT COUNT(*)
+                    FROM sent_emails
+                   WHERE term_id = {section.term.id}
+                     AND section_id = {section.ccn}
+                     AND template_type = '{template.value['type']}'
+        """
+    app.logger.info(sql)
+    result = db.session.execute(text(sql))
+    std_commit(allow_test_environment=True)
+    count = result.fetchone()[0]
+    return count
 
 
 def reset_sign_up_test_data(section):
@@ -387,6 +411,16 @@ def delete_course_instructor_row(section, instructor):
     sql = f"""DELETE FROM sis_sections
                     WHERE section_id = {section.ccn}
                       AND term_id = {section.term.id}
+                      AND instructor_uid = '{instructor.uid}'
+    """
+    app.logger.info(sql)
+    db.session.execute(text(sql))
+    std_commit(allow_test_environment=True)
+
+
+def delete_term_instructor_rows(term, instructor):
+    sql = f"""DELETE FROM sis_sections
+                    WHERE term_id = {term.id}
                       AND instructor_uid = '{instructor.uid}'
     """
     app.logger.info(sql)

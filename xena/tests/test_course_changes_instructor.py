@@ -25,7 +25,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 
 from flask import current_app as app
 import pytest
-from xena.models.email import Email
+from xena.models.email_template_type import EmailTemplateType
 from xena.models.publish_type import PublishType
 from xena.models.recording_approval_status import RecordingApprovalStatus
 from xena.models.recording_schedule import RecordingSchedule
@@ -62,10 +62,8 @@ class TestCourseInstructorChanges:
         self.jobs_page.load_page()
         self.jobs_page.run_emails_job()
 
-    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_delete_old_email(self):
-        self.email_page.log_in()
-        self.email_page.delete_all_messages()
+        util.reset_sent_email_test_data(self.real_section)
 
     # SCHEDULED COURSE CHANGES INSTRUCTOR
 
@@ -178,11 +176,8 @@ class TestCourseInstructorChanges:
         self.ouija_page.filter_for_scheduled_weird()
         assert self.ouija_page.is_course_in_results(self.real_section) is False
 
-    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_admin_emails_with_instr_change(self):
-        subj = f'Course Capture Admin: {self.real_section.code} Instructor changes'
-        email = Email(msg_type=None, subject=subj, sender=None)
-        assert self.email_page.is_message_delivered(email)
+        assert util.get_sent_email_count(EmailTemplateType.ADMIN_INSTR_CHANGE, self.real_section) == 1
 
     # UNSCHEDULE AND RESCHEDULE
 

@@ -27,7 +27,7 @@ from datetime import datetime
 
 from flask import current_app as app
 import pytest
-from xena.models.email import Email
+from xena.models.email_template_type import EmailTemplateType
 from xena.models.publish_type import PublishType
 from xena.models.recording_approval_status import RecordingApprovalStatus
 from xena.models.recording_schedule import RecordingSchedule
@@ -67,10 +67,8 @@ class TestCourseScheduleChanges:
         self.jobs_page.load_page()
         self.jobs_page.run_emails_job()
 
-    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_delete_old_email(self):
-        self.email_page.log_in()
-        self.email_page.delete_all_messages()
+        util.reset_sent_email_test_data(self.real_section)
 
     def test_sign_up(self):
         self.ouija_page.load_page()
@@ -142,11 +140,8 @@ class TestCourseScheduleChanges:
         app.logger.info(f'Actual: {actual}')
         assert expected in actual
 
-    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_admin_email_received(self):
-        subj = f'Course Capture Admin: {self.real_section.code} schedule change'
-        email = Email(msg_type=None, subject=subj, sender=None)
-        assert self.email_page.is_message_delivered(email)
+        assert util.get_sent_email_count(EmailTemplateType.ADMIN_DATE_CHANGE, self.real_section) == 1
 
     def test_admin_unsched_new_times(self):
         self.sign_up_page.load_page(self.real_section)
@@ -255,11 +250,8 @@ class TestCourseScheduleChanges:
         app.logger.info(f'Actual: {actual}')
         assert expected in actual
 
-    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
     def test_null_dates_admin_email_received(self):
-        subj = f'Course Capture Admin: {self.real_section.code} schedule change'
-        email = Email(msg_type=None, subject=subj, sender=None)
-        assert self.email_page.is_message_delivered(email)
+        assert util.get_sent_email_count(EmailTemplateType.ADMIN_DATE_CHANGE, self.real_section) == 2
 
     def test_admin_unsched_null_dates(self):
         self.sign_up_page.load_page(self.real_section)

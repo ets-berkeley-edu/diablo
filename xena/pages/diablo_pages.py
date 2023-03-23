@@ -79,6 +79,10 @@ class DiabloPages(Page):
         if not self.is_present(DiabloPages.LOG_OUT_LINK) or not self.element(DiabloPages.LOG_OUT_LINK).is_displayed():
             app.logger.info('Clicking header menu button')
             self.click_menu_button()
+            time.sleep(1)
+        if not self.is_present(DiabloPages.LOG_OUT_LINK) or not self.element(DiabloPages.LOG_OUT_LINK).is_displayed():
+            app.logger.info('Retrying the menu button')
+            self.click_menu_button()
 
     def click_blackouts_link(self):
         app.logger.info('Clicking Blackouts link')
