@@ -73,8 +73,11 @@ class KalturaPage(Page):
         self.driver.get(f'{app.config["KALTURA_MEDIA_SPACE_URL"]}/user/login')
         username = util.get_username()
         password = util.get_password()
-        calnet_page.log_in(username, password)
-        Wait(self.driver, util.get_medium_timeout()).until(ec.presence_of_element_located(KalturaPage.LOG_OUT_LINK))
+        if self.is_present(KalturaPage.LOG_OUT_LINK):
+            app.logger.info('User is already logged in to Kaltura')
+        else:
+            calnet_page.log_in(username, password)
+            Wait(self.driver, util.get_medium_timeout()).until(ec.presence_of_element_located(KalturaPage.LOG_OUT_LINK))
 
     def load_event_edit_page(self, series_id):
         self.driver.get(f'{app.config["KALTURA_MEDIA_SPACE_URL"]}/recscheduling/index/edit-event/eventid/{series_id}')
