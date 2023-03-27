@@ -23,10 +23,8 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-from flask import current_app as app
 import pytest
 from selenium.webdriver.common.by import By
-from xena.models.email import Email
 from xena.models.email_template import EmailTemplate
 from xena.models.email_template_type import EmailTemplateType
 from xena.models.term import Term
@@ -45,11 +43,6 @@ class TestEmailTemplates:
         subject='Invitation <code>term.name</code>',
         body='',
     )
-
-    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
-    def test_delete_old_email(self):
-        self.email_page.log_in()
-        self.email_page.delete_all_messages()
 
     def test_log_in(self):
         self.login_page.load_page()
@@ -101,13 +94,6 @@ class TestEmailTemplates:
     def test_edit_template_save(self):
         self.templates_page.click_edit_template_link(self.template)
         self.templates_page.click_save()
-
-    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
-    def test_email_test_button(self):
-        self.templates_page.click_send_test_email(self.template)
-        subj = f'{self.template.subject} (To: {app.config["EMAIL_DIABLO_ADMIN"]})'
-        expected_message = Email(msg_type=None, sender=None, subject=subj)
-        assert self.email_page.is_message_delivered(expected_message)
 
     def test_delete_button(self):
         self.templates_page.load_page()

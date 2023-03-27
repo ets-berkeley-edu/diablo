@@ -34,7 +34,6 @@ from xena.pages.blackouts_page import BlackoutsPage
 from xena.pages.calnet_page import CalNetPage
 from xena.pages.canvas_page import CanvasPage
 from xena.pages.course_changes_page import CourseChangesPage
-from xena.pages.email_page import EmailPage
 from xena.pages.email_templates_page import EmailTemplatesPage
 from xena.pages.instructor_page import InstructorPage
 from xena.pages.jobs_page import JobsPage
@@ -77,7 +76,6 @@ def page_objects(request):
     calnet_page = CalNetPage(driver, headless)
     canvas_page = CanvasPage(driver, headless)
     changes_page = CourseChangesPage(driver, headless)
-    email_page = EmailPage(driver, headless)
     instructor_page = InstructorPage(driver, headless)
     jobs_page = JobsPage(driver, headless)
     login_page = LoginPage(driver, headless)
@@ -101,7 +99,6 @@ def page_objects(request):
             setattr(cls.obj, 'calnet_page', calnet_page)
             setattr(cls.obj, 'canvas_page', canvas_page)
             setattr(cls.obj, 'changes_page', changes_page)
-            setattr(cls.obj, 'email_page', email_page)
             setattr(cls.obj, 'instructor_page', instructor_page)
             setattr(cls.obj, 'jobs_page', jobs_page)
             setattr(cls.obj, 'login_page', login_page)

@@ -144,10 +144,6 @@ TIMEZONE = 'America/Los_Angeles'
 # This base-URL config should only be non-None in the "local" env where the Vue front-end runs on port 8080.
 VUE_LOCALHOST_BASE_URL = None
 
-XENA_EMAIL_USERNAME = 'xena@amphipolis.gov'
-XENA_EMAIL_PASSWORD = 'shhh'
-XENA_EMAIL_DELIVERY_RETRIES = 15
-
 # We keep these out of alphabetical sort above for readability's sake.
 HOST = '0.0.0.0'
 PORT = 5000

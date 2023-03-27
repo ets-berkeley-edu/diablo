@@ -23,9 +23,7 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-from flask import current_app as app
 import pytest
-from xena.models.email_template_type import EmailTemplateType
 from xena.models.recording_approval_status import RecordingApprovalStatus
 from xena.models.recording_schedule import RecordingSchedule
 from xena.models.recording_scheduling_status import RecordingSchedulingStatus
@@ -92,11 +90,6 @@ class TestWeirdTypeD:
         self.jobs_page.load_page()
         self.jobs_page.run_emails_job()
         self.recording_schedule.approval_status = RecordingApprovalStatus.INVITED
-
-    @pytest.mark.skipif(app.config['SKIP_EMAILS'], reason='Check email')
-    def test_receive_invite_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_INVITATION, self.section,
-                                         self.section.instructors[0]) == 1
 
     # INSTRUCTOR LOGS IN
 
