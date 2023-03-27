@@ -25,6 +25,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 
 from flask import current_app as app
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support.wait import WebDriverWait as Wait
 from xena.pages.diablo_pages import DiabloPages
 from xena.test_utils import util
 
@@ -39,7 +40,6 @@ class LoginPage(DiabloPages):
     def load_page(self):
         app.logger.info('Loading the Diablo login page')
         self.driver.get(app.config['BASE_URL'])
-        self.wait_for_diablo_title('Welcome')
 
     def click_sign_in(self):
         self.wait_for_page_and_click(LoginPage.SIGN_IN_BUTTON)
@@ -48,6 +48,11 @@ class LoginPage(DiabloPages):
         if not uid:
             uid = util.get_admin_uid()
         app.logger.info(f'Logging in to El Diablo as UID {uid}')
+        Wait(self.driver, util.get_medium_timeout()).until(
+            lambda x: 'Welcome' in self.driver.title or 'Ouija Board' in self.driver.title or 'Eligible' in self.driver.title,
+        )
+        if 'Ouija Board' in self.driver.title or 'Eligible' in self.driver.title:
+            self.log_out()
         self.wait_for_element_and_type(LoginPage.USERNAME_INPUT, uid)
         self.wait_for_element_and_type(LoginPage.PASSWORD_INPUT, app.config['DEV_AUTH_PASSWORD'])
         self.wait_for_element_and_click(LoginPage.DEV_AUTH_LOGIN_BUTTON)
