@@ -83,20 +83,6 @@ class CanvasPage(Page):
         if self.is_present(el_loc) and self.element(el_loc):
             self.driver.execute_script('document.getElementById("element_toggler_0").style.display="none";')
 
-    def masquerade_as(self, user, site_id=None):
-        app.logger.info(f'Masquerading as Canvas ID {user.canvas_id}')
-        self.driver.get(f'{app.config["CANVAS_BASE_URL"]}/users/{user.canvas_id}/masquerade')
-        self.wait_for_element_and_click(CanvasPage.MASQUERADE_LINK)
-        Wait(self.driver, util.get_medium_timeout()).until(ec.visibility_of_element_located(CanvasPage.STOP_MASQUERADE_LINK))
-        if site_id:
-            self.load_site(site_id)
-
-    def stop_masquerading(self):
-        app.logger.info('Ending masquerade')
-        self.hit_homepage()
-        self.wait_for_page_and_click(CanvasPage.STOP_MASQUERADE_LINK)
-        Wait(self.driver, util.get_medium_timeout()).until(ec.staleness_of)
-
     def load_site(self, site_id):
         app.logger.info(f'Loading course site ID "{site_id}"')
         self.driver.get(f'{app.config["CANVAS_BASE_URL"]}/courses/{site_id}')

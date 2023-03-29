@@ -41,6 +41,8 @@ class TestCourseInstructorChanges:
     fake_test_data = util.get_test_script_course('test_course_changes_fake')
     real_section = util.get_test_section(real_test_data)
     real_meeting = real_section.meetings[0]
+    uids_to_exclude = list(map(lambda i: i.uid, real_section.instructors))
+    util.get_test_instructors(fake_test_data, uids_to_exclude=uids_to_exclude)
     fake_section = Section(fake_test_data)
     fake_meeting = fake_section.meetings[0]
     recording_sched = RecordingSchedule(real_section)
@@ -118,7 +120,7 @@ class TestCourseInstructorChanges:
 
     def test_changes_page_old_instructor(self):
         fake_instr_name = f'{self.fake_section.instructors[0].first_name} {self.fake_section.instructors[0].last_name}'
-        expected = f'{fake_instr_name} ({self.fake_section.instructors[0].uid})'
+        expected = f'{fake_instr_name} ({self.fake_section.instructors[0].uid})'.strip()
         actual = self.changes_page.scheduled_card_old_instructors(self.real_section)
         app.logger.info(f'Expecting: {expected}')
         app.logger.info(f'Actual: {actual}')
@@ -126,7 +128,7 @@ class TestCourseInstructorChanges:
 
     def test_changes_page_new_instructor(self):
         real_instr_name = f'{self.real_section.instructors[0].first_name} {self.real_section.instructors[0].last_name}'
-        expected = f'{real_instr_name} ({self.real_section.instructors[0].uid})'
+        expected = f'{real_instr_name} ({self.real_section.instructors[0].uid})'.strip()
         actual = self.changes_page.current_card_instructors(self.real_section, node=None)
         app.logger.info(f'Expecting: {expected}')
         app.logger.info(f'Actual: {actual}')

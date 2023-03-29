@@ -222,7 +222,7 @@ class TestSignUp2:
         assert self.sign_up_page.visible_course_title() == self.section.title
 
     def test_visible_instructors(self):
-        instructor_names = [f'{i.first_name} {i.last_name}' for i in self.section.instructors]
+        instructor_names = [f'{i.first_name} {i.last_name}'.strip() for i in self.section.instructors]
         assert self.sign_up_page.visible_instructors() == instructor_names
 
     def test_visible_meeting_days(self):
@@ -268,7 +268,7 @@ class TestSignUp2:
     # SELECT OPTIONS, APPROVE
 
     def test_pre_approval_msg(self):
-        name = f'{self.section.instructors[1].first_name} {self.section.instructors[1].last_name}'
+        name = f'{self.section.instructors[1].first_name} {self.section.instructors[1].last_name}'.strip()
         msg = f'Recordings will be scheduled when we have approvals from you and {name}.'
         self.sign_up_page.wait_for_approvals_msg(msg)
 
@@ -288,7 +288,7 @@ class TestSignUp2:
         self.recording_schedule.approval_status = RecordingApprovalStatus.PARTIALLY_APPROVED
 
     def test_confirmation_inst_1(self):
-        name = f'{self.section.instructors[1].first_name} {self.section.instructors[1].last_name}'
+        name = f'{self.section.instructors[1].first_name} {self.section.instructors[1].last_name}'.strip()
         msg = f'Approved by you. Recordings will be scheduled when we have approval from {name}.'
         self.sign_up_page.wait_for_approvals_msg(msg)
 
@@ -352,7 +352,7 @@ class TestSignUp2:
 
     def test_no_receive_awaiting_approval_email_inst_2(self):
         assert util.get_sent_email_count(EmailTemplateType.INSTR_AWAITING_APPROVAL, self.section,
-                                         self.section.instructors[0]) == 0
+                                         self.section.instructors[1]) == 0
 
     def test_receive_no_reminder_invite_inst_1(self):
         assert util.get_sent_email_count(EmailTemplateType.INSTR_INVITATION_REMINDER, self.section,
@@ -402,7 +402,7 @@ class TestSignUp2:
         self.sign_up_page.wait_for_diablo_title(f'{self.section.code}, {self.section.number}')
 
     def test_partial_approval_msg(self):
-        name = f'{self.section.instructors[0].first_name} {self.section.instructors[0].last_name}'
+        name = f'{self.section.instructors[0].first_name} {self.section.instructors[0].last_name}'.strip()
         msg = f'Approved by {name}. Recordings will be scheduled when we have approval from you.'
         self.sign_up_page.wait_for_approvals_msg(msg)
 
@@ -446,7 +446,7 @@ class TestSignUp2:
         self.recording_schedule.scheduling_status = RecordingSchedulingStatus.QUEUED_FOR_SCHEDULING
 
     def test_confirmation_inst_2(self):
-        name = f'{self.section.instructors[0].first_name} {self.section.instructors[0].last_name}'
+        name = f'{self.section.instructors[0].first_name} {self.section.instructors[0].last_name}'.strip()
         msg = f'This course is currently queued for scheduling. Recordings will be scheduled in an hour or less. Approved by {name} and you.'
         self.sign_up_page.wait_for_approvals_msg(msg)
 
@@ -576,7 +576,7 @@ class TestSignUp2:
         assert self.room_printable_page.visible_course(self.section) == expected
 
     def test_printable_instructors(self):
-        expected = [f'{inst.first_name} {inst.last_name} ({inst.uid})' for inst in self.section.instructors]
+        expected = [f'{inst.first_name} {inst.last_name} ({inst.uid})'.strip() for inst in self.section.instructors]
         list.sort(expected)
         visible = self.room_printable_page.visible_instructors(self.section)
         list.sort(visible)
@@ -655,8 +655,8 @@ class TestSignUp2:
 
     def test_series_desc(self):
         course = f'{self.section.code}, {self.section.number} ({self.term.name})'
-        instr_1 = f'{self.section.instructors[0].first_name} {self.section.instructors[0].last_name}'
-        instr_2 = f'{self.section.instructors[1].first_name} {self.section.instructors[1].last_name}'
+        instr_1 = f'{self.section.instructors[0].first_name} {self.section.instructors[0].last_name}'.strip()
+        instr_2 = f'{self.section.instructors[1].first_name} {self.section.instructors[1].last_name}'.strip()
         copy = f"Copyright ©{datetime.strftime(self.meeting.start_date, '%Y')} UC Regents; all rights reserved."
         expected = f'{course} is taught by {instr_1} and {instr_2}. {copy}'
         assert self.kaltura_page.visible_series_desc() == expected
@@ -755,7 +755,7 @@ class TestSignUp2:
         self.login_page.dev_auth(self.section.instructors[0].uid)
         self.ouija_page.click_sign_up_page_link(self.section)
         self.sign_up_page.wait_for_diablo_title(f'{self.section.code}, {self.section.number}')
-        name = f'{self.section.instructors[1].first_name} {self.section.instructors[1].last_name}'
+        name = f'{self.section.instructors[1].first_name} {self.section.instructors[1].last_name}'.strip()
         self.sign_up_page.wait_for_approvals_msg(f'Approved by you and {name}.')
 
     def test_view_scheduled_inst_1(self):

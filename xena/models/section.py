@@ -56,13 +56,13 @@ class Section(object):
 
     @property
     def instructors(self):
-        instructors = [User(i) for i in self.data['instructors'] if i['role'] != 'APRX']
+        instructors = [User(i) for i in self.data['instructors']]
         instructors.sort(key=lambda x: x.uid)
         return instructors
 
     @property
     def proxies(self):
-        proxies = [User(i) for i in self.data['instructors'] if i['role'] == 'APRX']
+        proxies = [User(i) for i in self.data['proxies']]
         proxies.sort(key=lambda x: x.uid)
         return proxies
 

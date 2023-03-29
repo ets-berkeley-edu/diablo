@@ -211,7 +211,7 @@ class TestSignUp1:
         assert self.sign_up_page.visible_course_title() == self.section.title
 
     def test_visible_instructors(self):
-        instructor_names = [f'{i.first_name} {i.last_name}' for i in self.section.instructors]
+        instructor_names = [f'{i.first_name} {i.last_name}'.strip() for i in self.section.instructors]
         assert self.sign_up_page.visible_instructors() == instructor_names
 
     def test_visible_meeting_days(self):
@@ -374,7 +374,7 @@ class TestSignUp1:
         assert self.room_printable_page.visible_course(self.section) == expected
 
     def test_printable_instructors(self):
-        expected = [f'{inst.first_name} {inst.last_name} ({inst.uid})' for inst in self.section.instructors]
+        expected = [f'{inst.first_name} {inst.last_name} ({inst.uid})'.strip() for inst in self.section.instructors]
         assert self.room_printable_page.visible_instructors(self.section) == expected
 
     def test_printable_days(self):
@@ -450,7 +450,7 @@ class TestSignUp1:
 
     def test_series_desc(self):
         course = f'{self.section.code}, {self.section.number} ({self.term.name})'
-        instr = f'{self.section.instructors[0].first_name} {self.section.instructors[0].last_name}'
+        instr = f'{self.section.instructors[0].first_name} {self.section.instructors[0].last_name}'.strip()
         copy = f"Copyright ©{datetime.strftime(self.meeting.start_date, '%Y')} UC Regents; all rights reserved."
         expected = f'{course} is taught by {instr}. {copy}'
         assert self.kaltura_page.visible_series_desc() == expected

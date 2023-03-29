@@ -67,6 +67,8 @@ class TestWeirdTypeC:
 
     # Course changes data
     test_data_changes = util.get_test_script_course('test_weird_type_c_changes')
+    uids_to_exclude = list(map(lambda i: i.uid, section.instructors))
+    util.get_test_instructors(test_data_changes, uids_to_exclude=uids_to_exclude)
     section_changes = Section(test_data_changes)
     meeting_0_changes = section_changes.meetings[0]
     meeting_1_changes = section_changes.meetings[1]
@@ -164,7 +166,7 @@ class TestWeirdTypeC:
         assert self.sign_up_page.visible_course_title() == self.section.title
 
     def test_visible_instructors(self):
-        instructor_names = [f'{self.instructor_0.first_name} {self.instructor_0.last_name}']
+        instructor_names = [f'{self.instructor_0.first_name} {self.instructor_0.last_name}'.strip()]
         assert self.sign_up_page.visible_instructors() == instructor_names
 
     def test_visible_meeting_days(self):
@@ -385,7 +387,7 @@ class TestWeirdTypeC:
         assert expected in actual
 
     def test_instr_removed_former_instr(self):
-        expected = f'{self.instructor_0.first_name} {self.instructor_0.last_name} ({self.instructor_0.uid})'
+        expected = f'{self.instructor_0.first_name} {self.instructor_0.last_name} ({self.instructor_0.uid})'.strip()
         actual = self.changes_page.scheduled_card_old_instructors(self.section)
         app.logger.info(f'Expecting: {expected}')
         app.logger.info(f'Actual: {actual}')
@@ -406,21 +408,21 @@ class TestWeirdTypeC:
         assert expected in actual
 
     def test_instr_changed_former_instr(self):
-        expected = f'{self.instructor_0.first_name} {self.instructor_0.last_name} ({self.instructor_0.uid})'
+        expected = f'{self.instructor_0.first_name} {self.instructor_0.last_name} ({self.instructor_0.uid})'.strip()
         actual = self.changes_page.scheduled_card_old_instructors(self.section)
         app.logger.info(f'Expecting: {expected}')
         app.logger.info(f'Actual: {actual}')
         assert expected in actual
 
     def test_instr_changed_new_instr(self):
-        expected = f'{self.instructor_1.first_name} {self.instructor_1.last_name} ({self.instructor_1.uid})'
+        expected = f'{self.instructor_1.first_name} {self.instructor_1.last_name} ({self.instructor_1.uid})'.strip()
         actual = self.changes_page.scheduled_card_new_instructors(self.section)
         app.logger.info(f'Expecting: {expected}')
         app.logger.info(f'Actual: {actual}')
         assert expected in actual
 
     def test_instr_changed_current_card(self):
-        expected = f'{self.instructor_1.first_name} {self.instructor_1.last_name} ({self.instructor_1.uid})'
+        expected = f'{self.instructor_1.first_name} {self.instructor_1.last_name} ({self.instructor_1.uid})'.strip()
         actual = self.changes_page.current_card_instructors(self.section, 1)
         app.logger.info(f'Expecting: {expected}')
         app.logger.info(f'Actual: {actual}')

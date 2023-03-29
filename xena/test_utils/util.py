@@ -34,6 +34,7 @@ from sqlalchemy import text
 from xena.models.recording_scheduling_status import RecordingSchedulingStatus
 from xena.models.room import Room
 from xena.models.section import Section
+from xena.models.term import Term
 
 
 def get_xena_browser():
@@ -120,6 +121,64 @@ def get_all_eligible_section_ids():
 # SECTION TEST DATA
 
 
+def get_test_instructors(test_section_data, uids_to_exclude=None):
+    uids = []
+    if uids_to_exclude:
+        for u in uids_to_exclude:
+            uids.append(f"'{u}'")
+    clause = f" AND instructor_uid NOT IN ({', '.join(uids)})" if uids else ''
+    sql = f"""SELECT instructor_uid
+                FROM sis_sections
+               WHERE term_id = '{Term().id}'
+                 AND instructor_name IS NOT NULL
+                 AND instructor_name != ' '
+                 AND instructor_role_code = 'PI'
+                 AND is_primary IS TRUE
+                 {clause}
+            ORDER BY RANDOM()
+               LIMIT {len(test_section_data['instructors'] + test_section_data['proxies'])};
+    """
+    app.logger.info(sql)
+    result = db.session.execute(text(sql))
+    std_commit(allow_test_environment=True)
+    uids = []
+    for row in result:
+        uids.append(f"'{row['instructor_uid']}'")
+    sql = f"""SELECT uid,
+                     first_name,
+                     last_name,
+                     email
+                FROM instructors
+               WHERE uid IN ({', '.join(uids)})
+    """
+    app.logger.info(sql)
+    results = db.session.execute(text(sql))
+    std_commit(allow_test_environment=True)
+    test_user_data = []
+    for row in results:
+        data = {
+            'uid': row['uid'],
+            'first_name': row['first_name'],
+            'last_name': row['last_name'],
+            'email': row['email'],
+        }
+        test_user_data.append(data)
+
+    test_instructor_data = test_user_data[:len(test_section_data['instructors'])] if test_section_data['instructors'] else []
+    for i in test_instructor_data:
+        idx = test_instructor_data.index(i)
+        i.update({'role': test_section_data['instructors'][idx]['role']})
+        app.logger.info(f'Instructor: {i}')
+    test_section_data['instructors'] = test_instructor_data
+
+    test_proxy_data = test_user_data[len(test_section_data['instructors']):] if test_section_data['proxies'] else []
+    for p in test_proxy_data:
+        idx = test_proxy_data.index(p)
+        p.update({'role': test_section_data['proxies'][idx]['role']})
+        app.logger.info(f'Proxy: {p}')
+    test_section_data['proxies'] = test_proxy_data
+
+
 def get_test_section(test_data):
     sql = f"""SELECT sis_sections.section_id AS ccn,
                      sis_sections.course_name AS code,
@@ -149,6 +208,7 @@ def get_test_section(test_data):
         'is_primary_listing': True,
     }
     test_data.update(sis_data)
+    get_test_instructors(test_data)
     return Section(test_data)
 
 
@@ -190,6 +250,7 @@ def get_test_x_listed_sections(test_data):
         'listings': [{'ccn': result['listing_ccn'], 'code': listing_result['course_name']}],
     }
     test_data.update(sis_data)
+    get_test_instructors(test_data)
     primary_listing_section = Section(test_data)
 
     listing_sis_data = {

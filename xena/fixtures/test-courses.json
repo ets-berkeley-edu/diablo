@@ -1,55 +1,138 @@
 {
   "courses": [
     {
-      "ccn": "123456",
-      "code": "TEST 0",
-      "title": "test_sign_up_0",
+      "test_script": "test_invitations_0",
+      "dept_code": "ASTRON",
       "instructors": [
         {
-          "uid": "1234567",
+          "uid": "123456",
           "first_name": "Test",
           "last_name": "Instructor",
-          "email": "test_0@berkeley.edu",
+          "email": "foo@bar.edu",
           "role": "PI"
         }
       ],
+      "proxies": [],
       "meetings": [
         {
           "start_date": null,
           "end_date": null,
-          "days": "Tuesday, Thursday",
-          "start_time": "12:30pm",
-          "end_time": "01:59pm",
+          "days": "MO, WE, FR",
+          "start_time": "3:00 pm",
+          "end_time": "3:59 pm",
           "room": {
             "name": "Pimentel 1",
-            "capabilities": "Screencast + Video"
+            "capability": "Screencast + Video"
           }
         }
       ],
       "listings": []
     },
     {
-      "ccn": "123456",
-      "code": "TEST 1",
-      "title": "test_sign_up_1",
+      "test_script": "test_invitations_1",
+      "dept_code": "ESPM",
       "instructors": [
         {
-          "uid": "1234567",
+          "uid": "123456",
           "first_name": "Test",
           "last_name": "Instructor",
-          "email": "test_0@berkeley.edu",
+          "email": "foo@bar.edu",
           "role": "PI"
         }
       ],
+      "proxies": [],
       "meetings": [
         {
           "start_date": null,
           "end_date": null,
-          "days": "Tuesday, Thursday",
-          "start_time": "12:30pm",
-          "end_time": "01:59pm",
+          "days": "TU, TH",
+          "start_time": "11:00 am",
+          "end_time": "12:29 pm",
           "room": {
-            "name": "Cory 277",
+            "name": "Pimentel 1",
+            "capability": "Screencast + Video"
+          }
+        }
+      ],
+      "listings": []
+    },
+    {
+      "test_script": "test_user_permissions",
+      "dept_code": "HISTORY",
+      "instructors": [
+        {
+          "uid": "123456",
+          "first_name": "Test",
+          "last_name": "Instructor",
+          "email": "foo@bar.edu",
+          "role": "PI"
+        }
+      ],
+      "proxies": [],
+      "meetings": [
+        {
+          "start_date": null,
+          "end_date": null,
+          "days": "TU, TH",
+          "start_time": "2:00 pm",
+          "end_time": "3:29 pm",
+          "room": {
+            "name": "O'Brien 212",
+            "capability": "Screencast"
+          }
+        }
+      ]
+    },
+    {
+      "test_script": "test_sign_up_0",
+      "dept_code": "ECON",
+      "instructors": [
+        {
+          "uid": "123456",
+          "first_name": "Test",
+          "last_name": "Instructor",
+          "email": "foo@bar.edu",
+          "role": "PI"
+        }
+      ],
+      "proxies": [],
+      "meetings": [
+        {
+          "start_date": null,
+          "end_date": null,
+          "days": "TU, TH",
+          "start_time": "11:00 am",
+          "end_time": "12:29 pm",
+          "room": {
+            "name": "Pimentel 1",
+            "capability": "Screencast + Video"
+          }
+        }
+      ],
+      "listings": []
+    },
+    {
+      "test_script": "test_sign_up_1",
+      "dept_code": "PSYCH",
+      "instructors": [
+        {
+          "uid": "123456",
+          "first_name": "Test",
+          "last_name": "Instructor",
+          "email": "foo@bar.edu",
+          "role": "ICNT"
+        }
+      ],
+      "proxies": [],
+      "meetings": [
+        {
+          "start_date": null,
+          "end_date": null,
+          "days": "MO, WE",
+          "start_time": "9:00 am",
+          "end_time": "9:59 am",
+          "room": {
+            "name": "O'Brien 212",
             "capabilities": "Screencast"
           }
         }
@@ -57,158 +140,588 @@
       "listings": []
     },
     {
-      "ccn": "123456",
-      "code": "TEST 2",
-      "title": "test_sign_up_2",
+      "test_script": "test_sign_up_2",
+      "dept_code": "PHYSICS",
       "instructors": [
         {
-          "uid": "1234567",
+          "uid": "123456",
           "first_name": "Test",
           "last_name": "Instructor",
-          "email": "test_0@berkeley.edu",
+          "email": "foo@bar.edu",
           "role": "PI"
         },
         {
-          "uid": "1234567",
+          "uid": "123456",
           "first_name": "Test",
           "last_name": "Instructor",
-          "email": "test_0@berkeley.edu",
-          "role": "PI"
+          "email": "foo@bar.edu",
+          "role": "TNIC"
+        }
+      ],
+      "proxies": [
+        {
+          "uid": "123456",
+          "first_name": "Test",
+          "last_name": "Instructor",
+          "email": "foo@bar.edu",
+          "role": "APRX"
         }
       ],
       "meetings": [
         {
           "start_date": null,
           "end_date": null,
-          "days": "Tuesday, Thursday",
-          "start_time": "12:30pm",
-          "end_time": "01:59pm",
+          "days": "TU, TH",
+          "start_time": "12:30 pm",
+          "end_time": "1:59 pm",
           "room": {
             "name": "Pimentel 1",
-            "capabilities": "Screencast + Video"
+            "capability": "Screencast + Video"
           }
         }
       ],
       "listings": []
     },
     {
-      "ccn": "123456",
-      "code": "TEST 3",
-      "title": "test_sign_up_3",
+      "test_script": "test_sign_up_3",
+      "dept_code": "MCELLBI",
       "instructors": [
         {
-          "uid": "1234567",
+          "uid": "123456",
           "first_name": "Test",
           "last_name": "Instructor",
-          "email": "test_0@berkeley.edu",
+          "email": "foo@bar.edu",
+          "role": "ICNT"
+        },
+        {
+          "uid": "123456",
+          "first_name": "Test",
+          "last_name": "Instructor",
+          "email": "foo@bar.edu",
+          "role": "PI"
+        }
+      ],
+      "proxies": [],
+      "meetings": [
+        {
+          "start_date": null,
+          "end_date": null,
+          "days": "TU, TH",
+          "start_time": "11:00 am",
+          "end_time": "12:29 pm",
+          "room": {
+            "name": "O'Brien 212",
+            "capability": "Screencast"
+          }
+        }
+      ],
+      "listings": []
+    },
+    {
+      "test_script": "test_aprx_0",
+      "dept_code": "GERMAN",
+      "instructors": [
+        {
+          "uid": "123456",
+          "first_name": "Test",
+          "last_name": "Instructor",
+          "email": "foo@bar.edu",
+          "role": "PI"
+        }
+      ],
+      "proxies": [
+        {
+          "uid": "123456",
+          "first_name": "Test",
+          "last_name": "Instructor",
+          "email": "foo@bar.edu",
+          "role": "APRX"
+        }
+      ],
+      "meetings": [
+        {
+          "start_date": null,
+          "end_date": null,
+          "days": "WE, FR",
+          "start_time": "10:00 pm",
+          "end_time": "10:59 pm",
+          "room": {
+            "name": "O'Brien 212",
+            "capability": "Screencast"
+          }
+        }
+      ],
+      "listings": []
+    },
+    {
+      "test_script": "test_aprx_1",
+      "dept_code": "FRENCH",
+      "instructors": [
+        {
+          "uid": "123456",
+          "first_name": "Test",
+          "last_name": "Instructor",
+          "email": "foo@bar.edu",
+          "role": "PI"
+        }
+      ],
+      "proxies": [
+        {
+          "uid": "123456",
+          "first_name": "Test",
+          "last_name": "Instructor",
+          "email": "foo@bar.edu",
+          "role": "APRX"
+        }
+      ],
+      "meetings": [
+        {
+          "start_date": null,
+          "end_date": null,
+          "days": "TU, TH",
+          "start_time": "10:00 am",
+          "end_time": "10:59 am",
+          "room": {
+            "name": "O'Brien 212",
+            "capability": "Screencast"
+          }
+        }
+      ],
+      "listings": []
+    },
+    {
+      "test_script": "test_aprx_2",
+      "dept_code": "SPANISH",
+      "instructors": [
+        {
+          "uid": "123456",
+          "first_name": "Test",
+          "last_name": "Instructor",
+          "email": "foo@bar.edu",
+          "role": "PI"
+        }
+      ],
+      "proxies": [
+        {
+          "uid": "123456",
+          "first_name": "Test",
+          "last_name": "Instructor",
+          "email": "foo@bar.edu",
+          "role": "APRX"
+        },
+        {
+          "uid": "123456",
+          "first_name": "Test",
+          "last_name": "Instructor",
+          "email": "foo@bar.edu",
+          "role": "APRX"
+        }
+      ],
+      "meetings": [
+        {
+          "start_date": null,
+          "end_date": null,
+          "days": "TU, TH",
+          "start_time": "7:00 pm",
+          "end_time": "7:59 pm",
+          "room": {
+            "name": "O'Brien 212",
+            "capability": "Screencast"
+          }
+        }
+      ],
+      "listings": []
+    },
+    {
+      "test_script": "test_x_listings",
+      "instructors": [
+        {
+          "uid": "123456",
+          "first_name": "Test",
+          "last_name": "Instructor",
+          "email": "foo@bar.edu",
           "role": "PI"
         },
         {
-          "uid": "1234567",
+          "uid": "123456",
           "first_name": "Test",
           "last_name": "Instructor",
-          "email": "test_0@berkeley.edu",
+          "email": "foo@bar.edu",
           "role": "PI"
         }
       ],
+      "proxies": [],
       "meetings": [
         {
           "start_date": null,
           "end_date": null,
-          "days": "Tuesday, Thursday",
-          "start_time": "12:30pm",
-          "end_time": "01:59pm",
+          "days": "MO, WE, FR",
+          "start_time": "10:00 am",
+          "end_time": "10:59 am",
           "room": {
-            "name": "Pimentel 1",
-            "capabilities": "Screencast + Video"
+            "name": "O'Brien 212",
+            "capability": "Screencast"
           }
         }
       ],
       "listings": []
     },
     {
-      "ccn": "123456",
-      "code": "TEST 4A",
-      "title": "test_invitations",
+      "test_script": "test_course_cancellation",
+      "dept_code": "CHEM",
       "instructors": [
         {
-          "uid": "1234567",
+          "uid": "123456",
           "first_name": "Test",
           "last_name": "Instructor",
-          "email": "test_0@berkeley.edu",
+          "email": "foo@bar.edu",
           "role": "PI"
         }
       ],
+      "proxies": [],
       "meetings": [
         {
           "start_date": null,
           "end_date": null,
-          "days": "Tuesday, Thursday",
-          "start_time": "12:30pm",
-          "end_time": "01:59pm",
+          "days": "MO, WE, FR",
+          "start_time": "4:00 pm",
+          "end_time": "4:59 pm",
           "room": {
-            "name": "Pimentel 1",
-            "capabilities": "Screencast + Video"
+            "name": "O'Brien 212",
+            "capability": "Screencast"
           }
         }
       ],
       "listings": []
     },
     {
-      "ccn": "123456",
-      "code": "TEST 4B",
-      "title": "test_invitations",
+      "test_script": "test_course_changes_real",
+      "dept_code": "ENGLISH",
       "instructors": [
         {
-          "uid": "1234567",
+          "uid": "123456",
           "first_name": "Test",
           "last_name": "Instructor",
-          "email": "test_0@berkeley.edu",
+          "email": "foo@bar.edu",
           "role": "PI"
+        }
+      ],
+      "proxies": [],
+      "meetings": [
+        {
+          "start_date": null,
+          "end_date": null,
+          "days": "MO, WE",
+          "start_time": "9:00 am",
+          "end_time": "9:59 am",
+          "room": {
+            "name": "O'Brien 212",
+            "capability": "Screencast"
+          }
+        }
+      ]
+    },
+    {
+      "test_script": "test_course_changes_fake",
+      "instructors": [
+        {
+          "uid": "123456",
+          "first_name": "Test",
+          "last_name": "Instructor",
+          "email": "foo@bar.edu",
+          "role": "PI"
+        }
+      ],
+      "proxies": [
+        {
+          "uid": "123456",
+          "first_name": "Test",
+          "last_name": "Instructor",
+          "email": "foo@bar.edu",
+          "role": "APRX"
         }
       ],
       "meetings": [
         {
           "start_date": null,
           "end_date": null,
-          "days": "Tuesday, Thursday",
-          "start_time": "12:30pm",
-          "end_time": "01:59pm",
+          "days": "TU, TH",
+          "start_time": "2:30 pm",
+          "end_time": "3:59 pm",
+          "room": {
+            "name": "Dwinelle 104",
+            "capability": "Screencast"
+          }
+        }
+      ]
+    },
+    {
+      "test_script": "test_course_changes_faker",
+      "instructors": [
+        {
+          "uid": "123456",
+          "first_name": "Test",
+          "last_name": "Instructor",
+          "email": "foo@bar.edu",
+          "role": "PI"
+        }
+      ],
+      "proxies": [],
+      "meetings": [
+        {
+          "start_date": null,
+          "end_date": null,
+          "days": "TU, TH",
+          "start_time": "2:30 pm",
+          "end_time": "3:59 pm",
+          "room": {
+            "name": "Dwinelle 104",
+            "capability": "Screencast"
+          }
+        }
+      ]
+    },
+    {
+      "test_script": "test_course_changes_fakest",
+      "instructors": [
+        {
+          "uid": "123456",
+          "first_name": "Test",
+          "last_name": "Instructor",
+          "email": "foo@bar.edu",
+          "role": "PI"
+        }
+      ],
+      "proxies": [],
+      "meetings": [
+        {
+          "start_date": null,
+          "end_date": null,
+          "days": "TU, TH",
+          "start_time": "2:30 pm",
+          "end_time": "3:59 pm",
           "room": {
             "name": "Pimentel 1",
-            "capabilities": "Screencast + Video"
+            "capability": "Screencast + Video"
+          }
+        }
+      ]
+    },
+    {
+      "test_script": "test_unschedule",
+      "dept_code": "EPS",
+      "instructors": [
+        {
+          "uid": "123456",
+          "first_name": "Test",
+          "last_name": "Instructor",
+          "email": "foo@bar.edu",
+          "role": "PI"
+        }
+      ],
+      "proxies": [],
+      "meetings": [
+        {
+          "start_date": null,
+          "end_date": null,
+          "days": "FR",
+          "start_time": "1:00 pm",
+          "end_time": "2:59 pm",
+          "room": {
+            "name": "Pimentel 1",
+            "capability": "Screencast + Video"
           }
         }
       ],
       "listings": []
     },
     {
-      "ccn": "123456",
-      "code": "TEST 6",
-      "title": "test_unschedule",
+      "test_script": "test_weird_type_b",
+      "dept_code": "LEGALST",
       "instructors": [
         {
-          "uid": "1234567",
+          "uid": "123456",
           "first_name": "Test",
           "last_name": "Instructor",
-          "email": "test_0@berkeley.edu",
+          "email": "foo@bar.edu",
           "role": "PI"
         }
       ],
+      "proxies": [],
       "meetings": [
         {
           "start_date": null,
           "end_date": null,
-          "days": "Tuesday, Thursday",
-          "start_time": "12:30pm",
-          "end_time": "01:59pm",
+          "days": "MO, WE, FR",
+          "start_time": "5:00 am",
+          "end_time": "5:59 am",
           "room": {
-            "name": "Pimentel 1",
-            "capabilities": "Screencast + Video"
+            "name": "O'Brien 212",
+            "capability": "Screencast"
+          }
+        },
+        {
+          "start_date": null,
+          "end_date": null,
+          "days": "MO, WE, FR",
+          "start_time": "5:00 am",
+          "end_time": "5:59 am",
+          "room": {
+            "name": "Internet/Online",
+            "capability": null
           }
         }
+      ]
+    },
+    {
+      "test_script": "test_weird_type_b_changes",
+      "instructors": [
+        {
+          "uid": "123456",
+          "first_name": "Test",
+          "last_name": "Instructor",
+          "email": "foo@bar.edu",
+          "role": "PI"
+        }
       ],
-      "listings": []
+      "proxies": [],
+      "meetings": [
+        {
+          "start_date": null,
+          "end_date": null,
+          "days": "MO, WE, FR",
+          "start_time": "5:00 am",
+          "end_time": "5:59 am",
+          "room": {
+            "name": "Pimentel 1",
+            "capability": "Screencast + Video"
+          }
+        },
+        {
+          "start_date": null,
+          "end_date": null,
+          "days": "MO, WE, FR",
+          "start_time": "5:00 am",
+          "end_time": "5:59 am",
+          "room": {
+            "name": "Internet/Online",
+            "capability": null
+          }
+        }
+      ]
+    },
+    {
+      "test_script": "test_weird_type_c",
+      "dept_code": "STAT",
+      "instructors": [
+        {
+          "uid": "123456",
+          "first_name": "Test",
+          "last_name": "Instructor",
+          "email": "foo@bar.edu",
+          "role": "PI"
+        }
+      ],
+      "proxies": [],
+      "meetings": [
+        {
+          "start_date": null,
+          "end_date": null,
+          "days": "TU, TH",
+          "start_time": "9:00 pm",
+          "end_time": "9:59 pm",
+          "room": {
+            "name": "Pimentel 1",
+            "capability": "Screencast + Video"
+          }
+        },
+        {
+          "start_date": null,
+          "end_date": null,
+          "days": "TU, TH",
+          "start_time": "9:00 pm",
+          "end_time": "9:59 pm",
+          "room": {
+            "name": "Internet/Online",
+            "capability": null
+          }
+        }
+      ]
+    },
+    {
+      "test_script": "test_weird_type_c_changes",
+      "instructors": [
+        {
+          "uid": "123456",
+          "first_name": "Test",
+          "last_name": "Instructor",
+          "email": "foo@bar.edu",
+          "role": "PI"
+        }
+      ],
+      "proxies": [],
+      "meetings": [
+        {
+          "start_date": null,
+          "end_date": null,
+          "days": "TU, TH",
+          "start_time": "9:00 pm",
+          "end_time": "9:59 pm",
+          "room": {
+            "name": "Pimentel 1",
+            "capability": "Screencast + Video"
+          }
+        },
+        {
+          "start_date": null,
+          "end_date": null,
+          "days": "TU, TH",
+          "start_time": "9:00 pm",
+          "end_time": "9:59 pm",
+          "room": {
+            "name": "O'Brien 212",
+            "capability": "Screencast"
+          }
+        }
+      ]
+    },
+    {
+      "test_script": "test_weird_type_d",
+      "dept_code": "COMPSCI",
+      "instructors": [
+        {
+          "uid": "123456",
+          "first_name": "Test",
+          "last_name": "Instructor",
+          "email": "foo@bar.edu",
+          "role": "PI"
+        }
+      ],
+      "proxies": [],
+      "meetings": [
+        {
+          "start_date": null,
+          "end_date": null,
+          "days": "TU, TH",
+          "start_time": "8:00 pm",
+          "end_time": "8:59 pm",
+          "room": {
+            "name": "O'Brien 212",
+            "capability": "Screencast"
+          }
+        },
+        {
+          "start_date": null,
+          "end_date": null,
+          "days": "TU, TH",
+          "start_time": "8:00 pm",
+          "end_time": "8:59 pm",
+          "room": {
+            "name": "Pimentel 1",
+            "capability": "Screencast + Video"
+          }
+        }
+      ]
     }
   ]
 }
