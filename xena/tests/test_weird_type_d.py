@@ -113,7 +113,7 @@ class TestWeirdTypeD:
 
     def test_visible_instructors(self):
         instructor = self.section.instructors[0]
-        instructor_names = [f'{instructor.first_name} {instructor.last_name}']
+        instructor_names = [f'{instructor.first_name} {instructor.last_name}'.strip()]
         assert self.sign_up_page.visible_instructors() == instructor_names
 
     def test_visible_meeting_0_days(self):

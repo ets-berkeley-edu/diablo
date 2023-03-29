@@ -34,10 +34,6 @@ class User(object):
         return self.data['uid']
 
     @property
-    def canvas_id(self):
-        return self.data['canvas_id']
-
-    @property
     def first_name(self):
         return self.data['first_name']
 

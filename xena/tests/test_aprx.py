@@ -116,11 +116,11 @@ class TestAPRX:
         self.sign_up_page.click_agree_checkbox()
 
     def test_scenario_0_visible_instructors(self):
-        instructor_names = [f'{i.first_name} {i.last_name}' for i in self.scenario_0_section.instructors]
+        instructor_names = [f'{i.first_name} {i.last_name}'.strip() for i in self.scenario_0_section.instructors]
         assert self.sign_up_page.visible_instructors() == instructor_names
 
     def test_scenario_0_no_visible_proxies(self):
-        proxy_names = [f'{p.first_name} {p.last_name}' for p in self.scenario_0_section.proxies]
+        proxy_names = [f'{p.first_name} {p.last_name}'.strip() for p in self.scenario_0_section.proxies]
         assert self.sign_up_page.visible_proxies() == proxy_names
 
     def test_scenario_0_aprx_perms_checked(self):
@@ -147,7 +147,7 @@ class TestAPRX:
         course = f'{self.scenario_0_section.code}, {self.scenario_0_section.number} ({self.term.name})'
         assert self.kaltura_page.visible_series_title() == course
         course = f'{self.scenario_0_section.code}, {self.scenario_0_section.number} ({self.term.name})'
-        instr = f'{self.scenario_0_section.instructors[0].first_name} {self.scenario_0_section.instructors[0].last_name}'
+        instr = f'{self.scenario_0_section.instructors[0].first_name} {self.scenario_0_section.instructors[0].last_name}'.strip()
         expected_desc = f'{course} is taught by {instr}.'
         assert expected_desc in self.kaltura_page.visible_series_desc()
 
@@ -181,7 +181,7 @@ class TestAPRX:
         self.sign_up_page.click_agree_checkbox()
 
     def test_scenario_1_visible_instructors(self):
-        instructor_names = [f'{i.first_name} {i.last_name}' for i in self.scenario_1_section.instructors]
+        instructor_names = [f'{i.first_name} {i.last_name}'.strip() for i in self.scenario_1_section.instructors]
         assert self.sign_up_page.visible_instructors() == instructor_names
 
     def test_scenario_1_no_visible_proxies(self):
@@ -214,7 +214,7 @@ class TestAPRX:
         course = f'{self.scenario_1_section.code}, {self.scenario_1_section.number} ({self.term.name})'
         assert self.kaltura_page.visible_series_title() == course
         course = f'{self.scenario_1_section.code}, {self.scenario_1_section.number} ({self.term.name})'
-        instr = f'{self.scenario_1_section.instructors[0].first_name} {self.scenario_1_section.instructors[0].last_name}'
+        instr = f'{self.scenario_1_section.instructors[0].first_name} {self.scenario_1_section.instructors[0].last_name}'.strip()
         expected_desc = f'{course} is taught by {instr}.'
         assert expected_desc in self.kaltura_page.visible_series_desc()
 
@@ -245,7 +245,7 @@ class TestAPRX:
         course = f'{self.scenario_1_section.code}, {self.scenario_1_section.number} ({self.term.name})'
         assert self.kaltura_page.visible_series_title() == course
         course = f'{self.scenario_1_section.code}, {self.scenario_1_section.number} ({self.term.name})'
-        instr = f'{self.scenario_1_section.instructors[0].first_name} {self.scenario_1_section.instructors[0].last_name}'
+        instr = f'{self.scenario_1_section.instructors[0].first_name} {self.scenario_1_section.instructors[0].last_name}'.strip()
         expected_desc = f'{course} is taught by {instr}.'
         assert expected_desc in self.kaltura_page.visible_series_desc()
 
@@ -303,7 +303,7 @@ class TestAPRX:
         self.kaltura_page.wait_for_delete_button()
         course = f'{self.scenario_1_section.code}, {self.scenario_1_section.number} ({self.term.name})'
         assert self.kaltura_page.visible_series_title() == course
-        instr = f'{self.scenario_1_section.instructors[0].first_name} {self.scenario_1_section.instructors[0].last_name}'
+        instr = f'{self.scenario_1_section.instructors[0].first_name} {self.scenario_1_section.instructors[0].last_name}'.strip()
         expected_desc = f'{course} is taught by {instr}.'
         assert expected_desc in self.kaltura_page.visible_series_desc()
 
@@ -334,11 +334,11 @@ class TestAPRX:
 
     def test_scenario_2_visible_instructors(self):
         self.sign_up_page.wait_for_diablo_title(f'{self.scenario_2_section.code}, {self.scenario_2_section.number}')
-        instructor_names = [f'{i.first_name} {i.last_name}' for i in self.scenario_2_section.instructors]
+        instructor_names = [f'{i.first_name} {i.last_name}'.strip() for i in self.scenario_2_section.instructors]
         assert self.sign_up_page.visible_instructors() == instructor_names
 
     def test_scenario_2_visible_proxies(self):
-        proxy_names = [f'{p.first_name} {p.last_name}' for p in self.scenario_2_section.proxies]
+        proxy_names = [f'{p.first_name} {p.last_name}'.strip() for p in self.scenario_2_section.proxies]
         assert self.sign_up_page.visible_proxies() == proxy_names
 
     def test_scenario_2_aprx_perms_selection_default(self):
@@ -366,7 +366,7 @@ class TestAPRX:
         self.kaltura_page.wait_for_delete_button()
         course = f'{self.scenario_2_section.code}, {self.scenario_2_section.number} ({self.term.name})'
         assert self.kaltura_page.visible_series_title() == course
-        instr = f'{self.scenario_2_section.instructors[0].first_name} {self.scenario_2_section.instructors[0].last_name}'
+        instr = f'{self.scenario_2_section.instructors[0].first_name} {self.scenario_2_section.instructors[0].last_name}'.strip()
         expected_desc = f'{course} is taught by {instr}.'
         assert expected_desc in self.kaltura_page.visible_series_desc()
 
@@ -390,11 +390,11 @@ class TestAPRX:
         self.sign_up_page.load_page(self.scenario_2_section)
 
     def test_scenario_2_reschedule_visible_instructors(self):
-        instructor_names = [f'{i.first_name} {i.last_name}' for i in self.scenario_2_section.instructors]
+        instructor_names = [f'{i.first_name} {i.last_name}'.strip() for i in self.scenario_2_section.instructors]
         assert self.sign_up_page.visible_instructors() == instructor_names
 
     def test_scenario_2_reschedule_visible_proxies(self):
-        proxy_names = [f'{p.first_name} {p.last_name}' for p in self.scenario_2_section.proxies]
+        proxy_names = [f'{p.first_name} {p.last_name}'.strip() for p in self.scenario_2_section.proxies]
         assert self.sign_up_page.visible_proxies() == proxy_names
 
     def test_scenario_2_select_proxy_rights(self):
@@ -421,7 +421,7 @@ class TestAPRX:
         self.kaltura_page.wait_for_delete_button()
         course = f'{self.scenario_2_section.code}, {self.scenario_2_section.number} ({self.term.name})'
         assert self.kaltura_page.visible_series_title() == course
-        instr = f'{self.scenario_2_section.instructors[0].first_name} {self.scenario_2_section.instructors[0].last_name}'
+        instr = f'{self.scenario_2_section.instructors[0].first_name} {self.scenario_2_section.instructors[0].last_name}'.strip()
         expected_desc = f'{course} is taught by {instr}.'
         assert expected_desc in self.kaltura_page.visible_series_desc()
 
@@ -445,9 +445,9 @@ class TestAPRX:
 
     def test_scenario_2_verify_sign_up_no_proxy(self):
         self.sign_up_page.load_page(self.scenario_2_section)
-        instructor_names = [f'{i.first_name} {i.last_name}' for i in self.scenario_2_section.instructors]
+        instructor_names = [f'{i.first_name} {i.last_name}'.strip() for i in self.scenario_2_section.instructors]
         assert self.sign_up_page.visible_instructors() == instructor_names
-        proxy_names = [f'{self.scenario_2_section.proxies[0].first_name} {self.scenario_2_section.proxies[0].last_name}']
+        proxy_names = [f'{self.scenario_2_section.proxies[0].first_name} {self.scenario_2_section.proxies[0].last_name}'.strip()]
         assert self.sign_up_page.visible_proxies() == proxy_names
 
     def test_scenario_2_run_kaltura_job(self):
@@ -465,7 +465,7 @@ class TestAPRX:
         self.kaltura_page.wait_for_delete_button()
         course = f'{self.scenario_2_section.code}, {self.scenario_2_section.number} ({self.term.name})'
         assert self.kaltura_page.visible_series_title() == course
-        instr = f'{self.scenario_2_section.instructors[0].first_name} {self.scenario_2_section.instructors[0].last_name}'
+        instr = f'{self.scenario_2_section.instructors[0].first_name} {self.scenario_2_section.instructors[0].last_name}'.strip()
         expected_desc = f'{course} is taught by {instr}.'
         assert expected_desc in self.kaltura_page.visible_series_desc()
 
