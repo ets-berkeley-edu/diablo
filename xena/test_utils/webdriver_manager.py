@@ -55,7 +55,8 @@ class WebDriverManager(object):
             d = DesiredCapabilities.CHROME
             d['loggingPrefs'] = {'browser': 'ALL'}
             options = Coptions()
-            options.headless = _headless
+            if _headless:
+                options.add_argument('--headless=new')
             prefs = {
                 'profile.default_content_settings.popups': 0,
                 'download.default_directory': util.default_download_dir(),
