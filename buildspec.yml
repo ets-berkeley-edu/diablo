@@ -1,10 +1,15 @@
 version: 0.2
 
 phases:
+
+  before_install:
+    - cd ${TRAVIS_BUILD_DIR}
+    - nvm install 16
+
   install:
     runtime-versions:
-      nodejs: 12
-      python: 3.8
+      nodejs: 16
+      python: 3.9
     commands:
       - npm install
 
