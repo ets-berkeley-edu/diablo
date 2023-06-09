@@ -23,6 +23,7 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 import os
+from threading import Thread
 import traceback
 
 from diablo import db
@@ -38,6 +39,16 @@ class BaseJob:
 
     def __init__(self, app_context):
         self.app_context = app_context
+
+    def run_async(self, force_run=False):
+        if os.environ.get('DIABLO_ENV') in ['test', 'testext']:
+            app.logger.info('Test run in progress; will not muddy the waters by actually kicking off a background thread.')
+            self.run(force_run=force_run)
+        else:
+            app.logger.info('About to start background thread.')
+            kwargs = {'force_run': force_run}
+            thread = Thread(target=self.run, kwargs=kwargs, daemon=True)
+            thread.start()
 
     def run(self, force_run=False):
         with self.app_context():
