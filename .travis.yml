@@ -2,11 +2,8 @@ sudo: required
 language: python
 python: "3.8"
 
-addons:
-  postgresql: "9.6"
-
 before_install:
-  - nvm install 14
+  - nvm install 16
 
 install:
   - npm install
@@ -18,3 +15,6 @@ script:
   - psql pazuzu_test -c 'create role diablo superuser login; alter schema public owner to diablo;' -U postgres
   - pip3 install -r requirements.txt
   - tox --parallel || travis_terminate 1
+
+services:
+  - postgresql
