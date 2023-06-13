@@ -59,7 +59,7 @@ CAS_SERVER = 'https://auth-test.berkeley.edu/cas/'
 COURSE_CAPTURE_EXPLAINED_URL = 'https://rtl.berkeley.edu/services-programs/course-capture'
 COURSE_CAPTURE_POLICIES_URL = 'https://rtl.berkeley.edu/services-programs/course-capture/policies'
 
-COURSE_CAPTURE_PREMIUM_COST = 1000
+COURSE_CAPTURE_PREMIUM_COST = -1
 
 # YYYY-MM-DD is expected date format. For example, '2020-01-21'
 CURRENT_TERM_BEGIN = None
