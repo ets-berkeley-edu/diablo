@@ -152,25 +152,29 @@ def refresh_cross_listings(term_id):
                     AND deleted_at IS NULL
                 ORDER BY schedule, section_id
             """
-    rows = db.session.execute(
-        text(sql),
-        {
-            'term_id': term_id,
-        },
-    )
+    rows = []
+    for row in db.session.execute(text(sql), {'term_id': term_id}):
+        rows.append({'schedule': row['schedule'], 'section_id': row['section_id']})
+    register_cross_listings(rows, term_id)
+
+
+def register_cross_listings(rows, term_id):
     cross_listings = {}
     previous_schedule = None
-    primary_section_id = None
+    primary_section = None
 
     for row in rows:
         section_id = row['section_id']
         schedule = row['schedule']
         if section_id not in cross_listings:
-            if schedule != previous_schedule:
-                primary_section_id = section_id
-                cross_listings[primary_section_id] = []
-            elif section_id not in cross_listings[primary_section_id]:
-                cross_listings[primary_section_id].append(section_id)
+            if schedule == previous_schedule:
+                primary_schedule = primary_section['schedule']
+                primary_section_id = primary_section['section_id']
+                if section_id not in cross_listings[primary_section_id] and schedule == primary_schedule:
+                    cross_listings[primary_section_id].append(section_id)
+            else:
+                primary_section = row
+                cross_listings[primary_section['section_id']] = []
         previous_schedule = schedule
 
     # Toss out section_ids with no cross-listings
@@ -202,6 +206,7 @@ def refresh_cross_listings(term_id):
     SisSection.set_non_principal_listings(section_ids=non_principal_section_ids, term_id=term_id)
 
     std_commit()
+    return cross_listings
 
 
 def schedule_recordings(all_approvals, course):
