@@ -177,8 +177,6 @@ class JobsPage(DiabloPages):
                     app.logger.info('Job succeeded')
                     break
                 else:
-                    if self.is_present(JobsPage.ERROR_REDIRECT):
-                        self.load_page()
                     Wait(self.driver, 1).until(ec.visibility_of_element_located(failure))
                     app.logger.info('Job failed')
                     break
