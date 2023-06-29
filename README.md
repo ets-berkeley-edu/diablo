@@ -21,7 +21,7 @@ nvm use
 npm install
 ```
 
-### Create Postgres user and databases
+### Create Postgres databases
 
 ![Picture of the demon Pazuzu, brother of Humbaba and son of the god Hanbi.](src/assets/pazuzu.jpg)
 
