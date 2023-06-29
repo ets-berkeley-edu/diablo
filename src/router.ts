@@ -131,7 +131,7 @@ const router = new Router({
           path: '/jobs',
           component: Jobs,
           meta: {
-            title: 'The Engine Room'
+            title: 'The Chancel'
           }
         },
         {
