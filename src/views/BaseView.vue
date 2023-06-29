@@ -99,7 +99,7 @@
             link
             @click="goToPath('/jobs')"
           >
-            <v-list-item-content>The Engine Room</v-list-item-content>
+            <v-list-item-content>The Chancel</v-list-item-content>
           </v-list-item>
           <v-list-item id="menu-item-log-out" link @click="logOut">
             <v-list-item-content>Log Out</v-list-item-content>
