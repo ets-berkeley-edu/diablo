@@ -22,6 +22,9 @@
         </v-icon> <span id="page-title" :class="clazz()" tabindex="0"> {{ text }}</span>
       </span>
     </h1>
+    <div v-if="subTitle" class="ml-5 pl-8 subtitle-1 text--secondary">
+      {{ subTitle }}
+    </div>
   </div>
 </template>
 
@@ -36,6 +39,11 @@ export default {
     },
     icon: {
       required: true,
+      type: String
+    },
+    subTitle: {
+      default: undefined,
+      required: false,
       type: String
     },
     text: {
