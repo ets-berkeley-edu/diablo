@@ -2,7 +2,11 @@
   <div v-if="!loading" class="pt-2">
     <v-card outlined class="elevation-1">
       <v-card-title class="align-start">
-        <PageTitle icon="mdi-engine-outline" text="The Chancel" />
+        <PageTitle
+          icon="mdi-hands-pray"
+          sub-title="A sacred place for Admin users."
+          text="The Chancel"
+        />
       </v-card-title>
       <v-card-text>
         <v-data-table
