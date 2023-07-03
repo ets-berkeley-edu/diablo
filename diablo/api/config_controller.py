@@ -27,6 +27,7 @@ import json
 
 from diablo import __version__ as version, cache
 from diablo.api.util import admin_required, get_search_filter_options
+from diablo.externals.kaltura import CREATED_BY_DIABLO_TAG
 from diablo.lib.berkeley import term_name_for_sis_id
 from diablo.lib.http import tolerant_jsonify
 from diablo.lib.util import get_eb_environment
@@ -76,6 +77,7 @@ def app_config():
     api_json = {
         **dict((_to_api_key(key), app.config[key]) for key in PUBLIC_CONFIGS),
         **{
+            'createdByDiabloTag': CREATED_BY_DIABLO_TAG,
             'currentTermName': term_name_for_sis_id(app.config['CURRENT_TERM_ID']),
             'ebEnvironment': get_eb_environment(),
             'emailTemplateTypes': EmailTemplate.get_template_type_options(),
