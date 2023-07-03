@@ -22,10 +22,13 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
+from datetime import datetime, timedelta
+
 from diablo.api.errors import BadRequestError, ResourceNotFoundError
 from diablo.api.util import admin_required
-from diablo.externals.kaltura import Kaltura
+from diablo.externals.kaltura import CREATED_BY_DIABLO_TAG, Kaltura
 from diablo.lib.http import tolerant_jsonify
+from diablo.lib.util import localize_datetime
 from diablo.models.room import Room
 from diablo.models.sis_section import SisSection
 from flask import current_app as app, request
@@ -47,7 +50,18 @@ def get_auditoriums():
 @app.route('/api/room/<kaltura_resource_id>/kaltura_events')
 @admin_required
 def get_kaltura_events(kaltura_resource_id):
-    return tolerant_jsonify(Kaltura().get_events_by_location(kaltura_resource_id=kaltura_resource_id))
+    def _strptime(key, days_delta=0):
+        return localize_datetime(datetime.strptime(app.config[key], '%Y-%m-%d')) + timedelta(days=days_delta)
+
+    term_start_date = _strptime('CURRENT_TERM_RECORDINGS_BEGIN', -1)
+    term_end_date = _strptime('CURRENT_TERM_RECORDINGS_END', 1)
+    events = []
+    for event in Kaltura().get_events_by_location(kaltura_resource_id=kaltura_resource_id):
+        if CREATED_BY_DIABLO_TAG in event.get('tags'):
+            start_date = datetime.fromisoformat(event.get('startDate'))
+            if term_start_date < start_date < term_end_date:
+                events.append(event)
+    return tolerant_jsonify(events)
 
 
 @app.route('/api/room/<room_id>')

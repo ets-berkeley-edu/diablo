@@ -55,7 +55,11 @@
       </v-card-text>
     </v-card>
     <div v-if="kalturaEventList" class="ma-3 pt-5">
-      <h2>Kaltura Events in {{ room.location }}</h2>
+      <h2>The Kaltura Events of {{ room.location }}</h2>
+      <div class="subtitle-2">
+        Kaltura events tagged with '{{ $config.createdByDiabloTag }}' and
+        a start-date between {{ $config.currentTermRecordingsBegin }} and  {{ $config.currentTermRecordingsEnd }}.
+      </div>
       <KalturaEventList :events="kalturaEventList" />
     </div>
   </div>
