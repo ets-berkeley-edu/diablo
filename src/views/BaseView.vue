@@ -25,14 +25,6 @@
             <v-list-item-title>{{ item.title }}</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
-        <v-list-item @click="$vuetify.theme.dark = !$vuetify.theme.dark">
-          <v-list-item-icon>
-            <v-icon color="icon-nav-default">mdi-lightbulb-outline</v-icon>
-          </v-list-item-icon>
-          <v-list-item-content>
-            <v-list-item-title>{{ $vuetify.theme.dark ? 'Light' : 'Dark' }} mode</v-list-item-title>
-          </v-list-item-content>
-        </v-list-item>
       </v-list>
     </v-navigation-drawer>
     <v-app-bar
@@ -77,29 +69,10 @@
           >
             <v-list-item-content>Feedback/Help</v-list-item-content>
           </v-list-item>
-          <v-list-item
-            v-if="$currentUser.isAdmin"
-            id="menu-item-blackouts"
-            link
-            @click="goToPath('/blackouts')"
-          >
-            <v-list-item-content>Blackouts</v-list-item-content>
-          </v-list-item>
-          <v-list-item
-            v-if="$currentUser.isAdmin"
-            id="menu-item-email-templates"
-            link
-            @click="goToPath('/email/templates')"
-          >
-            <v-list-item-content>Email Templates</v-list-item-content>
-          </v-list-item>
-          <v-list-item
-            v-if="$currentUser.isAdmin"
-            id="menu-item-jobs"
-            link
-            @click="goToPath('/jobs')"
-          >
-            <v-list-item-content>The Chancel</v-list-item-content>
+          <v-list-item @click="$vuetify.theme.dark = !$vuetify.theme.dark">
+            <v-list-item-content>
+              <v-list-item-title>{{ $vuetify.theme.dark ? 'Light' : 'Dark' }} mode</v-list-item-title>
+            </v-list-item-content>
           </v-list-item>
           <v-list-item id="menu-item-log-out" link @click="logOut">
             <v-list-item-content>Log Out</v-list-item-content>
@@ -149,9 +122,12 @@ export default {
     if (this.$currentUser.isAdmin) {
       this.navItems = this.navItems.concat([
         {title: 'Ouija Board', icon: 'mdi-auto-fix', path: '/ouija'},
-        {title: 'Rooms', icon: 'mdi-domain', path: '/rooms'},
         {title: 'Course Changes', icon: 'mdi-directions-fork', path: '/changes'},
-        {title: 'The Attic', icon: 'mdi-candle', path: '/attic'}
+        {title: 'Rooms', icon: 'mdi-domain', path: '/rooms'},
+        {title: 'Blackouts', icon: 'mdi-video-off-outline', path: '/blackouts'},
+        {title: 'Email Templates', icon: 'mdi-email-open-multiple-outline', path: '/email/templates'},
+        {title: 'The Attic', icon: 'mdi-candle', path: '/attic'},
+        {title: 'The Chancel', icon: 'mdi-hands-pray', path: '/jobs'}
       ])
     } else {
       this.$_.each(this.$currentUser.courses, course => {
