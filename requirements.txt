@@ -10,13 +10,13 @@ KalturaApiClient==19.3.0
 ldap3==2.7
 pprintpp==0.4.0
 psycopg2-binary==2.9.6
+python-cas==1.6.0
 python-dateutil==2.8.2
 requests==2.31.0
 schedule==1.2.0
 simplejson==3.19.1
 SQLAlchemy==1.4.46
 Werkzeug==2.3.6
-https://github.com/python-cas/python-cas/archive/master.zip
 
 # For testing
 moto==4.0.11
