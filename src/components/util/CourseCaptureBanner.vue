@@ -2,10 +2,9 @@
   <div class="banner">
     <transition><div v-if="showPrefix">This is</div></transition>
     <b>
-      <div class="banner-inner">
+      <div class="banner-inner" :style="`color: ${$config.uxBannerColor}`">
         Course Capture<br />
-        {{ $config.currentTermName }}<br />
-        Bear Territory
+        {{ $config.currentTermName }}
       </div>
     </b>
   </div>
@@ -44,7 +43,6 @@ export default {
 }
 .banner .banner-inner {
   display: inline-block;
-  color: #e74c3c;
   position: relative;
   white-space: nowrap;
   top: 0;
