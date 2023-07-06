@@ -61,13 +61,21 @@
         </template>
         <v-list>
           <v-list-item
+            v-if="$currentUser.isAdmin"
+            id="menu-item-attic"
+            link
+            @click="goToPath('/attic')"
+          >
+            <v-list-item-content>The Attic</v-list-item-content>
+          </v-list-item>
+          <v-list-item
             id="menu-item-feedback-and-help"
             aria-label="Send email to the Course Capture support team; this link opens a new tab."
             :href="`mailto:${$config.emailCourseCaptureSupport}`"
             link
             target="_blank"
           >
-            <v-list-item-content>Feedback/Help</v-list-item-content>
+            <v-list-item-content class="black--text">Feedback/Help</v-list-item-content>
           </v-list-item>
           <v-list-item @click="$vuetify.theme.dark = !$vuetify.theme.dark">
             <v-list-item-content>
@@ -126,7 +134,6 @@ export default {
         {title: 'Rooms', icon: 'mdi-domain', path: '/rooms'},
         {title: 'Blackouts', icon: 'mdi-video-off-outline', path: '/blackouts'},
         {title: 'Email Templates', icon: 'mdi-email-open-multiple-outline', path: '/email/templates'},
-        {title: 'The Attic', icon: 'mdi-candle', path: '/attic'},
         {title: 'The Chancel', icon: 'mdi-hands-pray', path: '/jobs'}
       ])
     } else {
