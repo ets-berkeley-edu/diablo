@@ -19,7 +19,7 @@ export default {
   created() {
     setTimeout(() => {
       this.showPrefix = false
-    }, 8000)
+    }, 5000)
   }
 }
 </script>
@@ -39,7 +39,7 @@ export default {
   overflow: hidden;
   position: relative;
   height: 50px;
-  top: 0px;
+  top: 0;
 }
 .banner .banner-inner {
   display: inline-block;
@@ -49,11 +49,11 @@ export default {
   left: 0;
 
   /*animation*/
-  -webkit-animation:move 5s;
-     -moz-animation:move 5s;
-      -ms-animation:move 5s;
-       -o-animation:move 5s;
-          animation:move 5s;
+  -webkit-animation:move 2s;
+     -moz-animation:move 2s;
+      -ms-animation:move 2s;
+       -o-animation:move 2s;
+          animation:move 2s;
   /*animation-iteration-count*/
   -webkit-animation-iteration-count: 1;
      -moz-animation-iteration-count: 1;
@@ -61,15 +61,15 @@ export default {
        -o-animation-iteration-count: 1;
           animation-iteration-count: 1;
   /*animation-delay*/
-  -webkit-animation-delay: 2s;
-     -moz-animation-delay: 2s;
-      -ms-animation-delay: 2s;
-       -o-animation-delay: 2s;
-          animation-delay: 2s;
+  -webkit-animation-delay: 1s;
+     -moz-animation-delay: 1s;
+      -ms-animation-delay: 1s;
+       -o-animation-delay: 1s;
+          animation-delay: 1s;
 }
 .v-enter-active,
 .v-leave-active {
-  transition: opacity 1.0s ease-out;
+  transition: opacity 1.0s ease;
 }
 .v-enter-from,
 .v-leave-to {
@@ -77,27 +77,22 @@ export default {
 }
 @keyframes move {
   0%  { top: 0px; }
-  20% { top: -50px; }
-  40% { top: -100px; }
+  50% { top: -50px; }
 }
 @-webkit-keyframes move {
   0%  { top: 0px; }
-  20% { top: -50px; }
-  40% { top: -100px; }
+  50% { top: -50px; }
 }
 @-moz-keyframes move {
   0%  { top: 0px; }
-  20% { top: -50px; }
-  40% { top: -100px; }
+  50% { top: -50px; }
 }
 @-o-keyframes move {
   0%  { top: 0px; }
-  20% { top: -50px; }
-  40% { top: -100px; }
+  50% { top: -50px; }
 }
 @keyframes move {
   0%  { top: 0px; }
-  20% { top: -50px; }
-  40% { top: -100px; }
+  50% { top: -50px; }
 }
 </style>
