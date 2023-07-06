@@ -8,10 +8,11 @@ export default new Vuetify( {
   theme: {
     themes: {
       light: {
+        accent: '#2a5f83',
+        black: '#000',
+        error: colors.red.accent3,
         primary: '#378dc5',
         secondary: '#68acd8',
-        accent: '#2a5f83',
-        error: colors.red.accent3,
         'body-background': '#fff',
         'header-background': '#2a5f83',
         'icon-nav-dark-mode': '#2a5f83',
@@ -20,10 +21,11 @@ export default new Vuetify( {
         'table-border': '#979797'
       },
       dark: {
+        accent: '#0d202c',
+        black: '#fff',
+        error: colors.red.accent3,
         primary: '#173c55',
         secondary: '#2a5f83',
-        accent: '#0d202c',
-        error: colors.red.accent3,
         'body-background': '#0d202c',
         'header-background': '#122b3c',
         'icon-nav-dark-mode': '#2a5f83',
