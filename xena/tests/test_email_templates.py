@@ -84,7 +84,7 @@ class TestEmailTemplates:
 
     def test_pre_existing_template(self):
         self.templates_page.click_template_select()
-        assert self.templates_page.is_menu_option_disabled(self.template.template_type).value['desc']
+        assert self.templates_page.is_menu_option_disabled(self.template.template_type.value['desc'])
 
     def test_edit_template_cancel(self):
         self.templates_page.hit_escape()

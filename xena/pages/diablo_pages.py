@@ -39,13 +39,13 @@ class DiabloPages(Page):
     OUIJA_BOARD_LINK = (By.ID, 'sidebar-link-Ouija Board')
     ROOMS_LINK = (By.ID, 'sidebar-link-Rooms')
     COURSE_CHANGES_LINK = (By.ID, 'sidebar-link-Course Changes')
-    DARK_MODE = (By.XPATH, '//div[text()="Dark mode"]')
+    BLACKOUTS_LINK = (By.ID, 'sidebar-link-Blackouts')
+    EMAIL_TEMPLATES_LINK = (By.ID, 'sidebar-link-Email Templates')
+    JOBS_LINK = (By.ID, 'sidebar-link-The Chancel')
 
     MENU_BUTTON = (By.ID, 'btn-main-menu')
-    BLACKOUTS_LINK = (By.ID, 'menu-item-blackouts')
-    EMAIL_TEMPLATES_LINK = (By.ID, 'menu-item-email-templates')
-    JOBS_LINK = (By.ID, 'menu-item-jobs')
     JOB_HISTORY_LINK = (By.ID, 'menu-item-job-history')
+    DARK_MODE = (By.XPATH, '//div[text()="Dark mode"]')
     LOG_OUT_LINK = (By.ID, 'menu-item-log-out')
 
     SPINNER = (By.XPATH, '//div[contains(@class, "spinner")]')
@@ -71,6 +71,20 @@ class DiabloPages(Page):
         app.logger.info('Clicking Course Changes link')
         self.wait_for_element_and_click(DiabloPages.COURSE_CHANGES_LINK)
 
+    def click_blackouts_link(self):
+        app.logger.info('Clicking Blackouts link')
+        self.wait_for_page_and_click(DiabloPages.BLACKOUTS_LINK)
+
+    def click_email_templates_link(self):
+        app.logger.info('Clicking Email Templates link')
+        self.wait_for_element_and_click(DiabloPages.EMAIL_TEMPLATES_LINK)
+
+    def click_jobs_link(self):
+        app.logger.info("Clicking 'The Engine Room' link")
+        self.wait_for_element_and_click(DiabloPages.JOBS_LINK)
+        time.sleep(1)
+        self.mouseover(self.element(DiabloPages.MENU_BUTTON))
+
     def click_menu_button(self):
         self.wait_for_element_and_click(DiabloPages.MENU_BUTTON)
 
@@ -82,21 +96,6 @@ class DiabloPages(Page):
         if not self.is_present(DiabloPages.LOG_OUT_LINK) or not self.element(DiabloPages.LOG_OUT_LINK).is_displayed():
             app.logger.info('Retrying the menu button')
             self.click_menu_button()
-
-    def click_blackouts_link(self):
-        app.logger.info('Clicking Blackouts link')
-        self.open_menu()
-        self.wait_for_page_and_click(DiabloPages.BLACKOUTS_LINK)
-
-    def click_email_templates_link(self):
-        app.logger.info('Clicking Email Templates link')
-        self.open_menu()
-        self.wait_for_element_and_click(DiabloPages.EMAIL_TEMPLATES_LINK)
-
-    def click_jobs_link(self):
-        app.logger.info("Clicking 'The Engine Room' link")
-        self.open_menu()
-        self.wait_for_element_and_click(DiabloPages.JOBS_LINK)
 
     def click_job_history_link(self):
         app.logger.info('Clicking Job History link')
