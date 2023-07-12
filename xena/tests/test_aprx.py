@@ -473,6 +473,6 @@ class TestAPRX:
         assert len(self.kaltura_page.collaborator_rows()) == 3
 
     def test_scenario_2_verify_instructor_not_removed(self):
-        assert self.kaltura_page.collaborator_perm(self.scenario_1_section.instructors[0]) == 'Co-Editor, Co-Publisher'
+        assert self.kaltura_page.collaborator_perm(self.scenario_2_section.instructors[0]) == 'Co-Editor, Co-Publisher'
         assert self.kaltura_page.collaborator_perm(self.scenario_2_section.proxies[0]) == 'Co-Editor, Co-Publisher'
         assert self.kaltura_page.collaborator_perm(self.scenario_2_section.proxies[1]) == 'Co-Editor, Co-Publisher'

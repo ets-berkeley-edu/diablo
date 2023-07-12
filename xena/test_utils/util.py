@@ -127,15 +127,20 @@ def get_test_instructors(test_section_data, uids_to_exclude=None):
         for u in uids_to_exclude:
             uids.append(f"'{u}'")
     clause = f" AND instructor_uid NOT IN ({', '.join(uids)})" if uids else ''
-    sql = f"""SELECT instructor_uid
+    sql = f"""SELECT sis_sections.instructor_uid
                 FROM sis_sections
-               WHERE term_id = '{Term().id}'
-                 AND instructor_name IS NOT NULL
-                 AND instructor_name != ' '
-                 AND instructor_role_code = 'PI'
-                 AND is_primary IS TRUE
+                JOIN instructors ON instructors.uid = sis_sections.instructor_uid
+               WHERE sis_sections.term_id = '{Term().id}'
+                 AND sis_sections.instructor_name IS NOT NULL
+                 AND instructors.first_name IS NOT NULL
+                 AND sis_sections.instructor_name != ' '
+                 AND instructors.first_name != ' '
+                 AND sis_sections.instructor_name != ''
+                 AND instructors.first_name != ''
+                 AND sis_sections.instructor_role_code = 'PI'
+                 AND sis_sections.is_primary IS TRUE
                  {clause}
-            ORDER BY RANDOM()
+               ORDER BY RANDOM()
                LIMIT {len(test_section_data['instructors'] + test_section_data['proxies'])};
     """
     app.logger.info(sql)
