@@ -23,6 +23,7 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
+from datetime import date
 from datetime import datetime
 from datetime import timedelta
 
@@ -154,6 +155,7 @@ class Meeting(object):
         weekday_indices = self.__weekday_indices(term)
         holidays = self.__holidays()
 
+        today = date.today()
         start = self.start_date.date()
         end = term.last_record_date.date() if self.end_date > term.last_record_date else self.end_date.date()
         delta = end - start
@@ -161,6 +163,6 @@ class Meeting(object):
         blackout_dates = []
         for i in range(delta.days + 1):
             day = start + timedelta(i)
-            if day.weekday() in weekday_indices and day in holidays:
+            if day.weekday() in weekday_indices and day in holidays and day >= today:
                 blackout_dates.append(day)
         return blackout_dates

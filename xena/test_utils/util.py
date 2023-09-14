@@ -565,6 +565,7 @@ def get_kaltura_id(recording_schedule, term):
     """
     ids = []
     app.logger.info(f'Checking for Kaltura ID for term {term.id} section {section.ccn}')
+    app.logger.info(sql)
     result = db.session.execute(text(sql))
     std_commit(allow_test_environment=True)
     for row in result:

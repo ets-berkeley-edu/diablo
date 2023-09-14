@@ -840,7 +840,7 @@ class TestSignUp2:
 
     def test_kaltura_course_site_count_still_two(self):
         self.kaltura_page.wait_for_publish_category_el()
-        assert len(self.kaltura_page.publish_category_els()) == 3
+        assert len(self.kaltura_page.publish_category_els()) == 4
 
     def test_kaltura_course_site_still_both(self):
         assert self.kaltura_page.is_publish_category_present(self.site_1)
