@@ -75,6 +75,9 @@ class BlackoutsPage(DiabloPages):
             self.wait_for_element_and_type(BlackoutsPage.NAME_INPUT, start_date_str)
             self.select_blackout_date(blackout_date_pair)
             self.wait_for_element_and_click(BlackoutsPage.SAVE_BUTTON)
+            Wait(self.driver, util.get_short_timeout()).until(
+                ec.presence_of_element_located(BlackoutsPage.blackout_delete_loc(blackout_date_pair[0])),
+            )
 
     def delete_blackout(self, blackout_date):
         app.logger.info(f'Deleting a blackout on "{blackout_date.strftime("%Y-%m-%d")}"')
@@ -91,6 +94,3 @@ class BlackoutsPage(DiabloPages):
     def create_all_blackouts(self):
         for date_pair in util.get_blackout_date_ranges():
             self.create_blackout_date(date_pair)
-            Wait(self.driver, util.get_short_timeout()).until(
-                ec.presence_of_element_located(BlackoutsPage.blackout_delete_loc(date_pair[0])),
-            )
