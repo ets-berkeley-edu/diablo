@@ -343,7 +343,6 @@ class TestSignUp2:
 
     def test_send_awaiting_approval_email(self):
         self.ouija_page.click_jobs_link()
-        self.jobs_page.run_remind_invitees_job()
         self.jobs_page.run_emails_job()
 
     def test_receive_awaiting_approval_email_inst_1(self):
@@ -353,14 +352,6 @@ class TestSignUp2:
     def test_no_receive_awaiting_approval_email_inst_2(self):
         assert util.get_sent_email_count(EmailTemplateType.INSTR_AWAITING_APPROVAL, self.section,
                                          self.section.instructors[1]) == 0
-
-    def test_receive_no_reminder_invite_inst_1(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_INVITATION_REMINDER, self.section,
-                                         self.section.instructors[0]) == 0
-
-    def test_receive_reminder_invite_inst_2(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_INVITATION_REMINDER, self.section,
-                                         self.section.instructors[1]) == 1
 
     # CREATE COURSE SITE
 
@@ -499,7 +490,6 @@ class TestSignUp2:
 
     def test_send_notify_of_changes_email(self):
         self.ouija_page.click_jobs_link()
-        self.jobs_page.run_remind_invitees_job()
         self.jobs_page.run_emails_job()
 
     def test_receive_notify_of_changes_email_inst_1(self):
@@ -509,12 +499,6 @@ class TestSignUp2:
     def test_no_receive_notify_of_changes_email_inst_2(self):
         assert util.get_sent_email_count(EmailTemplateType.INSTR_SETTINGS_CHANGE, self.section,
                                          self.section.instructors[1]) == 0
-
-    def test_receive_no_reminders_anybody(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_INVITATION_REMINDER, self.section,
-                                         self.section.instructors[0]) == 0
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_INVITATION_REMINDER, self.section,
-                                         self.section.instructors[1]) == 1
 
     # RUN KALTURA SCHEDULING JOB AND OBTAIN SERIES ID
 
