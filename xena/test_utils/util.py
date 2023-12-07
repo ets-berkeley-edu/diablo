@@ -107,6 +107,7 @@ def get_all_eligible_section_ids():
                 AND rooms.capability IS NOT NULL
                 AND sis_sections.is_principal_listing IS TRUE
                 AND deleted_at IS NULL
+                AND (sis_sections.instructor_role_code IN ('ICNT', 'PI', 'TNIC') OR sis_sections.instructor_role_code IS NULL)
               ORDER BY section_id ASC;
     """
     app.logger.info(sql)

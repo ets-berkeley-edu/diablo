@@ -270,7 +270,9 @@ class TestWeirdTypeC:
 
     def test_series_blackouts(self):
         expected = self.meeting_0.expected_blackout_dates(self.section.term)
+        expected.sort()
         visible = self.room_page.series_recording_blackout_dates(self.recording_schedule)
+        visible.sort()
         app.logger.info(f'Missing: {list(set(expected) - set(visible))}')
         app.logger.info(f'Unexpected: {list(set(visible) - set(expected))} ')
         assert visible == expected
