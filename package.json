@@ -8,6 +8,8 @@
     "serve-vue": "vue-cli-service serve --open"
   },
   "dependencies": {
+    "@babel/core": "^7.23.6",
+    "@babel/runtime": "^7.23.6",
     "@mdi/font": "7.1.96",
     "axios": "1.3.5",
     "core-js": "3.30.1",
@@ -18,11 +20,12 @@
     "tiptap-vuetify": "2.24.0",
     "v-calendar": "2.4.1",
     "v-wave": "1.5.0",
-    "vue": "2.7.14",
+    "vue": "npm:@neverendingsupport/vue2@2.7.17",
     "vue-moment": "4.1.0",
-    "vue-router": "3.6.5",
-    "vuetify": "2.6.14",
-    "vuex": "3.6.2"
+    "vue-router": "npm:@neverendingsupport/vue-router@3.6.6",
+    "vuetify": "npm:@neverendingsupport/vuetify2@2.7.1",
+    "vuex": "3.6.2",
+    "webpack": "^5.89.0"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^4.23.0",
@@ -52,16 +55,25 @@
     "typescript": "~4.9.4",
     "vue-cli-plugin-vuetify": "~2.5.8",
     "vue-eslint-parser": "^9.1.0",
-    "vue-template-compiler": "^2.7.14",
+    "vue-template-compiler": "npm:@neverendingsupport/vue2@2.7.17-template-compiler",
     "vuetify-loader": "^1.9.2"
   },
   "license": "SEE LICENSE IN LICENSE",
+  "overrides": {
+    "vue": { ".": "npm:@neverendingsupport/vue2@2.7.17" },
+    "@vue/compiler-sfc": { ".": "npm:@neverendingsupport/vue2@2.7.17-compiler-sfc" },
+    "vue-router": { ".": "npm:@neverendingsupport/vue-router@3.6.6" },
+    "vue-server-renderer": { ".": "npm:@neverendingsupport/vue2@2.7.17-server-renderer" },
+    "vue-template-compiler": { ".": "npm:@neverendingsupport/vue2@2.7.17-template-compiler" },
+    "vuetify": { ".": "npm:@neverendingsupport/vuetify2@2.7.1" }
+  },
   "repository": {
     "type": "git",
     "url": "git://github.com/ets-berkeley-edu/diablo.git"
   },
   "resolutions": {
     "lodash": "^4.17.21",
-    "merge": "^2.1.1"
+    "merge": "^2.1.1",
+    "webpack": "^5.89.0"
   }
 }
