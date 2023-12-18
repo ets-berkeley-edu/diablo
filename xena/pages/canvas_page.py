@@ -40,7 +40,7 @@ class CanvasPage(Page):
 
     ADMIN_LINK = (By.ID, 'global_nav_accounts_link')
 
-    FRAME = (By.ID, 'tool_content')
+    FRAME = (By.XPATH, '//iframe[starts-with(@id, "tool_content")]')
     MASQUERADE_LINK = (By.XPATH, '//a[contains(@href, "masquerade")]')
     STOP_MASQUERADE_LINK = (By.CLASS_NAME, 'stop_masquerading')
     ACCEPT_INVITE_BUTTON = (By.NAME, 'accept')
