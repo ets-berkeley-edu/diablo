@@ -29,6 +29,17 @@ from sqlalchemy.dialects.postgresql import ENUM
 
 
 email_template_type = ENUM(
+    # template types active as of Diablo v2.0
+    'admin_operator_requested',
+    'changes_confirmed',
+    'instructors_removed',
+    'new_class_scheduled',
+    'no_longer_scheduled',
+    'opted_out',
+    'room_change',
+    'room_change_no_longer_eligible',
+    'semester_start',
+    # legacy types
     'admin_alert_date_change',
     'admin_alert_instructor_change',
     'admin_alert_multiple_meeting_patterns',
@@ -37,7 +48,6 @@ email_template_type = ENUM(
     'notify_instructor_of_changes',
     'recordings_scheduled',
     'remind_invitees',
-    'room_change_no_longer_eligible',
     'waiting_for_approval',
     name='email_template_types',
     create_type=False,
@@ -121,6 +131,17 @@ class EmailTemplate(Base):
     @classmethod
     def get_template_type_options(cls):
         return {
+            # template types active as of Diablo v2.0
+            'admin_operator_requested': 'Admin alert: operator requested',
+            'changes_confirmed': 'Changes confirmed',
+            'instructors_removed': 'Instructor(s) removed from class',
+            'new_class_scheduled': 'New class scheduled',
+            'no_longer_scheduled': 'Class no longer scheduled',
+            'opted_out': 'Opted out',
+            'room_change': 'Room change',
+            'room_change_no_longer_eligible': 'Room change: no longer eligible',
+            'semester_start': 'Semester start',
+            # legacy types
             'admin_alert_instructor_change': 'Admin alert: Instructor change',
             'admin_alert_date_change': 'Admin alert: Date change',
             'admin_alert_multiple_meeting_patterns': 'Admin alert: Weird start/end dates',
@@ -129,7 +150,6 @@ class EmailTemplate(Base):
             'notify_instructor_of_changes': 'Notify instructor of changes',
             'recordings_scheduled': 'Recordings scheduled',
             'remind_invitees': 'Remind Invitees',
-            'room_change_no_longer_eligible': 'Room change: No longer eligible',
             'waiting_for_approval': 'Waiting for approval',
         }
 

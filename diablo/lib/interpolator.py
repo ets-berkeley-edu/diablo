@@ -34,6 +34,7 @@ def interpolate_content(
     course,
     recipient_name,
     templated_string,
+    course_list=None,
     pending_instructors=None,
     previous_publish_type_name=None,
     previous_recording_type_name=None,
@@ -43,6 +44,7 @@ def interpolate_content(
     interpolated = templated_string
     substitutions = get_template_substitutions(
         course=course,
+        course_list=course_list,
         recipient_name=recipient_name,
         pending_instructors=pending_instructors,
         previous_publish_type_name=previous_publish_type_name,
@@ -67,6 +69,7 @@ def get_sign_up_url(term_id, section_id):
 def get_template_substitutions(
         course,
         recipient_name,
+        course_list=None,
         pending_instructors=None,
         previous_publish_type_name=None,
         previous_recording_type_name=None,
@@ -89,6 +92,8 @@ def get_template_substitutions(
         days = None
         meeting = None
 
+    course_list = course_list or []
+
     return {
         'course.aprx': 'Yes' if course and course['canAprxInstructorsEditRecordings'] else 'No',
         'course.date.end': meeting and meeting['endDate'],
@@ -101,6 +106,7 @@ def get_template_substitutions(
         'course.time.end': meeting and meeting['endTimeFormatted'],
         'course.time.start': meeting and meeting['startTimeFormatted'],
         'course.title': course and course['courseTitle'],
+        'courseList': '\n'.join([f"{course['courseName']}: {course['courseTitle']}" for course in course_list]),
         'instructors.all': course and _join_names(course.get('instructors')),
         'instructors.pending': _join_names(pending_instructors),
         'instructors.previous': course and course.get('scheduled') and _join_names(course['scheduled'].get('instructors')),

@@ -29,7 +29,7 @@ from diablo.lib.util import format_days, format_time, get_names_of_days, to_isof
 from diablo.models.approval import NAMES_PER_PUBLISH_TYPE, NAMES_PER_RECORDING_TYPE, publish_type, recording_type
 from diablo.models.email_template import email_template_type
 from diablo.models.room import Room
-from sqlalchemy import and_, text
+from sqlalchemy import and_, func, text
 from sqlalchemy.dialects.postgresql import ARRAY
 
 
@@ -143,6 +143,10 @@ class Scheduled(db.Model):
     @classmethod
     def get_all_scheduled(cls, term_id):
         return cls.query.filter_by(term_id=term_id, deleted_at=None).all()
+
+    @classmethod
+    def get_scheduled_count(cls, term_id):
+        return db.session.query(func.count(cls.id)).filter(and_(cls.term_id == term_id, cls.deleted_at == None)).scalar()  # noqa: E711
 
     @classmethod
     def get_scheduled_per_section_ids(cls, section_ids, term_id):

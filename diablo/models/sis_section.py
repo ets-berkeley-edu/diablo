@@ -269,6 +269,7 @@ class SisSection(db.Model):
     def get_courses(
             cls,
             term_id,
+            exclude_scheduled=False,
             include_administrative_proxies=False,
             include_deleted=False,
             include_non_principal_sections=False,
@@ -286,6 +287,10 @@ class SisSection(db.Model):
         else:
             course_filter = 's.section_id = ANY(:section_ids)'
             params['section_ids'] = section_ids
+        if exclude_scheduled:
+            exclude_scheduled_join = 'LEFT JOIN scheduled sch ON sch.term_id = s.term_id AND sch.section_id = s.section_id AND sch.deleted_at IS NULL'
+        else:
+            exclude_scheduled_join = ''
         sql = f"""
             SELECT
                 s.*,
@@ -293,17 +298,20 @@ class SisSection(db.Model):
                 i.email AS instructor_email,
                 i.first_name || ' ' || i.last_name AS instructor_name,
                 i.uid AS instructor_uid,
+                {'sch.kaltura_schedule_id,' if exclude_scheduled else ''}
                 r.id AS room_id,
                 r.location AS room_location
             FROM sis_sections s
             {'LEFT' if include_null_meeting_locations else ''} JOIN rooms r ON r.location = s.meeting_location
             LEFT JOIN instructors i ON i.uid = s.instructor_uid
+            {exclude_scheduled_join}
             WHERE
                 {course_filter}
                 AND s.term_id = :term_id
                 AND (s.instructor_uid IS NULL OR s.instructor_role_code = ANY(:instructor_role_codes))
                 {'' if include_non_principal_sections else 'AND s.is_principal_listing IS TRUE'}
                 {'' if include_deleted else ' AND s.deleted_at IS NULL '}
+                {'AND sch.kaltura_schedule_id IS NULL' if exclude_scheduled else ''}
             ORDER BY s.course_name, s.section_id, s.instructor_uid, r.capability NULLS LAST
         """
         rows = db.session.execute(text(sql), params)

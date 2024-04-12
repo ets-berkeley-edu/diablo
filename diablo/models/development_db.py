@@ -107,6 +107,62 @@ def _create_blackouts():
 
 
 def _create_email_templates():
+    # template types active as of Diablo v2.0
+    EmailTemplate.create(
+        template_type='admin_operator_requested',
+        name='Admin alert: operator requested',
+        subject_line='Admin alert: operator requested',
+        message='Operator requested for class for class <code>course.name</code>',
+    )
+    EmailTemplate.create(
+        template_type='changes_confirmed',
+        name='Changes confirmed',
+        subject_line='Changes confirmed',
+        message='Changes confirmed for class <code>course.name</code>',
+    )
+    EmailTemplate.create(
+        template_type='instructors_removed',
+        name='Instructor(s) removed from class',
+        subject_line='Instructor(s) removed from class',
+        message='Instructor(s) removed from class <code>course.name</code>',
+    )
+    EmailTemplate.create(
+        template_type='new_class_scheduled',
+        name='New class scheduled',
+        subject_line='New class scheduled: <code>course.name</code>',
+        message='Intensely.',
+    )
+    EmailTemplate.create(
+        template_type='no_longer_scheduled',
+        name='Class no longer scheduled',
+        subject_line='Class no longer scheduled',
+        message='Class no longer scheduled: <code>course.name</code>',
+    )
+    EmailTemplate.create(
+        template_type='opted_out',
+        name='Opted out',
+        subject_line='Opted out',
+        message='Class opted out: <code>course.name</code>',
+    )
+    EmailTemplate.create(
+        template_type='room_change',
+        name='Room change',
+        subject_line='Room change alert',
+        message='<code>course.name</code> has changed to a new room: <code>course.room</code>',
+    )
+    EmailTemplate.create(
+        template_type='room_change_no_longer_eligible',
+        name='Room change: no longer eligible',
+        subject_line='Room change alert',
+        message='<code>course.name</code> has changed to a new, ineligible room: <code>course.room</code>',
+    )
+    EmailTemplate.create(
+        template_type='semester_start',
+        name='Semester start',
+        subject_line="It's a new semester, tally ho!",
+        message="Well, then let's introduce ourselves. I'm <code>recipient.name</code> and these are my courses:\n<code>courseList</code>",
+    )
+    # legacy types
     EmailTemplate.create(
         template_type='admin_alert_date_change',
         name='Scheduled course had date change',
@@ -146,12 +202,6 @@ def _create_email_templates():
         name='Reminder to invitees who have yet to approve',
         subject_line='Here is a friendly reminder',
         message='This service needs you. Please sign up!',
-    )
-    EmailTemplate.create(
-        template_type='room_change_no_longer_eligible',
-        name='Instructor alert when room change',
-        subject_line='Room change alert',
-        message='<code>course.name</code> has changed to a new room: <code>course.room</code>',
     )
     EmailTemplate.create(
         template_type='notify_instructor_of_changes',
@@ -197,6 +247,7 @@ def _set_up_and_run_jobs():
     Job.create(job_schedule_type='day_at', job_schedule_value='16:00', key='canvas')
     Job.create(disabled=True, job_schedule_type='minutes', job_schedule_value='5', key='doomed_to_fail')
     Job.create(is_schedulable=False, job_schedule_type='day_at', job_schedule_value='16:00', key='remind_invitees')
+    Job.create(is_schedulable=False, job_schedule_type='minutes', job_schedule_value='720', key='semester_start')
     background_job_manager.start(app)
     HouseKeepingJob(app_context=simply_yield).run()
     CanvasJob(app_context=simply_yield).run()

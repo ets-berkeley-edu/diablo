@@ -46,6 +46,17 @@ CREATE TYPE approver_types AS ENUM (
 --
 
 CREATE TYPE email_template_types AS ENUM (
+    -- template types active as of Diablo v2.0
+    'admin_operator_requested',
+    'changes_confirmed',
+    'instructors_removed',
+    'new_class_scheduled',
+    'no_longer_scheduled',
+    'opted_out',
+    'room_change',
+    'room_change_no_longer_eligible',
+    'semester_start',
+    -- legacy types
     'admin_alert_date_change',
     'admin_alert_instructor_change',
     'admin_alert_multiple_meeting_patterns',
@@ -54,7 +65,6 @@ CREATE TYPE email_template_types AS ENUM (
     'notify_instructor_of_changes',
     'recordings_scheduled',
     'remind_invitees',
-    'room_change_no_longer_eligible',
     'waiting_for_approval'
 );
 
@@ -360,7 +370,7 @@ CREATE TABLE scheduled (
     term_id INTEGER NOT NULL
 );
 ALTER TABLE scheduled OWNER TO diablo;
-CREATE UNIQUE INDEX scheduled_unique_idx ON scheduled (section_id, term_id) WHERE deleted_at IS NULL;
+CREATE INDEX scheduled_term_id_section_id_idx ON scheduled (term_id, section_id);
 
 --
 
