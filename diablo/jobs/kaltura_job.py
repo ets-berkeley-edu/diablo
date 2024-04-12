@@ -24,11 +24,9 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 from diablo.externals.kaltura import Kaltura
 from diablo.jobs.base_job import BaseJob
-from diablo.jobs.util import get_courses_ready_to_schedule, schedule_recordings
+from diablo.jobs.util import get_eligible_unscheduled_courses, schedule_recordings
 from diablo.lib.berkeley import term_name_for_sis_id
 from diablo.lib.kaltura_util import get_series_description
-from diablo.lib.util import objects_to_dict_organized_by_section_id
-from diablo.models.approval import Approval
 from diablo.models.email_template import EmailTemplate
 from diablo.models.sis_section import SisSection
 from flask import current_app as app
@@ -37,8 +35,8 @@ from flask import current_app as app
 class KalturaJob(BaseJob):
 
     def _run(self):
-        _update_already_scheduled_events()
-        _schedule_the_ready_to_schedule()
+        _schedule_new_courses()
+        # TODO update existing schedules per queued requests
 
     @classmethod
     def description(cls):
@@ -46,7 +44,7 @@ class KalturaJob(BaseJob):
             This job:
             <ul>
                 <li>Schedules recordings via Kaltura API</li>
-                <li>Queues up '{EmailTemplate.get_template_type_options()['recordings_scheduled']}' emails</li>
+                <li>Queues up '{EmailTemplate.get_template_type_options()['new_class_scheduled']}' emails</li>
                 <li>Updates existing schedules in Kaltura</li>
             </ul>
         """
@@ -63,6 +61,14 @@ def _get_subset_of_instructors(section_id, term_id, uids, include_deleted=False)
         term_id=term_id,
     )
     return list(filter(lambda instructor: instructor['uid'] in uids, course['instructors']))
+
+
+def _schedule_new_courses():
+    term_id = app.config['CURRENT_TERM_ID']
+    unscheduled_courses = get_eligible_unscheduled_courses(term_id)
+    app.logger.info(f'Preparing to schedule recordings for {len(unscheduled_courses)} courses.')
+    for course in unscheduled_courses:
+        schedule_recordings(course, is_semester_start=False)
 
 
 def _update_already_scheduled_events():
@@ -130,18 +136,3 @@ def _update_kaltura_category(canvas_course_site_id, course_name, kaltura, templa
             category_id=category['id'],
             entry_id=template_entry_id,
         )
-
-
-def _schedule_the_ready_to_schedule():
-    term_id = app.config['CURRENT_TERM_ID']
-    approvals = Approval.get_approvals_per_term(term_id=term_id)
-    if approvals:
-        approvals_per_section_id = objects_to_dict_organized_by_section_id(objects=approvals)
-        ready_to_schedule = get_courses_ready_to_schedule(approvals=approvals, term_id=term_id)
-        app.logger.info(f'Prepare to schedule recordings for {len(ready_to_schedule)} courses.')
-        for course in ready_to_schedule:
-            section_id = int(course['sectionId'])
-            schedule_recordings(
-                all_approvals=approvals_per_section_id[section_id],
-                course=course,
-            )

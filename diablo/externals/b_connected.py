@@ -112,17 +112,18 @@ class BConnected:
             template_type=template_type,
             term_id=term_id,
         )
-        for cross_listed_section_id, instructor_uids in CrossListing.get_instructor_uids_of_cross_listed_sections(
-            section_id=section_id,
-            term_id=term_id,
-        ).items():
-            if recipient_uid in instructor_uids:
-                SentEmail.create(
-                    recipient_uid=recipient_uid,
-                    section_id=cross_listed_section_id,
-                    template_type=template_type,
-                    term_id=term_id,
-                )
+        if template_type != 'semester_start':
+            for cross_listed_section_id, instructor_uids in CrossListing.get_instructor_uids_of_cross_listed_sections(
+                section_id=section_id,
+                term_id=term_id,
+            ).items():
+                if recipient_uid in instructor_uids:
+                    SentEmail.create(
+                        recipient_uid=recipient_uid,
+                        section_id=cross_listed_section_id,
+                        template_type=template_type,
+                        term_id=term_id,
+                    )
 
         return True
 

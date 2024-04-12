@@ -300,14 +300,14 @@ class TestJobSchedule:
             'type': 'minutes',
             'value': 120,
         }
-        kaltura_job = api_json['jobs'][-2]
+        kaltura_job = api_json['jobs'][-3]
         assert kaltura_job['key'] == 'kaltura'
         assert kaltura_job['disabled'] is False
         assert kaltura_job['schedule'] == {
             'type': 'day_at',
             'value': '15:00',
         }
-        remind_invitees_job = api_json['jobs'][-1]
+        remind_invitees_job = api_json['jobs'][-2]
         assert remind_invitees_job['key'] == 'remind_invitees'
         assert remind_invitees_job['disabled'] is False
         assert remind_invitees_job['isSchedulable'] is False

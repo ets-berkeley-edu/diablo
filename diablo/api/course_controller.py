@@ -325,7 +325,6 @@ def _after_approval(course):
         if app.config['FEATURE_FLAG_SCHEDULE_RECORDINGS_SYNCHRONOUSLY']:
             # Feature flag intended for dev workstation ONLY. Do not enable in diablo-dev|qa|prod.
             schedule_recordings(
-                all_approvals=approvals,
                 course=course,
             )
         return SisSection.get_course(

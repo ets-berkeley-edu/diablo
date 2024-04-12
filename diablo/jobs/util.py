@@ -32,7 +32,6 @@ from diablo.lib.berkeley import get_recording_end_date, get_recording_start_date
 from diablo.merged.calnet import get_calnet_users_for_uids
 from diablo.merged.emailer import send_system_error_email
 from diablo.models.admin_user import AdminUser
-from diablo.models.course_preference import CoursePreference
 from diablo.models.cross_listing import CrossListing
 from diablo.models.instructor import Instructor
 from diablo.models.queued_email import notify_instructors_recordings_scheduled
@@ -40,7 +39,6 @@ from diablo.models.room import Room
 from diablo.models.scheduled import Scheduled
 from diablo.models.sis_section import ALL_INSTRUCTOR_ROLE_CODES, AUTHORIZED_INSTRUCTOR_ROLE_CODES, SisSection
 from flask import current_app as app
-from KalturaClient.exceptions import KalturaClientException, KalturaException
 from sqlalchemy import text
 
 
@@ -76,10 +74,12 @@ def get_courses_ready_to_schedule(approvals, term_id):
     return ready_to_schedule
 
 
-def get_instructors_who_can_edit_recordings(course):
-    can_aprx_instructors_edit_recordings = course['canAprxInstructorsEditRecordings']
-    instructor_role_codes = ALL_INSTRUCTOR_ROLE_CODES if can_aprx_instructors_edit_recordings else AUTHORIZED_INSTRUCTOR_ROLE_CODES
-    return list(filter(lambda i: i['roleCode'] in instructor_role_codes and not i['deletedAt'], course['instructors']))
+def get_eligible_unscheduled_courses(term_id):
+    return SisSection.get_courses(
+        exclude_scheduled=True,
+        include_administrative_proxies=True,
+        term_id=term_id,
+    )
 
 
 def insert_or_update_instructors(instructor_uids):
@@ -209,93 +209,78 @@ def register_cross_listings(rows, term_id):
     return cross_listings
 
 
-def schedule_recordings(all_approvals, course):
+def schedule_recordings(course, is_semester_start=False, updates=None):
     def _report_error(subject):
         message = f'{subject}\n\n<pre>{course}</pre>'
         app.logger.error(message)
         send_system_error_email(message=message, subject=subject)
 
     meetings = course.get('meetings', {}).get('eligible', [])
-    meeting = meetings[0] if len(meetings) == 1 else None
-    if not meeting:
-        _report_error(subject=f"{course['label']} not scheduled. Unique eligible meeting pattern not found.")
+    if not len(meetings):
+        _report_error(subject=f"{course['label']} not scheduled. No eligible meeting patterns found.")
         return None
 
-    all_approvals.sort(key=lambda a: a.created_at.isoformat())
-    latest_approval = all_approvals[-1]
-    room = Room.get_room(latest_approval.room_id)
-    if room.location != meeting['location']:
-        _report_error(subject=f"{course['label']} not scheduled. Room change: {room.location} to {meeting['location']}")
-        return None
+    instructors = list(filter(lambda i: i['roleCode'] in ALL_INSTRUCTOR_ROLE_CODES and not i['deletedAt'], course['instructors']))
 
-    has_admin_approval = next((a for a in all_approvals if a.approver_type == 'admin'), None)
-    approved_by_uids = set(a.approved_by_uid for a in all_approvals)
-    instructors_who_teach = list(filter(lambda i: i['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES, course['instructors']))
-    instructor_uids = set([i['uid'] for i in instructors_who_teach])
-    if not has_admin_approval and not instructor_uids.issubset(approved_by_uids):
-        _report_error(subject=f"{course['label']} not scheduled. We are missing instructor approval(s).")
-        return None
+    for meeting in meetings:
+        room = Room.find_room(location=meeting.get('location'))
+        if not room:
+            _report_error(subject=f"{course['label']} not scheduled. Room change: {room.location} to {meeting['location']}")
+            return None
 
-    term_id = course['termId']
-    section_id = int(course['sectionId'])
-    scheduled = None
-    if room.kaltura_resource_id:
-        try:
-            instructors_who_can_edit_recordings = get_instructors_who_can_edit_recordings(course)
-            kaltura_schedule_id = Kaltura().schedule_recording(
-                canvas_course_site_ids=[c['courseSiteId'] for c in course['canvasCourseSites']],
-                course_label=course['label'],
-                instructors=instructors_who_can_edit_recordings,
-                meeting=meeting,
-                publish_type=latest_approval.publish_type,
-                recording_type=latest_approval.recording_type,
-                room=room,
-                term_id=term_id,
-            )
-            scheduled = Scheduled.create(
-                course_display_name=course['label'],
-                instructor_uids=[instructor['uid'] for instructor in instructors_who_teach],
-                kaltura_schedule_id=kaltura_schedule_id,
-                meeting_days=meeting['days'],
-                meeting_end_date=get_recording_end_date(meeting),
-                meeting_end_time=meeting['endTime'],
-                meeting_start_date=get_recording_start_date(meeting, return_today_if_past_start=True),
-                meeting_start_time=meeting['startTime'],
-                publish_type_=latest_approval.publish_type,
-                recording_type_=latest_approval.recording_type,
-                room_id=room.id,
-                section_id=section_id,
-                term_id=term_id,
-            )
-            # Turn off opt-out setting if present.
-            course_preferences = CoursePreference.get_course_preferences(section_id=section_id, term_id=term_id)
-            if course_preferences and course_preferences.has_opted_out:
-                CoursePreference.update_opt_out(
+        term_id = course['termId']
+        section_id = int(course['sectionId'])
+        scheduled = None
+        if room.kaltura_resource_id:
+            try:
+                publish_type = updates.publish_type if updates else 'kaltura_my_media'
+                recording_type = updates.recording_type if updates else 'presenter_presentation_audio'
+                kaltura_schedule_id = Kaltura().schedule_recording(
+                    canvas_course_site_ids=[c['courseSiteId'] for c in course['canvasCourseSites']],
+                    course_label=course['label'],
+                    instructors=instructors,
+                    meeting=meeting,
+                    publish_type=publish_type,
+                    recording_type=recording_type,
+                    room=room,
                     term_id=term_id,
-                    section_id=section_id,
-                    opt_out=False,
                 )
-            notify_instructors_recordings_scheduled(course=course, scheduled=scheduled)
-            uids = [approval.approved_by_uid for approval in all_approvals]
-            app.logger.info(f'Recordings scheduled for course {section_id} per approvals: {", ".join(uids)}')
+                scheduled = Scheduled.create(
+                    course_display_name=course['label'],
+                    instructor_uids=[instructor['uid'] for instructor in instructors],
+                    kaltura_schedule_id=kaltura_schedule_id,
+                    meeting_days=meeting['days'],
+                    meeting_end_date=get_recording_end_date(meeting),
+                    meeting_end_time=meeting['endTime'],
+                    meeting_start_date=get_recording_start_date(meeting, return_today_if_past_start=True),
+                    meeting_start_time=meeting['startTime'],
+                    publish_type_=publish_type,
+                    recording_type_=recording_type,
+                    room_id=room.id,
+                    section_id=section_id,
+                    term_id=term_id,
+                )
+                if not is_semester_start:
+                    notify_instructors_recordings_scheduled(course=course, scheduled=scheduled, template_type='new_class_scheduled')
+                app.logger.info(f'Recordings scheduled for course {section_id}')
 
-        except (KalturaClientException, KalturaException) as e:
-            # Error codes: https://developer.kaltura.com/api-docs/Error_Codes
-            summary = f"Failed to schedule recordings {course['label']} (section_id: {course['sectionId']})"
-            app.logger.error(summary)
-            app.logger.exception(e)
-            send_system_error_email(
-                message=f'{summary}\n\n<pre>{traceback.format_exc()}</pre>',
-                subject=f'{summary[:50]}...' if len(summary) > 50 else summary,
-            )
+            except Exception as e:
+                # Exceptions generated by the Kaltura API client will include one of these codes:
+                # https://developer.kaltura.com/api-docs/Error_Codes. Otherwise they're standard Python exceptions.
+                summary = f"Failed to schedule recordings {course['label']} (section_id: {course['sectionId']})"
+                app.logger.error(summary)
+                app.logger.exception(e)
+                send_system_error_email(
+                    message=f'{summary}\n\n<pre>{traceback.format_exc()}</pre>',
+                    subject=f'{summary[:50]}...' if len(summary) > 50 else summary,
+                )
 
-    else:
-        app.logger.warn(f"""
-            SKIP schedule recordings because room has no 'kaltura_resource_id'.
-            Course: {course['label']}
-            Room: {room.location}
-            Latest approved_by_uid: {latest_approval.approved_by_uid}
-        """)
+        else:
+            app.logger.warn(f"""
+                SKIP schedule recordings because room has no 'kaltura_resource_id'.
+                Course: {course['label']}
+                Room: {room.location}
+            """)
 
     return scheduled
 

@@ -155,6 +155,26 @@ def _get_email_template(course, template_type):
     return template
 
 
+def announce_semester_start(instructor, courses):
+    template = _get_email_template(course=courses[0], template_type='semester_start')
+    if not template:
+        return
+    message = interpolate_content(
+        templated_string=template.message,
+        recipient_name=instructor['name'],
+        course=None,
+        course_list=courses,
+    )
+    QueuedEmail.create(
+        message=message,
+        recipient=instructor,
+        section_id=courses[0]['sectionId'],
+        subject_line=template.subject_line,
+        template_type='semester_start',
+        term_id=courses[0]['termId'],
+    )
+
+
 def notify_instructors_of_changes(course, approval, previous_approvals):
     template = _get_email_template(course=course, template_type='notify_instructor_of_changes')
     if not template:
@@ -213,8 +233,7 @@ def notify_instructor_waiting_for_approval(course, instructor, pending_instructo
     )
 
 
-def notify_instructors_recordings_scheduled(course, scheduled):
-    template_type = 'recordings_scheduled'
+def notify_instructors_recordings_scheduled(course, scheduled, template_type):
     email_template = EmailTemplate.get_template_by_type(template_type)
     if email_template:
         publish_type_name = NAMES_PER_PUBLISH_TYPE[scheduled.publish_type]

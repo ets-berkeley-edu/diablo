@@ -22,10 +22,8 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-import random
 
-from diablo.jobs.util import get_instructors_who_can_edit_recordings
-from diablo.lib.util import get_names_of_days, readable_join, utc_now
+from diablo.lib.util import get_names_of_days, readable_join
 
 
 class TestUtils:
@@ -42,46 +40,3 @@ class TestUtils:
         assert readable_join(['Moe']) == 'Moe'
         assert readable_join(['Moe', 'Larry']) == 'Moe and Larry'
         assert readable_join(['Moe', 'Larry', 'Curly']) == 'Moe, Larry and Curly'
-
-    def test_get_instructors_who_can_edit_recordings(self):
-        def course(instructors, can_aprx_instructors_edit_recordings=False):
-            return {
-                'canAprxInstructorsEditRecordings': can_aprx_instructors_edit_recordings,
-                'instructors': instructors,
-            }
-
-        def instructor(role_code, deleted_at=None):
-            return {
-                'deletedAt': deleted_at,
-                'roleCode': role_code,
-                'uid': random.randint(1, 99999),
-            }
-        aprx_instructor = instructor(role_code='APRX')
-        deleted_instructor = instructor(role_code='PI', deleted_at=utc_now())
-        teaching_instructor = instructor(role_code='PI')
-
-        def _assert_who_can_edit_recordings(course_, instructors_expected):
-            instructors_actual = get_instructors_who_can_edit_recordings(course_)
-            actual_uids = [instructor['uid'] for instructor in instructors_actual]
-            expected_uids = [instructor['uid'] for instructor in instructors_expected]
-            assert set(actual_uids) == set(expected_uids)
-
-        _assert_who_can_edit_recordings(
-            course_=course([]),
-            instructors_expected=[],
-        )
-        _assert_who_can_edit_recordings(
-            course_=course(instructors=[teaching_instructor]),
-            instructors_expected=[teaching_instructor],
-        )
-        _assert_who_can_edit_recordings(
-            course_=course(instructors=[deleted_instructor, teaching_instructor]),
-            instructors_expected=[teaching_instructor],
-        )
-        _assert_who_can_edit_recordings(
-            course_=course(
-                can_aprx_instructors_edit_recordings=True,
-                instructors=[aprx_instructor, deleted_instructor, teaching_instructor],
-            ),
-            instructors_expected=[aprx_instructor, teaching_instructor],
-        )
