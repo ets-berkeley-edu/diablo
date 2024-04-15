@@ -57,6 +57,7 @@ ALTER TABLE IF EXISTS ONLY public.queued_emails DROP CONSTRAINT IF EXISTS queued
 ALTER TABLE IF EXISTS ONLY public.queued_emails DROP CONSTRAINT IF EXISTS queued_emails_section_id_template_type_unique_constraint;
 ALTER TABLE IF EXISTS ONLY public.rooms DROP CONSTRAINT IF EXISTS rooms_location_unique_constraint;
 ALTER TABLE IF EXISTS ONLY public.rooms DROP CONSTRAINT IF EXISTS rooms_pkey;
+ALTER TABLE IF EXISTS ONLY public.scheduled DROP CONSTRAINT IF EXISTS schedule_updates_pkey;
 ALTER TABLE IF EXISTS ONLY public.scheduled DROP CONSTRAINT IF EXISTS scheduled_pkey;
 ALTER TABLE IF EXISTS ONLY public.sent_emails DROP CONSTRAINT IF EXISTS sent_emails_pkey;
 ALTER TABLE IF EXISTS ONLY public.sis_sections DROP CONSTRAINT IF EXISTS sis_sections_pkey;
@@ -91,6 +92,8 @@ DROP TABLE IF EXISTS public.queued_emails;
 DROP SEQUENCE IF EXISTS public.queued_emails_id_seq;
 DROP TABLE IF EXISTS public.rooms;
 DROP SEQUENCE IF EXISTS public.rooms_id_seq;
+DROP TABLE IF EXISTS public.schedule_updates;
+DROP SEQUENCE IF EXISTS public.schedule_updates_id_seq;
 DROP TABLE IF EXISTS public.scheduled;
 DROP TABLE IF EXISTS public.sent_emails;
 DROP SEQUENCE IF EXISTS public.sent_emails_id_seq;
@@ -105,6 +108,7 @@ DROP TYPE IF EXISTS public.job_schedule_types;
 DROP TYPE IF EXISTS public.publish_types;
 DROP TYPE IF EXISTS public.recording_types;
 DROP TYPE IF EXISTS public.room_capability_types;
+DROP TYPE IF EXISTS public.schedule_update_status_types;
 DROP TYPE IF EXISTS public.user_types;
 
 --

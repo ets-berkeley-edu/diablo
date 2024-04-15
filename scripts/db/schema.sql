@@ -101,6 +101,14 @@ CREATE TYPE room_capability_types AS ENUM (
 
 --
 
+CREATE TYPE schedule_update_status_types AS ENUM (
+    'queued',
+    'succeeded',
+    'errored'
+);
+
+--
+
 CREATE TABLE admin_users (
     id integer NOT NULL,
     uid character varying(255) NOT NULL,
@@ -347,6 +355,36 @@ ALTER TABLE ONLY rooms
 ALTER TABLE ONLY rooms
     ADD CONSTRAINT rooms_location_unique_constraint UNIQUE (location);
 CREATE INDEX rooms_location_idx ON rooms USING btree (location);
+
+--
+
+CREATE TABLE schedule_updates (
+    id INTEGER NOT NULL,
+    term_id INTEGER NOT NULL,
+    section_id INTEGER NOT NULL,
+    field_name VARCHAR(80) NOT NULL,
+    field_value_old VARCHAR,
+    field_value_new VARCHAR,
+    requested_by_uid VARCHAR(80),
+    requested_by_name VARCHAR,
+    status schedule_update_status_types NOT NULL,
+    requested_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    published_at TIMESTAMP WITH TIME ZONE
+);
+ALTER TABLE schedule_updates OWNER TO diablo;
+CREATE SEQUENCE schedule_updates_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+ALTER TABLE ONLY schedule_updates ALTER COLUMN id SET DEFAULT nextval('schedule_updates_id_seq'::regclass);
+ALTER TABLE ONLY schedule_updates
+    ADD CONSTRAINT schedule_updates_pkey PRIMARY KEY (id);
+ALTER TABLE schedule_updates ALTER COLUMN requested_at SET DEFAULT now();
+
+CREATE INDEX schedule_updates_status_idx ON schedule_updates USING btree (status);
+CREATE INDEX schedule_updates_term_id_section_id_idx ON schedule_updates(term_id, section_id);
 
 --
 
