@@ -50,13 +50,9 @@ class OuijaBoardPage(DiabloPages):
     SEARCH_SELECT_OPTION = (By.XPATH, '//div[@role="listbox"]/div[@role="option"]//div[contains(@class, "title")]')
 
     FILTER_ALL_OPTION = (By.XPATH, '//div[@role="option"][contains(., "All")]')
-    FILTER_DO_NOT_EMAIL_OPTION = (By.XPATH, '//div[@role="option"][contains(., "Do Not Email")]')
-    FILTER_INVITED_OPTION = (By.XPATH, '//div[@role="option"][contains(., "Invited")]')
-    FILTER_NOT_INVITED_OPTION = (By.XPATH, '//div[@role="option"][contains(., "Not Invited")]')
-    FILTER_PARTIALLY_APPROVED_OPTION = (By.XPATH, '//div[@role="option"][contains(., "Partially Approved")]')
-    FILTER_QUEUED_FOR_SCHEDULING_OPTION = (By.XPATH, '//div[@role="option"][contains(., "Queued for Scheduling")]')
+    FILTER_OPTED_OUT = (By.XPATH, '//div[@role="option"][contains(., "Opted Out")]')
     FILTER_SCHEDULED_OPTION = (By.XPATH, '//div[@role="option"][contains(., "Scheduled") and not(contains(., "Nonstandard"))]')
-    FILTER_SCHEDULED_WEIRD_OPTION = (By.XPATH, '//div[@role="option"][contains(., "Scheduled (Nonstandard Dates)")]')
+    FILTER_NO_INSTRUCTORS_OPTION = (By.XPATH, '//div[@role="option"][contains(., "No Instructors")]')
 
     NO_RESULTS_MSG = (By.ID, 'message-when-zero-courses')
 
@@ -161,33 +157,17 @@ class OuijaBoardPage(DiabloPages):
         app.logger.info('Filtering by option All')
         self.filter_for_option(OuijaBoardPage.FILTER_ALL_OPTION)
 
-    def filter_for_do_not_email(self):
-        app.logger.info('Filtering by option Do Not Email')
-        self.filter_for_option(OuijaBoardPage.FILTER_DO_NOT_EMAIL_OPTION)
-
-    def filter_for_invited(self):
-        app.logger.info('Filtering by option Invited')
-        self.filter_for_option(OuijaBoardPage.FILTER_INVITED_OPTION)
-
-    def filter_for_not_invited(self):
-        app.logger.info('Filtering by option Not Invited')
-        self.filter_for_option(OuijaBoardPage.FILTER_NOT_INVITED_OPTION)
-
-    def filter_for_partially_approved(self):
-        app.logger.info('Filtering by option Partially Approved')
-        self.filter_for_option(OuijaBoardPage.FILTER_PARTIALLY_APPROVED_OPTION)
-
-    def filter_for_queued_for_scheduling(self):
-        app.logger.info('Filtering by option Queued for Scheduling')
-        self.filter_for_option(OuijaBoardPage.FILTER_QUEUED_FOR_SCHEDULING_OPTION)
+    def filter_for_opted_out(self):
+        app.logger.info('Filtering by option Opted Out')
+        self.filter_for_option(OuijaBoardPage.FILTER_OPTED_OUT)
 
     def filter_for_scheduled(self):
         app.logger.info('Filtering by option Scheduled')
         self.filter_for_option(OuijaBoardPage.FILTER_SCHEDULED_OPTION)
 
-    def filter_for_scheduled_weird(self):
+    def filter_for_no_instructors(self):
         app.logger.info('Filtering by option Scheduled (Nonstandard Dates)')
-        self.filter_for_option(OuijaBoardPage.FILTER_SCHEDULED_WEIRD_OPTION)
+        self.filter_for_option(OuijaBoardPage.FILTER_NO_INSTRUCTORS_OPTION)
 
     # COURSES
 

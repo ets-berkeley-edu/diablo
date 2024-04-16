@@ -34,6 +34,7 @@ from xena.pages.blackouts_page import BlackoutsPage
 from xena.pages.calnet_page import CalNetPage
 from xena.pages.canvas_page import CanvasPage
 from xena.pages.course_changes_page import CourseChangesPage
+from xena.pages.course_page import CoursePage
 from xena.pages.email_templates_page import EmailTemplatesPage
 from xena.pages.instructor_page import InstructorPage
 from xena.pages.jobs_page import JobsPage
@@ -43,7 +44,6 @@ from xena.pages.ouija_board_page import OuijaBoardPage
 from xena.pages.room_page import RoomPage
 from xena.pages.room_printable_page import RoomPrintablePage
 from xena.pages.rooms_page import RoomsPage
-from xena.pages.sign_up_page import SignUpPage
 from xena.test_utils.webdriver_manager import WebDriverManager
 
 
@@ -83,7 +83,7 @@ def page_objects(request):
     room_page = RoomPage(driver, headless)
     room_printable_page = RoomPrintablePage(driver, headless)
     rooms_page = RoomsPage(driver, headless)
-    sign_up_page = SignUpPage(driver, headless)
+    course_page = CoursePage(driver, headless)
     templates_page = EmailTemplatesPage(driver, headless)
     kaltura_page = KalturaPage(driver, headless)
 
@@ -99,6 +99,7 @@ def page_objects(request):
             setattr(cls.obj, 'calnet_page', calnet_page)
             setattr(cls.obj, 'canvas_page', canvas_page)
             setattr(cls.obj, 'changes_page', changes_page)
+            setattr(cls.obj, 'course_page', course_page)
             setattr(cls.obj, 'instructor_page', instructor_page)
             setattr(cls.obj, 'jobs_page', jobs_page)
             setattr(cls.obj, 'login_page', login_page)
@@ -106,7 +107,6 @@ def page_objects(request):
             setattr(cls.obj, 'room_page', room_page)
             setattr(cls.obj, 'room_printable_page', room_printable_page)
             setattr(cls.obj, 'rooms_page', rooms_page)
-            setattr(cls.obj, 'sign_up_page', sign_up_page)
             setattr(cls.obj, 'templates_page', templates_page)
             setattr(cls.obj, 'kaltura_page', kaltura_page)
         yield

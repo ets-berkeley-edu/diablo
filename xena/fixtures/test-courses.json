@@ -84,7 +84,7 @@
       ]
     },
     {
-      "test_script": "test_sign_up_0",
+      "test_script": "test_scheduling_0",
       "dept_code": "ECON",
       "instructors": [
         {

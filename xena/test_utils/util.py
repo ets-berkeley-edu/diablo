@@ -367,6 +367,8 @@ def reset_sign_up_test_data(section):
     db.session.execute(text(sql))
     sql = f'DELETE FROM scheduled WHERE section_id = {section.ccn} AND term_id = {term_id}'
     db.session.execute(text(sql))
+    sql = f'DELETE FROM schedule_updates WHERE section_id = {section.ccn} AND term_id = {term_id}'
+    db.session.execute(text(sql))
     sql = f'DELETE FROM sent_emails WHERE section_id = {section.ccn} AND term_id = {term_id}'
     db.session.execute(text(sql))
     sql = f'DELETE FROM course_preferences WHERE section_id = {section.ccn} AND term_id = {term_id}'

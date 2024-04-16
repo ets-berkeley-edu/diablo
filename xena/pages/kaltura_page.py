@@ -161,6 +161,15 @@ class KalturaPage(Page):
     def is_sun_checked(self):
         return self.element(KalturaPage.RECUR_WEEKLY_SUN_CBX).is_selected()
 
+    def verify_recur_days(self, days):
+        assert self.is_mon_checked() if 'MO' in days else not self.is_mon_checked()
+        assert self.is_tue_checked() if 'TU' in days else not self.is_tue_checked()
+        assert self.is_wed_checked() if 'WE' in days else not self.is_wed_checked()
+        assert self.is_thu_checked() if 'TH' in days else not self.is_thu_checked()
+        assert self.is_fri_checked() if 'FR' in days else not self.is_fri_checked()
+        assert not self.is_sat_checked()
+        assert not self.is_sun_checked()
+
     def visible_start_date(self):
         return self.element(KalturaPage.RECUR_DATE_START).get_attribute('value')
 

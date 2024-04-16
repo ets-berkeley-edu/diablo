@@ -34,7 +34,7 @@ from xena.pages.diablo_pages import DiabloPages
 from xena.test_utils import util
 
 
-class SignUpPage(DiabloPages):
+class CoursePage(DiabloPages):
 
     SECTION_ID = (By.ID, 'section-id')
     COURSE_TITLE = (By.ID, 'course-title')
@@ -120,45 +120,45 @@ class SignUpPage(DiabloPages):
         return self.is_present((By.XPATH, '//span[text()="UC Berkeley has canceled this section."]'))
 
     def visible_ccn(self):
-        return self.element(SignUpPage.SECTION_ID).text
+        return self.element(CoursePage.SECTION_ID).text
 
     def visible_course_title(self):
-        return self.element(SignUpPage.COURSE_TITLE).text
+        return self.element(CoursePage.COURSE_TITLE).text
 
     def visible_instructors(self):
-        els = self.elements(SignUpPage.INSTRUCTOR)
+        els = self.elements(CoursePage.INSTRUCTOR)
         return [el.text for el in els]
 
     def visible_proxies(self):
-        els = self.elements(SignUpPage.PROXY)
+        els = self.elements(CoursePage.PROXY)
         return [el.text for el in els]
 
     def visible_meeting_days(self):
-        els = self.elements(SignUpPage.MEETING_DAYS)
+        els = self.elements(CoursePage.MEETING_DAYS)
         vis = [el.get_attribute('innerText').replace('Days of the week:', '').replace('Dates:', '').strip() for el in els]
         app.logger.info(f'Visible {vis}')
         return vis
 
     def visible_meeting_time(self):
-        els = self.elements(SignUpPage.MEETING_TIMES)
+        els = self.elements(CoursePage.MEETING_TIMES)
         return [el.get_attribute('innerText').replace('Start and end times:', '').strip() for el in els]
 
     def visible_rooms(self):
-        els = self.elements(SignUpPage.ROOMS)
+        els = self.elements(CoursePage.ROOMS)
         return [el.get_attribute('innerText').replace('Location:', '').strip() for el in els]
 
     def visible_course_site_ids(self):
-        site_els = self.elements(SignUpPage.COURSE_SITE_LINK)
+        site_els = self.elements(CoursePage.COURSE_SITE_LINK)
         return [el.get_attribute('id').split('-')[-1] for el in site_els]
 
     def visible_cross_listing_codes(self):
-        return [el.text for el in self.elements(SignUpPage.CROSS_LISTING)]
+        return [el.text for el in self.elements(CoursePage.CROSS_LISTING)]
 
     def visible_cross_listing_ccns(self):
-        return [el.get_attribute('id').split('-')[2] for el in self.elements(SignUpPage.CROSS_LISTING)]
+        return [el.get_attribute('id').split('-')[2] for el in self.elements(CoursePage.CROSS_LISTING)]
 
     def visible_opt_out(self):
-        return self.element(SignUpPage.OPTED_OUT).get_attribute('innerText').strip()
+        return self.element(CoursePage.OPTED_OUT).get_attribute('innerText').strip()
 
     def click_room_link(self, room):
         self.wait_for_element_and_click(self.room_link_locator(room))
@@ -167,33 +167,33 @@ class SignUpPage(DiabloPages):
 
     def click_send_invite_button(self):
         app.logger.info('Clicking the Send Invite button')
-        self.wait_for_element_and_click(SignUpPage.SEND_INVITE_BUTTON)
-        Wait(self.driver, util.get_short_timeout()).until(ec.visibility_of_element_located(SignUpPage.ALERT_MSG))
+        self.wait_for_element_and_click(CoursePage.SEND_INVITE_BUTTON)
+        Wait(self.driver, util.get_short_timeout()).until(ec.visibility_of_element_located(CoursePage.ALERT_MSG))
 
     def click_unschedule_button(self):
         app.logger.info('Clicking the Unschedule button')
-        self.wait_for_element_and_click(SignUpPage.UNSCHEDULE_BUTTON)
+        self.wait_for_element_and_click(CoursePage.UNSCHEDULE_BUTTON)
 
     def confirm_unscheduling(self, recording_schedule):
         self.click_unschedule_button()
-        self.wait_for_element_and_click(SignUpPage.UNSCHEDULE_CONFIRM_BUTTON)
-        Wait(self.driver, util.get_medium_timeout()).until(ec.visibility_of_element_located(SignUpPage.APPROVE_BUTTON))
+        self.wait_for_element_and_click(CoursePage.UNSCHEDULE_CONFIRM_BUTTON)
+        Wait(self.driver, util.get_medium_timeout()).until(ec.visibility_of_element_located(CoursePage.APPROVE_BUTTON))
         recording_schedule.scheduling_status = RecordingSchedulingStatus.NOT_SCHEDULED
 
     def confirm_unscheduling_ineligible(self, recording_schedule):
         self.click_unschedule_button()
-        self.wait_for_element_and_click(SignUpPage.UNSCHEDULE_CONFIRM_BUTTON)
-        Wait(self.driver, util.get_medium_timeout()).until(ec.visibility_of_element_located(SignUpPage.OPTED_OUT))
+        self.wait_for_element_and_click(CoursePage.UNSCHEDULE_CONFIRM_BUTTON)
+        Wait(self.driver, util.get_medium_timeout()).until(ec.visibility_of_element_located(CoursePage.OPTED_OUT))
         recording_schedule.scheduling_status = RecordingSchedulingStatus.NOT_SCHEDULED
         time.sleep(util.get_short_timeout())
 
     def cancel_unscheduling(self):
         self.click_unschedule_button()
-        self.wait_for_element_and_click(SignUpPage.UNSCHEDULE_CANCEL_BUTTON)
-        Wait(self.driver, 1).until(ec.invisibility_of_element_located(SignUpPage.UNSCHEDULE_CANCEL_BUTTON))
+        self.wait_for_element_and_click(CoursePage.UNSCHEDULE_CANCEL_BUTTON)
+        Wait(self.driver, 1).until(ec.invisibility_of_element_located(CoursePage.UNSCHEDULE_CANCEL_BUTTON))
 
     def is_opted_out(self):
-        return self.is_present(SignUpPage.OPTED_OUT)
+        return self.is_present(CoursePage.OPTED_OUT)
 
     # CAPTURE + APPROVAL SETTINGS
 
@@ -207,11 +207,11 @@ class SignUpPage(DiabloPages):
 
     def click_rec_type_input(self):
         app.logger.info('Clicking the recording type input')
-        self.wait_for_element_and_click(SignUpPage.SELECT_RECORDING_TYPE_INPUT)
+        self.wait_for_element_and_click(CoursePage.SELECT_RECORDING_TYPE_INPUT)
 
     def click_publish_type_input(self):
         app.logger.info('Clicking the publish type input')
-        self.wait_for_element_and_click(SignUpPage.SELECT_PUBLISH_TYPE_INPUT)
+        self.wait_for_element_and_click(CoursePage.SELECT_PUBLISH_TYPE_INPUT)
 
     def select_rec_type(self, recording_type):
         app.logger.info(f'Selecting recording type {recording_type}')
@@ -227,55 +227,55 @@ class SignUpPage(DiabloPages):
 
     def click_agree_checkbox(self):
         app.logger.info('Clicking the agree-to-terms checkbox')
-        self.wait_for_element_and_click(SignUpPage.AGREE_TO_TERMS_CBX)
+        self.wait_for_element_and_click(CoursePage.AGREE_TO_TERMS_CBX)
 
     def aprx_editor_checked(self):
-        return self.element(SignUpPage.APRX_CAN_EDIT_CBX).get_attribute('aria-checked') == 'true'
+        return self.element(CoursePage.APRX_CAN_EDIT_CBX).get_attribute('aria-checked') == 'true'
 
     def select_aprx_editor(self):
         if not self.aprx_editor_checked():
-            self.click_element_js(SignUpPage.APRX_CAN_EDIT_CBX)
+            self.click_element_js(CoursePage.APRX_CAN_EDIT_CBX)
 
     def deselect_aprx_editor(self):
         if self.aprx_editor_checked():
-            self.click_element_js(SignUpPage.APRX_CAN_EDIT_CBX)
+            self.click_element_js(CoursePage.APRX_CAN_EDIT_CBX)
 
     def click_approve_button(self):
         app.logger.info('Clicking the approve button')
-        self.wait_for_element_and_click(SignUpPage.APPROVE_BUTTON)
+        self.wait_for_element_and_click(CoursePage.APPROVE_BUTTON)
 
     def wait_for_queued_confirmation(self):
-        Wait(self.driver, util.get_short_timeout()).until(ec.visibility_of_element_located(SignUpPage.QUEUED_MSG))
+        Wait(self.driver, util.get_short_timeout()).until(ec.visibility_of_element_located(CoursePage.QUEUED_MSG))
 
     def wait_for_approvals_msg(self, string=None):
-        Wait(self.driver, util.get_medium_timeout()).until(ec.visibility_of_element_located(SignUpPage.APPROVALS_MSG))
+        Wait(self.driver, util.get_medium_timeout()).until(ec.visibility_of_element_located(CoursePage.APPROVALS_MSG))
         if string:
-            app.logger.info(f'Visible: {self.element(SignUpPage.APPROVALS_MSG).get_attribute("innerText")}')
-            self.wait_for_text_in_element(SignUpPage.APPROVALS_MSG, string)
+            app.logger.info(f'Visible: {self.element(CoursePage.APPROVALS_MSG).get_attribute("innerText")}')
+            self.wait_for_text_in_element(CoursePage.APPROVALS_MSG, string)
 
     def wait_for_approval_confirmation(self):
-        Wait(self.driver, util.get_short_timeout()).until(ec.visibility_of_element_located(SignUpPage.CONFIRMATION_MSG))
+        Wait(self.driver, util.get_short_timeout()).until(ec.visibility_of_element_located(CoursePage.CONFIRMATION_MSG))
 
     def default_rec_type(self):
-        return self.element(SignUpPage.RECORDING_TYPE_STATIC).text.strip()
+        return self.element(CoursePage.RECORDING_TYPE_STATIC).text.strip()
 
     def aprx_can_edit_flag(self):
-        return self.element(SignUpPage.APRX_CAN_EDIT_FLAG).text.strip()
+        return self.element(CoursePage.APRX_CAN_EDIT_FLAG).text.strip()
 
     def approved_rec_type(self):
-        return self.element(SignUpPage.RECORDING_TYPE_APPROVED).text.strip()
+        return self.element(CoursePage.RECORDING_TYPE_APPROVED).text.strip()
 
     def approved_publish_type(self):
-        return self.element(SignUpPage.PUBLISH_TYPE_APPROVED).text.strip()
+        return self.element(CoursePage.PUBLISH_TYPE_APPROVED).text.strip()
 
     def scheduled_rec_type(self):
-        return self.element(SignUpPage.RECORDING_TYPE_SCHEDULED).text.strip()
+        return self.element(CoursePage.RECORDING_TYPE_SCHEDULED).text.strip()
 
     def scheduled_publish_type(self):
-        return self.element(SignUpPage.PUBLISH_TYPE_SCHEDULED).text.strip()
+        return self.element(CoursePage.PUBLISH_TYPE_SCHEDULED).text.strip()
 
     def click_kaltura_series_link(self, recording_schedule):
         app.logger.info(f'Clicking the link to Kaltura series ID {recording_schedule.series_id}')
-        self.wait_for_page_and_click(SignUpPage.kaltura_series_link(recording_schedule))
+        self.wait_for_page_and_click(CoursePage.kaltura_series_link(recording_schedule))
         time.sleep(2)
         self.switch_to_last_window(self.window_handles())
