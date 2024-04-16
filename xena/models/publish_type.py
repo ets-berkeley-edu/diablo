@@ -28,5 +28,6 @@ from enum import Enum
 
 class PublishType(Enum):
 
-    BCOURSES = 'GSI/TA moderation'
-    KALTURA = 'Instructor moderation'
+    PUBLISH_AUTOMATICALLY = 'Publish Automatically'
+    PUBLISH_TO_MY_MEDIA = 'Publish to My Media'
+    PUBLISH_TO_PENDING = 'Publish to Pending tab'

@@ -48,13 +48,13 @@ class EmailTemplateType(Enum):
         'desc': 'Waiting for approval',
         'type': 'waiting_for_approval',
     }
-    INSTR_INVITATION = {
-        'desc': 'Invitation',
-        'type': 'invitation',
+    INSTR_ANNUNCIATION = {
+        'desc': 'Announcement',
+        'type': 'announcement',
     }
-    INSTR_INVITATION_REMINDER = {
-        'desc': 'Remind Invitees',
-        'type': 'remind_invitees',
+    INSTR_ANNUNCIATION_REMINDER = {
+        'desc': 'Remind Scheduled',
+        'type': 'remind_scheduled',
     }
     INSTR_RECORDINGS_SCHEDULED = {
         'desc': 'Recordings scheduled',
@@ -64,7 +64,7 @@ class EmailTemplateType(Enum):
         'desc': 'Room change: No longer eligible',
         'type': 'room_change_no_longer_eligible',
     }
-    INSTR_SETTINGS_CHANGE = {
-        'desc': 'Notify instructor of changes',
-        'type': 'notify_instructor_of_changes',
+    INSTR_CHANGES_CONFIRMED = {
+        'desc': 'Changes confirmed',
+        'type': 'changes_confirmed',
     }

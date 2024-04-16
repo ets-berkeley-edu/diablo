@@ -33,5 +33,6 @@ class AsyncJob(Enum):
     HOUSEKEEPING = 'house_keeping'
     KALTURA = 'kaltura'
     EMAILS = 'emails'
-    REMIND_INVITEES = 'remind_invitees'
+    REMIND_SCHEDULED = 'remind_scheduled'
+    SEMESTER_START = 'semester_start'
     SIS_DATA_REFRESH = 'sis_data_refresh'
