@@ -28,7 +28,6 @@ import os
 from diablo import cache
 import diablo.factory
 from flask_login import logout_user
-from moto import mock_sts
 import pytest
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import scoped_session, sessionmaker
@@ -131,11 +130,3 @@ def db_session(db):
 def fake_auth(app, db, client):
     """Shortcut to start an authenticated session."""
     return FakeAuth(app, client)
-
-
-@pytest.fixture(scope='session', autouse=True)
-def fake_sts(app):
-    """Fake the AWS security token service that Diablo relies on to deliver S3 content (photos, note attachments)."""
-    mock_sts().start()
-    yield
-    mock_sts().stop()
