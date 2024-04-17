@@ -861,6 +861,7 @@ class TestCoursesChanges:
             Scheduled.create(
                 course_display_name=f'term_id:{self.term_id} section_id:{section_1_id}',
                 instructor_uids=get_instructor_uids(term_id=self.term_id, section_id=section_1_id),
+                collaborator_uids=[],
                 kaltura_schedule_id=random.randint(1, 10),
                 meeting_days=obsolete_meeting_days,
                 meeting_end_date=get_recording_end_date(meeting),
@@ -895,6 +896,7 @@ class TestCoursesChanges:
             Scheduled.create(
                 course_display_name=f'term_id:{self.term_id} section_id:{section_1_id}',
                 instructor_uids=get_instructor_uids(term_id=self.term_id, section_id=section_1_id),
+                collaborator_uids=[],
                 kaltura_schedule_id=random.randint(1, 10),
                 meeting_days=meeting['days'],
                 meeting_end_date=obsolete_meeting_end_date,
@@ -930,6 +932,7 @@ class TestCoursesChanges:
             Scheduled.create(
                 course_display_name=f'term_id:{self.term_id} section_id:{section_1_id}',
                 instructor_uids=[scheduled_with_uid],
+                collaborator_uids=[],
                 kaltura_schedule_id=random.randint(1, 10),
                 meeting_days=meeting['days'],
                 meeting_end_date=get_recording_end_date(meeting),

@@ -395,6 +395,7 @@ CREATE TABLE scheduled (
     created_at TIMESTAMP WITH TIME ZONE NOT NULL,
     deleted_at TIMESTAMP WITH TIME ZONE,
     instructor_uids VARCHAR(80)[] NOT NULL,
+    collaborator_uids VARCHAR(80)[] NOT NULL,
     kaltura_schedule_id INTEGER NOT NULL,
     meeting_days VARCHAR(80) NOT NULL,
     meeting_end_date TIMESTAMP NOT NULL,

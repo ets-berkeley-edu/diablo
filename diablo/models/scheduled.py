@@ -42,6 +42,7 @@ class Scheduled(db.Model):
     alerts = db.Column(ARRAY(email_template_type))
     course_display_name = db.Column(db.String, nullable=False)
     instructor_uids = db.Column(ARRAY(db.String(80)), nullable=False)
+    collaborator_uids = db.Column(ARRAY(db.String(80)), nullable=False)
     kaltura_schedule_id = db.Column(db.Integer, nullable=False)
     meeting_days = db.Column(db.String, nullable=False)
     meeting_end_date = db.Column(db.DateTime, nullable=False)
@@ -58,6 +59,7 @@ class Scheduled(db.Model):
             self,
             course_display_name,
             instructor_uids,
+            collaborator_uids,
             kaltura_schedule_id,
             meeting_days,
             meeting_end_date,
@@ -72,6 +74,7 @@ class Scheduled(db.Model):
     ):
         self.course_display_name = course_display_name
         self.instructor_uids = instructor_uids
+        self.collaborator_uids = collaborator_uids
         self.kaltura_schedule_id = kaltura_schedule_id
         self.meeting_days = meeting_days
         self.meeting_end_date = meeting_end_date
@@ -91,6 +94,7 @@ class Scheduled(db.Model):
                     course_display_name={self.course_display_name},
                     created_at={self.created_at},
                     instructor_uids={', '.join(self.instructor_uids)},
+                    collaborator_uids={', '.join(self.collaborator_uids)},
                     kaltura_schedule_id={self.kaltura_schedule_id}
                     meeting_days={self.meeting_days},
                     meeting_end_date={self.meeting_end_date},
@@ -109,6 +113,7 @@ class Scheduled(db.Model):
             cls,
             course_display_name,
             instructor_uids,
+            collaborator_uids,
             kaltura_schedule_id,
             meeting_days,
             meeting_end_date,
@@ -124,6 +129,7 @@ class Scheduled(db.Model):
         scheduled = cls(
             course_display_name=course_display_name,
             instructor_uids=instructor_uids,
+            collaborator_uids=collaborator_uids,
             kaltura_schedule_id=kaltura_schedule_id,
             meeting_days=meeting_days,
             meeting_end_date=meeting_end_date,
@@ -179,6 +185,12 @@ class Scheduled(db.Model):
         db.session.add(row)
         std_commit()
 
+    def update(self, **kwargs):
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+        db.session.add(self)
+        std_commit()
+
     def to_api_json(self, rooms_by_id=None):
         room_feed = None
         if self.room_id:
@@ -193,6 +205,7 @@ class Scheduled(db.Model):
             'courseDisplayName': self.course_display_name,
             'createdAt': to_isoformat(self.created_at),
             'instructorUids': self.instructor_uids,
+            'collaboratorUids': self.collaborator_uids,
             'kalturaScheduleId': self.kaltura_schedule_id,
             'meetingDays': formatted_days,
             'meetingDaysNames': get_names_of_days(formatted_days),

@@ -127,6 +127,7 @@ def _schedule_recordings(room_id, section_id, term_id):
     Scheduled.create(
         course_display_name=f'term_id:{term_id} section_id:{section_id}',
         instructor_uids=get_instructor_uids(term_id=term_id, section_id=section_id),
+        collaborator_uids=[],
         kaltura_schedule_id=random.randint(1, 10),
         meeting_days=meeting['days'],
         meeting_end_date=get_recording_end_date(meeting),

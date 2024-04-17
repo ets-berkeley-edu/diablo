@@ -28,6 +28,7 @@ from diablo.jobs.util import get_eligible_unscheduled_courses, schedule_recordin
 from diablo.lib.berkeley import term_name_for_sis_id
 from diablo.lib.kaltura_util import get_series_description
 from diablo.models.email_template import EmailTemplate
+from diablo.models.queued_email import notify_instructors_changes_confirmed
 from diablo.models.schedule_update import ScheduleUpdate
 from diablo.models.scheduled import Scheduled
 from diablo.models.sis_section import AUTHORIZED_INSTRUCTOR_ROLE_CODES, SisSection
@@ -80,17 +81,20 @@ def _update_already_scheduled_events():
         course = SisSection.get_course(term_id=term_id, section_id=section_id)
         for scheduled in course['scheduled']:
             kaltura_schedule = kaltura.get_event(event_id=scheduled['kalturaScheduleId'])
+            scheduled_model = Scheduled.get_by_id(scheduled['id'])
             if kaltura_schedule:
                 template_entry_id = kaltura_schedule['templateEntryId']
                 publish_to_course_sites = scheduled.publish_type == 'kaltura_media_gallery'
 
                 for schedule_update in schedule_updates:
                     if schedule_update.field_name == 'collaborator_uids':
-                        authorized_instructors = [i for i in course['instructors'] if i['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES]
-                        uids_entitled_to_edit = list(set([i['uid'] for i in authorized_instructors] + schedule_update.field_value_new))
+                        instructors = [i for i in course['instructors'] if i['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES]
+                        instructor_uids = [i['uid'] for i in instructors]
+                        collaborator_uids = schedule_update.field_value_new
+                        uids_entitled_to_edit = list(set(instructor_uids + collaborator_uids))
                         description = get_series_description(
                             course_label=course['label'],
-                            instructors=authorized_instructors,
+                            instructors=instructors,
                             term_name=term_name_for_sis_id(term_id),
                         )
                         kaltura.update_base_entry(
@@ -100,14 +104,14 @@ def _update_already_scheduled_events():
                             uids_entitled_to_edit=uids_entitled_to_edit,
                             uids_entitled_to_publish=uids_entitled_to_edit,
                         )
-                        Scheduled.get_by_id(course['scheduled']['id']).update(instructor_uids=uids_entitled_to_edit)
+                        scheduled_model.update(instructor_uids=instructor_uids, collaborator_uids=collaborator_uids)
 
                     elif schedule_update.field_name == 'publish_type':
                         if schedule_update.field_value_new == 'kaltura_media_gallery':
-                            Scheduled.get_by_id(course['scheduled']['id']).update(publish_type='kaltura_media_gallery')
+                            scheduled_model.update(publish_type='kaltura_media_gallery')
                             publish_to_course_sites = True
                         elif schedule_update.field_value_new == 'kaltura_my_media':
-                            Scheduled.get_by_id(course['scheduled']['id']).update(publish_type='kaltura_my_media')
+                            scheduled_model.update(publish_type='kaltura_my_media')
                             publish_to_course_sites = False
 
                 categories = kaltura.get_categories(template_entry_id)
@@ -115,8 +119,9 @@ def _update_already_scheduled_events():
                     _add_kaltura_categories(course, categories, kaltura, template_entry_id)
                 else:
                     _remove_kaltura_categories(course, categories, kaltura, template_entry_id)
-        else:
-            app.logger.warn(f"The previously scheduled {course['label']} schedule id {scheduled['kalturaScheduleId']} was not found in Kaltura.")
+            else:
+                app.logger.warn(f"The previously scheduled {course['label']} schedule id {scheduled['kalturaScheduleId']} was not found in Kaltura.")
+        notify_instructors_changes_confirmed(course, scheduled_model.to_api_json())
 
 
 def _add_kaltura_categories(course, categories, kaltura, template_entry_id):

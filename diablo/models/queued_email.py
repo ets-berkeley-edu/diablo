@@ -30,7 +30,7 @@ from diablo.lib.util import to_isoformat
 from diablo.merged.emailer import send_system_error_email
 from diablo.models.approval import NAMES_PER_PUBLISH_TYPE, NAMES_PER_RECORDING_TYPE
 from diablo.models.email_template import email_template_type, EmailTemplate
-from diablo.models.sis_section import AUTHORIZED_INSTRUCTOR_ROLE_CODES, SisSection
+from diablo.models.sis_section import AUTHORIZED_INSTRUCTOR_ROLE_CODES, get_loch_basic_attributes, SisSection
 from flask import current_app as app
 from sqlalchemy.dialects.postgresql import JSONB
 
@@ -175,7 +175,7 @@ def announce_semester_start(instructor, courses):
     )
 
 
-def notify_instructors_of_changes(course, approval, previous_approvals):
+def notify_instructors_approval_changes(course, approval, previous_approvals):
     template = _get_email_template(course=course, template_type='notify_instructor_of_changes')
     if not template:
         return
@@ -203,6 +203,48 @@ def notify_instructors_of_changes(course, approval, previous_approvals):
             section_id=course['sectionId'],
             subject_line=subject_line,
             template_type='notify_instructor_of_changes',
+            term_id=course['termId'],
+        )
+    return True
+
+
+def notify_instructors_changes_confirmed(course, scheduled):
+    email_template = _get_email_template(course=course, template_type='changes_confirmed')
+    if not email_template:
+        send_system_error_email(f"""
+            No email template of type 'changes_confirmed' is available.
+            {course['label']} instructors were NOT notified of scheduled: {scheduled}.
+        """)
+        return
+
+    publish_type_name = NAMES_PER_PUBLISH_TYPE[scheduled.publish_type]
+    recording_type_name = NAMES_PER_RECORDING_TYPE[scheduled.recording_type]
+    instructors = list(filter(lambda i: i['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES, course['instructors']))
+    if scheduled['collaboratorUids']:
+        collaborator_attributes = get_loch_basic_attributes(scheduled['collaboratorUids'])
+        collaborator_names = [f"{r['first_name']} {r['last_name']}" for r in collaborator_attributes]
+    else:
+        collaborator_names = []
+    for instructor in instructors:
+        message = interpolate_content(
+            templated_string=email_template.message,
+            course=course,
+            recipient_name=instructor['name'],
+            publish_type_name=publish_type_name,
+            recording_type_name=recording_type_name,
+            collaborator_names=collaborator_names,
+        )
+        subject_line = interpolate_content(
+            templated_string=email_template.subject_line,
+            course=course,
+            recipient_name=instructor['name'],
+        )
+        QueuedEmail.create(
+            message=message,
+            subject_line=subject_line,
+            recipient=instructor,
+            section_id=course['sectionId'],
+            template_type='changes_confirmed',
             term_id=course['termId'],
         )
     return True
