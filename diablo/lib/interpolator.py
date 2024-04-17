@@ -109,7 +109,7 @@ def get_template_substitutions(
         'courseList': '\n'.join([f"{course['courseName']}: {course['courseTitle']}" for course in course_list]),
         'instructors.all': course and _join_names(course.get('instructors')),
         'instructors.pending': _join_names(pending_instructors),
-        'instructors.previous': course and course.get('scheduled') and _join_names(course['scheduled'].get('instructors')),
+        'instructors.previous': course and course.get('scheduled') and _join_names(course['scheduled'][0].get('instructors')),
         'publish.type': publish_type_name,
         'publish.type.previous': previous_publish_type_name,
         'recipient.name': recipient_name,

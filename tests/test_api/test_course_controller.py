@@ -306,7 +306,6 @@ class TestGetCourse:
             assert len(approvals) == 1
             assert approved_by_uid == approvals[0]['approvedBy']
             assert api_json['approvalStatus'] == 'Partially Approved'
-            assert api_json['schedulingStatus'] == 'Not Scheduled'
             assert api_json['meetings']['eligible'][0]['room']['id'] == room_id
             assert api_json['meetings']['eligible'][0]['room']['location'] == "O'Brien 212"
 
@@ -531,10 +530,8 @@ class TestGetCourses:
             # Opted-out courses are in the feed, whether approved or not
             course_1 = _find_course(api_json=api_json, section_id=section_1_id, term_id=self.term_id)
             assert course_1['approvalStatus'] == 'Invited'
-            assert course_1['schedulingStatus'] == 'Not Scheduled'
             course_4 = _find_course(api_json=api_json, section_id=section_4_id, term_id=self.term_id)
             assert course_4['approvalStatus'] == 'Approved'
-            assert course_4['schedulingStatus'] == 'Queued for Scheduling'
 
             for section_id in (section_3_id, section_in_ineligible_room):
                 # Excluded courses
@@ -571,7 +568,6 @@ class TestGetCourses:
             assert course
             assert course['label'] == 'CHEM C110L, LAB 001'
             assert course['approvalStatus'] == 'Invited'
-            assert course['schedulingStatus'] == 'Not Scheduled'
             assert course['termId'] == self.term_id
             # The section with approval will NOT show up in search results
             assert not _find_course(api_json=api_json, section_id=section_5_id, term_id=self.term_id)
@@ -603,7 +599,6 @@ class TestGetCourses:
             assert _is_course_in_enabled_room(section_id=section_3_id, term_id=self.term_id)
             course = _find_course(api_json=api_json, section_id=section_3_id, term_id=self.term_id)
             assert course['approvalStatus'] == 'Not Invited'
-            assert course['schedulingStatus'] == 'Not Scheduled'
             assert course['label'] == 'BIO 1B, LEC 001'
 
     def test_partially_approved_filter(self, client, fake_auth):
@@ -646,7 +641,6 @@ class TestGetCourses:
             assert course
             assert course['label'] == 'LAW 23, LEC 002'
             assert course['approvalStatus'] == 'Partially Approved'
-            assert course['schedulingStatus'] == 'Not Scheduled'
 
     def test_scheduled_filter(self, client, fake_auth):
         """Scheduled filter: Courses with recordings scheduled."""
@@ -677,7 +671,6 @@ class TestGetCourses:
             assert len(api_json) == 2
             course = _find_course(api_json=api_json, section_id=section_1_id, term_id=self.term_id)
             assert course['approvalStatus'] == 'Partially Approved'
-            assert course['schedulingStatus'] == 'Scheduled'
             assert not _find_course(api_json=api_json, section_id=section_6_id, term_id=self.term_id)
 
     def test_all_filter(self, client, fake_auth):
@@ -814,10 +807,11 @@ class TestCoursesChanges:
         api_json = self._api_course_changes(client, term_id=self.term_id)
         course = _find_course(api_json=api_json, section_id=section_2_id, term_id=self.term_id)
         assert course
-        assert course['scheduled']['hasObsoleteRoom'] is True
-        assert course['scheduled']['hasObsoleteDates'] is False
-        assert course['scheduled']['hasObsoleteTimes'] is False
-        assert course['scheduled']['hasObsoleteInstructors'] is False
+        for scheduled in course['scheduled']:
+            assert scheduled['hasObsoleteRoom'] is True
+            assert scheduled['hasObsoleteDates'] is False
+            assert scheduled['hasObsoleteTimes'] is False
+            assert scheduled['hasObsoleteInstructors'] is False
 
     def test_room_change_to_null(self, client, fake_auth):
         """Admins can see room changes when course has no meeting location whatsoever."""
@@ -850,10 +844,11 @@ class TestCoursesChanges:
         api_json = self._api_course_changes(client, term_id=self.term_id)
         course = _find_course(api_json=api_json, section_id=section_id, term_id=self.term_id)
         assert course
-        assert course['scheduled']['hasObsoleteRoom'] is True
-        assert course['scheduled']['hasObsoleteDates'] is False
-        assert course['scheduled']['hasObsoleteTimes'] is False
-        assert course['scheduled']['hasObsoleteInstructors'] is False
+        for scheduled in course['scheduled']:
+            assert scheduled['hasObsoleteRoom'] is True
+            assert scheduled['hasObsoleteDates'] is False
+            assert scheduled['hasObsoleteTimes'] is False
+            assert scheduled['hasObsoleteInstructors'] is False
 
     def test_has_obsolete_meeting_times(self, client, fake_auth):
         """Admins can see meeting time changes that might disrupt scheduled recordings."""
@@ -883,10 +878,11 @@ class TestCoursesChanges:
             api_json = self._api_course_changes(client, term_id=self.term_id)
             course = _find_course(api_json=api_json, section_id=section_1_id, term_id=self.term_id)
             assert course
-            assert course['scheduled']['hasObsoleteRoom'] is False
-            assert course['scheduled']['hasObsoleteDates'] is False
-            assert course['scheduled']['hasObsoleteTimes'] is True
-            assert course['scheduled']['hasObsoleteInstructors'] is False
+            for scheduled in course['scheduled']:
+                assert scheduled['hasObsoleteRoom'] is False
+                assert scheduled['hasObsoleteDates'] is False
+                assert scheduled['hasObsoleteTimes'] is True
+                assert scheduled['hasObsoleteInstructors'] is False
 
     def test_has_obsolete_meeting_dates(self, client, fake_auth):
         """Admins can see meeting date changes that might disrupt scheduled recordings."""
@@ -916,10 +912,11 @@ class TestCoursesChanges:
             api_json = self._api_course_changes(client, term_id=self.term_id)
             course = _find_course(api_json=api_json, section_id=section_1_id, term_id=self.term_id)
             assert course
-            assert course['scheduled']['hasObsoleteRoom'] is False
-            assert course['scheduled']['hasObsoleteDates'] is True
-            assert course['scheduled']['hasObsoleteTimes'] is False
-            assert course['scheduled']['hasObsoleteInstructors'] is False
+            for scheduled in course['scheduled']:
+                assert scheduled['hasObsoleteRoom'] is False
+                assert scheduled['hasObsoleteDates'] is True
+                assert scheduled['hasObsoleteTimes'] is False
+                assert scheduled['hasObsoleteInstructors'] is False
 
     def test_has_obsolete_instructors(self, client, fake_auth):
         """Admins can see instructor changes that might disrupt scheduled recordings."""
@@ -950,13 +947,14 @@ class TestCoursesChanges:
             api_json = self._api_course_changes(client, term_id=self.term_id)
             course = _find_course(api_json=api_json, section_id=section_1_id, term_id=self.term_id)
             assert course
-            assert course['scheduled']['hasObsoleteRoom'] is False
-            assert course['scheduled']['hasObsoleteDates'] is False
-            assert course['scheduled']['hasObsoleteTimes'] is False
-            assert course['scheduled']['hasObsoleteInstructors'] is True
             assert len(course['instructors']) == 2
-            assert len(course['scheduled']['instructors']) == 1
-            assert course['scheduled']['instructors'][0]['uid'] == scheduled_with_uid
+            for scheduled in course['scheduled']:
+                assert scheduled['hasObsoleteRoom'] is False
+                assert scheduled['hasObsoleteDates'] is False
+                assert scheduled['hasObsoleteTimes'] is False
+                assert scheduled['hasObsoleteInstructors'] is True
+                assert len(scheduled['instructors']) == 1
+                assert scheduled['instructors'][0]['uid'] == scheduled_with_uid
 
 
 class TestCrossListedNameGeneration:
@@ -1138,7 +1136,6 @@ class TestUpdateOptOutCoursePreference:
                 opt_out=True,
             )
             api_json = api_get_course(client, section_id=section_1_id, term_id=self.term_id)
-            assert api_json['schedulingStatus'] == 'Not Scheduled'
             assert api_json['hasOptedOut'] is True
 
             api_approve(
@@ -1148,7 +1145,6 @@ class TestUpdateOptOutCoursePreference:
                 section_id=section_1_id,
             )
             api_json = api_get_course(client, section_id=section_1_id, term_id=self.term_id)
-            assert api_json['schedulingStatus'] == 'Queued for Scheduling'
             assert api_json['hasOptedOut'] is False
 
 
@@ -1232,10 +1228,9 @@ class TestUnscheduleCourse:
 
             course = api_get_course(client, term_id=self.term_id, section_id=section_1_id)
             assert len(course['approvals']) == 1
-            assert course['scheduled'] is not None
+            assert len(course['scheduled']) == 1
             assert course['hasNecessaryApprovals'] is True
             assert course['hasOptedOut'] is False
-            assert course['schedulingStatus'] == 'Scheduled'
 
             response = self._api_unschedule(
                 client,
@@ -1246,7 +1241,6 @@ class TestUnscheduleCourse:
             assert response['scheduled'] is None
             assert response['hasNecessaryApprovals'] is False
             assert response['hasOptedOut'] is True
-            assert response['schedulingStatus'] == 'Not Scheduled'
 
     def test_authorized_unschedule_queued(self, client, fake_auth):
         fake_auth.login(admin_uid)
@@ -1261,7 +1255,6 @@ class TestUnscheduleCourse:
             course = api_get_course(client, term_id=self.term_id, section_id=section_1_id)
             assert len(course['approvals']) == 1
             assert course['hasNecessaryApprovals'] is True
-            assert course['schedulingStatus'] == 'Queued for Scheduling'
 
             response = self._api_unschedule(
                 client,
@@ -1269,7 +1262,6 @@ class TestUnscheduleCourse:
                 section_id=section_1_id,
             )
             assert len(response['approvals']) == 0
-            assert response['schedulingStatus'] == 'Not Scheduled'
             assert response['hasNecessaryApprovals'] is False
             assert response['hasOptedOut'] is True
 

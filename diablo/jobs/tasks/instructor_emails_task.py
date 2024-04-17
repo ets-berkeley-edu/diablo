@@ -63,6 +63,7 @@ class InstructorEmailsTask(BaseTask):
             )
             courses_per_section_id = dict((course['sectionId'], course) for course in courses)
             for scheduled in all_scheduled:
+                scheduled_json = scheduled.to_api_json()
                 section_id = scheduled.section_id
                 course = courses_per_section_id.get(section_id)
                 if course:
@@ -79,9 +80,9 @@ class InstructorEmailsTask(BaseTask):
                                 def _get_interpolate_content(template):
                                     return interpolate_content(
                                         course=course,
-                                        publish_type_name=course.get('scheduled', {}).get('publishTypeName'),
+                                        publish_type_name=scheduled_json.get('publishTypeName'),
                                         recipient_name=instructor['name'],
-                                        recording_type_name=course.get('scheduled', {}).get('recordingTypeName'),
+                                        recording_type_name=scheduled_json.get('recordingTypeName'),
                                         templated_string=template,
                                     )
                                 QueuedEmail.create(
@@ -93,7 +94,7 @@ class InstructorEmailsTask(BaseTask):
                                     term_id=self.term_id,
                                 )
                             Scheduled.add_alert(
-                                scheduled_id=course['scheduled']['id'],
+                                scheduled_id=scheduled_json['id'],
                                 template_type=template_type,
                             )
                         else:

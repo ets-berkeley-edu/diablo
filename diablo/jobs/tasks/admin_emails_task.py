@@ -60,34 +60,36 @@ class AdminEmailsTask(BaseTask):
             meetings = course.get('meetings', {}).get('eligible', [])
             if len(meetings):
                 meeting = meetings[0]
-                scheduled = course['scheduled']
-                obsolete_dates = are_scheduled_dates_obsolete(meeting=meeting, scheduled=scheduled)
-                if obsolete_dates or are_scheduled_times_obsolete(meeting=meeting, scheduled=scheduled):
-                    self._notify(course=course, template_type=template_type)
+                for scheduled in (course['scheduled'] or []):
+                    obsolete_dates = are_scheduled_dates_obsolete(meeting=meeting, scheduled=scheduled)
+                    if obsolete_dates or are_scheduled_times_obsolete(meeting=meeting, scheduled=scheduled):
+                        self._notify(course=course, scheduled=scheduled, template_type=template_type)
 
     def _instructor_change_alerts(self):
         template_type = 'admin_alert_instructor_change'
         for course in self._get_courses_except_notified(template_type):
-            if course and course['scheduled']['hasObsoleteInstructors']:
-                self._notify(course=course, template_type=template_type)
+            for scheduled in (course['scheduled'] or []):
+                if scheduled['hasObsoleteInstructors']:
+                    self._notify(course=course, scheduled=scheduled, template_type=template_type)
 
     def _multiple_meeting_pattern_alerts(self):
         template_type = 'admin_alert_multiple_meeting_patterns'
         for course in SisSection.get_courses_scheduled_nonstandard_dates(term_id=self.term_id):
-            if template_type not in course['scheduled']['alerts']:
-                self._notify(course=course, template_type=template_type)
+            for scheduled in (course['scheduled'] or []):
+                if template_type not in scheduled['alerts']:
+                    self._notify(course=course, scheduled=scheduled, template_type=template_type)
 
     def _room_change_alerts(self):
         template_type = 'admin_alert_room_change'
         for course in self._get_courses_except_notified(template_type):
-            if course['scheduled']['hasObsoleteRoom'] or course['deletedAt']:
-                self._notify(course=course, template_type=template_type)
+            for scheduled in (course['scheduled'] or []):
+                if scheduled['hasObsoleteRoom'] or course['deletedAt']:
+                    self._notify(course=course, scheduled=scheduled, template_type=template_type)
 
-    def _notify(self, course, template_type):
+    def _notify(self, course, scheduled, template_type):
         email_template = EmailTemplate.get_template_by_type(template_type)
         if email_template:
             def _get_interpolate_content(template):
-                scheduled = course.get('scheduled', {})
                 return interpolate_content(
                     course=course,
                     publish_type_name=scheduled.get('publishTypeName'),
@@ -104,7 +106,7 @@ class AdminEmailsTask(BaseTask):
                 template_type=template_type,
                 term_id=self.term_id,
             )
-            Scheduled.add_alert(scheduled_id=course['scheduled']['id'], template_type=template_type)
+            Scheduled.add_alert(scheduled_id=scheduled['id'], template_type=template_type)
         else:
             send_system_error_email(f"""
                 No email template of type {template_type} is available.
@@ -112,4 +114,9 @@ class AdminEmailsTask(BaseTask):
             """)
 
     def _get_courses_except_notified(self, template_type):
-        return list(filter(lambda c: template_type not in c['scheduled']['alerts'], self.courses))
+        def _is_notified(course, template_type):
+            for scheduled in (course['scheduled'] or []):
+                if template_type in scheduled['alerts']:
+                    return True
+            return False
+        return list(filter(lambda c: not _is_notified(c, template_type), self.courses))

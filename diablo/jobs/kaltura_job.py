@@ -28,7 +28,9 @@ from diablo.jobs.util import get_eligible_unscheduled_courses, schedule_recordin
 from diablo.lib.berkeley import term_name_for_sis_id
 from diablo.lib.kaltura_util import get_series_description
 from diablo.models.email_template import EmailTemplate
-from diablo.models.sis_section import SisSection
+from diablo.models.schedule_update import ScheduleUpdate
+from diablo.models.scheduled import Scheduled
+from diablo.models.sis_section import AUTHORIZED_INSTRUCTOR_ROLE_CODES, SisSection
 from flask import current_app as app
 
 
@@ -74,65 +76,68 @@ def _schedule_new_courses():
 def _update_already_scheduled_events():
     kaltura = Kaltura()
     term_id = app.config['CURRENT_TERM_ID']
-    for course in SisSection.get_courses_scheduled(include_administrative_proxies=True, term_id=term_id):
-        course_name = course['label']
-        scheduled = course['scheduled']
-        kaltura_schedule = kaltura.get_event(event_id=scheduled['kalturaScheduleId'])
-        if kaltura_schedule:
-            template_entry_id = kaltura_schedule['templateEntryId']
-            if course['canvasCourseSites'] and scheduled['publishType'] == 'kaltura_media_gallery':
-                # From Kaltura, get Canvas course sites (categories) currently mapped to the course.
-                categories = kaltura.get_categories(template_entry_id)
+    for section_id, schedule_updates in ScheduleUpdate.get_queued_by_section_id(term_id=term_id).items():
+        course = SisSection.get_course(term_id=term_id, section_id=section_id)
+        for scheduled in course['scheduled']:
+            kaltura_schedule = kaltura.get_event(event_id=scheduled['kalturaScheduleId'])
+            if kaltura_schedule:
+                template_entry_id = kaltura_schedule['templateEntryId']
+                publish_to_course_sites = scheduled.publish_type == 'kaltura_media_gallery'
 
-                for s in course['canvasCourseSites']:
-                    canvas_course_site_id = str(s['courseSiteId'])
-                    if canvas_course_site_id not in [c['name'] for c in categories]:
-                        _update_kaltura_category(
-                            canvas_course_site_id=canvas_course_site_id,
-                            course_name=course_name,
-                            kaltura=kaltura,
-                            template_entry_id=template_entry_id,
+                for schedule_update in schedule_updates:
+                    if schedule_update.field_name == 'collaborator_uids':
+                        authorized_instructors = [i for i in course['instructors'] if i['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES]
+                        uids_entitled_to_edit = list(set([i['uid'] for i in authorized_instructors] + schedule_update.field_value_new))
+                        description = get_series_description(
+                            course_label=course['label'],
+                            instructors=authorized_instructors,
+                            term_name=term_name_for_sis_id(term_id),
                         )
-            # Update Kaltura edit permissions per UID.
-            uids_entitled_to_edit = set(scheduled['instructorUids'])
-            if course['canAprxInstructorsEditRecordings']:
-                instructors = course['instructors']
-                aprx_instructors = list(filter(lambda i: i['roleCode'] == 'APRX' and not i['deletedAt'], instructors))
-                uids_entitled_to_edit.update([i['uid'] for i in aprx_instructors])
-            uids_entitled_to_edit = list(uids_entitled_to_edit)
-            instructors_entitled_to_edit = _get_subset_of_instructors(
-                include_deleted=True,
-                section_id=course['sectionId'],
-                term_id=term_id,
-                uids=uids_entitled_to_edit,
-            )
-            description = get_series_description(
-                course_label=course_name,
-                instructors=instructors_entitled_to_edit,
-                term_name=term_name_for_sis_id(term_id),
-            )
-            # Preserve existing UIDs, added manually or otherwise, in Kaltura.
-            base_entry = kaltura.get_base_entry(template_entry_id)
-            existing_uids = {
-                'entitled_users_edit': base_entry['entitledUsersEdit'].split(','),
-                'entitled_users_publish': base_entry['entitledUsersPublish'].split(','),
-            }
-            kaltura.update_base_entry(
-                description=description,
-                entry_id=template_entry_id,
-                name=kaltura_schedule.get('name'),
-                uids_entitled_to_edit=list(set(uids_entitled_to_edit + existing_uids['entitled_users_edit'])),
-                uids_entitled_to_publish=list(set(uids_entitled_to_edit + existing_uids['entitled_users_publish'])),
-            )
+                        kaltura.update_base_entry(
+                            description=description,
+                            entry_id=template_entry_id,
+                            name=kaltura_schedule.get('name'),
+                            uids_entitled_to_edit=uids_entitled_to_edit,
+                            uids_entitled_to_publish=uids_entitled_to_edit,
+                        )
+                        Scheduled.get_by_id(course['scheduled']['id']).update(instructor_uids=uids_entitled_to_edit)
+
+                    elif schedule_update.field_name == 'publish_type':
+                        if schedule_update.field_value_new == 'kaltura_media_gallery':
+                            Scheduled.get_by_id(course['scheduled']['id']).update(publish_type='kaltura_media_gallery')
+                            publish_to_course_sites = True
+                        elif schedule_update.field_value_new == 'kaltura_my_media':
+                            Scheduled.get_by_id(course['scheduled']['id']).update(publish_type='kaltura_my_media')
+                            publish_to_course_sites = False
+
+                categories = kaltura.get_categories(template_entry_id)
+                if publish_to_course_sites:
+                    _add_kaltura_categories(course, categories, kaltura, template_entry_id)
+                else:
+                    _remove_kaltura_categories(course, categories, kaltura, template_entry_id)
         else:
-            app.logger.warn(f'The previously scheduled {course_name} has no schedule_event in Kaltura.')
+            app.logger.warn(f"The previously scheduled {course['label']} schedule id {scheduled['kalturaScheduleId']} was not found in Kaltura.")
 
 
-def _update_kaltura_category(canvas_course_site_id, course_name, kaltura, template_entry_id):
-    category = kaltura.get_canvas_category_object(canvas_course_site_id=canvas_course_site_id)
-    if category:
-        app.logger.info(f'{course_name}: add Kaltura category for canvas_course_site {canvas_course_site_id}')
-        kaltura.add_to_kaltura_category(
-            category_id=category['id'],
-            entry_id=template_entry_id,
-        )
+def _add_kaltura_categories(course, categories, kaltura, template_entry_id):
+    for s in course.get('canvasCourseSites', []):
+        canvas_course_site_id = str(s['courseSiteId'])
+        if canvas_course_site_id not in [c['name'] for c in categories]:
+            category = kaltura.get_canvas_category_object(canvas_course_site_id=canvas_course_site_id)
+            if category:
+                app.logger.info(f"{course['label']}: add Kaltura category for canvas_course_site {canvas_course_site_id}")
+                kaltura.add_to_kaltura_category(
+                    category_id=category['id'],
+                    entry_id=template_entry_id,
+                )
+
+
+def _remove_kaltura_categories(course, categories, kaltura, template_entry_id):
+    common_category = kaltura.get_category_object(name=app.config['KALTURA_COMMON_CATEGORY'])
+    for c in categories:
+        if common_category and c['id'] != common_category['id']:
+            app.logger.info(f"{course['label']}: delete Kaltura category for canvas_course_site {c['name']}")
+            kaltura.delete_kaltura_category(
+                category_id=c['id'],
+                entry_id=template_entry_id,
+            )

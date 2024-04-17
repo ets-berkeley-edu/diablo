@@ -214,8 +214,6 @@ class TestObsoleteScheduledDates:
                 with override_config(app, 'CURRENT_TERM_RECORDINGS_END', meeting['endDate']):
                     mock_scheduled(meeting=meeting, section_id=self.section_id, term_id=self.term_id)
                     course = SisSection.get_course(section_id=self.section_id, term_id=self.term_id)
-                    scheduled = course['scheduled']
-
                     meeting = _create_meeting(
                         days=None,
                         end_date=None,
@@ -223,7 +221,8 @@ class TestObsoleteScheduledDates:
                         start_date=None,
                         start_time=None,
                     )
-            assert are_scheduled_dates_obsolete(meeting, scheduled) is True
+                for scheduled in course['scheduled']:
+                    assert are_scheduled_dates_obsolete(meeting, scheduled) is True
 
     def _assert_schedule_is_obsolete(
             self,
@@ -250,7 +249,7 @@ class TestObsoleteScheduledDates:
                         term_id=self.term_id,
                     )
                     course = SisSection.get_course(section_id=self.section_id, term_id=self.term_id)
-                    scheduled = course['scheduled']
+                    scheduled = course['scheduled'][0]
                     assert are_scheduled_dates_obsolete(meeting=meeting, scheduled=scheduled) is expect_obsolete_dates
                     assert are_scheduled_times_obsolete(meeting=meeting, scheduled=scheduled) is expect_obsolete_times
 
