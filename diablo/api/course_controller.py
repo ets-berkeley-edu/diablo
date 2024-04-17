@@ -128,8 +128,9 @@ def get_course(term_id, section_id):
 
     if current_user.is_admin and course['scheduled']:
         # When debugging, the raw Kaltura-provided JSON is useful.
-        event_id = course['scheduled'].get('kalturaScheduleId')
-        course['scheduled']['kalturaSchedule'] = Kaltura().get_event(event_id)
+        for scheduled in course['scheduled']:
+            event_id = scheduled.get('kalturaScheduleId')
+            scheduled['kalturaSchedule'] = Kaltura().get_event(event_id)
     return tolerant_jsonify(course)
 
 
@@ -150,11 +151,10 @@ def download_courses_csv():
         name = instructor.get('name') or instructor.get('uid')
         return f'{name} <{email}>' if email else name
 
-    def _course_csv_row(c):
+    def _course_csv_row(c, scheduled):
         course_name = c.get('courseName')
         instruction_format = c.get('instructionFormat')
         eligible_meetings = c.get('meetings', {}).get('eligible', [])
-        scheduled = c.get('scheduled') or {}
         section_id = c.get('sectionId')
         return {
             'Course Name': f"{course_name}, {instruction_format} {c.get('sectionNum')}" if instruction_format else course_name,
@@ -177,10 +177,14 @@ def download_courses_csv():
     term_id = params.get('termId')
     filter_ = params.get('filter', 'Not Invited')
     now = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+    rows = []
+    for c in _get_courses_per_filter(filter_=filter_, term_id=term_id):
+        for scheduled in (c['scheduled'] or [{}]):
+            rows.append(_course_csv_row(c, scheduled))
     return csv_download_response(
-        rows=[_course_csv_row(c) for c in _get_courses_per_filter(filter_=filter_, term_id=term_id)],
+        rows=rows,
         filename=f"courses-{filter_.lower().replace(' ', '_')}-{term_id}_{now}.csv",
-        fieldnames=list(_course_csv_row({}).keys()),
+        fieldnames=list(_course_csv_row({}, {}).keys()),
     )
 
 
@@ -201,18 +205,19 @@ def unschedule():
     Approval.delete(term_id=term_id, section_id=section_id)
     Scheduled.delete(term_id=term_id, section_id=section_id)
 
-    event_id = (course.get('scheduled') or {}).get('kalturaScheduleId')
-    if event_id:
-        try:
-            Kaltura().delete(event_id)
-        except (KalturaClientException, KalturaException) as e:
-            message = f'Failed to delete Kaltura schedule: {event_id}'
-            app.logger.error(message)
-            app.logger.exception(e)
-            send_system_error_email(
-                message=f'{message}\n\n<pre>{traceback.format_exc()}</pre>',
-                subject=message,
-            )
+    for scheduled in (course.get('scheduled') or []):
+        event_id = scheduled.get('kalturaScheduleId')
+        if event_id:
+            try:
+                Kaltura().delete(event_id)
+            except (KalturaClientException, KalturaException) as e:
+                message = f'Failed to delete Kaltura schedule: {event_id}'
+                app.logger.error(message)
+                app.logger.exception(e)
+                send_system_error_email(
+                    message=f'{message}\n\n<pre>{traceback.format_exc()}</pre>',
+                    subject=message,
+                )
 
     CoursePreference.update_opt_out(
         term_id=term_id,

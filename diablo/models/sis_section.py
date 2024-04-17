@@ -236,16 +236,16 @@ class SisSection(db.Model):
         obsolete_instructor_uids = set()
 
         for course in _to_api_json(term_id=term_id, rows=rows):
-            scheduled = course['scheduled']
-            if scheduled['hasObsoleteRoom'] \
-                    or scheduled['hasObsoleteInstructors'] \
-                    or scheduled['hasObsoleteDates'] \
-                    or scheduled['hasObsoleteTimes'] \
-                    or course['deletedAt']:
-                courses.append(course)
-            if scheduled['hasObsoleteInstructors']:
-                obsolete_instructor_uids.update(scheduled['instructorUids'])
-                scheduled['instructors'] = []
+            for scheduled in course['scheduled']:
+                if scheduled['hasObsoleteRoom'] \
+                        or scheduled['hasObsoleteInstructors'] \
+                        or scheduled['hasObsoleteDates'] \
+                        or scheduled['hasObsoleteTimes'] \
+                        or course['deletedAt']:
+                    courses.append(course)
+                if scheduled['hasObsoleteInstructors']:
+                    obsolete_instructor_uids.update(scheduled['instructorUids'])
+                    scheduled['instructors'] = []
 
         if obsolete_instructor_uids:
             obsolete_instructors = {}
@@ -258,10 +258,11 @@ class SisSection(db.Model):
                         'uid': uid,
                     }
             for course in courses:
-                if course['scheduled']['hasObsoleteInstructors']:
-                    course['scheduled']['instructors'] = []
-                    for uid in course['scheduled']['instructorUids']:
-                        course['scheduled']['instructors'].append(obsolete_instructors.get(uid, {'name': '', 'uid': uid}))
+                for scheduled in course['scheduled']:
+                    if scheduled['hasObsoleteInstructors']:
+                        scheduled['instructors'] = []
+                        for uid in scheduled['instructorUids']:
+                            scheduled['instructors'].append(obsolete_instructors.get(uid, {'name': '', 'uid': uid}))
 
         return courses
 
@@ -807,7 +808,11 @@ def _to_api_json(term_id, rows, include_rooms=True):
     for approval in approval_results:
         approvals_by_section_id[approval.section_id].append(approval.to_api_json(rooms_by_id=rooms_by_id))
 
-    scheduled_by_section_id = {s.section_id: s.to_api_json(rooms_by_id=rooms_by_id) for s in scheduled_results}
+    scheduled_by_section_id = {}
+    for s in scheduled_results:
+        if s.section_id not in scheduled_by_section_id:
+            scheduled_by_section_id[s.section_id] = []
+        scheduled_by_section_id[s.section_id].append(s.to_api_json(rooms_by_id=rooms_by_id))
 
     cross_listings_per_section_id, instructors_per_section_id, canvas_sites_by_section_id = _get_cross_listed_courses(
         section_ids=section_ids,
@@ -914,7 +919,6 @@ def _to_api_json(term_id, rows, include_rooms=True):
 
 def _decorate_course(course):
     _decorate_course_approvals(course)
-    _decorate_course_scheduling(course)
     _decorate_course_changes(course)
     _decorate_course_meeting_type(course)
 
@@ -938,21 +942,12 @@ def _decorate_course_approvals(course):
             course['approvalStatus'] = 'Invited'
 
 
-def _decorate_course_scheduling(course):
-    course['schedulingStatus'] = 'Not Scheduled'
-    if course['scheduled']:
-        course['schedulingStatus'] = 'Scheduled'
-    elif course['hasNecessaryApprovals']:
-        course['schedulingStatus'] = 'Queued for Scheduling'
-
-
 def _decorate_course_changes(course):
     meetings = course['meetings']['eligible'] + course['meetings']['ineligible']
     meeting = meetings[0] if meetings else None
     room_id = meeting['room']['id'] if meeting and meeting.get('room') else None
 
-    scheduled = course['scheduled']
-    if scheduled:
+    for scheduled in (course['scheduled'] or []):
         instructor_uids = [i['uid'] for i in course['instructors']]
         scheduled.update({
             'hasObsoleteInstructors': set(instructor_uids) != set(scheduled.get('instructorUids')),

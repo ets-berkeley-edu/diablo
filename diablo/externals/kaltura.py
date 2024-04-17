@@ -83,6 +83,10 @@ class Kaltura:
         self.client.categoryEntry.add(category_entry)
 
     @skip_when_pytest()
+    def delete_kaltura_category(self, category_id, entry_id):
+        self.client.categoryEntry.delete(entry_id, category_id)
+
+    @skip_when_pytest()
     def get_base_entry(self, entry_id):
         entry = self.client.baseEntry.get(entryId=entry_id)
         if entry:

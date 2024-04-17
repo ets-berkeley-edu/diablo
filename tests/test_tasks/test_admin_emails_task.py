@@ -68,9 +68,9 @@ class TestAdminEmailsTask:
                             term_id=term_id,
                         )
                         course = SisSection.get_course(section_id=section_id, term_id=term_id)
-                        scheduled = course['scheduled']
-                        assert are_scheduled_dates_obsolete(meeting=meeting, scheduled=scheduled) is False
-                        assert are_scheduled_times_obsolete(meeting=meeting, scheduled=scheduled) is True
+                        for scheduled in course['scheduled']:
+                            assert are_scheduled_dates_obsolete(meeting=meeting, scheduled=scheduled) is False
+                            assert are_scheduled_times_obsolete(meeting=meeting, scheduled=scheduled) is True
 
                     def _assert_alert_count(count):
                         emails_sent = SentEmail.get_emails_sent_to(uid=admin_uid)
