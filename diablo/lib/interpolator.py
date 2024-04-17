@@ -40,6 +40,7 @@ def interpolate_content(
     previous_recording_type_name=None,
     publish_type_name=None,
     recording_type_name=None,
+    collaborator_names=None,
 ):
     interpolated = templated_string
     substitutions = get_template_substitutions(
@@ -51,6 +52,7 @@ def interpolate_content(
         previous_recording_type_name=previous_recording_type_name,
         publish_type_name=publish_type_name,
         recording_type_name=recording_type_name,
+        collaborator_names=collaborator_names,
     )
     for token, value in substitutions.items():
         if value is None:
@@ -75,6 +77,7 @@ def get_template_substitutions(
         previous_recording_type_name=None,
         publish_type_name=None,
         recording_type_name=None,
+        collaborator_names=None,
 ):
     term_id = (course and course['termId']) or app.config['CURRENT_TERM_ID']
 
@@ -95,6 +98,7 @@ def get_template_substitutions(
     course_list = course_list or []
 
     return {
+        'collaborators': '\n'.join(collaborator_names) if collaborator_names else '',
         'course.aprx': 'Yes' if course and course['canAprxInstructorsEditRecordings'] else 'No',
         'course.date.end': meeting and meeting['endDate'],
         'course.date.start': meeting and meeting['startDate'],

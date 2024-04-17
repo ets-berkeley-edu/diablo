@@ -35,7 +35,7 @@ from diablo.lib.interpolator import get_sign_up_url
 from diablo.merged.emailer import send_system_error_email
 from diablo.models.approval import Approval, get_all_publish_types, get_all_recording_types
 from diablo.models.course_preference import CoursePreference
-from diablo.models.queued_email import notify_instructor_waiting_for_approval, notify_instructors_of_changes
+from diablo.models.queued_email import notify_instructor_waiting_for_approval, notify_instructors_approval_changes
 from diablo.models.room import Room
 from diablo.models.scheduled import Scheduled
 from diablo.models.sis_section import SisSection
@@ -94,7 +94,7 @@ def approve():
         # Compare the current approval with preferences submitted in previous approval
         previous_approval = previous_approvals[-1]
         if (approval.publish_type, approval.recording_type) != (previous_approval.publish_type, previous_approval.recording_type):
-            notify_instructors_of_changes(course, approval, previous_approvals)
+            notify_instructors_approval_changes(course, approval, previous_approvals)
 
     all_approvals = previous_approvals + [approval]
     if len(course['instructors']) > len(all_approvals):

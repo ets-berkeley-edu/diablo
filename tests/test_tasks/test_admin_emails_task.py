@@ -122,6 +122,7 @@ class TestAdminEmailsTask:
                 Scheduled.create(
                     course_display_name=f'term_id:{term_id} section_id:{section_id}',
                     instructor_uids=get_instructor_uids(term_id=term_id, section_id=section_id),
+                    collaborator_uids=[],
                     kaltura_schedule_id=random.randint(1, 10),
                     meeting_days=meeting['days'],
                     meeting_end_date=get_recording_end_date(meeting),
@@ -168,6 +169,7 @@ class TestAdminEmailsTask:
             Scheduled.create(
                 course_display_name=f'term_id:{term_id} section_id:{section_id}',
                 instructor_uids=[instructor_1_uid],
+                collaborator_uids=[],
                 kaltura_schedule_id=random.randint(1, 10),
                 meeting_days=meeting['days'],
                 meeting_end_date=get_recording_end_date(meeting),
@@ -216,6 +218,7 @@ class TestAdminEmailsTask:
             Scheduled.create(
                 course_display_name=f'{section_id}:{term_id}',
                 instructor_uids=[instructor_uid],
+                collaborator_uids=[],
                 kaltura_schedule_id=random.randint(1, 10),
                 meeting_days=meeting['days'],
                 meeting_end_date=get_recording_end_date(meeting),

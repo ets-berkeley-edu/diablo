@@ -37,7 +37,7 @@ from diablo.models.instructor import Instructor
 from diablo.models.queued_email import notify_instructors_recordings_scheduled
 from diablo.models.room import Room
 from diablo.models.scheduled import Scheduled
-from diablo.models.sis_section import ALL_INSTRUCTOR_ROLE_CODES, AUTHORIZED_INSTRUCTOR_ROLE_CODES, SisSection
+from diablo.models.sis_section import AUTHORIZED_INSTRUCTOR_ROLE_CODES, SisSection
 from flask import current_app as app
 from sqlalchemy import text
 
@@ -220,7 +220,8 @@ def schedule_recordings(course, is_semester_start=False, updates=None):
         _report_error(subject=f"{course['label']} not scheduled. No eligible meeting patterns found.")
         return None
 
-    instructors = list(filter(lambda i: i['roleCode'] in ALL_INSTRUCTOR_ROLE_CODES and not i['deletedAt'], course['instructors']))
+    instructors = list(filter(lambda i: i['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES and not i['deletedAt'], course['instructors']))
+    collaborators = list(filter(lambda i: i['roleCode'] == 'APRX' and not i['deletedAt'], course['instructors']))
 
     for meeting in meetings:
         room = Room.find_room(location=meeting.get('location'))
@@ -238,7 +239,7 @@ def schedule_recordings(course, is_semester_start=False, updates=None):
                 kaltura_schedule_id = Kaltura().schedule_recording(
                     canvas_course_site_ids=[c['courseSiteId'] for c in course['canvasCourseSites']],
                     course_label=course['label'],
-                    instructors=instructors,
+                    instructors=(instructors + collaborators),
                     meeting=meeting,
                     publish_type=publish_type,
                     recording_type=recording_type,
@@ -248,6 +249,7 @@ def schedule_recordings(course, is_semester_start=False, updates=None):
                 scheduled = Scheduled.create(
                     course_display_name=course['label'],
                     instructor_uids=[instructor['uid'] for instructor in instructors],
+                    collaborator_uids=[collaborator['uid'] for collaborator in collaborators],
                     kaltura_schedule_id=kaltura_schedule_id,
                     meeting_days=meeting['days'],
                     meeting_end_date=get_recording_end_date(meeting),

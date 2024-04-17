@@ -27,6 +27,7 @@ from datetime import datetime
 from diablo import db
 from diablo.lib.berkeley import are_scheduled_dates_obsolete, are_scheduled_times_obsolete, get_recording_end_date, \
     get_recording_start_date
+from diablo.lib.db import resolve_sql_template_string
 from diablo.lib.util import format_days, format_time, get_names_of_days, safe_strftime
 from diablo.models.approval import Approval
 from diablo.models.canvas_course_site import CanvasCourseSite
@@ -1149,3 +1150,28 @@ def _construct_course_label(course_name, instruction_format, section_num, cross_
         return ' | '.join(merged)
     else:
         return _label(course_name, instruction_format, section_num)
+
+
+def get_loch_basic_attributes(uids):
+    query = resolve_sql_template_string("""SELECT * FROM dblink('{dblink_nessie_rds}',$NESSIE$
+                SELECT ldap_uid, sid, first_name, last_name, email_address
+                  FROM sis_data.basic_attributes
+                  WHERE ldap_uid = ANY(:uids)
+            $NESSIE$)
+            AS nessie_basic_attributes (
+                uid VARCHAR,
+                csid VARCHAR,å
+                first_name VARCHAR,
+                last_name VARCHAR,
+                email VARCHAR
+            )
+            """)
+    try:
+        results = db.session().execute(
+            text(query),
+            {'uids': uids},
+        ).all()
+        app.logger.info(f'Loch Ness basic attributes query returned {len(results)} results for {len(uids)} uids.')
+        return results
+    except Exception as e:
+        app.logger.exception(e)
