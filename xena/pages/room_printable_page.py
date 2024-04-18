@@ -68,3 +68,26 @@ class RoomPrintablePage(DiabloPages):
 
     def visible_recording_type(self, section):
         return self.element((By.ID, f'course-{section.ccn}-recording-type')).text.strip()
+
+    # ACTUAL VS EXPECTED
+
+    def verify_printable(self, section, meeting, recording_schedule):
+        self.open_printable_schedule()
+
+        expected_course = f'{section.code}, {section.number}'
+        assert self.visible_course(section) == expected_course
+
+        expected_instr = [f'{inst.first_name} {inst.last_name} ({inst.uid})'.strip() for inst in section.instructors]
+        assert self.visible_instructors(section) == expected_instr
+
+        expected_days = [f'{meeting.days}']
+        assert self.visible_days(section) == expected_days
+
+        dates = f'{meeting.start_date.strftime("%b %-d, %Y")} - {meeting.end_date.strftime("%b %-d, %Y")}'
+        times = f'{meeting.start_time} - {meeting.end_time}'
+        assert self.visible_times(section) == [f'{dates}\n{times}']
+
+        expected_type = recording_schedule.recording_type.value['printable']
+        assert self.visible_recording_type(section) == expected_type
+
+        self.close_printable_schedule()

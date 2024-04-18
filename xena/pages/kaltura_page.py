@@ -23,6 +23,8 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
+from datetime import datetime
+
 from flask import current_app as app
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
@@ -202,3 +204,48 @@ class KalturaPage(Page):
         self.wait_for_element_and_click(KalturaPage.SERIES_DELETE_CONFIRM_BUTTON)
         redirect_url = f'{app.config["KALTURA_MEDIA_SPACE_URL"]}/calendar/index/calendar/'
         Wait(self.driver, util.get_short_timeout()).until(ec.url_to_be(redirect_url))
+
+    # ACTUAL VS EXPECTED
+
+    def verify_title_and_desc(self, section, meeting):
+        expected = f'{section.code}, {section.number} ({section.term.name})'
+        assert self.visible_series_title() == expected
+
+        instructors = []
+        for instr in section.instructors:
+            instructors.append(f'{instr.first_name} {instr.last_name}'.strip())
+        instructors = ' and '.join(instructors)
+        course = f'{section.code}, {section.number} ({section.term.name})'
+        copy = f"Copyright ©{datetime.strftime(meeting.start_date, '%Y')} UC Regents; all rights reserved."
+        expected = f'{course} is taught by {instructors}. {copy}'
+        assert self.visible_series_desc() == expected
+
+    def verify_collaborators(self, section, addl_collaborators=None):
+        all_collabs = []
+        all_collabs.extend(section.instructors)
+        if addl_collaborators:
+            all_collabs.extend(addl_collaborators)
+        assert len(self.collaborator_rows()) == len(all_collabs)
+        for collab in all_collabs:
+            assert self.collaborator_perm(collab) == 'Co-Editor, Co-Publisher'
+
+    def verify_schedule(self, section, meeting):
+        self.open_recurrence_modal()
+        assert self.is_weekly_checked()
+        assert self.visible_weekly_frequency() == '1'
+
+        self.verify_recur_days(meeting.days)
+
+        start = util.get_kaltura_term_date_str(meeting.expected_recording_dates(section.term)[0])
+        assert self.visible_start_date() == start
+
+        end = util.get_kaltura_term_date_str(meeting.expected_recording_dates(section.term)[-1])
+        assert self.visible_end_date() == end
+
+        start = meeting.get_berkeley_start_time()
+        visible_start = datetime.strptime(self.visible_start_time(), '%I:%M %p')
+        assert visible_start == start
+
+        end = meeting.get_berkeley_end_time()
+        visible_end = datetime.strptime(self.visible_end_time(), '%I:%M %p')
+        assert visible_end == end

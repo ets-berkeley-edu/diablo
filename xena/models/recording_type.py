@@ -25,6 +25,8 @@ ENHANCEMENTS, OR MODIFICATIONS.
 
 from enum import Enum
 
+from flask import current_app as app
+
 
 class RecordingType(Enum):
     SCREENCAST = {
@@ -33,7 +35,7 @@ class RecordingType(Enum):
         'printable': 'Audio + Projection',
     }
     VIDEO_WITH_OPERATOR = {
-        'option': 'Audio + Projection + Camera with Operator ($2000)',
+        'option': f"Audio + Projection + Camera with Operator (${app.config['COURSE_CAPTURE_PREMIUM_COST']})",
         'selection': 'Audio + Projection + Camera with Operator',
         'printable': 'Audio + Projection + Camera with Operator',
     }

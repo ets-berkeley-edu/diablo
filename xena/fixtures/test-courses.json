@@ -112,7 +112,7 @@
       "listings": []
     },
     {
-      "test_script": "test_sign_up_1",
+      "test_script": "test_scheduling_1",
       "dept_code": "PSYCH",
       "instructors": [
         {
