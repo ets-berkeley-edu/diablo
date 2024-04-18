@@ -137,3 +137,31 @@ class RoomPage(DiabloPages):
     def series_recording_blackout_dates(self, recording_sched):
         xpath = f'{RoomPage.series_recording_xpath(recording_sched)}[contains(., "Cancelled")]'
         return self.series_recording_cell_dates(xpath)
+
+    # ACTUAL VS EXPECTED
+
+    def verify_series_schedule(self, section, meeting, recording_schedule):
+        start = meeting.expected_recording_dates(section.term)[0]
+        assert self.series_row_start_date(recording_schedule) == start
+
+        last_date = meeting.expected_recording_dates(section.term)[-1]
+        assert self.series_row_end_date(recording_schedule) == last_date
+
+        assert self.series_row_days(recording_schedule) == meeting.days.replace(' ', '')
+
+    def verify_series_recordings(self, section, meeting, recording_schedule):
+        self.expand_series_row(recording_schedule)
+        expected = meeting.expected_recording_dates(section.term)
+        visible = self.series_recording_start_dates(recording_schedule)
+        app.logger.info(f'Missing: {list(set(expected) - set(visible))}')
+        app.logger.info(f'Unexpected: {list(set(visible) - set(expected))} ')
+        expected.reverse()
+        assert visible == expected
+
+    def verify_series_blackouts(self, section, meeting, recording_schedule):
+        expected = meeting.expected_blackout_dates(section.term)
+        visible = self.series_recording_blackout_dates(recording_schedule)
+        app.logger.info(f'Missing: {list(set(expected) - set(visible))}')
+        app.logger.info(f'Unexpected: {list(set(visible) - set(expected))} ')
+        expected.reverse()
+        assert visible == expected
