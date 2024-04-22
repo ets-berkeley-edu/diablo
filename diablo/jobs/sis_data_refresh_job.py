@@ -26,7 +26,11 @@ from diablo.externals.rds import execute
 from diablo.jobs.base_job import BaseJob
 from diablo.jobs.errors import BackgroundJobError
 from diablo.jobs.util import insert_or_update_instructors, refresh_cross_listings, refresh_rooms
+from diablo.lib.berkeley import are_scheduled_dates_obsolete, are_scheduled_times_obsolete, get_recording_end_date, get_recording_start_date,\
+    serialize_scheduled_meeting_time, serialize_sis_meeting_time
 from diablo.lib.db import resolve_sql_template
+from diablo.lib.util import safe_strftime
+from diablo.models.schedule_update import ScheduleUpdate
 from diablo.models.sis_section import SisSection
 from flask import current_app as app
 
@@ -38,6 +42,7 @@ class SisDataRefreshJob(BaseJob):
         if execute(resolved_ddl_rds):
             term_id = app.config['CURRENT_TERM_ID']
             self.after_sis_data_refresh(term_id)
+            _queue_schedule_updates(term_id)
         else:
             raise BackgroundJobError('Failed to update RDS indexes for intermediate schema.')
 
@@ -60,3 +65,59 @@ class SisDataRefreshJob(BaseJob):
 
         refresh_cross_listings(term_id=term_id)
         app.logger.info('Cross-listings updated.')
+
+
+def _queue_schedule_updates(cls, term_id):
+    for course in SisSection.get_course_changes(term_id=term_id, filter_on_obsolete=False):
+        if course['deletedAt']:
+            meetings = []
+        else:
+            meetings = course.get('meetings', {}).get('eligible', [])
+
+        unmatched_sis_meetings = []
+        unmatched_scheduled_meetings = []
+
+        def _matched(meeting, scheduled):
+            return all([
+                not are_scheduled_dates_obsolete(meeting=meeting, scheduled=scheduled),
+                not are_scheduled_times_obsolete(meeting=meeting, scheduled=scheduled),
+                meeting.get('room', {}).get('id') == scheduled.get('room', {}).get('id'),
+            ])
+
+        for scheduled in (course['scheduled'] or []):
+            matching_meeting = next((m for m in meetings if _matched(m, scheduled)), None)
+            if not matching_meeting:
+                unmatched_scheduled_meetings.append(scheduled)
+        for meeting in meetings:
+            matching_scheduled = next((s for s in (course['scheduled'] or []) if _matched(meeting, s)), None)
+            if not matching_scheduled:
+                unmatched_sis_meetings.append(scheduled)
+
+        def _serialize_sis_meeting_pattern(m):
+            return {
+                'roomId': m.get('room', {}).get('id'),
+                'meetingTime': serialize_sis_meeting_time(m),
+                'startDate': safe_strftime(get_recording_start_date(m, return_today_if_past_start=False), '%Y-%m-%d'),
+                'endDate': safe_strftime(get_recording_end_date(m), '%Y-%m-%d'),
+            }
+
+        def _serialize_scheduled_meeting_pattern(s):
+            return {
+                'roomId': s.get('room', {}).get('id'),
+                'meetingTime': serialize_scheduled_meeting_time(s),
+                'startDate': s['meetingStartDate'],
+                'endDate': s['meetingEndDate'],
+            }
+
+        unmatched_pair_count = max(len(unmatched_sis_meetings), len(unmatched_scheduled_meetings))
+        for i in range(unmatched_pair_count):
+            meeting = unmatched_sis_meetings[i] if i < len(unmatched_sis_meetings) else None
+            scheduled = unmatched_scheduled_meetings[i] if i < len(unmatched_scheduled_meetings) else None
+            ScheduleUpdate.queue(
+                term_id=term_id,
+                section_id=course['sectionId'],
+                field_name='recording_schedule',
+                field_value_old=(_serialize_scheduled_meeting_pattern(scheduled) if scheduled else None),
+                field_value_new=(_serialize_sis_meeting_pattern(meeting) if meeting else None),
+                kaltura_schedule_id=(scheduled['kalturaScheduleId'] if scheduled else None),
+            )

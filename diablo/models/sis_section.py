@@ -198,7 +198,7 @@ class SisSection(db.Model):
         return api_json[0] if api_json else None
 
     @classmethod
-    def get_course_changes(cls, term_id):
+    def get_course_changes(cls, term_id, filter_on_obsolete=True):
         sql = """
             SELECT
                 s.*,
@@ -238,7 +238,8 @@ class SisSection(db.Model):
 
         for course in _to_api_json(term_id=term_id, rows=rows):
             for scheduled in course['scheduled']:
-                if scheduled['hasObsoleteRoom'] \
+                if not filter_on_obsolete \
+                        or scheduled['hasObsoleteRoom'] \
                         or scheduled['hasObsoleteInstructors'] \
                         or scheduled['hasObsoleteDates'] \
                         or scheduled['hasObsoleteTimes'] \

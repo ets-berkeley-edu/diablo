@@ -39,7 +39,7 @@ class KalturaJob(BaseJob):
 
     def _run(self):
         _schedule_new_courses()
-        # TODO update existing schedules per queued requests
+        _update_already_scheduled_events()
 
     @classmethod
     def description(cls):
