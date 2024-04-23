@@ -143,20 +143,26 @@ def are_scheduled_dates_obsolete(meeting, scheduled):
 
 def are_scheduled_times_obsolete(meeting, scheduled):
     if meeting:
-        course_meeting_time = '-'.join(
-            [
-                str(meeting['daysFormatted']),
-                str(meeting['startTime']),
-                str(meeting['endTime']),
-            ],
-        )
-        scheduled_meeting_time = '-'.join(
-            [
-                str(scheduled['meetingDays']),
-                scheduled['meetingStartTime'],
-                scheduled['meetingEndTime'],
-            ],
-        )
-        return course_meeting_time != scheduled_meeting_time
+        return serialize_sis_meeting_time(meeting) != serialize_scheduled_meeting_time(scheduled)
     else:
         return True
+
+
+def serialize_scheduled_meeting_time(scheduled):
+    return '-'.join(
+        [
+            str(scheduled['meetingDays']),
+            scheduled['meetingStartTime'],
+            scheduled['meetingEndTime'],
+        ],
+    )
+
+
+def serialize_sis_meeting_time(meeting):
+    return '-'.join(
+        [
+            str(meeting['daysFormatted']),
+            str(meeting['startTime']),
+            str(meeting['endTime']),
+        ],
+    )

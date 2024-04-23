@@ -365,6 +365,7 @@ CREATE TABLE schedule_updates (
     field_name VARCHAR(80) NOT NULL,
     field_value_old VARCHAR,
     field_value_new VARCHAR,
+    kaltura_schedule_id INTEGER,
     requested_by_uid VARCHAR(80),
     requested_by_name VARCHAR,
     status schedule_update_status_types NOT NULL,

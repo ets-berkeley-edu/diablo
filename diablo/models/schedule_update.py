@@ -27,7 +27,6 @@ from itertools import groupby
 
 from diablo import db, std_commit
 from diablo.lib.util import to_isoformat
-from diablo.models.base import Base
 from sqlalchemy.dialects.postgresql import ENUM
 
 
@@ -40,7 +39,7 @@ schedule_update_status_type = ENUM(
 )
 
 
-class ScheduleUpdate(Base):
+class ScheduleUpdate(db.Model):
     __tablename__ = 'schedule_updates'
 
     id = db.Column(db.Integer, nullable=False, primary_key=True)  # noqa: A003
@@ -49,6 +48,7 @@ class ScheduleUpdate(Base):
     field_name = db.Column(db.String, nullable=False)
     field_value_old = db.Column(db.String, nullable=True)
     field_value_new = db.Column(db.String, nullable=True)
+    kaltura_schedule_id = db.Column(db.Integer, nullable=True)
     requested_by_uid = db.Column(db.String, nullable=True)
     requested_by_name = db.Column(db.String, nullable=True)
     status = db.Column(schedule_update_status_type)
@@ -62,6 +62,7 @@ class ScheduleUpdate(Base):
         field_name,
         field_value_old,
         field_value_new,
+        kaltura_schedule_id,
         requested_by_uid,
         requested_by_name,
         status,
@@ -71,6 +72,7 @@ class ScheduleUpdate(Base):
         self.field_name = field_name
         self.field_value_old = field_value_old
         self.field_value_new = field_value_new
+        self.kaltura_schedule_id = kaltura_schedule_id
         self.requested_by_uid = requested_by_uid
         self.requested_by_name = requested_by_name
         self.status = status
@@ -92,8 +94,9 @@ class ScheduleUpdate(Base):
         field_name,
         field_value_old,
         field_value_new,
-        requested_by_uid,
-        requested_by_name,
+        kaltura_schedule_id=None,
+        requested_by_uid=None,
+        requested_by_name=None,
     ):
         schedule_update = cls(
             term_id=term_id,
@@ -101,6 +104,7 @@ class ScheduleUpdate(Base):
             field_name=field_name,
             field_value_old=field_value_old,
             field_value_new=field_value_new,
+            kaltura_schedule_id=kaltura_schedule_id,
             requested_by_uid=requested_by_uid,
             requested_by_name=requested_by_name,
             status='queued',
@@ -141,6 +145,7 @@ class ScheduleUpdate(Base):
             'fieldName': self.field_name,
             'fieldValueOld': self.field_value_old,
             'fieldValueNew': self.field_value_new,
+            'kalturaScheduleId': self.kaltura_schedule_id,
             'requestedByUid': self.requested_by_uid,
             'requestedByName': self.requested_by_name,
             'status': self.status,
