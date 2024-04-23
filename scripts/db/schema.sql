@@ -391,13 +391,13 @@ CREATE INDEX schedule_updates_term_id_section_id_idx ON schedule_updates(term_id
 
 CREATE TABLE scheduled (
     id SERIAL PRIMARY KEY,
-    alerts email_template_types[],
-    course_display_name VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL,
-    deleted_at TIMESTAMP WITH TIME ZONE,
-    instructor_uids VARCHAR(80)[] NOT NULL,
-    collaborator_uids VARCHAR(80)[] NOT NULL,
+    term_id INTEGER NOT NULL,
+    section_id INTEGER NOT NULL,
     kaltura_schedule_id INTEGER NOT NULL,
+    course_display_name VARCHAR(255) NOT NULL,
+    instructor_uids VARCHAR(80)[] NOT NULL,
+    collaborator_uids VARCHAR(80)[],
+    room_id INTEGER NOT NULL,
     meeting_days VARCHAR(80) NOT NULL,
     meeting_end_date TIMESTAMP NOT NULL,
     meeting_end_time VARCHAR(80) NOT NULL,
@@ -405,9 +405,9 @@ CREATE TABLE scheduled (
     meeting_start_time VARCHAR(80) NOT NULL,
     publish_type publish_types NOT NULL,
     recording_type recording_types NOT NULL,
-    room_id INTEGER NOT NULL,
-    section_id INTEGER NOT NULL,
-    term_id INTEGER NOT NULL
+    alerts email_template_types[],
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    deleted_at TIMESTAMP WITH TIME ZONE
 );
 ALTER TABLE scheduled OWNER TO diablo;
 CREATE INDEX scheduled_term_id_section_id_idx ON scheduled (term_id, section_id);
