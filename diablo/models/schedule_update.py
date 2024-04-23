@@ -27,6 +27,7 @@ from itertools import groupby
 
 from diablo import db, std_commit
 from diablo.lib.util import to_isoformat
+from sqlalchemy import text
 from sqlalchemy.dialects.postgresql import ENUM
 
 
@@ -78,12 +79,16 @@ class ScheduleUpdate(db.Model):
         self.status = status
 
     def __repr__(self):
-        return f"""<EmailTemplate
-                    id={self.id},
-                    template_type={self.template_type},
-                    name={self.name},
-                    subject_line={self.subject_line}
-                    message={self.message}>
+        return f"""<ScheduleUpdate
+                    term_id={self.term_id},
+                    section_id={self.section_id},
+                    field_name={self.field_name},
+                    field_value_old={self.field_value_old},
+                    field_value_new={self.field_value_new},
+                    kaltura_schedule_id={self.kaltura_schedule_id}.
+                    requested_by_uid={self.requested_by_uid},
+                    requested_by_name={self.requested_by_name},
+                    status={self.status}>
                 """
 
     @classmethod
@@ -124,6 +129,46 @@ class ScheduleUpdate(db.Model):
     @classmethod
     def get_section_history(cls, term_id=term_id, section_id=section_id):
         return cls.query.filter_by(term_id=term_id, section_id=section_id).order_by(cls.requested_at).all()
+
+    @classmethod
+    def find_collaborator_added(cls, term_id, section_id, collaborator_uid):
+        sql = """
+            SELECT * FROM schedule_updates
+            WHERE term_id = :term_id
+            AND section_id = :section_id
+            AND field_name = 'collaborator_uids'
+            AND NOT :collaborator_uid = ANY(field_value_old::varchar[])
+            AND :collaborator_uid = ANY(field_value_new::varchar[])
+            AND requested_by_uid IS NOT NULL
+            AND status = 'succeeded'"""
+        return db.session.execute(
+            text(sql),
+            {
+                'collaborator_uid': collaborator_uid,
+                'section_id': section_id,
+                'term_id': term_id,
+            },
+        )
+
+    @classmethod
+    def find_collaborator_removed(cls, term_id, section_id, collaborator_uid):
+        sql = """
+            SELECT * FROM schedule_updates
+            WHERE term_id = :term_id
+            AND section_id = :section_id
+            AND field_name = 'collaborator_uids'
+            AND :collaborator_uid = ANY(field_value_old::varchar[])
+            AND NOT :collaborator_uid = ANY(field_value_new::varchar[])
+            AND requested_by_uid IS NOT NULL
+            AND status = 'succeeded'"""
+        return db.session.execute(
+            text(sql),
+            {
+                'collaborator_uid': collaborator_uid,
+                'section_id': section_id,
+                'term_id': term_id,
+            },
+        )
 
     def mark_success(self):
         self.status = 'succeeded'
