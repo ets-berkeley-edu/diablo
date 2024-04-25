@@ -41,7 +41,7 @@ from KalturaClient.Plugins.Core import KalturaBaseEntry, KalturaCategoryEntry, K
 from KalturaClient.Plugins.Schedule import KalturaRecordScheduleEvent, KalturaRecordScheduleEventFilter, \
     KalturaScheduleEventClassificationType, KalturaScheduleEventFilter, KalturaScheduleEventRecurrence, \
     KalturaScheduleEventRecurrenceFrequency, KalturaScheduleEventRecurrenceType, KalturaScheduleEventResource, \
-    KalturaScheduleEventStatus, KalturaScheduleResourceFilter, KalturaSessionType
+    KalturaScheduleEventResourceFilter, KalturaScheduleEventStatus, KalturaScheduleResourceFilter, KalturaSessionType
 
 CREATED_BY_DIABLO_TAG = 'rtl_course_capture'
 
@@ -218,7 +218,7 @@ class Kaltura:
                 """)
 
         # Link the schedule to the room (ie, capture agent)
-        self._attach_scheduled_recordings_to_room(kaltura_schedule=kaltura_schedule, room=room)
+        self._attach_scheduled_recordings_to_room(kaltura_schedule_id=kaltura_schedule.id, room=room.to_api_json())
         return kaltura_schedule.id
 
     @skip_when_pytest()
@@ -282,6 +282,21 @@ class Kaltura:
             ),
         )
 
+    def update_schedule_event(self, meeting_attributes, scheduled_model):
+        term_name = term_name_for_sis_id(scheduled_model.term_id)
+        recurring_event = KalturaRecordScheduleEvent(summary=f'{scheduled_model.course_display_name} ({term_name})')
+        self._set_event_meeting_attributes(recurring_event, meeting_attributes, meeting_attributes.get('room'))
+        self.client.schedule.scheduleEvent.update(scheduled_model.kaltura_schedule_id, recurring_event)
+
+        if 'room' in meeting_attributes:
+            self._detach_scheduled_recordings_from_room(
+                kaltura_schedule_id=scheduled_model.kaltura_schedule_id,
+            )
+            self._attach_scheduled_recordings_to_room(
+                kaltura_schedule_id=scheduled_model.kaltura_schedule_id,
+                room=meeting_attributes['room'],
+            )
+
     def _get_events(self, kaltura_event_filter):
         def _fetch(page_index):
             return self.client.schedule.scheduleEvent.list(
@@ -317,41 +332,10 @@ class Kaltura:
             room,
             term_id,
     ):
-        # Recording starts X minutes before/after official start; it ends Y minutes before/after official end time.
-        days = format_days(meeting['days'])
-        start_time = _adjust_time(meeting['startTime'], app.config['KALTURA_RECORDING_OFFSET_START'])
-        end_time = _adjust_time(meeting['endTime'], app.config['KALTURA_RECORDING_OFFSET_END'])
-
-        app.logger.info(f"""
-            Prepare to schedule recordings for {course_label}:
-                Room: {room.location}
-                Instructor UIDs: {[instructor['uid'] for instructor in instructors]}
-                Schedule: {days}, {start_time} to {end_time}
-                Recording: {recording_type}; {publish_type}
-        """)
 
         term_name = term_name_for_sis_id(term_id)
-        recording_start_date = get_recording_start_date(meeting, return_today_if_past_start=True)
-        recording_end_date = get_recording_end_date(meeting)
         summary = f'{course_label} ({term_name})'
-        app.logger.info(f"""
-            {course_label} ({term_name}) meets in {room.location},
-            between {start_time.strftime('%H:%M')} and {end_time.strftime('%H:%M')}, on {days}.
-            Recordings of type {recording_type} will be published to {publish_type}.
-        """)
 
-        first_day_start = get_first_matching_datetime_of_term(
-            meeting_days=days,
-            start_date=recording_start_date,
-            time_hours=start_time.hour,
-            time_minutes=start_time.minute,
-        )
-        first_day_end = get_first_matching_datetime_of_term(
-            meeting_days=days,
-            start_date=recording_start_date,
-            time_hours=end_time.hour,
-            time_minutes=end_time.minute,
-        )
         description = get_series_description(
             course_label=course_label,
             instructors=instructors,
@@ -362,44 +346,87 @@ class Kaltura:
             instructors=instructors,
             name=f'{summary} in {room.location}',
         )
+
         for category_id in category_ids or []:
             self.add_to_kaltura_category(category_id=category_id, entry_id=base_entry.id)
 
-        until = datetime.combine(
-            recording_end_date,
-            time(end_time.hour, end_time.minute),
-            tzinfo=default_timezone(),
-        )
         recurring_event = KalturaRecordScheduleEvent(
             # https://developer.kaltura.com/api-docs/General_Objects/Objects/KalturaScheduleEvent
             classificationType=KalturaScheduleEventClassificationType.PUBLIC_EVENT,
             comment=f'{summary} in {room.location}',
             contact=','.join(instructor['uid'] for instructor in instructors),
             description=description,
-            duration=(end_time - start_time).seconds,
-            endDate=first_day_end.timestamp(),
             organizer=app.config['KALTURA_EVENT_ORGANIZER'],
             ownerId=app.config['KALTURA_KMS_OWNER_ID'],
             partnerId=app.config['KALTURA_PARTNER_ID'],
-            recurrence=KalturaScheduleEventRecurrence(
-                # https://developer.kaltura.com/api-docs/General_Objects/Objects/KalturaScheduleEventRecurrence
-                byDay=','.join(days),
-                frequency=KalturaScheduleEventRecurrenceFrequency.WEEKLY,
-                # 'interval' is not documented. When scheduling manually, the value was 1 in each individual event.
-                interval=1,
-                name=summary,
-                timeZone='US/Pacific',
-                until=until.timestamp(),
-                weekStartDay=days[0],
-            ),
             recurrenceType=KalturaScheduleEventRecurrenceType.RECURRING,
-            startDate=first_day_start.timestamp(),
             status=KalturaScheduleEventStatus.ACTIVE,
             summary=summary,
             tags=CREATED_BY_DIABLO_TAG,
             templateEntryId=base_entry.id,
         )
+
+        app.logger.info(f"""
+            Prepare to schedule recordings for {course_label}:
+                Room: {room.location}
+                Instructor UIDs: {[instructor['uid'] for instructor in instructors]}
+                Recording: {recording_type}; {publish_type}
+        """)
+
+        self._set_event_meeting_attributes(recurring_event, meeting, room.to_api_json())
+
         return self.client.schedule.scheduleEvent.add(recurring_event)
+
+    def _set_event_meeting_attributes(self, recurring_event, meeting, room):
+        if room:
+            app.logger.info(f"{recurring_event.summary} meets in {room['location']}")
+            recurring_event.setComment(f"{recurring_event.summary} in {room['location']}")
+
+        if 'days' in meeting:
+            # Recording starts X minutes before/after official start; it ends Y minutes before/after official end time.
+            days = format_days(meeting['days'])
+            start_time = _adjust_time(meeting['startTime'], app.config['KALTURA_RECORDING_OFFSET_START'])
+            end_time = _adjust_time(meeting['endTime'], app.config['KALTURA_RECORDING_OFFSET_END'])
+
+            recording_start_date = get_recording_start_date(meeting, return_today_if_past_start=True)
+            recording_end_date = get_recording_end_date(meeting)
+
+            first_day_start = get_first_matching_datetime_of_term(
+                meeting_days=days,
+                start_date=recording_start_date,
+                time_hours=start_time.hour,
+                time_minutes=start_time.minute,
+            )
+            first_day_end = get_first_matching_datetime_of_term(
+                meeting_days=days,
+                start_date=recording_start_date,
+                time_hours=end_time.hour,
+                time_minutes=end_time.minute,
+            )
+            until = datetime.combine(
+                recording_end_date,
+                time(end_time.hour, end_time.minute),
+                tzinfo=default_timezone(),
+            )
+
+            app.logger.info(
+                f"""{recurring_event.summary} meets between {start_time.strftime('%H:%M')} and {end_time.strftime('%H:%M')}, on {days}.""",
+            )
+
+            recurring_event.setDuration((end_time - start_time).seconds)
+            recurring_event.setStartDate(first_day_start.timestamp())
+            recurring_event.setEndDate(first_day_end.timestamp())
+            recurring_event.setRecurrence(KalturaScheduleEventRecurrence(
+                # https://developer.kaltura.com/api-docs/General_Objects/Objects/KalturaScheduleEventRecurrence
+                byDay=','.join(days),
+                frequency=KalturaScheduleEventRecurrenceFrequency.WEEKLY,
+                # 'interval' is not documented. When scheduling manually, the value was 1 in each individual event.
+                interval=1,
+                name=recurring_event.summary,
+                timeZone='US/Pacific',
+                until=until.timestamp(),
+                weekStartDay=days[0],
+            ))
 
     def _create_kaltura_base_entry(
             self,
@@ -424,18 +451,26 @@ class Kaltura:
         )
         return self.client.baseEntry.add(base_entry)
 
-    def _attach_scheduled_recordings_to_room(self, kaltura_schedule, room):
+    def _attach_scheduled_recordings_to_room(self, kaltura_schedule_id, room):
         utc_now_timestamp = int(datetime.utcnow().timestamp())
         event_resource = self.client.schedule.scheduleEventResource.add(
             KalturaScheduleEventResource(
-                eventId=kaltura_schedule.id,
-                resourceId=room.kaltura_resource_id,
+                eventId=kaltura_schedule_id,
+                resourceId=room['kalturaResourceId'],
                 partnerId=app.config['KALTURA_PARTNER_ID'],
                 createdAt=utc_now_timestamp,
                 updatedAt=utc_now_timestamp,
             ),
         )
-        app.logger.info(f'Kaltura schedule {kaltura_schedule.id} attached to {room.location}: {event_resource}')
+        app.logger.info(f"Kaltura schedule {kaltura_schedule_id} attached to {room['location']}: {event_resource}")
+
+    def _detach_scheduled_recordings_from_room(self, kaltura_schedule_id):
+        response = self.client.schedule.scheduleEventResource.list(
+            filter=KalturaScheduleEventResourceFilter(eventIdEqual=kaltura_schedule_id),
+            pager=KalturaFilterPager(),
+        )
+        for o in response.objects:
+            self.client.schedule.scheduleEventResource.delete(kaltura_schedule_id, o.resourceId)
 
 
 def _adjust_time(military_time, offset_minutes):

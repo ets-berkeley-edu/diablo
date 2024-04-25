@@ -24,6 +24,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 from datetime import datetime
 from itertools import groupby
+import json
 
 from diablo import db, std_commit
 from diablo.lib.util import to_isoformat
@@ -85,7 +86,7 @@ class ScheduleUpdate(db.Model):
                     field_name={self.field_name},
                     field_value_old={self.field_value_old},
                     field_value_new={self.field_value_new},
-                    kaltura_schedule_id={self.kaltura_schedule_id}.
+                    kaltura_schedule_id={self.kaltura_schedule_id},
                     requested_by_uid={self.requested_by_uid},
                     requested_by_name={self.requested_by_name},
                     status={self.status}>
@@ -148,7 +149,7 @@ class ScheduleUpdate(db.Model):
                 'section_id': section_id,
                 'term_id': term_id,
             },
-        )
+        ).all()
 
     @classmethod
     def find_collaborator_removed(cls, term_id, section_id, collaborator_uid):
@@ -168,7 +169,18 @@ class ScheduleUpdate(db.Model):
                 'section_id': section_id,
                 'term_id': term_id,
             },
-        )
+        ).all()
+
+    def deserialize(self, column):
+        field_value = getattr(self, column)
+        if field_value is None:
+            return None
+        if self.field_name in ('instructor_uids', 'collaborator_uids'):
+            # Postgres array to Python list
+            debracketed = field_value.translate({ord(i): None for i in '{}'})
+            return debracketed.split(',') if debracketed else []
+        elif self.field_name in ('meeting_added', 'meeting_removed', 'meeting_updated', 'not_scheduled', 'room_not_eligible'):
+            return json.loads(field_value)
 
     def mark_success(self):
         self.status = 'succeeded'
@@ -188,8 +200,8 @@ class ScheduleUpdate(db.Model):
             'termId': self.term_id,
             'sectionId': self.section_id,
             'fieldName': self.field_name,
-            'fieldValueOld': self.field_value_old,
-            'fieldValueNew': self.field_value_new,
+            'fieldValueOld': self.deserialize('field_value_old'),
+            'fieldValueNew': self.deserialize('field_value_new'),
             'kalturaScheduleId': self.kaltura_schedule_id,
             'requestedByUid': self.requested_by_uid,
             'requestedByName': self.requested_by_name,

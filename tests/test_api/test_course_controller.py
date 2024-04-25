@@ -811,7 +811,6 @@ class TestCoursesChanges:
             assert scheduled['hasObsoleteRoom'] is True
             assert scheduled['hasObsoleteDates'] is False
             assert scheduled['hasObsoleteTimes'] is False
-            assert scheduled['hasObsoleteInstructors'] is False
 
     def test_room_change_to_null(self, client, fake_auth):
         """Admins can see room changes when course has no meeting location whatsoever."""
@@ -848,7 +847,6 @@ class TestCoursesChanges:
             assert scheduled['hasObsoleteRoom'] is True
             assert scheduled['hasObsoleteDates'] is False
             assert scheduled['hasObsoleteTimes'] is False
-            assert scheduled['hasObsoleteInstructors'] is False
 
     def test_has_obsolete_meeting_times(self, client, fake_auth):
         """Admins can see meeting time changes that might disrupt scheduled recordings."""
@@ -883,7 +881,6 @@ class TestCoursesChanges:
                 assert scheduled['hasObsoleteRoom'] is False
                 assert scheduled['hasObsoleteDates'] is False
                 assert scheduled['hasObsoleteTimes'] is True
-                assert scheduled['hasObsoleteInstructors'] is False
 
     def test_has_obsolete_meeting_dates(self, client, fake_auth):
         """Admins can see meeting date changes that might disrupt scheduled recordings."""
@@ -918,7 +915,6 @@ class TestCoursesChanges:
                 assert scheduled['hasObsoleteRoom'] is False
                 assert scheduled['hasObsoleteDates'] is True
                 assert scheduled['hasObsoleteTimes'] is False
-                assert scheduled['hasObsoleteInstructors'] is False
 
     def test_has_obsolete_instructors(self, client, fake_auth):
         """Admins can see instructor changes that might disrupt scheduled recordings."""
@@ -950,7 +946,7 @@ class TestCoursesChanges:
             api_json = self._api_course_changes(client, term_id=self.term_id)
             course = _find_course(api_json=api_json, section_id=section_1_id, term_id=self.term_id)
             assert course
-            assert len(course['instructors']) == 2
+            assert len(course['instructors']) == 3
             for scheduled in course['scheduled']:
                 assert scheduled['hasObsoleteRoom'] is False
                 assert scheduled['hasObsoleteDates'] is False

@@ -155,6 +155,10 @@ class Scheduled(db.Model):
         return db.session.query(func.count(cls.id)).filter(and_(cls.term_id == term_id, cls.deleted_at == None)).scalar()  # noqa: E711
 
     @classmethod
+    def get_by_id(cls, id_):
+        return cls.query.filter_by(id=id_).first()
+
+    @classmethod
     def get_scheduled_per_section_ids(cls, section_ids, term_id):
         criteria = and_(cls.section_id.in_(section_ids), cls.term_id == term_id, cls.deleted_at == None)  # noqa: E711
         return cls.query.filter(criteria).order_by(cls.created_at).all()
