@@ -28,8 +28,7 @@ from diablo.externals.rds import execute
 from diablo.jobs.base_job import BaseJob
 from diablo.jobs.errors import BackgroundJobError
 from diablo.jobs.util import insert_or_update_instructors, refresh_cross_listings, refresh_rooms
-from diablo.lib.berkeley import are_scheduled_dates_obsolete, are_scheduled_times_obsolete, get_recording_end_date, get_recording_start_date,\
-    serialize_scheduled_meeting_time, serialize_sis_meeting_time
+from diablo.lib.berkeley import are_scheduled_dates_obsolete, are_scheduled_times_obsolete, get_recording_end_date, get_recording_start_date
 from diablo.lib.db import resolve_sql_template
 from diablo.lib.util import safe_strftime
 from diablo.models.schedule_update import ScheduleUpdate
@@ -58,6 +57,7 @@ class SisDataRefreshJob(BaseJob):
 
     @classmethod
     def after_sis_data_refresh(cls, term_id):
+        app.logger.info('Starting instructor update')
         distinct_instructor_uids = SisSection.get_distinct_instructor_uids()
         insert_or_update_instructors(distinct_instructor_uids)
         app.logger.info(f'{len(distinct_instructor_uids)} instructors updated')
@@ -71,16 +71,42 @@ class SisDataRefreshJob(BaseJob):
 
 def _queue_schedule_updates(term_id):
     for course in SisSection.get_course_changes(term_id=term_id, filter_on_obsolete=False):
-        _queue_meeting_updates(course)
-        _queue_instructor_updates(course)
+        eligible_meetings = course.get('meetings', {}).get('eligible', [])
+        ineligible_meetings = course.get('meetings', {}).get('ineligible', [])
+        if course['deletedAt'] or (len(eligible_meetings) + len(ineligible_meetings) == 0):
+            _queue_not_scheduled_update(course)
+        elif len(eligible_meetings) == 0 and len(ineligible_meetings) > 0:
+            _queue_room_not_eligible_update(course)
+        else:
+            _queue_meeting_updates(course)
+            _queue_instructor_updates(course)
+
+
+def _queue_not_scheduled_update(course):
+    scheduled = course['scheduled'][0]
+    ScheduleUpdate.queue(
+        term_id=course['termId'],
+        section_id=course['sectionId'],
+        field_name='not_scheduled',
+        field_value_old=json.dumps(scheduled),
+        field_value_new=None,
+    )
+
+
+def _queue_room_not_eligible_update(course):
+    meeting = course.get('meetings', {}).get('ineligible', [])
+    scheduled = course['scheduled'][0]
+    ScheduleUpdate.queue(
+        term_id=course['termId'],
+        section_id=course['sectionId'],
+        field_name='room_not_eligible',
+        field_value_old=json.dumps(_get_room_summary(scheduled)),
+        field_value_new=json.dumps(_get_room_summary(meeting)),
+    )
 
 
 def _queue_meeting_updates(course):
-    if course['deletedAt']:
-        meetings = []
-    else:
-        meetings = course.get('meetings', {}).get('eligible', [])
-
+    meetings = course.get('meetings', {}).get('eligible', [])
     unmatched_sis_meetings = []
     unmatched_scheduled_meetings = []
 
@@ -91,43 +117,85 @@ def _queue_meeting_updates(course):
             meeting.get('room', {}).get('id') == scheduled.get('room', {}).get('id'),
         ])
 
-    for scheduled in (course['scheduled'] or []):
+    for scheduled in course['scheduled']:
         matching_meeting = next((m for m in meetings if _matched(m, scheduled)), None)
         if not matching_meeting:
             unmatched_scheduled_meetings.append(scheduled)
     for meeting in meetings:
-        matching_scheduled = next((s for s in (course['scheduled'] or []) if _matched(meeting, s)), None)
+        matching_scheduled = next((s for s in course['scheduled'] if _matched(meeting, s)), None)
         if not matching_scheduled:
-            unmatched_sis_meetings.append(scheduled)
-
-    def _serialize_sis_meeting_pattern(m):
-        return json.dumps({
-            'roomId': m.get('room', {}).get('id'),
-            'meetingTime': serialize_sis_meeting_time(m),
-            'startDate': safe_strftime(get_recording_start_date(m, return_today_if_past_start=False), '%Y-%m-%d'),
-            'endDate': safe_strftime(get_recording_end_date(m), '%Y-%m-%d'),
-        })
-
-    def _serialize_scheduled_meeting_pattern(s):
-        return json.dumps({
-            'roomId': s.get('room', {}).get('id'),
-            'meetingTime': serialize_scheduled_meeting_time(s),
-            'startDate': s['meetingStartDate'],
-            'endDate': s['meetingEndDate'],
-        })
+            unmatched_sis_meetings.append(meeting)
 
     unmatched_pair_count = max(len(unmatched_sis_meetings), len(unmatched_scheduled_meetings))
     for i in range(unmatched_pair_count):
         meeting = unmatched_sis_meetings[i] if i < len(unmatched_sis_meetings) else None
         scheduled = unmatched_scheduled_meetings[i] if i < len(unmatched_scheduled_meetings) else None
-        ScheduleUpdate.queue(
-            term_id=course['termId'],
-            section_id=course['sectionId'],
-            field_name='recording_schedule',
-            field_value_old=(_serialize_scheduled_meeting_pattern(scheduled) if scheduled else None),
-            field_value_new=(_serialize_sis_meeting_pattern(meeting) if meeting else None),
-            kaltura_schedule_id=(scheduled['kalturaScheduleId'] if scheduled else None),
-        )
+
+        if not scheduled:
+            ScheduleUpdate.queue(
+                term_id=course['termId'],
+                section_id=course['sectionId'],
+                field_name='meeting_added',
+                field_value_old=None,
+                field_value_new=json.dumps({
+                    'days': meeting['days'],
+                    'startTime': meeting['startTime'],
+                    'endTime': meeting['endTime'],
+                    'startDate': safe_strftime(get_recording_start_date(meeting, return_today_if_past_start=True), '%Y-%m-%d'),
+                    'endDate': safe_strftime(get_recording_end_date(meeting), '%Y-%m-%d'),
+                    'room': _get_room_summary(meeting),
+                }),
+            )
+
+        elif not meeting:
+            ScheduleUpdate.queue(
+                term_id=course['termId'],
+                section_id=course['sectionId'],
+                field_name='meeting_removed',
+                field_value_old=None,
+                field_value_new=json.dumps({
+                    'days': scheduled['meetingDays'],
+                    'startTime': scheduled['meetingStartTime'],
+                    'endTime': scheduled['meetingEndTime'],
+                    'startDate': scheduled['meetingStartDate'],
+                    'endDate': scheduled['meetingEndDate'],
+                    'room': _get_room_summary(scheduled),
+                }),
+                kaltura_schedule_id=scheduled['kalturaScheduleId'],
+            )
+
+        else:
+            meeting_old = {}
+            meeting_new = {}
+
+            if are_scheduled_dates_obsolete(meeting=meeting, scheduled=scheduled) or \
+                    are_scheduled_times_obsolete(meeting=meeting, scheduled=scheduled):
+                meeting_old = {
+                    'days': scheduled['meetingDays'],
+                    'startTime': scheduled['meetingStartTime'],
+                    'endTime': scheduled['meetingEndTime'],
+                    'startDate': scheduled['meetingStartDate'],
+                    'endDate': scheduled['meetingEndDate'],
+                }
+                meeting_new = {
+                    'days': meeting['days'],
+                    'startTime': meeting['startTime'],
+                    'endTime': meeting['endTime'],
+                    'startDate': safe_strftime(get_recording_start_date(meeting, return_today_if_past_start=True), '%Y-%m-%d'),
+                    'endDate': safe_strftime(get_recording_end_date(meeting), '%Y-%m-%d'),
+                }
+            if meeting.get('room', {}).get('id') != scheduled.get('room', {}).get('id'):
+                meeting_old.update({'room': _get_room_summary(scheduled)})
+                meeting_new.update({'room': _get_room_summary(meeting)})
+
+            ScheduleUpdate.queue(
+                term_id=course['termId'],
+                section_id=course['sectionId'],
+                field_name='meeting_updated',
+                field_value_old=json.dumps(meeting_old),
+                field_value_new=json.dumps(meeting_new),
+                kaltura_schedule_id=scheduled['kalturaScheduleId'],
+            )
 
 
 def _queue_instructor_updates(course):
@@ -135,8 +203,8 @@ def _queue_instructor_updates(course):
     collaborators = list(filter(lambda i: i['roleCode'] == 'APRX' and not i['deletedAt'], course['instructors']))
     collaborator_uids = set(c['uid'] for c in collaborators)
 
-    scheduled_instructor_uids = course['scheduled'][0].get('instructorUids', [])
-    scheduled_collaborator_uids = course['scheduled'][0].get('collaboratorUids', [])
+    scheduled_instructor_uids = course['scheduled'][0].get('instructorUids') or []
+    scheduled_collaborator_uids = course['scheduled'][0].get('collaboratorUids') or []
 
     if set(i['uid'] for i in instructors) != set(scheduled_instructor_uids):
         ScheduleUpdate.queue(
@@ -173,7 +241,19 @@ def _queue_instructor_updates(course):
         ScheduleUpdate.queue(
             term_id=course['termId'],
             section_id=course['sectionId'],
-            field_name='instructor_uids',
+            field_name='collaborator_uids',
             field_value_old=scheduled_collaborator_uids,
-            field_value_new=list(set(scheduled_collaborator_uids) + collaborator_uids_to_add - collaborator_uids_to_remove),
+            field_value_new=list(set(scheduled_collaborator_uids).union(collaborator_uids_to_add).difference(collaborator_uids_to_remove)),
         )
+
+
+def _get_room_summary(meeting):
+    room = meeting.get('room')
+    if not room:
+        return None
+    else:
+        return {
+            'id': room['id'],
+            'location': room['location'],
+            'kalturaResourceId': room['kalturaResourceId'],
+        }

@@ -229,7 +229,7 @@ class SisSection(db.Model):
         rows = db.session.execute(
             text(sql),
             {
-                'instructor_role_codes': AUTHORIZED_INSTRUCTOR_ROLE_CODES,
+                'instructor_role_codes': ALL_INSTRUCTOR_ROLE_CODES,
                 'term_id': term_id,
             },
         )
@@ -1002,7 +1002,7 @@ def _get_cross_listed_courses(section_ids, term_id, approvals, invited_uids):
         text(sql),
         {
             'all_cross_listing_ids': all_cross_listing_ids,
-            'instructor_role_codes': AUTHORIZED_INSTRUCTOR_ROLE_CODES,
+            'instructor_role_codes': ALL_INSTRUCTOR_ROLE_CODES,
             'term_id': term_id,
         },
     )

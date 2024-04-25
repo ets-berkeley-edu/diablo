@@ -223,6 +223,8 @@ def schedule_recordings(course, is_semester_start=False, updates=None):
     instructors = list(filter(lambda i: i['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES and not i['deletedAt'], course['instructors']))
     collaborators = list(filter(lambda i: i['roleCode'] == 'APRX' and not i['deletedAt'], course['instructors']))
 
+    all_scheduled = []
+
     for meeting in meetings:
         room = Room.find_room(location=meeting.get('location'))
         if not room:
@@ -231,11 +233,10 @@ def schedule_recordings(course, is_semester_start=False, updates=None):
 
         term_id = course['termId']
         section_id = int(course['sectionId'])
-        scheduled = None
         if room.kaltura_resource_id:
             try:
-                publish_type = updates.publish_type if updates else 'kaltura_my_media'
-                recording_type = updates.recording_type if updates else 'presenter_presentation_audio'
+                publish_type = updates['publish_type'] if updates else 'kaltura_my_media'
+                recording_type = updates['recording_type'] if updates else 'presenter_presentation_audio'
                 kaltura_schedule_id = Kaltura().schedule_recording(
                     canvas_course_site_ids=[c['courseSiteId'] for c in course['canvasCourseSites']],
                     course_label=course['label'],
@@ -264,6 +265,7 @@ def schedule_recordings(course, is_semester_start=False, updates=None):
                 )
                 if not is_semester_start:
                     notify_instructors_recordings_scheduled(course=course, scheduled=scheduled, template_type='new_class_scheduled')
+                all_scheduled.append(scheduled)
                 app.logger.info(f'Recordings scheduled for course {section_id}')
 
             except Exception as e:
@@ -284,7 +286,7 @@ def schedule_recordings(course, is_semester_start=False, updates=None):
                 Room: {room.location}
             """)
 
-    return scheduled
+    return all_scheduled
 
 
 def _get_uids_per_section_id(approvals):
