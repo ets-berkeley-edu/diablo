@@ -31,7 +31,8 @@ from diablo.lib.berkeley import get_recording_end_date, get_recording_start_date
 from diablo.lib.kaltura_util import get_series_description
 from diablo.merged.emailer import send_system_error_email
 from diablo.models.email_template import EmailTemplate
-from diablo.models.queued_email import notify_instructors_changes_confirmed
+from diablo.models.instructor import instructor_json_from_uids
+from diablo.models.queued_email import QueuedEmail
 from diablo.models.schedule_update import ScheduleUpdate
 from diablo.models.scheduled import Scheduled
 from diablo.models.sis_section import AUTHORIZED_INSTRUCTOR_ROLE_CODES, SisSection
@@ -169,7 +170,27 @@ def _update_already_scheduled_events():  # noqa C901
             ('publish_type', 'recording_type', 'instructor_uids', 'collaborator_uids', 'not_scheduled', 'room_not_eligible'),
         )
 
-        notify_instructors_changes_confirmed(course, scheduled_model.to_api_json())
+        if no_longer_scheduled:
+            QueuedEmail.notify_instructors_no_longer_scheduled(course)
+        elif no_longer_eligible:
+            QueuedEmail.notify_instructors_no_longer_eligible(course)
+        else:
+            scheduled = (course['scheduled'] or [{}])[0]
+            if updated_collaborator_uids or updated_publish_type or updated_recording_type:
+                QueuedEmail.notify_instructors_changes_confirmed(
+                    course,
+                    collaborator_uids=updated_collaborator_uids or scheduled['collaboratorUids'],
+                    publish_type=updated_publish_type or scheduled['publishType'],
+                    recording_type=updated_recording_type or scheduled['recordingType'],
+                )
+            if meetings_added or meetings_removed_by_schedule_id or meetings_updated_by_schedule_id:
+                QueuedEmail.notify_instructors_room_change(course)
+            if updated_instructor_uids:
+                previously_scheduled_instructor_uids = scheduled.get('instructorUids') or []
+                removed_instructor_uids = [i for i in previously_scheduled_instructor_uids if i['uid'] not in updated_instructor_uids]
+                if removed_instructor_uids:
+                    for instructor in instructor_json_from_uids(removed_instructor_uids):
+                        QueuedEmail.notify_instructor_removed(instructor, course)
 
 
 def _handle_instructor_updates(
@@ -196,6 +217,7 @@ def _handle_instructor_updates(
         )
         scheduled_model.update(instructor_uids=instructor_uids, collaborator_uids=collaborator_uids)
         _mark_success(schedule_updates, ('collaborator_uids', 'instructor_uids'), scheduled['kalturaScheduleId'])
+
     except Exception as e:
         _mark_error(
             schedule_updates,
