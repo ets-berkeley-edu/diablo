@@ -112,6 +112,68 @@ class QueuedEmail(db.Model):
     def get_all_section_ids(cls, template_type, term_id):
         return [row.section_id for row in cls.query.filter_by(template_type=template_type, term_id=term_id).all()]
 
+    @classmethod
+    def notify_instructors_changes_confirmed(cls, course, collaborator_uids, publish_type, recording_type):
+        publish_type_name = NAMES_PER_PUBLISH_TYPE[publish_type]
+        recording_type_name = NAMES_PER_RECORDING_TYPE[recording_type]
+        if collaborator_uids:
+            collaborator_attributes = get_loch_basic_attributes(collaborator_uids)
+            collaborator_names = [f"{r['first_name']} {r['last_name']}" for r in collaborator_attributes]
+        else:
+            collaborator_names = []
+
+        for instructor in filter(lambda i: i['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES, course['instructors']):
+            cls._queue_instructor_email(
+                'changes_confirmed',
+                instructor,
+                course,
+                publish_type_name=publish_type_name,
+                recording_type_name=recording_type_name,
+                collaborator_names=collaborator_names,
+            )
+
+    @classmethod
+    def notify_instructors_no_longer_scheduled(cls, course):
+        for instructor in filter(lambda i: i['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES, course['instructors']):
+            cls._queue_instructor_email('no_longer_scheduled', instructor, course)
+
+    @classmethod
+    def notify_instructors_no_longer_eligible(cls, course):
+        for instructor in filter(lambda i: i['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES, course['instructors']):
+            cls._queue_instructor_email('room_change_no_longer_eligible', instructor, course)
+
+    @classmethod
+    def notify_instructors_room_change(cls, course):
+        for instructor in filter(lambda i: i['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES, course['instructors']):
+            cls._queue_instructor_email('room_change', instructor, course)
+
+    @classmethod
+    def notify_instructor_removed(cls, instructor, course):
+        cls._queue_instructor_email('instructors_removed', instructor, course)
+
+    @classmethod
+    def _queue_instructor_email(cls, template_type, instructor, course, **kwargs):
+        template = _get_email_template(course=course, template_type='template_type')
+        if template:
+            message = interpolate_content(
+                templated_string=template.message,
+                course=course,
+                recipient_name=instructor['name'],
+            )
+            subject_line = interpolate_content(
+                templated_string=template.subject_line,
+                course=course,
+                recipient_name=instructor['name'],
+            )
+            cls.create(
+                message=message,
+                subject_line=subject_line,
+                recipient=instructor,
+                section_id=course['sectionId'],
+                template_type=template_type,
+                term_id=course['termId'],
+            )
+
     def is_interpolated(self):
         return not (self.subject_line is None or self.message is None or self.recipient is None)
 
@@ -203,48 +265,6 @@ def notify_instructors_approval_changes(course, approval, previous_approvals):
             section_id=course['sectionId'],
             subject_line=subject_line,
             template_type='notify_instructor_of_changes',
-            term_id=course['termId'],
-        )
-    return True
-
-
-def notify_instructors_changes_confirmed(course, scheduled):
-    email_template = _get_email_template(course=course, template_type='changes_confirmed')
-    if not email_template:
-        send_system_error_email(f"""
-            No email template of type 'changes_confirmed' is available.
-            {course['label']} instructors were NOT notified of scheduled: {scheduled}.
-        """)
-        return
-
-    publish_type_name = NAMES_PER_PUBLISH_TYPE[scheduled.publish_type]
-    recording_type_name = NAMES_PER_RECORDING_TYPE[scheduled.recording_type]
-    instructors = list(filter(lambda i: i['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES, course['instructors']))
-    if scheduled['collaboratorUids']:
-        collaborator_attributes = get_loch_basic_attributes(scheduled['collaboratorUids'])
-        collaborator_names = [f"{r['first_name']} {r['last_name']}" for r in collaborator_attributes]
-    else:
-        collaborator_names = []
-    for instructor in instructors:
-        message = interpolate_content(
-            templated_string=email_template.message,
-            course=course,
-            recipient_name=instructor['name'],
-            publish_type_name=publish_type_name,
-            recording_type_name=recording_type_name,
-            collaborator_names=collaborator_names,
-        )
-        subject_line = interpolate_content(
-            templated_string=email_template.subject_line,
-            course=course,
-            recipient_name=instructor['name'],
-        )
-        QueuedEmail.create(
-            message=message,
-            subject_line=subject_line,
-            recipient=instructor,
-            section_id=course['sectionId'],
-            template_type='changes_confirmed',
             term_id=course['termId'],
         )
     return True

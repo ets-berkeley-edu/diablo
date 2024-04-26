@@ -27,6 +27,7 @@ import json
 from diablo import db
 from diablo.lib.util import utc_now
 from diablo.models.base import Base
+from sqlalchemy import text
 
 
 class Instructor(Base):
@@ -95,3 +96,13 @@ class Instructor(Base):
                 } for row in rows_subset
             ]
             db.session.execute(query, {'json_dumps': json.dumps(data)})
+
+
+def instructor_json_from_uids(uids):
+    def _row_to_json(row):
+        return {
+            'name': ' '.join([row['first_name'], row['last_name']]),
+            'uid': row['uid'],
+        }
+    instructor_query = 'SELECT uid, first_name, last_name from instructors where uid = any(:uids)'
+    return [_row_to_json(row) for row in db.session.execute(text(instructor_query), {'uids': list(uids)})]
