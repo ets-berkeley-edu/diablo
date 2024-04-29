@@ -65,7 +65,7 @@ class TestScheduling1:
     def test_delete_old_diablo_and_kaltura(self):
         self.kaltura_page.log_in_via_calnet(self.calnet_page)
         self.kaltura_page.reset_test_data(self.term, self.recording_schedule)
-        util.reset_sign_up_test_data(self.section)
+        util.reset_section_test_data(self.section)
         self.recording_schedule.scheduling_status = RecordingSchedulingStatus.NOT_SCHEDULED
 
     def test_run_initial_canvas_job(self):

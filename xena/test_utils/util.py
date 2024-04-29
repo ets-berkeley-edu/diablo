@@ -360,7 +360,7 @@ def get_sent_email_count(template, section, instructor=None):
     return count
 
 
-def reset_sign_up_test_data(section):
+def reset_section_test_data(section):
     reset_test_data(section)
     term_id = app.config['CURRENT_TERM_ID']
     sql = f'DELETE FROM approvals WHERE section_id = {section.ccn} AND term_id = {term_id}'
