@@ -111,7 +111,7 @@ class TestScheduling1:
 
     def test_kaltura_schedule_id(self):
         util.get_kaltura_id(self.recording_schedule, self.term)
-        self.recording_schedule.recording_type = RecordingType.SCREENCAST
+        self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
         self.recording_schedule.publish_type = PublishType.PUBLISH_TO_MY_MEDIA
         self.recording_schedule.scheduling_status = RecordingSchedulingStatus.SCHEDULED
 
@@ -250,8 +250,14 @@ class TestScheduling1:
 
     # VERIFY AVAILABLE OPTIONS
 
-    def test_rec_type_pre_selected(self):
-        assert self.sign_up_page.default_rec_type() == self.recording_schedule.recording_type.value['option']
+    def test_rec_type_options(self):
+        self.course_page.click_rec_type_input()
+        visible_opts = self.course_page.visible_menu_options()
+        expected = [
+            RecordingType.VIDEO_WITH_OPERATOR.value['option'],
+            RecordingType.VIDEO_SANS_OPERATOR.value['option'],
+        ]
+        assert visible_opts == expected
 
     def test_publish_options(self):
         self.course_page.hit_escape()
@@ -352,6 +358,10 @@ class TestScheduling1:
     def test_update_receive_schedule_conf_email(self):
         assert util.get_sent_email_count(EmailTemplateType.INSTR_CHANGES_CONFIRMED, self.section,
                                          self.section.instructors[0]) == 1
+
+    # VERIFY COURSE HISTORY
+
+    # TODO def test_course_history_updates_done(self):
 
     # CREATE COURSE SITE
 
