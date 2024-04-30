@@ -82,7 +82,7 @@ def _update_already_scheduled_events():  # noqa C901
     kaltura = Kaltura()
     term_id = app.config['CURRENT_TERM_ID']
     for section_id, schedule_updates in ScheduleUpdate.get_queued_by_section_id(term_id=term_id).items():
-        course = SisSection.get_course(term_id=term_id, section_id=section_id)
+        course = SisSection.get_course(term_id=term_id, section_id=section_id, include_deleted=True)
         if not course:
             app.logger.error(f'Course not found in SIS data (term {term_id}, section {section_id})')
             for su in schedule_updates:
@@ -187,7 +187,11 @@ def _update_already_scheduled_events():  # noqa C901
                 QueuedEmail.notify_instructors_room_change(course)
             if updated_instructor_uids:
                 previously_scheduled_instructor_uids = scheduled.get('instructorUids') or []
-                removed_instructor_uids = [i for i in previously_scheduled_instructor_uids if i['uid'] not in updated_instructor_uids]
+                added_instructor_uids = [i for i in updated_instructor_uids if i not in previously_scheduled_instructor_uids]
+                removed_instructor_uids = [i for i in previously_scheduled_instructor_uids if i not in updated_instructor_uids]
+                if added_instructor_uids:
+                    for instructor in instructor_json_from_uids(added_instructor_uids):
+                        QueuedEmail.notify_instructor_added(instructor, course)
                 if removed_instructor_uids:
                     for instructor in instructor_json_from_uids(removed_instructor_uids):
                         QueuedEmail.notify_instructor_removed(instructor, course)

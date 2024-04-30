@@ -233,12 +233,6 @@ def unschedule():
     return tolerant_jsonify(course)
 
 
-@app.route('/api/courses/changes/<term_id>')
-@admin_required
-def course_changes(term_id):
-    return tolerant_jsonify(SisSection.get_course_changes(term_id))
-
-
 @app.route('/api/course/can_aprx_instructors_edit_recordings', methods=['POST'])
 @login_required
 def update_can_aprx_instructors_edit_recordings():

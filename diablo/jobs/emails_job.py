@@ -22,39 +22,41 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
+from diablo.externals.b_connected import BConnected
 from diablo.jobs.base_job import BaseJob
-from diablo.jobs.tasks.admin_emails_task import AdminEmailsTask
-from diablo.jobs.tasks.instructor_emails_task import InstructorEmailsTask
-from diablo.jobs.tasks.invitation_emails_task import InvitationEmailsTask
-from diablo.jobs.tasks.queued_emails_task import QueuedEmailsTask
+from diablo.models.queued_email import QueuedEmail
+from diablo.models.sis_section import SisSection
+from flask import current_app as app
 
 
 class EmailsJob(BaseJob):
 
     def _run(self):
-        # Why do we run QueuedEmailsTask twice? Answer: reduce risk of duplicate emails.
-        # If this job crashes or gets stuck on the initial QueuedEmailsTask then nothing else happens.
-        tasks = [
-            QueuedEmailsTask(),
-            AdminEmailsTask(),
-            InstructorEmailsTask(),
-            InvitationEmailsTask(),
-            QueuedEmailsTask(),
-        ]
-        for task in tasks:
-            task.run()
+        term_id = app.config['CURRENT_TERM_ID']
+        for queued_email in QueuedEmail.get_all(term_id):
+            course = SisSection.get_course(term_id, queued_email.section_id, include_deleted=True)
+            if not course:
+                app.logger.warn(f'Email will remain queued until course data is present: {queued_email}')
+                continue
+            if course['hasOptedOut']:
+                QueuedEmail.delete(queued_email)
+                continue
+            if BConnected().send(
+                message=queued_email.message,
+                recipient=queued_email.recipient,
+                section_id=queued_email.section_id,
+                subject_line=queued_email.subject_line,
+                template_type=queued_email.template_type,
+                term_id=term_id,
+            ):
+                QueuedEmail.delete(queued_email)
+            else:
+                # If send() fails then report the error and DO NOT delete the queued item.
+                app.logger.error(f'Failed to send email: {queued_email}')
 
     @classmethod
     def description(cls):
-        return f"""
-            <ol>
-                <li>{QueuedEmailsTask.description()}</li>
-                <li>{AdminEmailsTask.description()}</li>
-                <li>{InstructorEmailsTask.description()}</li>
-                <li>{InvitationEmailsTask.description()}</li>
-                <li>{QueuedEmailsTask.description()}</li>
-            </ol>
-        """
+        return 'Sends all queued emails.'
 
     @classmethod
     def key(cls):

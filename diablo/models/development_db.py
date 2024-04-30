@@ -121,6 +121,12 @@ def _create_email_templates():
         message='Changes confirmed for class <code>course.name</code>',
     )
     EmailTemplate.create(
+        template_type='instructors_added',
+        name='Instructor(s) added to class',
+        subject_line='Instructor(s) added to class',
+        message='Instructor(s) added to class <code>course.name</code>',
+    )
+    EmailTemplate.create(
         template_type='instructors_removed',
         name='Instructor(s) removed from class',
         subject_line='Instructor(s) removed from class',
@@ -248,6 +254,7 @@ def _set_up_and_run_jobs():
     Job.create(disabled=True, job_schedule_type='minutes', job_schedule_value='5', key='doomed_to_fail')
     Job.create(is_schedulable=False, job_schedule_type='day_at', job_schedule_value='16:00', key='remind_invitees')
     Job.create(is_schedulable=False, job_schedule_type='minutes', job_schedule_value='720', key='semester_start')
+    Job.create(is_schedulable=False, job_schedule_type='minutes', job_schedule_value='820', key='sis_data_refresh')
     background_job_manager.start(app)
     HouseKeepingJob(app_context=simply_yield).run()
     CanvasJob(app_context=simply_yield).run()

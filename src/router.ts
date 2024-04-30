@@ -4,7 +4,6 @@ import Attic from '@/views/Attic.vue'
 import BaseView from '@/views/BaseView.vue'
 import Blackouts from '@/views/blackout/Blackouts.vue'
 import Course from '@/views/Course.vue'
-import CourseChanges from '@/views/CourseChanges.vue'
 import EditEmailTemplate from '@/views/email/EditEmailTemplate.vue'
 import EmailTemplates from '@/views/email/EmailTemplates.vue'
 import Error from '@/views/Error.vue'
@@ -97,13 +96,6 @@ const router = new Router({
           component: Blackouts,
           meta: {
             title: 'Blackouts'
-          }
-        },
-        {
-          path: '/changes',
-          component: CourseChanges,
-          meta: {
-            title: 'Course Changes'
           }
         },
         {

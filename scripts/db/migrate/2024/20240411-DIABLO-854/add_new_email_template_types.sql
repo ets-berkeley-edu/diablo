@@ -25,6 +25,7 @@
 
 ALTER TYPE email_template_types ADD VALUE IF NOT EXISTS 'admin_operator_requested';
 ALTER TYPE email_template_types ADD VALUE IF NOT EXISTS 'changes_confirmed';
+ALTER TYPE email_template_types ADD VALUE IF NOT EXISTS 'instructors_added';
 ALTER TYPE email_template_types ADD VALUE IF NOT EXISTS 'instructors_removed';
 ALTER TYPE email_template_types ADD VALUE IF NOT EXISTS 'new_class_scheduled';
 ALTER TYPE email_template_types ADD VALUE IF NOT EXISTS 'no_longer_scheduled';

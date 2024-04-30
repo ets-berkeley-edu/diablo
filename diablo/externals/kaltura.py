@@ -109,7 +109,7 @@ class Kaltura:
         else:
             return None
 
-    @skip_when_pytest()
+    @skip_when_pytest(mock_object=[])
     def get_categories(self, template_entry_id):
         category_entries = self._get_category_entries(KalturaCategoryEntryFilter(entryIdEqual=template_entry_id))
         if category_entries:
@@ -131,7 +131,7 @@ class Kaltura:
     def get_events_by_tag(self, tags_like=CREATED_BY_DIABLO_TAG):
         return self._get_events(kaltura_event_filter=KalturaScheduleEventFilter(tagsLike=tags_like))
 
-    @skip_when_pytest()
+    @skip_when_pytest(mock_object='kaltura/schedule_event.json', is_fixture_json_file=True)
     def get_event(self, event_id):
         events = self._get_events(kaltura_event_filter=KalturaScheduleEventFilter(idEqual=event_id))
         return events[0] if events else None
@@ -257,6 +257,7 @@ class Kaltura:
         )
         return result.totalCount is not None
 
+    @skip_when_pytest()
     def update_base_entry(
             self,
             description,
@@ -282,6 +283,7 @@ class Kaltura:
             ),
         )
 
+    @skip_when_pytest()
     def update_schedule_event(self, meeting_attributes, scheduled_model):
         term_name = term_name_for_sis_id(scheduled_model.term_id)
         recurring_event = KalturaRecordScheduleEvent(summary=f'{scheduled_model.course_display_name} ({term_name})')

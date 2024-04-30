@@ -39,13 +39,17 @@ from flask import current_app as app
 class SisDataRefreshJob(BaseJob):
 
     def _run(self, args=None):
-        resolved_ddl_rds = resolve_sql_template('update_rds_sis_sections.template.sql')
-        if execute(resolved_ddl_rds):
-            term_id = app.config['CURRENT_TERM_ID']
-            self.after_sis_data_refresh(term_id)
+        term_id = app.config['CURRENT_TERM_ID']
+        if app.config['SKIP_SIS_REFRESH_FOR_TESTING']:
+            refresh = True
+        else:
+            refresh = execute(resolve_sql_template('update_rds_sis_sections.template.sql'))
+            if refresh:
+                self.after_sis_data_refresh(term_id)
+        if refresh:
             _queue_schedule_updates(term_id)
         else:
-            raise BackgroundJobError('Failed to update RDS indexes for intermediate schema.')
+            raise BackgroundJobError('Failed to update SIS data from Nessie.')
 
     @classmethod
     def description(cls):
@@ -70,7 +74,7 @@ class SisDataRefreshJob(BaseJob):
 
 
 def _queue_schedule_updates(term_id):
-    for course in SisSection.get_course_changes(term_id=term_id, filter_on_obsolete=False):
+    for course in SisSection.get_course_changes(term_id=term_id):
         eligible_meetings = course.get('meetings', {}).get('eligible', [])
         ineligible_meetings = course.get('meetings', {}).get('ineligible', [])
         if course['deletedAt'] or (len(eligible_meetings) + len(ineligible_meetings) == 0):
@@ -94,7 +98,7 @@ def _queue_not_scheduled_update(course):
 
 
 def _queue_room_not_eligible_update(course):
-    meeting = course.get('meetings', {}).get('ineligible', [])
+    meeting = course.get('meetings', {}).get('ineligible', [])[0]
     scheduled = course['scheduled'][0]
     ScheduleUpdate.queue(
         term_id=course['termId'],

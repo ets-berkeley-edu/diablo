@@ -25,8 +25,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 from datetime import datetime
 
 from diablo import db
-from diablo.lib.berkeley import are_scheduled_dates_obsolete, are_scheduled_times_obsolete, get_recording_end_date, \
-    get_recording_start_date
+from diablo.lib.berkeley import get_recording_end_date, get_recording_start_date
 from diablo.lib.db import resolve_sql_template_string
 from diablo.lib.util import format_days, format_time, get_names_of_days, safe_strftime
 from diablo.models.approval import Approval
@@ -198,7 +197,7 @@ class SisSection(db.Model):
         return api_json[0] if api_json else None
 
     @classmethod
-    def get_course_changes(cls, term_id, filter_on_obsolete=True):
+    def get_course_changes(cls, term_id):
         sql = """
             SELECT
                 s.*,
@@ -233,40 +232,7 @@ class SisSection(db.Model):
                 'term_id': term_id,
             },
         )
-        courses = []
-        obsolete_instructor_uids = set()
-
-        for course in _to_api_json(term_id=term_id, rows=rows):
-            for scheduled in course['scheduled']:
-                if not filter_on_obsolete \
-                        or scheduled['hasObsoleteRoom'] \
-                        or scheduled['hasObsoleteInstructors'] \
-                        or scheduled['hasObsoleteDates'] \
-                        or scheduled['hasObsoleteTimes'] \
-                        or course['deletedAt']:
-                    courses.append(course)
-                if scheduled['hasObsoleteInstructors']:
-                    obsolete_instructor_uids.update(scheduled['instructorUids'])
-                    scheduled['instructors'] = []
-
-        if obsolete_instructor_uids:
-            obsolete_instructors = {}
-            instructor_query = 'SELECT uid, first_name, last_name from instructors where uid = any(:uids)'
-            for row in db.session.execute(text(instructor_query), {'uids': list(obsolete_instructor_uids)}):
-                uid = (row['uid'] or '').strip()
-                if uid:
-                    obsolete_instructors[uid] = {
-                        'name': ' '.join([row['first_name'], row['last_name']]),
-                        'uid': uid,
-                    }
-            for course in courses:
-                for scheduled in course['scheduled']:
-                    if scheduled['hasObsoleteInstructors']:
-                        scheduled['instructors'] = []
-                        for uid in scheduled['instructorUids']:
-                            scheduled['instructors'].append(obsolete_instructors.get(uid, {'name': '', 'uid': uid}))
-
-        return courses
+        return _to_api_json(term_id=term_id, rows=rows)
 
     @classmethod
     def get_courses(
@@ -921,7 +887,6 @@ def _to_api_json(term_id, rows, include_rooms=True):
 
 def _decorate_course(course):
     _decorate_course_approvals(course)
-    _decorate_course_changes(course)
     _decorate_course_meeting_type(course)
 
 
@@ -942,24 +907,6 @@ def _decorate_course_approvals(course):
             course['approvalStatus'] = 'Partially Approved'
         elif course['invitees']:
             course['approvalStatus'] = 'Invited'
-
-
-def _decorate_course_changes(course):
-    meetings = course['meetings']['eligible'] + course['meetings']['ineligible']
-    meeting = meetings[0] if meetings else None
-    room_id = meeting['room']['id'] if meeting and meeting.get('room') else None
-
-    for scheduled in (course['scheduled'] or []):
-        instructor_uids = [i['uid'] for i in course['instructors']]
-        scheduled.update({
-            'hasObsoleteInstructors': set(instructor_uids) != set(scheduled.get('instructorUids')),
-            'hasObsoleteDates': are_scheduled_dates_obsolete(meeting=meeting, scheduled=scheduled),
-            'hasObsoleteTimes': are_scheduled_times_obsolete(meeting=meeting, scheduled=scheduled),
-            'hasObsoleteRoom': room_id != scheduled.get('room', {}).get('id'),
-        })
-
-    for approval in course['approvals']:
-        approval['hasObsoleteRoom'] = room_id != approval.get('room', {}).get('id')
 
 
 def _decorate_course_meeting_type(course):

@@ -148,12 +148,16 @@ class QueuedEmail(db.Model):
             cls._queue_instructor_email('room_change', instructor, course)
 
     @classmethod
+    def notify_instructor_added(cls, instructor, course):
+        cls._queue_instructor_email('instructors_added', instructor, course)
+
+    @classmethod
     def notify_instructor_removed(cls, instructor, course):
         cls._queue_instructor_email('instructors_removed', instructor, course)
 
     @classmethod
     def _queue_instructor_email(cls, template_type, instructor, course, **kwargs):
-        template = _get_email_template(course=course, template_type='template_type')
+        template = _get_email_template(course=course, template_type=template_type)
         if template:
             message = interpolate_content(
                 templated_string=template.message,

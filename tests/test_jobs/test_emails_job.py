@@ -23,26 +23,27 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 from diablo import std_commit
-from diablo.jobs.tasks.queued_emails_task import QueuedEmailsTask
+from diablo.jobs.emails_job import EmailsJob
 from diablo.lib.util import utc_now
 from diablo.models.course_preference import CoursePreference
 from diablo.models.queued_email import QueuedEmail
 from diablo.models.sent_email import SentEmail
 from diablo.models.sis_section import SisSection
 from flask import current_app as app
+from tests.util import simply_yield
 
 
-class TestQueuedEmailsTask:
+class TestEmailsJob:
 
     def test_no_email_queued(self):
         """Do nothing if 'queued_emails' table is empty."""
         term_id = app.config['CURRENT_TERM_ID']
-        QueuedEmailsTask().run()
+        EmailsJob(simply_yield).run()
         std_commit(allow_test_environment=True)
         # Verify that the next job run will have zero queued emails.
         assert len(QueuedEmail.get_all(term_id=term_id)) == 0
 
-        QueuedEmailsTask().run()
+        EmailsJob(simply_yield).run()
         std_commit(allow_test_environment=True)
         # If we reach this point then no error occurred.
 
@@ -72,7 +73,7 @@ class TestQueuedEmailsTask:
         before = utc_now()
         emails_sent_before = _get_emails_to_courses()
         # Run the job
-        QueuedEmailsTask().run()
+        EmailsJob(simply_yield).run()
         std_commit(allow_test_environment=True)
 
         # Expect one email per instructor
@@ -111,7 +112,7 @@ class TestQueuedEmailsTask:
 
         emails_sent_before = _emails_sent()
         # Run the job
-        QueuedEmailsTask().run()
+        EmailsJob(simply_yield).run()
         std_commit(allow_test_environment=True)
 
         # Expect no emails sent
@@ -142,7 +143,7 @@ class TestQueuedEmailsTask:
         before = utc_now()
         emails_sent_before = _emails_sent()
         # Run the job
-        QueuedEmailsTask().run()
+        EmailsJob(simply_yield).run()
         std_commit(allow_test_environment=True)
 
         # Expect email to admin email address

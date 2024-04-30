@@ -233,7 +233,7 @@ class TestUpdateJobSchedule:
 
     def test_edit_schedule_of_running_job(self, client, admin_session):
         """You cannot edit job schedule if the job is running."""
-        with scheduled_job('emails') as job:
+        with scheduled_job('blackouts') as job:
             job_history = JobHistory.job_started(job_key=job.key)
             self._api_job_update_schedule(
                 client,
@@ -246,7 +246,7 @@ class TestUpdateJobSchedule:
 
     def test_authorized(self, client, admin_session):
         """Admin can edit job schedule."""
-        with scheduled_job('emails') as job:
+        with scheduled_job('blackouts') as job:
             # Job must be disabled in order to update schedule
             Job.update_disabled(job_id=job.id, disable=True)
             api_json = self._api_job_update_schedule(
@@ -306,14 +306,6 @@ class TestJobSchedule:
         assert kaltura_job['schedule'] == {
             'type': 'day_at',
             'value': '15:00',
-        }
-        remind_invitees_job = api_json['jobs'][-2]
-        assert remind_invitees_job['key'] == 'remind_invitees'
-        assert remind_invitees_job['disabled'] is False
-        assert remind_invitees_job['isSchedulable'] is False
-        assert remind_invitees_job['schedule'] == {
-            'type': 'day_at',
-            'value': '16:00',
         }
 
 

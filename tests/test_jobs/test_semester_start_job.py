@@ -22,13 +22,17 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from diablo import std_commit
+from diablo import db, std_commit
+from diablo.jobs.emails_job import EmailsJob
 from diablo.jobs.semester_start_job import SemesterStartJob
-from diablo.jobs.tasks.queued_emails_task import QueuedEmailsTask
+from diablo.lib.util import utc_now
+from diablo.models.course_preference import CoursePreference
 from diablo.models.queued_email import QueuedEmail
 from diablo.models.scheduled import Scheduled
 from diablo.models.sent_email import SentEmail
+from diablo.models.sis_section import SisSection
 from flask import current_app as app
+from sqlalchemy import text
 from tests.util import simply_yield, test_approvals_workflow
 
 
@@ -60,9 +64,9 @@ class TestSemesterStartJob:
                 'IND ENG 95: Richard Newton Lecture Series\n'\
                 'MATH C51: Linear algebra and differential calculus'
 
-            QueuedEmailsTask().run()
+            EmailsJob(simply_yield).run()
             emails_sent = SentEmail.get_emails_sent_to(instructor_uid)
-            assert len(emails_sent) == emails_to_instructor_count + 1
+            assert len(emails_sent) > emails_to_instructor_count
             email_sent = emails_sent[-1]
             assert email_sent.template_type == 'semester_start'
             assert email_sent.term_id == term_id
@@ -71,3 +75,76 @@ class TestSemesterStartJob:
             emails_to_instructor_count = len(SentEmail.get_emails_sent_to(instructor_uid))
             SemesterStartJob(simply_yield).run()
             assert len(SentEmail.get_emails_sent_to(instructor_uid)) == emails_to_instructor_count
+
+    def test_course_opted_out(self, app):
+        """Do not send email to courses that have opted out."""
+        term_id = app.config['CURRENT_TERM_ID']
+        with test_approvals_workflow(app):
+            section_id = 50006
+            CoursePreference.update_opt_out(term_id=term_id, section_id=section_id, opt_out=True)
+            std_commit(allow_test_environment=True)
+
+            timestamp = utc_now()
+            # Emails are queued but not sent.
+            SemesterStartJob(simply_yield).run()
+            assert len(_get_announcements_since(term_id, timestamp)) == 0
+            # Emails are sent.
+            EmailsJob(simply_yield).run()
+            announcements = _get_announcements_since(term_id, timestamp)
+            assert len(announcements) == 14
+            # Assert that cross-listings are accounted for in the 'sent_emails' table.
+            _assert_coverage_of_cross_listings(
+                expected_cross_listing_count=4,
+                sent_emails=announcements,
+                term_id=term_id,
+            )
+            assert not next((e for e in announcements if e.section_id == section_id), None)
+
+    def test_no_duplicate_announcements(self, app):
+        """Do not send the same announcement twice."""
+        with test_approvals_workflow(app):
+            # First, get expected number of emails sent.
+            term_id = app.config['CURRENT_TERM_ID']
+            timestamp = utc_now()
+            SemesterStartJob(simply_yield).run()
+            EmailsJob(simply_yield).run()
+            expected_count = len(_get_announcements_since(term_id, timestamp))
+
+            # Clean up
+            db.session.execute(text('DELETE FROM queued_emails; DELETE FROM sent_emails; DELETE FROM scheduled;'))
+
+            # Next, run semester start twice before running queued_emails_task. Expect no duplicate emails.
+            timestamp = utc_now()
+            SemesterStartJob(simply_yield).run()
+            SemesterStartJob(simply_yield).run()
+            std_commit(allow_test_environment=True)
+            # Nothing is sent until we run the queued_emails_task.
+            assert len(_get_announcements_since(term_id, timestamp)) == 0
+            # Send queued emails.
+            EmailsJob(simply_yield).run()
+            std_commit(allow_test_environment=True)
+            assert len(_get_announcements_since(term_id, timestamp)) == expected_count
+            # Verify no dupe emails.
+            emails_sent = _get_announcements_since(term_id, timestamp)
+            recipients = [f'{e.template_type}_{e.recipient_uid}_{e.term_id}_{e.section_id}' for e in emails_sent]
+            assert len(set(recipients)) == len(recipients)
+
+
+def _assert_coverage_of_cross_listings(expected_cross_listing_count, sent_emails, term_id):
+    cross_listing_count = 0
+    section_ids = [e.section_id for e in sent_emails]
+    for course in SisSection.get_courses(section_ids=section_ids, term_id=term_id):
+        for cross_listing in course['crossListings']:
+            cross_listed_section_id = cross_listing['sectionId']
+            announcement = next(
+                (e for e in sent_emails if e.section_id == cross_listed_section_id and e.term_id == term_id), None)
+            assert announcement
+            cross_listing_count += 1
+    assert cross_listing_count == expected_cross_listing_count
+
+
+def _get_announcements_since(term_id, timestamp):
+    return SentEmail.query\
+        .filter_by(template_type='semester_start', term_id=term_id)\
+        .filter(SentEmail.sent_at >= timestamp)\
+        .order_by(SentEmail.sent_at).all()

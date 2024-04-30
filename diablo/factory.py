@@ -57,7 +57,6 @@ def _register_jobs(app):
     from diablo.jobs.house_keeping_job import HouseKeepingJob  # noqa
     from diablo.jobs.kaltura_job import KalturaJob  # noqa
     from diablo.jobs.emails_job import EmailsJob  # noqa
-    from diablo.jobs.remind_invitees_job import RemindInviteesJob  # noqa
     from diablo.jobs.semester_start_job import SemesterStartJob  # noqa
     from diablo.jobs.sis_data_refresh_job import SisDataRefreshJob  # noqa
 

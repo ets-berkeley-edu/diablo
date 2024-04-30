@@ -17,11 +17,6 @@
         </div>
       </v-list-item-title>
       <v-list-item two-line>
-        <v-list-item-content v-if="scheduled.hasObsoleteRoom">
-          <v-list-item-title>
-            <CourseRoom :course="course" :hide-eligibility="true" :room="scheduled.room" />
-          </v-list-item-title>
-        </v-list-item-content>
         <v-list-item-content>
           <v-list-item-title>Scheduled on</v-list-item-title>
           <v-list-item-subtitle>{{ scheduled.createdAt | moment('MMM DD, YYYY') }}</v-list-item-subtitle>
@@ -96,11 +91,10 @@ import Context from '@/mixins/Context'
 import TermsAgreementText from '@/components/util/TermsAgreementText'
 import Utils from '@/mixins/Utils'
 import {approve} from '@/api/course'
-import CourseRoom from '@/components/course/CourseRoom'
 
 export default {
   name: 'ScheduledCourse',
-  components: {CourseRoom, TermsAgreementText},
+  components: {TermsAgreementText},
   mixins: [Context, Utils],
   props: {
     afterApprove: {
