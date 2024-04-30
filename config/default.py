@@ -131,6 +131,8 @@ SEARCH_ITEMS_PER_PAGE = 50
 # Used to encrypt session cookie.
 SECRET_KEY = 'secret'
 
+SKIP_SIS_REFRESH_FOR_TESTING = False
+
 # SQLAlchemy
 SQLALCHEMY_COMMIT_ON_TEARDOWN = True
 SQLALCHEMY_DATABASE_URI = 'postgresql://diablo:diablo@localhost:5432/pazuzu'
