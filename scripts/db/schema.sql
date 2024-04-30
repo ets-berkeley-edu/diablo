@@ -49,6 +49,7 @@ CREATE TYPE email_template_types AS ENUM (
     -- template types active as of Diablo v2.0
     'admin_operator_requested',
     'changes_confirmed',
+    'instructors_added',
     'instructors_removed',
     'new_class_scheduled',
     'no_longer_scheduled',

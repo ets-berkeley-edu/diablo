@@ -32,6 +32,7 @@ email_template_type = ENUM(
     # template types active as of Diablo v2.0
     'admin_operator_requested',
     'changes_confirmed',
+    'instructors_added',
     'instructors_removed',
     'new_class_scheduled',
     'no_longer_scheduled',
@@ -134,6 +135,7 @@ class EmailTemplate(Base):
             # template types active as of Diablo v2.0
             'admin_operator_requested': 'Admin alert: operator requested',
             'changes_confirmed': 'Changes confirmed',
+            'instructors_added': 'Instructor(s) added to class',
             'instructors_removed': 'Instructor(s) removed from class',
             'new_class_scheduled': 'New class scheduled',
             'no_longer_scheduled': 'Class no longer scheduled',

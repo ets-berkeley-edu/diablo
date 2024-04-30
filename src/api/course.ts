@@ -40,10 +40,6 @@ export function getCourses(filter, termId) {
   })
 }
 
-export function getCourseChanges(termId) {
-  return axios.get(`${utils.apiBaseUrl()}/api/courses/changes/${termId}`)
-}
-
 export function updateCanAprxInstructorsEditRecordings(
     canAprxInstructorsEditRecordings: boolean,
     sectionId: string,

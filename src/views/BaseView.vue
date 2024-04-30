@@ -132,7 +132,6 @@ export default {
     if (this.$currentUser.isAdmin) {
       this.navItems = this.navItems.concat([
         {title: 'Ouija Board', icon: 'mdi-auto-fix', path: '/ouija'},
-        {title: 'Course Changes', icon: 'mdi-directions-fork', path: '/changes'},
         {title: 'Rooms', icon: 'mdi-domain', path: '/rooms'},
         {title: 'Blackouts', icon: 'mdi-video-off-outline', path: '/blackouts'},
         {title: 'Email Templates', icon: 'mdi-email-open-multiple-outline', path: '/email/templates'},

@@ -25,12 +25,10 @@ ENHANCEMENTS, OR MODIFICATIONS.
 import csv
 from io import StringIO
 import json
-import random
 
-from diablo import db, std_commit
+from diablo import std_commit
 from diablo.jobs.canvas_job import CanvasJob
-from diablo.jobs.tasks.queued_emails_task import QueuedEmailsTask
-from diablo.lib.berkeley import get_recording_end_date, get_recording_start_date
+from diablo.jobs.emails_job import EmailsJob
 from diablo.models.approval import Approval
 from diablo.models.course_preference import CoursePreference
 from diablo.models.room import Room
@@ -38,9 +36,7 @@ from diablo.models.scheduled import Scheduled
 from diablo.models.sent_email import SentEmail
 from diablo.models.sis_section import SisSection
 from flask import current_app as app
-from sqlalchemy import text
-from tests.test_api.api_test_utils import api_approve, api_get_course, get_eligible_meeting, get_instructor_uids, \
-    mock_scheduled
+from tests.test_api.api_test_utils import api_approve, api_get_course, get_instructor_uids, mock_scheduled
 from tests.util import override_config, simply_yield, test_approvals_workflow
 
 admin_uid = '90001'
@@ -141,7 +137,7 @@ class TestApprove:
             )
             std_commit(allow_test_environment=True)
 
-            QueuedEmailsTask().run()
+            EmailsJob(simply_yield).run()
 
             # First instructor was notified 1) that second instructor needed to approve; 2) that second instructor made changes.
             emails_sent = SentEmail.get_emails_sent_to(instructors[0]['uid'])
@@ -760,200 +756,6 @@ class TestDownloadCoursesCsv:
                     assert meeting_type == 'B'
                 else:
                     assert meeting_type == 'A'
-
-
-class TestCoursesChanges:
-
-    @property
-    def term_id(self):
-        return app.config['CURRENT_TERM_ID']
-
-    @staticmethod
-    def _api_course_changes(client, term_id, expected_status_code=200):
-        response = client.get(f'/api/courses/changes/{term_id}')
-        assert response.status_code == expected_status_code
-        return response.json
-
-    def test_not_authenticated(self, client):
-        """Deny anonymous access."""
-        self._api_course_changes(client, term_id=self.term_id, expected_status_code=401)
-
-    def test_unauthorized(self, client, fake_auth):
-        """Instructors cannot see course changes."""
-        instructor_uids = get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
-        fake_auth.login(instructor_uids[0])
-        self._api_course_changes(client, term_id=self.term_id, expected_status_code=401)
-
-    def test_empty_feed(self, client, fake_auth):
-        """The /course/changes feed will often be empty."""
-        fake_auth.login(admin_uid)
-        assert len(self._api_course_changes(client, term_id=2192)) == 0
-
-    def test_has_obsolete_room(self, client, fake_auth):
-        """Admins can see room changes that might disrupt scheduled recordings."""
-        fake_auth.login(admin_uid)
-        course = SisSection.get_course(term_id=self.term_id, section_id=section_2_id)
-        actual_room_id = course['meetings']['ineligible'][0]['room']['id']
-        obsolete_room = Room.find_room('Barker 101')
-
-        assert obsolete_room
-        assert actual_room_id != obsolete_room.id
-
-        mock_scheduled(
-            section_id=section_2_id,
-            term_id=self.term_id,
-            override_room_id=obsolete_room.id,
-        )
-        api_json = self._api_course_changes(client, term_id=self.term_id)
-        course = _find_course(api_json=api_json, section_id=section_2_id, term_id=self.term_id)
-        assert course
-        for scheduled in course['scheduled']:
-            assert scheduled['hasObsoleteRoom'] is True
-            assert scheduled['hasObsoleteDates'] is False
-            assert scheduled['hasObsoleteTimes'] is False
-
-    def test_room_change_to_null(self, client, fake_auth):
-        """Admins can see room changes when course has no meeting location whatsoever."""
-        fake_auth.login(admin_uid)
-        section_id = 50019
-        course = SisSection.get_course(term_id=self.term_id, section_id=section_id)
-        all_meetings = course['meetings']['eligible'] + course['meetings']['ineligible']
-        all_rooms = [m['room'] for m in all_meetings if m['room']]
-        assert not all_rooms
-
-        def _update(meeting_location):
-            sql = 'UPDATE sis_sections SET meeting_location = :meeting_location WHERE term_id = :term_id AND section_id = :section_id'
-            args = {
-                'meeting_location': meeting_location,
-                'section_id': section_id,
-                'term_id': self.term_id,
-            }
-            db.session.execute(text(sql), args)
-            std_commit(allow_test_environment=True)
-        # In order to schedule recordings, we assign the course a room temporarily.
-        temporary_meeting_location = 'Barker 101'
-        _update(temporary_meeting_location)
-        api_json = api_get_course(client, section_id=section_id, term_id=self.term_id)
-        assert api_json['meetings']['eligible'][0]['location'] == temporary_meeting_location
-        # Schedule recordings
-        mock_scheduled(section_id=section_id, term_id=self.term_id)
-        # Remove the room assignment
-        _update(None)
-        # Verify that course shows up in the 'Changes' feed.
-        api_json = self._api_course_changes(client, term_id=self.term_id)
-        course = _find_course(api_json=api_json, section_id=section_id, term_id=self.term_id)
-        assert course
-        for scheduled in course['scheduled']:
-            assert scheduled['hasObsoleteRoom'] is True
-            assert scheduled['hasObsoleteDates'] is False
-            assert scheduled['hasObsoleteTimes'] is False
-
-    def test_has_obsolete_meeting_times(self, client, fake_auth):
-        """Admins can see meeting time changes that might disrupt scheduled recordings."""
-        fake_auth.login(admin_uid)
-        with test_approvals_workflow(app):
-            meeting = get_eligible_meeting(section_id=section_1_id, term_id=self.term_id)
-            obsolete_meeting_days = 'MOWE'
-            assert meeting['days'] != obsolete_meeting_days
-
-            Scheduled.create(
-                course_display_name=f'term_id:{self.term_id} section_id:{section_1_id}',
-                instructor_uids=get_instructor_uids(term_id=self.term_id, section_id=section_1_id),
-                collaborator_uids=[],
-                kaltura_schedule_id=random.randint(1, 10),
-                meeting_days=obsolete_meeting_days,
-                meeting_end_date=get_recording_end_date(meeting),
-                meeting_end_time=meeting['endTime'],
-                meeting_start_date=get_recording_start_date(meeting, return_today_if_past_start=True),
-                meeting_start_time=meeting['startTime'],
-                publish_type_='kaltura_my_media',
-                recording_type_='presentation_audio',
-                room_id=Room.get_room_id(section_id=section_1_id, term_id=self.term_id),
-                section_id=section_1_id,
-                term_id=self.term_id,
-            )
-            std_commit(allow_test_environment=True)
-
-            api_json = self._api_course_changes(client, term_id=self.term_id)
-            course = _find_course(api_json=api_json, section_id=section_1_id, term_id=self.term_id)
-            assert course
-            for scheduled in course['scheduled']:
-                assert scheduled['hasObsoleteRoom'] is False
-                assert scheduled['hasObsoleteDates'] is False
-                assert scheduled['hasObsoleteTimes'] is True
-
-    def test_has_obsolete_meeting_dates(self, client, fake_auth):
-        """Admins can see meeting date changes that might disrupt scheduled recordings."""
-        fake_auth.login(admin_uid)
-        with test_approvals_workflow(app):
-            meeting = get_eligible_meeting(section_id=section_1_id, term_id=self.term_id)
-            obsolete_meeting_end_date = '2020-04-01'
-            assert meeting['endDate'] != obsolete_meeting_end_date
-
-            Scheduled.create(
-                course_display_name=f'term_id:{self.term_id} section_id:{section_1_id}',
-                instructor_uids=get_instructor_uids(term_id=self.term_id, section_id=section_1_id),
-                collaborator_uids=[],
-                kaltura_schedule_id=random.randint(1, 10),
-                meeting_days=meeting['days'],
-                meeting_end_date=obsolete_meeting_end_date,
-                meeting_end_time=meeting['endTime'],
-                meeting_start_date=meeting['startDate'],
-                meeting_start_time=meeting['startTime'],
-                publish_type_='kaltura_my_media',
-                recording_type_='presentation_audio',
-                room_id=Room.get_room_id(section_id=section_1_id, term_id=self.term_id),
-                section_id=section_1_id,
-                term_id=self.term_id,
-            )
-            std_commit(allow_test_environment=True)
-
-            api_json = self._api_course_changes(client, term_id=self.term_id)
-            course = _find_course(api_json=api_json, section_id=section_1_id, term_id=self.term_id)
-            assert course
-            for scheduled in course['scheduled']:
-                assert scheduled['hasObsoleteRoom'] is False
-                assert scheduled['hasObsoleteDates'] is True
-                assert scheduled['hasObsoleteTimes'] is False
-
-    def test_has_obsolete_instructors(self, client, fake_auth):
-        """Admins can see instructor changes that might disrupt scheduled recordings."""
-        fake_auth.login(admin_uid)
-        with test_approvals_workflow(app):
-            meeting = get_eligible_meeting(section_id=section_1_id, term_id=self.term_id)
-            instructor_uids = get_instructor_uids(term_id=self.term_id, section_id=section_1_id)
-            # Course has multiple instructors; we will schedule using only one instructor UID.
-            assert len(instructor_uids) > 1
-            scheduled_with_uid = instructor_uids[0]
-            Scheduled.create(
-                course_display_name=f'term_id:{self.term_id} section_id:{section_1_id}',
-                instructor_uids=[scheduled_with_uid],
-                collaborator_uids=[],
-                kaltura_schedule_id=random.randint(1, 10),
-                meeting_days=meeting['days'],
-                meeting_end_date=get_recording_end_date(meeting),
-                meeting_end_time=meeting['endTime'],
-                meeting_start_date=get_recording_start_date(meeting, return_today_if_past_start=True),
-                meeting_start_time=meeting['startTime'],
-                publish_type_='kaltura_my_media',
-                recording_type_='presenter_audio',
-                room_id=Room.get_room_id(section_id=section_1_id, term_id=self.term_id),
-                section_id=section_1_id,
-                term_id=self.term_id,
-            )
-            std_commit(allow_test_environment=True)
-
-            api_json = self._api_course_changes(client, term_id=self.term_id)
-            course = _find_course(api_json=api_json, section_id=section_1_id, term_id=self.term_id)
-            assert course
-            assert len(course['instructors']) == 3
-            for scheduled in course['scheduled']:
-                assert scheduled['hasObsoleteRoom'] is False
-                assert scheduled['hasObsoleteDates'] is False
-                assert scheduled['hasObsoleteTimes'] is False
-                assert scheduled['hasObsoleteInstructors'] is True
-                assert len(scheduled['instructors']) == 1
-                assert scheduled['instructors'][0]['uid'] == scheduled_with_uid
 
 
 class TestCrossListedNameGeneration:

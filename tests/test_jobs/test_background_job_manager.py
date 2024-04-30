@@ -22,7 +22,14 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
+
+from diablo import std_commit
 from diablo.factory import background_job_manager
+from diablo.jobs.canvas_job import CanvasJob
+from diablo.jobs.doomed_to_failure import DoomedToFailure
+from diablo.models.job import Job
+from diablo.models.sent_email import SentEmail
+from tests.util import simply_yield
 
 
 class TestBackgroundJobManager:
@@ -36,3 +43,22 @@ class TestBackgroundJobManager:
         background_job_manager.restart()
         assert original_started_at != background_job_manager.get_started_at()
         assert background_job_manager.is_running()
+
+    def test_alert_on_job_failure(self, app):
+        def _get_admin_email_count():
+            return len(SentEmail.get_emails_sent_to(uid=app.config['EMAIL_DIABLO_ADMIN_UID']))
+
+        email_count = _get_admin_email_count()
+        # No alert on happy job.
+        CanvasJob(simply_yield).run()
+        assert _get_admin_email_count() == email_count
+        # Alert on sad job.
+        all_jobs = Job.get_all(include_disabled=True)
+        doomed_job = next((j for j in all_jobs if j.key == DoomedToFailure.key()))
+
+        # Make sure job is enabled
+        Job.update_disabled(job_id=doomed_job.id, disable=False)
+        std_commit(allow_test_environment=True)
+        DoomedToFailure(simply_yield).run()
+        # Failure alerts do not go through the queue.
+        assert _get_admin_email_count() == email_count + 1
