@@ -101,14 +101,14 @@ def get_test_script_course(test_script_str):
 
 def get_all_eligible_section_ids():
     sql = f"""SELECT DISTINCT(section_id)
-              FROM sis_sections
-              JOIN rooms ON rooms.location = sis_sections.meeting_location
-              WHERE sis_sections.term_id = {app.config['CURRENT_TERM_ID']}
-                AND rooms.capability IS NOT NULL
-                AND sis_sections.is_principal_listing IS TRUE
-                AND deleted_at IS NULL
-                AND (sis_sections.instructor_role_code IN ('ICNT', 'PI', 'TNIC') OR sis_sections.instructor_role_code IS NULL)
-              ORDER BY section_id ASC;
+                FROM sis_sections
+                JOIN rooms ON rooms.location = sis_sections.meeting_location
+               WHERE sis_sections.term_id = {app.config['CURRENT_TERM_ID']}
+                 AND rooms.capability IS NOT NULL
+                 AND sis_sections.is_principal_listing IS TRUE
+                 AND deleted_at IS NULL
+                 AND (sis_sections.instructor_role_code IN ('ICNT', 'PI', 'TNIC') OR sis_sections.instructor_role_code IS NULL)
+            ORDER BY section_id ASC;
     """
     app.logger.info(sql)
     ids = []
@@ -141,7 +141,7 @@ def get_test_instructors(test_section_data, uids_to_exclude=None):
                  AND sis_sections.instructor_role_code = 'PI'
                  AND sis_sections.is_primary IS TRUE
                  {clause}
-               ORDER BY RANDOM()
+            ORDER BY RANDOM()
                LIMIT {len(test_section_data['instructors'] + test_section_data['proxies'])};
     """
     app.logger.info(sql)
@@ -381,9 +381,9 @@ def reset_section_test_data(section):
 
 def set_meeting_location(section, meeting):
     sql = f"""UPDATE sis_sections
-              SET meeting_location = {"'" + meeting.room.name.replace("'", "''") + "'" if meeting.room else "NULL"}
-              WHERE section_id = {section.ccn}
-                AND term_id = {section.term.id}
+                 SET meeting_location = {"'" + meeting.room.name.replace("'", "''") + "'" if meeting.room else "NULL"}
+               WHERE section_id = {section.ccn}
+                 AND term_id = {section.term.id}
     """
     app.logger.info(sql)
     db.session.execute(text(sql))
@@ -402,10 +402,10 @@ def change_course_room(section, old_room=None, new_room=None):
     else:
         new = 'NULL'
     sql = f"""UPDATE sis_sections
-              SET meeting_location = {new}
-              WHERE section_id = {section.ccn}
-                AND term_id = {section.term.id}
-                AND meeting_location {old}
+                 SET meeting_location = {new}
+               WHERE section_id = {section.ccn}
+                 AND term_id = {section.term.id}
+                 AND meeting_location {old}
     """
     app.logger.info(sql)
     db.session.execute(text(sql))
@@ -415,11 +415,11 @@ def change_course_room(section, old_room=None, new_room=None):
 def update_course_start_end_dates(section, room, start, end):
     room_name = room.name.replace("'", "''")
     sql = f"""UPDATE sis_sections
-              SET meeting_start_date = {"'" + start.strftime('%Y-%m-%d %H:%M:%S') + "'" if start else "NULL"},
-                  meeting_end_date = {"'" + end.strftime('%Y-%m-%d %H:%M:%S') + "'" if start else "NULL"}
-              WHERE section_id = {section.ccn}
-                  AND term_id = {section.term.id}
-                  AND meeting_location = '{room_name}'
+                 SET meeting_start_date = {"'" + start.strftime('%Y-%m-%d %H:%M:%S') + "'" if start else "NULL"},
+                     meeting_end_date = {"'" + end.strftime('%Y-%m-%d %H:%M:%S') + "'" if start else "NULL"}
+               WHERE section_id = {section.ccn}
+                 AND term_id = {section.term.id}
+                 AND meeting_location = '{room_name}'
     """
     app.logger.info(sql)
     db.session.execute(text(sql))
@@ -428,9 +428,9 @@ def update_course_start_end_dates(section, room, start, end):
 
 def set_course_meeting_days(section, meeting):
     sql = f"""UPDATE sis_sections
-              SET meeting_days = {"'" + meeting.days + "'" if meeting.days else "NULL"}
-              WHERE section_id = {section.ccn}
-                  AND term_id = {section.term.id}
+                 SET meeting_days = {"'" + meeting.days + "'" if meeting.days else "NULL"}
+               WHERE section_id = {section.ccn}
+                 AND term_id = {section.term.id}
     """
     app.logger.info(sql)
     db.session.execute(text(sql))
@@ -441,10 +441,10 @@ def set_course_meeting_time(section, meeting):
     start_time_str = datetime.strptime(meeting.start_time, '%I:%M %p').strftime('%H:%M') if meeting.start_time else None
     end_time_str = datetime.strptime(meeting.end_time, '%I:%M %p').strftime('%H:%M') if meeting.end_time else None
     sql = f"""UPDATE sis_sections
-              SET meeting_start_time = {"'" + start_time_str + "'" if start_time_str else "NULL"},
-                  meeting_end_time = {"'" + end_time_str + "'" if end_time_str else "NULL"}
-              WHERE section_id = {section.ccn}
-                  AND term_id = {section.term.id}
+                 SET meeting_start_time = {"'" + start_time_str + "'" if start_time_str else "NULL"},
+                     meeting_end_time = {"'" + end_time_str + "'" if end_time_str else "NULL"}
+               WHERE section_id = {section.ccn}
+                 AND term_id = {section.term.id}
     """
     app.logger.info(sql)
     db.session.execute(text(sql))
@@ -455,21 +455,21 @@ def change_course_instructor(section, old_instructor=None, new_instructor=None):
     conditional = f" AND instructor_uid = '{old_instructor.uid}'" if old_instructor else ''
     if new_instructor:
         sql = f"""UPDATE sis_sections
-                  SET instructor_uid = '{new_instructor.uid}',
-                      instructor_name = '{new_instructor.first_name} {new_instructor.last_name}',
-                      instructor_role_code = '{new_instructor.role}'
-                  WHERE section_id = {section.ccn}
-                      AND term_id = {section.term.id}
+                     SET instructor_uid = '{new_instructor.uid}',
+                         instructor_name = '{new_instructor.first_name} {new_instructor.last_name}',
+                         instructor_role_code = '{new_instructor.role}'
+                   WHERE section_id = {section.ccn}
+                     AND term_id = {section.term.id}
                       {conditional}
         """
     else:
         sql = f"""UPDATE sis_sections
-                  SET instructor_uid = NULL,
-                      instructor_name = NULL,
-                      instructor_role_code = NULL
-                  WHERE section_id = {section.ccn}
-                      AND term_id = {section.term.id}
-                      AND instructor_uid = '{old_instructor.uid}'
+                     SET instructor_uid = NULL,
+                         instructor_name = NULL,
+                         instructor_role_code = NULL
+                   WHERE section_id = {section.ccn}
+                     AND term_id = {section.term.id}
+                     AND instructor_uid = '{old_instructor.uid}'
         """
     app.logger.info(sql)
     db.session.execute(text(sql))
@@ -499,10 +499,10 @@ def delete_term_instructor_rows(term, instructor):
 
 def set_instructor_role(section, instructor, role):
     sql = f"""UPDATE sis_sections
-              SET instructor_role_code = '{role}'
-              WHERE section_id = {section.ccn}
-                  AND term_id = {section.term.id}
-                  AND instructor_uid = '{instructor.uid}'
+                 SET instructor_role_code = '{role}'
+               WHERE section_id = {section.ccn}
+                 AND term_id = {section.term.id}
+                 AND instructor_uid = '{instructor.uid}'
     """
     app.logger.info(sql)
     db.session.execute(text(sql))
@@ -511,9 +511,9 @@ def set_instructor_role(section, instructor, role):
 
 def delete_section(section):
     sql = f"""UPDATE sis_sections
-              SET deleted_at = NOW()
-              WHERE section_id = {section.ccn}
-                AND term_id = {section.term.id}
+                 SET deleted_at = NOW()
+               WHERE section_id = {section.ccn}
+                 AND term_id = {section.term.id}
     """
     app.logger.info(sql)
     db.session.execute(text(sql))
@@ -522,9 +522,9 @@ def delete_section(section):
 
 def restore_section(section):
     sql = f"""UPDATE sis_sections
-              SET deleted_at = NULL
-              WHERE section_id = {section.ccn}
-                AND term_id = {section.term.id}
+                 SET deleted_at = NULL
+               WHERE section_id = {section.ccn}
+                 AND term_id = {section.term.id}
     """
     app.logger.info(sql)
     db.session.execute(text(sql))
@@ -549,7 +549,8 @@ def switch_principal_listing(old_primary, new_primary):
     db.session.execute(text(sql_2))
     std_commit(allow_test_environment=True)
     sql_3 = f"""UPDATE cross_listings
-                   SET section_id = {new_primary.ccn}, cross_listed_section_ids = ARRAY [{old_primary.ccn}]
+                   SET section_id = {new_primary.ccn},
+                       cross_listed_section_ids = ARRAY [{old_primary.ccn}]
                  WHERE section_id = {old_primary.ccn}
                    AND term_id = {old_primary.term.id}
     """
@@ -561,10 +562,10 @@ def switch_principal_listing(old_primary, new_primary):
 def get_kaltura_id(recording_schedule, term):
     section = recording_schedule.section
     sql = f"""SELECT kaltura_schedule_id
-              FROM scheduled
-              WHERE term_id = {term.id}
-                AND section_id = {section.ccn}
-                AND deleted_at IS NULL
+                FROM scheduled
+               WHERE term_id = {term.id}
+                 AND section_id = {section.ccn}
+                 AND deleted_at IS NULL
     """
     ids = []
     app.logger.info(f'Checking for Kaltura ID for term {term.id} section {section.ccn}')
