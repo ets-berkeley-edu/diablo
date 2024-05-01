@@ -67,7 +67,7 @@ class TestApprove:
         api_approve(
             client,
             publish_type='kaltura_my_media',
-            recording_type='presentation_audio',
+            recording_type='presenter_presentation_audio',
             section_id=section_1_id,
             expected_status_code=401,
         )
@@ -78,7 +78,7 @@ class TestApprove:
         api_approve(
             client,
             publish_type='youtube',
-            recording_type='presentation_audio',
+            recording_type='presenter_presentation_audio',
             section_id=section_1_id,
             expected_status_code=400,
         )
@@ -89,7 +89,7 @@ class TestApprove:
         api_approve(
             client,
             publish_type='kaltura_my_media',
-            recording_type='presentation_audio',
+            recording_type='presenter_presentation_audio',
             section_id=section_2_id,
             expected_status_code=403,
         )
@@ -104,7 +104,7 @@ class TestApprove:
                 api_approve(
                     client,
                     publish_type='kaltura_my_media',
-                    recording_type='presentation_audio',
+                    recording_type='presenter_presentation_audio',
                     section_id=section_1_id,
                     expected_status_code=expected_status_code,
                 )
@@ -122,7 +122,7 @@ class TestApprove:
                 client,
                 instructor_proxies=[{'uid': '10003'}],
                 publish_type='kaltura_my_media',
-                recording_type='presentation_audio',
+                recording_type='presenter_presentation_audio',
                 section_id=section_1_id,
             )
             std_commit(allow_test_environment=True)
@@ -132,7 +132,7 @@ class TestApprove:
                 client,
                 instructor_proxies=[{'uid': '10003'}],
                 publish_type='kaltura_media_gallery',
-                recording_type='presentation_audio',
+                recording_type='presenter_presentation_audio',
                 section_id=section_1_id,
             )
             std_commit(allow_test_environment=True)
@@ -170,8 +170,8 @@ class TestApprove:
             assert approvals_[1]['approvedBy'] == instructor_uids[1]
             assert approvals_[1]['courseDisplayName'] == api_json['label']
             assert approvals_[1]['publishType'] == 'kaltura_media_gallery'
-            assert approvals_[1]['recordingType'] == 'presentation_audio'
-            assert approvals_[1]['recordingTypeName'] == 'Audio + Projection'
+            assert approvals_[1]['recordingType'] == 'presenter_presentation_audio'
+            assert approvals_[1]['recordingTypeName'] == 'Camera without Operator'
 
             assert api_json['hasNecessaryApprovals'] is True
             assert api_json['scheduled'] is None
@@ -183,7 +183,7 @@ class TestApprove:
             api_json = api_approve(
                 client,
                 publish_type='kaltura_my_media',
-                recording_type='presentation_audio',
+                recording_type='presenter_presentation_audio',
                 section_id=section_1_id,
             )
             std_commit(allow_test_environment=True)
@@ -202,7 +202,7 @@ class TestApprove:
                 api_json = api_approve(
                     client,
                     publish_type='kaltura_my_media',
-                    recording_type='presentation_audio',
+                    recording_type='presenter_presentation_audio',
                     section_id=50012,
                 )
                 std_commit(allow_test_environment=True)
@@ -284,7 +284,7 @@ class TestGetCourse:
                 approver_type_='instructor',
                 course_display_name=f'term_id:{self.term_id} section_id:{section_1_id}',
                 publish_type_='kaltura_my_media',
-                recording_type_='presentation_audio',
+                recording_type_='presenter_presentation_audio',
                 room_id=room_id,
                 section_id=section_1_id,
                 term_id=self.term_id,
@@ -613,7 +613,7 @@ class TestGetCourses:
                         approver_type_='admin',
                         course_display_name=f'term_id:{self.term_id} section_id:{section_id}',
                         publish_type_='kaltura_my_media',
-                        recording_type_='presentation_audio',
+                        recording_type_='presenter_presentation_audio',
                         room_id=Room.get_room_id(section_id=section_id, term_id=self.term_id),
                         section_id=section_id,
                         term_id=self.term_id,
@@ -942,7 +942,7 @@ class TestUpdateOptOutCoursePreference:
             api_approve(
                 client,
                 publish_type='kaltura_my_media',
-                recording_type='presentation_audio',
+                recording_type='presenter_presentation_audio',
                 section_id=section_1_id,
             )
             api_json = api_get_course(client, section_id=section_1_id, term_id=self.term_id)
@@ -1019,7 +1019,7 @@ class TestUnscheduleCourse:
             api_approve(
                 client,
                 publish_type='kaltura_my_media',
-                recording_type='presentation_audio',
+                recording_type='presenter_presentation_audio',
                 section_id=section_1_id,
             )
             mock_scheduled(
@@ -1049,7 +1049,7 @@ class TestUnscheduleCourse:
             api_approve(
                 client,
                 publish_type='kaltura_my_media',
-                recording_type='presentation_audio',
+                recording_type='presenter_presentation_audio',
                 section_id=section_1_id,
             )
 
@@ -1102,7 +1102,7 @@ def _create_approval(section_id, term_id):
         approver_type_='instructor',
         course_display_name=f'term_id:{term_id} section_id:{section_id}',
         publish_type_='kaltura_my_media',
-        recording_type_='presentation_audio',
+        recording_type_='presenter_presentation_audio',
         room_id=Room.get_room_id(section_id=section_id, term_id=term_id),
         section_id=section_id,
         term_id=term_id,

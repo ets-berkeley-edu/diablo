@@ -80,7 +80,7 @@ class TestGetAuditoriums:
     def test_authorized(self, app, client, instructor_session):
         """Instructors and admins have access."""
         li_ka_shing = 'Li Ka Shing 145'
-        expected_locations = ["O'Brien 212", li_ka_shing]
+        expected_locations = [li_ka_shing, "O'Brien 212"]
         for cost in [None, 1000]:
             with override_config(app, 'COURSE_CAPTURE_PREMIUM_COST', cost):
                 for index, room in enumerate(self._api_auditoriums(client)):
@@ -125,7 +125,7 @@ class TestGetRoom:
         assert api_json['isAuditorium'] is True
         assert api_json['location'] == location
         assert api_json['kalturaResourceId'] == 890
-        assert len(api_json['recordingTypeOptions']) == 1
+        assert len(api_json['recordingTypeOptions']) == 2
 
         # Simple verification of courses sort order
         courses = api_json['courses']
@@ -160,7 +160,10 @@ class TestGetRoom:
         """Available recording types determined by values of capability and is_auditorium."""
         expected = {
             'Barker 101': ['presenter_presentation_audio'],
-            "O'Brien 212": ['presentation_audio'],
+            "O'Brien 212": [
+                'presenter_presentation_audio_with_operator',
+                'presenter_presentation_audio',
+            ],
             'Li Ka Shing 145': [
                 'presenter_presentation_audio_with_operator',
                 'presenter_presentation_audio',
@@ -205,7 +208,7 @@ class TestUpdateRoomCapability:
         """Admin user has access."""
         room_id = 1
         room = Room.get_room(room_id)
-        capability = 'screencast_and_video' if room.capability == 'screencast' else 'screencast'
+        capability = 'screencast_and_video'
         room = self._api_update_capability(client, room_id, capability)
         assert len(room)
         assert room['capability'] == capability
