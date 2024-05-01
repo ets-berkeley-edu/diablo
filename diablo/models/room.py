@@ -33,7 +33,6 @@ from sqlalchemy.dialects.postgresql import ENUM
 
 
 room_capability_type = ENUM(
-    'screencast',
     'screencast_and_video',
     name='room_capability_types',
     create_type=False,
@@ -170,27 +169,23 @@ class Room(db.Model):
     @classmethod
     def get_room_capability_options(cls):
         return {
-            'screencast': 'Screencast',
             'screencast_and_video': 'Screencast + Video',
         }
 
     def to_api_json(self):
-        if self.capability == 'screencast':
-            recording_type_options = {'presentation_audio': 'Audio + Projection'}
+        premium_cost = app.config['COURSE_CAPTURE_PREMIUM_COST']
+        suffix = f' (${premium_cost})' if premium_cost else ''
+        camera_with_operator_label = f'Audio + Projection + Camera with Operator{suffix}'
+        camera_without_operator_label = 'Audio + Projection + Camera without Operator'
+        if self.is_auditorium:
+            recording_type_options = {
+                'presenter_presentation_audio_with_operator': camera_with_operator_label,
+                'presenter_presentation_audio': camera_without_operator_label,
+            }
         else:
-            premium_cost = app.config['COURSE_CAPTURE_PREMIUM_COST']
-            suffix = f' (${premium_cost})' if premium_cost else ''
-            camera_with_operator_label = f'Audio + Projection + Camera with Operator{suffix}'
-            camera_without_operator_label = 'Audio + Projection + Camera without Operator'
-            if self.is_auditorium:
-                recording_type_options = {
-                    'presenter_presentation_audio_with_operator': camera_with_operator_label,
-                    'presenter_presentation_audio': camera_without_operator_label,
-                }
-            else:
-                recording_type_options = {
-                    'presenter_presentation_audio': camera_without_operator_label,
-                }
+            recording_type_options = {
+                'presenter_presentation_audio': camera_without_operator_label,
+            }
         return {
             'id': self.id,
             'location': self.location,

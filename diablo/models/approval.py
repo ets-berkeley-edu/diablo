@@ -38,9 +38,8 @@ publish_type = ENUM(
     create_type=False,
 )
 
+# In addition to these active options, legacy data includes the deprecated 'presentation_audio' and 'presenter_audio' options.
 recording_type = ENUM(
-    'presentation_audio',
-    'presenter_audio',
     'presenter_presentation_audio',
     'presenter_presentation_audio_with_operator',
     name='recording_types',
@@ -60,10 +59,8 @@ NAMES_PER_PUBLISH_TYPE = {
 }
 
 NAMES_PER_RECORDING_TYPE = {
-    'presentation_audio': 'Audio + Projection',
-    'presenter_audio': 'Audio + Camera',
-    'presenter_presentation_audio': 'Audio + Projection + Camera without Operator',
-    'presenter_presentation_audio_with_operator': 'Audio + Projection + Camera with Operator',
+    'presenter_presentation_audio': 'Camera without Operator',
+    'presenter_presentation_audio_with_operator': 'Camera with Operator',
 }
 
 
