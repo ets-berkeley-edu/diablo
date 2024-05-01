@@ -53,7 +53,7 @@ class CanvasPage(Page):
     MEDIA_GALLERY_LINK = (By.LINK_TEXT, 'Media Gallery')
     MY_MEDIA_LINK = (By.LINK_TEXT, 'My Media')
 
-    # JUNCTION
+    # RIPLEY
 
     CREATE_SITE_LINK = (By.LINK_TEXT, 'Create a Course Site')
     SWITCH_TO_CCN_BUTTON = (By.XPATH, '//button[contains(.,"Switch to CCN input")]')
@@ -65,9 +65,9 @@ class CanvasPage(Page):
     CREATE_SITE_BUTTON = (By.XPATH, '//button[contains(text(), "Create Course Site")]')
 
     @staticmethod
-    def junction_form_loc():
-        junction_url = app.config['JUNCTION_BASE_URL']
-        return By.XPATH, f'//form[contains(@action, "{junction_url}")]'
+    def ripley_form_loc():
+        ripley_url = app.config['RIPLEY_BASE_URL']
+        return By.XPATH, f'//form[contains(@action, "{ripley_url}")]'
 
     @staticmethod
     def term_loc():
@@ -101,7 +101,7 @@ class CanvasPage(Page):
         admin_id = app.config['CANVAS_ADMIN_ID']
         tool_id = app.config['CANVAS_SITE_CREATION_TOOL']
         self.driver.get(f'{app.config["CANVAS_BASE_URL"]}/users/{admin_id}/external_tools/{tool_id}')
-        Wait(self.driver, util.get_medium_timeout()).until(ec.presence_of_element_located(CanvasPage.junction_form_loc()))
+        Wait(self.driver, util.get_medium_timeout()).until(ec.presence_of_element_located(CanvasPage.ripley_form_loc()))
         self.hide_canvas_footer()
         Wait(self.driver, util.get_medium_timeout()).until(ec.frame_to_be_available_and_switch_to_it(CanvasPage.FRAME))
         Wait(self.driver, util.get_medium_timeout()).until(ec.visibility_of_element_located(CanvasPage.CREATE_SITE_LINK))

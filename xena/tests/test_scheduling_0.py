@@ -67,12 +67,7 @@ class TestScheduling0:
         util.reset_section_test_data(self.section)
         self.recording_schedule.scheduling_status = RecordingSchedulingStatus.NOT_SCHEDULED
 
-    def test_run_initial_canvas_job(self):
-        self.jobs_page.load_page()
-        self.jobs_page.run_canvas_job()
-
-    def test_delete_old_canvas_sites(self):
-        self.canvas_page.delete_section_sites(self.section)
+    # TODO - delete old course sites?
 
     def test_delete_old_email(self):
         util.reset_sent_email_test_data(self.section)
@@ -100,10 +95,6 @@ class TestScheduling0:
             app.logger.info('My Media is not properly configured')
             raise
 
-    def test_run_canvas_job(self):
-        self.jobs_page.load_page()
-        self.jobs_page.run_canvas_job()
-
     # CHECK FILTERS - NOT SCHEDULED
 
     def test_not_scheduled_filter_all(self):
@@ -128,15 +119,25 @@ class TestScheduling0:
         self.ouija_page.filter_for_no_instructors()
         assert not self.ouija_page.is_course_in_results(self.section)
 
+    # COURSE CAPTURE OPTIONS NOT AVAILABLE PRE-SCHEDULING
+
+    def test_no_recording_type_opts(self):
+        self.course_page.load_page(self.section)
+        assert not self.course_page.is_present(CoursePage.SELECT_RECORDING_TYPE_INPUT)
+
+    def test_no_publish_options(self):
+        assert not self.course_page.is_present(CoursePage.SELECT_PUBLISH_TYPE_INPUT)
+
+    # VERIFY COURSE HISTORY
+
+    # TODO
+
     # RUN SEMESTER START JOB
 
     def test_semester_start(self):
         self.jobs_page.load_page()
         self.jobs_page.run_semester_start_job()
-        self.jobs_page.run_emails_job()
-
-    def test_kaltura_schedule_id(self):
-        util.get_kaltura_id(self.recording_schedule, self.term)
+        assert util.get_kaltura_id(self.recording_schedule, self.term)
         self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
         self.recording_schedule.publish_type = PublishType.PUBLISH_TO_MY_MEDIA
         self.recording_schedule.scheduling_status = RecordingSchedulingStatus.SCHEDULED
@@ -199,6 +200,7 @@ class TestScheduling0:
     # VERIFY SERIES IN KALTURA
 
     def test_click_series_link(self):
+        self.room_printable_page.close_printable_schedule()
         self.course_page.load_page(self.section)
         self.course_page.click_kaltura_series_link(self.recording_schedule)
         self.kaltura_page.wait_for_delete_button()
@@ -215,17 +217,15 @@ class TestScheduling0:
     def test_series_publish_status(self):
         assert self.kaltura_page.is_private()
 
-    def test_kaltura_course_site_count(self):
+    def test_kaltura_course_site(self):
         assert len(self.kaltura_page.publish_category_els()) == 0
-
-    def test_kaltura_no_course_site(self):
         assert not self.kaltura_page.is_publish_category_present(self.site)
 
-    def test_close_kaltura_window(self):
-        self.kaltura_page.close_window_and_switch()
+    # VERIFY ANNUNCIATION EMAIL
 
     def test_receive_annunciation_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION, self.section,
+        self.kaltura_page.close_window_and_switch()
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_SEM_START, self.section,
                                          self.section.instructors[0]) == 1
 
     # INSTRUCTOR LOGS IN
@@ -257,12 +257,6 @@ class TestScheduling0:
 
     def test_visible_room(self):
         assert self.course_page.visible_rooms()[0] == self.meeting.room.name
-
-    def test_visible_site_ids(self):
-        assert self.course_page.visible_course_site_ids() == [site.site_id for site in self.section.sites]
-
-    def test_site_link(self):
-        assert self.course_page.external_link_valid(CoursePage.course_site_link_locator(self.site), self.site.name)
 
     def test_visible_listings(self):
         listing_codes = [li.code for li in self.section.listings]
@@ -312,7 +306,16 @@ class TestScheduling0:
         self.course_page.select_publish_type(PublishType.PUBLISH_TO_PENDING.value)
         self.recording_schedule.publish_type = PublishType.PUBLISH_TO_PENDING
 
-    # TODO - repurpose approve button as save button?
+    # TODO - verify site options include test site
+
+    # TODO - add site to publication channels
+
+    def test_visible_site_ids(self):
+        assert self.course_page.visible_course_site_ids() == [site.site_id for site in self.section.sites]
+
+    def test_site_link(self):
+        assert self.course_page.external_link_valid(CoursePage.course_site_link_locator(self.site), self.site.name)
+
     def test_approve(self):
         self.course_page.click_approve_button()
 
@@ -346,25 +349,13 @@ class TestScheduling0:
         self.rooms_page.click_room_link(self.meeting.room)
         self.room_page.wait_for_series_row(self.recording_schedule)
 
-    def test_update_room_series_link(self):
-        expected = f'{self.section.code}, {self.section.number} ({self.term.name})'
-        assert self.room_page.series_row_kaltura_link_text(self.recording_schedule) == expected
-
-    def test_update_room_series_schedule(self):
-        self.room_page.verify_series_schedule(self.section, self.meeting, self.recording_schedule)
-
-    def test_update_series_recordings(self):
-        self.room_page.verify_series_recordings(self.section, self.meeting, self.recording_schedule)
-
-    def test_update_series_blackouts(self):
-        self.room_page.verify_series_blackouts(self.section, self.meeting, self.recording_schedule)
-
     def test_update_open_printable(self):
         self.room_printable_page.verify_printable(self.section, self.meeting, self.recording_schedule)
 
     # VERIFY SERIES IN KALTURA
 
     def test_update_click_series_link(self):
+        self.room_printable_page.close_printable_schedule()
         self.course_page.load_page(self.section)
         self.course_page.click_kaltura_series_link(self.recording_schedule)
         self.kaltura_page.wait_for_delete_button()
@@ -384,18 +375,21 @@ class TestScheduling0:
         # TODO - pending status
         assert self.kaltura_page.is_published()
 
-    def test_update_kaltura_course_site_count(self):
-        assert len(self.kaltura_page.publish_category_els()) == 2
-
     def test_update_kaltura_course_site(self):
+        assert len(self.kaltura_page.publish_category_els()) == 2
         assert self.kaltura_page.is_publish_category_present(self.site)
 
     def test_update_close_kaltura_window(self):
         self.kaltura_page.close_window_and_switch()
 
+    # VERIFY EMAILS
+
     def test_update_receive_schedule_conf_email(self):
         assert util.get_sent_email_count(EmailTemplateType.INSTR_CHANGES_CONFIRMED, self.section,
                                          self.section.instructors[0]) == 1
+
+    def test_update_admin_email_operator_requested(self):
+        assert util.get_sent_email_count(EmailTemplateType.ADMIN_OPERATOR_REQUESTED, self.section) == 1
 
     # VERIFY NO RECORDING TYPE DOWNGRADE PERMITTED
 
@@ -408,5 +402,9 @@ class TestScheduling0:
     # TODO def test_no_downgrade(self):
 
     # VERIFY COURSE HISTORY
+
+    # TODO
+
+    # VERIFY REMINDER EMAIL
 
     # TODO

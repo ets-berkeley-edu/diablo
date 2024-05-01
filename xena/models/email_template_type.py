@@ -28,43 +28,43 @@ from enum import Enum
 
 class EmailTemplateType(Enum):
 
-    ADMIN_DATE_CHANGE = {
-        'desc': 'Admin alert: Date change',
-        'type': 'admin_alert_date_change',
+    ADMIN_OPERATOR_REQUESTED = {
+        # TODO
     }
-    ADMIN_INSTR_CHANGE = {
-        'desc': 'Admin alert: Instructor change',
-        'type': 'admin_alert_instructor_change',
+    INSTR_ADDED = {
+        # TODO
     }
-    ADMIN_ROOM_CHANGE = {
-        'desc': 'Admin alert: Room change',
-        'type': 'admin_alert_room_change',
-    }
-    ADMIN_WEIRD_DATES = {
-        'desc': 'Admin alert: Weird start/end dates',
-        'type': 'admin_alert_multiple_meeting_patterns',
-    }
-    INSTR_AWAITING_APPROVAL = {
-        'desc': 'Waiting for approval',
-        'type': 'waiting_for_approval',
-    }
-    INSTR_ANNUNCIATION = {
-        'desc': 'Announcement',
-        'type': 'announcement',
+    INSTR_ANNUNCIATION_NEW_COURSE_SCHED = {
+        # TODO
     }
     INSTR_ANNUNCIATION_REMINDER = {
         'desc': 'Remind Scheduled',
         'type': 'remind_scheduled',
     }
-    INSTR_RECORDINGS_SCHEDULED = {
-        'desc': 'Recordings scheduled',
-        'type': 'recordings_scheduled',
+    INSTR_ANNUNCIATION_SEM_START = {
+        'desc': 'Announcement',
+        'type': 'announcement',
+    }
+    INSTR_CHANGES_CONFIRMED = {
+        'desc': 'Changes confirmed',
+        'type': 'changes_confirmed',
+    }
+    INSTR_COURSE_CANCELLED = {
+        # TODO
+    }
+    INSTR_OPTED_OUT = {
+        # TODO
+    }
+    INSTR_REMOVED = {
+        # TODO
+    }
+    INSTR_ROOM_CHANGE_ELIGIBLE = {
+        # TODO
     }
     INSTR_ROOM_CHANGE_INELIGIBLE = {
         'desc': 'Room change: No longer eligible',
         'type': 'room_change_no_longer_eligible',
     }
-    INSTR_CHANGES_CONFIRMED = {
-        'desc': 'Changes confirmed',
-        'type': 'changes_confirmed',
+    INSTR_SCHEDULE_CHANGE = {
+        # TODO
     }

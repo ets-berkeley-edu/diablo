@@ -104,7 +104,7 @@ class TestCourseCancellation:
         assert not util.get_kaltura_id(self.recording_schedule, self.term)
 
     def test_no_annunciation(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION, self.section,
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_SEM_START, self.section,
                                          self.section.instructors[0]) == 0
 
     # COURSE IS RESTORED AND SCHEDULED
@@ -148,9 +148,6 @@ class TestCourseCancellation:
     def test_emails_job(self):
         self.jobs_page.load_page()
         self.jobs_page.run_emails_job()
-
-    def test_admin_email_canceled_ineligible(self):
-        assert util.get_sent_email_count(EmailTemplateType.ADMIN_ROOM_CHANGE, self.section) == 1
 
     def test_instructor_email_canceled_ineligible(self):
         assert util.get_sent_email_count(EmailTemplateType.INSTR_ROOM_CHANGE_INELIGIBLE, self.section,
