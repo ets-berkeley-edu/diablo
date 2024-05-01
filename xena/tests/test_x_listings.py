@@ -61,30 +61,19 @@ class TestCrossListings:
         self.login_page.dev_auth()
         self.ouija_page.click_jobs_link()
         self.jobs_page.run_emails_job()
-        self.jobs_page.run_canvas_job()
         self.jobs_page.disable_all_jobs()
 
     def test_delete_old_diablo_and_kaltura(self):
         self.kaltura_page.log_in_via_calnet(self.calnet_page)
         self.kaltura_page.reset_test_data(self.term, self.recording_schedule)
 
-    def test_delete_old_canvas_sites(self):
-        ids = []
-        for section in self.sections:
-            ids.append(self.canvas_page.delete_section_sites(section))
-        if any(ids):
-            self.jobs_page.load_page()
-            self.jobs_page.run_canvas_job()
+    # TODO - delete old course sites?
 
     def test_delete_old_diablo_data(self):
         util.reset_section_test_data(self.section)
         util.delete_sis_sections_rows(self.x_listed_section)
         util.add_sis_sections_rows(self.x_listed_section)
         self.recording_schedule.scheduling_status = RecordingSchedulingStatus.NOT_SCHEDULED
-
-    def test_run_initial_canvas_job(self):
-        self.jobs_page.load_page()
-        self.jobs_page.run_canvas_job()
 
     def test_delete_old_email(self):
         util.reset_sent_email_test_data(self.section)
@@ -134,14 +123,6 @@ class TestCrossListings:
             app.logger.info('My Media is not properly configured')
             raise
 
-    def test_run_canvas_job(self):
-        self.jobs_page.load_page()
-        self.jobs_page.run_canvas_job()
-
-    def test_visible_site_ids(self):
-        self.course_page.load_page(self.section)
-        assert self.course_page.visible_course_site_ids() == [self.site_1.site_id, self.site_2.site_id]
-
     # RUN SEMESTER START JOB
 
     def test_semester_start(self):
@@ -181,9 +162,9 @@ class TestCrossListings:
         assert not self.kaltura_page.is_publish_category_present(self.site_2)
 
     def test_receive_annunciation_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION, self.section,
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_SEM_START, self.section,
                                          self.section.instructors[0]) == 1
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION, self.section,
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_SEM_START, self.section,
                                          self.section.instructors[1]) == 1
 
     # CHANGE PUBLISH TYPE TO AUTOMATIC
@@ -191,6 +172,7 @@ class TestCrossListings:
     def test_update_publish_type(self):
         self.course_page.load_page(self.section)
         self.course_page.select_publish_type(PublishType.PUBLISH_AUTOMATICALLY.value)
+        # TODO - select both sites
         self.recording_schedule.publish_type = PublishType.PUBLISH_AUTOMATICALLY
 
     def test_approve(self):

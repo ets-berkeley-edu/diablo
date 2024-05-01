@@ -219,6 +219,6 @@ class OuijaBoardPage(DiabloPages):
     def course_row_sched_status_el(self, section):
         return self.element((By.ID, f'course-{section.ccn}-scheduling-status'))
 
-    def click_sign_up_page_link(self, section):
-        app.logger.info(f'Clicking the link to the sign up page for {section.code}')
+    def click_course_page_link(self, section):
+        app.logger.info(f'Clicking the link to the course page for {section.code}')
         self.wait_for_page_and_click((By.ID, f'link-course-{section.ccn}'))

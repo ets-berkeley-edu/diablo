@@ -46,12 +46,12 @@ CURRENT_TERM_NAME = 'Fall 2021'
 
 INDEX_HTML = f'{BASE_DIR}/tests/static/test-index.html'
 
-JUNCTION_BASE_URL = 'https://junction-dev.berkeley.edu'
-
 KALTURA_TOOL_URL = 'https://kaltura.tool.url'
 KALTURA_BLACKOUT_DATES = []
 
 LOGGING_LEVEL = logging.INFO
+
+RIPLEY_BASE_URL = 'https://ripley-dev.ets.berkeley.edu'
 
 TESTING = True
 

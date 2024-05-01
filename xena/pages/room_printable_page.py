@@ -89,5 +89,3 @@ class RoomPrintablePage(DiabloPages):
 
         expected_type = recording_schedule.recording_type.value['printable']
         assert self.visible_recording_type(section) == expected_type
-
-        self.close_printable_schedule()

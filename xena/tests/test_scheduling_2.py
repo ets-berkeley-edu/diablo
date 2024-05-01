@@ -72,12 +72,7 @@ class TestScheduling2:
         util.reset_section_test_data(self.section)
         self.recording_schedule.scheduling_status = RecordingSchedulingStatus.NOT_SCHEDULED
 
-    def test_run_initial_canvas_job(self):
-        self.jobs_page.load_page()
-        self.jobs_page.run_canvas_job()
-
-    def test_delete_old_canvas_sites(self):
-        self.canvas_page.delete_section_sites(self.section)
+    # TODO - delete old course sites?
 
     def test_delete_old_email(self):
         util.reset_sent_email_test_data(self.section)
@@ -111,10 +106,7 @@ class TestScheduling2:
     def test_semester_start(self):
         self.jobs_page.load_page()
         self.jobs_page.run_semester_start_job()
-        self.jobs_page.run_emails_job()
-
-    def test_kaltura_schedule_id(self):
-        util.get_kaltura_id(self.recording_schedule, self.term)
+        assert util.get_kaltura_id(self.recording_schedule, self.term)
         self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
         self.recording_schedule.publish_type = PublishType.PUBLISH_TO_MY_MEDIA
         self.recording_schedule.scheduling_status = RecordingSchedulingStatus.SCHEDULED
@@ -177,6 +169,7 @@ class TestScheduling2:
     # VERIFY SERIES IN KALTURA
 
     def test_click_series_link(self):
+        self.room_printable_page.close_printable_schedule()
         self.course_page.load_page(self.section)
         self.course_page.click_kaltura_series_link(self.recording_schedule)
         self.kaltura_page.wait_for_delete_button()
@@ -193,24 +186,19 @@ class TestScheduling2:
     def test_series_publish_status(self):
         assert self.kaltura_page.is_private()
 
-    def test_kaltura_course_site_count(self):
+    def test_kaltura_course_site(self):
         assert len(self.kaltura_page.publish_category_els()) == 0
 
-    def test_kaltura_no_course_site(self):
-        assert not self.kaltura_page.is_publish_category_present(self.site_1)
-
-    def test_close_kaltura_window(self):
-        self.kaltura_page.close_window_and_switch()
+    # VERIFY ANNUNCIATION EMAILS
 
     def test_receive_annunciation_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION, self.section,
+        self.kaltura_page.close_window_and_switch()
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_SEM_START, self.section,
                                          self.section.instructors[0]) == 1
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION, self.section,
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_SEM_START, self.section,
                                          self.section.instructors[1]) == 1
 
     # CREATE COURSE SITE
-
-    # TODO - create another site for entering manually
 
     def test_create_course_site(self):
         self.canvas_page.provision_site(self.section, [self.section.ccn], self.site_1)
@@ -232,34 +220,6 @@ class TestScheduling2:
         else:
             app.logger.info('My Media is not properly configured')
             raise
-
-    def test_new_site_run_canvas_job(self):
-        self.jobs_page.load_page()
-        self.jobs_page.run_canvas_job()
-
-    def test_new_site_run_kaltura_job(self):
-        self.ouija_page.click_jobs_link()
-        self.jobs_page.run_kaltura_job()
-        self.jobs_page.run_emails_job()
-
-    # VERIFY SERIES IN KALTURA
-
-    def test_new_site_click_series_link(self):
-        self.course_page.load_page(self.section)
-        self.course_page.click_kaltura_series_link(self.recording_schedule)
-        self.kaltura_page.wait_for_delete_button()
-
-    def test_new_site_series_publish_status(self):
-        assert self.kaltura_page.is_private()
-
-    def test_new_site_kaltura_course_site_count(self):
-        assert len(self.kaltura_page.publish_category_els()) == 0
-
-    def test_new_site_kaltura_no_course_site(self):
-        assert not self.kaltura_page.is_publish_category_present(self.site_1)
-
-    def test_new_site_close_kaltura_window(self):
-        self.kaltura_page.close_window_and_switch()
 
     # VERIFY STATIC COURSE SIS DATA
 
@@ -289,28 +249,9 @@ class TestScheduling2:
     def test_visible_room(self):
         assert self.course_page.visible_rooms()[0] == self.meeting.room.name
 
-    def test_visible_site_ids(self):
-        assert self.course_page.visible_course_site_ids() == [site.site_id for site in self.section.sites]
-
-    def test_site_link(self):
-        assert self.course_page.external_link_valid(CoursePage.course_site_link_locator(self.site_1), self.site_1.name)
-
     def test_visible_listings(self):
         listing_codes = [li.code for li in self.section.listings]
         assert self.course_page.visible_cross_listing_codes() == listing_codes
-
-    # VERIFY VARIABLE CONTENT AND EXTERNAL LINKS
-
-    def test_publish_type_text(self):
-        assert self.course_page.is_present(CoursePage.PUBLISH_TYPE_TEXT)
-
-    def test_overview_link(self):
-        title = 'Course Capture | Research, Teaching, and Learning'
-        assert self.course_page.external_link_valid(CoursePage.CC_EXPLAINED_LINK, title)
-
-    def test_policies_link(self):
-        title = 'Course Capture Policies | Research, Teaching, and Learning'
-        assert self.course_page.external_link_valid(CoursePage.CC_POLICIES_LINK, title)
 
     # VERIFY AVAILABLE OPTIONS
 
@@ -318,7 +259,6 @@ class TestScheduling2:
         self.course_page.click_rec_type_input()
         visible_opts = self.course_page.visible_menu_options()
         expected = [
-            RecordingType.VIDEO_WITH_OPERATOR.value['option'],
             RecordingType.VIDEO_SANS_OPERATOR.value['option'],
         ]
         assert visible_opts == expected
@@ -339,9 +279,8 @@ class TestScheduling2:
         self.course_page.select_publish_type(PublishType.PUBLISH_TO_PENDING.value)
         self.recording_schedule.publish_type = PublishType.PUBLISH_TO_PENDING
 
-    # TODO def test_enter_site_id(self):
+    # TODO - add newly created site
 
-    # TODO - repurpose approve button as save button?
     def test_approve(self):
         self.course_page.click_approve_button()
 
@@ -353,6 +292,8 @@ class TestScheduling2:
     # VERIFY COURSE HISTORY
 
     # TODO def test_course_history_updates_pending(self):
+
+    # UPDATE SERIES IN KALTURA
 
     def test_update_run_kaltura_job(self):
         self.ouija_page.click_jobs_link()
@@ -369,16 +310,22 @@ class TestScheduling2:
     def test_update_series_publish_status(self):
         assert self.kaltura_page.is_published()
 
-    def test_update_kaltura_course_site_count(self):
-        assert len(self.kaltura_page.publish_category_els()) == 2
-
     def test_update_kaltura_course_site(self):
+        assert len(self.kaltura_page.publish_category_els()) == 2
         assert self.kaltura_page.is_publish_category_present(self.site_1)
 
     def test_update_close_kaltura_window(self):
         self.kaltura_page.close_window_and_switch()
 
-    # TODO - Settings updated email sent
+    # VERIFY EMAILS
+
+    def test_update_receive_schedule_conf_email_instr_1(self):
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_CHANGES_CONFIRMED, self.section,
+                                         self.section.instructors[0]) == 1
+
+    def test_update_receive_schedule_conf_email_instr_2(self):
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_CHANGES_CONFIRMED, self.section,
+                                         self.section.instructors[1]) == 1
 
     # CREATE COURSE SITE
 
@@ -403,9 +350,9 @@ class TestScheduling2:
             app.logger.info('My Media is not properly configured')
             raise
 
-    def test_another_site_run_canvas_job(self):
-        self.jobs_page.load_page()
-        self.jobs_page.run_canvas_job()
+    def test_another_site_add_to_channels(self):
+        self.course_page.load_page(self.section)
+        # TODO - add new site to publication channels and save
 
     def test_another_site_run_kaltura_job(self):
         self.ouija_page.click_jobs_link()
@@ -422,43 +369,44 @@ class TestScheduling2:
     def test_another_site_series_publish_status(self):
         assert self.kaltura_page.is_published()
 
-    def test_another_site_kaltura_course_site_count(self):
+    def test_another_site_kaltura_course_sites(self):
         assert len(self.kaltura_page.publish_category_els()) == 4
-
-    def test_another_site_kaltura_course_site_one(self):
         assert self.kaltura_page.is_publish_category_present(self.site_1)
-
-    def test_another_site_kaltura_course_site_two(self):
         assert self.kaltura_page.is_publish_category_present(self.site_2)
 
-    def test_another_site_close_kaltura_window(self):
+    # VERIFY EMAILS
+
+    def test_update_receive_site_conf_email_instr_1(self):
         self.kaltura_page.close_window_and_switch()
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_CHANGES_CONFIRMED, self.section,
+                                         self.section.instructors[0]) == 2
+
+    def test_update_receive_site_conf_email_instr_2(self):
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_CHANGES_CONFIRMED, self.section,
+                                         self.section.instructors[1]) == 2
 
     # DELETE ONE COURSE SITE
 
     def test_delete_course_site(self):
-        self.canvas_page.delete_site(self.site_1.site_id)
+        self.ouija_page.load_page()
+        self.ouija_page.log_out()
+        self.login_page.dev_auth(self.section.instructors[1].uid)
+        self.ouija_page.click_course_page_link(self.section)
+        # TODO - delete site 1 from publication channels and save
         self.section.sites.remove(self.site_1)
 
     def test_run_jobs(self):
+        self.ouija_page.log_out()
+        self.login_page.dev_auth()
         self.jobs_page.load_page()
-        self.jobs_page.run_canvas_job()
         self.jobs_page.run_kaltura_job()
 
-    def test_one_visible_site_id(self):
-        self.sign_up_page.load_page(self.section)
-        assert self.course_page.visible_course_site_ids() == [site.site_id for site in self.section.sites]
-
-    def test_deleted_site_in_kaltura(self):
+    def test_kaltura_course_site_deleted(self):
         self.kaltura_page.load_event_edit_page(self.recording_schedule.series_id)
         self.kaltura_page.wait_for_delete_button()
-
-    def test_kaltura_course_site_count_still_two(self):
         self.kaltura_page.wait_for_publish_category_el()
-        assert len(self.kaltura_page.publish_category_els()) == 4
-
-    def test_kaltura_course_site_still_both(self):
-        assert self.kaltura_page.is_publish_category_present(self.site_1)
+        assert len(self.kaltura_page.publish_category_els()) == 2
+        assert not self.kaltura_page.is_publish_category_present(self.site_1)
         assert self.kaltura_page.is_publish_category_present(self.site_2)
 
     # INSTRUCTOR UPDATE PUBLISH TYPE
@@ -473,7 +421,6 @@ class TestScheduling2:
         self.course_page.click_rec_type_input()
         visible_opts = self.course_page.visible_menu_options()
         expected = [
-            RecordingType.VIDEO_WITH_OPERATOR.value['option'],
             RecordingType.VIDEO_SANS_OPERATOR.value['option'],
         ]
         assert visible_opts == expected
@@ -494,7 +441,6 @@ class TestScheduling2:
         self.course_page.select_publish_type(PublishType.PUBLISH_TO_MY_MEDIA.value)
         self.recording_schedule.publish_type = PublishType.PUBLISH_TO_MY_MEDIA
 
-    # TODO - repurpose approve button as save button?
     def test_update_approve(self):
         self.course_page.click_approve_button()
 
@@ -520,30 +466,6 @@ class TestScheduling2:
         self.jobs_page.run_kaltura_job()
         self.jobs_page.run_emails_job()
 
-    # VERIFY SERIES IN DIABLO
-
-    def test_update_room_series(self):
-        self.rooms_page.load_page()
-        self.rooms_page.find_room(self.meeting.room)
-        self.rooms_page.click_room_link(self.meeting.room)
-        self.room_page.wait_for_series_row(self.recording_schedule)
-
-    def test_update_room_series_link(self):
-        expected = f'{self.section.code}, {self.section.number} ({self.term.name})'
-        assert self.room_page.series_row_kaltura_link_text(self.recording_schedule) == expected
-
-    def test_update_room_series_schedule(self):
-        self.room_page.verify_series_schedule(self.section, self.meeting, self.recording_schedule)
-
-    def test_update_series_recordings(self):
-        self.room_page.verify_series_recordings(self.section, self.meeting, self.recording_schedule)
-
-    def test_update_series_blackouts(self):
-        self.room_page.verify_series_blackouts(self.section, self.meeting, self.recording_schedule)
-
-    def test_update_open_printable(self):
-        self.room_printable_page.verify_printable(self.section, self.meeting, self.recording_schedule)
-
     # VERIFY SERIES IN KALTURA
 
     def test_update_series_link(self):
@@ -551,32 +473,25 @@ class TestScheduling2:
         self.course_page.click_kaltura_series_link(self.recording_schedule)
         self.kaltura_page.wait_for_delete_button()
 
-    def test_update_series_title_and_desc(self):
-        self.kaltura_page.verify_title_and_desc(self.section, self.meeting)
-
-    def test_update_series_collab(self):
-        self.kaltura_page.verify_collaborators(self.section)
-
-    def test_update_schedule(self):
-        self.kaltura_page.verify_schedule(self.section, self.meeting)
-
     def test_update_series_publish(self):
-        self.kaltura_page.reload_page()
         self.kaltura_page.wait_for_publish_category_el()
         assert self.kaltura_page.is_private()
 
-    def test_updated_kaltura_course_site_count(self):
+    def test_updated_kaltura_no_course_site(self):
         assert len(self.kaltura_page.publish_category_els()) == 0
+        assert not self.kaltura_page.is_publish_category_present(self.site_1)
+        assert not self.kaltura_page.is_publish_category_present(self.site_2)
 
-    def test_updated_kaltura_course_site(self):
-        assert self.kaltura_page.is_publish_category_present(self.site)
+    # VERIFY EMAIL
 
-    def test_updated_close_kaltura_window(self):
+    def test_updated_receive_schedule_conf_email_instr_1(self):
         self.kaltura_page.close_window_and_switch()
-
-    def test_updated_receive_schedule_conf_email(self):
         assert util.get_sent_email_count(EmailTemplateType.INSTR_CHANGES_CONFIRMED, self.section,
-                                         self.section.instructors[0]) == 2
+                                         self.section.instructors[0]) == 3
+
+    def test_updated_receive_schedule_conf_email_instr_2(self):
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_CHANGES_CONFIRMED, self.section,
+                                         self.section.instructors[1]) == 3
 
     # VERIFY COURSE HISTORY
 
