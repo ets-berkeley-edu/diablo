@@ -27,7 +27,7 @@ import random
 from diablo import db, std_commit
 from diablo.jobs.emails_job import EmailsJob
 from diablo.jobs.kaltura_job import KalturaJob
-from diablo.jobs.sis_data_refresh_job import SisDataRefreshJob
+from diablo.jobs.schedule_updates_job import ScheduleUpdatesJob
 from diablo.lib.berkeley import are_scheduled_dates_obsolete, are_scheduled_times_obsolete, get_recording_end_date, \
     get_recording_start_date
 from diablo.models.room import Room
@@ -210,7 +210,7 @@ class TestKalturaJob:
             )
 
             # Message queued but not sent.
-            SisDataRefreshJob(simply_yield).run()
+            ScheduleUpdatesJob(simply_yield).run()
             KalturaJob(simply_yield).run()
             _assert_email_count(0, section_id, 'instructors_added')
 
@@ -246,7 +246,7 @@ class TestKalturaJob:
             )
 
             # Message queued but not sent.
-            SisDataRefreshJob(simply_yield).run()
+            ScheduleUpdatesJob(simply_yield).run()
             KalturaJob(simply_yield).run()
             _assert_email_count(0, section_id, 'instructors_removed')
 
@@ -269,7 +269,7 @@ def _get_email_count(uid):
 
 
 def _run_jobs():
-    SisDataRefreshJob(simply_yield).run()
+    ScheduleUpdatesJob(simply_yield).run()
     KalturaJob(simply_yield).run()
     EmailsJob(simply_yield).run()
 
