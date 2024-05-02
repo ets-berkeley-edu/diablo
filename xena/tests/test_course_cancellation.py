@@ -157,6 +157,7 @@ class TestCourseCancellation:
 
     def test_unsched_canceled(self):
         self.jobs_page.load_page(self.section)
+        # TODO run updates job
         self.jobs_page.run_kaltura_job()
 
     def test_no_kaltura_series_canceled_unsched(self):

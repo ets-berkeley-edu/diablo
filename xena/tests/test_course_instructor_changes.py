@@ -147,11 +147,11 @@ class TestCourseInstructorChanges:
     def test_kaltura_publish_type_not_updated(self):
         assert self.kaltura_page.is_published()
         assert len(self.kaltura_page.publish_category_els()) == 0
-        self.kaltura_page.close_window_and_switch()
 
     # VERIFY EMAILS
 
     def test_instr_1_removed_email(self):
+        self.kaltura_page.close_window_and_switch()
         assert util.get_sent_email_count(EmailTemplateType.INSTR_REMOVED, self.section, self.instr_1) == 1
 
     def test_instr_2_added_email(self):
