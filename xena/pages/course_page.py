@@ -110,7 +110,7 @@ class CoursePage(DiabloPages):
         self.driver.get(f'{app.config["BASE_URL"]}/course/{term_id}/{ccn}')
 
     def load_page(self, section):
-        app.logger.info(f'Loading sign-up page for term {section.term.id} section ID {section.ccn}')
+        app.logger.info(f'Loading course page for term {section.term.id} section ID {section.ccn}')
         self.hit_url(section.term.id, section.ccn)
         self.wait_for_diablo_title(f'{section.code}, {section.number}')
 

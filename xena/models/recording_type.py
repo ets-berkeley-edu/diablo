@@ -29,11 +29,7 @@ from flask import current_app as app
 
 
 class RecordingType(Enum):
-    SCREENCAST = {
-        'option': 'Audio + Projection',
-        'selection': 'Audio + Projection',
-        'printable': 'Audio + Projection',
-    }
+
     VIDEO_WITH_OPERATOR = {
         'option': f"Audio + Projection + Camera with Operator (${app.config['COURSE_CAPTURE_PREMIUM_COST']})",
         'selection': 'Audio + Projection + Camera with Operator',
