@@ -32,6 +32,7 @@ from diablo.models.approval import Approval
 from diablo.models.canvas_course_site import CanvasCourseSite
 from diablo.models.course_preference import CoursePreference
 from diablo.models.cross_listing import CrossListing
+from diablo.models.opt_out import OptOut
 from diablo.models.room import Room
 from diablo.models.scheduled import Scheduled
 from flask import current_app as app
@@ -313,17 +314,16 @@ class SisSection(db.Model):
                 d.section_id = s.section_id
                 AND d.term_id = s.term_id
                 AND d.deleted_at IS NULL
-            LEFT JOIN course_preferences cp ON
-                cp.section_id = s.section_id
-                AND cp.term_id = s.term_id
-                AND cp.has_opted_out IS TRUE
+            LEFT JOIN opt_outs o ON
+                o.section_id = s.section_id
+                AND o.term_id = s.term_id
             WHERE
                 s.term_id = :term_id
                 AND (s.instructor_uid IS NULL OR s.instructor_role_code = ANY(:instructor_role_codes))
                 AND s.is_principal_listing IS TRUE
                 AND a.section_id IS NULL
                 AND d.section_id IS NULL
-                AND cp.section_id IS NULL
+                AND o.section_id IS NULL
                 AND s.deleted_at IS NULL
             ORDER BY s.course_name, s.section_id, s.instructor_uid, r.capability NULLS LAST
         """
@@ -363,10 +363,9 @@ class SisSection(db.Model):
                 e.section_id = s.section_id
                 AND e.term_id = s.term_id
                 AND e.template_type = 'invitation'
-            LEFT JOIN course_preferences cp ON
-                cp.section_id = s.section_id
-                AND cp.term_id = s.term_id
-                AND cp.has_opted_out IS TRUE
+            LEFT JOIN opt_outs o ON
+                o.section_id = s.section_id
+                AND o.term_id = s.term_id
             WHERE
                 s.term_id = :term_id
                 AND s.section_id IN ({_sections_with_at_least_one_eligible_room()})
@@ -375,7 +374,7 @@ class SisSection(db.Model):
                 AND a.section_id IS NULL
                 AND d.section_id IS NULL
                 AND e.section_id IS NULL
-                AND cp.section_id IS NULL
+                AND o.section_id IS NULL
                 AND s.deleted_at IS NULL
             ORDER BY s.course_name, s.section_id, s.instructor_uid, r.capability NULLS LAST
         """
@@ -401,10 +400,9 @@ class SisSection(db.Model):
                 r.location AS room_location
             FROM sis_sections s
             JOIN rooms r ON r.location = s.meeting_location
-            JOIN course_preferences c ON
-                c.section_id = s.section_id
-                AND c.term_id = :term_id
-                AND c.has_opted_out IS TRUE
+            JOIN opt_outs o ON
+                o.section_id = s.section_id
+                AND o.term_id = :term_id
             LEFT JOIN instructors i ON i.uid = s.instructor_uid
             -- Omit scheduled courses.
             LEFT JOIN scheduled d ON
@@ -761,6 +759,8 @@ def _to_api_json(term_id, rows, include_rooms=True):
     # Perform bulk queries and build data structures for feed generation.
     all_course_preferences = CoursePreference.get_all_course_preferences(term_id=term_id)
     course_preferences_by_section_id = dict((p.section_id, p) for p in all_course_preferences)
+    all_opt_outs = OptOut.get_all_opt_outs(term_id=term_id)
+    opt_outs_by_section_id = dict((p.section_id, p) for p in all_opt_outs)
     invited_uids_by_section_id = get_invited_uids_by_section_id(section_ids, term_id)
 
     approval_results = Approval.get_approvals_per_section_ids(section_ids=section_ids, term_id=term_id)
@@ -805,17 +805,18 @@ def _to_api_json(term_id, rows, include_rooms=True):
             cross_listed_courses = cross_listings_per_section_id.get(section_id, [])
             instructors = instructors_per_section_id.get(section_id, [])
             # Construct course
+            opt_outs = opt_outs_by_section_id.get(section_id)
             preferences = course_preferences_by_section_id.get(section_id)
             course = {
                 'allowedUnits': row['allowed_units'],
                 'approvals': approvals,
-                'canAprxInstructorsEditRecordings': True if preferences and preferences.can_aprx_instructors_edit_recordings else False,
+                'collaboratorUids': (preferences and preferences.collaborator_uids) or None,
                 'canvasCourseSites': canvas_sites_by_section_id.get(section_id, []),
                 'courseName': row['course_name'],
                 'courseTitle': row['course_title'],
                 'crossListings': cross_listed_courses,
                 'deletedAt': safe_strftime(row['deleted_at'], '%Y-%m-%d'),
-                'hasOptedOut': True if preferences and preferences.has_opted_out else False,
+                'hasOptedOut': True if opt_outs else False,
                 'instructionFormat': row['instruction_format'],
                 'instructors': instructors,
                 'invitees': invited_uids_by_section_id.get(section_id),
@@ -831,6 +832,8 @@ def _to_api_json(term_id, rows, include_rooms=True):
                     'ineligible': [],
                 },
                 'nonstandardMeetingDates': False,
+                'publishType': (preferences and preferences.publish_type) or None,
+                'recordingType': (preferences and preferences.recording_type) or None,
                 'sectionId': section_id,
                 'sectionNum': row['section_num'],
                 'scheduled': scheduled,

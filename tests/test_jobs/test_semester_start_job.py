@@ -26,7 +26,7 @@ from diablo import db, std_commit
 from diablo.jobs.emails_job import EmailsJob
 from diablo.jobs.semester_start_job import SemesterStartJob
 from diablo.lib.util import utc_now
-from diablo.models.course_preference import CoursePreference
+from diablo.models.opt_out import OptOut
 from diablo.models.queued_email import QueuedEmail
 from diablo.models.scheduled import Scheduled
 from diablo.models.sent_email import SentEmail
@@ -80,8 +80,9 @@ class TestSemesterStartJob:
         """Do not send email to courses that have opted out."""
         term_id = app.config['CURRENT_TERM_ID']
         with test_approvals_workflow(app):
+            instructor_uid = '10001'
             section_id = 50006
-            CoursePreference.update_opt_out(term_id=term_id, section_id=section_id, opt_out=True)
+            OptOut.update_opt_out(instructor_uid=instructor_uid, term_id=term_id, section_id=section_id, opt_out=True)
             std_commit(allow_test_environment=True)
 
             timestamp = utc_now()

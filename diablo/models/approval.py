@@ -26,25 +26,11 @@ from datetime import datetime
 
 from diablo import db, std_commit
 from diablo.lib.util import to_isoformat
+from diablo.models.course_preference import NAMES_PER_PUBLISH_TYPE, NAMES_PER_RECORDING_TYPE, publish_type, recording_type
 from diablo.models.room import Room
 from sqlalchemy import and_, text
 from sqlalchemy.dialects.postgresql import ENUM
 
-
-publish_type = ENUM(
-    'kaltura_media_gallery',
-    'kaltura_my_media',
-    name='publish_types',
-    create_type=False,
-)
-
-# In addition to these active options, legacy data includes the deprecated 'presentation_audio' and 'presenter_audio' options.
-recording_type = ENUM(
-    'presenter_presentation_audio',
-    'presenter_presentation_audio_with_operator',
-    name='recording_types',
-    create_type=False,
-)
 
 approver_type = ENUM(
     'admin',
@@ -52,16 +38,6 @@ approver_type = ENUM(
     name='approver_types',
     create_type=False,
 )
-
-NAMES_PER_PUBLISH_TYPE = {
-    'kaltura_media_gallery': 'GSI/TA moderation',
-    'kaltura_my_media': 'Instructor moderation',
-}
-
-NAMES_PER_RECORDING_TYPE = {
-    'presenter_presentation_audio': 'Camera without Operator',
-    'presenter_presentation_audio_with_operator': 'Camera with Operator',
-}
 
 
 class Approval(db.Model):
@@ -188,11 +164,3 @@ class Approval(db.Model):
             'termId': self.term_id,
             'wasApprovedByAdmin': self.approver_type == 'admin',
         }
-
-
-def get_all_publish_types():
-    return publish_type.enums
-
-
-def get_all_recording_types():
-    return recording_type.enums

@@ -99,7 +99,6 @@ def get_template_substitutions(
 
     return {
         'collaborators': '\n'.join(collaborator_names) if collaborator_names else '',
-        'course.aprx': 'Yes' if course and course['canAprxInstructorsEditRecordings'] else 'No',
         'course.date.end': meeting and meeting['endDate'],
         'course.date.start': meeting and meeting['startDate'],
         'course.days': days and readable_join(days),

@@ -28,6 +28,36 @@ from diablo import db, std_commit
 from diablo.lib.util import to_isoformat
 from diablo.models.cross_listing import CrossListing
 from sqlalchemy import and_
+from sqlalchemy.dialects.postgresql import ARRAY, ENUM
+
+
+publish_type = ENUM(
+    'kaltura_media_gallery',
+    'kaltura_my_media',
+    name='publish_types',
+    create_type=False,
+)
+
+
+# In addition to these active options, legacy data includes the deprecated 'presentation_audio' and 'presenter_audio' options.
+recording_type = ENUM(
+    'presenter_presentation_audio',
+    'presenter_presentation_audio_with_operator',
+    name='recording_types',
+    create_type=False,
+)
+
+
+NAMES_PER_PUBLISH_TYPE = {
+    'kaltura_media_gallery': 'GSI/TA moderation',
+    'kaltura_my_media': 'Instructor moderation',
+}
+
+
+NAMES_PER_RECORDING_TYPE = {
+    'presenter_presentation_audio': 'Camera without Operator',
+    'presenter_presentation_audio_with_operator': 'Camera with Operator',
+}
 
 
 class CoursePreference(db.Model):
@@ -35,28 +65,32 @@ class CoursePreference(db.Model):
 
     term_id = db.Column(db.Integer, nullable=False, primary_key=True)
     section_id = db.Column(db.Integer, nullable=False, primary_key=True)
-    can_aprx_instructors_edit_recordings = db.Column(db.Boolean, nullable=False, default=True)
-    has_opted_out = db.Column(db.Boolean, nullable=False, default=False)
+    collaborator_uids = db.Column(ARRAY(db.String(80)))
+    publish_type = db.Column(publish_type, nullable=False)
+    recording_type = db.Column(recording_type, nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.now)
 
     def __init__(
             self,
             term_id,
             section_id,
-            can_aprx_instructors_edit_recordings=False,
-            has_opted_out=False,
+            publish_type='kaltura_my_media',
+            recording_type='presenter_presentation_audio',
+            collaborator_uids=None,
     ):
-        self.can_aprx_instructors_edit_recordings = can_aprx_instructors_edit_recordings
-        self.has_opted_out = has_opted_out
         self.term_id = term_id
         self.section_id = section_id
+        self.publish_type = publish_type
+        self.recording_type = recording_type
+        self.collaborator_uids = collaborator_uids
 
     def __repr__(self):
         return f"""<CoursePreferences
                     term_id={self.term_id},
                     section_id={self.section_id},
-                    can_aprx_instructors_edit_recordings={self.can_aprx_instructors_edit_recordings}
-                    has_opted_out={self.has_opted_out}
+                    publish_type={self.publish_type}
+                    recording_type={self.recording_type}
+                    collaborator_uids={self.collaborator_uids}
                     created_at={self.created_at}
                 """
 
@@ -69,40 +103,66 @@ class CoursePreference(db.Model):
         return cls.query.filter_by(section_id=section_id, term_id=term_id).first()
 
     @classmethod
-    def update_can_aprx_instructors_edit_recordings(
+    def update_collaborator_uids(
             cls,
-            can_aprx_instructors_edit_recordings,
-            section_id,
             term_id,
+            section_id,
+            collaborator_uids,
     ):
-        cross_listed_section_ids = CrossListing.get_cross_listed_section_ids(section_id=section_id, term_id=term_id)
-        section_ids = cross_listed_section_ids + [section_id]
+        section_ids = _get_section_ids_with_xlistings(section_id, term_id)
         criteria = and_(cls.section_id.in_(section_ids), cls.term_id == term_id)
-        for row in cls.query.filter(criteria).all():
-            row.can_aprx_instructors_edit_recordings = can_aprx_instructors_edit_recordings
-            section_ids.remove(row.section_id)
+        for existing_row in cls.query.filter(criteria).all():
+            existing_row.collaborator_uids = list(collaborator_uids)
+            section_ids.remove(existing_row.section_id)
         for section_id in section_ids:
             preferences = cls(
                 term_id=term_id,
                 section_id=section_id,
-                can_aprx_instructors_edit_recordings=can_aprx_instructors_edit_recordings,
+                collaborator_uids=collaborator_uids,
             )
             db.session.add(preferences)
         std_commit()
         return cls.query.filter_by(term_id=term_id, section_id=section_id).first()
 
     @classmethod
-    def update_opt_out(cls, term_id, section_id, opt_out):
-        section_ids = CrossListing.get_cross_listed_section_ids(section_id=section_id, term_id=term_id) + [section_id]
+    def update_publish_type(
+            cls,
+            term_id,
+            section_id,
+            publish_type,
+    ):
+        section_ids = _get_section_ids_with_xlistings(section_id, term_id)
         criteria = and_(cls.section_id.in_(section_ids), cls.term_id == term_id)
-        for row in cls.query.filter(criteria).all():
-            row.has_opted_out = opt_out
-            section_ids.remove(row.section_id)
+        for existing_row in cls.query.filter(criteria).all():
+            existing_row.publish_type = publish_type
+            section_ids.remove(existing_row.section_id)
         for section_id in section_ids:
             preferences = cls(
                 term_id=term_id,
                 section_id=section_id,
-                has_opted_out=opt_out,
+                publish_type=publish_type,
+            )
+            db.session.add(preferences)
+        std_commit()
+        return cls.query.filter_by(term_id=term_id, section_id=section_id).first()
+
+    @classmethod
+    def update_recording_type(
+            cls,
+            term_id,
+            section_id,
+            recording_type,
+    ):
+        section_ids = _get_section_ids_with_xlistings(section_id, term_id)
+        criteria = and_(cls.section_id.in_(section_ids), cls.term_id == term_id)
+        for existing_row in cls.query.filter(criteria).all():
+            existing_row.recording_type = recording_type
+            section_ids.remove(existing_row.section_id)
+        for section_id in section_ids:
+            preferences = cls(
+                term_id=term_id,
+                section_id=section_id,
+                recording_type=recording_type,
             )
             db.session.add(preferences)
         std_commit()
@@ -112,7 +172,22 @@ class CoursePreference(db.Model):
         return {
             'termId': self.term_id,
             'sectionId': self.section_id,
-            'canAprxInstructorsEditRecordings': self.can_aprx_instructors_edit_recordings,
-            'hasOptedOut': self.has_opted_out,
+            'publishType': self.publish_type,
+            'publishTypeName': NAMES_PER_PUBLISH_TYPE[self.publish_type],
+            'recordingType': self.recording_type,
+            'recordingTypeName': NAMES_PER_RECORDING_TYPE[self.recording_type],
+            'collaboratorUids': self.collaborator_uids,
             'createdAt': to_isoformat(self.created_at),
         }
+
+
+def get_all_publish_types():
+    return publish_type.enums
+
+
+def get_all_recording_types():
+    return recording_type.enums
+
+
+def _get_section_ids_with_xlistings(section_id, term_id):
+    return CrossListing.get_cross_listed_section_ids(section_id=section_id, term_id=term_id) + [section_id]

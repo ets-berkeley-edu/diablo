@@ -30,7 +30,7 @@ from diablo import std_commit
 from diablo.jobs.canvas_job import CanvasJob
 from diablo.jobs.emails_job import EmailsJob
 from diablo.models.approval import Approval
-from diablo.models.course_preference import CoursePreference
+from diablo.models.opt_out import OptOut
 from diablo.models.room import Room
 from diablo.models.scheduled import Scheduled
 from diablo.models.sent_email import SentEmail
@@ -40,6 +40,7 @@ from tests.test_api.api_test_utils import api_approve, api_get_course, get_instr
 from tests.util import override_config, simply_yield, test_approvals_workflow
 
 admin_uid = '90001'
+collaborator_uid = '242881'
 deleted_admin_user_uid = '910001'
 deleted_section_id = 50018
 section_1_id = 50000
@@ -502,7 +503,7 @@ class TestGetCourses:
         with test_approvals_workflow(app):
             # Send invites them opt_out.
             for section_id in (section_1_id, section_in_ineligible_room, section_3_id, section_4_id):
-                CoursePreference.update_opt_out(section_id=section_id, term_id=self.term_id, opt_out=True)
+                OptOut.update_opt_out(instructor_uid=admin_uid, section_id=section_id, term_id=self.term_id, opt_out=True)
 
                 in_enabled_room = _is_course_in_enabled_room(section_id=section_id, term_id=self.term_id)
                 if section_id == section_in_ineligible_room:
@@ -801,24 +802,24 @@ class TestCrossListedNameGeneration:
         )
 
 
-class TestCanAprxInstructorsEditRecordings:
+class TestUpdateCollaboratorUids:
 
     @property
     def term_id(self):
         return app.config['CURRENT_TERM_ID']
 
     @staticmethod
-    def _api_can_aprx_instructors_edit_recordings_update(
+    def _api_collaborator_uids_update(
             client,
             term_id,
             section_id,
-            can_aprx_instructors_edit_recordings,
+            collaborator_uids,
             expected_status_code=200,
     ):
         response = client.post(
-            '/api/course/can_aprx_instructors_edit_recordings',
+            '/api/course/collaborator_uids/update',
             data=json.dumps({
-                'canAprxInstructorsEditRecordings': can_aprx_instructors_edit_recordings,
+                'collaboratorUids': collaborator_uids,
                 'sectionId': section_id,
                 'termId': term_id,
             }),
@@ -829,34 +830,176 @@ class TestCanAprxInstructorsEditRecordings:
 
     def test_not_authenticated(self, client):
         """Deny anonymous access."""
-        self._api_can_aprx_instructors_edit_recordings_update(
+        self._api_collaborator_uids_update(
             client,
             term_id=self.term_id,
             section_id=section_1_id,
-            can_aprx_instructors_edit_recordings=True,
+            collaborator_uids=[collaborator_uid],
+            expected_status_code=401,
+        )
+
+    def test_unauthorized(self, client, fake_auth):
+        """Deny non-instructors."""
+        fake_auth.login(collaborator_uid)
+        self._api_collaborator_uids_update(
+            client,
+            collaborator_uids=[collaborator_uid],
+            section_id=section_1_id,
+            term_id=self.term_id,
             expected_status_code=401,
         )
 
     def test_authorized(self, client, fake_auth):
-        """Toggle the 'can_aprx_instructors_edit_recordings' course preference."""
+        """Update the 'collaborator_uids' course preference."""
         instructor_uids = get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
         fake_auth.login(instructor_uids[0])
 
         course = SisSection.get_course(section_id=section_1_id, term_id=self.term_id)
-        expected_value = not course['canAprxInstructorsEditRecordings']
-        self._api_can_aprx_instructors_edit_recordings_update(
+        self._api_collaborator_uids_update(
             client,
-            can_aprx_instructors_edit_recordings=expected_value,
+            collaborator_uids=[collaborator_uid],
             section_id=section_1_id,
             term_id=self.term_id,
         )
         std_commit(allow_test_environment=True)
 
         course = SisSection.get_course(section_id=section_1_id, term_id=self.term_id)
-        assert course['canAprxInstructorsEditRecordings'] is expected_value
+        assert course['collaboratorUids'] == [collaborator_uid]
 
 
-class TestUpdateOptOutCoursePreference:
+class TestUpdatePublishType:
+
+    @property
+    def term_id(self):
+        return app.config['CURRENT_TERM_ID']
+
+    @staticmethod
+    def _api_publish_type_update(
+            client,
+            term_id,
+            section_id,
+            publish_type,
+            expected_status_code=200,
+    ):
+        response = client.post(
+            '/api/course/publish_type/update',
+            data=json.dumps({
+                'publishType': publish_type,
+                'sectionId': section_id,
+                'termId': term_id,
+            }),
+            content_type='application/json',
+        )
+        assert response.status_code == expected_status_code
+        return response.json
+
+    def test_not_authenticated(self, client):
+        """Deny anonymous access."""
+        self._api_publish_type_update(
+            client,
+            term_id=self.term_id,
+            section_id=section_1_id,
+            publish_type='kaltura_media_gallery',
+            expected_status_code=401,
+        )
+
+    def test_unauthorized(self, client, fake_auth):
+        """Deny non-instructors."""
+        fake_auth.login(collaborator_uid)
+        self._api_publish_type_update(
+            client,
+            term_id=self.term_id,
+            section_id=section_1_id,
+            publish_type='kaltura_media_gallery',
+            expected_status_code=401,
+        )
+
+    def test_authorized(self, client, fake_auth):
+        """Update the 'publish_type' course preference."""
+        instructor_uids = get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
+        fake_auth.login(instructor_uids[0])
+
+        course = SisSection.get_course(section_id=section_1_id, term_id=self.term_id)
+        assert course['publishType'] == 'kaltura_my_media'
+        self._api_publish_type_update(
+            client,
+            term_id=self.term_id,
+            section_id=section_1_id,
+            publish_type='kaltura_media_gallery',
+        )
+        std_commit(allow_test_environment=True)
+
+        course = SisSection.get_course(section_id=section_1_id, term_id=self.term_id)
+        assert course['publishType'] == 'kaltura_media_gallery'
+
+
+class TestUpdateRecordingType:
+
+    @property
+    def term_id(self):
+        return app.config['CURRENT_TERM_ID']
+
+    @staticmethod
+    def _api_recording_type_update(
+            client,
+            term_id,
+            section_id,
+            recording_type,
+            expected_status_code=200,
+    ):
+        response = client.post(
+            '/api/course/recording_type/update',
+            data=json.dumps({
+                'termId': term_id,
+                'sectionId': section_id,
+                'recordingType': recording_type,
+            }),
+            content_type='application/json',
+        )
+        assert response.status_code == expected_status_code
+        return response.json
+
+    def test_not_authenticated(self, client):
+        """Deny anonymous access."""
+        self._api_recording_type_update(
+            client,
+            term_id=self.term_id,
+            section_id=section_1_id,
+            recording_type='presenter_presentation_audio_with_operator',
+            expected_status_code=401,
+        )
+
+    def test_unauthorized(self, client, fake_auth):
+        """Deny non-instructors."""
+        fake_auth.login(collaborator_uid)
+        self._api_recording_type_update(
+            client,
+            term_id=self.term_id,
+            section_id=section_1_id,
+            recording_type='presenter_presentation_audio_with_operator',
+            expected_status_code=401,
+        )
+
+    def test_authorized(self, client, fake_auth):
+        """Update the 'recording_type' course preference."""
+        instructor_uids = get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
+        fake_auth.login(instructor_uids[0])
+
+        course = SisSection.get_course(section_id=section_1_id, term_id=self.term_id)
+        assert course['recordingType'] == 'presenter_presentation_audio'
+        self._api_recording_type_update(
+            client,
+            term_id=self.term_id,
+            section_id=section_1_id,
+            recording_type='presenter_presentation_audio_with_operator',
+        )
+        std_commit(allow_test_environment=True)
+
+        course = SisSection.get_course(section_id=section_1_id, term_id=self.term_id)
+        assert course['recordingType'] == 'presenter_presentation_audio_with_operator'
+
+
+class TestUpdateOptOut:
 
     @property
     def term_id(self):
@@ -893,9 +1036,8 @@ class TestUpdateOptOutCoursePreference:
         )
 
     def test_unauthorized(self, client, fake_auth):
-        """Instructors cannot modify preferences."""
-        instructor_uids = get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
-        fake_auth.login(instructor_uids[0])
+        """Deny non-instructors."""
+        fake_auth.login([collaborator_uid])
         self._api_opt_out_update(
             client,
             term_id=self.term_id,
@@ -905,14 +1047,15 @@ class TestUpdateOptOutCoursePreference:
         )
 
     def test_authorized(self, client, fake_auth):
-        """Only admins can toggle the do-not-email preference of any given course."""
-        fake_auth.login(admin_uid)
+        """Instructors can toggle the opt-out preference for courses."""
+        instructor_uids = get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
+        fake_auth.login(instructor_uids[0])
         with test_approvals_workflow(app):
-            course_preferences = CoursePreference.get_course_preferences(
+            opt_outs = OptOut.get_opt_outs_for_section(
                 section_id=section_1_id,
                 term_id=self.term_id,
             )
-            opt_out = not (course_preferences and course_preferences.has_opted_out)
+            opt_out = not (len(opt_outs) > 0)
             self._api_opt_out_update(
                 client,
                 term_id=self.term_id,
@@ -921,11 +1064,11 @@ class TestUpdateOptOutCoursePreference:
             )
             std_commit(allow_test_environment=True)
 
-            course_preferences = CoursePreference.get_course_preferences(
+            opt_outs = OptOut.get_opt_outs_for_section(
                 section_id=section_1_id,
                 term_id=self.term_id,
             )
-            assert course_preferences.has_opted_out is opt_out
+            assert (len(opt_outs) > 0) is opt_out
 
     def test_scheduling_removes_opt_out(self, client, fake_auth):
         fake_auth.login(admin_uid)
