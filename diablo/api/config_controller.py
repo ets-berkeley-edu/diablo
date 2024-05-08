@@ -31,7 +31,7 @@ from diablo.externals.kaltura import CREATED_BY_DIABLO_TAG
 from diablo.lib.berkeley import term_name_for_sis_id
 from diablo.lib.http import tolerant_jsonify
 from diablo.lib.util import get_eb_environment
-from diablo.models.approval import NAMES_PER_PUBLISH_TYPE
+from diablo.models.course_preference import NAMES_PER_PUBLISH_TYPE
 from diablo.models.email_template import EmailTemplate
 from diablo.models.room import Room
 from flask import current_app as app

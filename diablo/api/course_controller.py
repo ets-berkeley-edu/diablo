@@ -33,10 +33,12 @@ from diablo.lib.berkeley import term_name_for_sis_id
 from diablo.lib.http import tolerant_jsonify
 from diablo.lib.interpolator import get_sign_up_url
 from diablo.merged.emailer import send_system_error_email
-from diablo.models.approval import Approval, get_all_publish_types, get_all_recording_types
-from diablo.models.course_preference import CoursePreference
+from diablo.models.approval import Approval
+from diablo.models.course_preference import CoursePreference, get_all_publish_types, get_all_recording_types
+from diablo.models.opt_out import OptOut
 from diablo.models.queued_email import notify_instructor_waiting_for_approval, notify_instructors_approval_changes
 from diablo.models.room import Room
+from diablo.models.schedule_update import ScheduleUpdate
 from diablo.models.scheduled import Scheduled
 from diablo.models.sis_section import SisSection
 from flask import current_app as app, request
@@ -170,7 +172,7 @@ def download_courses_csv():
             'Canvas URLs': [f"{app.config['CANVAS_BASE_URL']}/courses/{s['courseSiteId']}" for s in c.get('canvasCourseSites') or []],
             'Instructors': ', '.join([_get_email_with_label(instructor) for instructor in c.get('instructors') or []]),
             'Instructor UIDs': ', '.join([instructor.get('uid') for instructor in c.get('instructors') or []]),
-            'Admin Proxy': 'True' if c.get('canAprxInstructorsEditRecordings') else 'False',
+            'Collaborator UIDs': ', '.join([u for u in c.get('collaboratorUids') or []]),
         }
 
     params = request.get_json()
@@ -219,7 +221,8 @@ def unschedule():
                     subject=message,
                 )
 
-    CoursePreference.update_opt_out(
+    OptOut.update_opt_out(
+        instructor_uid=current_user.uid,
         term_id=term_id,
         section_id=section_id,
         opt_out=True,
@@ -233,28 +236,39 @@ def unschedule():
     return tolerant_jsonify(course)
 
 
-@app.route('/api/course/can_aprx_instructors_edit_recordings', methods=['POST'])
+@app.route('/api/course/collaborator_uids/update', methods=['POST'])
 @login_required
-def update_can_aprx_instructors_edit_recordings():
+def update_collaborator_uids():
     params = request.get_json()
-    can_aprx_instructors_edit_recordings = params.get('canAprxInstructorsEditRecordings')
     section_id = params.get('sectionId')
     term_id = params.get('termId')
+    collaborator_uids = params.get('collaboratorUids') or None
 
     course = SisSection.get_course(term_id, section_id) if (term_id and section_id) else None
-    if not course or can_aprx_instructors_edit_recordings is None:
+    if not course or (collaborator_uids is not None and type(collaborator_uids) != list):
         raise BadRequestError('Required params missing or invalid')
+    if not current_user.is_admin and current_user.uid not in [i['uid'] for i in course['instructors']]:
+        raise ForbiddenRequestError(f'Sorry, you are unauthorized to view the course {course["label"]}.')
 
-    preferences = CoursePreference.update_can_aprx_instructors_edit_recordings(
-        can_aprx_instructors_edit_recordings=can_aprx_instructors_edit_recordings,
+    preferences = CoursePreference.update_collaborator_uids(
         term_id=term_id,
         section_id=section_id,
+        collaborator_uids=collaborator_uids,
     )
+    if preferences:
+        ScheduleUpdate.queue(
+            term_id=course['termId'],
+            section_id=course['sectionId'],
+            field_name='publish_type',
+            field_value_old=course.get('collaboratorUids'),
+            field_value_new=collaborator_uids,
+        )
+
     return tolerant_jsonify(preferences.to_api_json())
 
 
 @app.route('/api/course/opt_out/update', methods=['POST'])
-@admin_required
+@login_required
 def update_opt_out():
     params = request.get_json()
     term_id = params.get('termId')
@@ -266,12 +280,77 @@ def update_opt_out():
         raise BadRequestError('Required params missing or invalid')
     if course['scheduled']:
         raise BadRequestError('Cannot update opt-out on scheduled course')
+    if not current_user.is_admin and current_user.uid not in [i['uid'] for i in course['instructors']]:
+        raise ForbiddenRequestError(f'Sorry, you are unauthorized to view the course {course["label"]}.')
 
-    preferences = CoursePreference.update_opt_out(
+    preferences = OptOut.update_opt_out(
+        instructor_uid=current_user.uid,
         term_id=term_id,
         section_id=section_id,
         opt_out=opt_out,
     )
+    return tolerant_jsonify(preferences.to_api_json())
+
+
+@app.route('/api/course/publish_type/update', methods=['POST'])
+@login_required
+def update_publish_type():
+    params = request.get_json()
+    section_id = params.get('sectionId')
+    term_id = params.get('termId')
+    publish_type = params.get('publishType') or None
+
+    course = SisSection.get_course(term_id, section_id) if (term_id and section_id) else None
+    if not course or (publish_type not in get_all_publish_types()):
+        raise BadRequestError('Required params missing or invalid')
+    if not current_user.is_admin and current_user.uid not in [i['uid'] for i in course['instructors']]:
+        raise ForbiddenRequestError(f'Sorry, you are unauthorized to view the course {course["label"]}.')
+
+    preferences = CoursePreference.update_publish_type(
+        term_id=term_id,
+        section_id=section_id,
+        publish_type=publish_type,
+    )
+    if preferences:
+        ScheduleUpdate.queue(
+            term_id=course['termId'],
+            section_id=course['sectionId'],
+            field_name='publish_type',
+            field_value_old=course.get('publishType'),
+            field_value_new=publish_type,
+        )
+
+    return tolerant_jsonify(preferences.to_api_json())
+
+
+@app.route('/api/course/recording_type/update', methods=['POST'])
+@login_required
+def update_recording_type():
+    params = request.get_json()
+    section_id = params.get('sectionId')
+    term_id = params.get('termId')
+    recording_type = params.get('recordingType') or None
+
+    course = SisSection.get_course(term_id, section_id) if (term_id and section_id) else None
+    if not course or (recording_type not in get_all_recording_types()):
+        raise BadRequestError('Required params missing or invalid')
+    if not current_user.is_admin and current_user.uid not in [i['uid'] for i in course['instructors']]:
+        raise ForbiddenRequestError(f'Sorry, you are unauthorized to view the course {course["label"]}.')
+
+    preferences = CoursePreference.update_recording_type(
+        term_id=term_id,
+        section_id=section_id,
+        recording_type=recording_type,
+    )
+    if preferences:
+        ScheduleUpdate.queue(
+            term_id=course['termId'],
+            section_id=course['sectionId'],
+            field_name='recording_type',
+            field_value_old=course.get('recordingType'),
+            field_value_new=recording_type,
+        )
+
     return tolerant_jsonify(preferences.to_api_json())
 
 
@@ -316,7 +395,8 @@ def _after_approval(course):
     if get_courses_ready_to_schedule(approvals=approvals, term_id=term_id):
         # Queuing course for scheduling wipes any opt-out preference.
         if course['hasOptedOut']:
-            CoursePreference.update_opt_out(
+            OptOut.update_opt_out(
+                instructor_uid=current_user.uid,
                 term_id=term_id,
                 section_id=section_id,
                 opt_out=False,

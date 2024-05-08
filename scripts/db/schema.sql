@@ -189,8 +189,9 @@ ALTER TABLE canvas_course_sites ADD CONSTRAINT canvas_course_sites_pkey PRIMARY 
 CREATE TABLE course_preferences (
     term_id INTEGER NOT NULL,
     section_id INTEGER NOT NULL,
-    can_aprx_instructors_edit_recordings BOOLEAN DEFAULT FALSE NOT NULL,
-    has_opted_out BOOLEAN DEFAULT FALSE NOT NULL,
+    collaborator_uids VARCHAR(80)[],
+    publish_type publish_types NOT NULL,
+    recording_type recording_types NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL
 );
 ALTER TABLE course_preferences OWNER TO diablo;
@@ -302,6 +303,28 @@ ALTER TABLE ONLY jobs
     ADD CONSTRAINT jobs_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY jobs
     ADD CONSTRAINT jobs_key_unique_constraint UNIQUE (key);
+
+--
+
+CREATE TABLE opt_outs (
+    id INTEGER NOT NULL,
+    instructor_uid VARCHAR(80) NOT NULL,
+    term_id INTEGER,
+    section_id INTEGER,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL
+);
+ALTER TABLE opt_outs OWNER TO diablo;
+CREATE SEQUENCE opt_outs_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+ALTER TABLE opt_outs_id_seq OWNER TO diablo;
+ALTER SEQUENCE opt_outs_id_seq OWNED BY opt_outs.id;
+ALTER TABLE ONLY opt_outs ALTER COLUMN id SET DEFAULT nextval('opt_outs_id_seq'::regclass);
+ALTER TABLE ONLY opt_outs
+    ADD CONSTRAINT opt_outs_pkey PRIMARY KEY (id);
 
 --
 

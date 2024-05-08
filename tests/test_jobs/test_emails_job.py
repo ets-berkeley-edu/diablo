@@ -25,7 +25,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 from diablo import std_commit
 from diablo.jobs.emails_job import EmailsJob
 from diablo.lib.util import utc_now
-from diablo.models.course_preference import CoursePreference
+from diablo.models.opt_out import OptOut
 from diablo.models.queued_email import QueuedEmail
 from diablo.models.sent_email import SentEmail
 from diablo.models.sis_section import SisSection
@@ -101,12 +101,12 @@ class TestEmailsJob:
 
         term_id = app.config['CURRENT_TERM_ID']
         section_id = 50000
-        CoursePreference.update_opt_out(term_id=term_id, section_id=section_id, opt_out=True)
-        email_template_type = 'invitation'
         recipient = {
             'name': 'William Peter Blatty',
             'uid': '10001',
         }
+        OptOut.update_opt_out(instructor_uid=recipient['uid'], term_id=term_id, section_id=section_id, opt_out=True)
+        email_template_type = 'invitation'
         QueuedEmail.create(section_id, email_template_type, term_id, recipient=recipient)
         std_commit(allow_test_environment=True)
 

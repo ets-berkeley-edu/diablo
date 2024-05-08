@@ -26,7 +26,7 @@ from datetime import datetime
 
 from diablo import db, std_commit
 from diablo.lib.util import format_days, format_time, get_names_of_days, to_isoformat
-from diablo.models.approval import NAMES_PER_PUBLISH_TYPE, NAMES_PER_RECORDING_TYPE, publish_type, recording_type
+from diablo.models.course_preference import NAMES_PER_PUBLISH_TYPE, NAMES_PER_RECORDING_TYPE, publish_type, recording_type
 from diablo.models.email_template import email_template_type
 from diablo.models.room import Room
 from sqlalchemy import and_, func, text
