@@ -28,7 +28,6 @@ from diablo import db
 from diablo.lib.berkeley import get_recording_end_date, get_recording_start_date
 from diablo.lib.db import resolve_sql_template_string
 from diablo.lib.util import format_days, format_time, get_names_of_days, safe_strftime
-from diablo.models.approval import Approval
 from diablo.models.canvas_course_site import CanvasCourseSite
 from diablo.models.course_preference import CoursePreference
 from diablo.models.cross_listing import CrossListing
@@ -751,7 +750,7 @@ class SisSection(db.Model):
         return set([row['section_id'] for row in rows])
 
 
-def _to_api_json(term_id, rows, include_rooms=True):
+def _to_api_json(term_id, rows, include_rooms=True):  # noqa C901
     rows = rows.fetchall()
     section_ids = list(set(int(row['section_id']) for row in rows))
     courses_per_id = {}
@@ -763,18 +762,12 @@ def _to_api_json(term_id, rows, include_rooms=True):
     opt_outs_by_section_id = dict((p.section_id, p) for p in all_opt_outs)
     invited_uids_by_section_id = get_invited_uids_by_section_id(section_ids, term_id)
 
-    approval_results = Approval.get_approvals_per_section_ids(section_ids=section_ids, term_id=term_id)
     scheduled_results = Scheduled.get_scheduled_per_section_ids(section_ids=section_ids, term_id=term_id)
 
     room_ids = set(row['room_id'] for row in rows)
-    room_ids.update(a.room_id for a in approval_results)
     room_ids.update(s.room_id for s in scheduled_results)
     rooms = Room.get_rooms(list(room_ids))
     rooms_by_id = {room.id: room for room in rooms}
-
-    approvals_by_section_id = {section_id: [] for section_id in section_ids}
-    for approval in approval_results:
-        approvals_by_section_id[approval.section_id].append(approval.to_api_json(rooms_by_id=rooms_by_id))
 
     scheduled_by_section_id = {}
     for s in scheduled_results:
@@ -785,7 +778,6 @@ def _to_api_json(term_id, rows, include_rooms=True):
     cross_listings_per_section_id, instructors_per_section_id, canvas_sites_by_section_id = _get_cross_listed_courses(
         section_ids=section_ids,
         term_id=term_id,
-        approvals=approvals_by_section_id,
         invited_uids=invited_uids_by_section_id,
     )
 
@@ -798,19 +790,25 @@ def _to_api_json(term_id, rows, include_rooms=True):
         if section_id in courses_per_id:
             course = courses_per_id[section_id]
         else:
-            # Approvals and scheduled (JSON)
-            approvals = approvals_by_section_id.get(section_id)
-            scheduled = scheduled_by_section_id.get(section_id)
             # Instructors per cross-listings
             cross_listed_courses = cross_listings_per_section_id.get(section_id, [])
             instructors = instructors_per_section_id.get(section_id, [])
+
             # Construct course
+            scheduled = scheduled_by_section_id.get(section_id)
             opt_outs = opt_outs_by_section_id.get(section_id)
+
             preferences = course_preferences_by_section_id.get(section_id)
+            if preferences:
+                preferences = preferences.to_api_json()
+            elif scheduled:
+                preferences = scheduled[0]
+            else:
+                preferences = {}
+
             course = {
                 'allowedUnits': row['allowed_units'],
-                'approvals': approvals,
-                'collaboratorUids': (preferences and preferences.collaborator_uids) or None,
+                'collaboratorUids': preferences.get('collaboratorUids'),
                 'canvasCourseSites': canvas_sites_by_section_id.get(section_id, []),
                 'courseName': row['course_name'],
                 'courseTitle': row['course_title'],
@@ -832,8 +830,10 @@ def _to_api_json(term_id, rows, include_rooms=True):
                     'ineligible': [],
                 },
                 'nonstandardMeetingDates': False,
-                'publishType': (preferences and preferences.publish_type) or None,
-                'recordingType': (preferences and preferences.recording_type) or None,
+                'publishType': preferences.get('publishType'),
+                'publishTypeName': preferences.get('publishTypeName'),
+                'recordingType': preferences.get('recordingType'),
+                'recordingTypeName': preferences.get('recordingTypeName'),
                 'sectionId': section_id,
                 'sectionNum': row['section_num'],
                 'scheduled': scheduled,
@@ -847,7 +847,6 @@ def _to_api_json(term_id, rows, include_rooms=True):
         if instructor_uid and instructor_uid not in [i['uid'] for i in course['instructors']]:
             instructor_json = _to_instructor_json(
                 row=row,
-                approvals=course['approvals'],
                 invited_uids=course['invitees'],
             )
             # Note:
@@ -881,35 +880,11 @@ def _to_api_json(term_id, rows, include_rooms=True):
     # Next, construct the feed
     api_json = []
     for section_id, course in courses_per_id.items():
-        _decorate_course(course)
+        _decorate_course_meeting_type(course)
         # Add course to the feed
         api_json.append(course)
 
     return api_json
-
-
-def _decorate_course(course):
-    _decorate_course_approvals(course)
-    _decorate_course_meeting_type(course)
-
-
-def _decorate_course_approvals(course):
-    course['hasNecessaryApprovals'] = False
-    if any(a['wasApprovedByAdmin'] for a in course['approvals']):
-        course['hasNecessaryApprovals'] = True
-
-    course['approvalStatus'] = 'Not Invited'
-    instructors = list(filter(lambda instructor: instructor['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES, course['instructors']))
-    if instructors:
-        approval_uids = [a['approvedBy'] for a in course['approvals']]
-        necessary_approval_uids = [i['uid'] for i in instructors]
-        if all(uid in approval_uids for uid in necessary_approval_uids):
-            course['approvalStatus'] = 'Approved'
-            course['hasNecessaryApprovals'] = True
-        elif any(uid in approval_uids for uid in necessary_approval_uids):
-            course['approvalStatus'] = 'Partially Approved'
-        elif course['invitees']:
-            course['approvalStatus'] = 'Invited'
 
 
 def _decorate_course_meeting_type(course):
@@ -924,7 +899,7 @@ def _decorate_course_meeting_type(course):
         course['meetingType'] = 'A'
 
 
-def _get_cross_listed_courses(section_ids, term_id, approvals, invited_uids):
+def _get_cross_listed_courses(section_ids, term_id, invited_uids):
     # Return course and instructor info for cross-listings, and Canvas site info for cross-listings as well as the
     # principal section. Although cross-listed sections were "deleted" during SIS data refresh job, we still rely
     # on metadata from those deleted records.
@@ -979,7 +954,6 @@ def _get_cross_listed_courses(section_ids, term_id, approvals, invited_uids):
 
     # Next, collect course data, instructor data, and Canvas sites associated with cross-listings.
     for section_id, cross_listing_ids in cross_listings_by_section_id.items():
-        approvals_for_section = approvals.get(section_id, [])
         invited_uids_for_section = invited_uids.get(section_id, [])
         courses_by_section_id[section_id] = []
         instructors_by_section_id[section_id] = []
@@ -1000,7 +974,7 @@ def _get_cross_listed_courses(section_ids, term_id, approvals, invited_uids):
                 # Instructor-specific data may be spread across multiple rows.
                 for row in rows_by_cross_listing_id[cross_listing_id]:
                     if row['instructor_uid'] and row['instructor_uid'] not in [i['uid'] for i in instructors_by_section_id[section_id]]:
-                        instructor_json = _to_instructor_json(row, approvals_for_section, invited_uids=invited_uids_for_section)
+                        instructor_json = _to_instructor_json(row, invited_uids=invited_uids_for_section)
                         uid = (instructor_json['uid'] or '').strip() if instructor_json else None
                         if uid and not instructor_json['deletedAt']:
                             instructors_by_section_id[section_id].append(instructor_json)
@@ -1048,7 +1022,7 @@ def _sections_with_at_least_one_eligible_room():
     """
 
 
-def _to_instructor_json(row, approvals=None, invited_uids=None):
+def _to_instructor_json(row, invited_uids=None):
     instructor_uid = row['instructor_uid']
     instructor_json = {
         'deletedAt': safe_strftime(row['deleted_at'], '%Y-%m-%d'),
@@ -1058,8 +1032,6 @@ def _to_instructor_json(row, approvals=None, invited_uids=None):
         'roleCode': row['instructor_role_code'],
         'uid': instructor_uid,
     }
-    if approvals is not None:
-        instructor_json['approval'] = next((a for a in approvals if a['approvedBy'] == instructor_uid), False)
     if invited_uids is not None:
         instructor_json['wasSentInvite'] = instructor_uid in invited_uids
     return instructor_json

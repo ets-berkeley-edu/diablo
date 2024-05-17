@@ -201,7 +201,7 @@ def unschedule():
     if not course:
         raise BadRequestError('Required params missing or invalid')
 
-    if not (course['scheduled'] or course['hasNecessaryApprovals']):
+    if not course['scheduled']:
         raise BadRequestError(f'Section id {section_id}, term id {term_id} is not currently scheduled or queued for scheduling')
 
     Approval.delete(term_id=term_id, section_id=section_id)

@@ -27,6 +27,7 @@ from datetime import datetime
 
 from diablo import db, std_commit
 from diablo.lib.util import to_isoformat
+from diablo.models.course_preference import NAMES_PER_RECORDING_TYPE
 from flask import current_app as app
 from sqlalchemy import func, text
 from sqlalchemy.dialects.postgresql import ENUM
@@ -173,19 +174,18 @@ class Room(db.Model):
         }
 
     def to_api_json(self):
-        premium_cost = app.config['COURSE_CAPTURE_PREMIUM_COST']
-        suffix = f' (${premium_cost})' if premium_cost else ''
-        camera_with_operator_label = f'Audio + Projection + Camera with Operator{suffix}'
-        camera_without_operator_label = 'Audio + Projection + Camera without Operator'
+        recording_type_options = {}
+
+        def _add_recording_type(key):
+            recording_type_options[key] = NAMES_PER_RECORDING_TYPE[key]
+
+        _add_recording_type('presenter_presentation_audio')
+
         if self.is_auditorium:
-            recording_type_options = {
-                'presenter_presentation_audio_with_operator': camera_with_operator_label,
-                'presenter_presentation_audio': camera_without_operator_label,
-            }
-        else:
-            recording_type_options = {
-                'presenter_presentation_audio': camera_without_operator_label,
-            }
+            _add_recording_type('presenter_presentation_audio_with_operator')
+            if app.config['COURSE_CAPTURE_PREMIUM_COST']:
+                recording_type_options['presenter_presentation_audio_with_operator'] += f" (${app.config['COURSE_CAPTURE_PREMIUM_COST']})"
+
         return {
             'id': self.id,
             'location': self.location,

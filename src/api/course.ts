@@ -3,21 +3,6 @@ import axios from 'axios'
 import moment from 'moment-timezone'
 import utils from '@/api/api-utils'
 
-export function approve(
-    publishType: string,
-    recordingType: string,
-    sectionId: string,
-    instructorProxies?: any[]
-) {
-  return axios
-    .post(`${utils.apiBaseUrl()}/api/course/approve`, {
-      instructorProxies,
-      publishType,
-      recordingType,
-      sectionId
-    })
-}
-
 export function downloadCSV(filter, termId) {
   const fileDownload = require('js-file-download')
   const now = moment().format('YYYY-MM-DD_HH-mm-ss')
@@ -40,14 +25,27 @@ export function getCourses(filter, termId) {
   })
 }
 
-export function updateCanAprxInstructorsEditRecordings(
-    canAprxInstructorsEditRecordings: boolean,
+export function updatePublishType(
+    publishType: boolean,
     sectionId: string,
     termId: string
 ) {
   return axios
-    .post(`${utils.apiBaseUrl()}/api/course/can_aprx_instructors_edit_recordings`, {
-      canAprxInstructorsEditRecordings,
+    .post(`${utils.apiBaseUrl()}/api/course/publish_type/update`, {
+      publishType,
+      sectionId,
+      termId
+    })
+}
+
+export function updateRecordingType(
+    recordingType: boolean,
+    sectionId: string,
+    termId: string
+) {
+  return axios
+    .post(`${utils.apiBaseUrl()}/api/course/recording_type/update`, {
+      recordingType,
       sectionId,
       termId
     })

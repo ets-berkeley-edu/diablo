@@ -111,7 +111,6 @@ class TestUserProfile:
         assert len(courses) > 0
 
         for course in courses:
-            assert 'approvals' in course
             assert 'scheduled' in course
             instructor = next((i for i in course['instructors'] if i['uid'] == instructor_uid), None)
             assert instructor
