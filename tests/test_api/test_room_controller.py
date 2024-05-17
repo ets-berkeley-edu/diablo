@@ -149,8 +149,8 @@ class TestGetRoom:
         assert api_json['kalturaResourceId'] == 678
         assert api_json['location'] == location
         assert list(api_json['recordingTypeOptions'].keys()) == [
-            'presenter_presentation_audio_with_operator',
             'presenter_presentation_audio',
+            'presenter_presentation_audio_with_operator',
         ]
         # Feed includes courses but room-per-course would be redundant
         assert len(api_json['courses']) > 0
@@ -161,12 +161,12 @@ class TestGetRoom:
         expected = {
             'Barker 101': ['presenter_presentation_audio'],
             "O'Brien 212": [
-                'presenter_presentation_audio_with_operator',
                 'presenter_presentation_audio',
+                'presenter_presentation_audio_with_operator',
             ],
             'Li Ka Shing 145': [
-                'presenter_presentation_audio_with_operator',
                 'presenter_presentation_audio',
+                'presenter_presentation_audio_with_operator',
             ],
         }
         for location, expected_options in expected.items():

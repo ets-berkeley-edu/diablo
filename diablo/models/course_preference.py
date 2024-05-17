@@ -49,8 +49,8 @@ recording_type = ENUM(
 
 
 NAMES_PER_PUBLISH_TYPE = {
-    'kaltura_media_gallery': 'GSI/TA moderation',
-    'kaltura_my_media': 'Instructor moderation',
+    'kaltura_media_gallery': 'Publish Automatically - all members of course site(s) will be able to access recordings',
+    'kaltura_my_media': 'Publish to My Media - I will decide if and how I want to share',
 }
 
 

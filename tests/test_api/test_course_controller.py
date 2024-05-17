@@ -161,20 +161,7 @@ class TestApprove:
             assert api_json['meetings']['eligible'][0]['room']['location'] == "O'Brien 212"
             instructor_uids = [i['uid'] for i in api_json['instructors']]
             assert instructor_uids == instructor_uids
-            approvals_ = api_json['approvals']
-            assert len(approvals_) == 2
 
-            assert approvals_[0]['approvedBy'] == instructor_uids[0]
-            assert approvals_[0]['courseDisplayName'] == api_json['label']
-            assert approvals_[0]['publishType'] == 'kaltura_my_media'
-
-            assert approvals_[1]['approvedBy'] == instructor_uids[1]
-            assert approvals_[1]['courseDisplayName'] == api_json['label']
-            assert approvals_[1]['publishType'] == 'kaltura_media_gallery'
-            assert approvals_[1]['recordingType'] == 'presenter_presentation_audio'
-            assert approvals_[1]['recordingTypeName'] == 'Camera without Operator'
-
-            assert api_json['hasNecessaryApprovals'] is True
             assert api_json['scheduled'] is None
 
     def test_approval_by_admin(self, client, fake_auth):
@@ -188,31 +175,7 @@ class TestApprove:
                 section_id=section_1_id,
             )
             std_commit(allow_test_environment=True)
-            assert api_json['hasNecessaryApprovals'] is True
             assert api_json['scheduled'] is None
-
-            approvals = api_json['approvals']
-            assert len(approvals) == 1
-            assert approvals[0]['courseDisplayName'] == api_json['label']
-
-    def test_has_necessary_approvals_when_cross_listed(self, client, fake_auth):
-        """If section X and Y are cross-listed then hasNecessaryApprovals is false until the Y instructor approves."""
-        with test_approvals_workflow(app):
-            def _approve(instructor_uid, expected_has_necessary):
-                fake_auth.login(instructor_uid)
-                api_json = api_approve(
-                    client,
-                    publish_type='kaltura_my_media',
-                    recording_type='presenter_presentation_audio',
-                    section_id=50012,
-                )
-                std_commit(allow_test_environment=True)
-                assert api_json['hasNecessaryApprovals'] is expected_has_necessary, f'instructor_uid: {instructor_uid}'
-
-            _approve(instructor_uid='10009', expected_has_necessary=False)
-            # Log out
-            client.get('/api/auth/logout')
-            _approve(instructor_uid='10010', expected_has_necessary=True)
 
 
 class TestGetCourse:
@@ -272,39 +235,6 @@ class TestGetCourse:
             section_id=deleted_section_id,
         )
         assert course['deletedAt']
-
-    def test_course_with_partial_approval(self, client, fake_auth):
-        """Course with two instructors and one approval."""
-        fake_auth.login(admin_uid)
-        with test_approvals_workflow(app):
-            # If course has approvals but not scheduled then it will show up in the feed.
-            approved_by_uid = get_instructor_uids(section_id=section_1_id, term_id=self.term_id)[0]
-            room_id = Room.get_room_id(section_id=section_1_id, term_id=self.term_id)
-            Approval.create(
-                approved_by_uid=approved_by_uid,
-                approver_type_='instructor',
-                course_display_name=f'term_id:{self.term_id} section_id:{section_1_id}',
-                publish_type_='kaltura_my_media',
-                recording_type_='presenter_presentation_audio',
-                room_id=room_id,
-                section_id=section_1_id,
-                term_id=self.term_id,
-            )
-            std_commit(allow_test_environment=True)
-
-            api_json = api_get_course(
-                client,
-                term_id=self.term_id,
-                section_id=section_1_id,
-            )
-            assert [i['uid'] for i in api_json['instructors']] == ['10001', '10002', '10003']
-
-            approvals = api_json['approvals']
-            assert len(approvals) == 1
-            assert approved_by_uid == approvals[0]['approvedBy']
-            assert api_json['approvalStatus'] == 'Partially Approved'
-            assert api_json['meetings']['eligible'][0]['room']['id'] == room_id
-            assert api_json['meetings']['eligible'][0]['room']['location'] == "O'Brien 212"
 
     def test_date_time_format(self, client, fake_auth):
         """Dates and times are properly formatted for front-end display."""
@@ -525,10 +455,8 @@ class TestGetCourses:
             api_json = self._api_courses(client, term_id=self.term_id, filter_='Do Not Email')
 
             # Opted-out courses are in the feed, whether approved or not
-            course_1 = _find_course(api_json=api_json, section_id=section_1_id, term_id=self.term_id)
-            assert course_1['approvalStatus'] == 'Invited'
-            course_4 = _find_course(api_json=api_json, section_id=section_4_id, term_id=self.term_id)
-            assert course_4['approvalStatus'] == 'Approved'
+            assert _find_course(api_json=api_json, section_id=section_1_id, term_id=self.term_id)
+            assert _find_course(api_json=api_json, section_id=section_4_id, term_id=self.term_id)
 
             for section_id in (section_3_id, section_in_ineligible_room):
                 # Excluded courses
@@ -564,7 +492,6 @@ class TestGetCourses:
             course = _find_course(api_json=api_json, section_id=section_4_id, term_id=self.term_id)
             assert course
             assert course['label'] == 'CHEM C110L, LAB 001'
-            assert course['approvalStatus'] == 'Invited'
             assert course['termId'] == self.term_id
             # The section with approval will NOT show up in search results
             assert not _find_course(api_json=api_json, section_id=section_5_id, term_id=self.term_id)
@@ -595,7 +522,6 @@ class TestGetCourses:
             # Third course is in enabled room and has not received an invite. Therefore, it is in the feed.
             assert _is_course_in_enabled_room(section_id=section_3_id, term_id=self.term_id)
             course = _find_course(api_json=api_json, section_id=section_3_id, term_id=self.term_id)
-            assert course['approvalStatus'] == 'Not Invited'
             assert course['label'] == 'BIO 1B, LEC 001'
 
     def test_partially_approved_filter(self, client, fake_auth):
@@ -637,7 +563,6 @@ class TestGetCourses:
             course = _find_course(api_json=api_json, section_id=section_6_id, term_id=self.term_id)
             assert course
             assert course['label'] == 'LAW 23, LEC 002'
-            assert course['approvalStatus'] == 'Partially Approved'
 
     def test_scheduled_filter(self, client, fake_auth):
         """Scheduled filter: Courses with recordings scheduled."""
@@ -666,8 +591,7 @@ class TestGetCourses:
             std_commit(allow_test_environment=True)
             api_json = self._api_courses(client, term_id=self.term_id, filter_='Scheduled')
             assert len(api_json) == 2
-            course = _find_course(api_json=api_json, section_id=section_1_id, term_id=self.term_id)
-            assert course['approvalStatus'] == 'Partially Approved'
+            assert _find_course(api_json=api_json, section_id=section_1_id, term_id=self.term_id)
             assert not _find_course(api_json=api_json, section_id=section_6_id, term_id=self.term_id)
 
     def test_all_filter(self, client, fake_auth):
@@ -1171,9 +1095,7 @@ class TestUnscheduleCourse:
             )
 
             course = api_get_course(client, term_id=self.term_id, section_id=section_1_id)
-            assert len(course['approvals']) == 1
             assert len(course['scheduled']) == 1
-            assert course['hasNecessaryApprovals'] is True
             assert course['hasOptedOut'] is False
 
             response = self._api_unschedule(
@@ -1181,32 +1103,7 @@ class TestUnscheduleCourse:
                 term_id=self.term_id,
                 section_id=section_1_id,
             )
-            assert len(response['approvals']) == 0
             assert response['scheduled'] is None
-            assert response['hasNecessaryApprovals'] is False
-            assert response['hasOptedOut'] is True
-
-    def test_authorized_unschedule_queued(self, client, fake_auth):
-        fake_auth.login(admin_uid)
-        with test_approvals_workflow(app):
-            api_approve(
-                client,
-                publish_type='kaltura_my_media',
-                recording_type='presenter_presentation_audio',
-                section_id=section_1_id,
-            )
-
-            course = api_get_course(client, term_id=self.term_id, section_id=section_1_id)
-            assert len(course['approvals']) == 1
-            assert course['hasNecessaryApprovals'] is True
-
-            response = self._api_unschedule(
-                client,
-                term_id=self.term_id,
-                section_id=section_1_id,
-            )
-            assert len(response['approvals']) == 0
-            assert response['hasNecessaryApprovals'] is False
             assert response['hasOptedOut'] is True
 
 
