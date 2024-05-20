@@ -77,6 +77,9 @@ class EmailTemplatesPage(DiabloPages):
         app.logger.info('Loading the templates page')
         self.hit_url()
 
+    def is_template_row_present(self, template):
+        return self.is_present((By.XPATH, self.template_row_xpath(template)))
+
     def wait_for_template_row(self, template):
         Wait(self.driver, util.get_short_timeout()).until(
             ec.visibility_of_element_located(EmailTemplatesPage.edit_template_link_locator(template)),
@@ -123,6 +126,9 @@ class EmailTemplatesPage(DiabloPages):
 
     def click_close_template_codes_button(self):
         self.wait_for_element_and_click(EmailTemplatesPage.CODES_CLOSE_BUTTON)
+
+    def template_codes_text(self):
+        return self.element(self.CODES_DIV).get_attribute('innerText')
 
     def click_cancel(self):
         app.logger.info('Clicking cancel')
