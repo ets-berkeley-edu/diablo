@@ -22,11 +22,11 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
+import inspect
 import json
 from os.path import dirname
 
 from decorator import decorator
-from diablo.lib.util import get_args_dict
 from flask import current_app as app
 from flask_caching import Cache
 from flask_sqlalchemy import SQLAlchemy
@@ -68,7 +68,7 @@ def std_commit(allow_test_environment=False):
 def cachify(key_pattern, timeout=1440):
     @decorator
     def _cachify(func, *args, **kw):
-        args_dict = get_args_dict(func, *args, **kw)
+        args_dict = _get_args_dict(func, *args, **kw)
         key = key_pattern.format(**args_dict)
         cached = cache.get(key)
         if cached is None:
@@ -92,3 +92,10 @@ def skip_when_pytest(mock_object=None, is_fixture_json_file=False):
         else:
             return func(*args, **kw)
     return _skip_when_pytest
+
+
+def _get_args_dict(func, *args, **kw):
+    arg_names = inspect.getfullargspec(func)[0]
+    resp = dict(zip(arg_names, args))
+    resp.update(kw)
+    return resp
