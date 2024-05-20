@@ -23,24 +23,22 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 from datetime import datetime
-import inspect
+import json
+import os
+import re
 
 from dateutil.tz import tzutc
+from diablo import db
 from flask import current_app as app
 import pytz
+from sqlalchemy.sql import text
+
 
 """Generic utilities."""
 
 
 def default_timezone():
     return pytz.timezone(app.config['TIMEZONE'])
-
-
-def get_args_dict(func, *args, **kw):
-    arg_names = inspect.getfullargspec(func)[0]
-    resp = dict(zip(arg_names, args))
-    resp.update(kw)
-    return resp
 
 
 def json_objects_to_dict(json_objects, field_name_of_key):
@@ -111,6 +109,50 @@ def get_names_of_days(day_codes):
     return [names_by_code.get(day_code[:2].lower()) for day_code in day_codes or ()]
 
 
+def get_loch_basic_attributes_by_uid_or_email(snippet, limit=20):
+    if not snippet:
+        return []
+    if os.environ.get('DIABLO_ENV') == 'test':
+        return _read_fixture(f"{app.config['FIXTURES_PATH']}/loch_ness/basic_attributes_for_snippet_{snippet}.json")
+
+    query_filter, params = parse_search_snippet(snippet)
+    params['limit'] = limit
+    query = f"""SELECT * FROM dblink('{app.config['DBLINK_NESSIE_RDS']}',$NESSIE$
+                SELECT ldap_uid, sid, first_name, last_name, email_address
+                  FROM sis_data.basic_attributes
+                  {query_filter}
+                  LIMIT :limit
+            $NESSIE$)
+            AS nessie_basic_attributes (
+                uid VARCHAR,
+                csid VARCHAR,
+                first_name VARCHAR,
+                last_name VARCHAR,
+                email VARCHAR
+            )
+            """
+    try:
+        results = db.session().execute(text(query), params).all()
+        app.logger.info(f'Loch Ness basic attributes query returned {len(results)} results (snippet={snippet}).')
+        return results
+    except Exception as e:
+        app.logger.exception(e)
+
+
+def parse_search_snippet(snippet):
+    params = {}
+    words = list(set(snippet.lower().split()))
+    # A single numeric string indicates a UID search.
+    if len(words) == 1 and re.match(r'^\d+$', words[0]):
+        query_filter = ' WHERE ldap_uid LIKE :uid_prefix'
+        params.update({'uid_prefix': f'{words[0]}%'})
+    # Otherwise search by email.
+    else:
+        query_filter = ' WHERE email_address LIKE :email_prefix'
+        params.update({'email_prefix': f'{words[0]}%'})
+    return query_filter, params
+
+
 def readable_join(items):
     return (f"{', '.join(items[:-1])} and {items[-1]}" if len(items) > 1 else items[0]) if len(items or []) else ''
 
@@ -131,3 +173,11 @@ def resolve_xml_template_string(template_string):
 
 def safe_strftime(date, date_format):
     return datetime.strftime(date, date_format) if date else None
+
+
+def _read_fixture(fixture_path):
+    results = []
+    if os.path.isfile(fixture_path):
+        with open(fixture_path) as f:
+            results = json.load(f)
+    return results

@@ -22,7 +22,10 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
+import json
+
 import pytest
+
 
 admin_uid = '90001'
 instructor_not_teaching_uid = '10000'
@@ -171,3 +174,34 @@ class TestGetCalnetUser:
         api_json = self._api_calnet_user(client, uid=uid)
         assert api_json['name'] == 'Father Karras'
         assert api_json['uid'] == uid
+
+
+class TestSearchUsers:
+
+    @staticmethod
+    def _api_search_users(client, snippet='123', expected_status_code=200):
+        response = client.post(
+            '/api/users/search',
+            data=json.dumps({'snippet': snippet}),
+            content_type='application/json',
+        )
+        assert response.status_code == expected_status_code
+        return response.json
+
+    def test_anonymous(self, client):
+        """Denies anonymous user."""
+        self._api_search_users(client, expected_status_code=401)
+
+    def test_search_by_uid(self, client, fake_auth):
+        fake_auth.login(instructor_uid)
+        results = self._api_search_users(client, snippet='500')
+        assert len(results) == 2
+        assert results[0]['uid'] == '5000286'
+        assert results[1]['uid'] == '5007147'
+
+    def test_search_by_email(self, client, fake_auth):
+        fake_auth.login(instructor_uid)
+        results = self._api_search_users(client, snippet='RO')
+        assert len(results) == 2
+        assert results[0]['email'] == 'rockwell.house@berkeley.edu'
+        assert results[1]['email'] == 'roscoe.bouquet@berkeley.edu'
