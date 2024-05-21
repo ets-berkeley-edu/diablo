@@ -1,0 +1,422 @@
+"""
+Copyright ©2024. The Regents of the University of California (Regents). All Rights Reserved.
+
+Permission to use, copy, modify, and distribute this software and its documentation
+for educational, research, and not-for-profit purposes, without fee and without a
+signed licensing agreement, is hereby granted, provided that the above copyright
+notice, this paragraph and the following two paragraphs appear in all copies,
+modifications, and distributions.
+
+Contact The Office of Technology Licensing, UC Berkeley, 2150 Shattuck Avenue,
+Suite 510, Berkeley, CA 94720-1620, (510) 643-7201, otl@berkeley.edu,
+http://ipira.berkeley.edu/industry-info for commercial licensing opportunities.
+
+IN NO EVENT SHALL REGENTS BE LIABLE TO ANY PARTY FOR DIRECT, INDIRECT, SPECIAL,
+INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING LOST PROFITS, ARISING OUT OF
+THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION, EVEN IF REGENTS HAS BEEN ADVISED
+OF THE POSSIBILITY OF SUCH DAMAGE.
+
+REGENTS SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE
+SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
+"AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
+ENHANCEMENTS, OR MODIFICATIONS.
+"""
+
+from datetime import timedelta
+
+from flask import current_app as app
+import pytest
+from xena.models.publish_type import PublishType
+from xena.models.recording_schedule import RecordingSchedule
+from xena.models.recording_scheduling_status import RecordingSchedulingStatus
+from xena.models.recording_type import RecordingType
+from xena.models.section import Section
+from xena.pages.course_page import CoursePage
+from xena.test_utils import util
+
+"""
+SCENARIO:
+- Course has two meetings at the same time, one physical and one online
+- Sole instructor visits sign-up page, approves
+- Recordings scheduled
+- Instructor, physical room, and schedule then change
+"""
+
+
+@pytest.mark.usefixtures('page_objects')
+class TestWeirdTypeB:
+
+    # Initial course data
+    test_data = util.get_test_script_course('test_weird_type_b')
+    section = util.get_test_section(test_data)
+    meeting_physical = section.meetings[0]
+    meeting_online = section.meetings[1]
+    instructor_0 = section.instructors[0]
+    room_0 = meeting_physical.room
+    recording_schedule = RecordingSchedule(section)
+
+    # Course changes data
+    test_data_changes = util.get_test_script_course('test_weird_type_b_changes')
+    uids_to_exclude = list(map(lambda i: i.uid, section.instructors))
+    util.get_test_instructors(test_data_changes, uids_to_exclude=uids_to_exclude)
+    section_changes = Section(test_data_changes)
+    meeting_physical_changes = section_changes.meetings[0]
+    meeting_online_changes = section_changes.meetings[1]
+    instructor_1 = section_changes.instructors[0]
+    room_1 = meeting_physical_changes.room
+    recording_schedule_changes = RecordingSchedule(section_changes)
+
+    # Set changed physical meeting start/end dates relative to original dates
+    start_date = (meeting_physical.end_date - timedelta(days=14)).strftime('%Y-%m-%d')
+    end_date = (meeting_physical.end_date - timedelta(days=7)).strftime('%Y-%m-%d')
+    meeting_physical_changes.start_date = start_date
+    meeting_physical_changes.end_date = end_date
+
+    def test_disable_jobs(self):
+        self.login_page.load_page()
+        self.login_page.dev_auth()
+        self.ouija_page.click_jobs_link()
+        self.jobs_page.disable_all_jobs()
+
+    def test_create_blackouts(self):
+        self.jobs_page.click_blackouts_link()
+        self.blackouts_page.delete_all_blackouts()
+        self.blackouts_page.create_all_blackouts()
+
+    def test_delete_old_diablo_and_kaltura(self):
+        self.kaltura_page.log_in_via_calnet(self.calnet_page)
+        self.kaltura_page.reset_test_data(self.term, self.recording_schedule)
+        util.reset_section_test_data(self.section)
+        self.recording_schedule.scheduling_status = RecordingSchedulingStatus.NOT_SCHEDULED
+
+    def test_delete_old_email(self):
+        util.reset_sent_email_test_data(self.section)
+
+    # RUN SEMESTER START JOB
+
+    def test_semester_start(self):
+        self.jobs_page.load_page()
+        self.jobs_page.run_semester_start_job()
+        assert util.get_kaltura_id(self.recording_schedule, self.term)
+        self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
+        self.recording_schedule.publish_type = PublishType.PUBLISH_TO_MY_MEDIA
+        self.recording_schedule.scheduling_status = RecordingSchedulingStatus.SCHEDULED
+
+    def test_kaltura_blackouts(self):
+        self.jobs_page.run_blackouts_job()
+
+    # CHECK FILTERS - SCHEDULED
+
+    def test_scheduled_filter_all(self):
+        self.ouija_page.load_page()
+        self.ouija_page.search_for_course_code(self.section)
+        self.ouija_page.filter_for_all()
+        assert self.ouija_page.is_course_in_results(self.section)
+
+    def test_scheduled_sched_status(self):
+        visible_status = self.ouija_page.course_row_sched_status_el(self.section).text.strip()
+        assert visible_status == self.recording_schedule.scheduling_status.value
+
+    def test_scheduled_filter_opted_out(self):
+        self.ouija_page.filter_for_opted_out()
+        assert not self.ouija_page.is_course_in_results(self.section)
+
+    def test_scheduled_filter_scheduled(self):
+        self.ouija_page.filter_for_scheduled()
+        assert self.ouija_page.is_course_in_results(self.section)
+
+    def test_scheduled_filter_no_instructors(self):
+        self.ouija_page.filter_for_no_instructors()
+        assert not self.ouija_page.is_course_in_results(self.section)
+
+    # VERIFY COURSE HISTORY
+
+    # TODO - admin view of just-scheduled course
+
+    # INSTRUCTOR LOGS IN
+
+    def test_home_page(self):
+        self.ouija_page.log_out()
+        self.login_page.dev_auth(self.instructor_0.uid)
+        self.ouija_page.wait_for_title_containing(f'Your {self.section.term.name} Course')
+
+    def test_course_page_link(self):
+        self.ouija_page.click_course_page_link(self.section)
+        self.course_page.wait_for_diablo_title(f'{self.section.code}, {self.section.number}')
+
+    # VERIFY STATIC COURSE SIS DATA
+
+    def test_visible_ccn(self):
+        assert self.course_page.visible_ccn() == self.section.ccn
+
+    def test_visible_course_title(self):
+        assert self.course_page.visible_course_title() == self.section.title
+
+    def test_visible_instructors(self):
+        instructor_names = [f'{self.instructor_0.first_name} {self.instructor_0.last_name}'.strip()]
+        assert self.course_page.visible_instructors() == instructor_names
+
+    def test_visible_meeting_days(self):
+        term_dates = f'{CoursePage.expected_term_date_str(self.meeting_physical.start_date, self.meeting_physical.end_date)}'
+        assert term_dates in self.course_page.visible_meeting_days()[0]
+        assert len(self.course_page.visible_meeting_days()) == 1
+
+    def test_visible_meeting_time(self):
+        assert self.course_page.visible_meeting_time()[0] == f'{self.meeting_physical.start_time} - {self.meeting_physical.end_time}'
+        assert len(self.course_page.visible_meeting_time()) == 1
+
+    def test_visible_room(self):
+        assert self.course_page.visible_rooms()[0] == self.meeting_physical.room.name
+        assert len(self.course_page.visible_rooms()) == 1
+
+    # UPDATE SETTINGS, SAVE
+
+    def test_choose_publish_type(self):
+        self.course_page.select_publish_type(PublishType.PUBLISH_TO_PENDING.value)
+        self.recording_schedule.publish_type = PublishType.PUBLISH_TO_PENDING
+
+    def test_approve(self):
+        self.course_page.click_approve_button()
+
+    # TODO def test_confirmation(self):
+
+    # VERIFY SERIES IN DIABLO
+
+    def test_room_series(self):
+        self.rooms_page.load_page()
+        self.rooms_page.find_room(self.meeting_physical.room)
+        self.rooms_page.click_room_link(self.meeting_physical.room)
+        self.room_page.wait_for_series_row(self.recording_schedule)
+
+    def test_room_series_link(self):
+        expected = f'{self.section.code}, {self.section.number} ({self.term.name})'
+        assert self.room_page.series_row_kaltura_link_text(self.recording_schedule) == expected
+
+    def test_room_series_start(self):
+        start = self.meeting_physical.expected_recording_dates(self.section.term)[0]
+        assert self.room_page.series_row_start_date(self.recording_schedule) == start
+
+    def test_room_series_end(self):
+        last_date = self.meeting_physical.expected_recording_dates(self.section.term)[-1]
+        assert self.room_page.series_row_end_date(self.recording_schedule) == last_date
+
+    def test_room_series_days(self):
+        assert self.room_page.series_row_days(self.recording_schedule) == self.meeting_physical.days.replace(' ', '')
+
+    def test_series_recordings(self):
+        self.room_page.expand_series_row(self.recording_schedule)
+        expected = self.meeting_physical.expected_recording_dates(self.section.term)
+        visible = self.room_page.series_recording_start_dates(self.recording_schedule)
+        app.logger.info(f'Missing: {list(set(expected) - set(visible))}')
+        app.logger.info(f'Unexpected: {list(set(visible) - set(expected))} ')
+        expected.reverse()
+        assert visible == expected
+
+    def test_series_blackouts(self):
+        expected = self.meeting_physical.expected_blackout_dates(self.section.term)
+        visible = self.room_page.series_recording_blackout_dates(self.recording_schedule)
+        app.logger.info(f'Missing: {list(set(expected) - set(visible))}')
+        app.logger.info(f'Unexpected: {list(set(visible) - set(expected))} ')
+        expected.reverse()
+        assert visible == expected
+
+    # VERIFY SERIES IN KALTURA
+
+    def test_click_series_link(self):
+        self.course_page.load_page(self.section)
+        self.course_page.click_kaltura_series_link(self.recording_schedule)
+        self.kaltura_page.wait_for_delete_button()
+
+    def test_series_title(self):
+        self.kaltura_page.verify_title_and_desc(self.section, self.meeting_physical)
+
+    def test_series_collab(self):
+        self.kaltura_page.verify_collaborators(self.section)
+
+    def test_series_schedule(self):
+        self.kaltura_page.verify_schedule(self.section, self.meeting_physical)
+
+    def test_close_kaltura_window(self):
+        self.kaltura_page.close_window_and_switch()
+
+    # INSTRUCTOR REMOVED
+
+    def test_remove_instructor(self):
+        util.change_course_instructor(self.section, old_instructor=self.instructor_0, new_instructor=None)
+
+    def test_run_kaltura_job_instr_removed(self):
+        self.jobs_page.load_page()
+        self.jobs_page.run_kaltura_job()
+
+    def test_run_emails_job_instr_removed(self):
+        self.jobs_page.run_emails_job()
+
+    def test_course_page_instr_removed(self):
+        self.course_page.load_page(self.section)
+        start_date = self.meeting_physical.start_date
+        start_time = self.meeting_physical.start_time
+        end_date = self.meeting_physical.end_date
+        end_time = self.meeting_physical.end_time
+        term_dates = f'{CoursePage.expected_term_date_str(start_date, end_date)}'
+        assert self.course_page.visible_instructors() == []
+        assert term_dates in self.course_page.visible_meeting_days()[0]
+        assert self.course_page.visible_meeting_time()[0] == f'{start_time} - {end_time}'
+        assert self.course_page.visible_rooms()[0] == self.room_0
+        assert self.course_page.scheduled_publish_type() == PublishType.PUBLISH_TO_PENDING
+
+    def test_series_title_and_desc_instr_removed(self):
+        self.course_page.click_kaltura_series_link(self.recording_schedule)
+        self.kaltura_page.wait_for_delete_button()
+        self.kaltura_page.verify_title_and_desc(self.section, self.meeting_physical)
+
+    def test_series_collab_instr_removed(self):
+        self.kaltura_page.verify_collaborators(self.section)
+
+    def test_series_schedule_instr_removed(self):
+        self.kaltura_page.verify_schedule(self.section, self.meeting_physical)
+
+    def test_series_publish_status_instr_removed(self):
+        assert self.kaltura_page.is_private()
+
+    # TODO - verify course history
+    # TODO - verify no instr-removed email sent
+
+    # INSTRUCTOR ADDED
+
+    def test_add_instructor(self):
+        util.change_course_instructor(self.section, old_instructor=None, new_instructor=self.instructor_1)
+
+    def test_run_kaltura_job_instr_added(self):
+        self.jobs_page.load_page()
+        self.jobs_page.run_kaltura_job()
+
+    def test_run_emails_job_instr_added(self):
+        self.jobs_page.run_emails_job()
+
+    def test_course_page_instr_added(self):
+        self.course_page.load_page(self.section)
+        instructor_names = [f'{self.instructor_1.first_name} {self.instructor_1.last_name}'.strip()]
+        start_date = self.meeting_physical.start_date
+        start_time = self.meeting_physical.start_time
+        end_date = self.meeting_physical.end_date
+        end_time = self.meeting_physical.end_time
+        term_dates = f'{CoursePage.expected_term_date_str(start_date, end_date)}'
+        assert self.course_page.visible_instructors() == instructor_names
+        assert term_dates in self.course_page.visible_meeting_days()[0]
+        assert self.course_page.visible_meeting_time()[0] == f'{start_time} - {end_time}'
+        assert self.course_page.visible_rooms()[0] == self.room_0
+        assert self.course_page.scheduled_publish_type() == PublishType.PUBLISH_TO_PENDING
+
+    def test_series_title_and_desc_instr_added(self):
+        self.course_page.click_kaltura_series_link(self.recording_schedule)
+        self.kaltura_page.wait_for_delete_button()
+        self.kaltura_page.verify_title_and_desc(self.section, self.meeting_physical)
+
+    def test_series_collab_instr_added(self):
+        self.kaltura_page.verify_collaborators(self.section)
+
+    def test_series_schedule_instr_added(self):
+        self.kaltura_page.verify_schedule(self.section, self.meeting_physical)
+
+    def test_series_publish_status_instr_added(self):
+        assert self.kaltura_page.is_private()
+
+    # TODO - verify course history
+    # TODO - verify instr-added email sent
+
+    # START / END DATES CHANGE FOR ELIGIBLE SECTION
+
+    def test_change_dates(self):
+        start = self.meeting_physical_changes.start_date
+        end = self.meeting_physical_changes.end_date
+        util.update_course_start_end_dates(self.section, self.meeting_physical.room, start, end)
+
+    def test_run_kaltura_job_new_dates(self):
+        self.jobs_page.load_page()
+        self.jobs_page.run_kaltura_job()
+
+    def test_run_emails_job_new_dates(self):
+        self.jobs_page.run_emails_job()
+
+    def test_course_page_new_dates(self):
+        self.course_page.load_page(self.section)
+        instructor_names = [f'{self.instructor_1.first_name} {self.instructor_1.last_name}'.strip()]
+        start_date = self.meeting_physical_changes.start_date
+        start_time = self.meeting_physical_changes.start_time
+        end_date = self.meeting_physical_changes.end_date
+        end_time = self.meeting_physical_changes.end_time
+        term_dates = f'{CoursePage.expected_term_date_str(start_date, end_date)}'
+        assert self.course_page.visible_instructors() == instructor_names
+        assert term_dates in self.course_page.visible_meeting_days()[0]
+        assert self.course_page.visible_meeting_time()[0] == f'{start_time} - {end_time}'
+        assert self.course_page.visible_rooms()[0] == self.room_0
+        assert self.course_page.scheduled_publish_type() == PublishType.PUBLISH_TO_PENDING
+
+    def test_series_title_and_desc_new_dates(self):
+        self.course_page.click_kaltura_series_link(self.recording_schedule)
+        self.kaltura_page.wait_for_delete_button()
+        self.kaltura_page.verify_title_and_desc(self.section, self.meeting_physical_changes)
+
+    def test_series_collab_new_dates(self):
+        self.kaltura_page.verify_collaborators(self.section)
+
+    def test_series_schedule_new_dates(self):
+        self.kaltura_page.verify_schedule(self.section, self.meeting_physical_changes)
+
+    def test_series_publish_status_new_dates(self):
+        assert self.kaltura_page.is_private()
+
+    # TODO - verify course history
+    # TODO - verify schedule change email sent
+
+    # ROOM REMOVED
+
+    def test_remove_room(self):
+        util.change_course_room(self.section, old_room=self.room_0, new_room=None)
+
+    def test_run_kaltura_job_room_removed(self):
+        self.jobs_page.load_page()
+        self.jobs_page.run_kaltura_job()
+
+    def test_run_emails_job_room_removed(self):
+        self.jobs_page.run_emails_job()
+
+    def test_course_page_room_removed(self):
+        self.course_page.load_page(self.section)
+        assert self.course_page.is_canceled()
+
+    def test_series_canceled_room_removed(self):
+        self.kaltura_page.load_event_edit_page(self.recording_schedule.series_id)
+        self.kaltura_page.wait_for_title('Access Denied - UC Berkeley - Test')
+
+    # TODO - verify course history
+    # TODO - verify instructor_room_change_no_longer_eligible email sent
+
+    # ROOM ADDED
+
+    def test_add_room(self):
+        util.change_course_room(self.section, old_room=None, new_room=self.room_1)
+
+    def test_run_kaltura_job_room_added(self):
+        self.jobs_page.load_page()
+        self.jobs_page.run_kaltura_job()
+
+    def test_run_emails_job_room_added(self):
+        self.jobs_page.run_emails_job()
+
+    def test_course_page_room_added(self):
+        instructor_names = [f'{i.first_name} {i.last_name}'.strip() for i in self.section.instructors]
+        start_date = self.meeting_physical_changes.start_date
+        start_time = self.meeting_physical_changes.start_time
+        end_date = self.meeting_physical_changes.end_date
+        end_time = self.meeting_physical_changes.end_time
+        term_dates = f'{CoursePage.expected_term_date_str(start_date, end_date)}'
+        assert self.course_page.visible_instructors() == instructor_names
+        assert term_dates in self.course_page.visible_meeting_days()[0]
+        assert self.course_page.visible_meeting_time()[0] == f'{start_time} - {end_time}'
+        assert self.course_page.visible_rooms()[0] == self.room_1
+        assert self.course_page.scheduled_publish_type() == PublishType.PUBLISH_TO_PENDING
+
+    # TODO - verify course history
+    # TODO - verify instructor-room-change email sent
