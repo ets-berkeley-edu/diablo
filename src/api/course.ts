@@ -25,6 +25,19 @@ export function getCourses(filter, termId) {
   })
 }
 
+export function updateCollaborators(
+    collaboratorUids: string[],
+    sectionId: string,
+    termId: string
+) {
+  return axios
+    .post(`${utils.apiBaseUrl()}/api/course/collaborator_uids/update`, {
+      collaboratorUids,
+      sectionId,
+      termId
+    })
+}
+
 export function updatePublishType(
     publishType: boolean,
     sectionId: string,

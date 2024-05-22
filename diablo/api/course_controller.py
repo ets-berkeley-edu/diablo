@@ -242,10 +242,10 @@ def update_collaborator_uids():
     params = request.get_json()
     section_id = params.get('sectionId')
     term_id = params.get('termId')
-    collaborator_uids = params.get('collaboratorUids') or None
+    collaborator_uids = params.get('collaboratorUids') or []
 
     course = SisSection.get_course(term_id, section_id) if (term_id and section_id) else None
-    if not course or (collaborator_uids is not None and type(collaborator_uids) != list):
+    if not course or type(collaborator_uids) != list:
         raise BadRequestError('Required params missing or invalid')
     if not current_user.is_admin and current_user.uid not in [i['uid'] for i in course['instructors']]:
         raise ForbiddenRequestError(f'Sorry, you are unauthorized to view the course {course["label"]}.')

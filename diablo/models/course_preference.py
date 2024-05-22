@@ -25,7 +25,8 @@ ENHANCEMENTS, OR MODIFICATIONS.
 from datetime import datetime
 
 from diablo import db, std_commit
-from diablo.lib.util import to_isoformat
+from diablo.externals.loch import get_loch_basic_attributes
+from diablo.lib.util import basic_attributes_to_api_json, to_isoformat
 from diablo.models.cross_listing import CrossListing
 from sqlalchemy import and_
 from sqlalchemy.dialects.postgresql import ARRAY, ENUM
@@ -168,15 +169,22 @@ class CoursePreference(db.Model):
         std_commit()
         return cls.query.filter_by(term_id=term_id, section_id=section_id).first()
 
+    def get_collaborator_attributes(self):
+        if self.collaborator_uids:
+            return [basic_attributes_to_api_json(a) for a in get_loch_basic_attributes(self.collaborator_uids)]
+        else:
+            return []
+
     def to_api_json(self):
         return {
             'termId': self.term_id,
             'sectionId': self.section_id,
+            'collaborators': self.get_collaborator_attributes(),
+            'collaboratorUids': self.collaborator_uids,
             'publishType': self.publish_type,
             'publishTypeName': NAMES_PER_PUBLISH_TYPE[self.publish_type],
             'recordingType': self.recording_type,
             'recordingTypeName': NAMES_PER_RECORDING_TYPE[self.recording_type],
-            'collaboratorUids': self.collaborator_uids,
             'createdAt': to_isoformat(self.created_at),
         }
 

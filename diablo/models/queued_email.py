@@ -25,12 +25,13 @@ ENHANCEMENTS, OR MODIFICATIONS.
 from datetime import datetime
 
 from diablo import db, std_commit
+from diablo.externals.loch import get_loch_basic_attributes
 from diablo.lib.interpolator import interpolate_content
 from diablo.lib.util import to_isoformat
 from diablo.merged.emailer import send_system_error_email
 from diablo.models.course_preference import NAMES_PER_PUBLISH_TYPE, NAMES_PER_RECORDING_TYPE
 from diablo.models.email_template import email_template_type, EmailTemplate
-from diablo.models.sis_section import AUTHORIZED_INSTRUCTOR_ROLE_CODES, get_loch_basic_attributes, SisSection
+from diablo.models.sis_section import AUTHORIZED_INSTRUCTOR_ROLE_CODES, SisSection
 from flask import current_app as app
 from sqlalchemy.dialects.postgresql import JSONB
 
