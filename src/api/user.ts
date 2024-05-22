@@ -12,3 +12,7 @@ export function getCalnetUser(uid) {
 export function getAdminUsers() {
   return axios.get(`${utils.apiBaseUrl()}/api/users/admins`)
 }
+
+export function searchUsers(snippet: string) {
+  return axios.post(`${utils.apiBaseUrl()}/api/users/search`, {snippet})
+}

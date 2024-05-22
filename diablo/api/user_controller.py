@@ -24,8 +24,9 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 from diablo.api.errors import ResourceNotFoundError
 from diablo.api.util import admin_required
+from diablo.externals.loch import get_loch_basic_attributes_by_uid_or_email
 from diablo.lib.http import tolerant_jsonify
-from diablo.lib.util import get_loch_basic_attributes_by_uid_or_email
+from diablo.lib.util import basic_attributes_to_api_json
 from diablo.merged.calnet import get_calnet_user_for_uid, get_calnet_users_for_uids
 from diablo.models.admin_user import AdminUser
 from diablo.models.sis_section import SisSection
@@ -79,16 +80,6 @@ def search_users():
     params = request.get_json()
     snippet = params.get('snippet').strip()
     attributes = get_loch_basic_attributes_by_uid_or_email(snippet, limit=20)
-    results = [_to_api_json(a) for a in attributes]
+    results = [basic_attributes_to_api_json(a) for a in attributes]
     results.sort(key=lambda x: x['firstName'])
     return tolerant_jsonify(results)
-
-
-def _to_api_json(user):
-    return {
-        'csid': user['csid'],
-        'email': user['email'],
-        'firstName': user['first_name'],
-        'lastName': user['last_name'],
-        'uid': user['uid'],
-    }

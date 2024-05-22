@@ -59,12 +59,87 @@
                 <h4>
                   Collaborator(s) listed will have editing and publishing access:
                 </h4>
-                <div v-for="collaboratorUid in course.collaboratorUids" :id="`collaborator-${collaboratorUid}`" :key="collaboratorUid">
-                  ({{ collaboratorUid }})
+                <div v-for="collaborator in collaborators" :id="`collaborator-${collaborator.uid}`" :key="collaborator.uid">
+                  {{ collaborator.firstName }} {{ collaborator.lastName }} ({{ collaborator.email }}) ({{ collaborator.uid }})
+                  <v-btn
+                    v-if="collaboratorsEditing"
+                    :id="`btn-collaborator-remove-${collaborator.uid}`"
+                    text
+                    :disabled="collaboratorsUpdating"
+                    @click="removeCollaborator(collaborator.uid)"
+                  >
+                    (remove)
+                  </v-btn>
                 </div>
-                <div v-if="!course.collaboratorUids" id="collaborators-none">
+                <div v-if="!collaborators.length" id="collaborators-none">
                   None
                 </div>
+                <div v-if="!collaboratorsEditing">
+                  <v-btn
+                    id="btn-collaborators-edit"
+                    text
+                    @click="toggleCollaboratorsEditing"
+                  >
+                    (edit)
+                  </v-btn>
+                </div>
+              </v-col>
+            </v-row>
+            <v-row
+              v-if="collaboratorsEditing"
+              align="end"
+              justify="end"
+            >
+              <v-col cols="9">
+                <PersonLookup
+                  id="input-collaborator-lookup-autocomplete"
+                  ref="personLookup"
+                  :disabled="collaboratorsUpdating"
+                  label="Find collaborator by UID or email address: "
+                  :on-select-result="addCollaboratorPending"
+                />
+              </v-col>
+              <v-col cols="3">
+                <v-btn
+                  id="btn-collaborator-add"
+                  color="success"
+                  :disabled="!pendingCollaborator"
+                  @click="addCollaboratorConfirm"
+                >
+                  Add
+                </v-btn>
+              </v-col>
+            </v-row>
+            <v-row
+              v-if="collaboratorsEditing"
+              align="center"
+              justify="start"
+            >
+              <v-col cols="12">
+                <v-btn
+                  id="btn-collaborators-save"
+                  color="success"
+                  :disabled="collaboratorsUpdating"
+                  @click="updateCollaborators"
+                >
+                  <v-progress-circular
+                    v-if="collaboratorsUpdating"
+                    class="mr-2"
+                    color="primary"
+                    indeterminate
+                    size="18"
+                    width="3"
+                  ></v-progress-circular>
+                  {{ collaboratorsUpdating ? 'Saving' : 'Save' }}
+                </v-btn>
+                <v-btn
+                  id="btn-recording-type-cancel"
+                  color="default"
+                  :disabled="collaboratorsUpdating"
+                  @click="updateCollaboratorsCancel"
+                >
+                  Cancel
+                </v-btn>
               </v-col>
             </v-row>
             <v-row
@@ -76,6 +151,7 @@
                   <label id="select-recording-type-label" for="select-recording-type">Recording Type</label>
                   <v-btn
                     v-if="recordingTypeEditable"
+                    id="btn-recording-type-edit"
                     text
                     :disabled="recordingTypeEditing"
                     @click="toggleRecordingTypeEditing"
@@ -142,6 +218,7 @@
                 <h4>
                   <label id="select-publish-type-label" for="select-publish-type">Recording Placement</label>
                   <v-btn
+                    id="btn-publish-type-edit"
                     text
                     :disabled="publishTypeEditing"
                     @click="togglePublishTypeEditing"
@@ -250,8 +327,9 @@
 import Context from '@/mixins/Context'
 import CoursePageSidebar from '@/components/course/CoursePageSidebar'
 import PageTitle from '@/components/util/PageTitle'
+import PersonLookup from '@/components/util/PersonLookup'
 import Utils from '@/mixins/Utils'
-import {getCourse, updatePublishType, updateRecordingType} from '@/api/course'
+import {getCourse, updateCollaborators, updatePublishType, updateRecordingType} from '@/api/course'
 import {getAuditoriums} from '@/api/room'
 
 export default {
@@ -260,11 +338,15 @@ export default {
   components: {
     CoursePageSidebar,
     PageTitle,
+    PersonLookup,
   },
   data: () => ({
     agreedToTerms: false,
     auditoriums: undefined,
     capability: undefined,
+    collaborators: undefined,
+    collaboratorsEditing: undefined,
+    collaboratorsUpdating: undefined,
     course: undefined,
     courseDisplayTitle: null,
     hasValidMeetingTimes: undefined,
@@ -273,6 +355,7 @@ export default {
     instructorProxyPrivileges: undefined,
     location: undefined,
     multipleEligibleMeetings: undefined,
+    pendingCollaborator: undefined,
     publishType: undefined,
     publishTypeEditing: false,
     publishTypeOptions: undefined,
@@ -317,10 +400,26 @@ export default {
     })
   },
   methods: {
+    addCollaboratorConfirm() {
+      this.collaborators.push(this.pendingCollaborator)
+      this.alertScreenReader(`Collaborator ${this.pendingCollaborator.firstName} ${this.pendingCollaborator.lastName} added.`)
+      this.pendingCollaborator = null
+      if (this.$refs.personLookup) {
+        this.$refs.personLookup.clear()
+      }
+    },
+    addCollaboratorPending(collaborator) {
+      if (collaborator) {
+        this.pendingCollaborator = collaborator
+      }
+    },
     afterUnschedule(data) {
       this.publishType = undefined
       this.recordingType = undefined
       this.render(data)
+    },
+    removeCollaborator(uid) {
+      this.collaborators = this.$_.filter(this.collaborators, c => c.uid !== uid)
     },
     render(data) {
       this.$loading()
@@ -350,9 +449,14 @@ export default {
           value
         }
       })
+      this.collaborators = this.course.collaborators
       this.publishType = this.course.publishType
       this.recordingType = this.course.recordingType
       this.$ready(this.courseDisplayTitle)
+    },
+    toggleCollaboratorsEditing() {
+      this.collaboratorsEditing = true
+      this.alertScreenReader('Editing collaborators.')
     },
     togglePublishTypeEditing() {
       this.publishTypeEditing = true
@@ -361,6 +465,24 @@ export default {
     toggleRecordingTypeEditing() {
       this.recordingTypeEditing = true
       this.alertScreenReader('Select recording type.')
+    },
+    updateCollaborators() {
+      this.collaboratorsUpdating = true
+      updateCollaborators(
+        this.$_.map(this.collaborators, 'uid'),
+        this.course.sectionId,
+        this.course.termId,
+      ).then(data => {
+        this.alertScreenReader('Collaborators updated.')
+        this.course.collaborators = data.collaborators
+        this.collaboratorsEditing = false
+        this.collaboratorsUpdating = false
+      })
+    },
+    updateCollaboratorsCancel() {
+      this.alertScreenReader('Collaborator update cancelled.')
+      this.publishTypeEditing = false
+      this.collaborators = this.course.collaborators
     },
     updatePublishType() {
       this.publishTypeUpdating = true

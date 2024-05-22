@@ -26,7 +26,6 @@ from datetime import datetime
 
 from diablo import db
 from diablo.lib.berkeley import get_recording_end_date, get_recording_start_date
-from diablo.lib.db import resolve_sql_template_string
 from diablo.lib.util import format_days, format_time, get_names_of_days, safe_strftime
 from diablo.models.canvas_course_site import CanvasCourseSite
 from diablo.models.course_preference import CoursePreference
@@ -808,6 +807,7 @@ def _to_api_json(term_id, rows, include_rooms=True):  # noqa C901
 
             course = {
                 'allowedUnits': row['allowed_units'],
+                'collaborators': preferences.get('collaborators'),
                 'collaboratorUids': preferences.get('collaboratorUids'),
                 'canvasCourseSites': canvas_sites_by_section_id.get(section_id, []),
                 'courseName': row['course_name'],
@@ -1073,28 +1073,3 @@ def _construct_course_label(course_name, instruction_format, section_num, cross_
         return ' | '.join(merged)
     else:
         return _label(course_name, instruction_format, section_num)
-
-
-def get_loch_basic_attributes(uids):
-    query = resolve_sql_template_string("""SELECT * FROM dblink('{dblink_nessie_rds}',$NESSIE$
-                SELECT ldap_uid, sid, first_name, last_name, email_address
-                  FROM sis_data.basic_attributes
-                  WHERE ldap_uid = ANY(:uids)
-            $NESSIE$)
-            AS nessie_basic_attributes (
-                uid VARCHAR,
-                csid VARCHAR,å
-                first_name VARCHAR,
-                last_name VARCHAR,
-                email VARCHAR
-            )
-            """)
-    try:
-        results = db.session().execute(
-            text(query),
-            {'uids': uids},
-        ).all()
-        app.logger.info(f'Loch Ness basic attributes query returned {len(results)} results for {len(uids)} uids.')
-        return results
-    except Exception as e:
-        app.logger.exception(e)
