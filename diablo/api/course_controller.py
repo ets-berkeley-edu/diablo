@@ -23,9 +23,10 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 from datetime import datetime
+import re
 import traceback
 
-from diablo.api.errors import BadRequestError, ForbiddenRequestError, ResourceNotFoundError
+from diablo.api.errors import BadRequestError, ForbiddenRequestError, InternalServerError, ResourceNotFoundError
 from diablo.api.util import admin_required, csv_download_response, get_search_filter_options
 from diablo.externals.kaltura import Kaltura
 from diablo.jobs.util import get_courses_ready_to_schedule, schedule_recordings
@@ -273,23 +274,53 @@ def update_opt_out():
     params = request.get_json()
     term_id = params.get('termId')
     section_id = params.get('sectionId')
-
-    course = SisSection.get_course(term_id, section_id) if (term_id and section_id) else None
     opt_out = params.get('optOut')
-    if not course or opt_out is None:
+    if opt_out is None or not term_id or not section_id:
         raise BadRequestError('Required params missing or invalid')
-    if course['scheduled']:
-        raise BadRequestError('Cannot update opt-out on scheduled course')
-    if not current_user.is_admin and current_user.uid not in [i['uid'] for i in course['instructors']]:
-        raise ForbiddenRequestError(f'Sorry, you are unauthorized to view the course {course["label"]}.')
 
-    preferences = OptOut.update_opt_out(
+    if term_id == 'all':
+        # Global opt-out for user.
+        term_id = None
+        section_id = None
+
+    elif re.match(r'2\d{3}', str(term_id)) and section_id == 'all':
+        # Per-term opt-cut for user.
+        section_id = None
+
+    else:
+        # Per-course opt-out.
+        course = SisSection.get_course(term_id, section_id)
+        if not course:
+            raise BadRequestError('Required params missing or invalid')
+        if course['scheduled']:
+            raise BadRequestError('Cannot update opt-out on scheduled course')
+        if not current_user.is_admin and current_user.uid not in [i['uid'] for i in course['instructors']]:
+            raise ForbiddenRequestError(f'Sorry, you are unauthorized to view the course {course["label"]}.')
+
+    def _schedule_opt_out_update(scheduled_section_id):
+        if opt_out:
+            ScheduleUpdate.queue(
+                term_id=term_id,
+                section_id=scheduled_section_id,
+                field_name='opted_out',
+                field_value_old=None,
+                field_value_new=current_user.uid,
+            )
+
+    if OptOut.update_opt_out(
         instructor_uid=current_user.uid,
         term_id=term_id,
         section_id=section_id,
         opt_out=opt_out,
-    )
-    return tolerant_jsonify(preferences.to_api_json())
+    ):
+        if section_id:
+            _schedule_opt_out_update(section_id)
+        else:
+            for scheduled_section_id in Scheduled.get_scheduled_per_instructor_uid(current_user.uid, term_id):
+                _schedule_opt_out_update(scheduled_section_id)
+        return tolerant_jsonify({'optedOut': opt_out})
+    else:
+        raise InternalServerError('Failed to update opt-out.')
 
 
 @app.route('/api/course/publish_type/update', methods=['POST'])

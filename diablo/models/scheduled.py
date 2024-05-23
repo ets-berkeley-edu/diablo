@@ -94,8 +94,8 @@ class Scheduled(db.Model):
                     alerts={', '.join(self.alerts or [])},
                     course_display_name={self.course_display_name},
                     created_at={self.created_at},
-                    instructor_uids={', '.join(self.instructor_uids)},
-                    collaborator_uids={', '.join(self.collaborator_uids)},
+                    instructor_uids={', '.join(self.instructor_uids or [])},
+                    collaborator_uids={', '.join(self.collaborator_uids or [])},
                     kaltura_schedule_id={self.kaltura_schedule_id}
                     meeting_days={self.meeting_days},
                     meeting_end_date={self.meeting_end_date},
@@ -167,6 +167,11 @@ class Scheduled(db.Model):
     @classmethod
     def get_scheduled(cls, section_id, term_id):
         return cls.query.filter_by(section_id=section_id, term_id=term_id, deleted_at=None).first()
+
+    @classmethod
+    def get_scheduled_per_instructor_uid(cls, instructor_uid, term_id):
+        criteria = and_(cls.instructor_uids.any(instructor_uid), cls.term_id == term_id, cls.deleted_at == None)  # noqa: E711
+        return [r[0] for r in db.session.query(cls.section_id).filter(criteria).all()]
 
     @classmethod
     def delete(cls, section_id, term_id):

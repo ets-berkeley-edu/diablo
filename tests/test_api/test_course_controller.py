@@ -979,12 +979,16 @@ class TestUpdateOptOut:
                 section_id=section_1_id,
                 term_id=self.term_id,
             )
-            opt_out = not (len(opt_outs) > 0)
+            assert not len(opt_outs)
+            course_feed = _api_get_course(client, self.term_id, section_1_id)
+            assert course_feed['hasBlanketOptedOut'] is False
+            assert course_feed['hasOptedOut'] is False
+
             self._api_opt_out_update(
                 client,
                 term_id=self.term_id,
                 section_id=section_1_id,
-                opt_out=opt_out,
+                opt_out=True,
             )
             std_commit(allow_test_environment=True)
 
@@ -992,7 +996,123 @@ class TestUpdateOptOut:
                 section_id=section_1_id,
                 term_id=self.term_id,
             )
-            assert (len(opt_outs) > 0) is opt_out
+            assert len(opt_outs)
+            course_feed = _api_get_course(client, self.term_id, section_1_id)
+            assert course_feed['hasBlanketOptedOut'] is False
+            assert course_feed['hasOptedOut'] is True
+
+            self._api_opt_out_update(
+                client,
+                term_id=self.term_id,
+                section_id=section_1_id,
+                opt_out=False,
+            )
+            std_commit(allow_test_environment=True)
+
+            opt_outs = OptOut.get_opt_outs_for_section(
+                section_id=section_1_id,
+                term_id=self.term_id,
+            )
+            assert not len(opt_outs)
+            course_feed = _api_get_course(client, self.term_id, section_1_id)
+            assert course_feed['hasBlanketOptedOut'] is False
+            assert course_feed['hasOptedOut'] is False
+
+    def test_authorized_blanket_per_term(self, client, fake_auth):
+        """Instructors can toggle the opt-out preference for all courses in a term."""
+        instructor_uids = get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
+        fake_auth.login(instructor_uids[0])
+        with test_approvals_workflow(app):
+            blanket_term_opt_outs = OptOut.get_opt_outs_for_section(
+                section_id=None,
+                term_id=self.term_id,
+            )
+            assert not len(blanket_term_opt_outs)
+            course_feed = _api_get_course(client, self.term_id, section_1_id)
+            assert course_feed['hasBlanketOptedOut'] is False
+            assert course_feed['hasOptedOut'] is False
+
+            self._api_opt_out_update(
+                client,
+                term_id=self.term_id,
+                section_id='all',
+                opt_out=True,
+            )
+            std_commit(allow_test_environment=True)
+
+            blanket_term_opt_outs = OptOut.get_opt_outs_for_section(
+                section_id=None,
+                term_id=self.term_id,
+            )
+            assert len(blanket_term_opt_outs)
+            course_feed = _api_get_course(client, self.term_id, section_1_id)
+            assert course_feed['hasBlanketOptedOut'] is True
+            assert course_feed['hasOptedOut'] is True
+
+            self._api_opt_out_update(
+                client,
+                term_id=self.term_id,
+                section_id='all',
+                opt_out=False,
+            )
+            std_commit(allow_test_environment=True)
+
+            blanket_term_opt_outs = OptOut.get_opt_outs_for_section(
+                section_id=None,
+                term_id=self.term_id,
+            )
+            assert not len(blanket_term_opt_outs)
+            course_feed = _api_get_course(client, self.term_id, section_1_id)
+            assert course_feed['hasBlanketOptedOut'] is False
+            assert course_feed['hasOptedOut'] is False
+
+    def test_authorized_blanket_all_terms(self, client, fake_auth):
+        """Instructors can toggle the opt-out preference for all courses in all terms."""
+        instructor_uids = get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
+        fake_auth.login(instructor_uids[0])
+        with test_approvals_workflow(app):
+            blanket_opt_outs = OptOut.get_opt_outs_for_section(
+                section_id=None,
+                term_id=None,
+            )
+            assert not len(blanket_opt_outs)
+            course_feed = _api_get_course(client, self.term_id, section_1_id)
+            assert course_feed['hasBlanketOptedOut'] is False
+            assert course_feed['hasOptedOut'] is False
+
+            self._api_opt_out_update(
+                client,
+                term_id='all',
+                section_id='all',
+                opt_out=True,
+            )
+            std_commit(allow_test_environment=True)
+
+            blanket_opt_outs = OptOut.get_opt_outs_for_section(
+                section_id=None,
+                term_id=None,
+            )
+            assert len(blanket_opt_outs)
+            course_feed = _api_get_course(client, self.term_id, section_1_id)
+            assert course_feed['hasBlanketOptedOut'] is True
+            assert course_feed['hasOptedOut'] is True
+
+            self._api_opt_out_update(
+                client,
+                term_id='all',
+                section_id='all',
+                opt_out=False,
+            )
+            std_commit(allow_test_environment=True)
+
+            blanket_opt_outs = OptOut.get_opt_outs_for_section(
+                section_id=None,
+                term_id=None,
+            )
+            assert not len(blanket_opt_outs)
+            course_feed = _api_get_course(client, self.term_id, section_1_id)
+            assert course_feed['hasBlanketOptedOut'] is False
+            assert course_feed['hasOptedOut'] is False
 
     def test_scheduling_removes_opt_out(self, client, fake_auth):
         fake_auth.login(admin_uid)
@@ -1134,6 +1254,12 @@ class TestCoursesReport:
         fake_auth.login(admin_uid)
         report = self._api_courses_report(client, term_id=self.term_id)
         assert report['totalScheduledCount'] == len(Scheduled.get_all_scheduled(self.term_id))
+
+
+def _api_get_course(client, term_id, section_id, expected_status_code=200):
+    response = client.get(f'/api/course/{term_id}/{section_id}')
+    assert response.status_code == expected_status_code
+    return response.json
 
 
 def _create_approval(section_id, term_id):
