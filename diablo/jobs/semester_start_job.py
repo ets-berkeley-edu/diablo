@@ -40,6 +40,8 @@ class SemesterStartJob(BaseJob):
 
         # Schedule recordings
         for course in unscheduled_courses:
+            if course['hasOptedOut']:
+                continue
             schedule_recordings(course, is_semester_start=True)
             for instructor in list(filter(lambda i: i['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES, course['instructors'])):
                 if instructor['uid'] not in courses_by_instructor_uid:

@@ -123,7 +123,6 @@ export default {
           // In support of search, we index nested course data
           course.courseCodes = this.getCourseCodes(course)
           course.instructorNames = this.$_.map(course.instructors, 'name')
-          course.publishTypeNames = course.approvals.length ? this.$_.last(course.approvals).publishTypeName : null
           course.isSelectable = !course.hasOptedOut
         })
         this.refreshing = false

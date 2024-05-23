@@ -75,6 +75,8 @@ def _schedule_new_courses():
     unscheduled_courses = get_eligible_unscheduled_courses(term_id)
     app.logger.info(f'Preparing to schedule recordings for {len(unscheduled_courses)} courses.')
     for course in unscheduled_courses:
+        if course['hasOptedOut']:
+            continue
         schedule_recordings(course, is_semester_start=False)
 
 
@@ -121,7 +123,7 @@ def _update_already_scheduled_events():  # noqa C901
                 meetings_removed_by_schedule_id[schedule_update.kaltura_schedule_id] = schedule_update.deserialize('field_value_new')
             elif schedule_update.field_name == 'meeting_updated':
                 meetings_updated_by_schedule_id[schedule_update.kaltura_schedule_id] = schedule_update.deserialize('field_value_new')
-            elif schedule_update.field_name == 'not_scheduled':
+            elif schedule_update.field_name == 'not_scheduled' or schedule_update.field_name == 'opted_out':
                 no_longer_scheduled = True
             elif schedule_update.field_name == 'room_not_eligible':
                 no_longer_eligible = True
@@ -167,7 +169,7 @@ def _update_already_scheduled_events():  # noqa C901
 
         _mark_success(
             schedule_updates,
-            ('publish_type', 'recording_type', 'instructor_uids', 'collaborator_uids', 'not_scheduled', 'room_not_eligible'),
+            ('publish_type', 'recording_type', 'instructor_uids', 'collaborator_uids', 'not_scheduled', 'opted_out', 'room_not_eligible'),
         )
 
         if no_longer_scheduled:
@@ -262,7 +264,7 @@ def _handle_meeting_removed(kaltura, course, scheduled, schedule_updates):
             'meeting_removed',
             kaltura_schedule_id=scheduled['kalturaScheduleId'],
         )
-        _mark_error(schedule_updates, e, None, ('not_scheduled', 'room_not_eligible'))
+        _mark_error(schedule_updates, e, None, ('not_scheduled', 'opted_out', 'room_not_eligible'))
 
 
 def _handle_meeting_updates(kaltura, meetings_updated_by_schedule_id, kaltura_schedule_id, scheduled_model, schedule_updates):

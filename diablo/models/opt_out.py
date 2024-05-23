@@ -27,7 +27,7 @@ from datetime import datetime
 from diablo import db, std_commit
 from diablo.lib.util import to_isoformat
 from diablo.models.cross_listing import CrossListing
-from sqlalchemy import and_
+from sqlalchemy import and_, or_
 
 
 class OptOut(db.Model):
@@ -59,7 +59,7 @@ class OptOut(db.Model):
 
     @classmethod
     def get_all_opt_outs(cls, term_id):
-        return cls.query.filter_by(term_id=term_id).all()
+        return cls.query.filter(or_(cls.term_id == term_id, cls.term_id == None)).all()  # noqa E711
 
     @classmethod
     def get_opt_outs_for_section(cls, section_id=None, term_id=None):
@@ -67,8 +67,13 @@ class OptOut(db.Model):
 
     @classmethod
     def update_opt_out(cls, instructor_uid, term_id, section_id, opt_out):
-        section_ids = _get_section_ids_with_xlistings(section_id, term_id)
-        criteria = and_(cls.section_id.in_(section_ids), cls.term_id == term_id)
+        if section_id is None:
+            section_ids = [None]
+            criteria = and_(cls.section_id == None, cls.term_id == term_id, cls.instructor_uid == instructor_uid)  # noqa E711
+        else:
+            section_ids = _get_section_ids_with_xlistings(section_id, term_id)
+            criteria = and_(cls.section_id.in_(section_ids), cls.term_id == term_id, cls.instructor_uid == instructor_uid)
+
         if opt_out is False:
             cls.query.filter(criteria).delete()
         else:
@@ -82,7 +87,7 @@ class OptOut(db.Model):
                 )
                 db.session.add(opt_out)
         std_commit()
-        return cls.query.filter_by(instructor_uid=instructor_uid, term_id=term_id, section_id=section_id).first()
+        return True
 
     def to_api_json(self):
         return {

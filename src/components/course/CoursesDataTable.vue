@@ -91,22 +91,6 @@
                   <span class="font-weight-bold red--text">Canceled</span>
                 </div>
                 <div v-if="!course.deletedAt">
-                  <v-tooltip v-if="course.wasApprovedByAdmin" :id="`tooltip-admin-approval-${course.sectionId}`" bottom>
-                    <template #activator="{on, attrs}">
-                      <v-icon
-                        color="green"
-                        class="pa-0"
-                        dark
-                        v-bind="attrs"
-                        v-on="on"
-                      >
-                        mdi-account-check-outline
-                      </v-icon>
-                    </template>
-                    Course Capture Admin <CalNetProfile :uid="$_.last(course.approvals).approvedBy" />
-                    submitted approval on
-                    {{ $_.last(course.approvals).createdAt | moment('MMM D, YYYY') }}.
-                  </v-tooltip>
                   <div :id="`course-${course.sectionId}-approval-status`">{{ course.approvalStatus || '&mdash;' }}</div>
                   <div :id="`course-${course.sectionId}-scheduling-status`">{{ course.schedulingStatus || '&mdash;' }}</div>
                 </div>
@@ -122,7 +106,7 @@
                 </div>
               </td>
               <td :id="`course-${course.sectionId}-publish-types`" :class="tdc(course)">
-                {{ course.publishTypeNames || '&mdash;' }}
+                {{ course.publishTypeName || '&mdash;' }}
               </td>
               <td :class="tdc(course)">
                 <ToggleOptOut
@@ -134,8 +118,8 @@
               </td>
             </tr>
             <tr v-for="index in $_.size(course.displayMeetings) - 1" :key="`${course.sectionId}-${index}`">
-              <td colspan="2" :class="mdc(course)"></td>
-              <td v-if="includeRoomColumn" :class="mdc(course)">
+              <td colspan="2"></td>
+              <td v-if="includeRoomColumn">
                 <router-link
                   v-if="course.displayMeetings[index].room"
                   :id="`course-${course.sectionId}-room-${course.displayMeetings[index].room.id}`"
@@ -145,11 +129,11 @@
                 </router-link>
                 <span v-if="!course.displayMeetings[index].room">&mdash;</span>
               </td>
-              <td class="text-no-wrap" :class="mdc(course)">
+              <td class="text-no-wrap">
                 <Days v-if="course.displayMeetings[index].daysNames.length" :names-of-days="course.displayMeetings[index].daysNames" />
                 <span v-if="!course.displayMeetings[index].daysNames.length">&mdash;</span>
               </td>
-              <td class="text-no-wrap" :class="mdc(course)">
+              <td class="text-no-wrap">
                 <div v-if="course.nonstandardMeetingDates">
                   <span class="text-no-wrap">{{ course.displayMeetings[index].startDate | moment('MMM D, YYYY') }} - </span>
                   <span class="text-no-wrap">{{ course.displayMeetings[index].endDate | moment('MMM D, YYYY') }}</span>
@@ -158,20 +142,13 @@
                   {{ course.displayMeetings[index].startTimeFormatted }} - {{ course.displayMeetings[index].endTimeFormatted }}
                 </div>
               </td>
-              <td colspan="4" :class="mdc(course)"></td>
+              <td colspan="4"></td>
             </tr>
-            <tr v-if="course.approvals.length" :key="`approvals-${course.sectionId}`">
+            <tr v-if="course.scheduled" :key="`approvals-${course.sectionId}`">
               <td :colspan="headers.length + 1" class="pb-2">
-                <div v-if="course.approvals.length" class="pb-3">
-                  <span v-for="approval in course.approvals" :key="approval.approvedBy">
-                    <router-link :id="`instructor-${approval.approvedBy}-mailto`" :to="`/user/${approval.approvedBy}`">
-                      <CalNetProfile :uid="approval.approvedBy" />
-                    </router-link> ({{ approval.approvedBy }}) selected "{{ approval.recordingTypeName }}".
-                  </span>
-                  <span v-if="course.scheduled">
-                    Recordings scheduled on {{ course.scheduled.createdAt | moment('MMM D, YYYY') }}.
-                    They will be published to {{ course.scheduled.publishTypeName }}.
-                  </span>
+                <div v-if="course.scheduled" class="pb-3">
+                  Recordings scheduled on {{ course.scheduled.createdAt | moment('MMM D, YYYY') }}.
+                  They will be published to {{ course.scheduled.publishTypeName }}.
                 </div>
               </td>
               <td></td>
@@ -199,7 +176,6 @@
 </template>
 
 <script>
-import CalNetProfile from '@/components/util/CalNetProfile'
 import Context from '@/mixins/Context'
 import Days from '@/components/util/Days'
 import Instructor from '@/components/course/Instructor'
@@ -208,7 +184,7 @@ import Utils from '@/mixins/Utils'
 
 export default {
   name: 'CoursesDataTable',
-  components: {CalNetProfile, Days, Instructor, ToggleOptOut},
+  components: {Days, Instructor, ToggleOptOut},
   mixins: [Context, Utils],
   props: {
     courses: {
@@ -245,7 +221,7 @@ export default {
       {text: 'Time', sortable: false},
       {text: 'Status', class: 'w-10', sortable: false},
       {text: 'Instructor(s)', value: 'instructorNames', sortable: false},
-      {text: 'Publish', value: 'publishTypeNames', class: 'w-10'},
+      {text: 'Publish', value: 'publishTypeName', class: 'w-10'},
       {text: 'Opt out', value: 'hasOptedOut', sortable: false}
     ],
     pageCount: undefined,
@@ -265,16 +241,12 @@ export default {
     this.refresh()
   },
   methods: {
-    mdc(course) {
-      return {'border-bottom-zero': course.approvals.length}
-    },
     refresh() {
       this.pageCurrent = 1
       this.headers = this.includeRoomColumn ? this.headers : this.$_.filter(this.headers, h => h.text !== 'Room')
       this.$_.each(this.courses, course => {
         course.instructorNames = this.$_.map(course.instructors, 'name')
         course.isSelectable = !course.hasOptedOut
-        course.publishTypeNames = course.approvals.length ? this.$_.last(course.approvals).publishTypeName : null
         const meetings = this.getDisplayMeetings(course)
         course.displayMeetings = meetings
         course.room = meetings.length && meetings[0].room ? meetings[0].room : null

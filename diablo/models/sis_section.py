@@ -259,6 +259,7 @@ class SisSection(db.Model):
             exclude_scheduled_join = 'LEFT JOIN scheduled sch ON sch.term_id = s.term_id AND sch.section_id = s.section_id AND sch.deleted_at IS NULL'
         else:
             exclude_scheduled_join = ''
+
         sql = f"""
             SELECT
                 s.*,
@@ -757,9 +758,19 @@ def _to_api_json(term_id, rows, include_rooms=True):  # noqa C901
     # Perform bulk queries and build data structures for feed generation.
     all_course_preferences = CoursePreference.get_all_course_preferences(term_id=term_id)
     course_preferences_by_section_id = dict((p.section_id, p) for p in all_course_preferences)
-    all_opt_outs = OptOut.get_all_opt_outs(term_id=term_id)
-    opt_outs_by_section_id = dict((p.section_id, p) for p in all_opt_outs)
     invited_uids_by_section_id = get_invited_uids_by_section_id(section_ids, term_id)
+
+    opt_outs_by_section_id = {}
+    blanket_opt_outs_by_instructor_uid = {}
+    for o in OptOut.get_all_opt_outs(term_id=term_id):
+        if o.section_id:
+            if o.section_id not in opt_outs_by_section_id:
+                opt_outs_by_section_id[o.section_id] = []
+            opt_outs_by_section_id[o.section_id].append(o)
+        else:
+            if o.instructor_uid not in blanket_opt_outs_by_instructor_uid:
+                blanket_opt_outs_by_instructor_uid[o.instructor_uid] = []
+            blanket_opt_outs_by_instructor_uid[o.instructor_uid].append(o)
 
     scheduled_results = Scheduled.get_scheduled_per_section_ids(section_ids=section_ids, term_id=term_id)
 
@@ -795,7 +806,7 @@ def _to_api_json(term_id, rows, include_rooms=True):  # noqa C901
 
             # Construct course
             scheduled = scheduled_by_section_id.get(section_id)
-            opt_outs = opt_outs_by_section_id.get(section_id)
+            opt_outs = opt_outs_by_section_id.get(section_id) or []
 
             preferences = course_preferences_by_section_id.get(section_id)
             if preferences:
@@ -814,7 +825,8 @@ def _to_api_json(term_id, rows, include_rooms=True):  # noqa C901
                 'courseTitle': row['course_title'],
                 'crossListings': cross_listed_courses,
                 'deletedAt': safe_strftime(row['deleted_at'], '%Y-%m-%d'),
-                'hasOptedOut': True if opt_outs else False,
+                'hasBlanketOptedOut': False,
+                'hasOptedOut': True if len(opt_outs) else False,
                 'instructionFormat': row['instruction_format'],
                 'instructors': instructors,
                 'invitees': invited_uids_by_section_id.get(section_id),
@@ -830,6 +842,7 @@ def _to_api_json(term_id, rows, include_rooms=True):  # noqa C901
                     'ineligible': [],
                 },
                 'nonstandardMeetingDates': False,
+                'optOuts': [o.to_api_json() for o in opt_outs],
                 'publishType': preferences.get('publishType'),
                 'publishTypeName': preferences.get('publishTypeName'),
                 'recordingType': preferences.get('recordingType'),
@@ -854,6 +867,14 @@ def _to_api_json(term_id, rows, include_rooms=True):  # noqa C901
             # 2. If the course IS DELETED then include deleted instructors.
             if not instructor_json['deletedAt'] or course['deletedAt']:
                 course['instructors'].append(instructor_json)
+
+        blanket_opt_outs = []
+        for i in course['instructors']:
+            blanket_opt_outs += blanket_opt_outs_by_instructor_uid.get(i['uid']) or []
+        if blanket_opt_outs:
+            course['hasBlanketOptedOut'] = True
+            course['hasOptedOut'] = True
+            course['optOuts'] += [o.to_api_json() for o in blanket_opt_outs]
 
         meeting = _to_meeting_json(row)
         eligible_meetings = course['meetings']['eligible']
