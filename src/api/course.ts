@@ -14,8 +14,7 @@ export function downloadCSV(filter, termId) {
 }
 
 export function getCourse(termId: number, sectionId: number) {
-  return axios
-    .get(`${utils.apiBaseUrl()}/api/course/${termId}/${sectionId}`)
+  return axios.get(`${utils.apiBaseUrl()}/api/course/${termId}/${sectionId}`)
 }
 
 export function getCourses(filter, termId) {
@@ -23,6 +22,21 @@ export function getCourses(filter, termId) {
     filter,
     termId
   })
+}
+
+export function getCoursesReport(termId) {
+  return axios.get(`${utils.apiBaseUrl()}/api/courses/report/${termId}`)
+}
+
+export function unschedule(
+    termId: string,
+    sectionId: string
+) {
+  return axios
+    .post(`${utils.apiBaseUrl()}/api/course/unschedule`, {
+      termId,
+      sectionId
+    })
 }
 
 export function updateCollaborators(
@@ -36,6 +50,15 @@ export function updateCollaborators(
       sectionId,
       termId
     })
+}
+
+export function updateOptOut(instructorUid, termId, sectionId, optOut) {
+  return axios.post(`${utils.apiBaseUrl()}/api/course/opt_out/update`, {
+    instructorUid,
+    optOut,
+    sectionId,
+    termId
+  })
 }
 
 export function updatePublishType(
@@ -62,27 +85,4 @@ export function updateRecordingType(
       sectionId,
       termId
     })
-}
-
-export function unschedule(
-    termId: string,
-    sectionId: string
-) {
-  return axios
-    .post(`${utils.apiBaseUrl()}/api/course/unschedule`, {
-      termId,
-      sectionId
-    })
-}
-
-export function getCoursesReport(termId) {
-  return axios.get(`${utils.apiBaseUrl()}/api/courses/report/${termId}`)
-}
-
-export function updateOptOut(termId, sectionId, optOut) {
-  return axios.post(`${utils.apiBaseUrl()}/api/course/opt_out/update`, {
-    optOut,
-    sectionId,
-    termId
-  })
 }

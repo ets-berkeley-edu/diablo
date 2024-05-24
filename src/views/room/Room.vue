@@ -49,7 +49,6 @@
           :courses="room.courses"
           :include-room-column="false"
           :message-for-courses="summarize(room.courses)"
-          :on-toggle-opt-out="() => {}"
           :refreshing="false"
         />
       </v-card-text>
