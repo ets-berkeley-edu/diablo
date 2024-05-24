@@ -1,8 +1,10 @@
 <template>
   <v-switch
-    :id="`toggle-opt-out-${course.sectionId}`"
+    :id="`toggle-opt-out-${sectionId}`"
     v-model="optOut"
     dense
+    :disabled="disabled"
+    :label="label"
     @change="toggleOptOut"
   ></v-switch>
 </template>
@@ -15,9 +17,35 @@ export default {
   name: 'ToggleOptOut',
   mixins: [Context],
   props: {
-    course: {
+    sectionId: {
       required: true,
-      type: Object
+      type: String
+    },
+    termId: {
+      required: true,
+      type: String
+    },
+    instructorUid: {
+      required: true,
+      type: String
+    },
+    initialValue: {
+      required: true,
+      type: Boolean
+    },
+    disabled: {
+      required: false,
+      type: Boolean
+    },
+    label: {
+      required: false,
+      type: String,
+      default: undefined
+    },
+    beforeToggle: {
+      default: () => {},
+      required: false,
+      type: Function
     },
     onToggle: {
       default: () => {},
@@ -29,13 +57,14 @@ export default {
     optOut: undefined
   }),
   created() {
-    this.optOut = this.course.hasOptedOut
+    this.optOut = this.initialValue
   },
   methods: {
     toggleOptOut() {
-      updateOptOut(this.course.termId, this.course.sectionId, this.optOut).then(data => {
-        this.alertScreenReader(`${this.course.label} has opted ${data.hasOptedOut ? 'out' : 'in'}`)
-        this.onToggle(this.course)
+      this.beforeToggle()
+      updateOptOut(this.instructorUid, this.termId, this.sectionId, this.optOut).then(data => {
+        this.alertScreenReader(`Opted ${data.hasOptedOut ? 'out' : 'in'}`)
+        this.onToggle()
       })
     }
   }

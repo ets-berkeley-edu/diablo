@@ -100,9 +100,13 @@ Vue.prototype.$loading = () => store.dispatch('context/loadingStart')
 Vue.prototype.$putFocusNextTick = putFocusNextTick
 Vue.prototype.$ready = label => store.dispatch('context/loadingComplete', label)
 
-axios.get(`${apiBaseUrl}/api/user/my_profile`).then(data => {
-  Vue.prototype.$currentUser = data
+Vue.prototype.$refreshCurrentUser = function() {
+  return axios.get(`${apiBaseUrl}/api/user/my_profile`).then(data => {
+    Vue.prototype.$currentUser = data
+  })
+}
 
+Vue.prototype.$refreshCurrentUser().then(() => {
   axios.get(`${apiBaseUrl}/api/config`).then(data => {
     Vue.prototype.$config = data
     Vue.prototype.$config.apiBaseUrl = apiBaseUrl

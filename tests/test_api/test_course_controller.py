@@ -932,6 +932,7 @@ class TestUpdateOptOut:
     @staticmethod
     def _api_opt_out_update(
             client,
+            instructor_uid,
             term_id,
             section_id,
             opt_out,
@@ -940,6 +941,7 @@ class TestUpdateOptOut:
         response = client.post(
             '/api/course/opt_out/update',
             data=json.dumps({
+                'instructorUid': instructor_uid,
                 'termId': term_id,
                 'sectionId': section_id,
                 'optOut': opt_out,
@@ -951,8 +953,10 @@ class TestUpdateOptOut:
 
     def test_not_authenticated(self, client):
         """Deny anonymous access."""
+        instructor_uids = get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
         self._api_opt_out_update(
             client,
+            instructor_uid=instructor_uids[0],
             term_id=self.term_id,
             section_id=section_1_id,
             opt_out=True,
@@ -961,9 +965,11 @@ class TestUpdateOptOut:
 
     def test_unauthorized(self, client, fake_auth):
         """Deny non-instructors."""
+        instructor_uids = get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
         fake_auth.login([collaborator_uid])
         self._api_opt_out_update(
             client,
+            instructor_uid=instructor_uids[0],
             term_id=self.term_id,
             section_id=section_1_id,
             opt_out=True,
@@ -986,6 +992,7 @@ class TestUpdateOptOut:
 
             self._api_opt_out_update(
                 client,
+                instructor_uid=instructor_uids[0],
                 term_id=self.term_id,
                 section_id=section_1_id,
                 opt_out=True,
@@ -1003,6 +1010,7 @@ class TestUpdateOptOut:
 
             self._api_opt_out_update(
                 client,
+                instructor_uid=instructor_uids[0],
                 term_id=self.term_id,
                 section_id=section_1_id,
                 opt_out=False,
@@ -1034,6 +1042,7 @@ class TestUpdateOptOut:
 
             self._api_opt_out_update(
                 client,
+                instructor_uid=instructor_uids[0],
                 term_id=self.term_id,
                 section_id='all',
                 opt_out=True,
@@ -1051,6 +1060,7 @@ class TestUpdateOptOut:
 
             self._api_opt_out_update(
                 client,
+                instructor_uid=instructor_uids[0],
                 term_id=self.term_id,
                 section_id='all',
                 opt_out=False,
@@ -1082,6 +1092,7 @@ class TestUpdateOptOut:
 
             self._api_opt_out_update(
                 client,
+                instructor_uid=instructor_uids[0],
                 term_id='all',
                 section_id='all',
                 opt_out=True,
@@ -1099,6 +1110,7 @@ class TestUpdateOptOut:
 
             self._api_opt_out_update(
                 client,
+                instructor_uid=instructor_uids[0],
                 term_id='all',
                 section_id='all',
                 opt_out=False,
@@ -1114,11 +1126,13 @@ class TestUpdateOptOut:
             assert course_feed['hasBlanketOptedOut'] is False
             assert course_feed['hasOptedOut'] is False
 
-    def test_scheduling_removes_opt_out(self, client, fake_auth):
+    def test_admin_toggle_opt_out(self, client, fake_auth):
         fake_auth.login(admin_uid)
         with test_approvals_workflow(app):
+            instructor_uids = get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
             self._api_opt_out_update(
                 client,
+                instructor_uid=instructor_uids[0],
                 term_id=self.term_id,
                 section_id=section_1_id,
                 opt_out=True,
@@ -1126,11 +1140,12 @@ class TestUpdateOptOut:
             api_json = api_get_course(client, section_id=section_1_id, term_id=self.term_id)
             assert api_json['hasOptedOut'] is True
 
-            api_approve(
+            self._api_opt_out_update(
                 client,
-                publish_type='kaltura_my_media',
-                recording_type='presenter_presentation_audio',
+                instructor_uid=instructor_uids[0],
+                term_id=self.term_id,
                 section_id=section_1_id,
+                opt_out=False,
             )
             api_json = api_get_course(client, section_id=section_1_id, term_id=self.term_id)
             assert api_json['hasOptedOut'] is False

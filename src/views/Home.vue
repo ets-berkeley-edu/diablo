@@ -3,8 +3,33 @@
     <v-card-title>
       <PageTitle icon="mdi-video-plus" :text="pageTitle" />
     </v-card-title>
-    <v-card-text v-if="courses.length">
+    <v-card-text>
+      <v-row class="mx-4">
+        <ToggleOptOut
+          :term-id="`${$config.currentTermId}`"
+          section-id="all"
+          :instructor-uid="$currentUser.uid"
+          :initial-value="$currentUser.hasOptedOutForTerm"
+          :disabled="$currentUser.hasOptedOutForAllTerms"
+          label="Opt out for current semester"
+          :before-toggle="() => refreshingCourses = true"
+          :on-toggle="reloadCoursesTable"
+        />
+      </v-row>
+      <v-row class="mx-4 mt-0 mb-2">
+        <ToggleOptOut
+          term-id="all"
+          section-id="all"
+          :instructor-uid="$currentUser.uid"
+          :initial-value="$currentUser.hasOptedOutForAllTerms"
+          label="Opt out for all semesters"
+          :before-toggle="() => refreshingCourses = true"
+          :on-toggle="reloadCoursesTable"
+        />
+      </v-row>
+      <Spinner v-if="refreshingCourses" />
       <v-data-table
+        v-if="!refreshingCourses && courses.length"
         disable-pagination
         disable-sort
         :headers="headers"
@@ -49,6 +74,15 @@
                   </div>
                   {{ course.meeting.startTimeFormatted }} - {{ course.meeting.endTimeFormatted }}
                 </td>
+                <td class="text-no-wrap">
+                  <ToggleOptOut
+                    :term-id="`${course.termId}`"
+                    :section-id="`${course.sectionId}`"
+                    :instructor-uid="$currentUser.uid"
+                    :initial-value="course.hasOptedOut"
+                    :disabled="course.hasBlanketOptedOut"
+                  />
+                </td>
               </tr>
               <tr v-for="index in course.meetings.eligible.length - 1" :key="index">
                 <td></td>
@@ -69,14 +103,15 @@
                     {{ course.meetings.eligible[index].startTimeFormatted }} - {{ course.meetings.eligible[index].endTimeFormatted }}
                   </div>
                 </td>
+                <td></td>
               </tr>
             </template>
           </tbody>
         </template>
       </v-data-table>
-    </v-card-text>
-    <v-card-text v-if="!courses.length" class="ma-4 text-no-wrap title">
-      No courses.
+      <v-row v-if="!courses.length" class="ma-4 text-no-wrap title">
+        No courses.
+      </v-row>
     </v-card-text>
   </v-card>
 </template>
@@ -85,12 +120,14 @@
 import Context from '@/mixins/Context'
 import Days from '@/components/util/Days'
 import PageTitle from '@/components/util/PageTitle'
+import Spinner from '@/components/util/Spinner'
+import ToggleOptOut from '@/components/course/ToggleOptOut'
 import Utils from '@/mixins/Utils'
 
 export default {
   name: 'Home',
   mixins: [Context, Utils],
-  components: {Days, PageTitle},
+  components: {Days, PageTitle, Spinner, ToggleOptOut},
   data: () => ({
     courses: undefined,
     headers: [
@@ -99,22 +136,35 @@ export default {
       {text: 'Instructors', value: 'instructors'},
       {text: 'Room', value: 'room'},
       {text: 'Days', value: 'days'},
-      {text: 'Time', value: 'time'}
+      {text: 'Time', value: 'time'},
+      {text: 'Opt out', value: 'hasOptedOut'}
     ],
-    pageTitle: undefined
+    pageTitle: undefined,
+    refreshingCourses: false,
   }),
   created() {
     this.$loading()
-    this.courses = this.$_.filter(this.$currentUser.courses, course => {
-      course.courseCodes = this.getCourseCodes(course)
-      const isEligible = course.meetings.eligible.length
-      if (isEligible) {
-        course.meeting = this.getDisplayMeetings(course)[0]
-      }
-      return isEligible
-    })
+    this.refreshCourses()
     this.pageTitle = `Your ${this.$config.currentTermName} Course${this.courses.length === 1 ? '' : 's'} Eligible for Capture`
     this.$ready(this.pageTitle)
+  },
+  methods: {
+    refreshCourses() {
+      this.courses = this.$_.filter(this.$currentUser.courses, course => {
+        course.courseCodes = this.getCourseCodes(course)
+        const isEligible = course.meetings.eligible.length
+        if (isEligible) {
+          course.meeting = this.getDisplayMeetings(course)[0]
+        }
+        return isEligible
+      })
+    },
+    reloadCoursesTable() {
+      this.$refreshCurrentUser().then(() => {
+        this.refreshCourses()
+        this.refreshingCourses = false
+      })
+    }
   }
 }
 </script>

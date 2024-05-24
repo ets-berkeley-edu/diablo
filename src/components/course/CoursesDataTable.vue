@@ -108,12 +108,15 @@
               <td :id="`course-${course.sectionId}-publish-types`" :class="tdc(course)">
                 {{ course.publishTypeName || '&mdash;' }}
               </td>
-              <td :class="tdc(course)">
+              <td v-if="includeOptOutColumnForUid" :class="tdc(course)">
                 <ToggleOptOut
-                  v-if="!course.hasNecessaryApprovals && !course.scheduled"
                   :key="course.sectionId"
-                  :course="course"
-                  :on-toggle="onToggleOptOut"
+                  :term-id="`${course.termId}`"
+                  :section-id="`${course.sectionId}`"
+                  :instructor-uid="includeOptOutColumnForUid"
+                  :initial-value="course.hasOptedOut"
+                  :disabled="course.hasBlanketOptedOut"
+                  :on-toggle="onToggleOptOut(course)"
                 />
               </td>
             </tr>
@@ -191,6 +194,11 @@ export default {
       required: true,
       type: Array
     },
+    includeOptOutColumnForUid: {
+      required: false,
+      type: String,
+      default: undefined
+    },
     includeRoomColumn: {
       required: true,
       type: Boolean
@@ -200,8 +208,9 @@ export default {
       type: String
     },
     onToggleOptOut: {
-      required: true,
-      type: Function
+      required: false,
+      type: Function,
+      default: () => {}
     },
     refreshing: {
       required: true,
@@ -210,7 +219,7 @@ export default {
     searchText: {
       default: undefined,
       type: String
-    }
+    },
   },
   data: () => ({
     headers: [
@@ -243,7 +252,12 @@ export default {
   methods: {
     refresh() {
       this.pageCurrent = 1
-      this.headers = this.includeRoomColumn ? this.headers : this.$_.filter(this.headers, h => h.text !== 'Room')
+      if (!this.includeRoomColumn) {
+        this.headers = this.$_.filter(this.headers, h => h.text !== 'Room')
+      }
+      if (!this.includeOptOutColumnForUid) {
+        this.headers = this.$_.filter(this.headers, h => h.text !== 'Opt out')
+      }
       this.$_.each(this.courses, course => {
         course.instructorNames = this.$_.map(course.instructors, 'name')
         course.isSelectable = !course.hasOptedOut
@@ -254,7 +268,7 @@ export default {
     },
     tdc(course) {
       return {
-        'border-bottom-zero': this.getDisplayMeetings(course).length > 1 || course.approvals.length,
+        'border-bottom-zero': this.getDisplayMeetings(course).length > 1,
         'pt-3 pb-3': this.$_.size(course.courseCodes) > 1
       }
     }
