@@ -319,6 +319,47 @@
           </v-container>
         </v-col>
       </v-row>
+      <v-row v-if="$currentUser.isAdmin">
+        <v-col cols="12">
+          <v-container id="update-history" class="elevation-2 pa-6 mx-0">
+            <h2>Update history</h2>
+            <div v-if="!course.updateHistory.length" id="no-updates">No updates.</div>
+            <v-data-table
+              v-if="course.updateHistory.length"
+              id="update-history-table"
+              disable-pagination
+              disable-sort
+              :headers="updateHistoryHeaders"
+              :hide-default-footer="true"
+              :items="course.updateHistory"
+              :items-per-page="100"
+              class="elevation-1"
+            >
+              <template #item.fieldName="{ item }">
+                <span :id="`update-fieldName-${item.id}`">{{ item.fieldName || '&mdash;' }}</span>
+              </template>
+              <template #item.fieldValueOld="{ item }">
+                <span :id="`update-fieldValueOld-${item.id}`">{{ item.fieldValueOld || '&mdash;' }}</span>
+              </template>
+              <template #item.fieldValueNew="{ item }">
+                <span :id="`update-fieldValueNew-${item.id}`">{{ item.fieldValueNew || '&mdash;' }}</span>
+              </template>
+              <template #item.requestedByName="{ item }">
+                <span :id="`update-requestedByName-${item.id}`">{{ item.requestedByName ? `${item.requestedByName} (${item.requestedByUid})` : '&mdash;' }}</span>
+              </template>
+              <template #item.requestedAt="{ item }">
+                <span :id="`update-requestedAt-${item.id}`">{{ new Date(item.requestedAt).toLocaleString() }}</span>
+              </template>
+              <template #item.publishedAt="{ item }">
+                <span :id="`update-publishedAt-${item.id}`">{{ new Date(item.publishedAt).toLocaleString() }}</span>
+              </template>
+              <template #item.status="{ item }">
+                <span :id="`update-status-${item.id}`">{{ item.status || '&mdash;' }}</span>
+              </template>
+            </v-data-table>
+          </v-container>
+        </v-col>
+      </v-row>
     </v-container>
   </div>
 </template>
@@ -363,7 +404,16 @@ export default {
     recordingType: undefined,
     recordingTypeEditing: false,
     recordingTypeOptions: undefined,
-    recordingTypeUpdating: false
+    recordingTypeUpdating: false,
+    updateHistoryHeaders: [
+      {text: 'Field', value: 'fieldName'},
+      {text: 'Old Value', value: 'fieldValueOld'},
+      {text: 'New Value', value: 'fieldValueNew'},
+      {text: 'Requested by', value: 'requestedByName'},
+      {text: 'Requested at', value: 'requestedAt'},
+      {text: 'Published at', value: 'publishedAt'},
+      {text: 'Status', value: 'status'}
+    ],
   }),
   computed: {
     disableSubmit() {
