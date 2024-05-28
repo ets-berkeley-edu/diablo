@@ -130,15 +130,15 @@ def _queue_meeting_updates(course):
                 term_id=course['termId'],
                 section_id=course['sectionId'],
                 field_name='meeting_removed',
-                field_value_old=None,
-                field_value_new=json.dumps({
-                    'days': scheduled['meetingDays'],
+                field_value_old=json.dumps({
+                    'days': ''.join(scheduled['meetingDays']),
                     'startTime': scheduled['meetingStartTime'],
                     'endTime': scheduled['meetingEndTime'],
                     'startDate': scheduled['meetingStartDate'],
                     'endDate': scheduled['meetingEndDate'],
                     'room': _get_room_summary(scheduled),
                 }),
+                field_value_new=None,
                 kaltura_schedule_id=scheduled['kalturaScheduleId'],
             )
 
@@ -149,7 +149,7 @@ def _queue_meeting_updates(course):
             if are_scheduled_dates_obsolete(meeting=meeting, scheduled=scheduled) or \
                     are_scheduled_times_obsolete(meeting=meeting, scheduled=scheduled):
                 meeting_old = {
-                    'days': scheduled['meetingDays'],
+                    'days': ''.join(scheduled['meetingDays']),
                     'startTime': scheduled['meetingStartTime'],
                     'endTime': scheduled['meetingEndTime'],
                     'startDate': scheduled['meetingStartDate'],

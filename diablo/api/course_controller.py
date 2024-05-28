@@ -123,6 +123,7 @@ def get_course(term_id, section_id):
         section_id,
         include_administrative_proxies=True,
         include_deleted=True,
+        include_update_history=True,
     )
     if not course:
         raise ResourceNotFoundError(f'No section for term_id = {term_id} and section_id = {section_id}')
@@ -260,9 +261,11 @@ def update_collaborator_uids():
         ScheduleUpdate.queue(
             term_id=course['termId'],
             section_id=course['sectionId'],
-            field_name='publish_type',
+            field_name='collaborator_uids',
             field_value_old=course.get('collaboratorUids'),
             field_value_new=collaborator_uids,
+            requested_by_uid=current_user.uid,
+            requested_by_name=current_user.name,
         )
 
     return tolerant_jsonify(preferences.to_api_json())
@@ -299,14 +302,26 @@ def update_opt_out():
         if not current_user.is_admin and str(instructor_uid) not in [str(i['uid']) for i in course['instructors']]:
             raise ForbiddenRequestError(f'Sorry, you are unauthorized to view the course {course["label"]}.')
 
-    def _schedule_opt_out_update(scheduled_section_id):
+    def _schedule_opt_out_update(scheduled_section_id, scheduled_term_id):
         if opt_out:
             ScheduleUpdate.queue(
-                term_id=term_id,
+                term_id=scheduled_term_id,
                 section_id=scheduled_section_id,
                 field_name='opted_out',
                 field_value_old=None,
                 field_value_new=instructor_uid,
+                requested_by_uid=current_user.uid,
+                requested_by_name=current_user.name,
+            )
+        else:
+            ScheduleUpdate.queue(
+                term_id=scheduled_term_id,
+                section_id=scheduled_section_id,
+                field_name='opted_out',
+                field_value_old=instructor_uid,
+                field_value_new=None,
+                requested_by_uid=current_user.uid,
+                requested_by_name=current_user.name,
             )
 
     if OptOut.update_opt_out(
@@ -316,10 +331,10 @@ def update_opt_out():
         opt_out=opt_out,
     ):
         if section_id:
-            _schedule_opt_out_update(section_id)
+            _schedule_opt_out_update(section_id, term_id)
         else:
-            for scheduled_section_id in Scheduled.get_scheduled_per_instructor_uid(instructor_uid, term_id):
-                _schedule_opt_out_update(scheduled_section_id)
+            for scheduled_section_id in Scheduled.get_scheduled_per_instructor_uid(instructor_uid, app.config['CURRENT_TERM_ID']):
+                _schedule_opt_out_update(scheduled_section_id, app.config['CURRENT_TERM_ID'])
         return tolerant_jsonify({'optedOut': opt_out})
     else:
         raise InternalServerError('Failed to update opt-out.')
@@ -351,6 +366,8 @@ def update_publish_type():
             field_name='publish_type',
             field_value_old=course.get('publishType'),
             field_value_new=publish_type,
+            requested_by_uid=current_user.uid,
+            requested_by_name=current_user.name,
         )
 
     return tolerant_jsonify(preferences.to_api_json())
@@ -382,6 +399,8 @@ def update_recording_type():
             field_name='recording_type',
             field_value_old=course.get('recordingType'),
             field_value_new=recording_type,
+            requested_by_uid=current_user.uid,
+            requested_by_name=current_user.name,
         )
 
     return tolerant_jsonify(preferences.to_api_json())
