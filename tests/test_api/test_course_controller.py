@@ -838,7 +838,7 @@ class TestUpdatePublishType:
             expected_status_code=401,
         )
 
-    def test_authorized(self, client, fake_auth):
+    def test_publish_authorized(self, client, fake_auth):
         """Update the 'publish_type' course preference."""
         instructor_uids = get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
         fake_auth.login(instructor_uids[0])
@@ -855,6 +855,14 @@ class TestUpdatePublishType:
 
         course = SisSection.get_course(section_id=section_1_id, term_id=self.term_id)
         assert course['publishType'] == 'kaltura_media_gallery'
+
+        publish_type_updates = [u for u in course['updateHistory'] if u['fieldName'] == 'publish_type']
+        assert len(publish_type_updates) == 1
+        assert publish_type_updates[0]['fieldValueOld'] == 'kaltura_my_media'
+        assert publish_type_updates[0]['fieldValueNew'] == 'kaltura_media_gallery'
+        assert publish_type_updates[0]['status'] == 'queued'
+        assert publish_type_updates[0]['requestedByUid'] == instructor_uids[0]
+        assert publish_type_updates[0]['requestedByName'] == 'William Peter Blatty'
 
 
 class TestUpdateRecordingType:
@@ -922,6 +930,14 @@ class TestUpdateRecordingType:
         course = SisSection.get_course(section_id=section_1_id, term_id=self.term_id)
         assert course['recordingType'] == 'presenter_presentation_audio_with_operator'
 
+        recording_type_updates = [u for u in course['updateHistory'] if u['fieldName'] == 'recording_type']
+        assert len(recording_type_updates) == 1
+        assert recording_type_updates[0]['fieldValueOld'] == 'presenter_presentation_audio'
+        assert recording_type_updates[0]['fieldValueNew'] == 'presenter_presentation_audio_with_operator'
+        assert recording_type_updates[0]['status'] == 'queued'
+        assert recording_type_updates[0]['requestedByUid'] == instructor_uids[0]
+        assert recording_type_updates[0]['requestedByName'] == 'William Peter Blatty'
+
 
 class TestUpdateOptOut:
 
@@ -986,7 +1002,7 @@ class TestUpdateOptOut:
                 term_id=self.term_id,
             )
             assert not len(opt_outs)
-            course_feed = _api_get_course(client, self.term_id, section_1_id)
+            course_feed = api_get_course(client, self.term_id, section_1_id)
             assert course_feed['hasBlanketOptedOut'] is False
             assert course_feed['hasOptedOut'] is False
 
@@ -1004,7 +1020,7 @@ class TestUpdateOptOut:
                 term_id=self.term_id,
             )
             assert len(opt_outs)
-            course_feed = _api_get_course(client, self.term_id, section_1_id)
+            course_feed = api_get_course(client, self.term_id, section_1_id)
             assert course_feed['hasBlanketOptedOut'] is False
             assert course_feed['hasOptedOut'] is True
 
@@ -1022,21 +1038,39 @@ class TestUpdateOptOut:
                 term_id=self.term_id,
             )
             assert not len(opt_outs)
-            course_feed = _api_get_course(client, self.term_id, section_1_id)
+            course_feed = api_get_course(client, self.term_id, section_1_id)
             assert course_feed['hasBlanketOptedOut'] is False
             assert course_feed['hasOptedOut'] is False
+
+            opt_out_updates = [u for u in course_feed['updateHistory'] if u['fieldName'] == 'opted_out']
+            assert len(opt_out_updates) == 2
+            assert opt_out_updates[0]['fieldValueOld'] is None
+            assert opt_out_updates[0]['fieldValueNew'] == instructor_uids[0]
+            assert opt_out_updates[0]['status'] == 'queued'
+            assert opt_out_updates[0]['requestedByUid'] == instructor_uids[0]
+            assert opt_out_updates[0]['requestedByName'] == 'William Peter Blatty'
+            assert opt_out_updates[1]['fieldValueOld'] == instructor_uids[0]
+            assert opt_out_updates[1]['fieldValueNew'] is None
+            assert opt_out_updates[1]['status'] == 'queued'
+            assert opt_out_updates[1]['requestedByUid'] == instructor_uids[0]
+            assert opt_out_updates[1]['requestedByName'] == 'William Peter Blatty'
 
     def test_authorized_blanket_per_term(self, client, fake_auth):
         """Instructors can toggle the opt-out preference for all courses in a term."""
         instructor_uids = get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
         fake_auth.login(instructor_uids[0])
         with test_approvals_workflow(app):
+            mock_scheduled(
+                section_id=section_1_id,
+                term_id=self.term_id,
+            )
+
             blanket_term_opt_outs = OptOut.get_opt_outs_for_section(
                 section_id=None,
                 term_id=self.term_id,
             )
             assert not len(blanket_term_opt_outs)
-            course_feed = _api_get_course(client, self.term_id, section_1_id)
+            course_feed = api_get_course(client, self.term_id, section_1_id)
             assert course_feed['hasBlanketOptedOut'] is False
             assert course_feed['hasOptedOut'] is False
 
@@ -1054,7 +1088,7 @@ class TestUpdateOptOut:
                 term_id=self.term_id,
             )
             assert len(blanket_term_opt_outs)
-            course_feed = _api_get_course(client, self.term_id, section_1_id)
+            course_feed = api_get_course(client, self.term_id, section_1_id)
             assert course_feed['hasBlanketOptedOut'] is True
             assert course_feed['hasOptedOut'] is True
 
@@ -1072,21 +1106,40 @@ class TestUpdateOptOut:
                 term_id=self.term_id,
             )
             assert not len(blanket_term_opt_outs)
-            course_feed = _api_get_course(client, self.term_id, section_1_id)
+            course_feed = api_get_course(client, self.term_id, section_1_id)
             assert course_feed['hasBlanketOptedOut'] is False
             assert course_feed['hasOptedOut'] is False
+
+            # Blanket opt-outs still leave notations in per-course update history.
+            opt_out_updates = [u for u in course_feed['updateHistory'] if u['fieldName'] == 'opted_out']
+            assert len(opt_out_updates) == 2
+            assert opt_out_updates[0]['fieldValueOld'] is None
+            assert opt_out_updates[0]['fieldValueNew'] == instructor_uids[0]
+            assert opt_out_updates[0]['status'] == 'queued'
+            assert opt_out_updates[0]['requestedByUid'] == instructor_uids[0]
+            assert opt_out_updates[0]['requestedByName'] == 'William Peter Blatty'
+            assert opt_out_updates[1]['fieldValueOld'] == instructor_uids[0]
+            assert opt_out_updates[1]['fieldValueNew'] is None
+            assert opt_out_updates[1]['status'] == 'queued'
+            assert opt_out_updates[1]['requestedByUid'] == instructor_uids[0]
+            assert opt_out_updates[1]['requestedByName'] == 'William Peter Blatty'
 
     def test_authorized_blanket_all_terms(self, client, fake_auth):
         """Instructors can toggle the opt-out preference for all courses in all terms."""
         instructor_uids = get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
         fake_auth.login(instructor_uids[0])
         with test_approvals_workflow(app):
+            mock_scheduled(
+                section_id=section_1_id,
+                term_id=self.term_id,
+            )
+
             blanket_opt_outs = OptOut.get_opt_outs_for_section(
                 section_id=None,
                 term_id=None,
             )
             assert not len(blanket_opt_outs)
-            course_feed = _api_get_course(client, self.term_id, section_1_id)
+            course_feed = api_get_course(client, self.term_id, section_1_id)
             assert course_feed['hasBlanketOptedOut'] is False
             assert course_feed['hasOptedOut'] is False
 
@@ -1104,7 +1157,7 @@ class TestUpdateOptOut:
                 term_id=None,
             )
             assert len(blanket_opt_outs)
-            course_feed = _api_get_course(client, self.term_id, section_1_id)
+            course_feed = api_get_course(client, self.term_id, section_1_id)
             assert course_feed['hasBlanketOptedOut'] is True
             assert course_feed['hasOptedOut'] is True
 
@@ -1122,9 +1175,23 @@ class TestUpdateOptOut:
                 term_id=None,
             )
             assert not len(blanket_opt_outs)
-            course_feed = _api_get_course(client, self.term_id, section_1_id)
+            course_feed = api_get_course(client, self.term_id, section_1_id)
             assert course_feed['hasBlanketOptedOut'] is False
             assert course_feed['hasOptedOut'] is False
+
+            # Blanket opt-outs still leave notations in per-course update history.
+            opt_out_updates = [u for u in course_feed['updateHistory'] if u['fieldName'] == 'opted_out']
+            assert len(opt_out_updates) == 2
+            assert opt_out_updates[0]['fieldValueOld'] is None
+            assert opt_out_updates[0]['fieldValueNew'] == instructor_uids[0]
+            assert opt_out_updates[0]['status'] == 'queued'
+            assert opt_out_updates[0]['requestedByUid'] == instructor_uids[0]
+            assert opt_out_updates[0]['requestedByName'] == 'William Peter Blatty'
+            assert opt_out_updates[1]['fieldValueOld'] == instructor_uids[0]
+            assert opt_out_updates[1]['fieldValueNew'] is None
+            assert opt_out_updates[1]['status'] == 'queued'
+            assert opt_out_updates[1]['requestedByUid'] == instructor_uids[0]
+            assert opt_out_updates[1]['requestedByName'] == 'William Peter Blatty'
 
     def test_admin_toggle_opt_out(self, client, fake_auth):
         fake_auth.login(admin_uid)
@@ -1211,7 +1278,7 @@ class TestUnscheduleCourse:
         self._api_unschedule(
             client,
             term_id=self.term_id,
-            section_id=section_1_id,
+            section_id=section_2_id,
             expected_status_code=400,
         )
 
@@ -1269,12 +1336,6 @@ class TestCoursesReport:
         fake_auth.login(admin_uid)
         report = self._api_courses_report(client, term_id=self.term_id)
         assert report['totalScheduledCount'] == len(Scheduled.get_all_scheduled(self.term_id))
-
-
-def _api_get_course(client, term_id, section_id, expected_status_code=200):
-    response = client.get(f'/api/course/{term_id}/{section_id}')
-    assert response.status_code == expected_status_code
-    return response.json
 
 
 def _create_approval(section_id, term_id):

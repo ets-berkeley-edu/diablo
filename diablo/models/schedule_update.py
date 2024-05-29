@@ -28,7 +28,7 @@ import json
 
 from diablo import db, std_commit
 from diablo.lib.util import to_isoformat
-from sqlalchemy import text
+from sqlalchemy import and_, text
 from sqlalchemy.dialects.postgresql import ENUM
 
 
@@ -120,16 +120,17 @@ class ScheduleUpdate(db.Model):
         return schedule_update
 
     @classmethod
-    def get_queued_by_section_id(cls, term_id=term_id):
+    def get_update_history_for_section_ids(cls, term_id, section_ids):
+        criteria = and_(cls.term_id == term_id, cls.section_id.in_(section_ids))
+        return cls.query.filter(criteria).order_by(cls.section_id, cls.requested_at).all()
+
+    @classmethod
+    def get_queued_by_section_id(cls, term_id):
         results = cls.query.filter_by(term_id=term_id, status='queued').order_by(cls.section_id, cls.requested_at).all()
         results_by_section_id = {}
         for section_id, section_results in groupby(results, lambda r: r.section_id):
             results_by_section_id[section_id] = list(section_results)
         return results_by_section_id
-
-    @classmethod
-    def get_section_history(cls, term_id=term_id, section_id=section_id):
-        return cls.query.filter_by(term_id=term_id, section_id=section_id).order_by(cls.requested_at).all()
 
     @classmethod
     def find_collaborator_added(cls, term_id, section_id, collaborator_uid):
@@ -181,6 +182,8 @@ class ScheduleUpdate(db.Model):
             return debracketed.split(',') if debracketed else []
         elif self.field_name in ('meeting_added', 'meeting_removed', 'meeting_updated', 'not_scheduled', 'room_not_eligible'):
             return json.loads(field_value)
+        else:
+            return field_value
 
     def mark_success(self):
         self.status = 'succeeded'

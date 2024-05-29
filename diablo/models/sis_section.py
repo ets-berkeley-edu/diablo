@@ -32,6 +32,7 @@ from diablo.models.course_preference import CoursePreference
 from diablo.models.cross_listing import CrossListing
 from diablo.models.opt_out import OptOut
 from diablo.models.room import Room
+from diablo.models.schedule_update import ScheduleUpdate
 from diablo.models.scheduled import Scheduled
 from flask import current_app as app
 from sqlalchemy import text
@@ -162,6 +163,7 @@ class SisSection(db.Model):
             section_id,
             include_administrative_proxies=False,
             include_deleted=False,
+            include_update_history=True,
     ):
         sql = f"""
             SELECT
@@ -192,7 +194,7 @@ class SisSection(db.Model):
                 'term_id': term_id,
             },
         )
-        api_json = _to_api_json(term_id=term_id, rows=rows)
+        api_json = _to_api_json(term_id=term_id, rows=rows, include_update_history=include_update_history)
         return api_json[0] if api_json else None
 
     @classmethod
@@ -750,7 +752,7 @@ class SisSection(db.Model):
         return set([row['section_id'] for row in rows])
 
 
-def _to_api_json(term_id, rows, include_rooms=True):  # noqa C901
+def _to_api_json(term_id, rows, include_rooms=True, include_update_history=False):  # noqa C901
     rows = rows.fetchall()
     section_ids = list(set(int(row['section_id']) for row in rows))
     courses_per_id = {}
@@ -804,6 +806,10 @@ def _to_api_json(term_id, rows, include_rooms=True):  # noqa C901
             cross_listed_courses = cross_listings_per_section_id.get(section_id, [])
             instructors = instructors_per_section_id.get(section_id, [])
 
+            cross_listed_section_ids = [c['sectionId'] for c in cross_listed_courses]
+            cross_listed_section_ids.append(section_id)
+            schedule_updates = ScheduleUpdate.get_update_history_for_section_ids(term_id=row['term_id'], section_ids=cross_listed_section_ids)
+
             # Construct course
             scheduled = scheduled_by_section_id.get(section_id)
             opt_outs = opt_outs_by_section_id.get(section_id) or []
@@ -851,6 +857,7 @@ def _to_api_json(term_id, rows, include_rooms=True):  # noqa C901
                 'sectionNum': row['section_num'],
                 'scheduled': scheduled,
                 'termId': row['term_id'],
+                'updateHistory': [u.to_api_json() for u in schedule_updates],
             }
             courses_per_id[section_id] = course
 

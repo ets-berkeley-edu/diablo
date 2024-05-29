@@ -36,16 +36,17 @@ from diablo.models.sent_email import SentEmail
 from diablo.models.sis_section import SisSection
 from flask import current_app as app
 from sqlalchemy import text
-from tests.test_api.api_test_utils import get_eligible_meeting, get_instructor_uids, mock_scheduled
+from tests.test_api.api_test_utils import api_get_course, get_eligible_meeting, get_instructor_uids, mock_scheduled
 from tests.util import override_config, simply_yield, test_approvals_workflow
 
 
+admin_uid = '90001'
 deleted_section_id = 50018
 
 
 class TestKalturaJob:
 
-    def test_new_course_scheduled(self):
+    def test_new_course_scheduled(self, client):
         """New courses are scheduled for recording by default."""
         with test_approvals_workflow(app):
             section_id = 50012
@@ -85,7 +86,7 @@ class TestKalturaJob:
             KalturaJob(simply_yield).run()
             assert len(_get_emails_sent()) == email_count
 
-    def test_email_alert_canceled_course(self, db_session):
+    def test_canceled_course(self, db_session):
         term_id = app.config['CURRENT_TERM_ID']
         with test_approvals_workflow(app):
             course = SisSection.get_course(section_id=deleted_section_id, term_id=term_id, include_deleted=True)
@@ -94,7 +95,7 @@ class TestKalturaJob:
             _run_jobs()
             _assert_email_count(1, deleted_section_id, 'no_longer_scheduled')
 
-    def test_email_alert_room_change(self, db_session):
+    def test_room_change(self, db_session, client, fake_auth):
         section_id = 50004
         term_id = app.config['CURRENT_TERM_ID']
 
@@ -145,7 +146,38 @@ class TestKalturaJob:
             _assert_email_count(1, section_id, 'room_change_no_longer_eligible')
             Scheduled.delete(section_id=section_id, term_id=term_id)
 
-    def test_email_alert_datetime_change(self, db_session):
+            fake_auth.login(admin_uid)
+            course = api_get_course(client, term_id, section_id)
+            assert len(course['updateHistory']) == 3
+
+            assert course['updateHistory'][0]['fieldName'] == 'meeting_updated'
+            assert course['updateHistory'][0]['fieldValueOld']['room']['location'] == 'Li Ka Shing 145'
+            assert course['updateHistory'][0]['fieldValueOld']['room']['kalturaResourceId']
+            assert course['updateHistory'][0]['fieldValueNew']['room']['location'] == 'Barker 101'
+            assert course['updateHistory'][0]['fieldValueNew']['room']['kalturaResourceId']
+            assert course['updateHistory'][0]['requestedByName'] is None
+            assert course['updateHistory'][0]['requestedByUid'] is None
+            assert course['updateHistory'][0]['status'] == 'succeeded'
+
+            assert course['updateHistory'][1]['fieldName'] == 'room_not_eligible'
+            assert course['updateHistory'][1]['fieldValueOld']['location'] == 'Barker 101'
+            assert course['updateHistory'][1]['fieldValueOld']['kalturaResourceId']
+            assert course['updateHistory'][1]['fieldValueNew']['location'] == 'Wheeler 150'
+            assert course['updateHistory'][1]['fieldValueNew']['kalturaResourceId'] is None
+            assert course['updateHistory'][1]['requestedByName'] is None
+            assert course['updateHistory'][1]['requestedByUid'] is None
+            assert course['updateHistory'][1]['status'] == 'succeeded'
+
+            assert course['updateHistory'][2]['fieldName'] == 'meeting_updated'
+            assert course['updateHistory'][2]['fieldValueOld']['room']['location'] == 'Wheeler 150'
+            assert course['updateHistory'][2]['fieldValueOld']['room']['kalturaResourceId'] is None
+            assert course['updateHistory'][2]['fieldValueNew']['room']['location'] == 'Li Ka Shing 145'
+            assert course['updateHistory'][2]['fieldValueNew']['room']['kalturaResourceId']
+            assert course['updateHistory'][2]['requestedByName'] is None
+            assert course['updateHistory'][2]['requestedByUid'] is None
+            assert course['updateHistory'][2]['status'] == 'succeeded'
+
+    def test_datetime_change(self, db_session, client, fake_auth):
         term_id = app.config['CURRENT_TERM_ID']
         section_id = 50004
         meeting = get_eligible_meeting(section_id=section_id, term_id=term_id)
@@ -182,7 +214,30 @@ class TestKalturaJob:
                     _run_jobs()
                     _assert_email_count(2, section_id, 'room_change')
 
-    def test_email_alert_instructor_added(self):
+                    fake_auth.login(admin_uid)
+                    course = api_get_course(client, term_id, section_id)
+                    assert len(course['updateHistory']) == 2
+                    for u in course['updateHistory']:
+                        assert u['fieldName'] == 'meeting_updated'
+                        assert u['fieldValueOld'] == {
+                            'days': 'MOWE',
+                            'startTime': '08:00',
+                            'endTime': '16:59',
+                            'startDate': '2024-05-29',
+                            'endDate': '2021-12-08',
+                        }
+                        assert u['fieldValueNew'] == {
+                            'days': 'MOWE',
+                            'startTime': '13:00',
+                            'endTime': '13:59',
+                            'startDate': '2024-05-29',
+                            'endDate': '2021-12-08',
+                        }
+                        assert u['requestedByName'] is None
+                        assert u['requestedByUid'] is None
+                        assert u['status'] == 'succeeded'
+
+    def test_instructor_added(self, client, fake_auth):
         """Emails new instructor when added to scheduled course."""
         with test_approvals_workflow(app):
             term_id = app.config['CURRENT_TERM_ID']
@@ -217,7 +272,17 @@ class TestKalturaJob:
             EmailsJob(simply_yield).run()
             _assert_email_count(1, section_id, 'instructors_added')
 
-    def test_email_alert_instructor_removed(self):
+            fake_auth.login(admin_uid)
+            course = api_get_course(client, term_id, section_id)
+            assert len(course['updateHistory']) == 1
+            assert course['updateHistory'][0]['fieldName'] == 'instructor_uids'
+            assert course['updateHistory'][0]['fieldValueOld'] == ['10006']
+            assert course['updateHistory'][0]['fieldValueNew'] == ['10006', '10007']
+            assert course['updateHistory'][0]['requestedByName'] is None
+            assert course['updateHistory'][0]['requestedByUid'] is None
+            assert course['updateHistory'][0]['status'] == 'succeeded'
+
+    def test_instructor_removed(self, client, fake_auth):
         """Emails instructor when removed from scheduled course."""
         with test_approvals_workflow(app):
             term_id = app.config['CURRENT_TERM_ID']
@@ -252,6 +317,16 @@ class TestKalturaJob:
 
             EmailsJob(simply_yield).run()
             _assert_email_count(1, section_id, 'instructors_removed')
+
+            fake_auth.login(admin_uid)
+            course = api_get_course(client, term_id, section_id)
+            assert len(course['updateHistory']) == 1
+            assert course['updateHistory'][0]['fieldName'] == 'instructor_uids'
+            assert course['updateHistory'][0]['fieldValueOld'] == ['10006', '10007', '10010']
+            assert course['updateHistory'][0]['fieldValueNew'] == ['10006', '10007']
+            assert course['updateHistory'][0]['requestedByName'] is None
+            assert course['updateHistory'][0]['requestedByUid'] is None
+            assert course['updateHistory'][0]['status'] == 'succeeded'
 
 
 def _assert_email_count(expected_count, section_id, template_type):
