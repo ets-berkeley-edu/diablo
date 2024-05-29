@@ -24,6 +24,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 from diablo.api.errors import ResourceNotFoundError
 from diablo.api.util import admin_required
+from diablo.externals.canvas import get_current_teaching_courses
 from diablo.externals.loch import get_loch_basic_attributes_by_uid_or_email
 from diablo.lib.http import tolerant_jsonify
 from diablo.lib.util import basic_attributes_to_api_json
@@ -62,6 +63,12 @@ def get_user(uid):
 @login_required
 def get_calnet_user(uid):
     return tolerant_jsonify(get_calnet_user_for_uid(app=app, uid=uid))
+
+
+@app.route('/api/user/<uid>/teaching_sites')
+@login_required
+def get_user_teaching_sites(uid):
+    return tolerant_jsonify(get_current_teaching_courses(uid=uid))
 
 
 @app.route('/api/users/admins')

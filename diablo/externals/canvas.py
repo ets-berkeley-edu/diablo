@@ -26,15 +26,21 @@ import re
 
 from canvasapi import Canvas
 from canvasapi.external_tool import ExternalTool
+from canvasapi.user import User
 from diablo import skip_when_pytest
 from diablo.lib.berkeley import get_canvas_sis_term_id
 from diablo.lib.util import resolve_xml_template
 from flask import current_app as app
 
 
+def get_account():
+    c = _get_canvas()
+    return c.get_account(app.config['CANVAS_BERKELEY_ACCOUNT_ID'])
+
+
 @skip_when_pytest(mock_object='canvas/canvas_course_sites.json', is_fixture_json_file=True)
 def get_canvas_course_sites(canvas_enrollment_term_id):
-    canvas_courses = _get_canvas().get_courses(
+    canvas_courses = get_account().get_courses(
         by_subaccounts=app.config['CANVAS_BERKELEY_SUB_ACCOUNTS'],
         enrollment_term_id=canvas_enrollment_term_id,
     )
@@ -62,22 +68,54 @@ def get_canvas_course_sites(canvas_enrollment_term_id):
 def get_canvas_enrollment_term(sis_term_id):
     canvas_sis_term_id = get_canvas_sis_term_id(sis_term_id)
     canvas_enrollment_term = None
-    for enrollment_term in _get_canvas().get_enrollment_terms():
+    for enrollment_term in get_account().get_enrollment_terms():
         if enrollment_term.sis_term_id == canvas_sis_term_id:
             canvas_enrollment_term = enrollment_term
             break
     return canvas_enrollment_term
 
 
+def get_user(user_id, api_call=True, api_url=None):
+    c = _get_canvas()
+    if api_call is False:
+        return User(c._Canvas__requester, {'id': user_id})
+    else:
+        user = None
+        try:
+            user = c.get_user(user_id)
+        except Exception as e:
+            app.logger.error(f'Failed to retrieve Canvas user (id={user_id})')
+            app.logger.exception(e)
+        return user
+
+
+def get_current_teaching_courses(uid):
+    teaching_courses = []
+    try:
+        user = get_user(f'sis_login_id:{uid}', api_call=False)
+        profile = user.get_profile()
+        if profile:
+            # Load all courses because ResourceDoesNotExist is possible when paging.
+            courses = [course for course in user.get_courses(include=['term'])]
+            canvas_sis_term_id = get_canvas_sis_term_id(app.config['CURRENT_TERM_ID'])
+            for canvas_course in courses:
+                if canvas_course.term['sis_term_id'] == canvas_sis_term_id:
+                    enrollments = list(filter(lambda e: e.get('user_id') == profile['id'], canvas_course.enrollments))
+                    current_user_roles = [e['role'] for e in enrollments]
+                    if next((role for role in current_user_roles if role in ['TeacherEnrollment', 'CanvasAdmin']), None):
+                        teaching_courses.append(_canvas_site_to_api_json(canvas_course))
+    except Exception as e:
+        app.logger.error(f'Failed to retrieve courses which UID {uid} is currently teaching.')
+        app.logger.exception(e)
+    return teaching_courses
+
+
 def ping_canvas():
-    return _get_canvas() is not None
+    return get_account() is not None
 
 
 def update_lti_configurations():
-    canvas = Canvas(
-        base_url=app.config['CANVAS_API_URL'],
-        access_token=app.config['CANVAS_ACCESS_TOKEN'],
-    )
+    canvas = _get_canvas()
     successes = []
     errors = []
     for tool_name, tool_id in app.config.get('CANVAS_LTI_EXTERNAL_TOOL_IDS', {}).items():
@@ -107,9 +145,18 @@ def update_lti_configurations():
     return successes, errors
 
 
+def _canvas_site_to_api_json(canvas_site):
+    return {
+        'canvasSiteId': canvas_site.id,
+        'courseCode': canvas_site.course_code,
+        'name': canvas_site.name.strip(),
+        'sisCourseId': canvas_site.sis_course_id,
+        'url': f"{app.config['CANVAS_API_URL']}/courses/{canvas_site.id}",
+    }
+
+
 def _get_canvas():
-    canvas = Canvas(
+    return Canvas(
         base_url=app.config['CANVAS_API_URL'],
         access_token=app.config['CANVAS_ACCESS_TOKEN'],
     )
-    return canvas.get_account(app.config['CANVAS_BERKELEY_ACCOUNT_ID'])

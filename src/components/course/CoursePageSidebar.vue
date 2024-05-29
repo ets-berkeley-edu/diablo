@@ -95,14 +95,12 @@
         </div>
       </v-col>
     </v-row>
-    <v-row v-if="course.canvasCourseSites.length" id="canvas-course-sites">
+    <v-row v-if="course.canvasSiteId" id="canvas-course-site=">
       <v-col md="auto">
         <v-icon aria-label="Bookmark icon">mdi-bookmark-outline</v-icon>
       </v-col>
       <v-col>
-        <OxfordJoin v-slot="{item}" :items="course.canvasCourseSites">
-          <CanvasCourseSite :site="item" />
-        </OxfordJoin>
+        <CanvasCourseSite :site-id="course.canvasSiteId" :course-site="courseSite" />
       </v-col>
     </v-row>
     <v-row v-if="$currentUser.isAdmin && course.hasOptedOut" id="opted-out">
@@ -196,6 +194,11 @@ export default {
     },
     course: {
       required: true,
+      type: Object
+    },
+    courseSite: {
+      default: () => {},
+      required: false,
       type: Object
     }
   },

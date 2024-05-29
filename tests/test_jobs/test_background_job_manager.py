@@ -25,8 +25,8 @@ ENHANCEMENTS, OR MODIFICATIONS.
 
 from diablo import std_commit
 from diablo.factory import background_job_manager
-from diablo.jobs.canvas_job import CanvasJob
 from diablo.jobs.doomed_to_failure import DoomedToFailure
+from diablo.jobs.emails_job import EmailsJob
 from diablo.models.job import Job
 from diablo.models.sent_email import SentEmail
 from tests.util import simply_yield
@@ -50,7 +50,7 @@ class TestBackgroundJobManager:
 
         email_count = _get_admin_email_count()
         # No alert on happy job.
-        CanvasJob(simply_yield).run()
+        EmailsJob(simply_yield).run()
         assert _get_admin_email_count() == email_count
         # Alert on sad job.
         all_jobs = Job.get_all(include_disabled=True)

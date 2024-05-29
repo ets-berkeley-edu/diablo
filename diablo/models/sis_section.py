@@ -27,7 +27,6 @@ from datetime import datetime
 from diablo import db
 from diablo.lib.berkeley import get_recording_end_date, get_recording_start_date
 from diablo.lib.util import format_days, format_time, get_names_of_days, safe_strftime
-from diablo.models.canvas_course_site import CanvasCourseSite
 from diablo.models.course_preference import CoursePreference
 from diablo.models.cross_listing import CrossListing
 from diablo.models.opt_out import OptOut
@@ -787,7 +786,7 @@ def _to_api_json(term_id, rows, include_rooms=True, include_update_history=False
             scheduled_by_section_id[s.section_id] = []
         scheduled_by_section_id[s.section_id].append(s.to_api_json(rooms_by_id=rooms_by_id))
 
-    cross_listings_per_section_id, instructors_per_section_id, canvas_sites_by_section_id = _get_cross_listed_courses(
+    cross_listings_per_section_id, instructors_per_section_id = _get_cross_listed_courses(
         section_ids=section_ids,
         term_id=term_id,
         invited_uids=invited_uids_by_section_id,
@@ -822,11 +821,13 @@ def _to_api_json(term_id, rows, include_rooms=True, include_update_history=False
             else:
                 preferences = {}
 
+            canvas_site_id = int(preferences['canvasSiteId']) if preferences.get('canvasSiteId') else None
+
             course = {
                 'allowedUnits': row['allowed_units'],
                 'collaborators': preferences.get('collaborators'),
                 'collaboratorUids': preferences.get('collaboratorUids'),
-                'canvasCourseSites': canvas_sites_by_section_id.get(section_id, []),
+                'canvasSiteId': canvas_site_id,
                 'courseName': row['course_name'],
                 'courseTitle': row['course_title'],
                 'crossListings': cross_listed_courses,
@@ -928,12 +929,11 @@ def _decorate_course_meeting_type(course):
 
 
 def _get_cross_listed_courses(section_ids, term_id, invited_uids):
-    # Return course and instructor info for cross-listings, and Canvas site info for cross-listings as well as the
+    # Return course and instructor info for cross-listings as well as the
     # principal section. Although cross-listed sections were "deleted" during SIS data refresh job, we still rely
     # on metadata from those deleted records.
     cross_listings_by_section_id = CrossListing.get_cross_listings_for_section_ids(section_ids=section_ids, term_id=term_id)
     all_cross_listing_ids = list(set(section_id for k, v in cross_listings_by_section_id.items() for section_id in v))
-    all_section_ids = list(set(section_ids + all_cross_listing_ids))
 
     sql = """
         SELECT
@@ -963,24 +963,10 @@ def _get_cross_listed_courses(section_ids, term_id, invited_uids):
     for row in rows:
         rows_by_cross_listing_id[row['section_id']].append(row)
 
-    canvas_sites_by_cross_listing_id = {section_id: [] for section_id in all_section_ids}
-    for site in CanvasCourseSite.get_canvas_course_sites(section_ids=all_section_ids, term_id=term_id):
-        canvas_sites_by_cross_listing_id[site.section_id].append({
-            'courseSiteId': site.canvas_course_site_id,
-            'courseSiteName': site.canvas_course_site_name,
-        })
-
     courses_by_section_id = {}
     instructors_by_section_id = {}
-    canvas_sites_by_section_id = {}
 
-    # First, collect Canvas sites associated with principal section ids.
-    for section_id in section_ids:
-        canvas_sites_by_section_id[section_id] = []
-        for canvas_site in canvas_sites_by_cross_listing_id.get(section_id, []):
-            canvas_sites_by_section_id[section_id].append(canvas_site)
-
-    # Next, collect course data, instructor data, and Canvas sites associated with cross-listings.
+    # Collect course and instructor data associated with cross-listings.
     for section_id, cross_listing_ids in cross_listings_by_section_id.items():
         invited_uids_for_section = invited_uids.get(section_id, [])
         courses_by_section_id[section_id] = []
@@ -1006,13 +992,7 @@ def _get_cross_listed_courses(section_ids, term_id, invited_uids):
                         uid = (instructor_json['uid'] or '').strip() if instructor_json else None
                         if uid and not instructor_json['deletedAt']:
                             instructors_by_section_id[section_id].append(instructor_json)
-                canvas_course_ids = [c['courseSiteId'] for c in canvas_sites_by_section_id[section_id]]
-                for canvas_site in canvas_sites_by_cross_listing_id[cross_listing_id]:
-                    canvas_course_id = canvas_site['courseSiteId']
-                    if canvas_course_id not in canvas_course_ids:
-                        canvas_sites_by_section_id[section_id].append(canvas_site)
-                        canvas_course_ids.append(canvas_course_id)
-    return courses_by_section_id, instructors_by_section_id, canvas_sites_by_section_id
+    return courses_by_section_id, instructors_by_section_id
 
 
 def get_invited_uids_by_section_id(section_ids, term_id):

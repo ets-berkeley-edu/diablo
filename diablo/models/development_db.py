@@ -27,7 +27,6 @@ import json
 
 from diablo import cache, db, std_commit
 from diablo.factory import background_job_manager
-from diablo.jobs.canvas_job import CanvasJob
 from diablo.jobs.house_keeping_job import HouseKeepingJob
 from diablo.jobs.sis_data_refresh_job import SisDataRefreshJob
 from diablo.lib.development_db_utils import save_mock_courses
@@ -250,14 +249,12 @@ def _set_up_and_run_jobs():
     Job.create(job_schedule_type='minutes', job_schedule_value='60', key='emails')
     Job.create(job_schedule_type='day_at', job_schedule_value='22:00', key='house_keeping')
     Job.create(disabled=True, job_schedule_type='minutes', job_schedule_value='120', key='blackouts')
-    Job.create(job_schedule_type='day_at', job_schedule_value='16:00', key='canvas')
     Job.create(disabled=True, job_schedule_type='minutes', job_schedule_value='5', key='doomed_to_fail')
     Job.create(is_schedulable=False, job_schedule_type='day_at', job_schedule_value='16:00', key='remind_invitees')
     Job.create(is_schedulable=False, job_schedule_type='minutes', job_schedule_value='820', key='schedule_updates')
     Job.create(is_schedulable=False, job_schedule_type='minutes', job_schedule_value='720', key='semester_start')
     background_job_manager.start(app)
     HouseKeepingJob(app_context=simply_yield).run()
-    CanvasJob(app_context=simply_yield).run()
     std_commit(allow_test_environment=True)
 
 
