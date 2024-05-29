@@ -14,7 +14,7 @@
         <template v-for="(item, index) in navItems">
           <v-list-item
             :id="`sidebar-link-${item.title}`"
-            :key="index"
+            :key="`sidebar-link-${index}`"
             link
             @click="toRoute(item.path)"
           >
@@ -25,7 +25,7 @@
               <v-list-item-title>{{ item.title }}</v-list-item-title>
             </v-list-item-content>
           </v-list-item>
-          <v-divider v-if="item.title === 'Rooms'" :key="index" />
+          <v-divider v-if="item.title === 'Rooms'" :key="`sidebar-divider-${index}`" />
         </template>
       </v-list>
     </v-navigation-drawer>
