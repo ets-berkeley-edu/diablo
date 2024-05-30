@@ -32,7 +32,7 @@ from diablo.models.sis_section import SisSection
 from flask import current_app as app
 import pytz
 from tests.test_api.api_test_utils import mock_scheduled
-from tests.util import override_config, test_approvals_workflow
+from tests.util import override_config, test_scheduling_workflow
 
 
 class TestTermIds:
@@ -202,7 +202,7 @@ class TestObsoleteScheduledDates:
         )
 
     def test_are_scheduled_dates_obsolete_handles_nulls(self):
-        with test_approvals_workflow(app):
+        with test_scheduling_workflow(app):
             meeting = _create_meeting(
                 days='MO',
                 end_date=_format(datetime.now() + timedelta(days=100)),
@@ -235,7 +235,7 @@ class TestObsoleteScheduledDates:
             override_start_date=None,
             override_start_time=None,
     ):
-        with test_approvals_workflow(app):
+        with test_scheduling_workflow(app):
             with override_config(app, 'CURRENT_TERM_RECORDINGS_BEGIN', meeting['startDate']):
                 with override_config(app, 'CURRENT_TERM_RECORDINGS_END', meeting['endDate']):
                     mock_scheduled(

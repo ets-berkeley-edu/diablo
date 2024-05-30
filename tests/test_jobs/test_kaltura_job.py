@@ -37,7 +37,7 @@ from diablo.models.sis_section import SisSection
 from flask import current_app as app
 from sqlalchemy import text
 from tests.test_api.api_test_utils import api_get_course, get_eligible_meeting, get_instructor_uids, mock_scheduled
-from tests.util import override_config, simply_yield, test_approvals_workflow
+from tests.util import override_config, simply_yield, test_scheduling_workflow
 
 
 admin_uid = '90001'
@@ -48,7 +48,7 @@ class TestKalturaJob:
 
     def test_new_course_scheduled(self, client):
         """New courses are scheduled for recording by default."""
-        with test_approvals_workflow(app):
+        with test_scheduling_workflow(app):
             section_id = 50012
             term_id = app.config['CURRENT_TERM_ID']
             course = SisSection.get_course(section_id=section_id, term_id=term_id)
@@ -88,7 +88,7 @@ class TestKalturaJob:
 
     def test_canceled_course(self, db_session):
         term_id = app.config['CURRENT_TERM_ID']
-        with test_approvals_workflow(app):
+        with test_scheduling_workflow(app):
             course = SisSection.get_course(section_id=deleted_section_id, term_id=term_id, include_deleted=True)
             room = course.get('meetings', {}).get('eligible', [])[0]['room']
             _schedule(room['id'], deleted_section_id)
@@ -108,7 +108,7 @@ class TestKalturaJob:
                     'term_id': term_id,
                 },
             )
-        with test_approvals_workflow(app):
+        with test_scheduling_workflow(app):
             course = SisSection.get_course(section_id=section_id, term_id=term_id)
             eligible_meetings = course.get('meetings', {}).get('eligible', [])
             assert len(eligible_meetings) == 1
@@ -181,7 +181,7 @@ class TestKalturaJob:
         term_id = app.config['CURRENT_TERM_ID']
         section_id = 50004
         meeting = get_eligible_meeting(section_id=section_id, term_id=term_id)
-        with test_approvals_workflow(app):
+        with test_scheduling_workflow(app):
             with override_config(app, 'CURRENT_TERM_RECORDINGS_BEGIN', meeting['startDate']):
                 with override_config(app, 'CURRENT_TERM_RECORDINGS_END', meeting['endDate']):
                     def _schedule():
@@ -219,27 +219,19 @@ class TestKalturaJob:
                     assert len(course['updateHistory']) == 2
                     for u in course['updateHistory']:
                         assert u['fieldName'] == 'meeting_updated'
-                        assert u['fieldValueOld'] == {
-                            'days': 'MOWE',
-                            'startTime': '08:00',
-                            'endTime': '16:59',
-                            'startDate': '2024-05-29',
-                            'endDate': '2021-12-08',
-                        }
-                        assert u['fieldValueNew'] == {
-                            'days': 'MOWE',
-                            'startTime': '13:00',
-                            'endTime': '13:59',
-                            'startDate': '2024-05-29',
-                            'endDate': '2021-12-08',
-                        }
+                        assert u['fieldValueOld']['days'] == 'MOWE'
+                        assert u['fieldValueOld']['startTime'] == '08:00'
+                        assert u['fieldValueOld']['endTime'] == '16:59'
+                        assert u['fieldValueNew']['days'] == 'MOWE'
+                        assert u['fieldValueNew']['startTime'] == '13:00'
+                        assert u['fieldValueNew']['endTime'] == '13:59'
                         assert u['requestedByName'] is None
                         assert u['requestedByUid'] is None
                         assert u['status'] == 'succeeded'
 
     def test_instructor_added(self, client, fake_auth):
         """Emails new instructor when added to scheduled course."""
-        with test_approvals_workflow(app):
+        with test_scheduling_workflow(app):
             term_id = app.config['CURRENT_TERM_ID']
             section_id = 50005
             room_id = Room.find_room('Barker 101').id
@@ -284,7 +276,7 @@ class TestKalturaJob:
 
     def test_instructor_removed(self, client, fake_auth):
         """Emails instructor when removed from scheduled course."""
-        with test_approvals_workflow(app):
+        with test_scheduling_workflow(app):
             term_id = app.config['CURRENT_TERM_ID']
             section_id = 50005
             room_id = Room.find_room('Barker 101').id

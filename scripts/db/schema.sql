@@ -35,14 +35,6 @@ SET search_path = public, pg_catalog;
 SET default_tablespace = '';
 SET default_with_oids = false;
 
-
---
-
-CREATE TYPE approver_types AS ENUM (
-    'admin',
-    'instructor'
-);
-
 --
 
 CREATE TYPE email_template_types AS ENUM (
@@ -128,24 +120,6 @@ ALTER TABLE ONLY admin_users
     ADD CONSTRAINT admin_users_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY admin_users
     ADD CONSTRAINT admin_users_uid_key UNIQUE (uid);
-
---
-
-CREATE TABLE approvals (
-    id SERIAL PRIMARY KEY,
-    approved_by_uid VARCHAR(80) NOT NULL,
-    approver_type approver_types,
-    course_display_name VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL,
-    deleted_at TIMESTAMP WITH TIME ZONE,
-    publish_type publish_types NOT NULL,
-    recording_type recording_types NOT NULL,
-    room_id INTEGER NOT NULL,
-    section_id INTEGER NOT NULL,
-    term_id INTEGER NOT NULL
-);
-ALTER TABLE approvals OWNER TO diablo;
-CREATE UNIQUE INDEX approvals_unique_idx ON approvals (approved_by_uid, section_id, term_id) WHERE deleted_at IS NULL;
 
 --
 
@@ -503,8 +477,6 @@ CREATE INDEX sis_sections_term_id_section_id_idx ON sis_sections(term_id, sectio
 
 --
 
-ALTER TABLE ONLY approvals
-    ADD CONSTRAINT approvals_room_id_fkey FOREIGN KEY (room_id) REFERENCES rooms(id);
 ALTER TABLE ONLY scheduled
     ADD CONSTRAINT scheduled_room_id_fkey FOREIGN KEY (room_id) REFERENCES rooms(id);
 

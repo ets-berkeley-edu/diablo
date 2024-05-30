@@ -90,9 +90,11 @@
                   </v-icon>
                   <span class="font-weight-bold red--text">Canceled</span>
                 </div>
-                <div v-if="!course.deletedAt">
-                  <div :id="`course-${course.sectionId}-approval-status`">{{ course.approvalStatus || '&mdash;' }}</div>
-                  <div :id="`course-${course.sectionId}-scheduling-status`">{{ course.schedulingStatus || '&mdash;' }}</div>
+                <div v-if="!course.deletedAt && course.scheduled">
+                  Scheduled
+                </div>
+                <div v-if="!course.deletedAt && !course.scheduled">
+                  Not Scheduled
                 </div>
               </td>
               <td :class="tdc(course)">
@@ -150,8 +152,8 @@
             <tr v-if="course.scheduled" :key="`approvals-${course.sectionId}`">
               <td :colspan="headers.length + 1" class="pb-2">
                 <div v-if="course.scheduled" class="pb-3">
-                  Recordings scheduled on {{ course.scheduled.createdAt | moment('MMM D, YYYY') }}.
-                  They will be published to {{ course.scheduled.publishTypeName }}.
+                  Recordings scheduled on {{ course.scheduled[0].createdAt | moment('MMM D, YYYY') }}.
+                  They will be published to {{ course.scheduled[0].publishTypeName.replace('Publish to ', '') }}.
                 </div>
               </td>
               <td></td>
@@ -236,7 +238,7 @@ export default {
     pageCount: undefined,
     pageCurrent: 1,
     selectedRows: [],
-    selectedFilter: 'Not Invited'
+    selectedFilter: 'Scheduled'
   }),
   watch: {
     refreshing(value) {

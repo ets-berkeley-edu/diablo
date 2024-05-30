@@ -90,7 +90,7 @@ export default {
     isDownloading: false,
     refreshing: undefined,
     searchText: '',
-    selectedFilter: 'Not Invited'
+    selectedFilter: 'Scheduled'
   }),
   created() {
     this.$loading()

@@ -144,7 +144,7 @@
           <v-card>
             <v-card-title class="headline">Unschedule this course?</v-card-title>
             <v-card-text>
-              The schedule and approvals for this course will be removed,
+              The schedule for this course will be removed,
               the Kaltura series will be deleted,
               and the course will be marked as opt-out.
             </v-card-text>
@@ -222,8 +222,8 @@ export default {
     },
     offerUnschedule() {
       return this.$currentUser.isAdmin
+        && this.course.scheduled
         && this.course.termId === this.$config.currentTermId
-        && (this.course.scheduled || this.course.hasNecessaryApprovals)
     }
   },
   created() {

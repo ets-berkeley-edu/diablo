@@ -33,14 +33,14 @@ from diablo.models.sent_email import SentEmail
 from diablo.models.sis_section import SisSection
 from flask import current_app as app
 from sqlalchemy import text
-from tests.util import simply_yield, test_approvals_workflow
+from tests.util import simply_yield, test_scheduling_workflow
 
 
 class TestSemesterStartJob:
 
     def test_semester_start(self):
         """Eligible courses are scheduled for recording by default at semester start."""
-        with test_approvals_workflow(app):
+        with test_scheduling_workflow(app):
             term_id = app.config['CURRENT_TERM_ID']
             instructor_uid = '10008'
             section_ids = ['50007', '50010']
@@ -79,7 +79,7 @@ class TestSemesterStartJob:
     def test_course_opted_out(self, app):
         """Do not send email to courses that have opted out."""
         term_id = app.config['CURRENT_TERM_ID']
-        with test_approvals_workflow(app):
+        with test_scheduling_workflow(app):
             instructor_uid = '10001'
             section_id = 50006
             OptOut.update_opt_out(instructor_uid=instructor_uid, term_id=term_id, section_id=section_id, opt_out=True)
@@ -103,7 +103,7 @@ class TestSemesterStartJob:
 
     def test_no_duplicate_announcements(self, app):
         """Do not send the same announcement twice."""
-        with test_approvals_workflow(app):
+        with test_scheduling_workflow(app):
             # First, get expected number of emails sent.
             term_id = app.config['CURRENT_TERM_ID']
             timestamp = utc_now()
