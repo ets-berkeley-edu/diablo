@@ -27,7 +27,6 @@ from io import StringIO
 import json
 
 from diablo import std_commit
-from diablo.jobs.canvas_job import CanvasJob
 from diablo.jobs.emails_job import EmailsJob
 from diablo.models.approval import Approval
 from diablo.models.opt_out import OptOut
@@ -53,7 +52,6 @@ section_7_id = 50010
 section_8_id = 50017
 
 section_in_ineligible_room = section_2_id
-section_with_canvas_course_sites = section_6_id
 eligible_course_with_no_instructors = section_8_id
 
 
@@ -262,17 +260,6 @@ class TestGetCourse:
         )
         assert api_json['meetings']['eligible'][0]['room']['location'] == 'Li Ka Shing 145'
         assert len(api_json['meetings']['eligible'][0]['room']['recordingTypeOptions']) == 2
-
-    def test_section_with_canvas_course_sites(self, client, fake_auth):
-        """Canvas course site information is included in the API."""
-        fake_auth.login(admin_uid)
-        CanvasJob(simply_yield).run()
-        api_json = api_get_course(
-            client,
-            term_id=self.term_id,
-            section_id=section_with_canvas_course_sites,
-        )
-        assert len(api_json['canvasCourseSites']) == 3
 
     def test_administrative_proxy_for_course_page(self, client, fake_auth):
         """Course page includes instructors with APRX role."""
@@ -803,11 +790,13 @@ class TestUpdatePublishType:
             term_id,
             section_id,
             publish_type,
+            canvas_site_id=None,
             expected_status_code=200,
     ):
         response = client.post(
             '/api/course/publish_type/update',
             data=json.dumps({
+                'canvasSiteId': canvas_site_id,
                 'publishType': publish_type,
                 'sectionId': section_id,
                 'termId': term_id,
@@ -838,6 +827,21 @@ class TestUpdatePublishType:
             expected_status_code=401,
         )
 
+    def test_canvas_site_id_required(self, client, fake_auth):
+        # kaltura_media_gallery setting requires a Canvas site ID.
+        instructor_uids = get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
+        fake_auth.login(instructor_uids[0])
+
+        course = SisSection.get_course(section_id=section_1_id, term_id=self.term_id)
+        assert course['publishType'] == 'kaltura_my_media'
+        self._api_publish_type_update(
+            client,
+            term_id=self.term_id,
+            section_id=section_1_id,
+            publish_type='kaltura_media_gallery',
+            expected_status_code=400,
+        )
+
     def test_publish_authorized(self, client, fake_auth):
         """Update the 'publish_type' course preference."""
         instructor_uids = get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
@@ -850,11 +854,13 @@ class TestUpdatePublishType:
             term_id=self.term_id,
             section_id=section_1_id,
             publish_type='kaltura_media_gallery',
+            canvas_site_id=1234567,
         )
         std_commit(allow_test_environment=True)
 
         course = SisSection.get_course(section_id=section_1_id, term_id=self.term_id)
         assert course['publishType'] == 'kaltura_media_gallery'
+        assert course['canvasSiteId'] == 1234567
 
         publish_type_updates = [u for u in course['updateHistory'] if u['fieldName'] == 'publish_type']
         assert len(publish_type_updates) == 1
@@ -863,6 +869,14 @@ class TestUpdatePublishType:
         assert publish_type_updates[0]['status'] == 'queued'
         assert publish_type_updates[0]['requestedByUid'] == instructor_uids[0]
         assert publish_type_updates[0]['requestedByName'] == 'William Peter Blatty'
+
+        canvas_site_updates = [u for u in course['updateHistory'] if u['fieldName'] == 'canvas_site_id']
+        assert len(canvas_site_updates) == 1
+        assert canvas_site_updates[0]['fieldValueOld'] is None
+        assert canvas_site_updates[0]['fieldValueNew'] == '1234567'
+        assert canvas_site_updates[0]['status'] == 'queued'
+        assert canvas_site_updates[0]['requestedByUid'] == instructor_uids[0]
+        assert canvas_site_updates[0]['requestedByName'] == 'William Peter Blatty'
 
 
 class TestUpdateRecordingType:

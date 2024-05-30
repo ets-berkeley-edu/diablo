@@ -16,3 +16,7 @@ export function getAdminUsers() {
 export function searchUsers(snippet: string) {
   return axios.post(`${utils.apiBaseUrl()}/api/users/search`, {snippet})
 }
+
+export function getCanvasSitesTeaching(uid) {
+  return axios.get(`${utils.apiBaseUrl()}/api/user/${uid}/teaching_sites`)
+}

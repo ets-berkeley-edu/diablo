@@ -238,7 +238,7 @@ def schedule_recordings(course, is_semester_start=False, updates=None):
                 publish_type = updates['publish_type'] if updates else 'kaltura_my_media'
                 recording_type = updates['recording_type'] if updates else 'presenter_presentation_audio'
                 kaltura_schedule_id = Kaltura().schedule_recording(
-                    canvas_course_site_ids=[c['courseSiteId'] for c in course['canvasCourseSites']],
+                    canvas_course_site_ids=[course['canvasSiteId']],
                     course_label=course['label'],
                     instructors=(instructors + collaborators),
                     meeting=meeting,

@@ -26,7 +26,7 @@
       </v-row>
       <v-row>
         <v-col lg="3" cols="3" sm="3">
-          <CoursePageSidebar :after-unschedule="afterUnschedule" :course="course" />
+          <CoursePageSidebar :after-unschedule="afterUnschedule" :course="course" :course-site="courseSite" />
         </v-col>
         <v-col>
           <v-container v-if="isCurrentTerm && capability && hasValidMeetingTimes && !multipleEligibleMeetings" class="elevation-2 pa-6">
@@ -231,6 +231,9 @@
                 <div id="publish-type">
                   {{ course.publishTypeName }}
                 </div>
+                <div v-if="publishType === 'kaltura_media_gallery' && course.canvasSiteId" id="publish-linked-canvas-site">
+                  Linked bCourses site: <CanvasCourseSite :site-id="publishCanvasSiteId" :course-site="courseSite" />
+                </div>
               </v-col>
               <v-col v-if="publishTypeEditing" cols="5">
                 <v-select
@@ -249,12 +252,31 @@
                   <span :id="`menu-option-publish-type-${data.item.value}`" slot="item" slot-scope="data">{{ data.item.text }}</span>
                 </v-select>
               </v-col>
+              <v-col v-if="publishTypeEditing && publishType === 'kaltura_media_gallery'" cols="5">
+                <v-select
+                  v-if="publishTypeEditing"
+                  id="select-canvas-site"
+                  v-model="publishCanvasSiteId"
+                  :disabled="publishTypeUpdating"
+                  :full-width="true"
+                  hide-details
+                  item-text="name"
+                  item-value="canvasSiteId"
+                  :items="publishCanvasSiteOptions"
+                  label="Select course site"
+                  solo
+                >
+                  <span :id="`menu-option-canvas-site-${data.item.canvasSiteId}`" slot="item" slot-scope="data">
+                    {{ data.item.name }} ({{ data.item.courseCode }})
+                  </span>
+                </v-select>
+              </v-col>
               <v-col v-if="publishTypeEditing" cols="3">
                 <v-btn
                   id="btn-publish-type-save"
                   class="float-right"
                   color="success"
-                  :disabled="publishTypeUpdating"
+                  :disabled="publishTypeUpdating || (publishType === 'kaltura_media_gallery' && !publishCanvasSiteId)"
                   @click="updatePublishType"
                 >
                   <v-progress-circular
@@ -365,6 +387,7 @@
 </template>
 
 <script>
+import CanvasCourseSite from '@/components/course/CanvasCourseSite'
 import Context from '@/mixins/Context'
 import CoursePageSidebar from '@/components/course/CoursePageSidebar'
 import PageTitle from '@/components/util/PageTitle'
@@ -372,11 +395,13 @@ import PersonLookup from '@/components/util/PersonLookup'
 import Utils from '@/mixins/Utils'
 import {getCourse, updateCollaborators, updatePublishType, updateRecordingType} from '@/api/course'
 import {getAuditoriums} from '@/api/room'
+import {getCanvasSitesTeaching} from '@/api/user'
 
 export default {
   name: 'Course',
   mixins: [Context, Utils],
   components: {
+    CanvasCourseSite,
     CoursePageSidebar,
     PageTitle,
     PersonLookup,
@@ -390,6 +415,7 @@ export default {
     collaboratorsUpdating: undefined,
     course: undefined,
     courseDisplayTitle: null,
+    courseSite: undefined,
     hasValidMeetingTimes: undefined,
     instructors: undefined,
     instructorProxies: undefined,
@@ -397,6 +423,8 @@ export default {
     location: undefined,
     multipleEligibleMeetings: undefined,
     pendingCollaborator: undefined,
+    publishCanvasSiteId: undefined,
+    publishCanvasSiteOptions: undefined,
     publishType: undefined,
     publishTypeEditing: false,
     publishTypeOptions: undefined,
@@ -489,7 +517,6 @@ export default {
         this.hasValidMeetingTimes = !!this.$_.find(eligibleMeetings, key)
         return this.hasValidMeetingTimes
       })
-
       this.courseDisplayTitle = this.getCourseCodes(this.course)[0]
       const recordingTypeOptions = this.meeting.room ? this.meeting.room.recordingTypeOptions : []
       this.recordingTypeOptions = this.$_.map(recordingTypeOptions, (text, value) => {
@@ -501,6 +528,11 @@ export default {
       })
       this.collaborators = this.course.collaborators
       this.publishType = this.course.publishType
+      getCanvasSitesTeaching(this.$currentUser.uid).then(data => {
+        this.publishCanvasSiteId = this.course.canvasSiteId
+        this.publishCanvasSiteOptions = data
+        this.courseSite = this.$_.find(this.publishCanvasSiteOptions, {canvasSiteId: this.publishCanvasSiteId})
+      })
       this.recordingType = this.course.recordingType
       this.$ready(this.courseDisplayTitle)
     },
@@ -537,12 +569,15 @@ export default {
     updatePublishType() {
       this.publishTypeUpdating = true
       updatePublishType(
+        this.publishCanvasSiteId,
         this.publishType,
         this.course.sectionId,
         this.course.termId,
       ).then(data => {
         const message = `Recording placement updated to ${data.publishTypeName}.`
         this.alertScreenReader(message)
+        this.course.canvasSiteId = parseInt(data.canvasSiteId, 10)
+        this.courseSite = this.$_.find(this.publishCanvasSiteOptions, {canvasSiteId: this.course.canvasSiteId})
         this.course.publishType = data.publishType
         this.course.publishTypeName = data.publishTypeName
         this.publishTypeEditing = false
@@ -550,7 +585,7 @@ export default {
       })
     },
     updatePublishTypeCancel() {
-      this.alertScreenReader('Publish type update cancelled.')
+      this.alertScreenReader('Recording placement update cancelled.')
       this.publishTypeEditing = false
     },
     updateRecordingType() {
@@ -570,7 +605,7 @@ export default {
     },
     updateRecordingTypeCancel() {
       this.alertScreenReader('Recording type update cancelled.')
-      this.publishTypeEditing = false
+      this.recordingTypeEditing = false
     },
   }
 }

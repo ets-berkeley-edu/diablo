@@ -26,7 +26,7 @@ import json
 import time
 
 from diablo import std_commit
-from diablo.jobs.canvas_job import CanvasJob
+from diablo.jobs.emails_job import EmailsJob
 from diablo.jobs.house_keeping_job import HouseKeepingJob
 from diablo.models.job import Job
 from diablo.models.job_history import JobHistory
@@ -70,7 +70,7 @@ class TestStartJob:
 
     def test_authorized(self, client, admin_session):
         """Admin can start a job."""
-        job_key = 'canvas'
+        job_key = 'emails'
         self._api_start_job(client, job_key=job_key)
         # Now verify
         response = client.get('/api/job/history')
@@ -113,8 +113,8 @@ class TestJobHistory:
 
     def test_authorized(self, client, admin_session):
         """Admin can access job_history."""
-        CanvasJob(simply_yield).run()
-        CanvasJob(simply_yield).run()
+        EmailsJob(simply_yield).run()
+        EmailsJob(simply_yield).run()
 
         job_history = self._api_job_history(client)
         assert len(job_history) > 1
@@ -220,13 +220,13 @@ class TestUpdateJobSchedule:
 
     def test_edit_schedule_of_enabled_job(self, client, admin_session):
         """You cannot edit job schedule if the job is enabled."""
-        with scheduled_job(job_key=CanvasJob.key()) as job:
+        with scheduled_job(job_key=EmailsJob.key()) as job:
             Job.update_disabled(job_id=job.id, disable=False)
             std_commit(allow_test_environment=True)
             self._api_job_update_schedule(
                 client,
                 expected_status_code=400,
-                job_id=Job.get_job_by_key('canvas').id,
+                job_id=Job.get_job_by_key('emails').id,
                 schedule_type='minutes',
                 schedule_value=3,
             )

@@ -171,7 +171,7 @@ def download_courses_csv():
             'Publish Type': scheduled.get('publishTypeName'),
             'Recording Type': scheduled.get('recordingTypeName'),
             'Sign-up URL': get_sign_up_url(section_id=section_id, term_id=c.get('termId')),
-            'Canvas URLs': [f"{app.config['CANVAS_BASE_URL']}/courses/{s['courseSiteId']}" for s in c.get('canvasCourseSites') or []],
+            'Canvas URL': f"{app.config['CANVAS_BASE_URL']}/courses/{c['canvasSiteId']}" if c.get('canvasSiteId') else '',
             'Instructors': ', '.join([_get_email_with_label(instructor) for instructor in c.get('instructors') or []]),
             'Instructor UIDs': ', '.join([instructor.get('uid') for instructor in c.get('instructors') or []]),
             'Collaborator UIDs': ', '.join([u for u in c.get('collaboratorUids') or []]),
@@ -347,17 +347,21 @@ def update_publish_type():
     section_id = params.get('sectionId')
     term_id = params.get('termId')
     publish_type = params.get('publishType') or None
+    canvas_site_id = params.get('canvasSiteId') or None
 
     course = SisSection.get_course(term_id, section_id) if (term_id and section_id) else None
     if not course or (publish_type not in get_all_publish_types()):
         raise BadRequestError('Required params missing or invalid')
     if not current_user.is_admin and current_user.uid not in [i['uid'] for i in course['instructors']]:
         raise ForbiddenRequestError(f'Sorry, you are unauthorized to view the course {course["label"]}.')
+    if publish_type == 'kaltura_media_gallery' and not canvas_site_id:
+        raise BadRequestError('Publication to course site requires Canvas site id')
 
     preferences = CoursePreference.update_publish_type(
         term_id=term_id,
         section_id=section_id,
         publish_type=publish_type,
+        canvas_site_id=canvas_site_id,
     )
     if preferences:
         ScheduleUpdate.queue(
@@ -366,6 +370,15 @@ def update_publish_type():
             field_name='publish_type',
             field_value_old=course.get('publishType'),
             field_value_new=publish_type,
+            requested_by_uid=current_user.uid,
+            requested_by_name=current_user.name,
+        )
+        ScheduleUpdate.queue(
+            term_id=course['termId'],
+            section_id=course['sectionId'],
+            field_name='canvas_site_id',
+            field_value_old=course.get('canvasSiteId'),
+            field_value_new=canvas_site_id,
             requested_by_uid=current_user.uid,
             requested_by_name=current_user.name,
         )

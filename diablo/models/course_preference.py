@@ -50,8 +50,8 @@ recording_type = ENUM(
 
 
 NAMES_PER_PUBLISH_TYPE = {
-    'kaltura_media_gallery': 'Publish Automatically - all members of course site(s) will be able to access recordings',
-    'kaltura_my_media': 'Publish to My Media - I will decide if and how I want to share',
+    'kaltura_media_gallery': 'Publish Automatically to Course Site',
+    'kaltura_my_media': 'Publish to My Media',
 }
 
 
@@ -69,6 +69,7 @@ class CoursePreference(db.Model):
     collaborator_uids = db.Column(ARRAY(db.String(80)))
     publish_type = db.Column(publish_type, nullable=False)
     recording_type = db.Column(recording_type, nullable=False)
+    canvas_site_id = db.Column(db.Integer)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.now)
 
     def __init__(
@@ -77,12 +78,14 @@ class CoursePreference(db.Model):
             section_id,
             publish_type='kaltura_my_media',
             recording_type='presenter_presentation_audio',
+            canvas_site_id=None,
             collaborator_uids=None,
     ):
         self.term_id = term_id
         self.section_id = section_id
         self.publish_type = publish_type
         self.recording_type = recording_type
+        self.canvas_site_id = canvas_site_id
         self.collaborator_uids = collaborator_uids
 
     def __repr__(self):
@@ -92,6 +95,7 @@ class CoursePreference(db.Model):
                     publish_type={self.publish_type}
                     recording_type={self.recording_type}
                     collaborator_uids={self.collaborator_uids}
+                    canvas_site_id={self.canvas_site_id}
                     created_at={self.created_at}
                 """
 
@@ -131,17 +135,20 @@ class CoursePreference(db.Model):
             term_id,
             section_id,
             publish_type,
+            canvas_site_id,
     ):
         section_ids = _get_section_ids_with_xlistings(section_id, term_id)
         criteria = and_(cls.section_id.in_(section_ids), cls.term_id == term_id)
         for existing_row in cls.query.filter(criteria).all():
             existing_row.publish_type = publish_type
+            existing_row.canvas_site_id = canvas_site_id
             section_ids.remove(existing_row.section_id)
         for section_id in section_ids:
             preferences = cls(
                 term_id=term_id,
                 section_id=section_id,
                 publish_type=publish_type,
+                canvas_site_id=canvas_site_id,
             )
             db.session.add(preferences)
         std_commit()
@@ -185,6 +192,7 @@ class CoursePreference(db.Model):
             'publishTypeName': NAMES_PER_PUBLISH_TYPE[self.publish_type],
             'recordingType': self.recording_type,
             'recordingTypeName': NAMES_PER_RECORDING_TYPE[self.recording_type],
+            'canvasSiteId': self.canvas_site_id,
             'createdAt': to_isoformat(self.created_at),
         }
 

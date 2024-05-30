@@ -305,16 +305,15 @@ def _handle_course_site_categories(kaltura, course, kaltura_schedule, publish_to
     categories = kaltura.get_categories(template_entry_id)
     if publish_to_course_sites:
         try:
-            for s in course.get('canvasCourseSites', []):
-                canvas_course_site_id = str(s['courseSiteId'])
-                if canvas_course_site_id not in [c['name'] for c in categories]:
-                    category = kaltura.get_canvas_category_object(canvas_course_site_id=canvas_course_site_id)
-                    if category:
-                        app.logger.info(f"{course['label']}: add Kaltura category for canvas_course_site {canvas_course_site_id}")
-                        kaltura.add_to_kaltura_category(
-                            category_id=category['id'],
-                            entry_id=template_entry_id,
-                        )
+            canvas_course_site_id = course['canvasSiteId']
+            if canvas_course_site_id and canvas_course_site_id not in [c['name'] for c in categories]:
+                category = kaltura.get_canvas_category_object(canvas_course_site_id=canvas_course_site_id)
+                if category:
+                    app.logger.info(f"{course['label']}: add Kaltura category for canvas_course_site {canvas_course_site_id}")
+                    kaltura.add_to_kaltura_category(
+                        category_id=category['id'],
+                        entry_id=template_entry_id,
+                    )
         except Exception as e:
             _mark_error(
                 schedule_updates,
