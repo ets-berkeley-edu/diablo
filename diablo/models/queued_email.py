@@ -242,64 +242,6 @@ def announce_semester_start(instructor, courses):
     )
 
 
-def notify_instructors_approval_changes(course, approval, previous_approvals):
-    template = _get_email_template(course=course, template_type='notify_instructor_of_changes')
-    if not template:
-        return
-    for previous_approval in previous_approvals:
-        instructor = next((i for i in course['instructors'] if i['uid'] == previous_approval.approved_by_uid), None)
-        if not instructor:
-            continue
-        message = interpolate_content(
-            templated_string=template.message,
-            course=course,
-            recipient_name=instructor['name'],
-            previous_publish_type_name=NAMES_PER_PUBLISH_TYPE.get(previous_approvals[-1].publish_type),
-            previous_recording_type_name=NAMES_PER_RECORDING_TYPE.get(previous_approvals[-1].recording_type),
-            publish_type_name=NAMES_PER_PUBLISH_TYPE.get(approval.publish_type),
-            recording_type_name=NAMES_PER_RECORDING_TYPE.get(approval.recording_type),
-        )
-        subject_line = interpolate_content(
-            templated_string=template.subject_line,
-            course=course,
-            recipient_name=instructor['name'],
-        )
-        QueuedEmail.create(
-            message=message,
-            recipient=instructor,
-            section_id=course['sectionId'],
-            subject_line=subject_line,
-            template_type='notify_instructor_of_changes',
-            term_id=course['termId'],
-        )
-    return True
-
-
-def notify_instructor_waiting_for_approval(course, instructor, pending_instructors):
-    template = _get_email_template(course=course, template_type='waiting_for_approval')
-    if not template:
-        return
-    message = interpolate_content(
-        templated_string=template.message,
-        course=course,
-        recipient_name=instructor['name'],
-        pending_instructors=pending_instructors,
-    )
-    subject_line = interpolate_content(
-        templated_string=template.subject_line,
-        course=course,
-        recipient_name=instructor['name'],
-    )
-    return QueuedEmail.create(
-        message=message,
-        recipient=instructor,
-        section_id=course['sectionId'],
-        subject_line=subject_line,
-        template_type='waiting_for_approval',
-        term_id=course['termId'],
-    )
-
-
 def notify_instructors_recordings_scheduled(course, scheduled, template_type):
     email_template = EmailTemplate.get_template_by_type(template_type)
     if email_template:

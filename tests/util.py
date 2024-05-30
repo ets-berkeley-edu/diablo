@@ -65,10 +65,9 @@ def simply_yield():
 
 
 @contextmanager
-def test_approvals_workflow(app):
-    """Delete all approvals before and after test."""
-    def _delete_all_approvals():
-        db.session.execute(text('DELETE FROM approvals'))
+def test_scheduling_workflow(app):
+    """Delete all schedules before and after test."""
+    def _delete_all_schedules():
         db.session.execute(text('DELETE FROM course_preferences'))
         db.session.execute(text('DELETE FROM opt_outs'))
         db.session.execute(text('DELETE FROM schedule_updates'))
@@ -77,7 +76,7 @@ def test_approvals_workflow(app):
         db.session.execute(text('DELETE FROM sent_emails'))
 
     try:
-        _delete_all_approvals()
+        _delete_all_schedules()
         yield
     finally:
-        _delete_all_approvals()
+        _delete_all_schedules()

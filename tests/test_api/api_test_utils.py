@@ -22,7 +22,6 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-import json
 import random
 
 from diablo import cachify, std_commit
@@ -30,32 +29,6 @@ from diablo.lib.berkeley import get_recording_end_date, get_recording_start_date
 from diablo.models.room import Room
 from diablo.models.scheduled import Scheduled
 from diablo.models.sis_section import SisSection
-
-
-def api_approve(
-        client,
-        publish_type,
-        recording_type,
-        section_id,
-        instructor_proxies=[],
-        expected_status_code=200,
-):
-    response = client.post(
-        '/api/course/approve',
-        data=json.dumps({
-            'instructorProxies': instructor_proxies,
-            'publishType': publish_type,
-            'recordingType': recording_type,
-            'sectionId': section_id,
-        }),
-        content_type='application/json',
-    )
-    assert response.status_code == expected_status_code, f"""
-        Expected status code: {expected_status_code}
-        Actual status code: {response.status_code}
-        section_id: {section_id}
-    """
-    return response.json
 
 
 def api_get_course(client, term_id, section_id, expected_status_code=200):

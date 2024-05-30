@@ -43,14 +43,10 @@ def admin_required(func):
 
 def get_search_filter_options():
     return {
-        'All': 'All courses.',
-        'Do Not Email': 'Courses in eligible rooms that have "opted out". All stages of approval. Not scheduled.',
-        'Invited': 'Courses in eligible rooms that received invitation. No approvals. Not scheduled.',
-        'Not Invited': 'Courses in eligible rooms, never sent an invitation. No approval. Not scheduled.',
-        'Partially Approved': 'Eligible courses (received invitation) with some but not all necessary approvals.',
-        'Queued for Scheduling': 'Courses with all necessary approvals but recordings not yet scheduled.',
         'Scheduled': 'Courses with scheduled recordings.',
-        'Scheduled (Nonstandard Dates)': 'Courses with scheduled recordings and nonstandard dates.',
+        'Opted Out': 'Courses in eligible rooms that have opted out.',
+        'No Instructors': 'Courses in eligible rooms with no assigned instructors.',
+        'All': 'All courses.',
     }
 
 

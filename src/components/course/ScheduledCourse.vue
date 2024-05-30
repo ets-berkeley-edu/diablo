@@ -53,16 +53,11 @@
 <script>
 import Context from '@/mixins/Context'
 import Utils from '@/mixins/Utils'
-import {approve} from '@/api/course'
 
 export default {
   name: 'ScheduledCourse',
   mixins: [Context, Utils],
   props: {
-    afterApprove: {
-      required: true,
-      type: Function
-    },
     course: {
       required: true,
       type: Object
@@ -71,29 +66,11 @@ export default {
   data: () => ({
     adminAlerts: undefined,
     agreedToTerms: false,
-    currentUserMustApprove: undefined,
-    isApproving: false
   }),
   created() {
     const alertKeys = this.$_.filter(this.course.scheduled.alerts, alert => alert.includes('admin'))
     this.adminAlerts = this.$_.map(alertKeys, key => this.$config.emailTemplateTypes[key].replace('Admin alert: ', ''))
-    this.currentUserMustApprove = !this.course.deletedAt
       && !this.$currentUser.isAdmin
-      && !this.$_.includes(this.$_.map(this.course.approvals, 'approvedBy'), this.$currentUser.uid)
-  },
-  methods: {
-    approve() {
-      this.isApproving = true
-      approve(
-        this.course.scheduled.publishType,
-        this.course.scheduled.recordingType,
-        this.course.sectionId
-      ).then(data => {
-        this.isApproving = this.currentUserMustApprove = false
-        this.afterApprove(data)
-        this.alertScreenReader('Approval received.')
-      })
-    }
   }
 }
 </script>

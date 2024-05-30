@@ -145,6 +145,7 @@ export default {
   created() {
     this.$loading()
     this.refreshCourses()
+    console.log(this.$currentUser)
     this.pageTitle = `Your ${this.$config.currentTermName} Course${this.courses.length === 1 ? '' : 's'} Eligible for Capture`
     this.$ready(this.pageTitle)
   },
