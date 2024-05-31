@@ -118,7 +118,8 @@ class CoursePreference(db.Model):
         criteria = and_(cls.section_id.in_(section_ids), cls.term_id == term_id)
         for existing_row in cls.query.filter(criteria).all():
             existing_row.collaborator_uids = list(collaborator_uids)
-            section_ids.remove(existing_row.section_id)
+            if existing_row.section_id in section_ids:
+                section_ids.remove(existing_row.section_id)
         for section_id in section_ids:
             preferences = cls(
                 term_id=term_id,

@@ -101,7 +101,7 @@ export default {
       this.$_.each(this.room.courses, course => {
         course.courseCodes = this.getCourseCodes(course)
       })
-      this.offerPrintable = !!this.$_.find(this.$_.filter(this.room.courses, 'scheduled'), c => c.scheduled.room.id === this.room.id)
+      this.offerPrintable = !!this.$_.find(this.room.courses, c => this.$_.find(c.scheduled, s => s.room.id === this.room.id))
       this.$ready(data.location)
       // The page is ready; Kaltura events will pop up in a sec.
       if (this.room.kalturaResourceId) {

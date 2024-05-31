@@ -638,8 +638,17 @@ def _to_api_json(term_id, rows, include_rooms=True, include_update_history=False
                 course['instructors'].append(instructor_json)
 
         blanket_opt_outs = []
+        decorated_course_instructors = []
         for i in course['instructors']:
-            blanket_opt_outs += blanket_opt_outs_by_instructor_uid.get(i['uid']) or []
+            instructor_has_opted_out = False
+            blanket_opt_outs_for_instructor = blanket_opt_outs_by_instructor_uid.get(i['uid'])
+            if blanket_opt_outs_for_instructor:
+                instructor_has_opted_out = True
+                blanket_opt_outs += blanket_opt_outs_for_instructor
+            elif next((o for o in opt_outs if o.instructor_uid == i['uid']), None):
+                instructor_has_opted_out = True
+            decorated_course_instructors.append({**i, **{'hasOptedOut': instructor_has_opted_out}})
+        course['instructors'] = decorated_course_instructors
         if blanket_opt_outs:
             course['hasBlanketOptedOut'] = True
             course['hasOptedOut'] = True

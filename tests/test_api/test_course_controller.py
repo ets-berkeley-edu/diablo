@@ -802,6 +802,7 @@ class TestUpdateOptOut:
             course_feed = api_get_course(client, self.term_id, section_1_id)
             assert course_feed['hasBlanketOptedOut'] is False
             assert course_feed['hasOptedOut'] is False
+            assert next(i['hasOptedOut'] for i in course_feed['instructors'] if i['uid'] == instructor_uids[0]) is False
 
             self._api_opt_out_update(
                 client,
@@ -820,6 +821,7 @@ class TestUpdateOptOut:
             course_feed = api_get_course(client, self.term_id, section_1_id)
             assert course_feed['hasBlanketOptedOut'] is False
             assert course_feed['hasOptedOut'] is True
+            assert next(i['hasOptedOut'] for i in course_feed['instructors'] if i['uid'] == instructor_uids[0]) is True
 
             self._api_opt_out_update(
                 client,
@@ -838,6 +840,7 @@ class TestUpdateOptOut:
             course_feed = api_get_course(client, self.term_id, section_1_id)
             assert course_feed['hasBlanketOptedOut'] is False
             assert course_feed['hasOptedOut'] is False
+            assert next(i['hasOptedOut'] for i in course_feed['instructors'] if i['uid'] == instructor_uids[0]) is False
 
             opt_out_updates = [u for u in course_feed['updateHistory'] if u['fieldName'] == 'opted_out']
             assert len(opt_out_updates) == 2
@@ -870,6 +873,7 @@ class TestUpdateOptOut:
             course_feed = api_get_course(client, self.term_id, section_1_id)
             assert course_feed['hasBlanketOptedOut'] is False
             assert course_feed['hasOptedOut'] is False
+            assert next(i['hasOptedOut'] for i in course_feed['instructors'] if i['uid'] == instructor_uids[0]) is False
 
             self._api_opt_out_update(
                 client,
@@ -888,6 +892,7 @@ class TestUpdateOptOut:
             course_feed = api_get_course(client, self.term_id, section_1_id)
             assert course_feed['hasBlanketOptedOut'] is True
             assert course_feed['hasOptedOut'] is True
+            assert next(i['hasOptedOut'] for i in course_feed['instructors'] if i['uid'] == instructor_uids[0]) is True
 
             self._api_opt_out_update(
                 client,
@@ -906,6 +911,7 @@ class TestUpdateOptOut:
             course_feed = api_get_course(client, self.term_id, section_1_id)
             assert course_feed['hasBlanketOptedOut'] is False
             assert course_feed['hasOptedOut'] is False
+            assert next(i['hasOptedOut'] for i in course_feed['instructors'] if i['uid'] == instructor_uids[0]) is False
 
             # Blanket opt-outs still leave notations in per-course update history.
             opt_out_updates = [u for u in course_feed['updateHistory'] if u['fieldName'] == 'opted_out']
@@ -939,6 +945,7 @@ class TestUpdateOptOut:
             course_feed = api_get_course(client, self.term_id, section_1_id)
             assert course_feed['hasBlanketOptedOut'] is False
             assert course_feed['hasOptedOut'] is False
+            assert next(i['hasOptedOut'] for i in course_feed['instructors'] if i['uid'] == instructor_uids[0]) is False
 
             self._api_opt_out_update(
                 client,
@@ -957,6 +964,7 @@ class TestUpdateOptOut:
             course_feed = api_get_course(client, self.term_id, section_1_id)
             assert course_feed['hasBlanketOptedOut'] is True
             assert course_feed['hasOptedOut'] is True
+            assert next(i['hasOptedOut'] for i in course_feed['instructors'] if i['uid'] == instructor_uids[0]) is True
 
             self._api_opt_out_update(
                 client,
@@ -975,6 +983,7 @@ class TestUpdateOptOut:
             course_feed = api_get_course(client, self.term_id, section_1_id)
             assert course_feed['hasBlanketOptedOut'] is False
             assert course_feed['hasOptedOut'] is False
+            assert next(i['hasOptedOut'] for i in course_feed['instructors'] if i['uid'] == instructor_uids[0]) is False
 
             # Blanket opt-outs still leave notations in per-course update history.
             opt_out_updates = [u for u in course_feed['updateHistory'] if u['fieldName'] == 'opted_out']

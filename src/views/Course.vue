@@ -31,10 +31,15 @@
         <v-col>
           <v-container v-if="isCurrentTerm && capability && hasValidMeetingTimes && !multipleEligibleMeetings" class="elevation-2 pa-6">
             <v-row>
-              <v-col class="font-weight-bold mb-1 green--text">
-                <span v-if="!course.scheduled && !course.deletedAt">This course is not currently scheduled.</span>
-                <span v-if="course.scheduled">
-                  <span v-if="course.scheduled">{{ $currentUser.isAdmin ? 'The' : 'Your' }} course is scheduled for Course Capture.</span>
+              <v-col class="font-weight-bold mb-1">
+                <span v-if="course.scheduled && !course.hasOptedOut" id="notice-scheduled" class="green--text">
+                  {{ $currentUser.isAdmin ? 'The' : 'Your' }} course is scheduled for Course Capture. The first recording is on {{ course.scheduled[0].meetingStartDate | moment('MMM D, YYYY') }}.
+                </span>
+                <span v-if="!course.scheduled && !course.deletedAt" id="notice-scheduled" class="red--text">
+                  This course is not currently scheduled.
+                </span>
+                <span v-if="course.hasOptedOut" id="notice-opt-out" class="red--text">
+                  {{ $currentUser.isAdmin ? 'The' : 'Your' }} course is not scheduled for Course Capture because one or more instructors have opted out. To schedule recordings, please have all instructors remove their opt-out status.
                 </span>
               </v-col>
             </v-row>
@@ -48,6 +53,9 @@
                 </h4>
                 <div v-for="instructor in course.instructors" :id="`instructor-${instructor.uid}`" :key="instructor.uid">
                   {{ instructor.name }} ({{ instructor.uid }})
+                  <span v-if="instructor.hasOptedOut" :id="`instructor-${instructor.uid}-opt-out`">
+                    (opted out)
+                  </span>
                 </div>
               </v-col>
             </v-row>
@@ -64,11 +72,10 @@
                   <v-btn
                     v-if="collaboratorsEditing"
                     :id="`btn-collaborator-remove-${collaborator.uid}`"
-                    text
                     :disabled="collaboratorsUpdating"
                     @click="removeCollaborator(collaborator.uid)"
                   >
-                    (remove)
+                    Remove
                   </v-btn>
                 </div>
                 <div v-if="!collaborators.length" id="collaborators-none">
@@ -77,10 +84,10 @@
                 <div v-if="!collaboratorsEditing">
                   <v-btn
                     id="btn-collaborators-edit"
-                    text
+                    class="mt-3"
                     @click="toggleCollaboratorsEditing"
                   >
-                    (edit)
+                    Edit
                   </v-btn>
                 </div>
               </v-col>
@@ -96,6 +103,7 @@
                   ref="personLookup"
                   :disabled="collaboratorsUpdating"
                   label="Find collaborator by UID or email address: "
+                  placeholder="UID or email"
                   :on-select-result="addCollaboratorPending"
                 />
               </v-col>
@@ -146,158 +154,165 @@
               align="center"
               justify="start"
             >
-              <v-col cols="4">
+              <v-col cols="12">
                 <h4>
                   <label id="select-recording-type-label" for="select-recording-type">Recording Type</label>
+                </h4>
+                <div v-if="!recordingTypeEditing">
+                  <div id="recording-type-name">
+                    {{ displayLabels[course.recordingType] }}
+                  </div>
                   <v-btn
                     v-if="recordingTypeEditable"
                     id="btn-recording-type-edit"
-                    text
-                    :disabled="recordingTypeEditing"
+                    class="mt-3"
                     @click="toggleRecordingTypeEditing"
                   >
-                    (edit)
+                    Edit
                   </v-btn>
-                </h4>
-              </v-col>
-              <v-col v-if="!recordingTypeEditing" cols="8">
-                <div id="recording-type">
-                  {{ course.recordingTypeName }}
                 </div>
-              </v-col>
-              <v-col v-if="recordingTypeEditing && recordingTypeEditable" cols="5">
-                <v-select
+                <v-radio-group
+                  v-if="recordingTypeEditing && recordingTypeEditable"
                   id="select-recording-type"
                   v-model="recordingType"
                   :disabled="recordingTypeUpdating"
-                  :full-width="true"
-                  hide-details
-                  item-text="text"
-                  item-value="value"
-                  :items="recordingTypeOptions"
-                  label="Select..."
-                  solo
                 >
-                  <span :id="`menu-option-recording-type-option-${data.item.value}`" slot="item" slot-scope="data">{{ data.item.text }}</span>
-                </v-select>
-              </v-col>
-              <v-col v-if="recordingTypeEditing && recordingTypeEditable" cols="3">
-                <v-btn
-                  id="btn-recording-type-save"
-                  class="float-right"
-                  color="success"
-                  :disabled="recordingTypeUpdating"
-                  @click="updateRecordingType"
-                >
-                  <v-progress-circular
-                    v-if="recordingTypeUpdating"
-                    class="mr-2"
-                    color="primary"
-                    indeterminate
-                    size="18"
-                    width="3"
-                  ></v-progress-circular>
-                  {{ recordingTypeUpdating ? 'Saving' : 'Save' }}
-                </v-btn>
-                <v-btn
-                  id="btn-recording-type-cancel"
-                  class="float-right"
-                  color="default"
-                  :disabled="recordingTypeUpdating"
-                  @click="updateRecordingTypeCancel"
-                >
-                  Cancel
-                </v-btn>
+                  <v-radio
+                    v-for="recordingTypeOption in recordingTypeOptions"
+                    :id="`radio-recording-type-${recordingTypeOption}`"
+                    :key="recordingTypeOption"
+                    :value="recordingTypeOption"
+                    :label="displayLabels[recordingTypeOption]"
+                  ></v-radio>
+                </v-radio-group>
+                <div v-if="recordingTypeEditing && recordingTypeEditable">
+                  <v-btn
+                    id="btn-recording-type-save"
+                    class="float-right"
+                    color="success"
+                    :disabled="recordingTypeUpdating"
+                    @click="updateRecordingType"
+                  >
+                    <v-progress-circular
+                      v-if="recordingTypeUpdating"
+                      class="mr-2"
+                      color="primary"
+                      indeterminate
+                      size="18"
+                      width="3"
+                    ></v-progress-circular>
+                    {{ recordingTypeUpdating ? 'Saving' : 'Save' }}
+                  </v-btn>
+                  <v-btn
+                    id="btn-recording-type-cancel"
+                    class="float-right"
+                    color="default"
+                    :disabled="recordingTypeUpdating"
+                    @click="updateRecordingTypeCancel"
+                  >
+                    Cancel
+                  </v-btn>
+                </div>
               </v-col>
             </v-row>
             <v-row
               align="center"
               justify="start"
             >
-              <v-col cols="4">
+              <v-col cols="12">
                 <h4>
                   <label id="select-publish-type-label" for="select-publish-type">Recording Placement</label>
+                </h4>
+                <div v-if="!publishTypeEditing">
+                  <div id="publish-type-name">
+                    {{ displayLabels[course.publishType] }}
+                  </div>
+                  <div v-if="publishType === 'kaltura_media_gallery' && course.canvasSiteId" id="publish-linked-canvas-site">
+                    Linked bCourses site: <CanvasCourseSite :site-id="publishCanvasSiteId" :course-site="courseSite" />
+                  </div>
                   <v-btn
                     id="btn-publish-type-edit"
-                    text
-                    :disabled="publishTypeEditing"
+                    class="mt-3"
                     @click="togglePublishTypeEditing"
                   >
-                    (edit)
+                    Edit
                   </v-btn>
-                </h4>
-              </v-col>
-              <v-col v-if="!publishTypeEditing" cols="8">
-                <div id="publish-type">
-                  {{ course.publishTypeName }}
                 </div>
-                <div v-if="publishType === 'kaltura_media_gallery' && course.canvasSiteId" id="publish-linked-canvas-site">
-                  Linked bCourses site: <CanvasCourseSite :site-id="publishCanvasSiteId" :course-site="courseSite" />
-                </div>
-              </v-col>
-              <v-col v-if="publishTypeEditing" cols="5">
-                <v-select
+                <v-radio-group
                   v-if="publishTypeEditing"
                   id="select-publish-type"
                   v-model="publishType"
                   :disabled="publishTypeUpdating"
-                  :full-width="true"
-                  hide-details
-                  item-text="text"
-                  item-value="value"
-                  :items="publishTypeOptions"
-                  label="Select..."
-                  solo
                 >
-                  <span :id="`menu-option-publish-type-${data.item.value}`" slot="item" slot-scope="data">{{ data.item.text }}</span>
-                </v-select>
+                  <v-radio
+                    v-for="publishTypeOption in publishTypeOptions"
+                    :id="`radio-publish-type-${publishTypeOption}`"
+                    :key="publishTypeOption"
+                    :value="publishTypeOption"
+                    :label="displayLabels[publishTypeOption]"
+                  ></v-radio>
+                </v-radio-group>
+                <div v-if="publishTypeEditing && publishType === 'kaltura_media_gallery'" class="mb-4">
+                  <v-select
+                    v-if="publishTypeEditing"
+                    id="select-canvas-site"
+                    v-model="publishCanvasSiteId"
+                    :disabled="publishTypeUpdating"
+                    :full-width="true"
+                    hide-details
+                    item-text="name"
+                    item-value="canvasSiteId"
+                    :items="publishCanvasSiteOptions"
+                    label="Select course site"
+                    solo
+                  >
+                    <span :id="`menu-option-canvas-site-${data.item.canvasSiteId}`" slot="item" slot-scope="data">
+                      {{ data.item.name }} ({{ data.item.courseCode }})
+                    </span>
+                  </v-select>
+                </div>
+                <div v-if="publishTypeEditing">
+                  <v-btn
+                    id="btn-publish-type-save"
+                    color="success"
+                    :disabled="publishTypeUpdating || (publishType === 'kaltura_media_gallery' && !publishCanvasSiteId)"
+                    @click="updatePublishType"
+                  >
+                    <v-progress-circular
+                      v-if="publishTypeUpdating"
+                      class="mr-2"
+                      color="primary"
+                      indeterminate
+                      size="18"
+                      width="3"
+                    ></v-progress-circular>
+                    {{ publishTypeUpdating ? 'Saving' : 'Save' }}
+                  </v-btn>
+                  <v-btn
+                    id="btn-publish-type-cancel"
+                    color="default"
+                    :disabled="publishTypeUpdating"
+                    @click="updatePublishTypeCancel"
+                  >
+                    Cancel
+                  </v-btn>
+                </div>
               </v-col>
-              <v-col v-if="publishTypeEditing && publishType === 'kaltura_media_gallery'" cols="5">
-                <v-select
-                  v-if="publishTypeEditing"
-                  id="select-canvas-site"
-                  v-model="publishCanvasSiteId"
-                  :disabled="publishTypeUpdating"
-                  :full-width="true"
-                  hide-details
-                  item-text="name"
-                  item-value="canvasSiteId"
-                  :items="publishCanvasSiteOptions"
-                  label="Select course site"
-                  solo
-                >
-                  <span :id="`menu-option-canvas-site-${data.item.canvasSiteId}`" slot="item" slot-scope="data">
-                    {{ data.item.name }} ({{ data.item.courseCode }})
-                  </span>
-                </v-select>
+            </v-row>
+            <v-row v-if="!$currentUser.isAdmin">
+              <v-col cols="12">
+                Based on the selected Recording Placement, please review the following KB articles:
+                <ul>
+                  <li><a href="https://www.berkeley.edu">How to Publish with Selected Students</a></li>
+                  <li><a href="https://www.berkeley.edu">How to Embed</a></li>
+                  <li><a href="https://www.berkeley.edu">How to Publish with All Students</a></li>
+                  <li><a href="https://www.berkeley.edu">How to Unpublish</a></li>
+                </ul>
               </v-col>
-              <v-col v-if="publishTypeEditing" cols="3">
-                <v-btn
-                  id="btn-publish-type-save"
-                  class="float-right"
-                  color="success"
-                  :disabled="publishTypeUpdating || (publishType === 'kaltura_media_gallery' && !publishCanvasSiteId)"
-                  @click="updatePublishType"
-                >
-                  <v-progress-circular
-                    v-if="publishTypeUpdating"
-                    class="mr-2"
-                    color="primary"
-                    indeterminate
-                    size="18"
-                    width="3"
-                  ></v-progress-circular>
-                  {{ publishTypeUpdating ? 'Saving' : 'Save' }}
-                </v-btn>
-                <v-btn
-                  id="btn-publish-type-cancel"
-                  class="float-right"
-                  color="default"
-                  :disabled="publishTypeUpdating"
-                  @click="updatePublishTypeCancel"
-                >
-                  Cancel
-                </v-btn>
+            </v-row>
+            <v-row v-if="$currentUser.isAdmin">
+              <v-col cols="12">
+                <ScheduledCourse :course="course"></ScheduledCourse>
               </v-col>
             </v-row>
           </v-container>
@@ -392,6 +407,7 @@ import Context from '@/mixins/Context'
 import CoursePageSidebar from '@/components/course/CoursePageSidebar'
 import PageTitle from '@/components/util/PageTitle'
 import PersonLookup from '@/components/util/PersonLookup'
+import ScheduledCourse from '@/components/course/ScheduledCourse'
 import Utils from '@/mixins/Utils'
 import {getCourse, updateCollaborators, updatePublishType, updateRecordingType} from '@/api/course'
 import {getAuditoriums} from '@/api/room'
@@ -405,44 +421,53 @@ export default {
     CoursePageSidebar,
     PageTitle,
     PersonLookup,
+    ScheduledCourse,
   },
-  data: () => ({
-    agreedToTerms: false,
-    auditoriums: undefined,
-    capability: undefined,
-    collaborators: undefined,
-    collaboratorsEditing: undefined,
-    collaboratorsUpdating: undefined,
-    course: undefined,
-    courseDisplayTitle: null,
-    courseSite: undefined,
-    hasValidMeetingTimes: undefined,
-    instructors: undefined,
-    instructorProxies: undefined,
-    instructorProxyPrivileges: undefined,
-    location: undefined,
-    multipleEligibleMeetings: undefined,
-    pendingCollaborator: undefined,
-    publishCanvasSiteId: undefined,
-    publishCanvasSiteOptions: undefined,
-    publishType: undefined,
-    publishTypeEditing: false,
-    publishTypeOptions: undefined,
-    publishTypeUpdating: false,
-    recordingType: undefined,
-    recordingTypeEditing: false,
-    recordingTypeOptions: undefined,
-    recordingTypeUpdating: false,
-    updateHistoryHeaders: [
-      {text: 'Field', value: 'fieldName'},
-      {text: 'Old Value', value: 'fieldValueOld'},
-      {text: 'New Value', value: 'fieldValueNew'},
-      {text: 'Requested by', value: 'requestedByName'},
-      {text: 'Requested at', value: 'requestedAt'},
-      {text: 'Published at', value: 'publishedAt'},
-      {text: 'Status', value: 'status'}
-    ],
-  }),
+  data() {
+    return {
+      agreedToTerms: false,
+      auditoriums: undefined,
+      capability: undefined,
+      collaborators: undefined,
+      collaboratorsEditing: undefined,
+      collaboratorsUpdating: undefined,
+      course: undefined,
+      courseDisplayTitle: null,
+      courseSite: undefined,
+      displayLabels: {
+        'kaltura_media_gallery': 'Publish automatically to the Media Gallery (all members of the bCourses site will have access)',
+        'kaltura_my_media': 'Publish to My Media (I will decide if and how I want to share)',
+        'presenter_presentation_audio': 'Camera Without Operator',
+        'presenter_presentation_audio_with_operator': `Camera With Operator ($${this.$config.courseCapturePremiumCost} fee)`
+      },
+      hasValidMeetingTimes: undefined,
+      instructors: undefined,
+      instructorProxies: undefined,
+      instructorProxyPrivileges: undefined,
+      location: undefined,
+      multipleEligibleMeetings: undefined,
+      pendingCollaborator: undefined,
+      publishCanvasSiteId: undefined,
+      publishCanvasSiteOptions: undefined,
+      publishType: undefined,
+      publishTypeEditing: false,
+      publishTypeOptions: undefined,
+      publishTypeUpdating: false,
+      recordingType: undefined,
+      recordingTypeEditing: false,
+      recordingTypeOptions: undefined,
+      recordingTypeUpdating: false,
+      updateHistoryHeaders: [
+        {text: 'Field', value: 'fieldName'},
+        {text: 'Old Value', value: 'fieldValueOld'},
+        {text: 'New Value', value: 'fieldValueNew'},
+        {text: 'Requested by', value: 'requestedByName'},
+        {text: 'Requested at', value: 'requestedAt'},
+        {text: 'Published at', value: 'publishedAt'},
+        {text: 'Status', value: 'status'}
+      ]
+    }
+  },
   computed: {
     disableSubmit() {
       return !this.agreedToTerms || !this.publishType || !this.recordingType
@@ -468,10 +493,8 @@ export default {
     const sectionId = this.$_.get(this.$route, 'params.sectionId')
     getCourse(termId, sectionId).then(data => {
       this.render(data)
-      this.publishTypeOptions = []
-      this.$_.each(this.$config.publishTypeOptions, (text, value) => {
-        this.publishTypeOptions.push({text, value})
-      })
+      // 'kaltura_my_media' comes before 'kaltura_media_gallery'.
+      this.publishTypeOptions = Object.keys(this.$config.publishTypeOptions).sort().reverse()
       getAuditoriums().then(data => {
         this.auditoriums = data
       })
@@ -518,22 +541,15 @@ export default {
         return this.hasValidMeetingTimes
       })
       this.courseDisplayTitle = this.getCourseCodes(this.course)[0]
-      const recordingTypeOptions = this.meeting.room ? this.meeting.room.recordingTypeOptions : []
-      this.recordingTypeOptions = this.$_.map(recordingTypeOptions, (text, value) => {
-        const premiumCost = this.$config.courseCapturePremiumCost
-        return {
-          text: text.includes('with_operator') && premiumCost ? `${text} ($${premiumCost})` : text,
-          value
-        }
-      })
       this.collaborators = this.course.collaborators
       this.publishType = this.course.publishType
+      this.recordingType = this.course.recordingType
+      this.recordingTypeOptions = this.meeting.room ? Object.keys(this.meeting.room.recordingTypeOptions) : []
       getCanvasSitesTeaching(this.$currentUser.uid).then(data => {
         this.publishCanvasSiteId = this.course.canvasSiteId
         this.publishCanvasSiteOptions = data
         this.courseSite = this.$_.find(this.publishCanvasSiteOptions, {canvasSiteId: this.publishCanvasSiteId})
       })
-      this.recordingType = this.course.recordingType
       this.$ready(this.courseDisplayTitle)
     },
     toggleCollaboratorsEditing() {
@@ -563,7 +579,8 @@ export default {
     },
     updateCollaboratorsCancel() {
       this.alertScreenReader('Collaborator update cancelled.')
-      this.publishTypeEditing = false
+      this.collaboratorsEditing = false
+      this.collaboratorsUpdating = false
       this.collaborators = this.course.collaborators
     },
     updatePublishType() {
