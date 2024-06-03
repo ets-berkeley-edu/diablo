@@ -15,14 +15,16 @@
       "proxies": [],
       "meetings": [
         {
-          "start_date": null,
-          "end_date": null,
-          "days": "MO, WE, FR",
-          "start_time": "3:00 pm",
-          "end_time": "3:59 pm",
           "room": {
             "name": "Pimentel 1",
             "capability": "Screencast + Video"
+          },
+          "meeting_schedule": {
+            "start_date": null,
+            "end_date": null,
+            "days": "MO, WE, FR",
+            "start_time": "3:00 pm",
+            "end_time": "3:59 pm"
           }
         }
       ],
@@ -43,14 +45,16 @@
       "proxies": [],
       "meetings": [
         {
-          "start_date": null,
-          "end_date": null,
-          "days": "TU, TH",
-          "start_time": "11:00 am",
-          "end_time": "12:29 pm",
           "room": {
             "name": "Pimentel 1",
             "capability": "Screencast + Video"
+          },
+          "meeting_schedule": {
+            "start_date": null,
+            "end_date": null,
+            "days": "TU, TH",
+            "start_time": "11:00 am",
+            "end_time": "12:29 pm"
           }
         }
       ],
@@ -71,14 +75,16 @@
       "proxies": [],
       "meetings": [
         {
-          "start_date": null,
-          "end_date": null,
-          "days": "TU, TH",
-          "start_time": "2:00 pm",
-          "end_time": "3:29 pm",
           "room": {
             "name": "O'Brien 212",
             "capability": "Screencast"
+          },
+          "meeting_schedule": {
+            "start_date": null,
+            "end_date": null,
+            "days": "TU, TH",
+            "start_time": "2:00 pm",
+            "end_time": "3:29 pm"
           }
         }
       ]
@@ -98,14 +104,16 @@
       "proxies": [],
       "meetings": [
         {
-          "start_date": null,
-          "end_date": null,
-          "days": "TU, TH",
-          "start_time": "11:00 am",
-          "end_time": "12:29 pm",
           "room": {
             "name": "Pimentel 1",
             "capability": "Screencast + Video"
+          },
+          "meeting_schedule": {
+            "start_date": null,
+            "end_date": null,
+            "days": "TU, TH",
+            "start_time": "11:00 am",
+            "end_time": "12:29 pm"
           }
         }
       ],
@@ -126,14 +134,16 @@
       "proxies": [],
       "meetings": [
         {
-          "start_date": null,
-          "end_date": null,
-          "days": "MO, WE",
-          "start_time": "9:00 am",
-          "end_time": "9:59 am",
           "room": {
             "name": "O'Brien 212",
             "capabilities": "Screencast"
+          },
+          "meeting_schedule": {
+            "start_date": null,
+            "end_date": null,
+            "days": "MO, WE",
+            "start_time": "9:00 am",
+            "end_time": "9:59 am"
           }
         }
       ],
@@ -169,14 +179,16 @@
       ],
       "meetings": [
         {
-          "start_date": null,
-          "end_date": null,
-          "days": "TU, TH",
-          "start_time": "12:30 pm",
-          "end_time": "1:59 pm",
           "room": {
             "name": "Pimentel 1",
             "capability": "Screencast + Video"
+          },
+          "meeting_schedule": {
+            "start_date": null,
+            "end_date": null,
+            "days": "TU, TH",
+            "start_time": "12:30 pm",
+            "end_time": "1:59 pm"
           }
         }
       ],
@@ -204,14 +216,16 @@
       "proxies": [],
       "meetings": [
         {
-          "start_date": null,
-          "end_date": null,
-          "days": "TU, TH",
-          "start_time": "11:00 am",
-          "end_time": "12:29 pm",
           "room": {
             "name": "O'Brien 212",
             "capability": "Screencast"
+          },
+          "meeting_schedule": {
+            "start_date": null,
+            "end_date": null,
+            "days": "TU, TH",
+            "start_time": "11:00 am",
+            "end_time": "12:29 pm"
           }
         }
       ],
@@ -240,14 +254,16 @@
       ],
       "meetings": [
         {
-          "start_date": null,
-          "end_date": null,
-          "days": "WE, FR",
-          "start_time": "10:00 pm",
-          "end_time": "10:59 pm",
           "room": {
             "name": "O'Brien 212",
             "capability": "Screencast"
+          },
+          "meeting_schedule": {
+            "start_date": null,
+            "end_date": null,
+            "days": "WE, FR",
+            "start_time": "10:00 pm",
+            "end_time": "10:59 pm"
           }
         }
       ],
@@ -276,14 +292,16 @@
       ],
       "meetings": [
         {
-          "start_date": null,
-          "end_date": null,
-          "days": "TU, TH",
-          "start_time": "10:00 am",
-          "end_time": "10:59 am",
           "room": {
             "name": "O'Brien 212",
             "capability": "Screencast"
+          },
+          "meeting_schedule": {
+            "start_date": null,
+            "end_date": null,
+            "days": "TU, TH",
+            "start_time": "10:00 am",
+            "end_time": "10:59 am"
           }
         }
       ],
@@ -319,14 +337,16 @@
       ],
       "meetings": [
         {
-          "start_date": null,
-          "end_date": null,
-          "days": "TU, TH",
-          "start_time": "7:00 pm",
-          "end_time": "7:59 pm",
           "room": {
             "name": "O'Brien 212",
             "capability": "Screencast"
+          },
+          "meeting_schedule": {
+            "start_date": null,
+            "end_date": null,
+            "days": "TU, TH",
+            "start_time": "7:00 pm",
+            "end_time": "7:59 pm"
           }
         }
       ],
@@ -353,14 +373,16 @@
       "proxies": [],
       "meetings": [
         {
-          "start_date": null,
-          "end_date": null,
-          "days": "MO, WE, FR",
-          "start_time": "10:00 am",
-          "end_time": "10:59 am",
           "room": {
             "name": "O'Brien 212",
             "capability": "Screencast"
+          },
+          "meeting_schedule": {
+            "start_date": null,
+            "end_date": null,
+            "days": "MO, WE, FR",
+            "start_time": "10:00 am",
+            "end_time": "10:59 am"
           }
         }
       ],
@@ -381,14 +403,16 @@
       "proxies": [],
       "meetings": [
         {
-          "start_date": null,
-          "end_date": null,
-          "days": "MO, WE, FR",
-          "start_time": "4:00 pm",
-          "end_time": "4:59 pm",
           "room": {
             "name": "O'Brien 212",
             "capability": "Screencast"
+          },
+          "meeting_schedule": {
+            "start_date": null,
+            "end_date": null,
+            "days": "MO, WE, FR",
+            "start_time": "4:00 pm",
+            "end_time": "4:59 pm"
           }
         }
       ],
@@ -409,14 +433,16 @@
       "proxies": [],
       "meetings": [
         {
-          "start_date": null,
-          "end_date": null,
-          "days": "MO, WE",
-          "start_time": "9:00 am",
-          "end_time": "9:59 am",
           "room": {
             "name": "O'Brien 212",
             "capability": "Screencast"
+          },
+          "meeting_schedule": {
+            "start_date": null,
+            "end_date": null,
+            "days": "MO, WE",
+            "start_time": "9:00 am",
+            "end_time": "9:59 am"
           }
         }
       ]
@@ -443,14 +469,16 @@
       ],
       "meetings": [
         {
-          "start_date": null,
-          "end_date": null,
-          "days": "TU, TH",
-          "start_time": "2:30 pm",
-          "end_time": "3:59 pm",
           "room": {
             "name": "Dwinelle 104",
             "capability": "Screencast"
+          },
+          "meeting_schedule": {
+            "start_date": null,
+            "end_date": null,
+            "days": "TU, TH",
+            "start_time": "2:30 pm",
+            "end_time": "3:59 pm"
           }
         }
       ]
@@ -469,14 +497,16 @@
       "proxies": [],
       "meetings": [
         {
-          "start_date": null,
-          "end_date": null,
-          "days": "TU, TH",
-          "start_time": "2:30 pm",
-          "end_time": "3:59 pm",
           "room": {
             "name": "Dwinelle 104",
             "capability": "Screencast"
+          },
+          "meeting_schedule": {
+            "start_date": null,
+            "end_date": null,
+            "days": "TU, TH",
+            "start_time": "2:30 pm",
+            "end_time": "3:59 pm"
           }
         }
       ]
@@ -495,14 +525,16 @@
       "proxies": [],
       "meetings": [
         {
-          "start_date": null,
-          "end_date": null,
-          "days": "TU, TH",
-          "start_time": "2:30 pm",
-          "end_time": "3:59 pm",
           "room": {
             "name": "Pimentel 1",
             "capability": "Screencast + Video"
+          },
+          "meeting_schedule": {
+            "start_date": null,
+            "end_date": null,
+            "days": "TU, TH",
+            "start_time": "2:30 pm",
+            "end_time": "3:59 pm"
           }
         }
       ]
@@ -522,14 +554,16 @@
       "proxies": [],
       "meetings": [
         {
-          "start_date": null,
-          "end_date": null,
-          "days": "FR",
-          "start_time": "1:00 pm",
-          "end_time": "2:59 pm",
           "room": {
             "name": "Pimentel 1",
             "capability": "Screencast + Video"
+          },
+          "meeting_schedule": {
+            "start_date": null,
+            "end_date": null,
+            "days": "FR",
+            "start_time": "1:00 pm",
+            "end_time": "2:59 pm"
           }
         }
       ],
@@ -550,25 +584,29 @@
       "proxies": [],
       "meetings": [
         {
-          "start_date": null,
-          "end_date": null,
-          "days": "MO, WE, FR",
-          "start_time": "5:00 am",
-          "end_time": "5:59 am",
           "room": {
             "name": "O'Brien 212",
             "capability": "Screencast"
+          },
+          "meeting_schedule": {
+            "start_date": null,
+            "end_date": null,
+            "days": "MO, WE, FR",
+            "start_time": "5:00 am",
+            "end_time": "5:59 am"
           }
         },
         {
-          "start_date": null,
-          "end_date": null,
-          "days": "MO, WE, FR",
-          "start_time": "5:00 am",
-          "end_time": "5:59 am",
           "room": {
             "name": "Internet/Online",
             "capability": null
+          },
+          "meeting_schedule": {
+            "start_date": null,
+            "end_date": null,
+            "days": "MO, WE, FR",
+            "start_time": "5:00 am",
+            "end_time": "5:59 am"
           }
         }
       ]
@@ -587,25 +625,29 @@
       "proxies": [],
       "meetings": [
         {
-          "start_date": null,
-          "end_date": null,
-          "days": "MO, WE, FR",
-          "start_time": "5:00 am",
-          "end_time": "5:59 am",
           "room": {
             "name": "Pimentel 1",
             "capability": "Screencast + Video"
+          },
+          "meeting_schedule": {
+            "start_date": null,
+            "end_date": null,
+            "days": "MO, WE, FR",
+            "start_time": "5:00 am",
+            "end_time": "5:59 am"
           }
         },
         {
-          "start_date": null,
-          "end_date": null,
-          "days": "MO, WE, FR",
-          "start_time": "5:00 am",
-          "end_time": "5:59 am",
           "room": {
             "name": "Internet/Online",
             "capability": null
+          },
+          "meeting_schedule": {
+            "start_date": null,
+            "end_date": null,
+            "days": "MO, WE, FR",
+            "start_time": "5:00 am",
+            "end_time": "5:59 am"
           }
         }
       ]
@@ -625,25 +667,29 @@
       "proxies": [],
       "meetings": [
         {
-          "start_date": null,
-          "end_date": null,
-          "days": "TU, TH",
-          "start_time": "9:00 pm",
-          "end_time": "9:59 pm",
           "room": {
             "name": "Pimentel 1",
             "capability": "Screencast + Video"
+          },
+          "meeting_schedule": {
+            "start_date": null,
+            "end_date": null,
+            "days": "TU, TH",
+            "start_time": "9:00 pm",
+            "end_time": "9:59 pm"
           }
         },
         {
-          "start_date": null,
-          "end_date": null,
-          "days": "TU, TH",
-          "start_time": "9:00 pm",
-          "end_time": "9:59 pm",
           "room": {
             "name": "Internet/Online",
             "capability": null
+          },
+          "meeting_schedule": {
+            "start_date": null,
+            "end_date": null,
+            "days": "TU, TH",
+            "start_time": "9:00 pm",
+            "end_time": "9:59 pm"
           }
         }
       ]
@@ -662,25 +708,29 @@
       "proxies": [],
       "meetings": [
         {
-          "start_date": null,
-          "end_date": null,
-          "days": "TU, TH",
-          "start_time": "9:00 pm",
-          "end_time": "9:59 pm",
           "room": {
             "name": "Pimentel 1",
             "capability": "Screencast + Video"
+          },
+          "meeting_schedule": {
+            "start_date": null,
+            "end_date": null,
+            "days": "TU, TH",
+            "start_time": "9:00 pm",
+            "end_time": "9:59 pm"
           }
         },
         {
-          "start_date": null,
-          "end_date": null,
-          "days": "TU, TH",
-          "start_time": "9:00 pm",
-          "end_time": "9:59 pm",
           "room": {
             "name": "O'Brien 212",
             "capability": "Screencast"
+          },
+          "meeting_schedule": {
+            "start_date": null,
+            "end_date": null,
+            "days": "TU, TH",
+            "start_time": "9:00 pm",
+            "end_time": "9:59 pm"
           }
         }
       ]
@@ -700,25 +750,29 @@
       "proxies": [],
       "meetings": [
         {
-          "start_date": null,
-          "end_date": null,
-          "days": "TU, TH",
-          "start_time": "8:00 pm",
-          "end_time": "8:59 pm",
           "room": {
             "name": "O'Brien 212",
             "capability": "Screencast"
+          },
+          "meeting_schedule": {
+            "start_date": null,
+            "end_date": null,
+            "days": "TU, TH",
+            "start_time": "8:00 pm",
+            "end_time": "8:59 pm"
           }
         },
         {
-          "start_date": null,
-          "end_date": null,
-          "days": "TU, TH",
-          "start_time": "8:00 pm",
-          "end_time": "8:59 pm",
           "room": {
             "name": "Pimentel 1",
             "capability": "Screencast + Video"
+          },
+          "meeting_schedule": {
+            "start_date": null,
+            "end_date": null,
+            "days": "TU, TH",
+            "start_time": "8:00 pm",
+            "end_time": "8:59 pm"
           }
         }
       ]

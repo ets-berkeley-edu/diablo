@@ -100,7 +100,7 @@ class CoursePage(DiabloPages):
 
     @staticmethod
     def expected_final_record_date_str(meeting, term):
-        return meeting.expected_recording_dates(term)[-1].strftime('%b %-d, %Y')
+        return meeting.meeting_schedule.expected_recording_dates(term)[-1].strftime('%b %-d, %Y')
 
     @staticmethod
     def kaltura_series_link(recording_schedule):

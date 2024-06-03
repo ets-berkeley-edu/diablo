@@ -40,7 +40,8 @@ class TestScheduling2:
     test_data = util.get_test_script_course('test_scheduling_2')
     section = util.get_test_section(test_data)
     meeting = section.meetings[0]
-    recording_schedule = RecordingSchedule(section)
+    meeting_schedule = meeting.meeting_schedule
+    recording_schedule = RecordingSchedule(section, meeting)
     site_1 = CanvasSite(
         code=f'XENA Scheduling2.1 - {section.code}',
         name=f'XENA Scheduling2.1 - {section.code}',
@@ -68,7 +69,7 @@ class TestScheduling2:
 
     def test_delete_old_diablo_and_kaltura(self):
         self.kaltura_page.log_in_via_calnet(self.calnet_page)
-        self.kaltura_page.reset_test_data(self.term, self.recording_schedule)
+        self.kaltura_page.reset_test_data(self.recording_schedule)
         util.reset_section_test_data(self.section)
         self.recording_schedule.scheduling_status = RecordingSchedulingStatus.NOT_SCHEDULED
 
@@ -106,7 +107,7 @@ class TestScheduling2:
     def test_semester_start(self):
         self.jobs_page.load_page()
         self.jobs_page.run_semester_start_job()
-        assert util.get_kaltura_id(self.recording_schedule, self.term)
+        assert util.get_kaltura_id(self.recording_schedule)
         self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
         self.recording_schedule.publish_type = PublishType.PUBLISH_TO_MY_MEDIA
         self.recording_schedule.scheduling_status = RecordingSchedulingStatus.SCHEDULED
@@ -155,16 +156,16 @@ class TestScheduling2:
         assert self.room_page.series_row_kaltura_link_text(self.recording_schedule) == expected
 
     def test_room_series_schedule(self):
-        self.room_page.verify_series_schedule(self.section, self.meeting, self.recording_schedule)
+        self.room_page.verify_series_schedule(self.recording_schedule)
 
     def test_room_series_recordings(self):
-        self.room_page.verify_series_recordings(self.section, self.meeting, self.recording_schedule)
+        self.room_page.verify_series_recordings(self.recording_schedule)
 
     def test_room_series_blackouts(self):
-        self.room_page.verify_series_blackouts(self.section, self.meeting, self.recording_schedule)
+        self.room_page.verify_series_blackouts(self.recording_schedule)
 
     def test_printable(self):
-        self.room_printable_page.verify_printable(self.section, self.meeting, self.recording_schedule)
+        self.room_printable_page.verify_printable(self.recording_schedule)
 
     # VERIFY SERIES IN KALTURA
 
@@ -240,11 +241,11 @@ class TestScheduling2:
         assert self.course_page.visible_instructors() == instructor_names
 
     def test_visible_meeting_days(self):
-        term_dates = f'{CoursePage.expected_term_date_str(self.meeting.start_date, self.meeting.end_date)}'
+        term_dates = f'{CoursePage.expected_term_date_str(self.meeting_schedule.start_date, self.meeting_schedule.end_date)}'
         assert term_dates in self.course_page.visible_meeting_days()[0]
 
     def test_visible_meeting_time(self):
-        assert self.course_page.visible_meeting_time()[0] == f'{self.meeting.start_time} - {self.meeting.end_time}'
+        assert self.course_page.visible_meeting_time()[0] == f'{self.meeting_schedule.start_time} - {self.meeting_schedule.end_time}'
 
     def test_visible_room(self):
         assert self.course_page.visible_rooms()[0] == self.meeting.room.name

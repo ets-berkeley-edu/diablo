@@ -42,7 +42,7 @@ class TestCourseCancellation:
     test_data = util.get_test_script_course('test_course_cancellation')
     section = util.get_test_section(test_data)
     meeting = section.meetings[0]
-    recording_schedule = RecordingSchedule(section)
+    recording_schedule = RecordingSchedule(section, meeting)
 
     def test_disable_jobs(self):
         self.login_page.load_page()
@@ -100,8 +100,8 @@ class TestCourseCancellation:
         self.jobs_page.run_semester_start_job()
         self.jobs_page.run_emails_job()
 
-    def test_cancel_pre_sched_no_kaltura_schecule_id(self):
-        assert not util.get_kaltura_id(self.recording_schedule, self.term)
+    def test_cancel_pre_sched_no_kaltura_schedule_id(self):
+        assert not util.get_kaltura_id(self.recording_schedule)
 
     def test_no_annunciation(self):
         assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_SEM_START, self.section,
@@ -121,7 +121,7 @@ class TestCourseCancellation:
         self.jobs_page.run_emails_job()
 
     def test_kaltura_schedule_id(self):
-        assert util.get_kaltura_id(self.recording_schedule, self.term)
+        assert util.get_kaltura_id(self.recording_schedule)
         self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
         self.recording_schedule.publish_type = PublishType.PUBLISH_TO_MY_MEDIA
         self.recording_schedule.scheduling_status = RecordingSchedulingStatus.SCHEDULED

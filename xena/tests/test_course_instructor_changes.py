@@ -46,7 +46,7 @@ class TestCourseInstructorChanges:
     util.get_test_instructors(instr_1_test_data, uids_to_exclude=[instr_2.uid])
     instr_1 = Section(instr_1_test_data).instructors[0]
 
-    recording_sched = RecordingSchedule(section)
+    recording_schedule = RecordingSchedule(section, meeting)
     site = CanvasSite(
         code=f'XENA Instructor Change - {section.code}',
         name=f'XENA Instructor Change - {section.code}',
@@ -61,9 +61,9 @@ class TestCourseInstructorChanges:
 
     def test_delete_old_diablo_and_kaltura(self):
         self.kaltura_page.log_in_via_calnet(self.calnet_page)
-        self.kaltura_page.reset_test_data(self.term, self.recording_sched)
+        self.kaltura_page.reset_test_data(self.term, self.recording_schedule)
         util.reset_section_test_data(self.section)
-        self.recording_sched.scheduling_status = RecordingSchedulingStatus.NOT_SCHEDULED
+        self.recording_schedule.scheduling_status = RecordingSchedulingStatus.NOT_SCHEDULED
 
     def test_emails_pre_run(self):
         self.jobs_page.load_page()
@@ -81,8 +81,8 @@ class TestCourseInstructorChanges:
 
     def test_schedule_course_instr_1(self):
         self.jobs_page.run_semester_start_job()
-        util.get_kaltura_id(self.recording_sched, self.term)
-        self.recording_sched.scheduling_status = RecordingSchedulingStatus.SCHEDULED
+        util.get_kaltura_id(self.recording_schedule)
+        self.recording_schedule.scheduling_status = RecordingSchedulingStatus.SCHEDULED
 
     def test_modify_recording_settings(self):
         self.ouija_page.load_page()
@@ -121,13 +121,13 @@ class TestCourseInstructorChanges:
         self.room_page.wait_for_series_row(self.recording_schedule)
 
     def test_series_recordings(self):
-        self.room_page.verify_series_recordings(self.section, self.meeting, self.recording_schedule)
+        self.room_page.verify_series_recordings(self.section, self.recording_schedule)
 
     def test_series_blackouts(self):
-        self.room_page.verify_series_blackouts(self.section, self.meeting, self.recording_schedule)
+        self.room_page.verify_series_blackouts(self.section, self.recording_schedule)
 
     def test_verify_printable(self):
-        self.room_printable_page.verify_printable(self.section, self.meeting, self.recording_schedule)
+        self.room_printable_page.verify_printable(self.section, self.recording_schedule)
 
     def test_verify_diablo_selected_settings(self):
         self.room_printable_page.close_printable_schedule()

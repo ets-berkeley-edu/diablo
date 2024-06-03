@@ -140,26 +140,30 @@ class RoomPage(DiabloPages):
 
     # ACTUAL VS EXPECTED
 
-    def verify_series_schedule(self, section, meeting, recording_schedule):
-        start = meeting.expected_recording_dates(section.term)[0]
+    def verify_series_schedule(self, recording_schedule):
+        section = recording_schedule.section
+        schedule = recording_schedule.meeting.meeting_schedule
+        start = schedule.expected_recording_dates(section.term)[0]
         assert self.series_row_start_date(recording_schedule) == start
 
-        last_date = meeting.expected_recording_dates(section.term)[-1]
+        last_date = schedule.expected_recording_dates(section.term)[-1]
         assert self.series_row_end_date(recording_schedule) == last_date
 
-        assert self.series_row_days(recording_schedule) == meeting.days.replace(' ', '')
+        assert self.series_row_days(recording_schedule) == schedule.days.replace(' ', '')
 
-    def verify_series_recordings(self, section, meeting, recording_schedule):
+    def verify_series_recordings(self, recording_schedule):
+        section = recording_schedule.section
         self.expand_series_row(recording_schedule)
-        expected = meeting.expected_recording_dates(section.term)
+        expected = recording_schedule.meeting.meeting_schedule.expected_recording_dates(section.term)
         visible = self.series_recording_start_dates(recording_schedule)
         app.logger.info(f'Missing: {list(set(expected) - set(visible))}')
         app.logger.info(f'Unexpected: {list(set(visible) - set(expected))} ')
         expected.reverse()
         assert visible == expected
 
-    def verify_series_blackouts(self, section, meeting, recording_schedule):
-        expected = meeting.expected_blackout_dates(section.term)
+    def verify_series_blackouts(self, recording_schedule):
+        section = recording_schedule.section
+        expected = recording_schedule.meeting.meeting_schedule.expected_blackout_dates(section.term)
         visible = self.series_recording_blackout_dates(recording_schedule)
         app.logger.info(f'Missing: {list(set(expected) - set(visible))}')
         app.logger.info(f'Unexpected: {list(set(visible) - set(expected))} ')
