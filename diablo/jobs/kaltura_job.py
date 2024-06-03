@@ -126,7 +126,7 @@ def _update_already_scheduled_events():  # noqa C901
             elif schedule_update.field_name == 'not_scheduled':
                 no_longer_scheduled = True
             elif schedule_update.field_name == 'opted_out':
-                no_longer_scheduled = True if schedule_update.field_value is not None else False
+                no_longer_scheduled = True if schedule_update.field_value_new is not None else False
             elif schedule_update.field_name == 'room_not_eligible':
                 no_longer_eligible = True
 
