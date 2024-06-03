@@ -30,7 +30,6 @@ from diablo.lib.http import tolerant_jsonify
 from diablo.lib.util import basic_attributes_to_api_json
 from diablo.merged.calnet import get_calnet_user_for_uid, get_calnet_users_for_uids
 from diablo.models.admin_user import AdminUser
-from diablo.models.opt_out import OptOut
 from diablo.models.sis_section import SisSection
 from flask import current_app as app, request
 from flask_login import current_user, login_required
@@ -39,7 +38,6 @@ from flask_login import current_user, login_required
 @app.route('/api/user/my_profile')
 def my_profile():
     profile = current_user.to_api_json(include_courses=True)
-    _merge_opt_outs(profile)
     return tolerant_jsonify(profile)
 
 
@@ -55,7 +53,6 @@ def get_user(uid):
             instructor_uid=uid,
         )
         user['courses'] = courses
-        _merge_opt_outs(user)
         return tolerant_jsonify(user)
 
 
@@ -94,13 +91,3 @@ def search_users():
     results = [basic_attributes_to_api_json(a) for a in attributes]
     results.sort(key=lambda x: x['firstName'])
     return tolerant_jsonify(results)
-
-
-def _merge_opt_outs(user):
-    user['hasOptedOutForTerm'] = False
-    user['hasOptedOutForAllTerms'] = False
-    for opt_out in OptOut.get_blanket_opt_outs_for_uid(user['uid']):
-        if opt_out.term_id == app.config['CURRENT_TERM_ID']:
-            user['hasOptedOutForTerm'] = True
-        elif opt_out.term_id is None:
-            user['hasOptedOutForAllTerms'] = True

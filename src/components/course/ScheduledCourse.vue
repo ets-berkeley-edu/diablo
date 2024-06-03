@@ -11,7 +11,7 @@
               target="_blank"
               aria-label="Open Kaltura MediaSpace in a new window"
             >
-              Kaltura series {{ course.scheduled.kalturaScheduleId }} <v-icon small class="pb-1">mdi-open-in-new</v-icon>
+              Kaltura series {{ scheduled.kalturaScheduleId }} <v-icon small class="pb-1">mdi-open-in-new</v-icon>
             </a>
           </div>
         </div>
@@ -32,9 +32,9 @@
           <v-list-item-subtitle>{{ scheduled.publishTypeName }}</v-list-item-subtitle>
         </v-list-item-content>
         <v-list-item-content>
-          <v-list-item-title>Admin Proxy Publish</v-list-item-title>
-          <v-list-item-subtitle id="admin-proxy-status">
-            {{ course.canAprxInstructorsEditRecordings ? 'Yes' : 'No' }}
+          <v-list-item-title>Collaborator UIDs</v-list-item-title>
+          <v-list-item-subtitle id="scheduled-collaborator-uids">
+            {{ scheduled.collaboratorUids.length ? scheduled.collaboratorUids : 'None' }}
           </v-list-item-subtitle>
         </v-list-item-content>
       </v-list-item>

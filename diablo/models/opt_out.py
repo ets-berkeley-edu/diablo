@@ -82,7 +82,8 @@ class OptOut(db.Model):
             cls.query.filter(criteria).delete()
         else:
             for row in cls.query.filter(criteria).all():
-                section_ids.remove(row.section_id)
+                if row.section_id in section_ids:
+                    section_ids.remove(row.section_id)
             for section_id in section_ids:
                 opt_out = cls(
                     instructor_uid=instructor_uid,
