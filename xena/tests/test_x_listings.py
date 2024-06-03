@@ -131,7 +131,7 @@ class TestCrossListings:
         self.jobs_page.run_emails_job()
 
     def test_kaltura_schedule_id(self):
-        util.get_kaltura_id(self.recording_schedule, self.term)
+        util.get_kaltura_id(self.recording_schedule)
         self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
         self.recording_schedule.publish_type = PublishType.PUBLISH_TO_MY_MEDIA
         self.recording_schedule.scheduling_status = RecordingSchedulingStatus.SCHEDULED

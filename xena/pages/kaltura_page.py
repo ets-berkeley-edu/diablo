@@ -29,6 +29,7 @@ from flask import current_app as app
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.wait import WebDriverWait as Wait
+from xena.models.publish_type import PublishType
 from xena.pages.page import Page
 from xena.test_utils import util
 
@@ -186,8 +187,8 @@ class KalturaPage(Page):
 
     # DELETION
 
-    def reset_test_data(self, term, recording_schedule):
-        old_schedule = util.get_kaltura_id(recording_schedule, term)
+    def reset_test_data(self, recording_schedule):
+        old_schedule = util.get_kaltura_id(recording_schedule)
         if old_schedule:
             recording_schedule.series_id = old_schedule
             app.logger.info(f'Deleting an existing Kaltura series id {recording_schedule.series_id}')
@@ -216,7 +217,7 @@ class KalturaPage(Page):
             instructors.append(f'{instr.first_name} {instr.last_name}'.strip())
         instructors = ' and '.join(instructors)
         course = f'{section.code}, {section.number} ({section.term.name})'
-        copy = f"Copyright ©{datetime.strftime(meeting.start_date, '%Y')} UC Regents; all rights reserved."
+        copy = f"Copyright ©{datetime.strftime(meeting.meeting_schedule.start_date, '%Y')} UC Regents; all rights reserved."
         expected = f'{course} is taught by {instructors}. {copy}'
         assert self.visible_series_desc() == expected
 
@@ -230,22 +231,31 @@ class KalturaPage(Page):
             assert self.collaborator_perm(collab) == 'Co-Editor, Co-Publisher'
 
     def verify_schedule(self, section, meeting):
+        schedule = meeting.meeting_schedule
         self.open_recurrence_modal()
         assert self.is_weekly_checked()
         assert self.visible_weekly_frequency() == '1'
 
-        self.verify_recur_days(meeting.days)
+        self.verify_recur_days(schedule.days)
 
-        start = util.get_kaltura_term_date_str(meeting.expected_recording_dates(section.term)[0])
+        start = util.get_kaltura_term_date_str(schedule.expected_recording_dates(section.term)[0])
         assert self.visible_start_date() == start
 
-        end = util.get_kaltura_term_date_str(meeting.expected_recording_dates(section.term)[-1])
+        end = util.get_kaltura_term_date_str(schedule.expected_recording_dates(section.term)[-1])
         assert self.visible_end_date() == end
 
-        start = meeting.get_berkeley_start_time()
+        start = schedule.get_berkeley_start_time()
         visible_start = datetime.strptime(self.visible_start_time(), '%I:%M %p')
         assert visible_start == start
 
-        end = meeting.get_berkeley_end_time()
+        end = schedule.get_berkeley_end_time()
         visible_end = datetime.strptime(self.visible_end_time(), '%I:%M %p')
         assert visible_end == end
+
+    def verify_publish_status(self, recording_schedule):
+        if recording_schedule.publish_type == PublishType.PUBLISH_TO_MY_MEDIA:
+            assert self.is_private()
+        elif recording_schedule.publish_type == PublishType.PUBLISH_TO_PENDING:
+            assert self.is_unlisted()
+        else:
+            assert self.is_published()

@@ -23,13 +23,8 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-from datetime import date
-from datetime import datetime
-from datetime import timedelta
-
-from flask import current_app as app
+from xena.models.meeting_schedule import MeetingSchedule
 from xena.models.room import Room
-from xena.test_utils import util
 
 
 class Meeting(object):
@@ -38,64 +33,12 @@ class Meeting(object):
         self.data = data
 
     @property
-    def start_date(self):
-        date_str = self.data['start_date'] or app.config['CURRENT_TERM_BEGIN']
-        return datetime.strptime(date_str, '%Y-%m-%d')
+    def meeting_schedule(self):
+        return MeetingSchedule(self.data['meeting_schedule'])
 
-    @start_date.setter
-    def start_date(self, value):
-        self.data['start_date'] = value
-
-    @property
-    def record_start(self):
-        term_start_str = app.config['CURRENT_TERM_BEGIN']
-        term_record_start_str = app.config['CURRENT_TERM_RECORDINGS_BEGIN'] or term_start_str
-        meeting_start_str = self.data['start_date'] or term_start_str
-
-        term_record_start_date = datetime.strptime(term_record_start_str, '%Y-%m-%d')
-        meeting_start_date = datetime.strptime(meeting_start_str, '%Y-%m-%d')
-        now = datetime.now()
-
-        start_date = meeting_start_date if meeting_start_date > term_record_start_date else term_record_start_date
-        return start_date if start_date > now else now
-
-    @property
-    def end_date(self):
-        date_str = self.data['end_date'] or app.config['CURRENT_TERM_END']
-        return datetime.strptime(date_str, '%Y-%m-%d')
-
-    @end_date.setter
-    def end_date(self, value):
-        self.data['end_date'] = value
-
-    @property
-    def record_end(self):
-        date_str = self.data['end_date'] or app.config['CURRENT_TERM_RECORDINGS_END']
-        return datetime.strptime(date_str, '%Y-%m-%d')
-
-    @property
-    def days(self):
-        return self.data['days']
-
-    @days.setter
-    def days(self, value):
-        self.data['days'] = value
-
-    @property
-    def start_time(self):
-        return self.data['start_time']
-
-    @start_time.setter
-    def start_time(self, value):
-        self.data['start_time'] = value
-
-    @property
-    def end_time(self):
-        return self.data['end_time']
-
-    @end_time.setter
-    def end_time(self, value):
-        self.data['end_time'] = value
+    @meeting_schedule.setter
+    def meeting_schedule(self, value):
+        self.data['meeting_schedule'] = value
 
     @property
     def room(self):
@@ -104,65 +47,3 @@ class Meeting(object):
     @room.setter
     def room(self, value):
         self.data['room'] = value
-
-    @staticmethod
-    def add_minutes(section_time_str, minutes):
-        return datetime.strptime(section_time_str, '%I:%M %p') + timedelta(minutes=minutes)
-
-    def get_berkeley_start_time(self):
-        return Meeting.add_minutes(self.start_time, 7)
-
-    def get_berkeley_end_time(self):
-        return Meeting.add_minutes(self.end_time, 2)
-
-    def __weekday_indices(self, term):
-        weekdays = ['MO', 'TU', 'WE', 'TH', 'FR']
-        weekday_indices = []
-        for day in weekdays:
-            if day in self.days:
-                weekday_indices.append(weekdays.index(day))
-        return weekday_indices
-
-    @staticmethod
-    def __holidays():
-        holidays = []
-        date_ranges = util.get_blackout_date_ranges()
-        for date_range in date_ranges:
-            for n in range(int((date_range[1] - date_range[0]).days) + 1):
-                holidays.append(date_range[0] + timedelta(n))
-        return holidays
-
-    def expected_recording_dates(self, term):
-        weekday_indices = self.__weekday_indices(term)
-        holidays = self.__holidays()
-
-        # Don't expect a recording for today if it's past the start time when you schedule it
-        start_time = datetime.strptime(f'{self.record_start.date()} {self.start_time}', '%Y-%m-%d %I:%M %p')
-        now_time = datetime.now()
-        start = self.record_start.date() if now_time < start_time else (self.record_start.date() + timedelta(days=1))
-
-        end = term.last_record_date.date() if self.end_date > term.last_record_date else self.end_date.date()
-        delta = end - start
-
-        recording_dates = []
-        for i in range(delta.days + 1):
-            day = start + timedelta(i)
-            if day.weekday() in weekday_indices and day not in holidays:
-                recording_dates.append(day)
-        return recording_dates
-
-    def expected_blackout_dates(self, term):
-        weekday_indices = self.__weekday_indices(term)
-        holidays = self.__holidays()
-
-        today = date.today()
-        start = self.start_date.date()
-        end = term.last_record_date.date() if self.end_date > term.last_record_date else self.end_date.date()
-        delta = end - start
-
-        blackout_dates = []
-        for i in range(delta.days + 1):
-            day = start + timedelta(i)
-            if day.weekday() in weekday_indices and day in holidays and day >= today:
-                blackout_dates.append(day)
-        return blackout_dates

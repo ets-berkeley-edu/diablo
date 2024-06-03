@@ -39,10 +39,11 @@ class TestCourseScheduleChanges:
 
     section = util.get_test_section(util.get_test_script_course('test_course_changes_real'))
     instr = section.instructors[0]
-    original_meeting = section.meetings[0]
+    meeting = section.meetings[0]
+    recording_schedule = RecordingSchedule(section, meeting)
+
     new_meeting = Section(util.get_test_script_course('test_course_changes_fake')).meetings[0]
     newer_meeting = Section(util.get_test_script_course('test_course_changes_faker')).meetings[0]
-    recording_sched = RecordingSchedule(section)
 
     def test_disable_jobs(self):
         self.login_page.load_page()
@@ -52,9 +53,9 @@ class TestCourseScheduleChanges:
 
     def test_delete_old_diablo_and_kaltura(self):
         self.kaltura_page.log_in_via_calnet(self.calnet_page)
-        self.kaltura_page.reset_test_data(self.term, self.recording_sched)
+        self.kaltura_page.reset_test_data(self.term, self.recording_schedule)
         util.reset_section_test_data(self.section)
-        self.recording_sched.scheduling_status = RecordingSchedulingStatus.NOT_SCHEDULED
+        self.recording_schedule.scheduling_status = RecordingSchedulingStatus.NOT_SCHEDULED
 
     def test_emails_pre_run(self):
         self.jobs_page.load_page()
@@ -65,10 +66,10 @@ class TestCourseScheduleChanges:
 
     def test_semester_start(self):
         self.jobs_page.run_semester_start_job()
-        util.get_kaltura_id(self.recording_sched, self.section)
-        self.recording_sched.scheduling_status = RecordingSchedulingStatus.SCHEDULED
-        self.recording_sched.recording_type = RecordingType.VIDEO_SANS_OPERATOR
-        self.recording_sched.publish_type = PublishType.PUBLISH_TO_MY_MEDIA
+        util.get_kaltura_id(self.recording_schedule)
+        self.recording_schedule.scheduling_status = RecordingSchedulingStatus.SCHEDULED
+        self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
+        self.recording_schedule.publish_type = PublishType.PUBLISH_TO_MY_MEDIA
 
     def test_run_email_job_post_scheduling(self):
         self.jobs_page.run_emails_job()
@@ -84,11 +85,11 @@ class TestCourseScheduleChanges:
         self.jobs_page.run_kaltura_job()
 
     def test_verify_old_kaltura_series_gone(self):
-        self.kaltura_page.load_event_edit_page(self.recording_sched.series_id)
+        self.kaltura_page.load_event_edit_page(self.recording_schedule.series_id)
         self.kaltura_page.wait_for_title('Access Denied - UC Berkeley - Test')
 
     def test_get_new_kaltura_series_id(self):
-        util.get_kaltura_id(self.recording_sched, self.term)
+        util.get_kaltura_id(self.recording_schedule)
 
     def test_room_new_series(self):
         self.rooms_page.load_page()
@@ -143,13 +144,13 @@ class TestCourseScheduleChanges:
     # SCHEDULED COURSE MEETING START/END AND MEETING DAYS/TIMES CHANGE TO NULL
 
     def test_set_null_schedule(self):
-        self.newer_meeting.start_date = None
-        self.newer_meeting.end_date = None
-        util.update_course_start_end_dates(self.section, self.original_meeting.room, start=None, end=None)
-        self.newer_meeting.days = None
+        self.newer_meeting.meeting_schedule.start_date = None
+        self.newer_meeting.meeting_schedule.end_date = None
+        self.newer_meeting.meeting_schedule.days = None
+        self.newer_meeting.meeting_schedule.start_time = None
+        self.newer_meeting.meeting_schedule.end_time = None
+        util.update_course_start_end_dates(self.section, self.meeting.room, self.newer_meeting.meeting_schedule)
         util.set_course_meeting_days(self.section, self.newer_meeting)
-        self.newer_meeting.start_time = None
-        self.newer_meeting.end_time = None
         util.set_course_meeting_time(self.section, self.newer_meeting)
 
     def test_unschedule_with_null_schedule(self):
@@ -158,11 +159,11 @@ class TestCourseScheduleChanges:
         self.jobs_page.run_kaltura_job()
 
     def test_verify_updated_kaltura_series_gone(self):
-        self.kaltura_page.load_event_edit_page(self.recording_sched.series_id)
+        self.kaltura_page.load_event_edit_page(self.recording_schedule.series_id)
         self.kaltura_page.wait_for_title('Access Denied - UC Berkeley - Test')
 
     def test_verify_no_new_kaltura_series_id(self):
-        assert not util.get_kaltura_id(self.recording_sched, self.term)
+        assert not util.get_kaltura_id(self.recording_schedule)
 
     def test_run_email_job_with_null_dates(self):
         self.jobs_page.load_page()

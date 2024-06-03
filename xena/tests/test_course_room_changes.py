@@ -38,10 +38,11 @@ class TestCourseRoomChanges:
 
     section = util.get_test_section(util.get_test_script_course('test_course_changes_real'))
     instr = section.instructors[0]
-    original_meeting = section.meetings[0]
-    new_eligible_meeting = Section(util.get_test_script_course('test_course_changes_fakest')).meetings[0]
-    new_ineligible_meeting = Section(util.get_test_script_course('test_course_changes_fake')).meetings[0]
-    recording_sched = RecordingSchedule(section)
+    meeting = section.meetings[0]
+    recording_schedule = RecordingSchedule(section, meeting)
+
+    new_ineligible_room = Section(util.get_test_script_course('test_course_changes_fake')).meetings[0].room
+    new_eligible_room = Section(util.get_test_script_course('test_course_changes_fakest')).meetings[0].room
 
     def test_disable_jobs(self):
         self.login_page.load_page()
@@ -51,9 +52,9 @@ class TestCourseRoomChanges:
 
     def test_delete_old_diablo_and_kaltura(self):
         self.kaltura_page.log_in_via_calnet(self.calnet_page)
-        self.kaltura_page.reset_test_data(self.term, self.recording_sched)
+        self.kaltura_page.reset_test_data(self.term, self.recording_schedule)
         util.reset_section_test_data(self.section)
-        self.recording_sched.scheduling_status = RecordingSchedulingStatus.NOT_SCHEDULED
+        self.recording_schedule.scheduling_status = RecordingSchedulingStatus.NOT_SCHEDULED
 
     def test_emails_pre_run(self):
         self.jobs_page.load_page()
@@ -66,8 +67,8 @@ class TestCourseRoomChanges:
 
     def test_semester_start(self):
         self.jobs_page.run_semester_start_job()
-        assert util.get_kaltura_id(self.recording_sched, self.term)
-        self.recording_sched.scheduling_status = RecordingSchedulingStatus.SCHEDULED
+        assert util.get_kaltura_id(self.recording_schedule)
+        self.recording_schedule.scheduling_status = RecordingSchedulingStatus.SCHEDULED
 
     def test_modify_recording_settings(self):
         self.ouija_page.load_page()
@@ -81,13 +82,14 @@ class TestCourseRoomChanges:
     def test_update_series(self):
         self.jobs_page.load_page()
         self.jobs_page.run_kaltura_job()
-        self.recording_sched.recording_type = RecordingType.VIDEO_WITH_OPERATOR
-        self.recording_sched.publish_type = PublishType.PUBLISH_AUTOMATICALLY
+        self.recording_schedule.recording_type = RecordingType.VIDEO_WITH_OPERATOR
+        self.recording_schedule.publish_type = PublishType.PUBLISH_AUTOMATICALLY
 
     # SCHEDULED COURSE MOVES TO ANOTHER ELIGIBLE ROOM, THOUGH NOT AN AUDITORIUM
 
     def test_move_to_new_eligible_room(self):
-        util.set_meeting_location(self.section, self.new_eligible_meeting)
+        self.meeting.room = self.new_eligible_room
+        util.set_meeting_location(self.section, self.meeting)
 
     def test_new_eligible_room_run_email_job(self):
         self.jobs_page.run_emails_job()
@@ -98,22 +100,22 @@ class TestCourseRoomChanges:
     def test_new_eligible_room_update_series(self):
         # TODO run update job
         self.jobs_page.run_kaltura_job()
-        self.recording_sched.recording_type = RecordingType.VIDEO_SANS_OPERATOR
+        self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
 
     def test_new_eligible_room_series(self):
         self.rooms_page.load_page()
-        self.rooms_page.find_room(self.new_eligible_meeting.room)
-        self.rooms_page.click_room_link(self.new_eligible_meeting.room)
+        self.rooms_page.find_room(self.meeting.room)
+        self.rooms_page.click_room_link(self.meeting.room)
         self.room_page.wait_for_series_row(self.recording_schedule)
 
     def test_new_eligible_room_recordings(self):
-        self.room_page.verify_series_recordings(self.section, self.new_eligible_meeting, self.recording_schedule)
+        self.room_page.verify_series_recordings(self.section, self.recording_schedule)
 
     def test_new_eligible_room_blackouts(self):
-        self.room_page.verify_series_blackouts(self.section, self.new_eligible_meeting, self.recording_schedule)
+        self.room_page.verify_series_blackouts(self.section, self.recording_schedule)
 
     def test_new_eligible_room_printable(self):
-        self.room_printable_page.verify_printable(self.section, self.new_eligible_meeting, self.recording_schedule)
+        self.room_printable_page.verify_printable(self.section, self.recording_schedule)
 
     def test_new_eligible_room_recording_type_downgrade(self):
         self.room_printable_page.close_printable_schedule()
@@ -124,7 +126,7 @@ class TestCourseRoomChanges:
     def test_new_eligible_room_series_title_and_desc(self):
         self.course_page.click_kaltura_series_link(self.recording_schedule)
         self.kaltura_page.wait_for_delete_button()
-        self.kaltura_page.verify_title_and_desc(self.section, self.new_eligible_meeting)
+        self.kaltura_page.verify_title_and_desc(self.section, self.meeting)
 
     def test_new_eligible_room_series_collab(self):
         self.kaltura_page.verify_collaborators(self.section)
@@ -137,7 +139,8 @@ class TestCourseRoomChanges:
     # SCHEDULED COURSE MOVES TO INELIGIBLE ROOM
 
     def test_move_to_ineligible_room(self):
-        util.set_meeting_location(self.section, self.new_ineligible_meeting)
+        self.meeting.room = self.new_ineligible_room
+        util.set_meeting_location(self.section, self.meeting)
 
     def test_email_job_ineligible_room(self):
         self.jobs_page.run_emails_job()
@@ -148,8 +151,8 @@ class TestCourseRoomChanges:
     def test_ineligible_room_unschedule_series(self):
         # TODO run update job
         self.jobs_page.run_kaltura_job()
-        assert not util.get_kaltura_id(self.recording_sched, self.section.term)
-        self.recording_sched.scheduling_status = RecordingSchedulingStatus.NOT_SCHEDULED
+        assert not util.get_kaltura_id(self.recording_schedule)
+        self.recording_schedule.scheduling_status = RecordingSchedulingStatus.NOT_SCHEDULED
 
     def test_no_ineligible_kaltura_series(self):
         self.kaltura_page.load_event_edit_page(self.recording_schedule.series_id)
@@ -176,7 +179,8 @@ class TestCourseRoomChanges:
     # BACK TO ELIGIBLE ROOM, SETTINGS REVERT TO DEFAULT
 
     def test_move_back_to_eligible_room(self):
-        util.set_meeting_location(self.section, self.new_eligible_meeting)
+        self.meeting.room = self.new_eligible_room
+        util.set_meeting_location(self.section, self.meeting)
 
     def test_run_email_job_eligible_room_again(self):
         self.jobs_page.run_emails_job()
@@ -187,25 +191,25 @@ class TestCourseRoomChanges:
     def test_eligible_room_again_reschedule_series(self):
         # TODO run update job
         self.jobs_page.run_kaltura_job()
-        assert util.get_kaltura_id(self.recording_sched, self.section.term)
-        self.recording_sched.scheduling_status = RecordingSchedulingStatus.SCHEDULED
-        self.recording_sched.recording_type = RecordingType.VIDEO_SANS_OPERATOR
-        self.recording_sched.publish_type = PublishType.PUBLISH_TO_MY_MEDIA
+        assert util.get_kaltura_id(self.recording_schedule)
+        self.recording_schedule.scheduling_status = RecordingSchedulingStatus.SCHEDULED
+        self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
+        self.recording_schedule.publish_type = PublishType.PUBLISH_TO_MY_MEDIA
 
     def test_eligible_room_again_series(self):
         self.rooms_page.load_page()
-        self.rooms_page.find_room(self.new_eligible_meeting.room)
-        self.rooms_page.click_room_link(self.new_eligible_meeting.room)
+        self.rooms_page.find_room(self.meeting.room)
+        self.rooms_page.click_room_link(self.meeting.room)
         self.room_page.wait_for_series_row(self.recording_schedule)
 
     def test_eligible_room_again_recordings(self):
-        self.room_page.verify_series_recordings(self.section, self.new_eligible_meeting, self.recording_schedule)
+        self.room_page.verify_series_recordings(self.section, self.recording_schedule)
 
     def test_eligible_room_again_blackouts(self):
-        self.room_page.verify_series_blackouts(self.section, self.new_eligible_meeting, self.recording_schedule)
+        self.room_page.verify_series_blackouts(self.section, self.recording_schedule)
 
     def test_eligible_room_again_printable(self):
-        self.room_printable_page.verify_printable(self.section, self.new_eligible_meeting, self.recording_schedule)
+        self.room_printable_page.verify_printable(self.section, self.recording_schedule)
 
     def test_eligible_room_again_settings(self):
         self.room_printable_page.close_printable_schedule()
@@ -216,7 +220,7 @@ class TestCourseRoomChanges:
     def test_eligible_room_again_series_title_and_desc(self):
         self.course_page.click_kaltura_series_link(self.recording_schedule)
         self.kaltura_page.wait_for_delete_button()
-        self.kaltura_page.verify_title_and_desc(self.section, self.new_eligible_meeting)
+        self.kaltura_page.verify_title_and_desc(self.section, self.meeting)
 
     def test_eligible_room_again_series_collab(self):
         self.kaltura_page.verify_collaborators(self.section)
@@ -229,7 +233,7 @@ class TestCourseRoomChanges:
     # ROOM REMOVED ALTOGETHER
 
     def test_reset_data_null_test(self):
-        util.change_course_room(self.section, old_room=self.new_eligible_meeting.room, new_room=None)
+        util.change_course_room(self.section, self.meeting, new_room=None)
 
     def test_email_job_null_room(self):
         self.jobs_page.run_emails_job()
@@ -241,8 +245,8 @@ class TestCourseRoomChanges:
     def test_null_room_unschedule_series(self):
         # TODO run update job
         self.jobs_page.run_kaltura_job()
-        assert not util.get_kaltura_id(self.recording_sched, self.section.term)
-        self.recording_sched.scheduling_status = RecordingSchedulingStatus.NOT_SCHEDULED
+        assert not util.get_kaltura_id(self.recording_schedule)
+        self.recording_schedule.scheduling_status = RecordingSchedulingStatus.NOT_SCHEDULED
 
     def test_no_null_room_kaltura_series(self):
         self.kaltura_page.load_event_edit_page(self.recording_schedule.series_id)

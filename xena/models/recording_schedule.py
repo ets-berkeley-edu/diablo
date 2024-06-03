@@ -29,6 +29,7 @@ class RecordingSchedule(object):
     def __init__(
             self,
             section,
+            meeting,
             recording_type=None,
             publish_type=None,
             approval_status=None,
@@ -36,6 +37,7 @@ class RecordingSchedule(object):
             series_id=None,
     ):
         self.section = section
+        self.meeting = meeting
         self.recording_type = recording_type
         self.publish_type = publish_type
         self.approval_status = approval_status

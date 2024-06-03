@@ -287,11 +287,12 @@ def add_sis_sections_rows(section):
         instructor_name = f'{instructor.first_name} {instructor.last_name}'
         for meeting in section.meetings:
             room = meeting.room.name.replace("'", "''")
-            days = meeting.days.replace(',', '').replace(' ', '')
-            start_date = meeting.start_date.strftime('%Y-%m-%d %H:%M:%S')
-            end_date = meeting.end_date.strftime('%Y-%m-%d %H:%M:%S')
-            start_time = datetime.strptime(meeting.start_time, '%I:%M %p').strftime('%H:%M')
-            end_time = datetime.strptime(meeting.end_time, '%I:%M %p').strftime('%H:%M')
+            schedule = meeting.meeting_schedule
+            days = schedule.days.replace(',', '').replace(' ', '')
+            start_date = schedule.start_date.strftime('%Y-%m-%d %H:%M:%S')
+            end_date = schedule.end_date.strftime('%Y-%m-%d %H:%M:%S')
+            start_time = datetime.strptime(schedule.start_time, '%I:%M %p').strftime('%H:%M')
+            end_time = datetime.strptime(schedule.end_time, '%I:%M %p').strftime('%H:%M')
             sql = f"""
                 INSERT INTO sis_sections (
                     allowed_units, course_name, course_title, created_at, instruction_format, instructor_name,
@@ -390,9 +391,9 @@ def set_meeting_location(section, meeting):
     std_commit(allow_test_environment=True)
 
 
-def change_course_room(section, old_room=None, new_room=None):
-    if old_room:
-        old_name = old_room.name.replace("'", "''")
+def change_course_room(section, meeting, new_room=None):
+    if meeting.room:
+        old_name = meeting.room.name.replace("'", "''")
         old = f"= '{old_name}'"
     else:
         old = 'IS NULL'
@@ -410,25 +411,35 @@ def change_course_room(section, old_room=None, new_room=None):
     app.logger.info(sql)
     db.session.execute(text(sql))
     std_commit(allow_test_environment=True)
+    meeting.room = new_room
 
 
-def update_course_start_end_dates(section, room, start, end):
-    room_name = room.name.replace("'", "''")
+def update_course_start_end_dates(section, meeting, new_schedule):
+    room_name = meeting.room.name.replace("'", "''")
+    old_start = meeting.meeting_schedule.start_date
+    old_end = meeting.meeting_schedule.end_date
+    new_start = new_schedule.start_date
+    new_end = new_schedule.end_date
     sql = f"""UPDATE sis_sections
-                 SET meeting_start_date = {"'" + start.strftime('%Y-%m-%d %H:%M:%S') + "'" if start else "NULL"},
-                     meeting_end_date = {"'" + end.strftime('%Y-%m-%d %H:%M:%S') + "'" if start else "NULL"}
+                 SET meeting_start_date = {"'" + new_start.strftime('%Y-%m-%d %H:%M:%S') + "'" if new_start else "NULL"},
+                     meeting_end_date = {"'" + new_end.strftime('%Y-%m-%d %H:%M:%S') + "'" if new_end else "NULL"}
                WHERE section_id = {section.ccn}
                  AND term_id = {section.term.id}
                  AND meeting_location = '{room_name}'
+                 AND meeting_start_date = {"'" + old_start.strftime('%Y-%m-%d %H:%M:%S') + "'" if old_start else "NULL"}
+                 AND meeting_end_date = {"'" + old_end.strftime('%Y-%m-%d %H:%M:%S') + "'" if old_end else "NULL"}
     """
     app.logger.info(sql)
     db.session.execute(text(sql))
     std_commit(allow_test_environment=True)
+    meeting.meeting_schedule.start_date = new_start
+    meeting.meeting_schedule.end_date = new_end
 
 
 def set_course_meeting_days(section, meeting):
+    schedule = meeting.meeting_schedule
     sql = f"""UPDATE sis_sections
-                 SET meeting_days = {"'" + meeting.days + "'" if meeting.days else "NULL"}
+                 SET meeting_days = {"'" + schedule.days + "'" if schedule.days else "NULL"}
                WHERE section_id = {section.ccn}
                  AND term_id = {section.term.id}
     """
@@ -438,8 +449,9 @@ def set_course_meeting_days(section, meeting):
 
 
 def set_course_meeting_time(section, meeting):
-    start_time_str = datetime.strptime(meeting.start_time, '%I:%M %p').strftime('%H:%M') if meeting.start_time else None
-    end_time_str = datetime.strptime(meeting.end_time, '%I:%M %p').strftime('%H:%M') if meeting.end_time else None
+    schedule = meeting.meeting_schedule
+    start_time_str = datetime.strptime(schedule.start_time, '%I:%M %p').strftime('%H:%M') if schedule.start_time else None
+    end_time_str = datetime.strptime(schedule.end_time, '%I:%M %p').strftime('%H:%M') if schedule.end_time else None
     sql = f"""UPDATE sis_sections
                  SET meeting_start_time = {"'" + start_time_str + "'" if start_time_str else "NULL"},
                      meeting_end_time = {"'" + end_time_str + "'" if end_time_str else "NULL"}
@@ -474,6 +486,10 @@ def change_course_instructor(section, old_instructor=None, new_instructor=None):
     app.logger.info(sql)
     db.session.execute(text(sql))
     std_commit(allow_test_environment=True)
+    if old_instructor:
+        section.instructors.remove(old_instructor)
+    if new_instructor:
+        section.instructors.append(new_instructor)
 
 
 def delete_course_instructor_row(section, instructor):
@@ -559,16 +575,22 @@ def switch_principal_listing(old_primary, new_primary):
     std_commit(allow_test_environment=True)
 
 
-def get_kaltura_id(recording_schedule, term):
+def get_kaltura_id(recording_schedule):
     section = recording_schedule.section
+    meeting = recording_schedule.meeting
+    schedule = meeting.meeting_schedule
     sql = f"""SELECT kaltura_schedule_id
                 FROM scheduled
-               WHERE term_id = {term.id}
-                 AND section_id = {section.ccn}
-                 AND deleted_at IS NULL
+                JOIN rooms ON rooms.id = scheduled.room_id
+               WHERE scheduled.term_id = {section.term.id}
+                 AND scheduled.section_id = {section.ccn}
+                 AND scheduled.meeting_start_date = '{schedule.start_date.strftime('%Y-%m-%d %H:%M:%S')}'
+                 AND scheduled.meeting_end_date = '{schedule.end_date.strftime('%Y-%m-%d %H:%M:%S')}'
+                 AND rooms.location = '{meeting.room.name}'
+                 AND scheduled.deleted_at IS NULL
     """
     ids = []
-    app.logger.info(f'Checking for Kaltura ID for term {term.id} section {section.ccn}')
+    app.logger.info(f'Checking for Kaltura ID for term {section.term.id} section {section.ccn}')
     app.logger.info(sql)
     result = db.session.execute(text(sql))
     std_commit(allow_test_environment=True)
