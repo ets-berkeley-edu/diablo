@@ -28,17 +28,6 @@ export function getCoursesReport(termId) {
   return axios.get(`${utils.apiBaseUrl()}/api/courses/report/${termId}`)
 }
 
-export function unschedule(
-    termId: string,
-    sectionId: string
-) {
-  return axios
-    .post(`${utils.apiBaseUrl()}/api/course/unschedule`, {
-      termId,
-      sectionId
-    })
-}
-
 export function updateCollaborators(
     collaboratorUids: string[],
     sectionId: string,

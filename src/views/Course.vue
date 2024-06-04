@@ -26,10 +26,10 @@
       </v-row>
       <v-row>
         <v-col lg="3" cols="3" sm="3">
-          <CoursePageSidebar :after-unschedule="afterUnschedule" :course="course" :course-site="courseSite" />
+          <CoursePageSidebar :course="course" :course-site="courseSite" />
         </v-col>
         <v-col>
-          <v-container v-if="isCurrentTerm && capability && hasValidMeetingTimes && !multipleEligibleMeetings" class="elevation-2 pa-6">
+          <v-container v-if="isCurrentTerm && capability && hasValidMeetingTimes" class="elevation-2 pa-6">
             <v-row>
               <v-col class="font-weight-bold mb-1">
                 <span v-if="course.scheduled && !course.hasOptedOut" id="notice-scheduled" class="green--text">
@@ -445,7 +445,6 @@ export default {
       instructorProxies: undefined,
       instructorProxyPrivileges: undefined,
       location: undefined,
-      multipleEligibleMeetings: undefined,
       pendingCollaborator: undefined,
       publishCanvasSiteId: undefined,
       publishCanvasSiteOptions: undefined,
@@ -514,11 +513,6 @@ export default {
         this.pendingCollaborator = collaborator
       }
     },
-    afterUnschedule(data) {
-      this.publishType = undefined
-      this.recordingType = undefined
-      this.render(data)
-    },
     removeCollaborator(uid) {
       this.collaborators = this.$_.filter(this.collaborators, c => c.uid !== uid)
     },
@@ -535,7 +529,6 @@ export default {
         this.capability = this.meeting.room.capability
         this.location = this.meeting.room.location
       }
-      this.multipleEligibleMeetings = (eligibleMeetings.length > 1)
       this.$_.each(['endDate', 'endTime', 'startDate', 'startTime'], key => {
         this.hasValidMeetingTimes = !!this.$_.find(eligibleMeetings, key)
         return this.hasValidMeetingTimes

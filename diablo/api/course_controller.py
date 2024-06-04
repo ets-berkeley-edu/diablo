@@ -24,14 +24,12 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 from datetime import datetime
 import re
-import traceback
 
 from diablo.api.errors import BadRequestError, ForbiddenRequestError, InternalServerError, ResourceNotFoundError
 from diablo.api.util import admin_required, csv_download_response, get_search_filter_options
 from diablo.externals.kaltura import Kaltura
 from diablo.lib.http import tolerant_jsonify
 from diablo.lib.interpolator import get_sign_up_url
-from diablo.merged.emailer import send_system_error_email
 from diablo.models.course_preference import CoursePreference, get_all_publish_types, get_all_recording_types
 from diablo.models.opt_out import OptOut
 from diablo.models.schedule_update import ScheduleUpdate
@@ -39,7 +37,6 @@ from diablo.models.scheduled import Scheduled
 from diablo.models.sis_section import SisSection
 from flask import current_app as app, request
 from flask_login import current_user, login_required
-from KalturaClient.exceptions import KalturaClientException, KalturaException
 
 
 @app.route('/api/course/<term_id>/<section_id>')
@@ -117,51 +114,6 @@ def download_courses_csv():
         filename=f"courses-{filter_.lower().replace(' ', '_')}-{term_id}_{now}.csv",
         fieldnames=list(_course_csv_row({}, {}).keys()),
     )
-
-
-@app.route('/api/course/unschedule', methods=['POST'])
-@admin_required
-def unschedule():
-    params = request.get_json()
-    term_id = params.get('termId')
-    section_id = params.get('sectionId')
-    course = SisSection.get_course(term_id, section_id, include_deleted=True) if (term_id and section_id) else None
-
-    if not course:
-        raise BadRequestError('Required params missing or invalid')
-
-    if not course['scheduled']:
-        raise BadRequestError(f'Section id {section_id}, term id {term_id} is not currently scheduled or queued for scheduling')
-
-    Scheduled.delete(term_id=term_id, section_id=section_id)
-
-    for scheduled in (course.get('scheduled') or []):
-        event_id = scheduled.get('kalturaScheduleId')
-        if event_id:
-            try:
-                Kaltura().delete(event_id)
-            except (KalturaClientException, KalturaException) as e:
-                message = f'Failed to delete Kaltura schedule: {event_id}'
-                app.logger.error(message)
-                app.logger.exception(e)
-                send_system_error_email(
-                    message=f'{message}\n\n<pre>{traceback.format_exc()}</pre>',
-                    subject=message,
-                )
-
-    OptOut.update_opt_out(
-        instructor_uid=current_user.uid,
-        term_id=term_id,
-        section_id=section_id,
-        opt_out=True,
-    )
-    course = SisSection.get_course(
-        section_id=section_id,
-        term_id=term_id,
-        include_administrative_proxies=True,
-        include_deleted=True,
-    )
-    return tolerant_jsonify(course)
 
 
 @app.route('/api/course/collaborator_uids/update', methods=['POST'])
