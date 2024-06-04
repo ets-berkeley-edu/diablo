@@ -365,7 +365,6 @@
               v-if="course.updateHistory.length"
               id="update-history-table"
               disable-pagination
-              disable-sort
               :headers="updateHistoryHeaders"
               :hide-default-footer="true"
               :items="course.updateHistory"
@@ -460,9 +459,9 @@ export default {
         {text: 'Field', value: 'fieldName'},
         {text: 'Old Value', value: 'fieldValueOld'},
         {text: 'New Value', value: 'fieldValueNew'},
-        {text: 'Requested by', value: 'requestedByName'},
-        {text: 'Requested at', value: 'requestedAt'},
-        {text: 'Published at', value: 'publishedAt'},
+        {text: 'Requested by', value: 'requestedByName', width: '130px'},
+        {text: 'Requested at', value: 'requestedAt', width: '130px'},
+        {text: 'Published at', value: 'publishedAt', width: '130px'},
         {text: 'Status', value: 'status'}
       ]
     }

@@ -122,7 +122,7 @@ class ScheduleUpdate(db.Model):
     @classmethod
     def get_update_history_for_section_ids(cls, term_id, section_ids):
         criteria = and_(cls.term_id == term_id, cls.section_id.in_(section_ids))
-        return cls.query.filter(criteria).order_by(cls.section_id, cls.requested_at).all()
+        return cls.query.filter(criteria).order_by(cls.requested_at.desc()).all()
 
     @classmethod
     def get_queued_by_section_id(cls, term_id):
