@@ -111,66 +111,6 @@
         Opted out
       </v-col>
     </v-row>
-    <v-row
-      v-if="offerSendInvite"
-      id="send-invite"
-      justify="center"
-      class="mt-4"
-    >
-      <v-btn
-        id="send-invite-btn"
-        :disabled="!isInviteTemplateAvailable"
-        @click="sendInvite"
-      >
-        Send Invite
-      </v-btn>
-      <div v-if="!isInviteTemplateAvailable" class="ml-12 mt-2 font-weight-light">
-        In order to send an invite, you must create an 'Invitation' email template.
-      </div>
-    </v-row>
-    <v-row v-if="offerUnschedule" id="unschedule" justify="center">
-      <v-col md="auto">
-        <v-dialog v-model="showUnscheduleModal" persistent max-width="400">
-          <template #activator="{on, attrs}">
-            <v-btn
-              id="unschedule-course-btn"
-              color="primary"
-              v-bind="attrs"
-              v-on="on"
-            >
-              Unschedule
-            </v-btn>
-          </template>
-          <v-card>
-            <v-card-title class="headline">Unschedule this course?</v-card-title>
-            <v-card-text>
-              The schedule for this course will be removed,
-              the Kaltura series will be deleted,
-              and the course will be marked as opt-out.
-            </v-card-text>
-            <v-card-actions>
-              <v-spacer></v-spacer>
-              <v-btn
-                id="confirm-unschedule-course-btn"
-                color="blue"
-                text
-                @click="unscheduleCourse"
-              >
-                Confirm
-              </v-btn>
-              <v-btn
-                id="cancel-unschedule-course-btn"
-                color="blue"
-                text
-                @click="showUnscheduleModal = false"
-              >
-                Cancel
-              </v-btn>
-            </v-card-actions>
-          </v-card>
-        </v-dialog>
-      </v-col>
-    </v-row>
   </v-container>
 </template>
 
@@ -180,18 +120,12 @@ import Context from '@/mixins/Context'
 import Days from '@/components/util/Days'
 import OxfordJoin from '@/components/util/OxfordJoin'
 import Utils from '@/mixins/Utils'
-import {unschedule} from '@/api/course'
-import {getAllEmailTemplates, queueEmail} from '@/api/email'
 
 export default {
   name: 'CoursePageSidebar',
   components: {CanvasCourseSite, Days, OxfordJoin},
   mixins: [Context, Utils],
   props: {
-    afterUnschedule: {
-      required: true,
-      type: Function
-    },
     course: {
       required: true,
       type: Object
@@ -206,51 +140,13 @@ export default {
     displayMeetings: undefined,
     instructors: undefined,
     instructorProxies: undefined,
-    isInviteTemplateAvailable: undefined,
     nowDate: undefined,
-    showUnscheduleModal: false
   }),
-  computed: {
-    offerSendInvite() {
-      return this.$currentUser.isAdmin
-        && this.course.termId === this.$config.currentTermId
-        && this.course.instructors.length
-        && !this.course.deletedAt
-        && !this.course.hasOptedOut
-        && this.course.meetings.eligible.length === 1
-        && !this.$_.isUndefined(this.isInviteTemplateAvailable)
-    },
-    offerUnschedule() {
-      return this.$currentUser.isAdmin
-        && this.course.scheduled
-        && this.course.termId === this.$config.currentTermId
-    }
-  },
   created() {
     this.displayMeetings = this.getDisplayMeetings(this.course)
     this.instructors = this.$_.filter(this.course.instructors, i => i.roleCode !== 'APRX')
     this.instructorProxies = this.$_.filter(this.course.instructors, i => i.roleCode === 'APRX')
     this.nowDate = this.$moment().format('YYYY-MM-DD')
-    if (this.$currentUser.isAdmin) {
-      getAllEmailTemplates().then(data => {
-        this.isInviteTemplateAvailable = this.$_.find(data, ['templateType', 'invitation']) || null
-      })
-    }
-  },
-  methods: {
-    sendInvite() {
-      queueEmail('invitation', this.course.sectionId, this.course.termId).then(data => {
-        this.snackbarOpen(data.message)
-      })
-    },
-    unscheduleCourse() {
-      this.$loading()
-      this.showUnscheduleModal = false
-      unschedule(this.course.termId, this.course.sectionId).then(data => {
-        this.alertScreenReader(`${this.course.label} unscheduled.`)
-        this.afterUnschedule(data)
-      })
-    }
   }
 }
 </script>

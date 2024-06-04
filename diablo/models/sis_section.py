@@ -520,7 +520,6 @@ def _to_api_json(term_id, rows, include_rooms=True, include_update_history=False
     # Perform bulk queries and build data structures for feed generation.
     all_course_preferences = CoursePreference.get_all_course_preferences(term_id=term_id)
     course_preferences_by_section_id = dict((p.section_id, p) for p in all_course_preferences)
-    invited_uids_by_section_id = get_invited_uids_by_section_id(section_ids, term_id)
 
     opt_outs_by_section_id = {}
     blanket_opt_outs_by_instructor_uid = {}
@@ -550,7 +549,6 @@ def _to_api_json(term_id, rows, include_rooms=True, include_update_history=False
     cross_listings_per_section_id, instructors_per_section_id = _get_cross_listed_courses(
         section_ids=section_ids,
         term_id=term_id,
-        invited_uids=invited_uids_by_section_id,
     )
 
     # Construct course objects.
@@ -597,7 +595,6 @@ def _to_api_json(term_id, rows, include_rooms=True, include_update_history=False
                 'hasOptedOut': True if len(opt_outs) else False,
                 'instructionFormat': row['instruction_format'],
                 'instructors': instructors,
-                'invitees': invited_uids_by_section_id.get(section_id),
                 'isPrimary': row['is_primary'],
                 'label': _construct_course_label(
                     course_name=row['course_name'],
@@ -627,10 +624,7 @@ def _to_api_json(term_id, rows, include_rooms=True, include_update_history=False
         instructor_uid = row['instructor_uid']
         instructor_uid = instructor_uid.strip() if instructor_uid else None
         if instructor_uid and instructor_uid not in [i['uid'] for i in course['instructors']]:
-            instructor_json = _to_instructor_json(
-                row=row,
-                invited_uids=course['invitees'],
-            )
+            instructor_json = _to_instructor_json(row)
             # Note:
             # 1. If the course IS NOT DELETED then include only non-deleted instructors.
             # 2. If the course IS DELETED then include deleted instructors.
@@ -698,7 +692,7 @@ def _decorate_course_meeting_type(course):
         course['meetingType'] = 'A'
 
 
-def _get_cross_listed_courses(section_ids, term_id, invited_uids):
+def _get_cross_listed_courses(section_ids, term_id):
     # Return course and instructor info for cross-listings as well as the
     # principal section. Although cross-listed sections were "deleted" during SIS data refresh job, we still rely
     # on metadata from those deleted records.
@@ -738,7 +732,6 @@ def _get_cross_listed_courses(section_ids, term_id, invited_uids):
 
     # Collect course and instructor data associated with cross-listings.
     for section_id, cross_listing_ids in cross_listings_by_section_id.items():
-        invited_uids_for_section = invited_uids.get(section_id, [])
         courses_by_section_id[section_id] = []
         instructors_by_section_id[section_id] = []
         for cross_listing_id in cross_listing_ids:
@@ -758,33 +751,11 @@ def _get_cross_listed_courses(section_ids, term_id, invited_uids):
                 # Instructor-specific data may be spread across multiple rows.
                 for row in rows_by_cross_listing_id[cross_listing_id]:
                     if row['instructor_uid'] and row['instructor_uid'] not in [i['uid'] for i in instructors_by_section_id[section_id]]:
-                        instructor_json = _to_instructor_json(row, invited_uids=invited_uids_for_section)
+                        instructor_json = _to_instructor_json(row)
                         uid = (instructor_json['uid'] or '').strip() if instructor_json else None
                         if uid and not instructor_json['deletedAt']:
                             instructors_by_section_id[section_id].append(instructor_json)
     return courses_by_section_id, instructors_by_section_id
-
-
-def get_invited_uids_by_section_id(section_ids, term_id):
-    sql = """
-        SELECT section_id, recipient ->> 'uid' AS recipient_uid FROM queued_emails
-        WHERE term_id = :term_id AND section_id = ANY(:section_ids) AND template_type = :template_type
-        UNION
-        SELECT section_id, recipient_uid FROM sent_emails
-        WHERE term_id = :term_id AND section_id = ANY(:section_ids) AND template_type = :template_type
-    """
-    args = {
-        'section_ids': section_ids,
-        'template_type': 'invitation',
-        'term_id': term_id,
-    }
-    invited_uids_by_section_id = {section_id: [] for section_id in section_ids}
-    for row in db.session.execute(text(sql), args):
-        recipient_uid = row['recipient_uid']
-        section_id = row['section_id']
-        if recipient_uid not in invited_uids_by_section_id[section_id]:
-            invited_uids_by_section_id[section_id].append(recipient_uid)
-    return invited_uids_by_section_id
 
 
 def _sections_with_at_least_one_eligible_room():
@@ -800,7 +771,7 @@ def _sections_with_at_least_one_eligible_room():
     """
 
 
-def _to_instructor_json(row, invited_uids=None):
+def _to_instructor_json(row):
     instructor_uid = row['instructor_uid']
     instructor_json = {
         'deletedAt': safe_strftime(row['deleted_at'], '%Y-%m-%d'),
@@ -810,8 +781,6 @@ def _to_instructor_json(row, invited_uids=None):
         'roleCode': row['instructor_role_code'],
         'uid': instructor_uid,
     }
-    if invited_uids is not None:
-        instructor_json['wasSentInvite'] = instructor_uid in invited_uids
     return instructor_json
 
 
