@@ -844,16 +844,16 @@ class TestUpdateOptOut:
 
             opt_out_updates = [u for u in course_feed['updateHistory'] if u['fieldName'] == 'opted_out']
             assert len(opt_out_updates) == 2
-            assert opt_out_updates[0]['fieldValueOld'] is None
-            assert opt_out_updates[0]['fieldValueNew'] == instructor_uids[0]
-            assert opt_out_updates[0]['status'] == 'queued'
-            assert opt_out_updates[0]['requestedByUid'] == instructor_uids[0]
-            assert opt_out_updates[0]['requestedByName'] == 'William Peter Blatty'
-            assert opt_out_updates[1]['fieldValueOld'] == instructor_uids[0]
-            assert opt_out_updates[1]['fieldValueNew'] is None
+            assert opt_out_updates[1]['fieldValueOld'] is None
+            assert opt_out_updates[1]['fieldValueNew'] == instructor_uids[0]
             assert opt_out_updates[1]['status'] == 'queued'
             assert opt_out_updates[1]['requestedByUid'] == instructor_uids[0]
             assert opt_out_updates[1]['requestedByName'] == 'William Peter Blatty'
+            assert opt_out_updates[0]['fieldValueOld'] == instructor_uids[0]
+            assert opt_out_updates[0]['fieldValueNew'] is None
+            assert opt_out_updates[0]['status'] == 'queued'
+            assert opt_out_updates[0]['requestedByUid'] == instructor_uids[0]
+            assert opt_out_updates[0]['requestedByName'] == 'William Peter Blatty'
 
     def test_authorized_blanket_per_term(self, client, fake_auth):
         """Instructors can toggle the opt-out preference for all courses in a term."""
@@ -916,16 +916,16 @@ class TestUpdateOptOut:
             # Blanket opt-outs still leave notations in per-course update history.
             opt_out_updates = [u for u in course_feed['updateHistory'] if u['fieldName'] == 'opted_out']
             assert len(opt_out_updates) == 2
-            assert opt_out_updates[0]['fieldValueOld'] is None
-            assert opt_out_updates[0]['fieldValueNew'] == instructor_uids[0]
-            assert opt_out_updates[0]['status'] == 'queued'
-            assert opt_out_updates[0]['requestedByUid'] == instructor_uids[0]
-            assert opt_out_updates[0]['requestedByName'] == 'William Peter Blatty'
-            assert opt_out_updates[1]['fieldValueOld'] == instructor_uids[0]
-            assert opt_out_updates[1]['fieldValueNew'] is None
+            assert opt_out_updates[1]['fieldValueOld'] is None
+            assert opt_out_updates[1]['fieldValueNew'] == instructor_uids[0]
             assert opt_out_updates[1]['status'] == 'queued'
             assert opt_out_updates[1]['requestedByUid'] == instructor_uids[0]
             assert opt_out_updates[1]['requestedByName'] == 'William Peter Blatty'
+            assert opt_out_updates[0]['fieldValueOld'] == instructor_uids[0]
+            assert opt_out_updates[0]['fieldValueNew'] is None
+            assert opt_out_updates[0]['status'] == 'queued'
+            assert opt_out_updates[0]['requestedByUid'] == instructor_uids[0]
+            assert opt_out_updates[0]['requestedByName'] == 'William Peter Blatty'
 
     def test_authorized_blanket_all_terms(self, client, fake_auth):
         """Instructors can toggle the opt-out preference for all courses in all terms."""
@@ -988,16 +988,16 @@ class TestUpdateOptOut:
             # Blanket opt-outs still leave notations in per-course update history.
             opt_out_updates = [u for u in course_feed['updateHistory'] if u['fieldName'] == 'opted_out']
             assert len(opt_out_updates) == 2
-            assert opt_out_updates[0]['fieldValueOld'] is None
-            assert opt_out_updates[0]['fieldValueNew'] == instructor_uids[0]
-            assert opt_out_updates[0]['status'] == 'queued'
-            assert opt_out_updates[0]['requestedByUid'] == instructor_uids[0]
-            assert opt_out_updates[0]['requestedByName'] == 'William Peter Blatty'
-            assert opt_out_updates[1]['fieldValueOld'] == instructor_uids[0]
-            assert opt_out_updates[1]['fieldValueNew'] is None
+            assert opt_out_updates[1]['fieldValueOld'] is None
+            assert opt_out_updates[1]['fieldValueNew'] == instructor_uids[0]
             assert opt_out_updates[1]['status'] == 'queued'
             assert opt_out_updates[1]['requestedByUid'] == instructor_uids[0]
             assert opt_out_updates[1]['requestedByName'] == 'William Peter Blatty'
+            assert opt_out_updates[0]['fieldValueOld'] == instructor_uids[0]
+            assert opt_out_updates[0]['fieldValueNew'] is None
+            assert opt_out_updates[0]['status'] == 'queued'
+            assert opt_out_updates[0]['requestedByUid'] == instructor_uids[0]
+            assert opt_out_updates[0]['requestedByName'] == 'William Peter Blatty'
 
     def test_admin_toggle_opt_out(self, client, fake_auth):
         fake_auth.login(admin_uid)

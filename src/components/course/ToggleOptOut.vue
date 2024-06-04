@@ -1,6 +1,6 @@
 <template>
   <v-switch
-    :id="`toggle-opt-out-${sectionId}`"
+    :id="`toggle-opt-out-${switchId}`"
     v-model="optOut"
     dense
     :disabled="disabled"
@@ -54,10 +54,16 @@ export default {
     }
   },
   data: () => ({
-    optOut: undefined
+    optOut: undefined,
+    switchId: undefined
   }),
   created() {
     this.optOut = this.initialValue
+    if (this.sectionId === 'all') {
+      this.switchId = this.termId === 'all' ? 'all-terms' : 'current-term'
+    } else {
+      this.switchId = this.sectionId
+    }
   },
   methods: {
     toggleOptOut() {

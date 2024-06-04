@@ -150,14 +150,14 @@ class TestKalturaJob:
             course = api_get_course(client, term_id, section_id)
             assert len(course['updateHistory']) == 3
 
-            assert course['updateHistory'][0]['fieldName'] == 'meeting_updated'
-            assert course['updateHistory'][0]['fieldValueOld']['room']['location'] == 'Li Ka Shing 145'
-            assert course['updateHistory'][0]['fieldValueOld']['room']['kalturaResourceId']
-            assert course['updateHistory'][0]['fieldValueNew']['room']['location'] == 'Barker 101'
-            assert course['updateHistory'][0]['fieldValueNew']['room']['kalturaResourceId']
-            assert course['updateHistory'][0]['requestedByName'] is None
-            assert course['updateHistory'][0]['requestedByUid'] is None
-            assert course['updateHistory'][0]['status'] == 'succeeded'
+            assert course['updateHistory'][2]['fieldName'] == 'meeting_updated'
+            assert course['updateHistory'][2]['fieldValueOld']['room']['location'] == 'Li Ka Shing 145'
+            assert course['updateHistory'][2]['fieldValueOld']['room']['kalturaResourceId']
+            assert course['updateHistory'][2]['fieldValueNew']['room']['location'] == 'Barker 101'
+            assert course['updateHistory'][2]['fieldValueNew']['room']['kalturaResourceId']
+            assert course['updateHistory'][2]['requestedByName'] is None
+            assert course['updateHistory'][2]['requestedByUid'] is None
+            assert course['updateHistory'][2]['status'] == 'succeeded'
 
             assert course['updateHistory'][1]['fieldName'] == 'room_not_eligible'
             assert course['updateHistory'][1]['fieldValueOld']['location'] == 'Barker 101'
@@ -168,14 +168,14 @@ class TestKalturaJob:
             assert course['updateHistory'][1]['requestedByUid'] is None
             assert course['updateHistory'][1]['status'] == 'succeeded'
 
-            assert course['updateHistory'][2]['fieldName'] == 'meeting_updated'
-            assert course['updateHistory'][2]['fieldValueOld']['room']['location'] == 'Wheeler 150'
-            assert course['updateHistory'][2]['fieldValueOld']['room']['kalturaResourceId'] is None
-            assert course['updateHistory'][2]['fieldValueNew']['room']['location'] == 'Li Ka Shing 145'
-            assert course['updateHistory'][2]['fieldValueNew']['room']['kalturaResourceId']
-            assert course['updateHistory'][2]['requestedByName'] is None
-            assert course['updateHistory'][2]['requestedByUid'] is None
-            assert course['updateHistory'][2]['status'] == 'succeeded'
+            assert course['updateHistory'][0]['fieldName'] == 'meeting_updated'
+            assert course['updateHistory'][0]['fieldValueOld']['room']['location'] == 'Wheeler 150'
+            assert course['updateHistory'][0]['fieldValueOld']['room']['kalturaResourceId'] is None
+            assert course['updateHistory'][0]['fieldValueNew']['room']['location'] == 'Li Ka Shing 145'
+            assert course['updateHistory'][0]['fieldValueNew']['room']['kalturaResourceId']
+            assert course['updateHistory'][0]['requestedByName'] is None
+            assert course['updateHistory'][0]['requestedByUid'] is None
+            assert course['updateHistory'][0]['status'] == 'succeeded'
 
     def test_datetime_change(self, db_session, client, fake_auth):
         term_id = app.config['CURRENT_TERM_ID']
