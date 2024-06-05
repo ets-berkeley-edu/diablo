@@ -122,7 +122,26 @@ def get_all_eligible_section_ids():
 # SECTION TEST DATA
 
 
-def get_test_instructors(test_section_data, uids_to_exclude=None):
+def get_test_section_instructor_data(test_section_data, uids_to_exclude=None):
+    count = len(test_section_data['instructors'] + test_section_data['proxies'])
+    test_user_data = get_test_instructors(count, uids_to_exclude)
+
+    test_instructor_data = test_user_data[:len(test_section_data['instructors'])] if test_section_data['instructors'] else []
+    for i in test_instructor_data:
+        idx = test_instructor_data.index(i)
+        i.update({'role': test_section_data['instructors'][idx]['role']})
+        app.logger.info(f'Instructor: {i}')
+    test_section_data['instructors'] = test_instructor_data
+
+    test_proxy_data = test_user_data[len(test_section_data['instructors']):] if test_section_data['proxies'] else []
+    for p in test_proxy_data:
+        idx = test_proxy_data.index(p)
+        p.update({'role': test_section_data['proxies'][idx]['role']})
+        app.logger.info(f'Proxy: {p}')
+    test_section_data['proxies'] = test_proxy_data
+
+
+def get_test_instructors(count, uids_to_exclude=None):
     uids = []
     if uids_to_exclude:
         for u in uids_to_exclude:
@@ -142,7 +161,7 @@ def get_test_instructors(test_section_data, uids_to_exclude=None):
                  AND sis_sections.is_primary IS TRUE
                  {clause}
             ORDER BY RANDOM()
-               LIMIT {len(test_section_data['instructors'] + test_section_data['proxies'])};
+               LIMIT {count};
     """
     app.logger.info(sql)
     result = db.session.execute(text(sql))
@@ -160,7 +179,7 @@ def get_test_instructors(test_section_data, uids_to_exclude=None):
     app.logger.info(sql)
     results = db.session.execute(text(sql))
     std_commit(allow_test_environment=True)
-    test_user_data = []
+    test_instructor_data = []
     for row in results:
         data = {
             'uid': row['uid'],
@@ -168,24 +187,11 @@ def get_test_instructors(test_section_data, uids_to_exclude=None):
             'last_name': row['last_name'],
             'email': row['email'],
         }
-        test_user_data.append(data)
-
-    test_instructor_data = test_user_data[:len(test_section_data['instructors'])] if test_section_data['instructors'] else []
-    for i in test_instructor_data:
-        idx = test_instructor_data.index(i)
-        i.update({'role': test_section_data['instructors'][idx]['role']})
-        app.logger.info(f'Instructor: {i}')
-    test_section_data['instructors'] = test_instructor_data
-
-    test_proxy_data = test_user_data[len(test_section_data['instructors']):] if test_section_data['proxies'] else []
-    for p in test_proxy_data:
-        idx = test_proxy_data.index(p)
-        p.update({'role': test_section_data['proxies'][idx]['role']})
-        app.logger.info(f'Proxy: {p}')
-    test_section_data['proxies'] = test_proxy_data
+        test_instructor_data.append(data)
+    return test_instructor_data
 
 
-def get_test_section(test_data):
+def get_test_section(test_data, test_section_instructor_data=False):
     sql = f"""SELECT sis_sections.section_id AS ccn,
                      sis_sections.course_name AS code,
                      sis_sections.course_title AS title,
@@ -214,8 +220,22 @@ def get_test_section(test_data):
         'is_primary_listing': True,
     }
     test_data.update(sis_data)
-    get_test_instructors(test_data)
+    if not test_section_instructor_data:
+        get_test_section_instructor_data(test_data)
     return Section(test_data)
+
+
+def get_test_opt_out_sections():
+    sections = []
+    test_instructor_data = get_test_instructors(2)
+    test_sections_data = [get_test_script_course('test_opt_out_0'), get_test_script_course('test_opt_out_1')]
+    for sec_data in test_sections_data:
+        for instr in sec_data['instructors']:
+            idx = sec_data['instructors'].index(instr)
+            instr = test_instructor_data[idx]
+            instr.update({'role': 'PI'})
+        sections.append(get_test_section(sec_data, test_section_instructor_data=True))
+    return sections
 
 
 def get_test_x_listed_sections(test_data):
@@ -256,7 +276,7 @@ def get_test_x_listed_sections(test_data):
         'listings': [{'ccn': result['listing_ccn'], 'code': listing_result['course_name']}],
     }
     test_data.update(sis_data)
-    get_test_instructors(test_data)
+    get_test_section_instructor_data(test_data)
     primary_listing_section = Section(test_data)
 
     listing_sis_data = {
@@ -361,7 +381,7 @@ def get_sent_email_count(template, section, instructor=None):
     return count
 
 
-def reset_section_test_data(section):
+def reset_section_test_data(section, delete_opt_outs=True):
     reset_test_data(section)
     term_id = app.config['CURRENT_TERM_ID']
     sql = f'DELETE FROM approvals WHERE section_id = {section.ccn} AND term_id = {term_id}'
@@ -373,6 +393,20 @@ def reset_section_test_data(section):
     sql = f'DELETE FROM sent_emails WHERE section_id = {section.ccn} AND term_id = {term_id}'
     db.session.execute(text(sql))
     sql = f'DELETE FROM course_preferences WHERE section_id = {section.ccn} AND term_id = {term_id}'
+    db.session.execute(text(sql))
+    if delete_opt_outs:
+        for i in section.instructors:
+            sql = f'DELETE FROM opt_outs WHERE instructor_uid = {i.uid}'
+            db.session.execute(text(sql))
+    std_commit(allow_test_environment=True)
+
+
+def set_past_term_opt_out(instructor):
+    current_term_id = int(app.config['CURRENT_TERM_ID'])
+    previous_term_id = current_term_id - (4 if (current_term_id % 10 == 2) else 3)
+    sql = f"""INSERT INTO opt_outs (instructor_uid, term_id, section_id, created_at)
+                   SELECT '{instructor.uid}', {previous_term_id}, NULL, now()"""
+    app.logger.info(sql)
     db.session.execute(text(sql))
     std_commit(allow_test_environment=True)
 

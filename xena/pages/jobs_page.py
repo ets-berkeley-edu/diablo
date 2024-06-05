@@ -42,6 +42,7 @@ class JobsPage(DiabloPages):
     RUN_KALTURA_JOB_BUTTON = (By.ID, 'run-job-kaltura')
     RUN_EMAILS_JOB_BUTTON = (By.ID, 'run-job-emails')
     RUN_REMIND_SCHEDULED_BUTTON = (By.ID, 'run-job-remind_scheduled')
+    RUN_SCHEDULE_UPDATES_JOB_BUTTON = (By.ID, 'run-job-schedule_updates')
     RUN_SEMESTER_START_JOB_BUTTON = (By.ID, 'run-job-semester-start')
     RUN_SIS_DATA_REFRESH_JOB_BUTTON = (By.ID, 'run-job-sis_data_refresh')
 
@@ -96,6 +97,13 @@ class JobsPage(DiabloPages):
         time.sleep(1)
         self.wait_for_page_and_click(JobsPage.RUN_REMIND_SCHEDULED_BUTTON)
         self.wait_for_most_recent_job_success(AsyncJob.REMIND_SCHEDULED)
+
+    def run_schedule_updates_job(self):
+        app.logger.info('Running Schedule Updates job')
+        self.scroll_to_top()
+        time.sleep(1)
+        self.wait_for_page_and_click(JobsPage.RUN_SCHEDULE_UPDATES_JOB_BUTTON)
+        self.wait_for_most_recent_job_success(AsyncJob.SCHEDULE_UPDATES)
 
     def run_semester_start_job(self):
         app.logger.info('Running Semester Start job')

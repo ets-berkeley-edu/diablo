@@ -5,10 +5,6 @@
       "dept_code": "ASTRON",
       "instructors": [
         {
-          "uid": "123456",
-          "first_name": "Test",
-          "last_name": "Instructor",
-          "email": "foo@bar.edu",
           "role": "PI"
         }
       ],
@@ -20,8 +16,6 @@
             "capability": "Screencast + Video"
           },
           "meeting_schedule": {
-            "start_date": null,
-            "end_date": null,
             "days": "MO, WE, FR",
             "start_time": "3:00 pm",
             "end_time": "3:59 pm"
@@ -35,10 +29,6 @@
       "dept_code": "ESPM",
       "instructors": [
         {
-          "uid": "123456",
-          "first_name": "Test",
-          "last_name": "Instructor",
-          "email": "foo@bar.edu",
           "role": "PI"
         }
       ],
@@ -50,8 +40,6 @@
             "capability": "Screencast + Video"
           },
           "meeting_schedule": {
-            "start_date": null,
-            "end_date": null,
             "days": "TU, TH",
             "start_time": "11:00 am",
             "end_time": "12:29 pm"
@@ -65,10 +53,6 @@
       "dept_code": "HISTORY",
       "instructors": [
         {
-          "uid": "123456",
-          "first_name": "Test",
-          "last_name": "Instructor",
-          "email": "foo@bar.edu",
           "role": "PI"
         }
       ],
@@ -80,8 +64,6 @@
             "capability": "Screencast"
           },
           "meeting_schedule": {
-            "start_date": null,
-            "end_date": null,
             "days": "TU, TH",
             "start_time": "2:00 pm",
             "end_time": "3:29 pm"
@@ -94,10 +76,6 @@
       "dept_code": "ECON",
       "instructors": [
         {
-          "uid": "123456",
-          "first_name": "Test",
-          "last_name": "Instructor",
-          "email": "foo@bar.edu",
           "role": "PI"
         }
       ],
@@ -109,8 +87,6 @@
             "capability": "Screencast + Video"
           },
           "meeting_schedule": {
-            "start_date": null,
-            "end_date": null,
             "days": "TU, TH",
             "start_time": "11:00 am",
             "end_time": "12:29 pm"
@@ -124,10 +100,6 @@
       "dept_code": "PSYCH",
       "instructors": [
         {
-          "uid": "123456",
-          "first_name": "Test",
-          "last_name": "Instructor",
-          "email": "foo@bar.edu",
           "role": "ICNT"
         }
       ],
@@ -139,8 +111,6 @@
             "capabilities": "Screencast"
           },
           "meeting_schedule": {
-            "start_date": null,
-            "end_date": null,
             "days": "MO, WE",
             "start_time": "9:00 am",
             "end_time": "9:59 am"
@@ -154,26 +124,14 @@
       "dept_code": "PHYSICS",
       "instructors": [
         {
-          "uid": "123456",
-          "first_name": "Test",
-          "last_name": "Instructor",
-          "email": "foo@bar.edu",
           "role": "PI"
         },
         {
-          "uid": "123456",
-          "first_name": "Test",
-          "last_name": "Instructor",
-          "email": "foo@bar.edu",
           "role": "TNIC"
         }
       ],
       "proxies": [
         {
-          "uid": "123456",
-          "first_name": "Test",
-          "last_name": "Instructor",
-          "email": "foo@bar.edu",
           "role": "APRX"
         }
       ],
@@ -184,8 +142,6 @@
             "capability": "Screencast + Video"
           },
           "meeting_schedule": {
-            "start_date": null,
-            "end_date": null,
             "days": "TU, TH",
             "start_time": "12:30 pm",
             "end_time": "1:59 pm"
@@ -199,17 +155,9 @@
       "dept_code": "MCELLBI",
       "instructors": [
         {
-          "uid": "123456",
-          "first_name": "Test",
-          "last_name": "Instructor",
-          "email": "foo@bar.edu",
           "role": "ICNT"
         },
         {
-          "uid": "123456",
-          "first_name": "Test",
-          "last_name": "Instructor",
-          "email": "foo@bar.edu",
           "role": "PI"
         }
       ],
@@ -221,8 +169,6 @@
             "capability": "Screencast"
           },
           "meeting_schedule": {
-            "start_date": null,
-            "end_date": null,
             "days": "TU, TH",
             "start_time": "11:00 am",
             "end_time": "12:29 pm"
@@ -236,19 +182,11 @@
       "dept_code": "GERMAN",
       "instructors": [
         {
-          "uid": "123456",
-          "first_name": "Test",
-          "last_name": "Instructor",
-          "email": "foo@bar.edu",
           "role": "PI"
         }
       ],
       "proxies": [
         {
-          "uid": "123456",
-          "first_name": "Test",
-          "last_name": "Instructor",
-          "email": "foo@bar.edu",
           "role": "APRX"
         }
       ],
@@ -259,8 +197,6 @@
             "capability": "Screencast"
           },
           "meeting_schedule": {
-            "start_date": null,
-            "end_date": null,
             "days": "WE, FR",
             "start_time": "10:00 pm",
             "end_time": "10:59 pm"
@@ -274,19 +210,11 @@
       "dept_code": "FRENCH",
       "instructors": [
         {
-          "uid": "123456",
-          "first_name": "Test",
-          "last_name": "Instructor",
-          "email": "foo@bar.edu",
           "role": "PI"
         }
       ],
       "proxies": [
         {
-          "uid": "123456",
-          "first_name": "Test",
-          "last_name": "Instructor",
-          "email": "foo@bar.edu",
           "role": "APRX"
         }
       ],
@@ -297,8 +225,6 @@
             "capability": "Screencast"
           },
           "meeting_schedule": {
-            "start_date": null,
-            "end_date": null,
             "days": "TU, TH",
             "start_time": "10:00 am",
             "end_time": "10:59 am"
@@ -312,26 +238,14 @@
       "dept_code": "SPANISH",
       "instructors": [
         {
-          "uid": "123456",
-          "first_name": "Test",
-          "last_name": "Instructor",
-          "email": "foo@bar.edu",
           "role": "PI"
         }
       ],
       "proxies": [
         {
-          "uid": "123456",
-          "first_name": "Test",
-          "last_name": "Instructor",
-          "email": "foo@bar.edu",
           "role": "APRX"
         },
         {
-          "uid": "123456",
-          "first_name": "Test",
-          "last_name": "Instructor",
-          "email": "foo@bar.edu",
           "role": "APRX"
         }
       ],
@@ -342,8 +256,6 @@
             "capability": "Screencast"
           },
           "meeting_schedule": {
-            "start_date": null,
-            "end_date": null,
             "days": "TU, TH",
             "start_time": "7:00 pm",
             "end_time": "7:59 pm"
@@ -356,17 +268,9 @@
       "test_script": "test_x_listings",
       "instructors": [
         {
-          "uid": "123456",
-          "first_name": "Test",
-          "last_name": "Instructor",
-          "email": "foo@bar.edu",
           "role": "PI"
         },
         {
-          "uid": "123456",
-          "first_name": "Test",
-          "last_name": "Instructor",
-          "email": "foo@bar.edu",
           "role": "PI"
         }
       ],
@@ -378,8 +282,6 @@
             "capability": "Screencast"
           },
           "meeting_schedule": {
-            "start_date": null,
-            "end_date": null,
             "days": "MO, WE, FR",
             "start_time": "10:00 am",
             "end_time": "10:59 am"
@@ -393,10 +295,6 @@
       "dept_code": "CHEM",
       "instructors": [
         {
-          "uid": "123456",
-          "first_name": "Test",
-          "last_name": "Instructor",
-          "email": "foo@bar.edu",
           "role": "PI"
         }
       ],
@@ -408,8 +306,6 @@
             "capability": "Screencast"
           },
           "meeting_schedule": {
-            "start_date": null,
-            "end_date": null,
             "days": "MO, WE, FR",
             "start_time": "4:00 pm",
             "end_time": "4:59 pm"
@@ -423,10 +319,6 @@
       "dept_code": "ENGLISH",
       "instructors": [
         {
-          "uid": "123456",
-          "first_name": "Test",
-          "last_name": "Instructor",
-          "email": "foo@bar.edu",
           "role": "PI"
         }
       ],
@@ -438,8 +330,6 @@
             "capability": "Screencast"
           },
           "meeting_schedule": {
-            "start_date": null,
-            "end_date": null,
             "days": "MO, WE",
             "start_time": "9:00 am",
             "end_time": "9:59 am"
@@ -451,19 +341,11 @@
       "test_script": "test_course_changes_fake",
       "instructors": [
         {
-          "uid": "123456",
-          "first_name": "Test",
-          "last_name": "Instructor",
-          "email": "foo@bar.edu",
           "role": "PI"
         }
       ],
       "proxies": [
         {
-          "uid": "123456",
-          "first_name": "Test",
-          "last_name": "Instructor",
-          "email": "foo@bar.edu",
           "role": "APRX"
         }
       ],
@@ -474,8 +356,6 @@
             "capability": "Screencast"
           },
           "meeting_schedule": {
-            "start_date": null,
-            "end_date": null,
             "days": "TU, TH",
             "start_time": "2:30 pm",
             "end_time": "3:59 pm"
@@ -487,10 +367,6 @@
       "test_script": "test_course_changes_faker",
       "instructors": [
         {
-          "uid": "123456",
-          "first_name": "Test",
-          "last_name": "Instructor",
-          "email": "foo@bar.edu",
           "role": "PI"
         }
       ],
@@ -502,8 +378,6 @@
             "capability": "Screencast"
           },
           "meeting_schedule": {
-            "start_date": null,
-            "end_date": null,
             "days": "TU, TH",
             "start_time": "2:30 pm",
             "end_time": "3:59 pm"
@@ -515,10 +389,6 @@
       "test_script": "test_course_changes_fakest",
       "instructors": [
         {
-          "uid": "123456",
-          "first_name": "Test",
-          "last_name": "Instructor",
-          "email": "foo@bar.edu",
           "role": "PI"
         }
       ],
@@ -530,8 +400,6 @@
             "capability": "Screencast + Video"
           },
           "meeting_schedule": {
-            "start_date": null,
-            "end_date": null,
             "days": "TU, TH",
             "start_time": "2:30 pm",
             "end_time": "3:59 pm"
@@ -544,10 +412,6 @@
       "dept_code": "EPS",
       "instructors": [
         {
-          "uid": "123456",
-          "first_name": "Test",
-          "last_name": "Instructor",
-          "email": "foo@bar.edu",
           "role": "PI"
         }
       ],
@@ -559,8 +423,6 @@
             "capability": "Screencast + Video"
           },
           "meeting_schedule": {
-            "start_date": null,
-            "end_date": null,
             "days": "FR",
             "start_time": "1:00 pm",
             "end_time": "2:59 pm"
@@ -574,10 +436,6 @@
       "dept_code": "LEGALST",
       "instructors": [
         {
-          "uid": "123456",
-          "first_name": "Test",
-          "last_name": "Instructor",
-          "email": "foo@bar.edu",
           "role": "PI"
         }
       ],
@@ -589,8 +447,6 @@
             "capability": "Screencast"
           },
           "meeting_schedule": {
-            "start_date": null,
-            "end_date": null,
             "days": "MO, WE, FR",
             "start_time": "5:00 am",
             "end_time": "5:59 am"
@@ -602,8 +458,6 @@
             "capability": null
           },
           "meeting_schedule": {
-            "start_date": null,
-            "end_date": null,
             "days": "MO, WE, FR",
             "start_time": "5:00 am",
             "end_time": "5:59 am"
@@ -615,10 +469,6 @@
       "test_script": "test_weird_type_b_changes",
       "instructors": [
         {
-          "uid": "123456",
-          "first_name": "Test",
-          "last_name": "Instructor",
-          "email": "foo@bar.edu",
           "role": "PI"
         }
       ],
@@ -630,8 +480,6 @@
             "capability": "Screencast + Video"
           },
           "meeting_schedule": {
-            "start_date": null,
-            "end_date": null,
             "days": "MO, WE, FR",
             "start_time": "5:00 am",
             "end_time": "5:59 am"
@@ -643,8 +491,6 @@
             "capability": null
           },
           "meeting_schedule": {
-            "start_date": null,
-            "end_date": null,
             "days": "MO, WE, FR",
             "start_time": "5:00 am",
             "end_time": "5:59 am"
@@ -657,10 +503,6 @@
       "dept_code": "STAT",
       "instructors": [
         {
-          "uid": "123456",
-          "first_name": "Test",
-          "last_name": "Instructor",
-          "email": "foo@bar.edu",
           "role": "PI"
         }
       ],
@@ -672,8 +514,6 @@
             "capability": "Screencast + Video"
           },
           "meeting_schedule": {
-            "start_date": null,
-            "end_date": null,
             "days": "TU, TH",
             "start_time": "9:00 pm",
             "end_time": "9:59 pm"
@@ -685,8 +525,6 @@
             "capability": null
           },
           "meeting_schedule": {
-            "start_date": null,
-            "end_date": null,
             "days": "TU, TH",
             "start_time": "9:00 pm",
             "end_time": "9:59 pm"
@@ -698,10 +536,6 @@
       "test_script": "test_weird_type_c_changes",
       "instructors": [
         {
-          "uid": "123456",
-          "first_name": "Test",
-          "last_name": "Instructor",
-          "email": "foo@bar.edu",
           "role": "PI"
         }
       ],
@@ -713,8 +547,6 @@
             "capability": "Screencast + Video"
           },
           "meeting_schedule": {
-            "start_date": null,
-            "end_date": null,
             "days": "TU, TH",
             "start_time": "9:00 pm",
             "end_time": "9:59 pm"
@@ -726,8 +558,6 @@
             "capability": "Screencast"
           },
           "meeting_schedule": {
-            "start_date": null,
-            "end_date": null,
             "days": "TU, TH",
             "start_time": "9:00 pm",
             "end_time": "9:59 pm"
@@ -740,10 +570,6 @@
       "dept_code": "COMPSCI",
       "instructors": [
         {
-          "uid": "123456",
-          "first_name": "Test",
-          "last_name": "Instructor",
-          "email": "foo@bar.edu",
           "role": "PI"
         }
       ],
@@ -755,8 +581,6 @@
             "capability": "Screencast"
           },
           "meeting_schedule": {
-            "start_date": null,
-            "end_date": null,
             "days": "TU, TH",
             "start_time": "8:00 pm",
             "end_time": "8:59 pm"
@@ -768,9 +592,67 @@
             "capability": "Screencast + Video"
           },
           "meeting_schedule": {
-            "start_date": null,
-            "end_date": null,
             "days": "TU, TH",
+            "start_time": "8:00 pm",
+            "end_time": "8:59 pm"
+          }
+        }
+      ]
+    },
+    {
+     "test_script": "test_opt_out_0",
+      "dept_code": "COMPSCI",
+      "instructors": [
+        {
+          "role": "PI"
+        },
+        {
+          "role": "PI"
+        }
+      ],
+      "proxies": [],
+      "meetings": [
+        {
+          "room": {
+            "name": "O'Brien 212",
+            "capability": "Screencast"
+          },
+          "meeting_schedule": {
+            "days": "TU, TH",
+            "start_time": "8:00 pm",
+            "end_time": "8:59 pm"
+          }
+        },
+        {
+          "room": {
+            "name": "Pimentel 1",
+            "capability": "Screencast"
+          },
+          "meeting_schedule": {
+            "days": "TU, TH",
+            "start_time": "8:00 pm",
+            "end_time": "8:59 pm"
+          }
+        }
+      ]
+    },
+    {
+     "test_script": "test_opt_out_1",
+      "dept_code": "COMPSCI",
+      "instructors": [
+        {
+          "role": "PI"
+        }
+      ],
+      "proxies": [],
+      "meetings": [
+        {
+          "room": {
+            "name": "O'Brien 212",
+            "capability": "Screencast"
+          },
+          "meeting_schedule": {
+            "days": "MO, WE",
             "start_time": "8:00 pm",
             "end_time": "8:59 pm"
           }
