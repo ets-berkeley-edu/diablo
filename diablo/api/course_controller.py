@@ -232,7 +232,7 @@ def update_publish_type():
         raise BadRequestError('Required params missing or invalid')
     if not current_user.is_admin and current_user.uid not in [i['uid'] for i in course['instructors']]:
         raise ForbiddenRequestError(f'Sorry, you are unauthorized to view the course {course["label"]}.')
-    if publish_type == 'kaltura_media_gallery' and not canvas_site_id:
+    if publish_type and publish_type.startswith('kaltura_media_gallery') and not canvas_site_id:
         raise BadRequestError('Publication to course site requires Canvas site id')
 
     preferences = CoursePreference.update_publish_type(
@@ -242,24 +242,26 @@ def update_publish_type():
         canvas_site_id=canvas_site_id,
     )
     if preferences:
-        ScheduleUpdate.queue(
-            term_id=course['termId'],
-            section_id=course['sectionId'],
-            field_name='publish_type',
-            field_value_old=course.get('publishType'),
-            field_value_new=publish_type,
-            requested_by_uid=current_user.uid,
-            requested_by_name=current_user.name,
-        )
-        ScheduleUpdate.queue(
-            term_id=course['termId'],
-            section_id=course['sectionId'],
-            field_name='canvas_site_id',
-            field_value_old=course.get('canvasSiteId'),
-            field_value_new=canvas_site_id,
-            requested_by_uid=current_user.uid,
-            requested_by_name=current_user.name,
-        )
+        if course.get('publishType') != publish_type:
+            ScheduleUpdate.queue(
+                term_id=course['termId'],
+                section_id=course['sectionId'],
+                field_name='publish_type',
+                field_value_old=course.get('publishType'),
+                field_value_new=publish_type,
+                requested_by_uid=current_user.uid,
+                requested_by_name=current_user.name,
+            )
+        if course.get('canvasSiteId') != canvas_site_id:
+            ScheduleUpdate.queue(
+                term_id=course['termId'],
+                section_id=course['sectionId'],
+                field_name='canvas_site_id',
+                field_value_old=course.get('canvasSiteId'),
+                field_value_new=canvas_site_id,
+                requested_by_uid=current_user.uid,
+                requested_by_name=current_user.name,
+            )
 
     return tolerant_jsonify(preferences.to_api_json())
 

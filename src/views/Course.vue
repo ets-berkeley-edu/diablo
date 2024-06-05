@@ -227,7 +227,7 @@
                   <div id="publish-type-name">
                     {{ displayLabels[course.publishType] }}
                   </div>
-                  <div v-if="publishType === 'kaltura_media_gallery' && course.canvasSiteId" id="publish-linked-canvas-site">
+                  <div v-if="publishType && publishType.startsWith('kaltura_media_gallery') && course.canvasSiteId" id="publish-linked-canvas-site">
                     Linked bCourses site: <CanvasCourseSite :site-id="publishCanvasSiteId" :course-site="courseSite" />
                   </div>
                   <v-btn
@@ -252,7 +252,7 @@
                     :label="displayLabels[publishTypeOption]"
                   ></v-radio>
                 </v-radio-group>
-                <div v-if="publishTypeEditing && publishType === 'kaltura_media_gallery'" class="mb-4">
+                <div v-if="publishTypeEditing && publishType && publishType.startsWith('kaltura_media_gallery')" class="mb-4">
                   <v-select
                     v-if="publishTypeEditing"
                     id="select-canvas-site"
@@ -275,7 +275,7 @@
                   <v-btn
                     id="btn-publish-type-save"
                     color="success"
-                    :disabled="publishTypeUpdating || (publishType === 'kaltura_media_gallery' && !publishCanvasSiteId)"
+                    :disabled="publishTypeUpdating || (publishType && publishType.startsWith('kaltura_media_gallery') && !publishCanvasSiteId)"
                     @click="updatePublishType"
                   >
                     <v-progress-circular
@@ -435,6 +435,7 @@ export default {
       courseSite: undefined,
       displayLabels: {
         'kaltura_media_gallery': 'Publish automatically to the Media Gallery (all members of the bCourses site will have access)',
+        'kaltura_media_gallery_moderated': 'Publish to Pending tab (Teacher/TA/Designer members of the bCourses site can approve recordings for viewing)',
         'kaltura_my_media': 'Publish to My Media (I will decide if and how I want to share)',
         'presenter_presentation_audio': 'Camera Without Operator',
         'presenter_presentation_audio_with_operator': `Camera With Operator ($${this.$config.courseCapturePremiumCost} fee)`

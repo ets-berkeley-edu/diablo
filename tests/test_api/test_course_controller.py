@@ -610,7 +610,7 @@ class TestUpdatePublishType:
             expected_status_code=401,
         )
 
-    def test_canvas_site_id_required(self, client, fake_auth):
+    def test_canvas_site_id_required_unmoderated(self, client, fake_auth):
         # kaltura_media_gallery setting requires a Canvas site ID.
         instructor_uids = get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
         fake_auth.login(instructor_uids[0])
@@ -622,6 +622,21 @@ class TestUpdatePublishType:
             term_id=self.term_id,
             section_id=section_1_id,
             publish_type='kaltura_media_gallery',
+            expected_status_code=400,
+        )
+
+    def test_canvas_site_id_required_moderated(self, client, fake_auth):
+        # kaltura_media_gallery_moderated setting requires a Canvas site ID.
+        instructor_uids = get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
+        fake_auth.login(instructor_uids[0])
+
+        course = SisSection.get_course(section_id=section_1_id, term_id=self.term_id)
+        assert course['publishType'] == 'kaltura_my_media'
+        self._api_publish_type_update(
+            client,
+            term_id=self.term_id,
+            section_id=section_1_id,
+            publish_type='kaltura_media_gallery_moderated',
             expected_status_code=400,
         )
 
@@ -645,13 +660,31 @@ class TestUpdatePublishType:
         assert course['publishType'] == 'kaltura_media_gallery'
         assert course['canvasSiteId'] == 1234567
 
+        self._api_publish_type_update(
+            client,
+            term_id=self.term_id,
+            section_id=section_1_id,
+            publish_type='kaltura_media_gallery_moderated',
+            canvas_site_id=1234567,
+        )
+        std_commit(allow_test_environment=True)
+
+        course = SisSection.get_course(section_id=section_1_id, term_id=self.term_id)
+        assert course['publishType'] == 'kaltura_media_gallery_moderated'
+        assert course['canvasSiteId'] == 1234567
+
         publish_type_updates = [u for u in course['updateHistory'] if u['fieldName'] == 'publish_type']
-        assert len(publish_type_updates) == 1
-        assert publish_type_updates[0]['fieldValueOld'] == 'kaltura_my_media'
-        assert publish_type_updates[0]['fieldValueNew'] == 'kaltura_media_gallery'
+        assert len(publish_type_updates) == 2
+        assert publish_type_updates[0]['fieldValueOld'] == 'kaltura_media_gallery'
+        assert publish_type_updates[0]['fieldValueNew'] == 'kaltura_media_gallery_moderated'
         assert publish_type_updates[0]['status'] == 'queued'
         assert publish_type_updates[0]['requestedByUid'] == instructor_uids[0]
         assert publish_type_updates[0]['requestedByName'] == 'William Peter Blatty'
+        assert publish_type_updates[1]['fieldValueOld'] == 'kaltura_my_media'
+        assert publish_type_updates[1]['fieldValueNew'] == 'kaltura_media_gallery'
+        assert publish_type_updates[1]['status'] == 'queued'
+        assert publish_type_updates[1]['requestedByUid'] == instructor_uids[0]
+        assert publish_type_updates[1]['requestedByName'] == 'William Peter Blatty'
 
         canvas_site_updates = [u for u in course['updateHistory'] if u['fieldName'] == 'canvas_site_id']
         assert len(canvas_site_updates) == 1
