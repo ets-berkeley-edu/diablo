@@ -73,6 +73,7 @@ CREATE TYPE job_schedule_types AS ENUM (
 
 CREATE TYPE publish_types AS ENUM (
     'kaltura_media_gallery',
+    'kaltura_media_gallery_moderated',
     'kaltura_my_media'
 );
 

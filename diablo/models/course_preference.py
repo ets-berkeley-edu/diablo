@@ -34,6 +34,7 @@ from sqlalchemy.dialects.postgresql import ARRAY, ENUM
 
 publish_type = ENUM(
     'kaltura_media_gallery',
+    'kaltura_media_gallery_moderated',
     'kaltura_my_media',
     name='publish_types',
     create_type=False,
@@ -51,6 +52,7 @@ recording_type = ENUM(
 
 NAMES_PER_PUBLISH_TYPE = {
     'kaltura_media_gallery': 'Publish Automatically to Course Site',
+    'kaltura_media_gallery_moderated': 'Publish to Pending Tab in Course Site',
     'kaltura_my_media': 'Publish to My Media',
 }
 

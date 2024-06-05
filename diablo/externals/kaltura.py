@@ -35,9 +35,9 @@ from diablo.lib.kaltura_util import get_classification_name, get_recurrence_name
 from diablo.lib.util import default_timezone, epoch_time_to_isoformat, format_days
 from flask import current_app as app
 from KalturaClient import KalturaClient, KalturaConfiguration
-from KalturaClient.Plugins.Core import KalturaBaseEntry, KalturaCategoryEntry, KalturaCategoryEntryFilter, \
+from KalturaClient.Plugins.Core import KalturaBaseEntry, KalturaCategory, KalturaCategoryEntry, KalturaCategoryEntryFilter, \
     KalturaCategoryEntryStatus, KalturaCategoryFilter, KalturaEntryDisplayInSearchType, KalturaEntryModerationStatus, \
-    KalturaEntryStatus, KalturaEntryType, KalturaFilterPager, KalturaMediaEntryFilter
+    KalturaEntryStatus, KalturaEntryType, KalturaFilterPager, KalturaMediaEntryFilter, KalturaNullableBoolean
 from KalturaClient.Plugins.Schedule import KalturaRecordScheduleEvent, KalturaRecordScheduleEventFilter, \
     KalturaScheduleEventClassificationType, KalturaScheduleEventFilter, KalturaScheduleEventRecurrence, \
     KalturaScheduleEventRecurrenceFrequency, KalturaScheduleEventRecurrenceType, KalturaScheduleEventResource, \
@@ -163,6 +163,20 @@ class Kaltura:
         return [{'id': o.id, 'name': o.name} for o in _get_kaltura_objects(_fetch)]
 
     @skip_when_pytest()
+    def get_or_create_canvas_category_object(self, canvas_course_site_id, moderation=False):
+        o = self.get_category_object(name=f'Canvas>site>channels>{canvas_course_site_id}')
+        if o:
+            return o
+        else:
+            parent = self.get_category_object(name='Canvas>site>channels')
+            response = self.client.category.add(KalturaCategory(
+                name=canvas_course_site_id,
+                parentId=parent['id'],
+                moderation=KalturaNullableBoolean(1 if moderation else 0),
+            ))
+            return _category_object_to_json(response) if response else None
+
+    @skip_when_pytest()
     def get_canvas_category_object(self, canvas_course_site_id):
         return self.get_category_object(name=f'Canvas>site>channels>{canvas_course_site_id}')
 
@@ -192,9 +206,10 @@ class Kaltura:
         if common_category:
             category_ids.append(common_category['id'])
 
-        if publish_type == 'kaltura_media_gallery':
+        if publish_type and publish_type.startswith('kaltura_media_gallery'):
+            moderation = publish_type == 'kaltura_media_gallery_moderated'
             for canvas_course_site_id in canvas_course_site_ids:
-                category = self.get_canvas_category_object(canvas_course_site_id=canvas_course_site_id)
+                category = self.get_or_create_canvas_category_object(canvas_course_site_id=canvas_course_site_id, moderation=moderation)
                 if category:
                     category_ids.append(category['id'])
 
@@ -282,6 +297,12 @@ class Kaltura:
                 userId='RecordScheduleGroup',
             ),
         )
+
+    @skip_when_pytest()
+    def update_category_object(self, category_id, moderation):
+        # TODO pending better understanding of how category updates work in the Kaltura API.
+        return None
+        # response = self.client.category.update(KalturaCategory(id=update, moderation=KalturaNullableBoolean(1 if moderation else 0)))
 
     @skip_when_pytest()
     def update_schedule_event(self, meeting_attributes, scheduled_model):
@@ -494,9 +515,15 @@ def _category_entry_object_to_json(obj):
 
 
 def _category_object_to_json(obj):
+    _moderation_value_decoder = {
+        -1: None,
+        0: False,
+        1: True,
+    }
     return {
         'id': obj.id,
         'name': obj.name,
+        'moderation': _moderation_value_decoder.get(obj.moderation.value),
     }
 
 
