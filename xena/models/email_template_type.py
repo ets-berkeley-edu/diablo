@@ -72,7 +72,3 @@ class EmailTemplateType(Enum):
         # TODO 'desc': '',
         'type': 'room_change_no_longer_eligible',
     }
-    INSTR_SCHEDULE_CHANGE = {
-        # TODO 'desc': '',
-        # TODO 'type': '',
-    }

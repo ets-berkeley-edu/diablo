@@ -43,7 +43,7 @@ class TestCourseInstructorChanges:
     instr_2 = section.instructors[0]
 
     instr_1_test_data = util.get_test_script_course('test_course_changes_fake')
-    util.get_test_instructors(instr_1_test_data, uids_to_exclude=[instr_2.uid])
+    util.get_test_section_instructor_data(instr_1_test_data, uids_to_exclude=[instr_2.uid])
     instr_1 = Section(instr_1_test_data).instructors[0]
 
     recording_schedule = RecordingSchedule(section, meeting)

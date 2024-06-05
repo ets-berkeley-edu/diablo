@@ -60,7 +60,7 @@ class TestWeirdTypeB:
     # Course changes data
     test_data_changes = util.get_test_script_course('test_weird_type_b_changes')
     uids_to_exclude = list(map(lambda i: i.uid, section.instructors))
-    util.get_test_instructors(test_data_changes, uids_to_exclude=uids_to_exclude)
+    util.get_test_section_instructor_data(test_data_changes, uids_to_exclude=uids_to_exclude)
     changes = Section(test_data_changes)
     meeting_changes = changes.meetings[0]
 

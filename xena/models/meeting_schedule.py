@@ -38,7 +38,10 @@ class MeetingSchedule(object):
 
     @property
     def start_date(self):
-        date_str = self.data['start_date'] or app.config['CURRENT_TERM_BEGIN']
+        try:
+            date_str = self.data['start_date']
+        except KeyError:
+            date_str = app.config['CURRENT_TERM_BEGIN']
         return datetime.strptime(date_str, '%Y-%m-%d')
 
     @start_date.setter
@@ -49,7 +52,7 @@ class MeetingSchedule(object):
     def record_start(self):
         term_start_str = app.config['CURRENT_TERM_BEGIN']
         term_record_start_str = app.config['CURRENT_TERM_RECORDINGS_BEGIN'] or term_start_str
-        meeting_start_str = self.data['start_date'] or term_start_str
+        meeting_start_str = self.start_date.strftime('%Y-%m-%d')
 
         term_record_start_date = datetime.strptime(term_record_start_str, '%Y-%m-%d')
         meeting_start_date = datetime.strptime(meeting_start_str, '%Y-%m-%d')
@@ -60,7 +63,10 @@ class MeetingSchedule(object):
 
     @property
     def end_date(self):
-        date_str = self.data['end_date'] or app.config['CURRENT_TERM_END']
+        try:
+            date_str = self.data['end_date']
+        except KeyError:
+            date_str = app.config['CURRENT_TERM_END']
         return datetime.strptime(date_str, '%Y-%m-%d')
 
     @end_date.setter
@@ -69,7 +75,7 @@ class MeetingSchedule(object):
 
     @property
     def record_end(self):
-        date_str = self.data['end_date'] or app.config['CURRENT_TERM_RECORDINGS_END']
+        date_str = self.end_date.strftime('%Y-%m-%d') or app.config['CURRENT_TERM_RECORDINGS_END']
         return datetime.strptime(date_str, '%Y-%m-%d')
 
     @property
