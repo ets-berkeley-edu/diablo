@@ -35,6 +35,7 @@ from xena.models.recording_scheduling_status import RecordingSchedulingStatus
 from xena.models.room import Room
 from xena.models.section import Section
 from xena.models.term import Term
+from xena.models.user import User
 
 
 def get_xena_browser():
@@ -75,6 +76,13 @@ def get_username():
 
 def get_password():
     return os.getenv('PASSWORD')
+
+
+def get_test_collaborator():
+    return User({
+        'email': app.config['TEST_DATA_USER_EMAIL'],
+        'uid': app.config['TEST_DATA_USER_UID'],
+    })
 
 
 def get_kaltura_term_date_str(date):

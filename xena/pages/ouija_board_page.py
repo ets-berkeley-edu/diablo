@@ -34,11 +34,11 @@ from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.wait import WebDriverWait as Wait
-from xena.pages.diablo_pages import DiabloPages
+from xena.pages.courses_page import CoursesPage
 from xena.test_utils import util
 
 
-class OuijaBoardPage(DiabloPages):
+class OuijaBoardPage(CoursesPage):
 
     DOWNLOAD_CSV_BUTTON = (By.XPATH, '//button[contains(., "Download CSV")]')
 
@@ -55,8 +55,6 @@ class OuijaBoardPage(DiabloPages):
     FILTER_NO_INSTRUCTORS_OPTION = (By.XPATH, '//div[@role="option"][contains(., "No Instructors")]')
 
     NO_RESULTS_MSG = (By.ID, 'message-when-zero-courses')
-
-    COURSE_ROW = (By.XPATH, '//a[contains(@id, "link-course-")]')
 
     def hit_url(self):
         self.driver.get(f'{app.config["BASE_URL"]}/ouija')
@@ -171,26 +169,10 @@ class OuijaBoardPage(DiabloPages):
 
     # COURSES
 
-    @staticmethod
-    def course_row_locator(section):
-        return By.XPATH, f'//tr[contains(., "{section.code}") and contains(., "{section.ccn}")]'
-
-    @staticmethod
-    def course_row_link_locator(section):
-        return By.ID, f'link-course-{section.ccn}'
-
-    def wait_for_course_results(self):
-        Wait(self.driver, util.get_short_timeout()).until(
-            ec.visibility_of_any_elements_located(OuijaBoardPage.COURSE_ROW),
-        )
-
     def wait_for_course_result(self, section):
         Wait(self.driver, util.get_short_timeout()).until(
-            ec.visibility_of_element_located(OuijaBoardPage.course_row_locator(section)),
+            ec.visibility_of_element_located(self.course_row_locator(section)),
         )
-
-    def course_row_link(self, section):
-        return self.element((OuijaBoardPage.course_row_link_locator(section)))
 
     def course_row_code_el(self, section):
         return self.element((By.XPATH, f'//tr[contains(., "{section.code}")]/td[1]'))
@@ -218,7 +200,3 @@ class OuijaBoardPage(DiabloPages):
 
     def course_row_sched_status_el(self, section):
         return self.element((By.ID, f'course-{section.ccn}-scheduling-status'))
-
-    def click_course_page_link(self, section):
-        app.logger.info(f'Clicking the link to the course page for {section.code}')
-        self.wait_for_page_and_click((By.ID, f'link-course-{section.ccn}'))
