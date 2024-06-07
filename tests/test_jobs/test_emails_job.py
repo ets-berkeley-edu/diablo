@@ -25,7 +25,6 @@ ENHANCEMENTS, OR MODIFICATIONS.
 from diablo import std_commit
 from diablo.jobs.emails_job import EmailsJob
 from diablo.lib.util import utc_now
-from diablo.models.opt_out import OptOut
 from diablo.models.queued_email import QueuedEmail
 from diablo.models.sent_email import SentEmail
 from diablo.models.sis_section import SisSection
@@ -47,11 +46,11 @@ class TestEmailsJob:
         std_commit(allow_test_environment=True)
         # If we reach this point then no error occurred.
 
-    def test_send_invitation_emails(self):
+    def test_send_course_emails(self):
         """Send all email in 'queued_emails' table."""
         term_id = app.config['CURRENT_TERM_ID']
         courses = SisSection.get_courses(section_ids=[50000, 50001], term_id=term_id)
-        email_template_type = 'invitation'
+        email_template_type = 'semester_start'
 
         for course in courses:
             for instructor in course['instructors']:
@@ -94,32 +93,6 @@ class TestEmailsJob:
                 assert email_json['termId'] == term_id
                 assert email_json['sentAt']
 
-    def test_course_has_opted_out(self):
-        """Do not send email to courses that have opted out."""
-        def _emails_sent():
-            return _get_emails_sent(email_template_type=email_template_type, section_id=section_id, term_id=term_id)
-
-        term_id = app.config['CURRENT_TERM_ID']
-        section_id = 50000
-        recipient = {
-            'name': 'William Peter Blatty',
-            'uid': '10001',
-        }
-        OptOut.update_opt_out(instructor_uid=recipient['uid'], term_id=term_id, section_id=section_id, opt_out=True)
-        email_template_type = 'invitation'
-        QueuedEmail.create(section_id, email_template_type, term_id, recipient=recipient)
-        std_commit(allow_test_environment=True)
-
-        emails_sent_before = _emails_sent()
-        # Run the job
-        EmailsJob(simply_yield).run()
-        std_commit(allow_test_environment=True)
-
-        # Expect no emails sent
-        emails_sent_after = _emails_sent()
-        assert len(emails_sent_after) == len(emails_sent_before)
-        assert list(map(lambda e: e.id, emails_sent_before)) == list(map(lambda e: e.id, emails_sent_after))
-
     def test_queued_email_for_admin(self):
         """Certain email template types are for admin recipients only."""
         def _emails_sent():
@@ -127,7 +100,7 @@ class TestEmailsJob:
 
         term_id = app.config['CURRENT_TERM_ID']
         section_id = 50005
-        email_template_type = 'admin_alert_room_change'
+        email_template_type = 'admin_operator_requested'
         recipient_uid = app.config['EMAIL_DIABLO_ADMIN_UID']
         QueuedEmail.create(
             section_id,

@@ -106,7 +106,6 @@ def _create_blackouts():
 
 
 def _create_email_templates():
-    # template types active as of Diablo v2.0
     EmailTemplate.create(
         template_type='admin_operator_requested',
         name='Admin alert: operator requested',
@@ -144,6 +143,12 @@ def _create_email_templates():
         message='Class no longer scheduled: <code>course.name</code>',
     )
     EmailTemplate.create(
+        template_type='notify_instructor_of_changes',
+        name="I'm the Devil. Now kindly undo these straps.",
+        subject_line="If you're the Devil, why not make the straps disappear?",
+        message="That's much too vulgar a display of power.",
+    )
+    EmailTemplate.create(
         template_type='opted_out',
         name='Opted out',
         subject_line='Opted out',
@@ -166,71 +171,6 @@ def _create_email_templates():
         name='Semester start',
         subject_line="It's a new semester, tally ho!",
         message="Well, then let's introduce ourselves. I'm <code>recipient.name</code> and these are my courses:\n<code>courseList</code>",
-    )
-    # legacy types
-    EmailTemplate.create(
-        template_type='admin_alert_date_change',
-        name='Scheduled course had date change',
-        subject_line='Funky dates!',
-        message="""
-            Scheduled recordings of <code>course.name</code> have invalid dates:
-            <code>course.date.start</code> to <code>course.date.end</code>.
-        """,
-    )
-    EmailTemplate.create(
-        template_type='admin_alert_instructor_change',
-        name='Alert admin instructors change',
-        subject_line='Instructors have changed',
-        message="""
-            <code>course.name</code>:
-            Old instructor(s) <code>instructors.previous</code>
-            New instructor(s) <code>instructors.all</code>
-        """,
-    )
-    EmailTemplate.create(
-        template_type='admin_alert_multiple_meeting_patterns',
-        name='Alert admin when multiple meeting patterns',
-        subject_line="It's complicated!",
-        message="""
-            <code>course.name</code> has weird dates:
-            <code>course.date.start</code> to <code>course.date.end</code>
-        """,
-    )
-    EmailTemplate.create(
-        template_type='admin_alert_room_change',
-        name='Alert admin when room change',
-        subject_line='Room change alert',
-        message='<code>course.name</code> has changed to a new room: <code>course.room</code>',
-    )
-    EmailTemplate.create(
-        template_type='remind_invitees',
-        name='Reminder to invitees who have yet to approve',
-        subject_line='Here is a friendly reminder',
-        message='This service needs you. Please sign up!',
-    )
-    EmailTemplate.create(
-        template_type='notify_instructor_of_changes',
-        name="I'm the Devil. Now kindly undo these straps.",
-        subject_line="If you're the Devil, why not make the straps disappear?",
-        message="That's much too vulgar a display of power.",
-    )
-    EmailTemplate.create(
-        template_type='invitation',
-        name='What an excellent day for an exorcism.',
-        subject_line='You would like that?',
-        message='Intensely.',
-    )
-    EmailTemplate.create(
-        template_type='recordings_scheduled',
-        name='Recordings scheduled',
-        subject_line='Course scheduled for Course Capture',
-        message='Recordings of type <code>recording.type</code> will be published to <code>publish.type</code>.',
-    )
-    EmailTemplate.create(
-        template_type='waiting_for_approval',
-        name='Waiting for approval',
-        subject_line="Who's Captain Howdy?",
-        message='You know, I make the questions and he does the answers.',
     )
     std_commit(allow_test_environment=True)
 

@@ -1,3 +1,4 @@
+
 """
 Copyright ©2024. The Regents of the University of California (Regents). All Rights Reserved.
 
@@ -88,11 +89,11 @@ class TestGetEmailTemplate:
 
     def test_get_email_template(self, client, admin_session):
         """Admin user has access to email_template data."""
-        email_template = next((t for t in EmailTemplate.all_templates() if 'exorcism' in t.name), None)
+        email_template = next((t for t in EmailTemplate.all_templates() if 'Devil' in t.name), None)
         assert email_template
         api_json = self._api_email_template(client, email_template.id)
         assert api_json['id'] == email_template.id
-        assert 'exorcism' in api_json['name']
+        assert 'Devil' in api_json['name']
 
 
 class TestUpdateEmailTemplate:

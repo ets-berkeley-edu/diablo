@@ -38,27 +38,17 @@ SET default_with_oids = false;
 --
 
 CREATE TYPE email_template_types AS ENUM (
-    -- template types active as of Diablo v2.0
     'admin_operator_requested',
     'changes_confirmed',
     'instructors_added',
     'instructors_removed',
     'new_class_scheduled',
     'no_longer_scheduled',
+    'notify_instructor_of_changes',
     'opted_out',
     'room_change',
     'room_change_no_longer_eligible',
-    'semester_start',
-    -- legacy types
-    'admin_alert_date_change',
-    'admin_alert_instructor_change',
-    'admin_alert_multiple_meeting_patterns',
-    'admin_alert_room_change',
-    'invitation',
-    'notify_instructor_of_changes',
-    'recordings_scheduled',
-    'remind_invitees',
-    'waiting_for_approval'
+    'semester_start'
 );
 
 --
@@ -146,18 +136,6 @@ ALTER TABLE ONLY blackouts
     ADD CONSTRAINT blackouts_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY blackouts
     ADD CONSTRAINT blackouts_name_unique_constraint UNIQUE (name);
-
---
-
-CREATE TABLE canvas_course_sites (
-    canvas_course_site_id INTEGER NOT NULL,
-    section_id INTEGER NOT NULL,
-    term_id INTEGER NOT NULL,
-    canvas_course_site_name TEXT NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL
-);
-ALTER TABLE canvas_course_sites OWNER TO diablo;
-ALTER TABLE canvas_course_sites ADD CONSTRAINT canvas_course_sites_pkey PRIMARY KEY (canvas_course_site_id, section_id, term_id);
 
 --
 
