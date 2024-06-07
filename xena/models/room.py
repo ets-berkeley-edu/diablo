@@ -23,8 +23,6 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-from xena.models.capability import Capability
-
 
 class Room(object):
 
@@ -35,7 +33,3 @@ class Room(object):
     @property
     def name(self):
         return self.data['name']
-
-    @property
-    def capability(self):
-        return Capability(self.data['capability'])

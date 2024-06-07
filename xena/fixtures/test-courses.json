@@ -1,54 +1,6 @@
 {
   "courses": [
     {
-      "test_script": "test_invitations_0",
-      "dept_code": "ASTRON",
-      "instructors": [
-        {
-          "role": "PI"
-        }
-      ],
-      "proxies": [],
-      "meetings": [
-        {
-          "room": {
-            "name": "Pimentel 1",
-            "capability": "Screencast + Video"
-          },
-          "meeting_schedule": {
-            "days": "MO, WE, FR",
-            "start_time": "3:00 pm",
-            "end_time": "3:59 pm"
-          }
-        }
-      ],
-      "listings": []
-    },
-    {
-      "test_script": "test_invitations_1",
-      "dept_code": "ESPM",
-      "instructors": [
-        {
-          "role": "PI"
-        }
-      ],
-      "proxies": [],
-      "meetings": [
-        {
-          "room": {
-            "name": "Pimentel 1",
-            "capability": "Screencast + Video"
-          },
-          "meeting_schedule": {
-            "days": "TU, TH",
-            "start_time": "11:00 am",
-            "end_time": "12:29 pm"
-          }
-        }
-      ],
-      "listings": []
-    },
-    {
       "test_script": "test_user_permissions",
       "dept_code": "HISTORY",
       "instructors": [
@@ -120,7 +72,7 @@
       "listings": []
     },
     {
-      "test_script": "test_sign_up_2",
+      "test_script": "test_scheduling_2",
       "dept_code": "PHYSICS",
       "instructors": [
         {
@@ -145,33 +97,6 @@
             "days": "TU, TH",
             "start_time": "12:30 pm",
             "end_time": "1:59 pm"
-          }
-        }
-      ],
-      "listings": []
-    },
-    {
-      "test_script": "test_sign_up_3",
-      "dept_code": "MCELLBI",
-      "instructors": [
-        {
-          "role": "ICNT"
-        },
-        {
-          "role": "PI"
-        }
-      ],
-      "proxies": [],
-      "meetings": [
-        {
-          "room": {
-            "name": "O'Brien 212",
-            "capability": "Screencast"
-          },
-          "meeting_schedule": {
-            "days": "TU, TH",
-            "start_time": "11:00 am",
-            "end_time": "12:29 pm"
           }
         }
       ],

@@ -24,13 +24,11 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 
 from datetime import datetime
-import time
 
 from flask import current_app as app
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.wait import WebDriverWait as Wait
-from xena.models.capability import Capability
 from xena.pages.diablo_pages import DiabloPages
 from xena.test_utils import util
 
@@ -40,35 +38,6 @@ class RoomPage(DiabloPages):
     def hit_url(self, room):
         room_id = util.get_room_id(room)
         self.driver.get(f'{app.config["BASE_URL"]}/room/{room_id}')
-
-    # HEADER
-
-    SELECT_CAPABILITY_INPUT = (By.XPATH, '//input[contains(@id, "select-room-capability")]/ancestor::div[@role="button"]')
-    AUDITORIUM_TOGGLE = (By.XPATH, '//label[text()="Auditorium"]/preceding-sibling::div')
-
-    def auditorium_selected(self):
-        el = self.element((By.XPATH, '//label[text()="Auditorium"]/preceding-sibling::div/input'))
-        return el.get_attribute('aria-checked') == 'true'
-
-    def click_auditorium_toggle(self):
-        app.logger.info('Clicking the auditorium toggle')
-        self.wait_for_element_and_click(RoomPage.AUDITORIUM_TOGGLE)
-
-    def set_auditorium_true(self):
-        if not self.auditorium_selected():
-            self.click_auditorium_toggle()
-
-    def set_auditorium_false(self):
-        if self.auditorium_selected():
-            self.click_auditorium_toggle()
-
-    def set_capability(self, capability):
-        app.logger.info(f'Setting room capability "{capability.value}"')
-        if (capability == Capability.SCREENCAST_AND_VIDEO) and not self.auditorium_selected():
-            self.click_auditorium_toggle()
-        self.wait_for_element_and_click(RoomPage.SELECT_CAPABILITY_INPUT)
-        self.click_menu_option(capability.value)
-        time.sleep(1)
 
     # COURSES TABLE
 

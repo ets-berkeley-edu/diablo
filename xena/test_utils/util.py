@@ -32,7 +32,6 @@ from diablo import db, std_commit
 from flask import current_app as app
 from sqlalchemy import text
 from xena.models.recording_scheduling_status import RecordingSchedulingStatus
-from xena.models.room import Room
 from xena.models.section import Section
 from xena.models.term import Term
 from xena.models.user import User
@@ -89,20 +88,10 @@ def get_kaltura_term_date_str(date):
     return datetime.strftime(date, '%m/%d/%Y')
 
 
-def parse_rooms_data():
-    with open(app.config['TEST_DATA_ROOMS']) as f:
-        parsed = json.load(f)
-        return [Room(agent) for agent in parsed['agents']]
-
-
-def parse_course_test_data():
-    with open(app.config['TEST_DATA_COURSES']) as f:
-        parsed = json.load(f)
-        return parsed['courses']
-
-
 def get_test_script_course(test_script_str):
-    for course in parse_course_test_data():
+    with open(app.config['TEST_DATA_COURSES']) as f:
+        parsed = json.load(f)['courses']
+    for course in parsed:
         if course['test_script'] == test_script_str:
             return course
 
