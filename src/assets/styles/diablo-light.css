@@ -6,3 +6,7 @@
 #light .v-card--outlined {
   border-color: #979797;
 }
+
+#light .background-shaded {
+  background-color: #f1f5fa;
+}
