@@ -25,56 +25,34 @@ ENHANCEMENTS, OR MODIFICATIONS.
 
 from flask import current_app as app
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as ec
+from selenium.webdriver.support.wait import WebDriverWait as Wait
 from xena.pages.diablo_pages import DiabloPages
+from xena.test_utils import util
 
 
 class CoursesPage(DiabloPages):
 
-    OPT_OUT_ALL_BUTTON = By.ID, 'toggle-opt-out-all-terms'
-    OPT_OUT_CURRENT_BUTTON = By.ID, 'toggle-opt-out-current-term'
+    COURSE_ROW = (By.XPATH, '//a[contains(@id, "link-course-")]')
+
+    # COURSES
 
     @staticmethod
-    def opt_out_section_button_loc(section):
-        return By.ID, f'toggle-opt-out-{section.ccn}'
+    def course_row_locator(section):
+        return By.XPATH, f'//tr[contains(., "{section.code}") and contains(., "{section.ccn}")]'
 
-    def enable_opt_out_all_terms(self):
-        app.logger.info('Opting out of all terms')
-        if self.element(self.OPT_OUT_ALL_BUTTON).get_attribute('aria-checked') == 'false':
-            self.wait_for_element_and_click(self.OPT_OUT_ALL_BUTTON)
-        else:
-            app.logger.info('Already opted out of all terms')
+    @staticmethod
+    def course_row_link_locator(section):
+        return By.ID, f'link-course-{section.ccn}'
 
-    def disable_opt_out_all_terms(self):
-        app.logger.info('Unchecking opt-out-all-terms')
-        if self.element(self.OPT_OUT_ALL_BUTTON).get_attribute('aria-checked') == 'true':
-            self.wait_for_element_and_click(self.OPT_OUT_ALL_BUTTON)
-        else:
-            app.logger.info('Already disabled')
+    def wait_for_course_results(self):
+        Wait(self.driver, util.get_short_timeout()).until(
+            ec.visibility_of_any_elements_located(self.COURSE_ROW),
+        )
 
-    def enable_opt_out_current_term(self):
-        app.logger.info('Opting out of current term')
-        if self.element(self.OPT_OUT_CURRENT_BUTTON).get_attribute('aria-checked') == 'false':
-            self.wait_for_element_and_click(self.OPT_OUT_CURRENT_BUTTON)
-        else:
-            app.logger.info('Already opted out of current term')
+    def course_row_link(self, section):
+        return self.element((self.course_row_link_locator(section)))
 
-    def disable_opt_out_current_term(self):
-        app.logger.info('Unchecking opt-out-current-term')
-        if self.element(self.OPT_OUT_CURRENT_BUTTON).get_attribute('aria-checked') == 'true':
-            self.wait_for_element_and_click(self.OPT_OUT_CURRENT_BUTTON)
-        else:
-            app.logger.info('Already disabled')
-
-    def enable_opt_out_section(self, section):
-        app.logger.info(f'Opting out of section ID {section.ccn}')
-        if self.element(self.opt_out_section_button_loc(section)).get_attribute('aria-checked') == 'false':
-            self.wait_for_element_and_click(self.opt_out_section_button_loc(section))
-        else:
-            app.logger.info(f'Already opted out of section {section.ccn}')
-
-    def disable_opt_out_section(self, section):
-        app.logger.info(f'Unchecking opt-out-{section.ccn}')
-        if self.element(self.opt_out_section_button_loc(section)).get_attribute('aria-checked') == 'true':
-            self.wait_for_element_and_click(self.opt_out_section_button_loc(section))
-        else:
-            app.logger.info('Already disabled')
+    def click_course_page_link(self, section):
+        app.logger.info(f'Clicking the link to the course page for {section.code}')
+        self.wait_for_page_and_click((By.ID, f'link-course-{section.ccn}'))

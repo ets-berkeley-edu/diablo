@@ -84,10 +84,10 @@ class TestOptOut0:
         self.jobs_page.log_out()
         self.login_page.load_page()
         self.login_page.dev_auth(instructor_0.uid)
-        self.courses_page.enable_opt_out_all_terms()
+        self.instructor_page.enable_opt_out_all_terms()
 
     def test_run_update(self):
-        self.courses_page.log_out()
+        self.instructor_page.log_out()
         self.login_page.dev_auth()
         self.ouija_page.click_jobs_link()
         self.jobs_page.run_kaltura_job()
@@ -139,10 +139,10 @@ class TestOptOut1:
         self.jobs_page.log_out()
         self.login_page.load_page()
         self.login_page.dev_auth(instructor_0.uid)
-        self.courses_page.disable_opt_out_all_terms()
+        self.instructor_page.disable_opt_out_all_terms()
 
     def test_run_update(self):
-        self.courses_page.log_out()
+        self.instructor_page.log_out()
         self.login_page.dev_auth()
         self.ouija_page.click_jobs_link()
         self.jobs_page.run_kaltura_job()
@@ -179,10 +179,10 @@ class TestOptOut2:
         self.jobs_page.log_out()
         self.login_page.load_page()
         self.login_page.dev_auth(instructor_1.uid)
-        self.courses_page.enable_opt_out_section(section_0)
+        self.instructor_page.enable_opt_out_section(section_0)
 
     def test_run_update(self):
-        self.courses_page.log_out()
+        self.instructor_page.log_out()
         self.login_page.dev_auth()
         self.ouija_page.click_jobs_link()
         self.jobs_page.run_kaltura_job()
@@ -233,10 +233,10 @@ class TestOptOut3:
         self.jobs_page.log_out()
         self.login_page.load_page()
         self.login_page.dev_auth(instructor_0.uid)
-        self.courses_page.enable_opt_out_current_term()
+        self.instructor_page.enable_opt_out_current_term()
 
     def test_run_update_encore(self):
-        self.courses_page.log_out()
+        self.instructor_page.log_out()
         self.login_page.dev_auth()
         self.ouija_page.click_jobs_link()
         self.jobs_page.run_kaltura_job()
@@ -274,10 +274,10 @@ class TestOptOut4:
         self.jobs_page.log_out()
         self.login_page.load_page()
         self.login_page.dev_auth(instructor_0.uid)
-        self.courses_page.enable_opt_out_all_terms()
+        self.instructor_page.enable_opt_out_all_terms()
 
     def test_run_update(self):
-        self.courses_page.log_out()
+        self.instructor_page.log_out()
         self.login_page.dev_auth()
         self.ouija_page.click_jobs_link()
         self.jobs_page.run_schedule_updates_job()
@@ -299,11 +299,11 @@ class TestOptOut4:
         self.jobs_page.log_out()
         self.login_page.load_page()
         self.login_page.dev_auth(instructor_0.uid)
-        self.courses_page.disable_opt_out_all_terms()
-        self.courses_page.enable_opt_out_section(section_0)
+        self.instructor_page.disable_opt_out_all_terms()
+        self.instructor_page.enable_opt_out_section(section_0)
 
     def test_run_update_encore(self):
-        self.courses_page.log_out()
+        self.instructor_page.log_out()
         self.login_page.dev_auth()
         self.ouija_page.click_jobs_link()
         self.jobs_page.run_kaltura_job()
@@ -348,10 +348,10 @@ class TestOptOut5:
         self.jobs_page.log_out()
         self.login_page.load_page()
         self.login_page.dev_auth(instructor_0.uid)
-        self.courses_page.enable_opt_out_all_terms()
+        self.instructor_page.enable_opt_out_all_terms()
 
     def test_run_update_encore(self):
-        self.courses_page.log_out()
+        self.instructor_page.log_out()
         self.login_page.dev_auth()
         self.ouija_page.click_jobs_link()
         self.jobs_page.run_kaltura_job()
@@ -395,13 +395,13 @@ class TestOptOut6:
         self.jobs_page.log_out()
         self.login_page.load_page()
         self.login_page.dev_auth(instructor_0.uid)
-        self.courses_page.enable_opt_out_all_terms()
+        self.instructor_page.enable_opt_out_all_terms()
 
     def test_add_instructors_to_sections(self):
         util.change_course_instructor(section_1, old_instructor=None, new_instructor=instructor_0)
 
     def test_run_update_encore(self):
-        self.courses_page.log_out()
+        self.instructor_page.log_out()
         self.login_page.dev_auth()
         self.ouija_page.click_jobs_link()
         self.jobs_page.run_schedule_updates_job()

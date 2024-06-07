@@ -178,7 +178,7 @@
       "listings": []
     },
     {
-      "test_script": "test_aprx_0",
+      "test_script": "test_collaborators_0",
       "dept_code": "GERMAN",
       "instructors": [
         {
@@ -206,7 +206,7 @@
       "listings": []
     },
     {
-      "test_script": "test_aprx_1",
+      "test_script": "test_collaborators_1",
       "dept_code": "FRENCH",
       "instructors": [
         {
@@ -234,7 +234,7 @@
       "listings": []
     },
     {
-      "test_script": "test_aprx_2",
+      "test_script": "test_collaborators_2",
       "dept_code": "SPANISH",
       "instructors": [
         {

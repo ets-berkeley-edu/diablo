@@ -173,6 +173,22 @@ class Page(object):
         self.wait_for_page_and_click_js((By.ID, element_id), addl_pause)
         self.driver.execute_script(f"document.getElementById('{element_id}').value='{string}'")
 
+    def remove_chars(self, locator):
+        self.wait_for_element_and_click(locator)
+        repeat = 300
+        for x in range(repeat):
+            self.hit_delete()
+            self.hit_backspace()
+
+    def enter_chars(self, locator, string):
+        for i in string:
+            time.sleep(0.5)
+            self.element(locator).send_keys(i)
+
+    def remove_and_enter_chars(self, locator, string):
+        self.remove_chars(locator)
+        self.element(locator).send_keys(string)
+
     # PAGE TITLE AND HEADING
 
     def title(self):
@@ -217,6 +233,12 @@ class Page(object):
 
     def hit_escape(self):
         ActionChains(self.driver).send_keys(Keys.ESCAPE).perform()
+
+    def hit_delete(self):
+        ActionChains(self.driver).send_keys(Keys.DELETE).perform()
+
+    def hit_backspace(self):
+        ActionChains(self.driver).send_keys(Keys.BACKSPACE).perform()
 
     # EXTERNAL LINK VALIDATOR
 

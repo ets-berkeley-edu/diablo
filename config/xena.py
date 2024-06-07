@@ -57,6 +57,8 @@ TESTING = True
 
 TEST_DATA_COURSES = f'{BASE_DIR}/xena/fixtures/test-courses.json'
 TEST_DATA_ROOMS = f'{BASE_DIR}/xena/fixtures/test-rooms.json'
+TEST_DATA_USER_EMAIL = 'foo@bar.edu'
+TEST_DATA_USER_UID = '1234567'
 
 TIMEOUT_SHORT = 10
 TIMEOUT_MEDIUM = 90

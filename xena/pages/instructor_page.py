@@ -24,10 +24,60 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 
 from flask import current_app as app
-from xena.pages.diablo_pages import DiabloPages
+from selenium.webdriver.common.by import By
+from xena.pages.courses_page import CoursesPage
 
 
-class InstructorPage(DiabloPages):
+class InstructorPage(CoursesPage):
 
-    def hit_url(self, instructor):
+    def hit_admin_url(self, instructor):
         self.driver.get(f'{app.config["BASE_URL"]}/user/{instructor.uid}')
+
+    OPT_OUT_ALL_BUTTON = By.ID, 'toggle-opt-out-all-terms'
+    OPT_OUT_CURRENT_BUTTON = By.ID, 'toggle-opt-out-current-term'
+
+    @staticmethod
+    def opt_out_section_button_loc(section):
+        return By.ID, f'toggle-opt-out-{section.ccn}'
+
+    def enable_opt_out_all_terms(self):
+        app.logger.info('Opting out of all terms')
+        if self.element(self.OPT_OUT_ALL_BUTTON).get_attribute('aria-checked') == 'false':
+            self.wait_for_element_and_click(self.OPT_OUT_ALL_BUTTON)
+        else:
+            app.logger.info('Already opted out of all terms')
+
+    def disable_opt_out_all_terms(self):
+        app.logger.info('Unchecking opt-out-all-terms')
+        if self.element(self.OPT_OUT_ALL_BUTTON).get_attribute('aria-checked') == 'true':
+            self.wait_for_element_and_click(self.OPT_OUT_ALL_BUTTON)
+        else:
+            app.logger.info('Already disabled')
+
+    def enable_opt_out_current_term(self):
+        app.logger.info('Opting out of current term')
+        if self.element(self.OPT_OUT_CURRENT_BUTTON).get_attribute('aria-checked') == 'false':
+            self.wait_for_element_and_click(self.OPT_OUT_CURRENT_BUTTON)
+        else:
+            app.logger.info('Already opted out of current term')
+
+    def disable_opt_out_current_term(self):
+        app.logger.info('Unchecking opt-out-current-term')
+        if self.element(self.OPT_OUT_CURRENT_BUTTON).get_attribute('aria-checked') == 'true':
+            self.wait_for_element_and_click(self.OPT_OUT_CURRENT_BUTTON)
+        else:
+            app.logger.info('Already disabled')
+
+    def enable_opt_out_section(self, section):
+        app.logger.info(f'Opting out of section ID {section.ccn}')
+        if self.element(self.opt_out_section_button_loc(section)).get_attribute('aria-checked') == 'false':
+            self.wait_for_element_and_click(self.opt_out_section_button_loc(section))
+        else:
+            app.logger.info(f'Already opted out of section {section.ccn}')
+
+    def disable_opt_out_section(self, section):
+        app.logger.info(f'Unchecking opt-out-{section.ccn}')
+        if self.element(self.opt_out_section_button_loc(section)).get_attribute('aria-checked') == 'true':
+            self.wait_for_element_and_click(self.opt_out_section_button_loc(section))
+        else:
+            app.logger.info('Already disabled')

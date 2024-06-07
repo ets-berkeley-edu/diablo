@@ -51,7 +51,7 @@ class TestUserPerms:
     def test_instructor_login(self):
         self.login_page.load_page()
         self.login_page.dev_auth(self.instructor.uid)
-        self.ouija_page.wait_for_title_containing(f'Your {self.section.term.name} Course')
+        self.instructor_page.wait_for_title_containing(f'Your {self.section.term.name} Course')
 
     def test_no_ouija(self):
         self.ouija_page.hit_url()
@@ -64,7 +64,7 @@ class TestUserPerms:
         self.rooms_page.wait_for_diablo_title('Page not found')
 
     def test_no_instructor(self):
-        self.instructor_page.hit_url(self.instructor)
+        self.instructor_page.hit_admin_url(self.instructor)
         time.sleep(1)
         self.instructor_page.wait_for_diablo_title('Page not found')
 

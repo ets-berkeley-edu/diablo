@@ -29,7 +29,6 @@ from flask import current_app as app
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.wait import WebDriverWait as Wait
-from xena.models.recording_scheduling_status import RecordingSchedulingStatus
 from xena.pages.diablo_pages import DiabloPages
 from xena.test_utils import util
 
@@ -46,11 +45,6 @@ class CoursePage(DiabloPages):
     ROOMS = (By.XPATH, '//*[contains(@id, "rooms-")]')
     COURSE_SITE_LINK = (By.XPATH, '//a[contains(@id, "canvas-course-site-")]')
     CROSS_LISTING = (By.XPATH, '//div[contains(@id, "cross-listing-")]')
-    OPTED_OUT = (By.ID, 'opted-out')
-    SEND_INVITE_BUTTON = (By.ID, 'send-invite-btn')
-    UNSCHEDULE_BUTTON = (By.ID, 'unschedule-course-btn')
-    UNSCHEDULE_CONFIRM_BUTTON = (By.ID, 'confirm-unschedule-course-btn')
-    UNSCHEDULE_CANCEL_BUTTON = (By.ID, 'cancel-unschedule-course-btn')
 
     CC_EXPLAINED_LINK = (By.ID, 'link-to-course-capture-overview')
     RECORDING_TYPE_TEXT = (By.XPATH, '//div[contains(text(), "\'Presentation and Audio\' recordings are free")]')
@@ -58,8 +52,6 @@ class CoursePage(DiabloPages):
     RECORDING_TYPE_STATIC = (By.XPATH, '//input[@name="recordingType"]/..')
     SELECT_RECORDING_TYPE_INPUT = (By.XPATH, '//label[@id="select-recording-type-label"]')
     SELECT_PUBLISH_TYPE_INPUT = (By.XPATH, '//input[@id="select-publish-type"]/..')
-    AGREE_TO_TERMS_CBX = (By.XPATH, '//input[@id="agree-to-terms-checkbox"]/..')
-    APRX_CAN_EDIT_CBX = (By.ID, 'can-aprx-instructors-edit-recordings')
     CC_POLICIES_LINK = (By.ID, 'link-to-course-capture-policies')
     APPROVE_BUTTON = (By.ID, 'btn-approve')
     QUEUED_MSG = (By.XPATH, '//span[contains(text(), "This course is currently queued for scheduling")]')
@@ -67,8 +59,6 @@ class CoursePage(DiabloPages):
     CONFIRMATION_MSG = (By.XPATH, '//span[contains(text(), "You submitted the preferences below.")]')
     NO_AUTO_SCHED_MSG = (By.XPATH, '//div[contains(text(), "cannot be scheduled automatically")]')
     NOT_ELIGIBLE_MSG = (By.ID, 'course-not-eligible')
-
-    APRX_CAN_EDIT_FLAG = (By.ID, 'admin-proxy-status')
 
     RECORDING_TYPE_APPROVED = (By.XPATH, '//h4[contains(., "Recording Type")]/../following-sibling::div/div')
     PUBLISH_TYPE_APPROVED = (By.ID, 'approved-publish-type')
@@ -163,47 +153,7 @@ class CoursePage(DiabloPages):
     def click_room_link(self, room):
         self.wait_for_element_and_click(self.room_link_locator(room))
 
-    # INVITES, UN-SCHEDULING, OPTED-OUT
-
-    def click_send_invite_button(self):
-        app.logger.info('Clicking the Send Invite button')
-        self.wait_for_element_and_click(CoursePage.SEND_INVITE_BUTTON)
-        Wait(self.driver, util.get_short_timeout()).until(ec.visibility_of_element_located(CoursePage.ALERT_MSG))
-
-    def click_unschedule_button(self):
-        app.logger.info('Clicking the Unschedule button')
-        self.wait_for_element_and_click(CoursePage.UNSCHEDULE_BUTTON)
-
-    def confirm_unscheduling(self, recording_schedule):
-        self.click_unschedule_button()
-        self.wait_for_element_and_click(CoursePage.UNSCHEDULE_CONFIRM_BUTTON)
-        Wait(self.driver, util.get_medium_timeout()).until(ec.visibility_of_element_located(CoursePage.APPROVE_BUTTON))
-        recording_schedule.scheduling_status = RecordingSchedulingStatus.NOT_SCHEDULED
-
-    def confirm_unscheduling_ineligible(self, recording_schedule):
-        self.click_unschedule_button()
-        self.wait_for_element_and_click(CoursePage.UNSCHEDULE_CONFIRM_BUTTON)
-        Wait(self.driver, util.get_medium_timeout()).until(ec.visibility_of_element_located(CoursePage.OPTED_OUT))
-        recording_schedule.scheduling_status = RecordingSchedulingStatus.NOT_SCHEDULED
-        time.sleep(util.get_short_timeout())
-
-    def cancel_unscheduling(self):
-        self.click_unschedule_button()
-        self.wait_for_element_and_click(CoursePage.UNSCHEDULE_CANCEL_BUTTON)
-        Wait(self.driver, 1).until(ec.invisibility_of_element_located(CoursePage.UNSCHEDULE_CANCEL_BUTTON))
-
-    def is_opted_out(self):
-        return self.is_present(CoursePage.OPTED_OUT)
-
-    # CAPTURE + APPROVAL SETTINGS
-
-    def instructor_approval_present(self, instructor):
-        locator = (By.XPATH, f'//div[contains(text(), "{instructor.first_name} {instructor.last_name}")][contains(., "approved.")]')
-        return self.is_present(locator)
-
-    def admin_approval_present(self):
-        locator = (By.XPATH, '//span[text()="(Course Capture administrator)"]/..[contains(., "approved.")]')
-        return self.is_present(locator)
+    # CAPTURE SETTINGS
 
     def click_rec_type_input(self):
         app.logger.info('Clicking the recording type input')
@@ -225,24 +175,86 @@ class CoursePage(DiabloPages):
         self.click_publish_type_input()
         self.click_menu_option(publish_type)
 
-    def click_agree_checkbox(self):
-        app.logger.info('Clicking the agree-to-terms checkbox')
-        self.wait_for_element_and_click(CoursePage.AGREE_TO_TERMS_CBX)
+    # COLLABORATORS
 
-    def aprx_editor_checked(self):
-        return self.element(CoursePage.APRX_CAN_EDIT_CBX).get_attribute('aria-checked') == 'true'
+    COLLAB_ROW = By.XPATH, '//div[contains(@id, "collaborator-")]'
+    COLLAB_EDIT_BUTTON = By.ID, 'btn-collaborators-edit'
+    COLLAB_NONE_MSG = By.ID, 'collaborators-none'
+    COLLAB_INPUT = By.ID, 'input-collaborator-lookup-autocomplete'
+    COLLAB_ADD_BUTTON = By.ID, 'btn-collaborator-add'
+    COLLAB_SAVE_BUTTON = By.ID, 'btn-collaborators-save'
+    COLLAB_CXL_BUTTON = By.ID, 'btn-recording-type-cancel'
 
-    def select_aprx_editor(self):
-        if not self.aprx_editor_checked():
-            self.click_element_js(CoursePage.APRX_CAN_EDIT_CBX)
+    @staticmethod
+    def collaborator_row_loc(user):
+        return By.ID, f'collaborator-{user.uid}'
 
-    def deselect_aprx_editor(self):
-        if self.aprx_editor_checked():
-            self.click_element_js(CoursePage.APRX_CAN_EDIT_CBX)
+    def is_collaborator_present(self, user):
+        return self.is_present(self.collaborator_row_loc(user))
+
+    def visible_collaborator_uids(self):
+        return list(map(lambda el: el.get_attribute('id').split('-')[-1], self.elements(self.COLLAB_ROW)))
+
+    def click_edit_collaborators(self):
+        app.logger.info('Clicking the edit collaborators button')
+        self.wait_for_element_and_click(self.COLLAB_EDIT_BUTTON)
+
+    # Adding
+
+    def look_up_uid(self, uid):
+        app.logger.info(f'Looking up UID {uid}')
+        self.remove_and_enter_chars(self.COLLAB_INPUT, uid)
+
+    def look_up_email(self, email):
+        app.logger.info(f'Looking up {email}')
+        self.remove_and_enter_chars(self.COLLAB_INPUT, email)
+
+    @staticmethod
+    def add_collaborator_lookup_result(user):
+        return By.XPATH, f'//div[contains(@id, "list-item")][contains(., "({user.uid})")]'
+
+    def click_look_up_result(self, user):
+        self.wait_for_page_and_click(self.add_collaborator_lookup_result(user))
+
+    def click_collaborator_add_button(self):
+        self.wait_for_element_and_click(self.COLLAB_ADD_BUTTON)
+
+    def add_collaborator_by_uid(self, user):
+        self.look_up_uid(user.uid)
+        self.click_look_up_result(user)
+        self.click_collaborator_add_button()
+
+    def add_collaborator_by_email(self, user):
+        self.look_up_email(user.email)
+        self.click_look_up_result(user)
+        self.click_collaborator_add_button()
+
+    # Removing
+
+    @staticmethod
+    def remove_collaborator_button_loc(user):
+        return By.ID, f'btn-collaborator-remove-{user.uid}'
+
+    def click_remove_collaborator(self, user):
+        self.wait_for_element_and_click(self.remove_collaborator_button_loc(user))
+
+    # Save, Cancel
+
+    def save_collaborator_edits(self):
+        self.wait_for_element_and_click(self.COLLAB_SAVE_BUTTON)
+
+    def cancel_collaborator_edits(self):
+        self.wait_for_element_and_click(self.COLLAB_CXL_BUTTON)
+
+    @staticmethod
+    def collaborator_remove_button_loc(user):
+        return By.ID, f'btn-collaborator-remove-{user.uid}'
 
     def click_approve_button(self):
         app.logger.info('Clicking the approve button')
         self.wait_for_element_and_click(CoursePage.APPROVE_BUTTON)
+
+    # TODO - repurpose the following with new messaging
 
     def wait_for_queued_confirmation(self):
         Wait(self.driver, util.get_short_timeout()).until(ec.visibility_of_element_located(CoursePage.QUEUED_MSG))
@@ -258,9 +270,6 @@ class CoursePage(DiabloPages):
 
     def default_rec_type(self):
         return self.element(CoursePage.RECORDING_TYPE_STATIC).text.strip()
-
-    def aprx_can_edit_flag(self):
-        return self.element(CoursePage.APRX_CAN_EDIT_FLAG).text.strip()
 
     def approved_rec_type(self):
         return self.element(CoursePage.RECORDING_TYPE_APPROVED).text.strip()
