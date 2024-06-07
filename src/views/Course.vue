@@ -60,6 +60,7 @@
               </v-col>
             </v-row>
             <v-row
+              v-if="!collaboratorsEditing"
               align="center"
               justify="start"
             >
@@ -69,87 +70,109 @@
                 </h4>
                 <div v-for="collaborator in collaborators" :id="`collaborator-${collaborator.uid}`" :key="collaborator.uid">
                   {{ collaborator.firstName }} {{ collaborator.lastName }} ({{ collaborator.email }}) ({{ collaborator.uid }})
-                  <v-btn
-                    v-if="collaboratorsEditing"
-                    :id="`btn-collaborator-remove-${collaborator.uid}`"
-                    :disabled="collaboratorsUpdating"
-                    @click="removeCollaborator(collaborator.uid)"
-                  >
-                    Remove
-                  </v-btn>
                 </div>
                 <div v-if="!collaborators.length" id="collaborators-none">
                   None
                 </div>
-                <div v-if="!collaboratorsEditing">
-                  <v-btn
-                    id="btn-collaborators-edit"
-                    class="mt-3"
-                    @click="toggleCollaboratorsEditing"
-                  >
-                    Edit
-                  </v-btn>
-                </div>
-              </v-col>
-            </v-row>
-            <v-row
-              v-if="collaboratorsEditing"
-              align="end"
-              justify="end"
-            >
-              <v-col cols="9">
-                <PersonLookup
-                  id="input-collaborator-lookup-autocomplete"
-                  ref="personLookup"
-                  :disabled="collaboratorsUpdating"
-                  label="Find collaborator by UID or email address: "
-                  placeholder="UID or email"
-                  :on-select-result="addCollaboratorPending"
-                />
-              </v-col>
-              <v-col cols="3">
                 <v-btn
-                  id="btn-collaborator-add"
-                  color="success"
-                  :disabled="!pendingCollaborator"
-                  @click="addCollaboratorConfirm"
+                  id="btn-collaborators-edit"
+                  class="mt-3"
+                  @click="toggleCollaboratorsEditing"
                 >
-                  Add
+                  Edit
                 </v-btn>
               </v-col>
             </v-row>
-            <v-row
-              v-if="collaboratorsEditing"
-              align="center"
-              justify="start"
-            >
-              <v-col cols="12">
-                <v-btn
-                  id="btn-collaborators-save"
-                  color="success"
-                  :disabled="collaboratorsUpdating"
-                  @click="updateCollaborators"
+            <v-card v-if="collaboratorsEditing" class="my-4 background-shaded">
+              <v-container>
+                <v-row
+                  align="center"
+                  justify="start"
                 >
-                  <v-progress-circular
-                    v-if="collaboratorsUpdating"
-                    class="mr-2"
-                    color="primary"
-                    indeterminate
-                    size="18"
-                    width="3"
-                  ></v-progress-circular>
-                  {{ collaboratorsUpdating ? 'Saving' : 'Save' }}
-                </v-btn>
-                <v-btn
-                  id="btn-recording-type-cancel"
-                  color="default"
-                  :disabled="collaboratorsUpdating"
-                  @click="updateCollaboratorsCancel"
+                  <v-col cols="12">
+                    <h4>
+                      Update collaborators
+                    </h4>
+                  </v-col>
+                </v-row>
+                <v-row
+                  align="end"
+                  justify="start"
                 >
-                  Cancel
-                </v-btn>
-              </v-col>
-            </v-row>
+                  <v-col cols="9">
+                    <PersonLookup
+                      id="input-collaborator-lookup-autocomplete"
+                      ref="personLookup"
+                      :disabled="collaboratorsUpdating"
+                      label="Find collaborator by UID or email address: "
+                      placeholder="UID or email"
+                      :on-select-result="addCollaboratorPending"
+                    />
+                  </v-col>
+                  <v-col cols="3">
+                    <v-btn
+                      id="btn-collaborator-add"
+                      color="success"
+                      :disabled="!pendingCollaborator"
+                      @click="addCollaboratorConfirm"
+                    >
+                      Add
+                    </v-btn>
+                  </v-col>
+                </v-row>
+                <v-row
+                  v-if="collaboratorsEditing"
+                  align="center"
+                  justify="start"
+                >
+                  <v-col cols="12">
+                    <div
+                      v-for="collaborator in collaborators"
+                      :id="`collaborator-${collaborator.uid}`"
+                      :key="collaborator.uid"
+                      class="my-2"
+                    >
+                      {{ collaborator.firstName }} {{ collaborator.lastName }} ({{ collaborator.email }}) ({{ collaborator.uid }})
+                      <v-btn
+                        :id="`btn-collaborator-remove-${collaborator.uid}`"
+                        :disabled="collaboratorsUpdating"
+                        small
+                        @click="removeCollaborator(collaborator.uid)"
+                      >
+                        Remove
+                      </v-btn>
+                    </div>
+                    <div class="mt-4">
+                      <v-btn
+                        id="btn-collaborators-save"
+                        color="success"
+                        :disabled="collaboratorsUpdating"
+                        @click="updateCollaborators"
+                      >
+                        <v-progress-circular
+                          v-if="collaboratorsUpdating"
+                          class="mr-2"
+                          color="primary"
+                          indeterminate
+                          size="18"
+                          width="3"
+                        ></v-progress-circular>
+                        {{ collaboratorsUpdating ? 'Saving' : 'Save' }}
+                      </v-btn>
+                      <v-btn
+                        id="btn-collaborators-cancel"
+                        color="default"
+                        :disabled="collaboratorsUpdating"
+                        class="mx-2"
+                        @click="updateCollaboratorsCancel"
+                      >
+                        Cancel
+                      </v-btn>
+                    </div>
+                  </v-col>
+                </v-row>
+              </v-container>
+            </v-card>
             <v-row
               align="center"
               justify="start"
@@ -205,7 +228,7 @@
                   </v-btn>
                   <v-btn
                     id="btn-recording-type-cancel"
-                    class="float-right"
+                    class="float-right mx-2"
                     color="default"
                     :disabled="recordingTypeUpdating"
                     @click="updateRecordingTypeCancel"
@@ -292,6 +315,7 @@
                     id="btn-publish-type-cancel"
                     color="default"
                     :disabled="publishTypeUpdating"
+                    class="mx-2"
                     @click="updatePublishTypeCancel"
                   >
                     Cancel
@@ -501,7 +525,9 @@ export default {
   },
   methods: {
     addCollaboratorConfirm() {
-      this.collaborators.push(this.pendingCollaborator)
+      if (!this.$_.find(this.collaborators, {'uid': this.pendingCollaborator.uid})) {
+        this.collaborators.push(this.pendingCollaborator)
+      }
       this.alertScreenReader(`Collaborator ${this.pendingCollaborator.firstName} ${this.pendingCollaborator.lastName} added.`)
       this.pendingCollaborator = null
       if (this.$refs.personLookup) {
@@ -534,7 +560,7 @@ export default {
         return this.hasValidMeetingTimes
       })
       this.courseDisplayTitle = this.getCourseCodes(this.course)[0]
-      this.collaborators = this.course.collaborators
+      this.collaborators = this.$_.clone(this.course.collaborators)
       this.publishType = this.course.publishType
       this.recordingType = this.course.recordingType
       this.recordingTypeOptions = this.meeting.room ? Object.keys(this.meeting.room.recordingTypeOptions) : []
@@ -574,7 +600,7 @@ export default {
       this.alertScreenReader('Collaborator update cancelled.')
       this.collaboratorsEditing = false
       this.collaboratorsUpdating = false
-      this.collaborators = this.course.collaborators
+      this.collaborators = this.$_.clone(this.course.collaborators)
     },
     updatePublishType() {
       this.publishTypeUpdating = true

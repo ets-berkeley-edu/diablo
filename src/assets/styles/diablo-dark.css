@@ -3,6 +3,10 @@
   border-bottom-color: #378dc5;
 }
 
+#dark .background-shaded {
+  background-color: #263238;
+}
+
 #dark .v-card--outlined {
   border-color: #378dc5;
 }
