@@ -29,7 +29,6 @@ import json
 from diablo import std_commit
 from diablo.models.opt_out import OptOut
 from diablo.models.scheduled import Scheduled
-from diablo.models.sent_email import SentEmail
 from diablo.models.sis_section import SisSection
 from flask import current_app as app
 from tests.test_api.api_test_utils import api_get_course, get_instructor_uids, mock_scheduled
@@ -305,7 +304,6 @@ class TestGetCourses:
                     assert not in_enabled_room
                 else:
                     assert in_enabled_room
-                    _send_invitation_email(section_id, term_id=self.term_id)
 
             api_json = self._api_courses(client, term_id=self.term_id, filter_='Opted Out')
 
@@ -320,10 +318,6 @@ class TestGetCourses:
         """Scheduled filter: Courses with recordings scheduled."""
         fake_auth.login(admin_uid)
         with test_scheduling_workflow(app):
-            # Send invites
-            for section_id in [section_1_id, section_6_id]:
-                _send_invitation_email(section_id, term_id=self.term_id)
-
             # Feed will only include courses that were scheduled.
             mock_scheduled(
                 section_id=section_1_id,
@@ -370,8 +364,6 @@ class TestGetCourses:
         fake_auth.login(admin_uid)
         with test_scheduling_workflow(app):
             # Put courses in a few different states.
-            for section_id in [section_1_id, section_6_id]:
-                _send_invitation_email(section_id, term_id=self.term_id)
             mock_scheduled(
                 section_id=section_1_id,
                 term_id=self.term_id,
@@ -1093,12 +1085,3 @@ def _find_course(api_json, section_id, term_id):
 def _is_course_in_enabled_room(section_id, term_id):
     eligible_meetings = SisSection.get_course(term_id=term_id, section_id=section_id)['meetings']['eligible']
     return eligible_meetings and eligible_meetings[0]['room']['capability'] is not None
-
-
-def _send_invitation_email(section_id, term_id):
-    SentEmail.create(
-        section_id=section_id,
-        recipient_uid=get_instructor_uids(section_id=section_id, term_id=term_id)[0],
-        template_type='invitation',
-        term_id=term_id,
-    )

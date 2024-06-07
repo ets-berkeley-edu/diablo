@@ -33,7 +33,7 @@ class TestQueuedEmail:
         """Refuse to queue emails for a course without a proper instructor."""
         term_id = app.config['CURRENT_TERM_ID']
         section_id = 50006
-        email_template_type = 'invitation'
+        email_template_type = 'semester_start'
         # Courses with no proper instructor are excluded from query results.
         assert not SisSection.get_course(term_id=term_id, section_id=section_id)
 
