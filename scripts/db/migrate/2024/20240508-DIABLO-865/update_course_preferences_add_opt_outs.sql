@@ -33,6 +33,7 @@ UPDATE course_preferences SET recording_type = 'presenter_presentation_audio';
 ALTER TABLE course_preferences ALTER COLUMN publish_type SET NOT NULL;
 ALTER TABLE course_preferences ALTER COLUMN recording_type SET NOT NULL;
 
+ALTER TYPE publish_types ADD VALUE IF NOT EXISTS 'kaltura_media_gallery_moderated';
 
 CREATE TABLE opt_outs (
     id INTEGER NOT NULL,
