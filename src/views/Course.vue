@@ -211,7 +211,6 @@
                 <div v-if="recordingTypeEditing && recordingTypeEditable">
                   <v-btn
                     id="btn-recording-type-save"
-                    class="float-right"
                     color="success"
                     :disabled="recordingTypeUpdating"
                     @click="updateRecordingType"
@@ -228,7 +227,7 @@
                   </v-btn>
                   <v-btn
                     id="btn-recording-type-cancel"
-                    class="float-right mx-2"
+                    class="mx-2"
                     color="default"
                     :disabled="recordingTypeUpdating"
                     @click="updateRecordingTypeCancel"
@@ -502,7 +501,7 @@ export default {
       return this.showSignUpForm && !this.$currentUser.isAdmin
     },
     recordingTypeEditable() {
-      return this.recordingTypeOptions.length > 1 && this.course.recordingType !== 'presenter_presentation_audio_with_operator'
+      return this.recordingTypeOptions.length > 1 && (this.$currentUser.isAdmin || this.course.recordingType !== 'presenter_presentation_audio_with_operator')
     },
     showSignUpForm() {
       let show = !this.course.scheduled && !this.course.deletedAt

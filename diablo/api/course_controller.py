@@ -32,6 +32,7 @@ from diablo.lib.http import tolerant_jsonify
 from diablo.lib.interpolator import get_sign_up_url
 from diablo.models.course_preference import CoursePreference, get_all_publish_types, get_all_recording_types
 from diablo.models.opt_out import OptOut
+from diablo.models.queued_email import QueuedEmail
 from diablo.models.schedule_update import ScheduleUpdate
 from diablo.models.scheduled import Scheduled
 from diablo.models.sis_section import SisSection
@@ -295,6 +296,8 @@ def update_recording_type():
             requested_by_uid=current_user.uid,
             requested_by_name=current_user.name,
         )
+        if recording_type == 'presenter_presentation_audio_with_operator':
+            QueuedEmail.notify_admin_operator_requested(course)
 
     return tolerant_jsonify(preferences.to_api_json())
 

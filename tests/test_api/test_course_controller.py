@@ -27,12 +27,14 @@ from io import StringIO
 import json
 
 from diablo import std_commit
+from diablo.jobs.emails_job import EmailsJob
 from diablo.models.opt_out import OptOut
 from diablo.models.scheduled import Scheduled
+from diablo.models.sent_email import SentEmail
 from diablo.models.sis_section import SisSection
 from flask import current_app as app
 from tests.test_api.api_test_utils import api_get_course, get_instructor_uids, mock_scheduled
-from tests.util import override_config, test_scheduling_workflow
+from tests.util import override_config, simply_yield, test_scheduling_workflow
 
 admin_uid = '90001'
 collaborator_uid = '242881'
@@ -759,6 +761,16 @@ class TestUpdateRecordingType:
         assert recording_type_updates[0]['status'] == 'queued'
         assert recording_type_updates[0]['requestedByUid'] == instructor_uids[0]
         assert recording_type_updates[0]['requestedByName'] == 'William Peter Blatty'
+
+        def _get_operator_emails():
+            return SentEmail.get_emails_of_type(
+                section_ids=[section_1_id],
+                template_type='admin_operator_requested',
+                term_id=self.term_id,
+            )
+        assert len(_get_operator_emails()) == 0
+        EmailsJob(simply_yield).run()
+        assert len(_get_operator_emails()) == 1
 
 
 class TestUpdateOptOut:
