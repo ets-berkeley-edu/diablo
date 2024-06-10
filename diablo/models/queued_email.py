@@ -28,7 +28,7 @@ from diablo import db, std_commit
 from diablo.externals.loch import get_loch_basic_attributes
 from diablo.lib.interpolator import interpolate_content
 from diablo.lib.util import to_isoformat
-from diablo.merged.emailer import send_system_error_email
+from diablo.merged.emailer import get_admin_alert_recipient, send_system_error_email
 from diablo.models.course_preference import NAMES_PER_PUBLISH_TYPE, NAMES_PER_RECORDING_TYPE
 from diablo.models.email_template import email_template_type, EmailTemplate
 from diablo.models.sis_section import AUTHORIZED_INSTRUCTOR_ROLE_CODES, SisSection
@@ -114,6 +114,10 @@ class QueuedEmail(db.Model):
         return [row.section_id for row in cls.query.filter_by(template_type=template_type, term_id=term_id).all()]
 
     @classmethod
+    def notify_admin_operator_requested(cls, course):
+        cls._queue_admin_email('admin_operator_requested', course)
+
+    @classmethod
     def notify_instructors_changes_confirmed(cls, course, collaborator_uids, publish_type, recording_type):
         publish_type_name = NAMES_PER_PUBLISH_TYPE[publish_type]
         recording_type_name = NAMES_PER_RECORDING_TYPE[recording_type]
@@ -155,6 +159,30 @@ class QueuedEmail(db.Model):
     @classmethod
     def notify_instructor_removed(cls, instructor, course):
         cls._queue_instructor_email('instructors_removed', instructor, course)
+
+    @classmethod
+    def _queue_admin_email(cls, template_type, course, **kwargs):
+        template = _get_email_template(course=course, template_type=template_type)
+        if template:
+            recipient = get_admin_alert_recipient()
+            message = interpolate_content(
+                templated_string=template.message,
+                course=course,
+                recipient_name=recipient['name'],
+            )
+            subject_line = interpolate_content(
+                templated_string=template.subject_line,
+                course=course,
+                recipient_name=recipient['name'],
+            )
+            cls.create(
+                message=message,
+                subject_line=subject_line,
+                recipient=recipient,
+                section_id=course['sectionId'],
+                template_type=template_type,
+                term_id=course['termId'],
+            )
 
     @classmethod
     def _queue_instructor_email(cls, template_type, instructor, course, **kwargs):
