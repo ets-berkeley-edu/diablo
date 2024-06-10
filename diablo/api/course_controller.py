@@ -122,7 +122,7 @@ def update_collaborator_uids():
     params = request.get_json()
     section_id = params.get('sectionId')
     term_id = params.get('termId')
-    collaborator_uids = params.get('collaboratorUids') or []
+    collaborator_uids = sorted(params.get('collaboratorUids')) or []
 
     course = SisSection.get_course(term_id, section_id) if (term_id and section_id) else None
     if not course or type(collaborator_uids) != list:
@@ -135,7 +135,7 @@ def update_collaborator_uids():
         section_id=section_id,
         collaborator_uids=collaborator_uids,
     )
-    if preferences:
+    if preferences and collaborator_uids != sorted(course.get('collaboratorUids') or []):
         ScheduleUpdate.queue(
             term_id=course['termId'],
             section_id=course['sectionId'],
@@ -285,7 +285,7 @@ def update_recording_type():
         section_id=section_id,
         recording_type=recording_type,
     )
-    if preferences:
+    if preferences and course.get('recordingType') != recording_type:
         ScheduleUpdate.queue(
             term_id=course['termId'],
             section_id=course['sectionId'],

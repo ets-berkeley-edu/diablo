@@ -146,7 +146,7 @@
                       <v-btn
                         id="btn-collaborators-save"
                         color="success"
-                        :disabled="collaboratorsUpdating"
+                        :disabled="$_.isEqual($_.sortBy(collaborators, 'uid'), $_.sortBy(course.collaborators, 'uid')) || collaboratorsUpdating"
                         @click="updateCollaborators"
                       >
                         <v-progress-circular
