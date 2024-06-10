@@ -46,7 +46,6 @@ def get_course(term_id, section_id):
     course = SisSection.get_course(
         term_id,
         section_id,
-        include_administrative_proxies=True,
         include_deleted=True,
         include_update_history=True,
     )
