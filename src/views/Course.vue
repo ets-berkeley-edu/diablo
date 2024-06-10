@@ -410,7 +410,7 @@
                 <span :id="`update-requestedAt-${item.id}`">{{ new Date(item.requestedAt).toLocaleString() }}</span>
               </template>
               <template #item.publishedAt="{ item }">
-                <span :id="`update-publishedAt-${item.id}`">{{ new Date(item.publishedAt).toLocaleString() }}</span>
+                <span :id="`update-publishedAt-${item.id}`">{{ item.publishedAt ? new Date(item.publishedAt).toLocaleString() : '&mdash;' }}</span>
               </template>
               <template #item.status="{ item }">
                 <span :id="`update-status-${item.id}`">{{ item.status || '&mdash;' }}</span>
