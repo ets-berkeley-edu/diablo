@@ -75,6 +75,7 @@ def get_loch_basic_attributes_by_uid_or_email(snippet, limit=20):
                 SELECT ldap_uid, sid, first_name, last_name, email_address
                   FROM sis_data.basic_attributes
                   {query_filter}
+                  AND affiliations LIKE '%-TYPE-%' AND affiliations NOT LIKE '%TYPE-SPA%'
                   LIMIT :limit
             $NESSIE$)
             AS nessie_basic_attributes (
