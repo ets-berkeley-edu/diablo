@@ -38,7 +38,7 @@
           <div>
             <span class="sr-only">Dates:</span>
             {{ meeting.startDate | moment('MMM D, YYYY') }} to {{ meeting.endDate | moment('MMM D, YYYY') }}
-            <div v-if="meeting.recordingEndDate && meeting.endDate !== meeting.recordingEndDate" class="font-weight-light">
+            <div v-if="course.scheduled && !course.hasOptedOut && meeting.recordingEndDate && meeting.endDate !== meeting.recordingEndDate" class="font-weight-light">
               <div v-if="course.termId === $config.currentTermId">
                 (Final recording
                 <span v-if="meeting.recordingEndDate < nowDate">was on</span>
@@ -46,7 +46,7 @@
                 <span v-if="meeting.recordingEndDate === nowDate">is today, </span>
                 {{ meeting.recordingEndDate | moment('MMM D, YYYY') }}.)
               </div>
-              <div v-if="course.termId < $config.currentTermId && course.scheduled">
+              <div v-if="course.termId < $config.currentTermId">
                 (Final recording was on {{ meeting.recordingEndDate | moment('MMM D, YYYY') }}.)
               </div>
             </div>
@@ -97,7 +97,7 @@
     </v-row>
     <v-row v-if="$currentUser.isAdmin && course.hasOptedOut" id="opted-out">
       <v-col md="auto">
-        <v-icon aria-label="'Do not disturb' icon">mdi-do-not-disturb</v-icon>
+        <v-icon aria-label="'Do not disturb' icon">mdi-minus-circle</v-icon>
       </v-col>
       <v-col>
         Opted out
