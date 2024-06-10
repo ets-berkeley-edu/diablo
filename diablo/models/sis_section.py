@@ -160,7 +160,6 @@ class SisSection(db.Model):
             cls,
             term_id,
             section_id,
-            include_administrative_proxies=False,
             include_deleted=False,
             include_update_history=True,
     ):
@@ -175,20 +174,20 @@ class SisSection(db.Model):
                 r.location AS room_location
             FROM sis_sections s
             LEFT JOIN rooms r ON r.location = s.meeting_location
-            LEFT JOIN instructors i ON i.uid = s.instructor_uid
+            LEFT JOIN instructors i
+              ON i.uid = s.instructor_uid
+              AND s.instructor_role_code = ANY(:instructor_role_codes)
             WHERE
                 s.term_id = :term_id
                 AND s.section_id = :section_id
-                AND (s.instructor_uid IS NULL OR s.instructor_role_code = ANY(:instructor_role_codes))
                 AND s.is_principal_listing IS TRUE
                 {'' if include_deleted else ' AND s.deleted_at IS NULL '}
             ORDER BY s.course_name, s.section_id, s.instructor_uid, r.capability NULLS LAST
         """
-        instructor_role_codes = ALL_INSTRUCTOR_ROLE_CODES if include_administrative_proxies else AUTHORIZED_INSTRUCTOR_ROLE_CODES
         rows = db.session.execute(
             text(sql),
             {
-                'instructor_role_codes': instructor_role_codes,
+                'instructor_role_codes': AUTHORIZED_INSTRUCTOR_ROLE_CODES,
                 'section_id': section_id,
                 'term_id': term_id,
             },
@@ -405,10 +404,9 @@ class SisSection(db.Model):
         return _to_api_json(term_id=term_id, rows=rows, include_rooms=False)
 
     @classmethod
-    def get_courses_scheduled(cls, term_id, include_administrative_proxies=False):
+    def get_courses_scheduled(cls, term_id):
         scheduled_section_ids = list(cls._section_ids_scheduled(term_id))
         return cls.get_courses(
-            include_administrative_proxies=include_administrative_proxies,
             include_deleted=True,
             section_ids=scheduled_section_ids,
             term_id=term_id,
