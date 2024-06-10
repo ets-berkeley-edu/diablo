@@ -26,7 +26,7 @@
       </v-row>
       <v-row>
         <v-col lg="3" cols="3" sm="3">
-          <CoursePageSidebar :course="course" :course-site="courseSite" />
+          <CoursePageSidebar :course="course" />
         </v-col>
         <v-col>
           <v-container v-if="isCurrentTerm && capability && hasValidMeetingTimes" class="elevation-2 pa-6">
