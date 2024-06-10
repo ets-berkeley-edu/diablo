@@ -95,14 +95,6 @@
         </div>
       </v-col>
     </v-row>
-    <v-row v-if="course.canvasSiteId" id="canvas-course-site=">
-      <v-col md="auto">
-        <v-icon aria-label="Bookmark icon">mdi-bookmark-outline</v-icon>
-      </v-col>
-      <v-col>
-        <CanvasCourseSite :site-id="course.canvasSiteId" :course-site="courseSite" />
-      </v-col>
-    </v-row>
     <v-row v-if="$currentUser.isAdmin && course.hasOptedOut" id="opted-out">
       <v-col md="auto">
         <v-icon aria-label="'Do not disturb' icon">mdi-do-not-disturb</v-icon>
@@ -115,7 +107,6 @@
 </template>
 
 <script>
-import CanvasCourseSite from '@/components/course/CanvasCourseSite'
 import Context from '@/mixins/Context'
 import Days from '@/components/util/Days'
 import OxfordJoin from '@/components/util/OxfordJoin'
@@ -123,16 +114,11 @@ import Utils from '@/mixins/Utils'
 
 export default {
   name: 'CoursePageSidebar',
-  components: {CanvasCourseSite, Days, OxfordJoin},
+  components: {Days, OxfordJoin},
   mixins: [Context, Utils],
   props: {
     course: {
       required: true,
-      type: Object
-    },
-    courseSite: {
-      default: () => {},
-      required: false,
       type: Object
     }
   },
