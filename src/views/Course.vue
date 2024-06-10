@@ -29,17 +29,14 @@
           <CoursePageSidebar :course="course" />
         </v-col>
         <v-col>
-          <v-container v-if="isCurrentTerm && capability && hasValidMeetingTimes" class="elevation-2 pa-6">
+          <v-container v-if="isCurrentTerm && capability && hasValidMeetingTimes && !course.hasOptedOut" class="elevation-2 pa-6">
             <v-row>
               <v-col class="font-weight-bold mb-1">
-                <span v-if="course.scheduled && !course.hasOptedOut" id="notice-scheduled" class="green--text">
+                <span v-if="course.scheduled" id="notice-scheduled" class="green--text">
                   {{ $currentUser.isAdmin ? 'The' : 'Your' }} course is scheduled for Course Capture. The first recording is on {{ course.scheduled[0].meetingStartDate | moment('MMM D, YYYY') }}.
                 </span>
                 <span v-if="!course.scheduled && !course.deletedAt" id="notice-scheduled" class="red--text">
                   This course is not currently scheduled.
-                </span>
-                <span v-if="course.hasOptedOut" id="notice-opt-out" class="red--text">
-                  {{ $currentUser.isAdmin ? 'The' : 'Your' }} course is not scheduled for Course Capture because one or more instructors have opted out. To schedule recordings, please have all instructors remove their opt-out status.
                 </span>
               </v-col>
             </v-row>
@@ -336,6 +333,31 @@
             <v-row v-if="$currentUser.isAdmin">
               <v-col cols="12">
                 <ScheduledCourse :course="course"></ScheduledCourse>
+              </v-col>
+            </v-row>
+          </v-container>
+          <v-container v-if="isCurrentTerm && capability && hasValidMeetingTimes && course.hasOptedOut" class="elevation-2 pa-6">
+            <v-row>
+              <v-col class="font-weight-bold mb-1">
+                <span v-if="course.hasOptedOut" id="notice-opt-out" class="red--text">
+                  {{ $currentUser.isAdmin ? 'The' : 'Your' }} course is not scheduled for Course Capture because one or more instructors have opted out. To schedule recordings, please have all instructors remove their opt-out status.
+                </span>
+              </v-col>
+            </v-row>
+            <v-row
+              align="center"
+              justify="start"
+            >
+              <v-col id="instructors-list" cols="12">
+                <h4>
+                  Instructor(s):
+                </h4>
+                <div v-for="instructor in course.instructors" :id="`instructor-${instructor.uid}`" :key="instructor.uid">
+                  {{ instructor.name }} ({{ instructor.uid }})
+                  <span v-if="instructor.hasOptedOut" :id="`instructor-${instructor.uid}-opt-out`">
+                    (opted out)
+                  </span>
+                </div>
               </v-col>
             </v-row>
           </v-container>
