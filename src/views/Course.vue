@@ -32,6 +32,15 @@
           <v-container v-if="isCurrentTerm && capability && hasValidMeetingTimes && !course.hasOptedOut" class="elevation-2 pa-6">
             <v-row>
               <v-col class="font-weight-bold mb-1">
+                <v-alert
+                  v-if="updatesQueued"
+                  density="compact"
+                  type="warning"
+                  icon="mdi-alert"
+                  outlined
+                >
+                  Recent updates to recording settings are currently queued for publication. They will be published in an hour or less.
+                </v-alert>
                 <span v-if="course.scheduled" id="notice-scheduled" class="green--text">
                   {{ $currentUser.isAdmin ? 'The' : 'Your' }} course is scheduled for Course Capture. The first recording is on {{ course.scheduled[0].meetingStartDate | moment('MMM D, YYYY') }}.
                 </span>
@@ -529,6 +538,9 @@ export default {
       let show = !this.course.scheduled && !this.course.deletedAt
       show &&= (this.$currentUser.isAdmin || this.$_.map(this.instructors, 'uid').includes(this.$currentUser.uid))
       return show
+    },
+    updatesQueued() {
+      return !!this.$_.find(this.course.updateHistory, {'status': 'queued'})
     }
   },
   created() {
