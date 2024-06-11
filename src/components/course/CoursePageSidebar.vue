@@ -10,7 +10,7 @@
         <OxfordJoin v-slot="{item}" :items="instructors">
           <router-link
             v-if="$currentUser.isAdmin"
-            :id="`instructor-${item.uid}`"
+            :id="`instructor-sidebar-link-${item.uid}`"
             aria-label="Link to instructor page"
             :to="`/user/${item.uid}`"
           >
