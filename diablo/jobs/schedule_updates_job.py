@@ -210,10 +210,10 @@ def _queue_instructor_updates(course):
             previous_manual_addition = ScheduleUpdate.find_collaborator_added(
                 term_id=course['termId'],
                 section_id=course['sectionId'],
-                collaborator_uid=c['uid'],
+                collaborator_uid=u,
             )
             if not previous_manual_addition:
-                collaborator_uids_to_remove.add(c['uid'])
+                collaborator_uids_to_remove.add(u)
 
     if len(collaborator_uids_to_add) or len(collaborator_uids_to_remove):
         ScheduleUpdate.queue(
