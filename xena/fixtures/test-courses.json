@@ -12,8 +12,7 @@
       "meetings": [
         {
           "room": {
-            "name": "O'Brien 212",
-            "capability": "Screencast"
+            "name": "O'Brien 212"
           },
           "meeting_schedule": {
             "days": "TU, TH",
@@ -35,8 +34,7 @@
       "meetings": [
         {
           "room": {
-            "name": "Pimentel 1",
-            "capability": "Screencast + Video"
+            "name": "Pimentel 1"
           },
           "meeting_schedule": {
             "days": "TU, TH",
@@ -59,8 +57,7 @@
       "meetings": [
         {
           "room": {
-            "name": "O'Brien 212",
-            "capabilities": "Screencast"
+            "name": "Pimentel 1"
           },
           "meeting_schedule": {
             "days": "MO, WE",
@@ -90,8 +87,7 @@
       "meetings": [
         {
           "room": {
-            "name": "Pimentel 1",
-            "capability": "Screencast + Video"
+            "name": "O'Brien 212"
           },
           "meeting_schedule": {
             "days": "TU, TH",
@@ -118,8 +114,7 @@
       "meetings": [
         {
           "room": {
-            "name": "O'Brien 212",
-            "capability": "Screencast"
+            "name": "O'Brien 212"
           },
           "meeting_schedule": {
             "days": "WE, FR",
@@ -146,8 +141,17 @@
       "meetings": [
         {
           "room": {
-            "name": "O'Brien 212",
-            "capability": "Screencast"
+            "name": "O'Brien 212"
+          },
+          "meeting_schedule": {
+            "days": "TU, TH",
+            "start_time": "10:00 am",
+            "end_time": "10:59 am"
+          }
+        },
+        {
+          "room": {
+            "name": "Pimentel 1"
           },
           "meeting_schedule": {
             "days": "TU, TH",
@@ -177,8 +181,7 @@
       "meetings": [
         {
           "room": {
-            "name": "O'Brien 212",
-            "capability": "Screencast"
+            "name": "O'Brien 212"
           },
           "meeting_schedule": {
             "days": "TU, TH",
@@ -203,8 +206,7 @@
       "meetings": [
         {
           "room": {
-            "name": "O'Brien 212",
-            "capability": "Screencast"
+            "name": "O'Brien 212"
           },
           "meeting_schedule": {
             "days": "MO, WE, FR",
@@ -227,8 +229,7 @@
       "meetings": [
         {
           "room": {
-            "name": "O'Brien 212",
-            "capability": "Screencast"
+            "name": "O'Brien 212"
           },
           "meeting_schedule": {
             "days": "MO, WE, FR",
@@ -251,8 +252,7 @@
       "meetings": [
         {
           "room": {
-            "name": "O'Brien 212",
-            "capability": "Screencast"
+            "name": "O'Brien 212"
           },
           "meeting_schedule": {
             "days": "MO, WE",
@@ -277,8 +277,7 @@
       "meetings": [
         {
           "room": {
-            "name": "Dwinelle 104",
-            "capability": "Screencast"
+            "name": "Dwinelle 104"
           },
           "meeting_schedule": {
             "days": "TU, TH",
@@ -299,8 +298,7 @@
       "meetings": [
         {
           "room": {
-            "name": "Dwinelle 104",
-            "capability": "Screencast"
+            "name": "Dwinelle 104"
           },
           "meeting_schedule": {
             "days": "TU, TH",
@@ -321,8 +319,7 @@
       "meetings": [
         {
           "room": {
-            "name": "Pimentel 1",
-            "capability": "Screencast + Video"
+            "name": "Pimentel 1"
           },
           "meeting_schedule": {
             "days": "TU, TH",
@@ -344,8 +341,7 @@
       "meetings": [
         {
           "room": {
-            "name": "Pimentel 1",
-            "capability": "Screencast + Video"
+            "name": "Pimentel 1"
           },
           "meeting_schedule": {
             "days": "FR",
@@ -368,8 +364,7 @@
       "meetings": [
         {
           "room": {
-            "name": "O'Brien 212",
-            "capability": "Screencast"
+            "name": "O'Brien 212"
           },
           "meeting_schedule": {
             "days": "MO, WE, FR",
@@ -379,8 +374,7 @@
         },
         {
           "room": {
-            "name": "Internet/Online",
-            "capability": null
+            "name": "Internet/Online"
           },
           "meeting_schedule": {
             "days": "MO, WE, FR",
@@ -401,8 +395,7 @@
       "meetings": [
         {
           "room": {
-            "name": "Pimentel 1",
-            "capability": "Screencast + Video"
+            "name": "Pimentel 1"
           },
           "meeting_schedule": {
             "days": "MO, WE, FR",
@@ -412,8 +405,7 @@
         },
         {
           "room": {
-            "name": "Internet/Online",
-            "capability": null
+            "name": "Internet/Online"
           },
           "meeting_schedule": {
             "days": "MO, WE, FR",
@@ -435,8 +427,7 @@
       "meetings": [
         {
           "room": {
-            "name": "Pimentel 1",
-            "capability": "Screencast + Video"
+            "name": "Pimentel 1"
           },
           "meeting_schedule": {
             "days": "TU, TH",
@@ -446,8 +437,7 @@
         },
         {
           "room": {
-            "name": "Internet/Online",
-            "capability": null
+            "name": "Internet/Online"
           },
           "meeting_schedule": {
             "days": "TU, TH",
@@ -468,8 +458,7 @@
       "meetings": [
         {
           "room": {
-            "name": "Pimentel 1",
-            "capability": "Screencast + Video"
+            "name": "Pimentel 1"
           },
           "meeting_schedule": {
             "days": "TU, TH",
@@ -479,8 +468,7 @@
         },
         {
           "room": {
-            "name": "O'Brien 212",
-            "capability": "Screencast"
+            "name": "O'Brien 212"
           },
           "meeting_schedule": {
             "days": "TU, TH",
@@ -502,8 +490,7 @@
       "meetings": [
         {
           "room": {
-            "name": "O'Brien 212",
-            "capability": "Screencast"
+            "name": "O'Brien 212"
           },
           "meeting_schedule": {
             "days": "TU, TH",
@@ -513,8 +500,7 @@
         },
         {
           "room": {
-            "name": "Pimentel 1",
-            "capability": "Screencast + Video"
+            "name": "Pimentel 1"
           },
           "meeting_schedule": {
             "days": "TU, TH",
@@ -539,8 +525,7 @@
       "meetings": [
         {
           "room": {
-            "name": "O'Brien 212",
-            "capability": "Screencast"
+            "name": "O'Brien 212"
           },
           "meeting_schedule": {
             "days": "TU, TH",
@@ -550,8 +535,7 @@
         },
         {
           "room": {
-            "name": "Pimentel 1",
-            "capability": "Screencast"
+            "name": "Pimentel 1"
           },
           "meeting_schedule": {
             "days": "TU, TH",
@@ -573,8 +557,7 @@
       "meetings": [
         {
           "room": {
-            "name": "O'Brien 212",
-            "capability": "Screencast"
+            "name": "O'Brien 212"
           },
           "meeting_schedule": {
             "days": "MO, WE",

@@ -32,7 +32,6 @@ class RecordingSchedule(object):
             meeting,
             recording_type=None,
             publish_type=None,
-            approval_status=None,
             scheduling_status=None,
             series_id=None,
     ):
@@ -40,6 +39,5 @@ class RecordingSchedule(object):
         self.meeting = meeting
         self.recording_type = recording_type
         self.publish_type = publish_type
-        self.approval_status = approval_status
         self.scheduling_status = scheduling_status
         self.series_id = series_id

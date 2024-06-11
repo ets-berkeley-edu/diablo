@@ -88,6 +88,9 @@ class Page(object):
         except exceptions.NoSuchElementException:
             return False
 
+    def when_present(self, locator, timeout):
+        Wait(self.driver, timeout).until(ec.presence_of_element_located(locator))
+
     def when_not_present(self, locator, timeout):
         tries = 0
         while tries <= timeout:
@@ -157,7 +160,7 @@ class Page(object):
         self.click_element(locator, addl_pause)
 
     def wait_for_page_and_click_js(self, locator, addl_pause=None):
-        self.wait_for_element(locator, util.get_medium_timeout())
+        self.when_present(locator, util.get_medium_timeout())
         self.click_element_js(locator, addl_pause)
 
     def wait_for_element_and_click(self, locator, addl_pause=None):

@@ -195,8 +195,5 @@ class OuijaBoardPage(CoursesPage):
     def course_row_status_el(self, section):
         return self.element((By.ID, f'course-{section.ccn}-status'))
 
-    def course_row_approval_status_el(self, section):
-        return self.element((By.ID, f'course-{section.ccn}-approval-status'))
-
-    def course_row_sched_status_el(self, section):
-        return self.element((By.ID, f'course-{section.ccn}-scheduling-status'))
+    def visible_course_row_sched_status(self, section):
+        return self.course_row_status_el(section).text.strip()

@@ -43,7 +43,7 @@ class JobsPage(DiabloPages):
     RUN_EMAILS_JOB_BUTTON = (By.ID, 'run-job-emails')
     RUN_REMIND_SCHEDULED_BUTTON = (By.ID, 'run-job-remind_scheduled')
     RUN_SCHEDULE_UPDATES_JOB_BUTTON = (By.ID, 'run-job-schedule_updates')
-    RUN_SEMESTER_START_JOB_BUTTON = (By.ID, 'run-job-semester-start')
+    RUN_SEMESTER_START_JOB_BUTTON = (By.ID, 'run-job-semester_start')
     RUN_SIS_DATA_REFRESH_JOB_BUTTON = (By.ID, 'run-job-sis_data_refresh')
 
     SEARCH_HISTORY_INPUT = (By.XPATH, '//label[text()="Search History"]/following-sibling::input')

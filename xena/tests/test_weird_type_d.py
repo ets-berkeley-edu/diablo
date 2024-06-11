@@ -29,7 +29,7 @@ from flask import current_app as app
 import pytest
 from xena.models.canvas_site import CanvasSite
 from xena.models.email_template_type import EmailTemplateType
-from xena.models.publish_type import PublishType
+from xena.models.recording_placement import RecordingPlacement
 from xena.models.recording_schedule import RecordingSchedule
 from xena.models.recording_type import RecordingType
 from xena.pages.course_page import CoursePage
@@ -78,24 +78,6 @@ class TestWeirdTypeD:
     def test_create_course_site(self):
         self.canvas_page.provision_site(self.section, [self.section.ccn], self.site)
 
-    def test_enable_media_gallery(self):
-        if self.canvas_page.is_tool_configured(app.config['CANVAS_MEDIA_GALLERY_TOOL']):
-            self.canvas_page.load_site(self.site.site_id)
-            self.canvas_page.enable_media_gallery(self.site)
-            self.canvas_page.click_media_gallery_tool()
-        else:
-            app.logger.info('Media Gallery is not properly configured')
-            raise
-
-    def test_enable_my_media(self):
-        if self.canvas_page.is_tool_configured(app.config['CANVAS_MY_MEDIA_TOOL']):
-            self.canvas_page.load_site(self.site.site_id)
-            self.canvas_page.enable_my_media(self.site)
-            self.canvas_page.click_my_media_tool()
-        else:
-            app.logger.info('My Media is not properly configured')
-            raise
-
     # RUN SEMESTER START JOB
 
     def test_semester_start(self):
@@ -103,10 +85,10 @@ class TestWeirdTypeD:
         self.jobs_page.run_semester_start_job()
         assert util.get_kaltura_id(self.recording_schedule_0)
         self.recording_schedule_0.recording_type = RecordingType.VIDEO_SANS_OPERATOR
-        self.recording_schedule_0.publish_type = PublishType.PUBLISH_TO_MY_MEDIA
+        self.recording_schedule_0.publish_type = RecordingPlacement.PUBLISH_TO_MY_MEDIA
         assert util.get_kaltura_id(self.recording_schedule_1)
         self.recording_schedule_1.recording_type = RecordingType.VIDEO_SANS_OPERATOR
-        self.recording_schedule_1.publish_type = PublishType.PUBLISH_TO_MY_MEDIA
+        self.recording_schedule_1.publish_type = RecordingPlacement.PUBLISH_TO_MY_MEDIA
 
     def test_kaltura_blackouts(self):
         self.jobs_page.run_blackouts_job()
@@ -120,7 +102,7 @@ class TestWeirdTypeD:
         assert self.ouija_page.is_course_in_results(self.section)
 
     def test_scheduled_sched_status(self):
-        visible_status = self.ouija_page.course_row_sched_status_el(self.section).text.strip()
+        visible_status = self.ouija_page.visible_course_row_sched_status(self.section)
         assert visible_status == self.recording_schedule_0.scheduling_status.value
 
     def test_scheduled_filter_opted_out(self):
@@ -330,9 +312,9 @@ class TestWeirdTypeD:
     # UPDATE SETTINGS, SAVE
 
     def test_choose_publish_type(self):
-        self.course_page.select_publish_type(PublishType.PUBLISH_AUTOMATICALLY)
-        self.recording_schedule_0.publish_type = PublishType.PUBLISH_AUTOMATICALLY
-        self.recording_schedule_1.publish_type = PublishType.PUBLISH_AUTOMATICALLY
+        self.course_page.select_recording_placement(RecordingPlacement.PUBLISH_AUTOMATICALLY)
+        self.recording_schedule_0.publish_type = RecordingPlacement.PUBLISH_AUTOMATICALLY
+        self.recording_schedule_1.publish_type = RecordingPlacement.PUBLISH_AUTOMATICALLY
 
     # TODO - enter Canvas site
 

@@ -28,8 +28,8 @@ import time
 from flask import current_app as app
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
+from selenium.webdriver.support.select import Select
 from selenium.webdriver.support.wait import WebDriverWait as Wait
-from xena.models.kaltura_lti_tool import KalturaLTITool
 from xena.pages.page import Page
 from xena.test_utils import util
 
@@ -38,31 +38,32 @@ class CanvasPage(Page):
 
     # CANVAS
 
-    ADMIN_LINK = (By.ID, 'global_nav_accounts_link')
-
     FRAME = (By.XPATH, '//iframe[starts-with(@id, "tool_content")]')
-    MASQUERADE_LINK = (By.XPATH, '//a[contains(@href, "masquerade")]')
-    STOP_MASQUERADE_LINK = (By.CLASS_NAME, 'stop_masquerading')
-    ACCEPT_INVITE_BUTTON = (By.NAME, 'accept')
-
     DELETE_COURSE_BUTTON = (By.XPATH, '//button[text()="Delete Course"]')
     DELETE_COURSE_SUCCESS = (By.XPATH, '//*[contains(.,"successfully deleted")]')
 
-    NAVIGATION_LINK = (By.LINK_TEXT, 'Navigation')
-    TOOL_SAVE_BUTTON = (By.XPATH, '//button[text()="Save"]')
-    MEDIA_GALLERY_LINK = (By.LINK_TEXT, 'Media Gallery')
-    MY_MEDIA_LINK = (By.LINK_TEXT, 'My Media')
-
     # RIPLEY
 
-    CREATE_SITE_LINK = (By.LINK_TEXT, 'Create a Course Site')
-    SWITCH_TO_CCN_BUTTON = (By.XPATH, '//button[contains(.,"Switch to CCN input")]')
-    CCN_TEXT_AREA = (By.ID, 'bc-page-create-course-site-ccn-list')
-    REVIEW_CCNS_BUTTON = (By.XPATH, '//button[contains(text(), "Review matching CCNs")]')
-    NEXT_BUTTON = (By.XPATH, '//button[contains(text(), "Next")]')
-    SITE_NAME_INPUT = (By.ID, 'siteName')
-    SITE_ABBREV_INPUT = (By.ID, 'siteAbbreviation')
-    CREATE_SITE_BUTTON = (By.XPATH, '//button[contains(text(), "Create Course Site")]')
+    # Create Site
+    CREATE_SITE_LINK = (By.ID, 'create-course-site')
+    CREATE_SITE_NEXT_BUTTON = (By.ID, 'go-next-btn')
+    SWITCH_TO_CCN_BUTTON = (By.ID, 'radio-btn-mode-section-id')
+    CCN_TEXT_AREA = (By.ID, 'page-create-course-site-section-id-list')
+    REVIEW_CCNS_BUTTON = (By.ID, 'sections-by-ids-button')
+    EXPAND_SECTIONS_BUTTON = (By.XPATH, '//button[contains(@id, "sections-course-")]')
+    NEXT_BUTTON = (By.ID, 'page-create-course-site-continue')
+    SITE_NAME_INPUT = (By.ID, 'course-site-name')
+    SITE_ABBREV_INPUT = (By.ID, 'course-site-abbreviation')
+    CREATE_SITE_BUTTON = (By.ID, 'create-course-site-button')
+
+    # Add User
+    SEARCH_TERM_INPUT = By.ID, 'search-text'
+    SEARCH_BY_UID = By.ID, 'radio-btn-uid'
+    SEARCH_BUTTON = By.ID, 'add-user-submit-search-btn'
+    SECTION_SELECT = By.ID, 'course-section'
+    ROLE_SELECT = By.ID, 'user-role'
+    ADD_USER_BUTTON = By.ID, 'add-user-btn'
+    SUCCESS_MSG = By.ID, 'success-message'
 
     @staticmethod
     def ripley_form_loc():
@@ -72,10 +73,15 @@ class CanvasPage(Page):
     @staticmethod
     def term_loc():
         current_term = app.config['CURRENT_TERM_NAME']
-        return By.XPATH, f'//label[contains(., "{current_term}")]/..'
+        return By.XPATH, f'//span[contains(., "{current_term}")]/..'
 
-    def hit_homepage(self):
-        self.driver.get(app.config['CANVAS_BASE_URL'])
+    @staticmethod
+    def section_cbx_loc(section_id):
+        return By.ID, f'template-canvas-manage-sections-checkbox-{section_id}'
+
+    @staticmethod
+    def user_cbx_loc(user):
+        return By.XPATH, f'//td[contains(.,"{user.uid}")]/ancestor::tr//input[@name="selectedUser"]'
 
     def hide_canvas_footer(self):
         el_id = 'element_toggler_0'
@@ -83,13 +89,10 @@ class CanvasPage(Page):
         if self.is_present(el_loc) and self.element(el_loc):
             self.driver.execute_script('document.getElementById("element_toggler_0").style.display="none";')
 
-    def load_site(self, site_id):
-        app.logger.info(f'Loading course site ID "{site_id}"')
-        self.driver.get(f'{app.config["CANVAS_BASE_URL"]}/courses/{site_id}')
-        Wait(self.driver, util.get_medium_timeout()).until(ec.url_contains(site_id))
-        if self.is_present(CanvasPage.ACCEPT_INVITE_BUTTON):
-            self.wait_for_element_and_click(CanvasPage.ACCEPT_INVITE_BUTTON)
-            self.when_not_present(CanvasPage.ACCEPT_INVITE_BUTTON)
+    def wait_for_ripley_frame_and_switch(self):
+        Wait(self.driver, util.get_medium_timeout()).until(ec.presence_of_element_located(CanvasPage.ripley_form_loc()))
+        self.hide_canvas_footer()
+        Wait(self.driver, util.get_medium_timeout()).until(ec.frame_to_be_available_and_switch_to_it(CanvasPage.FRAME))
 
     def provision_site(self, section, section_ids, site):
         epoch = int(time.time())
@@ -101,24 +104,29 @@ class CanvasPage(Page):
         admin_id = app.config['CANVAS_ADMIN_ID']
         tool_id = app.config['CANVAS_SITE_CREATION_TOOL']
         self.driver.get(f'{app.config["CANVAS_BASE_URL"]}/users/{admin_id}/external_tools/{tool_id}')
-        Wait(self.driver, util.get_medium_timeout()).until(ec.presence_of_element_located(CanvasPage.ripley_form_loc()))
-        self.hide_canvas_footer()
-        Wait(self.driver, util.get_medium_timeout()).until(ec.frame_to_be_available_and_switch_to_it(CanvasPage.FRAME))
-        Wait(self.driver, util.get_medium_timeout()).until(ec.visibility_of_element_located(CanvasPage.CREATE_SITE_LINK))
-        self.wait_for_element_and_click(CanvasPage.CREATE_SITE_LINK)
+        self.wait_for_ripley_frame_and_switch()
+        self.when_present(CanvasPage.CREATE_SITE_LINK, util.get_medium_timeout())
+        self.click_element_js(CanvasPage.CREATE_SITE_LINK)
+        self.wait_for_element_and_click(CanvasPage.CREATE_SITE_NEXT_BUTTON)
 
         # Select sections by CCN
-        self.wait_for_element(CanvasPage.SWITCH_TO_CCN_BUTTON, util.get_long_timeout())
-        self.wait_for_page_and_click(CanvasPage.SWITCH_TO_CCN_BUTTON)
+        self.when_present(CanvasPage.SWITCH_TO_CCN_BUTTON, util.get_short_timeout())
+        self.click_element_js(CanvasPage.SWITCH_TO_CCN_BUTTON)
         self.wait_for_page_and_click(CanvasPage.term_loc())
         self.wait_for_element_and_type(CanvasPage.CCN_TEXT_AREA, ', '.join(section_ids))
         self.wait_for_page_and_click(CanvasPage.REVIEW_CCNS_BUTTON)
+        if not self.is_present(self.section_cbx_loc(section_ids[0])):
+            self.wait_for_element_and_click(CanvasPage.EXPAND_SECTIONS_BUTTON)
+        for section_id in section_ids:
+            self.when_present(CanvasPage.section_cbx_loc(section_id), 2)
+            self.click_element_js(CanvasPage.section_cbx_loc(section_id))
         self.wait_for_page_and_click_js(CanvasPage.NEXT_BUTTON)
 
         # Name and create site; store site ID
         self.scroll_to_bottom()
-        self.wait_for_element_and_type(CanvasPage.SITE_NAME_INPUT, f'{site.name}')
-        self.wait_for_element_and_type(CanvasPage.SITE_ABBREV_INPUT, f'{site.code}')
+        self.when_present(CanvasPage.SITE_NAME_INPUT, util.get_short_timeout())
+        self.remove_and_enter_chars(CanvasPage.SITE_NAME_INPUT, f'{site.name}')
+        self.remove_and_enter_chars(CanvasPage.SITE_ABBREV_INPUT, f'{site.code}')
         self.wait_for_page_and_click(CanvasPage.CREATE_SITE_BUTTON)
         Wait(self.driver, util.get_long_timeout()).until(ec.url_contains('/courses/'))
         parts = self.driver.current_url.split('/')
@@ -132,11 +140,20 @@ class CanvasPage(Page):
         self.wait_for_page_and_click_js(CanvasPage.DELETE_COURSE_BUTTON)
         Wait(self.driver, util.get_medium_timeout()).until(ec.visibility_of_element_located(CanvasPage.DELETE_COURSE_SUCCESS))
 
-    def delete_section_sites(self, section):
-        site_ids = util.get_course_site_ids(section)
-        for site_id in site_ids:
-            self.delete_site(site_id)
-        return site_ids
+    def add_teacher_to_site(self, site, section, user):
+        app.logger.info(f'Adding UID {user.uid} to site ID {site.site_id} section {section.number} as a Teacher')
+        self.driver.get(f"{app.config['CANVAS_BASE_URL']}/courses/{site.site_id}/external_tools/{app.config['CANVAS_ADD_USER_TOOL']}")
+        self.wait_for_ripley_frame_and_switch()
+        self.wait_for_element_and_click(self.SEARCH_BY_UID)
+        self.remove_and_enter_chars(self.SEARCH_TERM_INPUT, user.uid)
+        self.wait_for_element_and_click(self.SEARCH_BUTTON)
+        self.wait_for_element_and_click(self.user_cbx_loc(user))
+        section_select = Select(self.element(self.SECTION_SELECT))
+        section_select.select_by_visible_text(f'{section.code} {section.number}')
+        role_select = Select(self.element(self.ROLE_SELECT))
+        role_select.select_by_visible_text('Teacher')
+        self.wait_for_element_and_click(self.ADD_USER_BUTTON)
+        self.when_present(self.SUCCESS_MSG, util.get_medium_timeout())
 
     # KALTURA
 
@@ -144,70 +161,6 @@ class CanvasPage(Page):
     def kaltura_form_loc():
         tool_url = app.config['KALTURA_TOOL_URL']
         return By.XPATH, f'//form[contains(@action, "{tool_url}")]'
-
-    @staticmethod
-    def tool_nav_link_locator(tool):
-        return By.XPATH, f'//ul[@id="section-tabs"]//a[text()="{tool.value}"]'
-
-    @staticmethod
-    def disabled_tool_locator(tool):
-        return By.XPATH, f'//ul[@id="nav_disabled_list"]/li[contains(.,"{tool.value}")]//a'
-
-    @staticmethod
-    def enable_tool_link_locator(tool):
-        return By.XPATH, f'//ul[@id="nav_disabled_list"]/li[contains(.,"{tool.value}")]//a[@title="Enable this item"]'
-
-    @staticmethod
-    def enabled_tool_locator(tool):
-        return By.XPATH, f'//ul[@id="nav_enabled_list"]/li[contains(.,"{tool.value}")]'
-
-    def enable_tool(self, site, tool):
-        if self.is_present(CanvasPage.tool_nav_link_locator(tool)):
-            app.logger.info(f'{tool} is already enabled')
-        else:
-            app.logger.info(f'Enabling {tool} on site ID {site.site_id}')
-            self.driver.get(f'{app.config["CANVAS_BASE_URL"]}/courses/{site.site_id}/settings')
-            self.wait_for_page_and_click(CanvasPage.NAVIGATION_LINK)
-            self.hide_canvas_footer()
-            self.wait_for_element_and_click(CanvasPage.disabled_tool_locator(tool))
-            self.wait_for_element_and_click(CanvasPage.enable_tool_link_locator(tool))
-            Wait(self.driver, util.get_medium_timeout()).until(
-                ec.visibility_of_element_located(CanvasPage.enabled_tool_locator(tool)),
-            )
-            self.wait_for_element_and_click(CanvasPage.TOOL_SAVE_BUTTON)
-            Wait(self.driver, util.get_medium_timeout()).until(
-                ec.visibility_of_element_located(CanvasPage.tool_nav_link_locator(tool)),
-            )
-
-    def enable_media_gallery(self, site):
-        self.enable_tool(site, KalturaLTITool.MEDIA_GALLERY)
-
-    def enable_my_media(self, site):
-        self.enable_tool(site, KalturaLTITool.MY_MEDIA)
-
-    def click_media_gallery_tool(self):
-        app.logger.info('Clicking the Media Gallery LTI tool')
-        self.hide_canvas_footer()
-        self.wait_for_page_and_click(CanvasPage.MEDIA_GALLERY_LINK)
-        Wait(self.driver, util.get_medium_timeout()).until(ec.presence_of_element_located(CanvasPage.kaltura_form_loc()))
-
-    def click_my_media_tool(self):
-        app.logger.info('Clicking the My Media LTI tool')
-        self.hide_canvas_footer()
-        self.wait_for_page_and_click(CanvasPage.MY_MEDIA_LINK)
-        Wait(self.driver, util.get_medium_timeout()).until(ec.presence_of_element_located(CanvasPage.kaltura_form_loc()))
-
-    def load_media_gallery_tool(self, site):
-        app.logger.info(f'Loading Media Gallery on site ID {site.site_id}')
-        tool_id = app.config['CANVAS_MEDIA_GALLERY_TOOL']
-        self.driver.get(f'{app.config["CANVAS_BASE_URL"]}/courses/{site.site_id}/external_tools/{tool_id}')
-        Wait(self.driver, util.get_medium_timeout()).until(ec.presence_of_element_located(CanvasPage.kaltura_form_loc()))
-
-    def load_my_media_tool(self, site):
-        app.logger.info(f'Loading My Media on site ID {site.site_id}')
-        tool_id = app.config['CANVAS_MY_MEDIA_TOOL']
-        self.driver.get(f'{app.config["CANVAS_BASE_URL"]}/courses/{site.site_id}/external_tools/{tool_id}')
-        Wait(self.driver, util.get_medium_timeout()).until(ec.presence_of_element_located(CanvasPage.kaltura_form_loc()))
 
     def is_tool_configured(self, tool_id):
         self.driver.get(f'{app.config["CANVAS_BASE_URL"]}/api/v1/accounts/{app.config["CANVAS_ROOT_ACCOUNT"]}/external_tools/{tool_id}')
