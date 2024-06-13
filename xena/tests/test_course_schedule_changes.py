@@ -26,7 +26,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 
 import pytest
 from xena.models.email_template_type import EmailTemplateType
-from xena.models.publish_type import PublishType
+from xena.models.recording_placement import RecordingPlacement
 from xena.models.recording_schedule import RecordingSchedule
 from xena.models.recording_scheduling_status import RecordingSchedulingStatus
 from xena.models.recording_type import RecordingType
@@ -69,7 +69,7 @@ class TestCourseScheduleChanges:
         util.get_kaltura_id(self.recording_schedule)
         self.recording_schedule.scheduling_status = RecordingSchedulingStatus.SCHEDULED
         self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
-        self.recording_schedule.publish_type = PublishType.PUBLISH_TO_MY_MEDIA
+        self.recording_schedule.publish_type = RecordingPlacement.PUBLISH_TO_MY_MEDIA
 
     def test_run_email_job_post_scheduling(self):
         self.jobs_page.run_emails_job()

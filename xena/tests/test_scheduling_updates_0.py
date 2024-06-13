@@ -22,14 +22,13 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
+import datetime
 
-from flask import current_app as app
 import pytest
 from xena.models.canvas_site import CanvasSite
 from xena.models.email_template_type import EmailTemplateType
-from xena.models.publish_type import PublishType
+from xena.models.recording_placement import RecordingPlacement
 from xena.models.recording_schedule import RecordingSchedule
-from xena.models.recording_scheduling_status import RecordingSchedulingStatus
 from xena.models.recording_type import RecordingType
 from xena.pages.course_page import CoursePage
 from xena.test_utils import util
@@ -39,6 +38,7 @@ from xena.test_utils import util
 class TestScheduling0:
     test_data = util.get_test_script_course('test_scheduling_0')
     section = util.get_test_section(test_data)
+    instructor = section.instructors[0]
     meeting = section.meetings[0]
     meeting_schedule = meeting.meeting_schedule
     recording_schedule = RecordingSchedule(section, meeting)
@@ -66,9 +66,6 @@ class TestScheduling0:
         self.kaltura_page.log_in_via_calnet(self.calnet_page)
         self.kaltura_page.reset_test_data(self.recording_schedule)
         util.reset_section_test_data(self.section)
-        self.recording_schedule.scheduling_status = RecordingSchedulingStatus.NOT_SCHEDULED
-
-    # TODO - delete old course sites?
 
     def test_delete_old_email(self):
         util.reset_sent_email_test_data(self.section)
@@ -77,24 +74,7 @@ class TestScheduling0:
 
     def test_create_course_site(self):
         self.canvas_page.provision_site(self.section, [self.section.ccn], self.site)
-
-    def test_enable_media_gallery(self):
-        if self.canvas_page.is_tool_configured(app.config['CANVAS_MEDIA_GALLERY_TOOL']):
-            self.canvas_page.load_site(self.site.site_id)
-            self.canvas_page.enable_media_gallery(self.site)
-            self.canvas_page.click_media_gallery_tool()
-        else:
-            app.logger.info('Media Gallery is not properly configured')
-            raise
-
-    def test_enable_my_media(self):
-        if self.canvas_page.is_tool_configured(app.config['CANVAS_MY_MEDIA_TOOL']):
-            self.canvas_page.load_site(self.site.site_id)
-            self.canvas_page.enable_my_media(self.site)
-            self.canvas_page.click_my_media_tool()
-        else:
-            app.logger.info('My Media is not properly configured')
-            raise
+        self.canvas_page.add_teacher_to_site(self.site, self.section, self.instructor)
 
     # CHECK FILTERS - NOT SCHEDULED
 
@@ -105,8 +85,7 @@ class TestScheduling0:
         assert self.ouija_page.is_course_in_results(self.section)
 
     def test_not_scheduled_sched_status(self):
-        visible_status = self.ouija_page.course_row_sched_status_el(self.section).text.strip()
-        assert visible_status == self.recording_schedule.scheduling_status.value
+        assert self.ouija_page.visible_course_row_sched_status(self.section) == 'Not Scheduled'
 
     def test_not_scheduled_filter_opted_out(self):
         self.ouija_page.filter_for_opted_out()
@@ -122,16 +101,20 @@ class TestScheduling0:
 
     # COURSE CAPTURE OPTIONS NOT AVAILABLE PRE-SCHEDULING
 
-    def test_no_recording_type_opts(self):
+    def test_no_collaborator_edits(self):
         self.course_page.load_page(self.section)
-        assert not self.course_page.is_present(CoursePage.SELECT_RECORDING_TYPE_INPUT)
+        assert not self.course_page.is_present(CoursePage.COLLAB_EDIT_BUTTON)
 
-    def test_no_publish_options(self):
-        assert not self.course_page.is_present(CoursePage.SELECT_PUBLISH_TYPE_INPUT)
+    def test_no_recording_type_edits(self):
+        assert not self.course_page.is_present(CoursePage.RECORDING_TYPE_EDIT_BUTTON)
+
+    def test_no_recording_placement_edits(self):
+        assert not self.course_page.is_present(CoursePage.PLACEMENT_EDIT_BUTTON)
 
     # VERIFY COURSE HISTORY
 
-    # TODO
+    def test_no_history(self):
+        assert not self.course_page.update_history_table_rows()
 
     # RUN SEMESTER START JOB
 
@@ -140,8 +123,7 @@ class TestScheduling0:
         self.jobs_page.run_semester_start_job()
         assert util.get_kaltura_id(self.recording_schedule)
         self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
-        self.recording_schedule.publish_type = PublishType.PUBLISH_TO_MY_MEDIA
-        self.recording_schedule.scheduling_status = RecordingSchedulingStatus.SCHEDULED
+        self.recording_schedule.publish_type = RecordingPlacement.PUBLISH_TO_MY_MEDIA
 
     def test_kaltura_blackouts(self):
         self.jobs_page.run_blackouts_job()
@@ -155,8 +137,7 @@ class TestScheduling0:
         assert self.ouija_page.is_course_in_results(self.section)
 
     def test_scheduled_sched_status(self):
-        visible_status = self.ouija_page.course_row_sched_status_el(self.section).text.strip()
-        assert visible_status == self.recording_schedule.scheduling_status.value
+        assert self.ouija_page.visible_course_row_sched_status(self.section) == 'Scheduled'
 
     def test_scheduled_filter_opted_out(self):
         self.ouija_page.filter_for_opted_out()
@@ -169,10 +150,6 @@ class TestScheduling0:
     def test_scheduled_filter_no_instructors(self):
         self.ouija_page.filter_for_no_instructors()
         assert not self.ouija_page.is_course_in_results(self.section)
-
-    # VERIFY COURSE HISTORY
-
-    # TODO - admin view of just-scheduled course
 
     # VERIFY SERIES IN DIABLO
 
@@ -187,13 +164,13 @@ class TestScheduling0:
         assert self.room_page.series_row_kaltura_link_text(self.recording_schedule) == expected
 
     def test_room_series_schedule(self):
-        self.room_page.verify_series_schedule(self.section, self.recording_schedule)
+        self.room_page.verify_series_schedule(self.recording_schedule)
 
     def test_series_recordings(self):
-        self.room_page.verify_series_recordings(self.section, self.recording_schedule)
+        self.room_page.verify_series_recordings(self.recording_schedule)
 
     def test_series_blackouts(self):
-        self.room_page.verify_series_blackouts(self.section, self.recording_schedule)
+        self.room_page.verify_series_blackouts(self.recording_schedule)
 
     def test_verify_printable(self):
         self.room_printable_page.verify_printable(self.section, self.recording_schedule)
@@ -226,15 +203,17 @@ class TestScheduling0:
 
     def test_receive_annunciation_email(self):
         self.kaltura_page.close_window_and_switch()
+        self.jobs_page.load_page()
+        self.jobs_page.run_emails_job()
         assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_SEM_START, self.section,
-                                         self.section.instructors[0]) == 1
+                                         self.instructor) == 1
 
     # INSTRUCTOR LOGS IN
 
     def test_home_page(self):
-        self.ouija_page.log_out()
+        self.jobs_page.log_out()
         self.course_page.hit_url(self.term.id, self.section.ccn)
-        self.login_page.dev_auth(self.section.instructors[0].uid)
+        self.login_page.dev_auth(self.instructor.uid)
         self.course_page.wait_for_diablo_title(f'{self.section.code}, {self.section.number}')
 
     # VERIFY STATIC COURSE SIS DATA
@@ -246,8 +225,7 @@ class TestScheduling0:
         assert self.course_page.visible_course_title() == self.section.title
 
     def test_visible_instructors(self):
-        instructor_names = [f'{i.first_name} {i.last_name}'.strip() for i in self.section.instructors]
-        assert self.course_page.visible_instructors() == instructor_names
+        assert self.course_page.visible_instructors() == [f'{self.instructor.first_name} {self.instructor.last_name}'.strip()]
 
     def test_visible_meeting_days(self):
         term_dates = f'{CoursePage.expected_term_date_str(self.meeting_schedule.start_date, self.meeting_schedule.end_date)}'
@@ -259,88 +237,110 @@ class TestScheduling0:
     def test_visible_room(self):
         assert self.course_page.visible_rooms()[0] == self.meeting.room.name
 
+    def test_visible_site_ids(self):
+        assert self.course_page.visible_course_site_ids() == []
+
     def test_visible_listings(self):
         listing_codes = [li.code for li in self.section.listings]
         assert self.course_page.visible_cross_listing_codes() == listing_codes
 
-    # VERIFY VARIABLE CONTENT AND EXTERNAL LINKS
+    # VERIFY DEFAULT SETTINGS AND EXTERNAL LINKS
 
-    def test_publish_type_text(self):
-        assert self.course_page.is_present(CoursePage.PUBLISH_TYPE_TEXT)
+    def test_default_instructors(self):
+        assert self.course_page.visible_instructor_uids() == [str(self.instructor.uid)]
 
-    def test_overview_link(self):
-        title = 'Course Capture | Research, Teaching, and Learning'
-        assert self.course_page.external_link_valid(CoursePage.CC_EXPLAINED_LINK, title)
+    def test_no_collaborators(self):
+        assert not self.course_page.visible_collaborator_uids()
 
-    def test_policies_link(self):
-        title = 'Course Capture Policies | Research, Teaching, and Learning'
-        assert self.course_page.external_link_valid(CoursePage.CC_POLICIES_LINK, title)
+    def test_default_recording_type(self):
+        assert self.course_page.visible_recording_type() == self.recording_schedule.recording_type.value['desc']
+
+    def test_default_recording_placement(self):
+        assert self.recording_schedule.publish_type.value['desc'] in self.course_page.visible_recording_placement()
+
+    def test_no_instructor_kaltura_link(self):
+        assert not self.course_page.is_present(self.course_page.kaltura_series_link(self.recording_schedule))
+
+    # TODO - tests for variable links
 
     # VERIFY AVAILABLE OPTIONS
 
     def test_rec_type_options(self):
-        self.course_page.click_rec_type_input()
-        visible_opts = self.course_page.visible_menu_options()
-        expected = [
-            RecordingType.VIDEO_WITH_OPERATOR.value['option'],
-            RecordingType.VIDEO_SANS_OPERATOR.value['option'],
-        ]
-        assert visible_opts == expected
+        self.course_page.click_rec_type_edit_button()
+        assert self.course_page.is_present(self.course_page.RECORDING_TYPE_NO_OP_RADIO)
+        assert self.course_page.is_present(self.course_page.RECORDING_TYPE_OP_RADIO)
 
-    def test_publish_options(self):
-        self.course_page.hit_escape()
-        self.course_page.click_publish_type_input()
-        visible_opts = self.course_page.visible_menu_options()
-        assert visible_opts == [
-            PublishType.PUBLISH_AUTOMATICALLY.value,
-            PublishType.PUBLISH_TO_PENDING.value,
-            PublishType.PUBLISH_TO_MY_MEDIA.value,
-        ]
+    def test_rec_placement_options(self):
+        self.course_page.cancel_recording_type_edits()
+        self.course_page.click_edit_recording_placement()
+        assert self.course_page.is_present(self.course_page.PLACEMENT_MY_MEDIA_RADIO)
+        assert self.course_page.is_present(self.course_page.PLACEMENT_PENDING_RADIO)
+        assert self.course_page.is_present(self.course_page.PLACEMENT_AUTOMATIC_RADIO)
 
     # SELECT OPTIONS, SAVE
 
     def test_choose_rec_type(self):
-        self.course_page.select_rec_type(RecordingType.VIDEO_WITH_OPERATOR.value['option'])
+        self.course_page.cancel_recording_placement_edits()
+        self.course_page.click_rec_type_edit_button()
+        self.course_page.select_rec_type(RecordingType.VIDEO_WITH_OPERATOR)
+        self.course_page.save_recording_type_edits()
         self.recording_schedule.recording_type = RecordingType.VIDEO_WITH_OPERATOR
 
-    def test_choose_publish_type(self):
-        self.course_page.select_publish_type(PublishType.PUBLISH_TO_PENDING.value)
-        self.recording_schedule.publish_type = PublishType.PUBLISH_TO_PENDING
+    def test_rec_type_operator_no_going_back(self):
+        assert not self.course_page.is_present(self.course_page.RECORDING_TYPE_EDIT_BUTTON)
 
-    # TODO - verify site options include test site
+    def test_choose_rec_placement(self):
+        self.course_page.click_edit_recording_placement()
+        self.course_page.select_recording_placement(RecordingPlacement.PUBLISH_TO_PENDING, sites=[self.site])
+        self.course_page.save_recording_placement_edits()
+        self.recording_schedule.publish_type = RecordingPlacement.PUBLISH_TO_PENDING
 
-    # TODO - add site to publication channels
-
-    def test_visible_site_ids(self):
-        assert self.course_page.visible_course_site_ids() == [site.site_id for site in self.section.sites]
+    def test_visible_site_ids_updated(self):
+        assert self.course_page.visible_course_site_ids() == [self.site.site_id]
 
     def test_site_link(self):
-        assert self.course_page.external_link_valid(CoursePage.course_site_link_locator(self.site), self.site.name)
+        assert self.course_page.external_link_valid(CoursePage.selected_placement_site_loc(self.site), self.site.name)
 
-    def test_approve(self):
-        self.course_page.click_approve_button()
+    # TODO - confirmation of changes message?
 
-    # TODO - revise this
-    def test_confirmation(self):
-        msg = 'This course is currently queued for scheduling. Recordings will be scheduled in an hour or less. Approved by you.'
-        self.course_page.wait_for_approvals_msg(msg)
+    def test_no_history_for_instructors(self):
+        self.course_page.load_page(self.section)
+        assert not self.course_page.update_history_table_rows()
 
     # VERIFY COURSE HISTORY
 
-    def test_course_history_updates_pending(self):
+    def test_course_history_rec_type(self):
         self.course_page.log_out()
         self.login_page.dev_auth()
+        self.course_page.load_page(self.section)
+        row = next(filter(lambda r: r['field'] == 'recording_type', self.course_page.update_history_table_rows()))
+        assert row['old_value'] == RecordingType.VIDEO_SANS_OPERATOR.value['db']
+        assert row['new_value'] == RecordingType.VIDEO_WITH_OPERATOR.value['db']
+        assert row['requested_by'] == str(self.instructor.uid)
+        assert row['requested_at'] == datetime.date.today().strftime('%/%/%')
+        assert row['status'] == 'queued'
 
-    # TODO - what does ouija page row display while updates are pending?
-    # TODO - what does room page row display while updates are pending?
-    # TODO - what does course page display while updates are pending?
+    def test_course_history_rec_placement(self):
+        row = next(filter(lambda r: r['field'] == 'publish_type', self.course_page.update_history_table_rows()))
+        assert row['old_value'] == RecordingPlacement.PUBLISH_TO_MY_MEDIA.value['db']
+        assert row['new_value'] == RecordingPlacement.PUBLISH_TO_PENDING.value['db']
+        assert row['requested_by'] == str(self.instructor.uid)
+        assert row['requested_at'] == datetime.date.today().strftime('%/%/%')
+        assert row['status'] == 'queued'
+
+    def test_course_history_canvas_site(self):
+        row = next(filter(lambda r: r['field'] == 'canvas_site_id', self.course_page.update_history_table_rows()))
+        assert row['old_value'] == '—'
+        assert row['new_value'] == str(self.site.site_id)
+        assert row['requested_by'] == str(self.instructor.uid)
+        assert row['requested_at'] == datetime.date.today().strftime('%/%/%')
+        assert row['status'] == 'queued'
 
     # UPDATE SERIES IN KALTURA
 
     def test_run_kaltura_job(self):
         self.ouija_page.click_jobs_link()
         self.jobs_page.run_kaltura_job()
-        self.jobs_page.run_emails_job()
 
     # VERIFY SERIES IN DIABLO
 
@@ -380,31 +380,34 @@ class TestScheduling0:
         assert len(self.kaltura_page.publish_category_els()) == 2
         assert self.kaltura_page.is_publish_category_present(self.site)
 
-    def test_update_close_kaltura_window(self):
-        self.kaltura_page.close_window_and_switch()
-
     # VERIFY EMAILS
+
+    def test_run_emails_job(self):
+        self.kaltura_page.close_window_and_switch()
+        self.jobs_page.load_page()
+        self.jobs_page.run_emails_job()
 
     def test_update_receive_schedule_conf_email(self):
         assert util.get_sent_email_count(EmailTemplateType.INSTR_CHANGES_CONFIRMED, self.section,
-                                         self.section.instructors[0]) == 1
+                                         self.instructor) == 1
 
     def test_update_admin_email_operator_requested(self):
         assert util.get_sent_email_count(EmailTemplateType.ADMIN_OPERATOR_REQUESTED, self.section) == 1
 
-    # VERIFY NO RECORDING TYPE DOWNGRADE PERMITTED
-
-    def test_instructor_login(self):
-        self.ouija_page.log_out()
-        self.course_page.hit_url(self.term.id, self.section.ccn)
-        self.login_page.dev_auth(self.section.instructors[0].uid)
-        self.course_page.wait_for_diablo_title(f'{self.section.code}, {self.section.number}')
-
-    # TODO def test_no_downgrade(self):
-
     # VERIFY COURSE HISTORY
 
-    # TODO
+    def test_course_history_rec_type_updated(self):
+        self.course_page.load_page(self.section)
+        row = next(filter(lambda r: r['field'] == 'recording_type', self.course_page.update_history_table_rows()))
+        assert row['status'] == 'succeeded'
+
+    def test_course_history_rec_placement_updated(self):
+        row = next(filter(lambda r: r['field'] == 'publish_type', self.course_page.update_history_table_rows()))
+        assert row['status'] == 'succeeded'
+
+    def test_course_history_canvas_site_updated(self):
+        row = next(filter(lambda r: r['field'] == 'canvas_site_id', self.course_page.update_history_table_rows()))
+        assert row['status'] == 'succeeded'
 
     # VERIFY REMINDER EMAIL
 

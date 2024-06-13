@@ -25,7 +25,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 
 import pytest
 from xena.models.email_template_type import EmailTemplateType
-from xena.models.publish_type import PublishType
+from xena.models.recording_placement import RecordingPlacement
 from xena.models.recording_schedule import RecordingSchedule
 from xena.models.recording_scheduling_status import RecordingSchedulingStatus
 from xena.models.recording_type import RecordingType
@@ -54,7 +54,6 @@ class TestCourseRoomChanges:
         self.kaltura_page.log_in_via_calnet(self.calnet_page)
         self.kaltura_page.reset_test_data(self.term, self.recording_schedule)
         util.reset_section_test_data(self.section)
-        self.recording_schedule.scheduling_status = RecordingSchedulingStatus.NOT_SCHEDULED
 
     def test_emails_pre_run(self):
         self.jobs_page.load_page()
@@ -76,14 +75,14 @@ class TestCourseRoomChanges:
         self.login_page.dev_auth(self.instr.uid)
         self.ouija_page.click_course_page_link(self.section)
         self.course_page.select_recording_type(RecordingType.VIDEO_WITH_OPERATOR.value['option'])
-        self.course_page.select_publish_type(PublishType.PUBLISH_AUTOMATICALLY.value['option'])
+        self.course_page.select_recording_placement(RecordingPlacement.PUBLISH_AUTOMATICALLY.value['option'])
         self.course_page.click_approve_button()
 
     def test_update_series(self):
         self.jobs_page.load_page()
         self.jobs_page.run_kaltura_job()
         self.recording_schedule.recording_type = RecordingType.VIDEO_WITH_OPERATOR
-        self.recording_schedule.publish_type = PublishType.PUBLISH_AUTOMATICALLY
+        self.recording_schedule.publish_type = RecordingPlacement.PUBLISH_AUTOMATICALLY
 
     # SCHEDULED COURSE MOVES TO ANOTHER ELIGIBLE ROOM, THOUGH NOT AN AUDITORIUM
 
@@ -194,7 +193,7 @@ class TestCourseRoomChanges:
         assert util.get_kaltura_id(self.recording_schedule)
         self.recording_schedule.scheduling_status = RecordingSchedulingStatus.SCHEDULED
         self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
-        self.recording_schedule.publish_type = PublishType.PUBLISH_TO_MY_MEDIA
+        self.recording_schedule.publish_type = RecordingPlacement.PUBLISH_TO_MY_MEDIA
 
     def test_eligible_room_again_series(self):
         self.rooms_page.load_page()

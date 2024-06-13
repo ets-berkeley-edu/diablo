@@ -34,7 +34,7 @@ class Meeting(object):
 
     @property
     def meeting_schedule(self):
-        return MeetingSchedule(self.data['meeting_schedule'])
+        return MeetingSchedule(self.data['meeting_schedule']) if self.data['meeting_schedule'] else None
 
     @meeting_schedule.setter
     def meeting_schedule(self, value):
@@ -42,7 +42,7 @@ class Meeting(object):
 
     @property
     def room(self):
-        return Room(self.data['room'])
+        return Room(self.data['room']) if self.data['room'] else None
 
     @room.setter
     def room(self, value):

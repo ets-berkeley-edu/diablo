@@ -28,7 +28,6 @@ from flask import current_app as app
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options as Coptions
 from selenium.webdriver.common.by import By
-from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
 from selenium.webdriver.firefox.options import Options as Foptions
 from xena.test_utils import util
@@ -54,9 +53,8 @@ class WebDriverManager(object):
             options.headless = _headless
             return webdriver.Firefox(options=options)
         else:
-            d = DesiredCapabilities.CHROME
-            d['loggingPrefs'] = {'browser': 'ALL'}
             options = Coptions()
+            options.binary_location = util.get_xena_browser_chrome_binary_path()
             if _headless:
                 options.add_argument('--headless=new')
             prefs = {
@@ -65,7 +63,7 @@ class WebDriverManager(object):
                 'directory_upgrade': True,
             }
             options.add_experimental_option('prefs', prefs)
-            driver = webdriver.Chrome(desired_capabilities=d, options=options)
+            driver = webdriver.Chrome(options=options)
             WebDriverManager.allow_canvas_iframe_in_chrome(driver)
             return driver
 

@@ -41,6 +41,10 @@ def get_xena_browser():
     return app.config['XENA_BROWSER']
 
 
+def get_xena_browser_chrome_binary_path():
+    return app.config['XENA_BROWSER_BINARY_PATH']
+
+
 def get_xena_browser_headless():
     return app.config['XENA_BROWSER_HEADLESS']
 
@@ -88,12 +92,47 @@ def get_kaltura_term_date_str(date):
     return datetime.strftime(date, '%m/%d/%Y')
 
 
+# TEST DATA MANAGEMENT
+
+
 def get_test_script_course(test_script_str):
     with open(app.config['TEST_DATA_COURSES']) as f:
         parsed = json.load(f)['courses']
     for course in parsed:
         if course['test_script'] == test_script_str:
             return course
+
+
+def get_kaltura_id(recording_schedule):
+    section = recording_schedule.section
+    meeting = recording_schedule.meeting
+    schedule = meeting.meeting_schedule
+    recording_dates = schedule.expected_recording_dates(section.term)
+    sql = f"""SELECT kaltura_schedule_id
+                FROM scheduled
+                JOIN rooms ON rooms.id = scheduled.room_id
+               WHERE scheduled.term_id = {section.term.id}
+                 AND scheduled.section_id = {section.ccn}
+                 AND scheduled.meeting_start_date = '{recording_dates[0].strftime('%Y-%m-%d %H:%M:%S')}'
+                 AND scheduled.meeting_end_date = '{recording_dates[-1].strftime('%Y-%m-%d %H:%M:%S')}'
+                 AND rooms.location = '{meeting.room.name.replace("'", "''")}'
+                 AND scheduled.deleted_at IS NULL
+    """
+    ids = []
+    app.logger.info(f'Checking for Kaltura ID for term {section.term.id} section {section.ccn}')
+    app.logger.info(sql)
+    result = db.session.execute(text(sql))
+    std_commit(allow_test_environment=True)
+    for row in result:
+        ids.append(dict(row).get('kaltura_schedule_id'))
+    if len(ids) > 0:
+        kaltura_id = ids[0]
+        app.logger.info(f'ID is {kaltura_id}')
+        recording_schedule.series_id = kaltura_id
+        recording_schedule.scheduling_status = RecordingSchedulingStatus.SCHEDULED
+        return kaltura_id
+    else:
+        return None
 
 
 def get_all_eligible_section_ids():
@@ -114,9 +153,6 @@ def get_all_eligible_section_ids():
     for row in result:
         ids.append(f'{dict(row).get("section_id")}')
     return ids
-
-
-# SECTION TEST DATA
 
 
 def get_test_section_instructor_data(test_section_data, uids_to_exclude=None):
@@ -296,12 +332,12 @@ def delete_sis_sections_rows(section):
     std_commit(allow_test_environment=True)
 
 
-def add_sis_sections_rows(section):
+def add_sis_sections_rows(section, instructors=None):
     instruction_format = section.number.split(' ')[0]
     section_num = section.number.split(' ')[1]
-    all_instructors = section.instructors + section.proxies
+    all_instructors = instructors or (section.instructors + section.proxies)
     for instructor in all_instructors:
-        instructor_name = f'{instructor.first_name} {instructor.last_name}'
+        instructor_name = f'{instructor.first_name} {instructor.last_name}'.replace("'", "''")
         for meeting in section.meetings:
             room = meeting.room.name.replace("'", "''")
             schedule = meeting.meeting_schedule
@@ -378,24 +414,65 @@ def get_sent_email_count(template, section, instructor=None):
     return count
 
 
+def reset_email_template_test_data(template_type):
+    sql = f"DELETE FROM email_templates WHERE template_type = '{template_type}'"
+    db.session.execute(text(sql))
+    std_commit(allow_test_environment=True)
+
+
+def get_next_date(start_date, day_index):
+    days_ahead = day_index - start_date.weekday()
+    if days_ahead < 0:
+        days_ahead += 7
+    return start_date + timedelta(days_ahead)
+
+
+def get_room_id(room):
+    room = room.name.replace("'", "''")
+    sql = f"SELECT id FROM rooms WHERE location = '{room}'"
+    app.logger.info(sql)
+    ids = []
+    result = db.session.execute(text(sql))
+    std_commit(allow_test_environment=True)
+    for row in result:
+        ids.append(dict(row).get('id'))
+    return ids[0]
+
+
+def get_blackout_date_ranges():
+    ranges = []
+    for i in app.config['KALTURA_BLACKOUT_DATES']:
+        pair = i.split(' - ')
+        date_pair = [dateutil.parser.parse(pair[0]).date(), dateutil.parser.parse(pair[1]).date()]
+        ranges.append(date_pair)
+    return ranges
+
+
 def reset_section_test_data(section, delete_opt_outs=True):
     reset_test_data(section)
     term_id = app.config['CURRENT_TERM_ID']
-    sql = f'DELETE FROM approvals WHERE section_id = {section.ccn} AND term_id = {term_id}'
-    db.session.execute(text(sql))
     sql = f'DELETE FROM scheduled WHERE section_id = {section.ccn} AND term_id = {term_id}'
+    app.logger.info(sql)
     db.session.execute(text(sql))
+    std_commit(allow_test_environment=True)
     sql = f'DELETE FROM schedule_updates WHERE section_id = {section.ccn} AND term_id = {term_id}'
+    app.logger.info(sql)
     db.session.execute(text(sql))
+    std_commit(allow_test_environment=True)
     sql = f'DELETE FROM sent_emails WHERE section_id = {section.ccn} AND term_id = {term_id}'
+    app.logger.info(sql)
     db.session.execute(text(sql))
+    std_commit(allow_test_environment=True)
     sql = f'DELETE FROM course_preferences WHERE section_id = {section.ccn} AND term_id = {term_id}'
+    app.logger.info(sql)
     db.session.execute(text(sql))
+    std_commit(allow_test_environment=True)
     if delete_opt_outs:
         for i in section.instructors:
-            sql = f'DELETE FROM opt_outs WHERE instructor_uid = {i.uid}'
+            sql = f"DELETE FROM opt_outs WHERE instructor_uid = '{i.uid}'"
+            app.logger.info(sql)
             db.session.execute(text(sql))
-    std_commit(allow_test_environment=True)
+            std_commit(allow_test_environment=True)
 
 
 def set_past_term_opt_out(instructor):
@@ -604,89 +681,3 @@ def switch_principal_listing(old_primary, new_primary):
     app.logger.info(sql_3)
     db.session.execute(text(sql_3))
     std_commit(allow_test_environment=True)
-
-
-def get_kaltura_id(recording_schedule):
-    section = recording_schedule.section
-    meeting = recording_schedule.meeting
-    schedule = meeting.meeting_schedule
-    sql = f"""SELECT kaltura_schedule_id
-                FROM scheduled
-                JOIN rooms ON rooms.id = scheduled.room_id
-               WHERE scheduled.term_id = {section.term.id}
-                 AND scheduled.section_id = {section.ccn}
-                 AND scheduled.meeting_start_date = '{schedule.start_date.strftime('%Y-%m-%d %H:%M:%S')}'
-                 AND scheduled.meeting_end_date = '{schedule.end_date.strftime('%Y-%m-%d %H:%M:%S')}'
-                 AND rooms.location = '{meeting.room.name}'
-                 AND scheduled.deleted_at IS NULL
-    """
-    ids = []
-    app.logger.info(f'Checking for Kaltura ID for term {section.term.id} section {section.ccn}')
-    app.logger.info(sql)
-    result = db.session.execute(text(sql))
-    std_commit(allow_test_environment=True)
-    for row in result:
-        ids.append(dict(row).get('kaltura_schedule_id'))
-    if len(ids) > 0:
-        kaltura_id = ids[0]
-        app.logger.info(f'ID is {kaltura_id}')
-        recording_schedule.series_id = kaltura_id
-        recording_schedule.scheduling_status = RecordingSchedulingStatus.SCHEDULED
-        return kaltura_id
-    else:
-        return None
-
-
-# COURSE SITES
-
-
-def get_course_site_ids(section):
-    sql = f'SELECT canvas_course_site_id FROM canvas_course_sites WHERE term_id = {section.term.id} AND section_id = {section.ccn}'
-    app.logger.info(sql)
-    ids = []
-    result = db.session.execute(text(sql))
-    std_commit(allow_test_environment=True)
-    for row in result:
-        ids.append(dict(row).get('canvas_course_site_id'))
-    app.logger.info(f'Site IDs are {ids}')
-    return ids
-
-
-def delete_course_site(site_id):
-    sql = f'DELETE FROM canvas_course_sites WHERE canvas_course_site_id = {site_id}'
-    db.session.execute(text(sql))
-    std_commit(allow_test_environment=True)
-
-
-def reset_email_template_test_data(template_type):
-    sql = f"DELETE FROM email_templates WHERE template_type = '{template_type}'"
-    db.session.execute(text(sql))
-    std_commit(allow_test_environment=True)
-
-
-def get_next_date(start_date, day_index):
-    days_ahead = day_index - start_date.weekday()
-    if days_ahead < 0:
-        days_ahead += 7
-    return start_date + timedelta(days_ahead)
-
-
-def get_room_id(room):
-    room = room.name.replace("'", "''")
-    sql = f"SELECT id FROM rooms WHERE location = '{room}'"
-    app.logger.info(sql)
-    ids = []
-    result = db.session.execute(text(sql))
-    std_commit(allow_test_environment=True)
-    for row in result:
-        ids.append(dict(row).get('id'))
-    return ids[0]
-
-
-def get_blackout_date_ranges():
-    ranges = []
-    for i in app.config['KALTURA_BLACKOUT_DATES']:
-        pair = i.split(' - ')
-        date_pair = [dateutil.parser.parse(pair[0]).date(), dateutil.parser.parse(pair[1]).date()]
-        ranges.append(date_pair)
-    return ranges

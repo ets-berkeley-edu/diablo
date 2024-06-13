@@ -25,9 +25,8 @@ ENHANCEMENTS, OR MODIFICATIONS.
 
 import pytest
 from xena.models.email_template_type import EmailTemplateType
-from xena.models.publish_type import PublishType
+from xena.models.recording_placement import RecordingPlacement
 from xena.models.recording_schedule import RecordingSchedule
-from xena.models.recording_scheduling_status import RecordingSchedulingStatus
 from xena.models.recording_type import RecordingType
 from xena.pages.course_page import CoursePage
 from xena.pages.ouija_board_page import OuijaBoardPage
@@ -41,6 +40,7 @@ class TestCourseCancellation:
 
     test_data = util.get_test_script_course('test_course_cancellation')
     section = util.get_test_section(test_data)
+    instructor = section.instructors[0]
     meeting = section.meetings[0]
     recording_schedule = RecordingSchedule(section, meeting)
 
@@ -54,7 +54,6 @@ class TestCourseCancellation:
         self.kaltura_page.log_in_via_calnet(self.calnet_page)
         self.kaltura_page.reset_test_data(self.term, self.recording_schedule)
         util.reset_section_test_data(self.section)
-        self.recording_schedule.scheduling_status = RecordingSchedulingStatus.NOT_SCHEDULED
 
     def test_emails_pre_run(self):
         self.jobs_page.load_page()
@@ -77,21 +76,22 @@ class TestCourseCancellation:
     def test_cancel_pre_sched_no_admin_recording_opts(self):
         self.course_page.load_page(self.section)
         assert self.course_page.is_canceled()
-        assert not self.course_page.is_present(CoursePage.APPROVE_BUTTON)
-        assert not self.course_page.is_present(CoursePage.SELECT_PUBLISH_TYPE_INPUT)
-        assert not self.course_page.is_present(CoursePage.SEND_INVITE_BUTTON)
+        assert not self.course_page.is_present(CoursePage.COLLAB_EDIT_BUTTON)
+        assert not self.course_page.is_present(CoursePage.RECORDING_TYPE_EDIT_BUTTON)
+        assert not self.course_page.is_present(CoursePage.PLACEMENT_EDIT_BUTTON)
 
     def test_cancel_pre_sched_no_teacher_result(self):
         self.course_page.log_out()
-        self.login_page.dev_auth(self.section.instructors[0].uid)
+        self.login_page.dev_auth(self.instructor.uid)
         self.ouija_page.wait_for_title_contains('Eligible for Capture')
         assert not self.ouija_page.is_present(OuijaBoardPage.course_row_link_locator(self.section))
 
     def test_cancel_pre_sched_no_teacher_recording_opts(self):
         self.course_page.load_page(self.section)
         assert self.course_page.is_canceled()
-        assert not self.course_page.is_present(CoursePage.APPROVE_BUTTON)
-        assert not self.course_page.is_present(CoursePage.SELECT_PUBLISH_TYPE_INPUT)
+        assert not self.course_page.is_present(CoursePage.COLLAB_EDIT_BUTTON)
+        assert not self.course_page.is_present(CoursePage.RECORDING_TYPE_EDIT_BUTTON)
+        assert not self.course_page.is_present(CoursePage.PLACEMENT_EDIT_BUTTON)
 
     # SEMESTER START JOB SKIPS CANCELLED COURSE
 
@@ -105,26 +105,21 @@ class TestCourseCancellation:
 
     def test_no_annunciation(self):
         assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_SEM_START, self.section,
-                                         self.section.instructors[0]) == 0
+                                         self.instructor) == 0
 
     # COURSE IS RESTORED AND SCHEDULED
 
     def test_restored_pre_sched(self):
         util.restore_section(self.section)
         self.ouija_page.click_jobs_link()
-        self.jobs_page.run_semester_start_job()
-        self.jobs_page.run_emails_job()
-
-    def test_restored_pre_sched_jobs(self):
-        self.ouija_page.click_jobs_link()
-        self.jobs_page.run_semester_start_job()
+        self.jobs_page.run_schedule_updates_job()
+        self.jobs_page.run_kaltura_job()
         self.jobs_page.run_emails_job()
 
     def test_kaltura_schedule_id(self):
         assert util.get_kaltura_id(self.recording_schedule)
         self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
-        self.recording_schedule.publish_type = PublishType.PUBLISH_TO_MY_MEDIA
-        self.recording_schedule.scheduling_status = RecordingSchedulingStatus.SCHEDULED
+        self.recording_schedule.publish_type = RecordingPlacement.PUBLISH_TO_MY_MEDIA
 
     def test_kaltura_blackouts(self):
         self.jobs_page.run_blackouts_job()
@@ -151,13 +146,13 @@ class TestCourseCancellation:
 
     def test_instructor_email_canceled_ineligible(self):
         assert util.get_sent_email_count(EmailTemplateType.INSTR_ROOM_CHANGE_INELIGIBLE, self.section,
-                                         self.section.instructors[0]) == 1
+                                         self.instructor) == 1
 
     # UNSCHEDULE CANCELED COURSE
 
     def test_unsched_canceled(self):
         self.jobs_page.load_page(self.section)
-        # TODO run updates job
+        self.jobs_page.run_schedule_updates_job()
         self.jobs_page.run_kaltura_job()
 
     def test_no_kaltura_series_canceled_unsched(self):

@@ -29,7 +29,7 @@ from flask import current_app as app
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.wait import WebDriverWait as Wait
-from xena.models.publish_type import PublishType
+from xena.models.recording_placement import RecordingPlacement
 from xena.pages.page import Page
 from xena.test_utils import util
 
@@ -219,6 +219,7 @@ class KalturaPage(Page):
         course = f'{section.code}, {section.number} ({section.term.name})'
         copy = f"Copyright ©{datetime.strftime(meeting.meeting_schedule.start_date, '%Y')} UC Regents; all rights reserved."
         expected = f'{course} is taught by {instructors}. {copy}'
+        app.logger.info(f'Expecting {expected}, got {self.visible_series_desc()}')
         assert self.visible_series_desc() == expected
 
     def verify_collaborators(self, section, addl_collaborators=None):
@@ -226,9 +227,11 @@ class KalturaPage(Page):
         all_collabs.extend(section.instructors)
         if addl_collaborators:
             all_collabs.extend(addl_collaborators)
-        assert len(self.collaborator_rows()) == len(all_collabs)
         for collab in all_collabs:
+            app.logger.info(f'Verifying collaborator UID {collab.uid} perms')
             assert self.collaborator_perm(collab) == 'Co-Editor, Co-Publisher'
+        app.logger.info(f'Expecting {len(all_collabs)} collaborators, got {len(self.collaborator_rows())}')
+        assert len(self.collaborator_rows()) == len(all_collabs)
 
     def verify_schedule(self, section, meeting):
         schedule = meeting.meeting_schedule
@@ -253,9 +256,9 @@ class KalturaPage(Page):
         assert visible_end == end
 
     def verify_publish_status(self, recording_schedule):
-        if recording_schedule.publish_type == PublishType.PUBLISH_TO_MY_MEDIA:
+        if recording_schedule.publish_type == RecordingPlacement.PUBLISH_TO_MY_MEDIA:
             assert self.is_private()
-        elif recording_schedule.publish_type == PublishType.PUBLISH_TO_PENDING:
+        elif recording_schedule.publish_type == RecordingPlacement.PUBLISH_TO_PENDING:
             assert self.is_unlisted()
         else:
             assert self.is_published()

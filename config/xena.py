@@ -33,6 +33,7 @@ BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
 BASE_URL = 'https://manage-dev.coursecapture.berkeley.edu'
 
+CANVAS_ADD_USER_TOOL = '12345'
 CANVAS_ADMIN_ID = '123456'
 CANVAS_BASE_URL = 'https://ucberkeley.beta.instructure.com'
 CANVAS_ROOT_ACCOUNT = '123456'
@@ -65,4 +66,5 @@ TIMEOUT_MEDIUM = 90
 TIMEOUT_LONG = 360
 
 XENA_BROWSER = 'chrome'
+XENA_BROWSER_BINARY_PATH = '/path/to/chrome'
 XENA_BROWSER_HEADLESS = False

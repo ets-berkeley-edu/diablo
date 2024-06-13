@@ -27,44 +27,16 @@ import time
 
 from flask import current_app as app
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions as ec
-from selenium.webdriver.support.wait import WebDriverWait as Wait
+from xena.models.recording_placement import RecordingPlacement
+from xena.models.recording_type import RecordingType
 from xena.pages.diablo_pages import DiabloPages
 from xena.test_utils import util
 
 
 class CoursePage(DiabloPages):
 
-    SECTION_ID = (By.ID, 'section-id')
-    COURSE_TITLE = (By.ID, 'course-title')
-    INSTRUCTORS = (By.ID, 'instructors')
-    INSTRUCTOR = (By.XPATH, '//*[contains(@id, "instructor-")][not(contains(@id, "proxy"))]')
-    PROXY = (By.XPATH, '//span[contains(@id, "instructor-proxy-")]')
-    MEETING_DAYS = (By.XPATH, '//*[contains(@id, "meeting-days-")]')
-    MEETING_TIMES = (By.XPATH, '//*[contains(@id, "meeting-times-")]')
-    ROOMS = (By.XPATH, '//*[contains(@id, "rooms-")]')
-    COURSE_SITE_LINK = (By.XPATH, '//a[contains(@id, "canvas-course-site-")]')
-    CROSS_LISTING = (By.XPATH, '//div[contains(@id, "cross-listing-")]')
-
-    CC_EXPLAINED_LINK = (By.ID, 'link-to-course-capture-overview')
-    RECORDING_TYPE_TEXT = (By.XPATH, '//div[contains(text(), "\'Presentation and Audio\' recordings are free")]')
-    PUBLISH_TYPE_TEXT = (By.XPATH, '//div[contains(text(), "If you choose \'GSI/TA moderation\'")]')
-    RECORDING_TYPE_STATIC = (By.XPATH, '//input[@name="recordingType"]/..')
-    SELECT_RECORDING_TYPE_INPUT = (By.XPATH, '//label[@id="select-recording-type-label"]')
-    SELECT_PUBLISH_TYPE_INPUT = (By.XPATH, '//input[@id="select-publish-type"]/..')
-    CC_POLICIES_LINK = (By.ID, 'link-to-course-capture-policies')
-    APPROVE_BUTTON = (By.ID, 'btn-approve')
-    QUEUED_MSG = (By.XPATH, '//span[contains(text(), "This course is currently queued for scheduling")]')
-    APPROVALS_MSG = (By.ID, 'approvals-described')
-    CONFIRMATION_MSG = (By.XPATH, '//span[contains(text(), "You submitted the preferences below.")]')
-    NO_AUTO_SCHED_MSG = (By.XPATH, '//div[contains(text(), "cannot be scheduled automatically")]')
+    UPDATES_QUEUED_MSG = By.XPATH, '//div[contains(text(), "Recent updates to recording settings are currently queued")]'
     NOT_ELIGIBLE_MSG = (By.ID, 'course-not-eligible')
-
-    RECORDING_TYPE_APPROVED = (By.XPATH, '//h4[contains(., "Recording Type")]/../following-sibling::div/div')
-    PUBLISH_TYPE_APPROVED = (By.ID, 'approved-publish-type')
-
-    RECORDING_TYPE_SCHEDULED = (By.XPATH, '//div[text()="Recording Type"]/following-sibling::div')
-    PUBLISH_TYPE_SCHEDULED = (By.XPATH, '//div[text()="Publish Type"]/following-sibling::div')
 
     @staticmethod
     def instructor_link_locator(instructor):
@@ -73,10 +45,6 @@ class CoursePage(DiabloPages):
     @staticmethod
     def room_link_locator(room):
         return By.LINK_TEXT, room.name
-
-    @staticmethod
-    def course_site_link_locator(site):
-        return By.XPATH, f'//a[@id="canvas-course-site-{site.site_id}"]'
 
     @staticmethod
     def not_authorized_msg_locator(section):
@@ -92,10 +60,6 @@ class CoursePage(DiabloPages):
     def expected_final_record_date_str(meeting, term):
         return meeting.meeting_schedule.expected_recording_dates(term)[-1].strftime('%b %-d, %Y')
 
-    @staticmethod
-    def kaltura_series_link(recording_schedule):
-        return By.PARTIAL_LINK_TEXT, f'Kaltura series {recording_schedule.series_id}'
-
     def hit_url(self, term_id, ccn):
         self.driver.get(f'{app.config["BASE_URL"]}/course/{term_id}/{ccn}')
 
@@ -106,6 +70,16 @@ class CoursePage(DiabloPages):
 
     # SIS DATA
 
+    SECTION_ID = (By.ID, 'section-id')
+    COURSE_TITLE = (By.ID, 'course-title')
+    INSTRUCTORS = (By.ID, 'instructors')
+    INSTRUCTOR = (By.XPATH, '//div[@id="instructors"]//*[contains(@id, "instructor-") and not(contains(@id, "proxy"))]')
+    PROXY = (By.XPATH, '//div[@id="instructors"]//span[contains(@id, "instructor-proxy-")]')
+    MEETING_DAYS = (By.XPATH, '//*[contains(@id, "meeting-days-")]')
+    MEETING_TIMES = (By.XPATH, '//*[contains(@id, "meeting-times-")]')
+    ROOMS = (By.XPATH, '//*[contains(@id, "rooms-")]')
+    CROSS_LISTING = (By.XPATH, '//div[contains(@id, "cross-listing-")]')
+
     def is_canceled(self):
         return self.is_present((By.XPATH, '//span[text()="UC Berkeley has canceled this section."]'))
 
@@ -114,6 +88,9 @@ class CoursePage(DiabloPages):
 
     def visible_course_title(self):
         return self.element(CoursePage.COURSE_TITLE).text
+
+    def wait_for_instructors(self):
+        self.when_present(self.INSTRUCTOR, util.get_short_timeout())
 
     def visible_instructors(self):
         els = self.elements(CoursePage.INSTRUCTOR)
@@ -137,10 +114,6 @@ class CoursePage(DiabloPages):
         els = self.elements(CoursePage.ROOMS)
         return [el.get_attribute('innerText').replace('Location:', '').strip() for el in els]
 
-    def visible_course_site_ids(self):
-        site_els = self.elements(CoursePage.COURSE_SITE_LINK)
-        return [el.get_attribute('id').split('-')[-1] for el in site_els]
-
     def visible_cross_listing_codes(self):
         return [el.text for el in self.elements(CoursePage.CROSS_LISTING)]
 
@@ -153,31 +126,18 @@ class CoursePage(DiabloPages):
     def click_room_link(self, room):
         self.wait_for_element_and_click(self.room_link_locator(room))
 
-    # CAPTURE SETTINGS
+    # CAPTURE SETTINGS - instructors
 
-    def click_rec_type_input(self):
-        app.logger.info('Clicking the recording type input')
-        self.wait_for_element_and_click(CoursePage.SELECT_RECORDING_TYPE_INPUT)
+    INSTRUCTOR_ROW = By.XPATH, '//div[@id="instructors-list"]/div'
 
-    def click_publish_type_input(self):
-        app.logger.info('Clicking the publish type input')
-        self.wait_for_element_and_click(CoursePage.SELECT_PUBLISH_TYPE_INPUT)
+    def visible_instructor_uids(self):
+        uids = list(map(lambda el: el.get_attribute('id').split('-')[-1], self.elements(self.INSTRUCTOR_ROW)))
+        uids.sort()
+        return uids
 
-    def select_rec_type(self, recording_type):
-        app.logger.info(f'Selecting recording type {recording_type}')
-        self.hit_escape()
-        self.click_rec_type_input()
-        self.click_menu_option(recording_type)
+    # CAPTURE SETTINGS - collaborators
 
-    def select_publish_type(self, publish_type):
-        app.logger.info(f'Selecting publish type {publish_type}')
-        self.hit_escape()
-        self.click_publish_type_input()
-        self.click_menu_option(publish_type)
-
-    # COLLABORATORS
-
-    COLLAB_ROW = By.XPATH, '//div[contains(@id, "collaborator-")]'
+    COLLAB_ROW = By.XPATH, '//div[starts-with(@id, "collaborator-")]'
     COLLAB_EDIT_BUTTON = By.ID, 'btn-collaborators-edit'
     COLLAB_NONE_MSG = By.ID, 'collaborators-none'
     COLLAB_INPUT = By.ID, 'input-collaborator-lookup-autocomplete'
@@ -193,7 +153,17 @@ class CoursePage(DiabloPages):
         return self.is_present(self.collaborator_row_loc(user))
 
     def visible_collaborator_uids(self):
-        return list(map(lambda el: el.get_attribute('id').split('-')[-1], self.elements(self.COLLAB_ROW)))
+        uids = list(map(lambda el: el.get_attribute('id').split('-')[-1], self.elements(self.COLLAB_ROW)))
+        uids.sort()
+        return uids
+
+    def verify_collaborator_uids(self, collaborators):
+        visible = self.visible_collaborator_uids()
+        visible.sort()
+        expected = list(map(lambda c: str(c.uid), collaborators))
+        expected.sort()
+        app.logger.info(f'Expecting collaborator UIDs {expected}, got {visible}')
+        assert visible == expected
 
     def click_edit_collaborators(self):
         app.logger.info('Clicking the edit collaborators button')
@@ -250,41 +220,120 @@ class CoursePage(DiabloPages):
     def collaborator_remove_button_loc(user):
         return By.ID, f'btn-collaborator-remove-{user.uid}'
 
-    def click_approve_button(self):
-        app.logger.info('Clicking the approve button')
-        self.wait_for_element_and_click(CoursePage.APPROVE_BUTTON)
+    # CAPTURE SETTINGS - recording type
 
-    # TODO - repurpose the following with new messaging
+    RECORDING_TYPE_TEXT = (By.ID, 'recording-type-name')
+    RECORDING_TYPE_EDIT_BUTTON = By.ID, 'btn-recording-type-edit'
+    RECORDING_TYPE_NO_OP_RADIO = By.ID, 'radio-recording-type-presenter_presentation_audio'
+    RECORDING_TYPE_OP_RADIO = By.ID, 'radio-recording-type-presenter_presentation_audio_with_operator'
+    RECORDING_TYPE_SAVE_BUTTON = By.ID, 'btn-recording-type-save'
+    RECORDING_TYPE_CXL_BUTTON = By.ID, 'btn-recording-type-cancel'
 
-    def wait_for_queued_confirmation(self):
-        Wait(self.driver, util.get_short_timeout()).until(ec.visibility_of_element_located(CoursePage.QUEUED_MSG))
+    def visible_recording_type(self):
+        return self.element(self.RECORDING_TYPE_TEXT).text.strip()
 
-    def wait_for_approvals_msg(self, string=None):
-        Wait(self.driver, util.get_medium_timeout()).until(ec.visibility_of_element_located(CoursePage.APPROVALS_MSG))
-        if string:
-            app.logger.info(f'Visible: {self.element(CoursePage.APPROVALS_MSG).get_attribute("innerText")}')
-            self.wait_for_text_in_element(CoursePage.APPROVALS_MSG, string)
+    def click_rec_type_edit_button(self):
+        app.logger.info('Clicking the recording type edit button')
+        self.wait_for_element_and_click(CoursePage.RECORDING_TYPE_EDIT_BUTTON)
 
-    def wait_for_approval_confirmation(self):
-        Wait(self.driver, util.get_short_timeout()).until(ec.visibility_of_element_located(CoursePage.CONFIRMATION_MSG))
+    def select_rec_type(self, recording_type):
+        app.logger.info(f"Selecting recording type {recording_type.value['desc']}")
+        self.click_rec_type_edit_button()
+        if recording_type == RecordingType.VIDEO_WITH_OPERATOR:
+            self.wait_for_element_and_click(self.RECORDING_TYPE_OP_RADIO)
+        else:
+            self.wait_for_element_and_click(self.RECORDING_TYPE_NO_OP_RADIO)
 
-    def default_rec_type(self):
-        return self.element(CoursePage.RECORDING_TYPE_STATIC).text.strip()
+    def save_recording_type_edits(self):
+        self.wait_for_element_and_click(self.RECORDING_TYPE_SAVE_BUTTON)
 
-    def approved_rec_type(self):
-        return self.element(CoursePage.RECORDING_TYPE_APPROVED).text.strip()
+    def cancel_recording_type_edits(self):
+        self.wait_for_page_and_click_js(self.RECORDING_TYPE_CXL_BUTTON)
 
-    def approved_publish_type(self):
-        return self.element(CoursePage.PUBLISH_TYPE_APPROVED).text.strip()
+    # CAPTURE SETTINGS - recording placement
 
-    def scheduled_rec_type(self):
-        return self.element(CoursePage.RECORDING_TYPE_SCHEDULED).text.strip()
+    PLACEMENT_TEXT = By.ID, 'publish-type-name'
+    PLACEMENT_EDIT_BUTTON = By.ID, 'btn-publish-type-edit'
+    PLACEMENT_MY_MEDIA_RADIO = By.ID, 'radio-publish-type-kaltura_my_media'
+    PLACEMENT_PENDING_RADIO = By.ID, 'radio-publish-type-kaltura_media_gallery_moderated'
+    PLACEMENT_AUTOMATIC_RADIO = By.ID, 'radio-publish-type-kaltura_media_gallery'
+    PLACEMENT_SAVE_BUTTON = By.ID, 'btn-publish-type-save'
+    PLACEMENT_CXL_BUTTON = By.ID, 'btn-publish-type-cancel'
 
-    def scheduled_publish_type(self):
-        return self.element(CoursePage.PUBLISH_TYPE_SCHEDULED).text.strip()
+    PLACEMENT_SITE_SELECT = By.ID, 'select-canvas-site'
+    PLACEMENT_SITE_LINK = By.XPATH, '//a[contains(@id, "canvas-course-site-")]'
+
+    @staticmethod
+    def placement_site_option_loc(site):
+        return By.ID, f'menu-option-canvas-site-{site.site_id}'
+
+    @staticmethod
+    def selected_placement_site_loc(site):
+        return By.ID, f'canvas-course-site-{site.site_id}'
+
+    def visible_course_site_ids(self):
+        site_els = self.elements(self.PLACEMENT_SITE_LINK)
+        ids = [el.get_attribute('id').split('-')[-1] for el in site_els]
+        ids.sort()
+        return ids
+
+    def visible_recording_placement(self):
+        return self.element(self.PLACEMENT_TEXT).text.strip()
+
+    def click_edit_recording_placement(self):
+        app.logger.info('Clicking the edit recording placement button')
+        self.wait_for_element_and_click(self.PLACEMENT_EDIT_BUTTON)
+
+    def select_recording_placement(self, publish_type, sites=None):
+        app.logger.info(f'Selecting the radio button for {publish_type}')
+        if publish_type == RecordingPlacement.PUBLISH_TO_MY_MEDIA:
+            self.wait_for_page_and_click_js(self.PLACEMENT_MY_MEDIA_RADIO)
+        elif publish_type == RecordingPlacement.PUBLISH_TO_PENDING:
+            self.wait_for_page_and_click_js(self.PLACEMENT_PENDING_RADIO)
+            if sites:
+                for site in sites:
+                    self.wait_for_element_and_click(self.PLACEMENT_SITE_SELECT)
+                    self.wait_for_element_and_click(self.placement_site_option_loc(site))
+        else:
+            self.wait_for_page_and_click_js(self.PLACEMENT_AUTOMATIC_RADIO)
+            if sites:
+                for site in sites:
+                    self.wait_for_element_and_click(self.PLACEMENT_SITE_SELECT)
+                    self.wait_for_element_and_click(self.placement_site_option_loc(site))
+
+    def save_recording_placement_edits(self):
+        self.wait_for_element_and_click(self.PLACEMENT_SAVE_BUTTON)
+
+    def cancel_recording_placement_edits(self):
+        self.wait_for_page_and_click_js(self.PLACEMENT_CXL_BUTTON)
+
+    # KALTURA SERIES INFO
+
+    @staticmethod
+    def kaltura_series_link(recording_schedule):
+        return By.PARTIAL_LINK_TEXT, f'Kaltura series {recording_schedule.series_id}'
 
     def click_kaltura_series_link(self, recording_schedule):
         app.logger.info(f'Clicking the link to Kaltura series ID {recording_schedule.series_id}')
         self.wait_for_page_and_click(CoursePage.kaltura_series_link(recording_schedule))
         time.sleep(2)
         self.switch_to_last_window(self.window_handles())
+
+    # COURSE UPDATE HISTORY
+
+    def update_history_table_rows(self):
+        rows = []
+        xpath = '//div[@id="update-history-table"]//tbody/tr'
+        row_els = self.elements((By.XPATH, xpath))
+        for r in row_els:
+            node = str(row_els.index(r) + 1)
+            rows.append({
+                'field': self.element((By.XPATH, f'{xpath}{node}/td[1]')).text,
+                'old_value': self.element((By.XPATH, f'{xpath}{node}/td[2]')).text,
+                'new_value': self.element((By.XPATH, f'{xpath}{node}/td[3]')).text,
+                'requested_by': self.element((By.XPATH, f'{xpath}{node}/td[4]')).text.split('(')[-1][0:-1],
+                'requested_at': self.element((By.XPATH, f'{xpath}{node}/td[5]')).text.split(',')[0],
+                'published_at': self.element((By.XPATH, f'{xpath}{node}/td[6]')).text.split(',')[0],
+                'status': self.element((By.XPATH, f'{xpath}{node}/td[7]')).text,
+            })
+        return rows

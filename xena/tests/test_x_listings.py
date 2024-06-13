@@ -23,11 +23,10 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-from flask import current_app as app
 import pytest
 from xena.models.canvas_site import CanvasSite
 from xena.models.email_template_type import EmailTemplateType
-from xena.models.publish_type import PublishType
+from xena.models.recording_placement import RecordingPlacement
 from xena.models.recording_schedule import RecordingSchedule
 from xena.models.recording_scheduling_status import RecordingSchedulingStatus
 from xena.models.recording_type import RecordingType
@@ -84,44 +83,8 @@ class TestCrossListings:
     def test_create_course_site_one(self):
         self.canvas_page.provision_site(self.section, [self.section.ccn], self.site_1)
 
-    def test_enable_media_gallery_1(self):
-        if self.canvas_page.is_tool_configured(app.config['CANVAS_MEDIA_GALLERY_TOOL']):
-            self.canvas_page.load_site(self.site_1.site_id)
-            self.canvas_page.enable_media_gallery(self.site_1)
-            self.canvas_page.click_media_gallery_tool()
-        else:
-            app.logger.info('Media Gallery is not properly configured')
-            raise
-
-    def test_enable_my_media_1(self):
-        if self.canvas_page.is_tool_configured(app.config['CANVAS_MY_MEDIA_TOOL']):
-            self.canvas_page.load_site(self.site_1.site_id)
-            self.canvas_page.enable_my_media(self.site_1)
-            self.canvas_page.click_my_media_tool()
-        else:
-            app.logger.info('My Media is not properly configured')
-            raise
-
     def test_create_course_site_two(self):
         self.canvas_page.provision_site(self.x_listed_section, [self.x_listed_section.ccn], self.site_2)
-
-    def test_enable_media_gallery_2(self):
-        if self.canvas_page.is_tool_configured(app.config['CANVAS_MEDIA_GALLERY_TOOL']):
-            self.canvas_page.load_site(self.site_2.site_id)
-            self.canvas_page.enable_media_gallery(self.site_2)
-            self.canvas_page.click_media_gallery_tool()
-        else:
-            app.logger.info('Media Gallery is not properly configured')
-            raise
-
-    def test_enable_my_media_2(self):
-        if self.canvas_page.is_tool_configured(app.config['CANVAS_MY_MEDIA_TOOL']):
-            self.canvas_page.load_site(self.site_2.site_id)
-            self.canvas_page.enable_my_media(self.site_2)
-            self.canvas_page.click_my_media_tool()
-        else:
-            app.logger.info('My Media is not properly configured')
-            raise
 
     # RUN SEMESTER START JOB
 
@@ -133,7 +96,7 @@ class TestCrossListings:
     def test_kaltura_schedule_id(self):
         util.get_kaltura_id(self.recording_schedule)
         self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
-        self.recording_schedule.publish_type = PublishType.PUBLISH_TO_MY_MEDIA
+        self.recording_schedule.publish_type = RecordingPlacement.PUBLISH_TO_MY_MEDIA
         self.recording_schedule.scheduling_status = RecordingSchedulingStatus.SCHEDULED
 
     def test_kaltura_blackouts(self):
@@ -171,9 +134,9 @@ class TestCrossListings:
 
     def test_update_publish_type(self):
         self.course_page.load_page(self.section)
-        self.course_page.select_publish_type(PublishType.PUBLISH_AUTOMATICALLY.value)
+        self.course_page.select_recording_placement(RecordingPlacement.PUBLISH_AUTOMATICALLY.value)
         # TODO - select both sites
-        self.recording_schedule.publish_type = PublishType.PUBLISH_AUTOMATICALLY
+        self.recording_schedule.publish_type = RecordingPlacement.PUBLISH_AUTOMATICALLY
 
     def test_approve(self):
         self.course_page.click_approve_button()

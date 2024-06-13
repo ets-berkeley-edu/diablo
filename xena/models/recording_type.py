@@ -25,18 +25,16 @@ ENHANCEMENTS, OR MODIFICATIONS.
 
 from enum import Enum
 
-from flask import current_app as app
-
 
 class RecordingType(Enum):
 
     VIDEO_WITH_OPERATOR = {
-        'option': f"Audio + Projection + Camera with Operator (${app.config['COURSE_CAPTURE_PREMIUM_COST']})",
-        'selection': 'Audio + Projection + Camera with Operator',
-        'printable': 'Audio + Projection + Camera with Operator',
+        'desc': 'Camera With Operator ($2000 fee)',
+        'db': 'presenter_presentation_audio_with_operator',
+        'printable': 'Camera With Operator',
     }
     VIDEO_SANS_OPERATOR = {
-        'option': 'Audio + Projection + Camera without Operator',
-        'selection': 'Audio + Projection + Camera without Operator',
-        'printable': 'Audio + Projection + Camera without Operator',
+        'desc': 'Camera Without Operator',
+        'db': 'presenter_presentation_audio',
+        'printable': 'Camera Without Operator',
     }

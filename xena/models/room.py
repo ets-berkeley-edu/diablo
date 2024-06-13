@@ -33,3 +33,7 @@ class Room(object):
     @property
     def name(self):
         return self.data['name']
+
+    @name.setter
+    def name(self, value):
+        self.data['name'] = value

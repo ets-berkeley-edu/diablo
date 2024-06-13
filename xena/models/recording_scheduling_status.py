@@ -29,5 +29,4 @@ from enum import Enum
 class RecordingSchedulingStatus(Enum):
 
     NOT_SCHEDULED = 'Not Scheduled'
-    QUEUED_FOR_SCHEDULING = 'Queued for Scheduling'
     SCHEDULED = 'Scheduled'
