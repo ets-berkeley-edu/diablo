@@ -16,8 +16,7 @@
           >
             {{ item.name }}
           </router-link>
-          <span v-if="!$currentUser.isAdmin" :id="`instructor-${item.uid}`">{{ item.name }}</span>
-          <span v-if="item.roleCode === 'APRX'" :id="`instructor-${item.uid}-is-proxy`"> (administrative proxy)</span>
+          <span v-if="!$currentUser.isAdmin" :id="`instructor-sidebar-${item.uid}`">{{ item.name }}</span>
         </OxfordJoin>
         <div v-if="instructorProxies.length" class="text--secondary subtitle-2">
           (<OxfordJoin v-slot="{item}" :items="instructorProxies">
