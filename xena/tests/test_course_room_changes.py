@@ -94,7 +94,7 @@ class TestCourseRoomChanges:
         self.jobs_page.run_emails_job()
 
     def test_new_eligible_room_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_ROOM_CHANGE_ELIGIBLE, self.section, self.instr) == 1
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_SCHEDULE_CHANGE, self.section, self.instr) == 1
 
     def test_new_eligible_room_update_series(self):
         # TODO run update job
@@ -185,7 +185,7 @@ class TestCourseRoomChanges:
         self.jobs_page.run_emails_job()
 
     def test_eligible_room_again_no_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_ROOM_CHANGE_ELIGIBLE, self.section, self.instr) == 1
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_SCHEDULE_CHANGE, self.section, self.instr) == 1
 
     def test_eligible_room_again_reschedule_series(self):
         # TODO run update job

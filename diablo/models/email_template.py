@@ -37,8 +37,9 @@ email_template_type = ENUM(
     'no_longer_scheduled',
     'notify_instructor_of_changes',
     'opted_out',
-    'room_change',
+    'remind_scheduled',
     'room_change_no_longer_eligible',
+    'schedule_change',
     'semester_start',
     name='email_template_types',
     create_type=False,
@@ -130,8 +131,9 @@ class EmailTemplate(Base):
             'no_longer_scheduled': 'Class no longer scheduled',
             'notify_instructor_of_changes': 'Notify instructor of changes',
             'opted_out': 'Opted out',
-            'room_change': 'Room change',
+            'remind_scheduled': 'Remind scheduled instructors',
             'room_change_no_longer_eligible': 'Room change: no longer eligible',
+            'schedule_change': 'Schedule change',
             'semester_start': 'Semester start',
         }
 

@@ -188,15 +188,6 @@ class TestEmailTemplates:
         )
         self.templates_page.create_template(template)
 
-    def test_instr_room_change(self):
-        util.reset_email_template_test_data('room_change')
-        template = EmailTemplate(
-            template_type=EmailTemplateType.INSTR_ROOM_CHANGE_ELIGIBLE,
-            subject='<code>course.name</code> has a new eligible room',
-            body='',
-        )
-        self.templates_page.create_template(template)
-
     def test_instr_room_change_no_longer_eligible(self):
         util.reset_email_template_test_data('room_change_no_longer_eligible')
         template = EmailTemplate(

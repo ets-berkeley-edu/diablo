@@ -194,7 +194,7 @@ def _update_already_scheduled_events():  # noqa C901
                     recording_type=updated_recording_type or scheduled['recordingType'],
                 )
             if meetings_added or meetings_removed_by_schedule_id or meetings_updated_by_schedule_id:
-                QueuedEmail.notify_instructors_room_change(course)
+                QueuedEmail.notify_instructors_schedule_change(course)
             if updated_instructor_uids:
                 previously_scheduled_instructor_uids = scheduled.get('instructorUids') or []
                 added_instructor_uids = [i for i in updated_instructor_uids if i not in previously_scheduled_instructor_uids]

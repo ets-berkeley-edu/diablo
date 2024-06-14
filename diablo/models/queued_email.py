@@ -148,9 +148,9 @@ class QueuedEmail(db.Model):
             cls._queue_instructor_email('room_change_no_longer_eligible', instructor, course)
 
     @classmethod
-    def notify_instructors_room_change(cls, course):
+    def notify_instructors_schedule_change(cls, course):
         for instructor in filter(lambda i: i['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES, course['instructors']):
-            cls._queue_instructor_email('room_change', instructor, course)
+            cls._queue_instructor_email('schedule_change', instructor, course)
 
     @classmethod
     def notify_instructor_added(cls, instructor, course):
