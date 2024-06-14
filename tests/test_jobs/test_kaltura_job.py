@@ -118,20 +118,20 @@ class TestKalturaJob:
             # Schedule
             _schedule(original_room['id'], section_id)
             _run_jobs()
-            _assert_email_count(0, section_id, 'room_change')
+            _assert_email_count(0, section_id, 'schedule_change')
             _assert_email_count(0, section_id, 'room_change_no_longer_eligible')
 
             # Move course to some other eligible room.
             _move_course('Barker 101')
             _run_jobs()
-            _assert_email_count(1, section_id, 'room_change')
+            _assert_email_count(1, section_id, 'schedule_change')
             _assert_email_count(0, section_id, 'room_change_no_longer_eligible')
 
             # Move course to an ineligible room.
             ineligible_room = 'Wheeler 150'
             _move_course(ineligible_room)
             _run_jobs()
-            _assert_email_count(1, section_id, 'room_change')
+            _assert_email_count(1, section_id, 'schedule_change')
             _assert_email_count(1, section_id, 'room_change_no_longer_eligible')
 
             # Move course back to its original location
@@ -142,7 +142,7 @@ class TestKalturaJob:
             _schedule(Room.find_room(ineligible_room).id, section_id)
             _run_jobs()
             # Expect email.
-            _assert_email_count(2, section_id, 'room_change')
+            _assert_email_count(2, section_id, 'schedule_change')
             _assert_email_count(1, section_id, 'room_change_no_longer_eligible')
             Scheduled.delete(section_id=section_id, term_id=term_id)
 
@@ -200,7 +200,7 @@ class TestKalturaJob:
                     # First time scheduled.
                     _schedule()
                     _run_jobs()
-                    _assert_email_count(1, section_id, 'room_change')
+                    _assert_email_count(1, section_id, 'schedule_change')
 
                     # Unschedule and schedule a second time.
                     Scheduled.delete(section_id=section_id, term_id=term_id)
@@ -208,11 +208,11 @@ class TestKalturaJob:
 
                     _run_jobs()
                     # Another notification is emailed because it is a new schedule.
-                    _assert_email_count(2, section_id, 'room_change')
+                    _assert_email_count(2, section_id, 'schedule_change')
 
                     # Run jobs again and expect no alerts.
                     _run_jobs()
-                    _assert_email_count(2, section_id, 'room_change')
+                    _assert_email_count(2, section_id, 'schedule_change')
 
                     fake_auth.login(admin_uid)
                     course = api_get_course(client, term_id, section_id)

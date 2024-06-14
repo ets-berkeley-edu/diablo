@@ -64,11 +64,11 @@ class EmailTemplateType(Enum):
         # TODO 'desc': '',
         'type': 'instructors_removed',
     }
-    INSTR_ROOM_CHANGE_ELIGIBLE = {
-        # TODO 'desc': '',
-        'type': 'room_change',
-    }
     INSTR_ROOM_CHANGE_INELIGIBLE = {
         # TODO 'desc': '',
         'type': 'room_change_no_longer_eligible',
+    }
+    INSTR_SCHEDULE_CHANGE = {
+        # TODO 'desc': '',
+        'type': 'schedule_change',
     }

@@ -155,16 +155,22 @@ def _create_email_templates():
         message='Class opted out: <code>course.name</code>',
     )
     EmailTemplate.create(
-        template_type='room_change',
-        name='Room change',
-        subject_line='Room change alert',
-        message='<code>course.name</code> has changed to a new room: <code>course.room</code>',
+        template_type='remind_scheduled',
+        name='Blessed are those who are scheduled',
+        subject_line='You are scheduled!',
+        message='Did you remember??',
     )
     EmailTemplate.create(
         template_type='room_change_no_longer_eligible',
         name='Room change: no longer eligible',
         subject_line='Room change alert',
         message='<code>course.name</code> has changed to a new, ineligible room: <code>course.room</code>',
+    )
+    EmailTemplate.create(
+        template_type='schedule_change',
+        name='Schedule change',
+        subject_line='Schedule change alert',
+        message='<code>course.name</code> has changed to a new room and/or schedule: <code>course.room</code>',
     )
     EmailTemplate.create(
         template_type='semester_start',
