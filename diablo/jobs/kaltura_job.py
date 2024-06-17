@@ -30,6 +30,7 @@ from diablo.jobs.util import get_eligible_unscheduled_courses, schedule_recordin
 from diablo.lib.berkeley import get_recording_end_date, get_recording_start_date, term_name_for_sis_id
 from diablo.lib.kaltura_util import get_series_description
 from diablo.merged.emailer import send_system_error_email
+from diablo.models.course_preference import CoursePreference
 from diablo.models.email_template import EmailTemplate
 from diablo.models.instructor import instructor_json_from_uids
 from diablo.models.queued_email import QueuedEmail
@@ -131,7 +132,7 @@ def _update_already_scheduled_events():  # noqa C901
                 no_longer_eligible = True
 
         for meeting_added in meetings_added:
-            _handle_meeting_added(course, meeting_added)
+            _handle_meeting_added(course, meeting_added, updated_publish_type, updated_recording_type, updated_collaborator_uids)
 
         for scheduled in course['scheduled'] or []:
             kaltura_schedule = kaltura.get_event(event_id=scheduled['kalturaScheduleId'])
@@ -149,7 +150,7 @@ def _update_already_scheduled_events():  # noqa C901
                 else:
                     publish_to_course_sites = None
 
-                if updated_collaborator_uids or updated_instructor_uids:
+                if updated_collaborator_uids is not None or updated_instructor_uids is not None:
                     _handle_instructor_updates(
                         kaltura, course, scheduled, scheduled_model, schedule_updates, kaltura_schedule, updated_collaborator_uids,
                         updated_instructor_uids,
@@ -213,7 +214,10 @@ def _handle_instructor_updates(
 ):
     instructors = [i for i in course['instructors'] if i['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES and not i['deletedAt']]
     instructor_uids = [i['uid'] for i in instructors]
-    collaborator_uids = updated_collaborator_uids or scheduled['collaboratorUids'] or []
+    if updated_collaborator_uids is None:
+        collaborator_uids = scheduled['collaboratorUids']
+    else:
+        collaborator_uids = updated_collaborator_uids
 
     uids_entitled_to_edit = list(set(instructor_uids + collaborator_uids))
     description = get_series_description(
@@ -221,6 +225,7 @@ def _handle_instructor_updates(
         instructors=instructors,
         term_name=term_name_for_sis_id(course['termId']),
     )
+
     try:
         kaltura.update_base_entry(
             description=description,
@@ -230,6 +235,11 @@ def _handle_instructor_updates(
             uids_entitled_to_publish=uids_entitled_to_edit,
         )
         scheduled_model.update(instructor_uids=instructor_uids, collaborator_uids=collaborator_uids)
+        CoursePreference.update_collaborator_uids(
+            term_id=course['termId'],
+            section_id=course['sectionId'],
+            collaborator_uids=collaborator_uids,
+        )
         _mark_success(schedule_updates, ('collaborator_uids', 'instructor_uids'), scheduled['kalturaScheduleId'])
 
     except Exception as e:
@@ -242,15 +252,21 @@ def _handle_instructor_updates(
         )
 
 
-def _handle_meeting_added(meeting_added, course):
+def _handle_meeting_added(meeting_added, course, updated_publish_type, updated_recording_type, updated_collaborator_uids):
     meeting = meeting_added.deserialize('field_value_new')
+    updates = {
+        'publishType': updated_publish_type or course['scheduled'][0]['publishType'],
+        'recordingType': updated_recording_type or course['scheduled'][0]['recordingType'],
+    }
+    if updated_collaborator_uids is None:
+        updates['collaboratorUids'] = course['scheduled'][0]['collaboratorUids']
+    else:
+        updates['collaboratorUids'] = updated_collaborator_uids
+
     newly_scheduled = schedule_recordings(
         {**course, **{'meetings': {'eligible': [meeting]}}},
         is_semester_start=False,
-        updates={
-            'publishType': course['scheduled'][0]['publishType'],
-            'recordingType': course['scheduled'][0]['recordingType'],
-        },
+        updates=updates,
     )
     if newly_scheduled:
         meeting_added.mark_success()
