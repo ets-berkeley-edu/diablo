@@ -31,6 +31,7 @@ from diablo.externals.kaltura import Kaltura
 from diablo.lib.berkeley import get_recording_end_date, get_recording_start_date
 from diablo.merged.calnet import get_calnet_users_for_uids
 from diablo.merged.emailer import send_system_error_email
+from diablo.models.course_preference import CoursePreference
 from diablo.models.cross_listing import CrossListing
 from diablo.models.instructor import Instructor
 from diablo.models.queued_email import notify_instructors_recordings_scheduled
@@ -188,7 +189,11 @@ def schedule_recordings(course, is_semester_start=False, updates=None):
         return None
 
     instructors = list(filter(lambda i: i['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES and not i['deletedAt'], course['instructors']))
-    collaborators = list(filter(lambda i: i['roleCode'] == 'APRX' and not i['deletedAt'], course['instructors']))
+
+    if updates:
+        collaborators = [{'uid': collaborator_uid} for collaborator_uid in updates['collaboratorUids']]
+    else:
+        collaborators = list(filter(lambda i: i['roleCode'] == 'APRX' and not i['deletedAt'], course['instructors']))
 
     all_scheduled = []
 
@@ -202,8 +207,8 @@ def schedule_recordings(course, is_semester_start=False, updates=None):
         section_id = int(course['sectionId'])
         if room.kaltura_resource_id:
             try:
-                publish_type = updates['publish_type'] if updates else 'kaltura_my_media'
-                recording_type = updates['recording_type'] if updates else 'presenter_presentation_audio'
+                publish_type = updates['publishType'] if updates else 'kaltura_my_media'
+                recording_type = updates['recordingType'] if updates else 'presenter_presentation_audio'
                 kaltura_schedule_id = Kaltura().schedule_recording(
                     canvas_course_site_ids=[course['canvasSiteId']],
                     course_label=course['label'],
@@ -230,6 +235,12 @@ def schedule_recordings(course, is_semester_start=False, updates=None):
                     section_id=section_id,
                     term_id=term_id,
                 )
+                CoursePreference.update_collaborator_uids(
+                    term_id=term_id,
+                    section_id=section_id,
+                    collaborator_uids=[collaborator['uid'] for collaborator in collaborators],
+                )
+
                 if not is_semester_start:
                     notify_instructors_recordings_scheduled(course=course, scheduled=scheduled, template_type='new_class_scheduled')
                 all_scheduled.append(scheduled)
