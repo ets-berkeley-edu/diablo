@@ -568,13 +568,13 @@ class TestUpdatePublishType:
             term_id,
             section_id,
             publish_type,
-            canvas_site_id=None,
+            canvas_site_ids=None,
             expected_status_code=200,
     ):
         response = client.post(
             '/api/course/publish_type/update',
             data=json.dumps({
-                'canvasSiteId': canvas_site_id,
+                'canvasSiteIds': canvas_site_ids,
                 'publishType': publish_type,
                 'sectionId': section_id,
                 'termId': term_id,
@@ -605,8 +605,8 @@ class TestUpdatePublishType:
             expected_status_code=401,
         )
 
-    def test_canvas_site_id_required_unmoderated(self, client, fake_auth):
-        # kaltura_media_gallery setting requires a Canvas site ID.
+    def test_canvas_site_ids_required_unmoderated(self, client, fake_auth):
+        # kaltura_media_gallery setting requires Canvas site IDs.
         instructor_uids = get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
         fake_auth.login(instructor_uids[0])
 
@@ -620,8 +620,8 @@ class TestUpdatePublishType:
             expected_status_code=400,
         )
 
-    def test_canvas_site_id_required_moderated(self, client, fake_auth):
-        # kaltura_media_gallery_moderated setting requires a Canvas site ID.
+    def test_canvas_site_ids_required_moderated(self, client, fake_auth):
+        # kaltura_media_gallery_moderated setting requires Canvas site IDs.
         instructor_uids = get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
         fake_auth.login(instructor_uids[0])
 
@@ -647,26 +647,26 @@ class TestUpdatePublishType:
             term_id=self.term_id,
             section_id=section_1_id,
             publish_type='kaltura_media_gallery',
-            canvas_site_id=1234567,
+            canvas_site_ids=[1234567],
         )
         std_commit(allow_test_environment=True)
 
         course = SisSection.get_course(section_id=section_1_id, term_id=self.term_id)
         assert course['publishType'] == 'kaltura_media_gallery'
-        assert course['canvasSiteId'] == 1234567
+        assert course['canvasSiteIds'] == [1234567]
 
         self._api_publish_type_update(
             client,
             term_id=self.term_id,
             section_id=section_1_id,
             publish_type='kaltura_media_gallery_moderated',
-            canvas_site_id=1234567,
+            canvas_site_ids=[1234567, 1234568],
         )
         std_commit(allow_test_environment=True)
 
         course = SisSection.get_course(section_id=section_1_id, term_id=self.term_id)
         assert course['publishType'] == 'kaltura_media_gallery_moderated'
-        assert course['canvasSiteId'] == 1234567
+        assert course['canvasSiteIds'] == [1234567, 1234568]
 
         publish_type_updates = [u for u in course['updateHistory'] if u['fieldName'] == 'publish_type']
         assert len(publish_type_updates) == 2
@@ -681,10 +681,15 @@ class TestUpdatePublishType:
         assert publish_type_updates[1]['requestedByUid'] == instructor_uids[0]
         assert publish_type_updates[1]['requestedByName'] == 'William Peter Blatty'
 
-        canvas_site_updates = [u for u in course['updateHistory'] if u['fieldName'] == 'canvas_site_id']
-        assert len(canvas_site_updates) == 1
-        assert canvas_site_updates[0]['fieldValueOld'] is None
-        assert canvas_site_updates[0]['fieldValueNew'] == '1234567'
+        canvas_site_updates = [u for u in course['updateHistory'] if u['fieldName'] == 'canvas_site_ids']
+        assert len(canvas_site_updates) == 2
+        assert canvas_site_updates[1]['fieldValueOld'] is None
+        assert canvas_site_updates[1]['fieldValueNew'] == ['1234567']
+        assert canvas_site_updates[1]['status'] == 'queued'
+        assert canvas_site_updates[1]['requestedByUid'] == instructor_uids[0]
+        assert canvas_site_updates[1]['requestedByName'] == 'William Peter Blatty'
+        assert canvas_site_updates[0]['fieldValueOld'] == ['1234567']
+        assert canvas_site_updates[0]['fieldValueNew'] == ['1234567', '1234568']
         assert canvas_site_updates[0]['status'] == 'queued'
         assert canvas_site_updates[0]['requestedByUid'] == instructor_uids[0]
         assert canvas_site_updates[0]['requestedByName'] == 'William Peter Blatty'

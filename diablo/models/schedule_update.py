@@ -176,7 +176,7 @@ class ScheduleUpdate(db.Model):
         field_value = getattr(self, column)
         if field_value is None:
             return None
-        if self.field_name in ('instructor_uids', 'collaborator_uids'):
+        if self.field_name in ('instructor_uids', 'collaborator_uids', 'canvas_site_ids'):
             # Postgres array to Python list
             debracketed = field_value.translate({ord(i): None for i in '{}'})
             return debracketed.split(',') if debracketed else []

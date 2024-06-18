@@ -27,7 +27,7 @@ ALTER TABLE course_preferences DROP COLUMN can_aprx_instructors_edit_recordings;
 ALTER TABLE course_preferences ADD COLUMN collaborator_uids VARCHAR(80)[];
 ALTER TABLE course_preferences ADD COLUMN publish_type publish_types;
 ALTER TABLE course_preferences ADD COLUMN recording_type recording_types;
-ALTER TABLE course_preferences ADD COLUMN canvas_site_id INTEGER;
+ALTER TABLE course_preferences ADD COLUMN canvas_site_ids INTEGER[];
 UPDATE course_preferences SET publish_type = 'kaltura_my_media';
 UPDATE course_preferences SET recording_type = 'presenter_presentation_audio';
 ALTER TABLE course_preferences ALTER COLUMN publish_type SET NOT NULL;
