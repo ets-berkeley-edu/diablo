@@ -103,6 +103,7 @@ def instructor_json_from_uids(uids):
         return {
             'name': ' '.join([row['first_name'], row['last_name']]),
             'uid': row['uid'],
+            'email': row['email'],
         }
-    instructor_query = 'SELECT uid, first_name, last_name from instructors where uid = any(:uids)'
+    instructor_query = 'SELECT uid, first_name, last_name, email from instructors where uid = any(:uids)'
     return [_row_to_json(row) for row in db.session.execute(text(instructor_query), {'uids': list(uids)})]
