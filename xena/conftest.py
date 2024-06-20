@@ -99,7 +99,7 @@ def page_objects(request):
             setattr(cls.obj, 'calnet_page', calnet_page)
             setattr(cls.obj, 'canvas_page', canvas_page)
             setattr(cls.obj, 'course_page', course_page)
-            setattr(cls.obj, 'courses-page', courses_page)
+            setattr(cls.obj, 'courses_page', courses_page)
             setattr(cls.obj, 'instructor_page', instructor_page)
             setattr(cls.obj, 'jobs_page', jobs_page)
             setattr(cls.obj, 'login_page', login_page)

@@ -34,7 +34,10 @@ class Meeting(object):
 
     @property
     def meeting_schedule(self):
-        return MeetingSchedule(self.data['meeting_schedule']) if self.data['meeting_schedule'] else None
+        try:
+            return MeetingSchedule(self.data['meeting_schedule'])
+        except KeyError:
+            return None
 
     @meeting_schedule.setter
     def meeting_schedule(self, value):
@@ -42,8 +45,11 @@ class Meeting(object):
 
     @property
     def room(self):
-        return Room(self.data['room']) if self.data['room'] else None
+        try:
+            return Room(self.data['room'])
+        except KeyError:
+            return None
 
     @room.setter
-    def room(self, value):
-        self.data['room'] = value
+    def room(self, room):
+        self.data['room'] = room.data if room else None

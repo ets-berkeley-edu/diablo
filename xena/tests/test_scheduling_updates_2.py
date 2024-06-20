@@ -82,7 +82,7 @@ class TestScheduling2:
         self.jobs_page.run_semester_start_job()
         assert util.get_kaltura_id(self.recording_schedule)
         self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
-        self.recording_schedule.publish_type = RecordingPlacement.PUBLISH_TO_MY_MEDIA
+        self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_TO_MY_MEDIA
 
     def test_kaltura_blackouts(self):
         self.jobs_page.run_blackouts_job()
@@ -200,7 +200,7 @@ class TestScheduling2:
     def test_choose_rec_placement(self):
         self.course_page.select_recording_placement(RecordingPlacement.PUBLISH_AUTOMATICALLY, sites=[self.site_0])
         self.course_page.save_recording_placement_edits()
-        self.recording_schedule.publish_type = RecordingPlacement.PUBLISH_AUTOMATICALLY
+        self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_AUTOMATICALLY
 
     def test_visible_site_ids_updated(self):
         assert self.course_page.visible_course_site_ids() == [self.site.site_id]
@@ -327,7 +327,7 @@ class TestScheduling2:
         self.course_page.click_edit_recording_placement()
         self.course_page.select_recording_placement(RecordingPlacement.PUBLISH_TO_MY_MEDIA.value)
         self.course_page.save_recording_placement_edits()
-        self.recording_schedule.publish_type = RecordingPlacement.PUBLISH_TO_MY_MEDIA
+        self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_TO_MY_MEDIA
 
     # TODO - confirmation of changes message?
 

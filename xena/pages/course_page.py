@@ -238,11 +238,10 @@ class CoursePage(DiabloPages):
 
     def select_rec_type(self, recording_type):
         app.logger.info(f"Selecting recording type {recording_type.value['desc']}")
-        self.click_rec_type_edit_button()
         if recording_type == RecordingType.VIDEO_WITH_OPERATOR:
-            self.wait_for_element_and_click(self.RECORDING_TYPE_OP_RADIO)
+            self.wait_for_page_and_click_js(self.RECORDING_TYPE_OP_RADIO)
         else:
-            self.wait_for_element_and_click(self.RECORDING_TYPE_NO_OP_RADIO)
+            self.wait_for_page_and_click_js(self.RECORDING_TYPE_NO_OP_RADIO)
 
     def save_recording_type_edits(self):
         self.wait_for_element_and_click(self.RECORDING_TYPE_SAVE_BUTTON)
@@ -272,6 +271,7 @@ class CoursePage(DiabloPages):
         return By.ID, f'canvas-course-site-{site.site_id}'
 
     def visible_course_site_ids(self):
+        time.sleep(2)
         site_els = self.elements(self.PLACEMENT_SITE_LINK)
         ids = [el.get_attribute('id').split('-')[-1] for el in site_els]
         ids.sort()

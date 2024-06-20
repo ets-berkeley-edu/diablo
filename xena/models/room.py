@@ -32,7 +32,7 @@ class Room(object):
 
     @property
     def name(self):
-        return self.data['name']
+        return self.data['name'] if self.data else None
 
     @name.setter
     def name(self, value):

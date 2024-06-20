@@ -62,9 +62,9 @@ class TestOptOut0:
         util.reset_sent_email_test_data(section_1)
 
         self.kaltura_page.log_in_via_calnet(self.calnet_page)
-        self.kaltura_page.reset_test_data(section_0.term, recording_schedule_0_0)
-        self.kaltura_page.reset_test_data(section_0.term, recording_schedule_0_1)
-        self.kaltura_page.reset_test_data(section_1.term, recording_schedule_1)
+        self.kaltura_page.reset_test_data(recording_schedule_0_0)
+        self.kaltura_page.reset_test_data(recording_schedule_0_1)
+        self.kaltura_page.reset_test_data(recording_schedule_1)
         util.reset_section_test_data(section_0)
         util.reset_section_test_data(section_1)
 
@@ -114,9 +114,9 @@ class TestOptOut1:
         util.reset_sent_email_test_data(section_0)
         util.reset_sent_email_test_data(section_1)
 
-        self.kaltura_page.reset_test_data(section_0.term, recording_schedule_0_0)
-        self.kaltura_page.reset_test_data(section_0.term, recording_schedule_0_1)
-        self.kaltura_page.reset_test_data(section_1.term, recording_schedule_1)
+        self.kaltura_page.reset_test_data(recording_schedule_0_0)
+        self.kaltura_page.reset_test_data(recording_schedule_0_1)
+        self.kaltura_page.reset_test_data(recording_schedule_1)
         util.reset_section_test_data(section_0, delete_opt_outs=False)
         util.reset_section_test_data(section_1, delete_opt_outs=False)
 
@@ -160,9 +160,9 @@ class TestOptOut2:
         util.reset_sent_email_test_data(section_0)
         util.reset_sent_email_test_data(section_1)
 
-        self.kaltura_page.reset_test_data(section_0.term, recording_schedule_0_0)
-        self.kaltura_page.reset_test_data(section_0.term, recording_schedule_0_1)
-        self.kaltura_page.reset_test_data(section_1.term, recording_schedule_1)
+        self.kaltura_page.reset_test_data(recording_schedule_0_0)
+        self.kaltura_page.reset_test_data(recording_schedule_0_1)
+        self.kaltura_page.reset_test_data(recording_schedule_1)
         util.reset_section_test_data(section_0)
         util.reset_section_test_data(section_1)
 
@@ -210,9 +210,9 @@ class TestOptOut3:
         util.reset_sent_email_test_data(section_0)
         util.reset_sent_email_test_data(section_1)
 
-        self.kaltura_page.reset_test_data(section_0.term, recording_schedule_0_0)
-        self.kaltura_page.reset_test_data(section_0.term, recording_schedule_0_1)
-        self.kaltura_page.reset_test_data(section_1.term, recording_schedule_1)
+        self.kaltura_page.reset_test_data(recording_schedule_0_0)
+        self.kaltura_page.reset_test_data(recording_schedule_0_1)
+        self.kaltura_page.reset_test_data(recording_schedule_1)
         util.reset_section_test_data(section_0)
         util.reset_section_test_data(section_1)
 
@@ -264,9 +264,9 @@ class TestOptOut4:
         util.reset_sent_email_test_data(section_0)
         util.reset_sent_email_test_data(section_1)
 
-        self.kaltura_page.reset_test_data(section_0.term, recording_schedule_0_0)
-        self.kaltura_page.reset_test_data(section_0.term, recording_schedule_0_1)
-        self.kaltura_page.reset_test_data(section_1.term, recording_schedule_1)
+        self.kaltura_page.reset_test_data(recording_schedule_0_0)
+        self.kaltura_page.reset_test_data(recording_schedule_0_1)
+        self.kaltura_page.reset_test_data(recording_schedule_1)
         util.reset_section_test_data(section_0)
         util.reset_section_test_data(section_1)
 
@@ -328,9 +328,9 @@ class TestOptOut5:
         util.reset_sent_email_test_data(section_0)
         util.reset_sent_email_test_data(section_1)
 
-        self.kaltura_page.reset_test_data(section_0.term, recording_schedule_0_0)
-        self.kaltura_page.reset_test_data(section_0.term, recording_schedule_0_1)
-        self.kaltura_page.reset_test_data(section_1.term, recording_schedule_1)
+        self.kaltura_page.reset_test_data(recording_schedule_0_0)
+        self.kaltura_page.reset_test_data(recording_schedule_0_1)
+        self.kaltura_page.reset_test_data(recording_schedule_1)
         util.reset_section_test_data(section_0)
         util.reset_section_test_data(section_1)
 
@@ -378,7 +378,7 @@ class TestOptOut6:
     def test_set_up(self):
         util.reset_sent_email_test_data(section_1)
 
-        self.kaltura_page.reset_test_data(section_1.term, recording_schedule_1)
+        self.kaltura_page.reset_test_data(recording_schedule_1)
         util.reset_section_test_data(section_1)
 
         util.change_course_instructor(section_1, old_instructor=instructor_0, new_instructor=None)

@@ -108,6 +108,10 @@ def get_kaltura_id(recording_schedule):
     meeting = recording_schedule.meeting
     schedule = meeting.meeting_schedule
     recording_dates = schedule.expected_recording_dates(section.term)
+    if meeting.room and meeting.room.name:
+        room_clause = f"""AND rooms.location = '{meeting.room.name.replace("'", "''")}'"""
+    else:
+        room_clause = 'AND rooms.location IS NULL'
     sql = f"""SELECT kaltura_schedule_id
                 FROM scheduled
                 JOIN rooms ON rooms.id = scheduled.room_id
@@ -115,7 +119,7 @@ def get_kaltura_id(recording_schedule):
                  AND scheduled.section_id = {section.ccn}
                  AND scheduled.meeting_start_date = '{recording_dates[0].strftime('%Y-%m-%d %H:%M:%S')}'
                  AND scheduled.meeting_end_date = '{recording_dates[-1].strftime('%Y-%m-%d %H:%M:%S')}'
-                 AND rooms.location = '{meeting.room.name.replace("'", "''")}'
+                 {room_clause}
                  AND scheduled.deleted_at IS NULL
     """
     ids = []
@@ -594,9 +598,11 @@ def change_course_instructor(section, old_instructor=None, new_instructor=None):
     app.logger.info(sql)
     db.session.execute(text(sql))
     std_commit(allow_test_environment=True)
-    if old_instructor:
+    if old_instructor and old_instructor in section.instructors:
+        app.logger.info(f'Removing old instructor {vars(old_instructor)}')
         section.instructors.remove(old_instructor)
-    if new_instructor:
+    if new_instructor and new_instructor not in section.instructors:
+        app.logger.info(f'Adding new instructor {vars(new_instructor)}')
         section.instructors.append(new_instructor)
 
 

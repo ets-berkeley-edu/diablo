@@ -71,22 +71,28 @@ class RoomPrintablePage(DiabloPages):
 
     # ACTUAL VS EXPECTED
 
-    def verify_printable(self, section, recording_schedule):
+    def verify_printable(self, recording_schedule):
         self.open_printable_schedule()
+        section = recording_schedule.section
         schedule = recording_schedule.meeting.meeting_schedule
 
         expected_course = f'{section.code}, {section.number}'
-        assert self.visible_course(section) == expected_course
+        visible_course = self.visible_course(section)
+        assert visible_course == expected_course
 
         expected_instr = [f'{inst.first_name} {inst.last_name} ({inst.uid})'.strip() for inst in section.instructors]
-        assert self.visible_instructors(section) == expected_instr
+        visible_instr = self.visible_instructors(section)
+        assert visible_instr == expected_instr
 
         expected_days = [f'{schedule.days}']
-        assert self.visible_days(section) == expected_days
+        visible_days = self.visible_days(section)
+        assert visible_days == expected_days
 
         dates = f'{schedule.start_date.strftime("%b %-d, %Y")} - {schedule.end_date.strftime("%b %-d, %Y")}'
         times = f'{schedule.start_time} - {schedule.end_time}'
-        assert self.visible_times(section) == [f'{dates}\n{times}']
+        visible_times = self.visible_times(section)
+        assert visible_times == [f'{dates}\n{times}']
 
         expected_type = recording_schedule.recording_type.value['printable']
-        assert self.visible_recording_type(section) == expected_type
+        visible_type = self.visible_recording_type(section)
+        assert visible_type == expected_type

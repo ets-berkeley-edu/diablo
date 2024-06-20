@@ -67,7 +67,7 @@ class TestWeirdTypeD:
 
     def test_delete_old_diablo_and_kaltura(self):
         self.kaltura_page.log_in_via_calnet(self.calnet_page)
-        self.kaltura_page.reset_test_data(self.term, self.recording_schedule_0)
+        self.kaltura_page.reset_test_data(self.recording_schedule_0)
         util.reset_section_test_data(self.section)
 
     def test_delete_old_email(self):
@@ -85,10 +85,10 @@ class TestWeirdTypeD:
         self.jobs_page.run_semester_start_job()
         assert util.get_kaltura_id(self.recording_schedule_0)
         self.recording_schedule_0.recording_type = RecordingType.VIDEO_SANS_OPERATOR
-        self.recording_schedule_0.publish_type = RecordingPlacement.PUBLISH_TO_MY_MEDIA
+        self.recording_schedule_0.recording_placement = RecordingPlacement.PUBLISH_TO_MY_MEDIA
         assert util.get_kaltura_id(self.recording_schedule_1)
         self.recording_schedule_1.recording_type = RecordingType.VIDEO_SANS_OPERATOR
-        self.recording_schedule_1.publish_type = RecordingPlacement.PUBLISH_TO_MY_MEDIA
+        self.recording_schedule_1.recording_placement = RecordingPlacement.PUBLISH_TO_MY_MEDIA
 
     def test_kaltura_blackouts(self):
         self.jobs_page.run_blackouts_job()
@@ -313,8 +313,8 @@ class TestWeirdTypeD:
 
     def test_choose_publish_type(self):
         self.course_page.select_recording_placement(RecordingPlacement.PUBLISH_AUTOMATICALLY)
-        self.recording_schedule_0.publish_type = RecordingPlacement.PUBLISH_AUTOMATICALLY
-        self.recording_schedule_1.publish_type = RecordingPlacement.PUBLISH_AUTOMATICALLY
+        self.recording_schedule_0.recording_placement = RecordingPlacement.PUBLISH_AUTOMATICALLY
+        self.recording_schedule_1.recording_placement = RecordingPlacement.PUBLISH_AUTOMATICALLY
 
     # TODO - enter Canvas site
 
