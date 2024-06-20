@@ -36,12 +36,12 @@ from xena.test_utils import util
 @pytest.mark.usefixtures('page_objects')
 class TestCourseInstructorChanges:
 
-    new_instructor_test_data = util.get_test_script_course('test_course_changes_real')
+    new_instructor_test_data = util.get_test_script_course('test_course_changes_auditorium')
     section = util.get_test_section(new_instructor_test_data)
     meeting = section.meetings[0]
     new_instructor = section.instructors[0]
 
-    old_instructor_test_data = util.get_test_script_course('test_course_changes_fake')
+    old_instructor_test_data = util.get_test_script_course('test_course_changes_ineligible')
     util.get_test_section_instructor_data(old_instructor_test_data, uids_to_exclude=[new_instructor.uid])
     old_instructor = Section(old_instructor_test_data).instructors[0]
 
@@ -58,9 +58,14 @@ class TestCourseInstructorChanges:
         self.ouija_page.click_jobs_link()
         self.jobs_page.disable_all_jobs()
 
+    def test_create_blackouts(self):
+        self.jobs_page.click_blackouts_link()
+        self.blackouts_page.delete_all_blackouts()
+        self.blackouts_page.create_all_blackouts()
+
     def test_delete_old_diablo_and_kaltura(self):
         self.kaltura_page.log_in_via_calnet(self.calnet_page)
-        self.kaltura_page.reset_test_data(self.term, self.recording_schedule)
+        self.kaltura_page.reset_test_data(self.recording_schedule)
         util.reset_section_test_data(self.section)
 
     def test_emails_pre_run(self):
@@ -80,22 +85,24 @@ class TestCourseInstructorChanges:
     # COURSE SCHEDULED WITH INSTRUCTOR 1, WHO MODIFIES RECORDING SETTINGS
 
     def test_schedule_course_instr_1(self):
+        self.jobs_page.load_page()
         self.jobs_page.run_semester_start_job()
         util.get_kaltura_id(self.recording_schedule)
+        self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_TO_MY_MEDIA
+        self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
 
     def test_modify_recording_settings(self):
-        self.ouija_page.load_page()
-        self.ouija_page.log_out()
+        self.jobs_page.log_out()
         self.login_page.dev_auth(self.old_instructor.uid)
         self.ouija_page.click_course_page_link(self.section)
 
         self.course_page.click_edit_recording_placement()
-        self.course_page.select_recording_placement(RecordingPlacement.PUBLISH_AUTOMATICALLY.value, sites=[self.site])
+        self.course_page.select_recording_placement(RecordingPlacement.PUBLISH_AUTOMATICALLY, sites=[self.site])
         self.course_page.save_recording_placement_edits()
-        self.recording_schedule.publish_type = RecordingPlacement.PUBLISH_AUTOMATICALLY
+        self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_AUTOMATICALLY
 
         self.course_page.click_rec_type_edit_button()
-        self.course_page.select_rec_type(RecordingType.VIDEO_WITH_OPERATOR.value)
+        self.course_page.select_rec_type(RecordingType.VIDEO_WITH_OPERATOR)
         self.course_page.save_recording_type_edits()
         self.recording_schedule.recording_type = RecordingType.VIDEO_WITH_OPERATOR
 
@@ -126,19 +133,19 @@ class TestCourseInstructorChanges:
         self.room_page.wait_for_series_row(self.recording_schedule)
 
     def test_series_recordings(self):
-        self.room_page.verify_series_recordings(self.section, self.recording_schedule)
+        self.room_page.verify_series_recordings(self.recording_schedule)
 
     def test_series_blackouts(self):
-        self.room_page.verify_series_blackouts(self.section, self.recording_schedule)
+        self.room_page.verify_series_blackouts(self.recording_schedule)
 
     def test_verify_printable(self):
-        self.room_printable_page.verify_printable(self.section, self.recording_schedule)
+        self.room_printable_page.verify_printable(self.recording_schedule)
 
     def test_verify_diablo_selected_settings(self):
         self.room_printable_page.close_printable_schedule()
         self.course_page.load_page(self.section)
         assert self.course_page.visible_recording_type() == self.recording_schedule.recording_type.value['desc']
-        assert self.course_page.visible_recording_placement() == self.recording_schedule.publish_type.value['desc']
+        assert self.recording_schedule.recording_placement.value['desc'] in self.course_page.visible_recording_placement()
         assert self.course_page.visible_course_site_ids() == [self.site.site_id]
 
     def test_update_series_title_and_desc(self):

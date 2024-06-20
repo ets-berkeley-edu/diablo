@@ -64,7 +64,7 @@ class TestCrossListings:
 
     def test_delete_old_diablo_and_kaltura(self):
         self.kaltura_page.log_in_via_calnet(self.calnet_page)
-        self.kaltura_page.reset_test_data(self.term, self.recording_schedule)
+        self.kaltura_page.reset_test_data(self.recording_schedule)
 
     # TODO - delete old course sites?
 
@@ -96,7 +96,7 @@ class TestCrossListings:
     def test_kaltura_schedule_id(self):
         util.get_kaltura_id(self.recording_schedule)
         self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
-        self.recording_schedule.publish_type = RecordingPlacement.PUBLISH_TO_MY_MEDIA
+        self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_TO_MY_MEDIA
         self.recording_schedule.scheduling_status = RecordingSchedulingStatus.SCHEDULED
 
     def test_kaltura_blackouts(self):
@@ -136,7 +136,7 @@ class TestCrossListings:
         self.course_page.load_page(self.section)
         self.course_page.select_recording_placement(RecordingPlacement.PUBLISH_AUTOMATICALLY.value)
         # TODO - select both sites
-        self.recording_schedule.publish_type = RecordingPlacement.PUBLISH_AUTOMATICALLY
+        self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_AUTOMATICALLY
 
     def test_approve(self):
         self.course_page.click_approve_button()

@@ -52,7 +52,7 @@ class TestCourseCancellation:
 
     def test_delete_old_diablo_and_kaltura(self):
         self.kaltura_page.log_in_via_calnet(self.calnet_page)
-        self.kaltura_page.reset_test_data(self.term, self.recording_schedule)
+        self.kaltura_page.reset_test_data(self.recording_schedule)
         util.reset_section_test_data(self.section)
 
     def test_emails_pre_run(self):
@@ -83,19 +83,14 @@ class TestCourseCancellation:
     def test_cancel_pre_sched_no_teacher_result(self):
         self.course_page.log_out()
         self.login_page.dev_auth(self.instructor.uid)
-        self.ouija_page.wait_for_title_contains('Eligible for Capture')
-        assert not self.ouija_page.is_present(OuijaBoardPage.course_row_link_locator(self.section))
-
-    def test_cancel_pre_sched_no_teacher_recording_opts(self):
-        self.course_page.load_page(self.section)
-        assert self.course_page.is_canceled()
-        assert not self.course_page.is_present(CoursePage.COLLAB_EDIT_BUTTON)
-        assert not self.course_page.is_present(CoursePage.RECORDING_TYPE_EDIT_BUTTON)
-        assert not self.course_page.is_present(CoursePage.PLACEMENT_EDIT_BUTTON)
+        self.courses_page.wait_for_title_contains('Eligible for Capture')
+        assert not self.courses_page.is_present(OuijaBoardPage.course_row_link_locator(self.section))
 
     # SEMESTER START JOB SKIPS CANCELLED COURSE
 
     def test_cancel_pre_sched_jobs(self):
+        self.courses_page.log_out()
+        self.login_page.dev_auth()
         self.ouija_page.click_jobs_link()
         self.jobs_page.run_semester_start_job()
         self.jobs_page.run_emails_job()
@@ -119,7 +114,7 @@ class TestCourseCancellation:
     def test_kaltura_schedule_id(self):
         assert util.get_kaltura_id(self.recording_schedule)
         self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
-        self.recording_schedule.publish_type = RecordingPlacement.PUBLISH_TO_MY_MEDIA
+        self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_TO_MY_MEDIA
 
     def test_kaltura_blackouts(self):
         self.jobs_page.run_blackouts_job()
@@ -137,23 +132,15 @@ class TestCourseCancellation:
         self.ouija_page.load_page()
         self.ouija_page.search_for_course_code(self.section)
         self.ouija_page.filter_for_scheduled()
-        assert self.ouija_page.is_course_in_results(self.section)
-        assert self.ouija_page.course_row_status_el(self.section).text.strip() == 'Canceled'
-
-    def test_emails_job(self):
-        self.jobs_page.load_page()
-        self.jobs_page.run_emails_job()
-
-    def test_instructor_email_canceled_ineligible(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_ROOM_CHANGE_INELIGIBLE, self.section,
-                                         self.instructor) == 1
+        assert not self.ouija_page.is_course_in_results(self.section)
 
     # UNSCHEDULE CANCELED COURSE
 
     def test_unsched_canceled(self):
-        self.jobs_page.load_page(self.section)
+        self.jobs_page.load_page()
         self.jobs_page.run_schedule_updates_job()
         self.jobs_page.run_kaltura_job()
+        self.jobs_page.run_emails_job()
 
     def test_no_kaltura_series_canceled_unsched(self):
         self.kaltura_page.load_event_edit_page(self.recording_schedule.series_id)
@@ -164,3 +151,7 @@ class TestCourseCancellation:
         self.ouija_page.search_for_course_code(self.section)
         self.ouija_page.filter_for_all()
         assert not self.ouija_page.is_course_in_results(self.section)
+
+    def test_instructor_email_canceled_ineligible(self):
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_COURSE_CANCELLED, self.section,
+                                         self.instructor) == 1

@@ -123,7 +123,7 @@ class TestScheduling0:
         self.jobs_page.run_semester_start_job()
         assert util.get_kaltura_id(self.recording_schedule)
         self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
-        self.recording_schedule.publish_type = RecordingPlacement.PUBLISH_TO_MY_MEDIA
+        self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_TO_MY_MEDIA
 
     def test_kaltura_blackouts(self):
         self.jobs_page.run_blackouts_job()
@@ -173,7 +173,7 @@ class TestScheduling0:
         self.room_page.verify_series_blackouts(self.recording_schedule)
 
     def test_verify_printable(self):
-        self.room_printable_page.verify_printable(self.section, self.recording_schedule)
+        self.room_printable_page.verify_printable(self.recording_schedule)
 
     # VERIFY SERIES IN KALTURA
 
@@ -256,7 +256,7 @@ class TestScheduling0:
         assert self.course_page.visible_recording_type() == self.recording_schedule.recording_type.value['desc']
 
     def test_default_recording_placement(self):
-        assert self.recording_schedule.publish_type.value['desc'] in self.course_page.visible_recording_placement()
+        assert self.recording_schedule.recording_placement.value['desc'] in self.course_page.visible_recording_placement()
 
     def test_no_instructor_kaltura_link(self):
         assert not self.course_page.is_present(self.course_page.kaltura_series_link(self.recording_schedule))
@@ -293,7 +293,7 @@ class TestScheduling0:
         self.course_page.click_edit_recording_placement()
         self.course_page.select_recording_placement(RecordingPlacement.PUBLISH_TO_PENDING, sites=[self.site])
         self.course_page.save_recording_placement_edits()
-        self.recording_schedule.publish_type = RecordingPlacement.PUBLISH_TO_PENDING
+        self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_TO_PENDING
 
     def test_visible_site_ids_updated(self):
         assert self.course_page.visible_course_site_ids() == [self.site.site_id]
@@ -351,7 +351,7 @@ class TestScheduling0:
         self.room_page.wait_for_series_row(self.recording_schedule)
 
     def test_update_open_printable(self):
-        self.room_printable_page.verify_printable(self.section, self.recording_schedule)
+        self.room_printable_page.verify_printable(self.recording_schedule)
 
     # VERIFY SERIES IN KALTURA
 

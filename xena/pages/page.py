@@ -27,6 +27,7 @@ import time
 
 from flask import current_app as app
 from selenium.common import exceptions
+from selenium.common.exceptions import ElementClickInterceptedException
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -113,10 +114,6 @@ class Page(object):
             method=ec.presence_of_element_located(locator),
             message=f'Failed wait for presence_of_element_located: {str(locator)}',
         )
-        Wait(self.driver, timeout).until(
-            method=ec.visibility_of_element_located(locator),
-            message=f'Failed wait for visibility_of_element_located: {str(locator)}',
-        )
 
     def wait_for_text_in_element(self, locator, string):
         tries = 0
@@ -143,12 +140,15 @@ class Page(object):
         self.hide_diablo_footer()
         sleep_default = app.config['CLICK_SLEEP']
         time.sleep(addl_pause or sleep_default)
-        Wait(driver=self.driver, timeout=util.get_short_timeout()).until(
-            method=ec.element_to_be_clickable(locator),
-            message=f'Failed to click_element: {str(locator)}',
-        )
-        time.sleep(addl_pause or sleep_default)
-        self.element(locator).click()
+        try:
+            Wait(driver=self.driver, timeout=util.get_short_timeout()).until(
+                method=ec.element_to_be_clickable(locator),
+                message=f'Failed to click_element: {str(locator)}',
+            )
+            time.sleep(addl_pause or sleep_default)
+            self.element(locator).click()
+        except ElementClickInterceptedException:
+            self.click_element_js(locator)
 
     def click_element_js(self, locator, addl_pause=None):
         sleep_default = app.config['CLICK_SLEEP']

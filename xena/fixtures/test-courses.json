@@ -241,7 +241,7 @@
       "listings": []
     },
     {
-      "test_script": "test_course_changes_real",
+      "test_script": "test_course_changes_auditorium",
       "dept_code": "ENGLISH",
       "instructors": [
         {
@@ -252,7 +252,7 @@
       "meetings": [
         {
           "room": {
-            "name": "O'Brien 212"
+            "name": "Pimentel 1"
           },
           "meeting_schedule": {
             "days": "MO, WE",
@@ -263,7 +263,7 @@
       ]
     },
     {
-      "test_script": "test_course_changes_fake",
+      "test_script": "test_course_changes_ineligible",
       "instructors": [
         {
           "role": "PI"
@@ -277,7 +277,7 @@
       "meetings": [
         {
           "room": {
-            "name": "Dwinelle 104"
+            "name": "Chavez 100"
           },
           "meeting_schedule": {
             "days": "TU, TH",
@@ -298,7 +298,7 @@
       "meetings": [
         {
           "room": {
-            "name": "Dwinelle 104"
+            "name": "Pimentel 1"
           },
           "meeting_schedule": {
             "days": "TU, TH",
@@ -309,7 +309,7 @@
       ]
     },
     {
-      "test_script": "test_course_changes_fakest",
+      "test_script": "test_course_changes_eligible",
       "instructors": [
         {
           "role": "PI"
@@ -319,7 +319,7 @@
       "meetings": [
         {
           "room": {
-            "name": "Pimentel 1"
+            "name": "Dwinelle 104"
           },
           "meeting_schedule": {
             "days": "TU, TH",

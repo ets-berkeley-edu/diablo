@@ -31,13 +31,13 @@ class RecordingSchedule(object):
             section,
             meeting,
             recording_type=None,
-            publish_type=None,
+            recording_placement=None,
             scheduling_status=None,
             series_id=None,
     ):
         self.section = section
         self.meeting = meeting
         self.recording_type = recording_type
-        self.publish_type = publish_type
+        self.recording_placement = recording_placement
         self.scheduling_status = scheduling_status
         self.series_id = series_id
