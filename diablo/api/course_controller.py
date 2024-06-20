@@ -84,6 +84,12 @@ def download_courses_csv():
         instruction_format = c.get('instructionFormat')
         eligible_meetings = c.get('meetings', {}).get('eligible', [])
         section_id = c.get('sectionId')
+
+        if c.get('canvasSiteIds'):
+            canvas_site_urls = ', '.join([f"{app.config['CANVAS_BASE_URL']}/courses/{site_id}" for site_id in {c['canvasSiteIds']}])
+        else:
+            canvas_site_urls = ''
+
         return {
             'Course Name': f"{course_name}, {instruction_format} {c.get('sectionNum')}" if instruction_format else course_name,
             'Section Id': section_id,
@@ -95,7 +101,7 @@ def download_courses_csv():
             'Publish Type': scheduled.get('publishTypeName'),
             'Recording Type': scheduled.get('recordingTypeName'),
             'Sign-up URL': get_sign_up_url(section_id=section_id, term_id=c.get('termId')),
-            'Canvas URL': f"{app.config['CANVAS_BASE_URL']}/courses/{c['canvasSiteId']}" if c.get('canvasSiteId') else '',
+            'Canvas URL': canvas_site_urls,
             'Instructors': ', '.join([_get_email_with_label(instructor) for instructor in c.get('instructors') or []]),
             'Instructor UIDs': ', '.join([instructor.get('uid') for instructor in c.get('instructors') or []]),
             'Collaborator UIDs': ', '.join([u for u in c.get('collaboratorUids') or []]),
@@ -225,21 +231,21 @@ def update_publish_type():
     section_id = params.get('sectionId')
     term_id = params.get('termId')
     publish_type = params.get('publishType') or None
-    canvas_site_id = params.get('canvasSiteId') or None
+    canvas_site_ids = params.get('canvasSiteIds') or None
 
     course = SisSection.get_course(term_id, section_id) if (term_id and section_id) else None
     if not course or (publish_type not in get_all_publish_types()):
         raise BadRequestError('Required params missing or invalid')
     if not current_user.is_admin and current_user.uid not in [i['uid'] for i in course['instructors']]:
         raise ForbiddenRequestError(f'Sorry, you are unauthorized to view the course {course["label"]}.')
-    if publish_type and publish_type.startswith('kaltura_media_gallery') and not canvas_site_id:
+    if publish_type and publish_type.startswith('kaltura_media_gallery') and not canvas_site_ids:
         raise BadRequestError('Publication to course site requires Canvas site id')
 
     preferences = CoursePreference.update_publish_type(
         term_id=term_id,
         section_id=section_id,
         publish_type=publish_type,
-        canvas_site_id=canvas_site_id,
+        canvas_site_ids=canvas_site_ids,
     )
     if preferences:
         if course.get('publishType') != publish_type:
@@ -252,13 +258,13 @@ def update_publish_type():
                 requested_by_uid=current_user.uid,
                 requested_by_name=current_user.name,
             )
-        if course.get('canvasSiteId') != canvas_site_id:
+        if course.get('canvasSiteIds') != canvas_site_ids:
             ScheduleUpdate.queue(
                 term_id=course['termId'],
                 section_id=course['sectionId'],
-                field_name='canvas_site_id',
-                field_value_old=course.get('canvasSiteId'),
-                field_value_new=canvas_site_id,
+                field_name='canvas_site_ids',
+                field_value_old=course.get('canvasSiteIds'),
+                field_value_new=canvas_site_ids,
                 requested_by_uid=current_user.uid,
                 requested_by_name=current_user.name,
             )

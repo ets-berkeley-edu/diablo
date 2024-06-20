@@ -330,18 +330,18 @@ def _handle_course_site_categories(kaltura, course, kaltura_schedule, publish_to
     categories = kaltura.get_categories(template_entry_id)
     if publish_to_course_sites:
         try:
-            canvas_course_site_id = course['canvasSiteId']
             moderation = True if publish_to_course_sites == 'moderated' else False
-            if canvas_course_site_id and canvas_course_site_id not in [c['name'] for c in categories]:
-                category = kaltura.get_or_create_canvas_category_object(canvas_course_site_id=canvas_course_site_id, moderation=moderation)
-                if category:
-                    app.logger.info(f"{course['label']}: add Kaltura category for canvas_course_site {canvas_course_site_id}")
-                    kaltura.add_to_kaltura_category(
-                        category_id=category['id'],
-                        entry_id=template_entry_id,
-                    )
-                    if moderation != category['moderation']:
-                        kaltura.update_category_object(category['id'], moderation=moderation)
+            for canvas_course_site_id in course['canvasSiteIds'] or []:
+                if canvas_course_site_id not in [c['name'] for c in categories]:
+                    category = kaltura.get_or_create_canvas_category_object(canvas_course_site_id=canvas_course_site_id, moderation=moderation)
+                    if category:
+                        app.logger.info(f"{course['label']}: add Kaltura category for canvas_course_site {canvas_course_site_id}")
+                        kaltura.add_to_kaltura_category(
+                            category_id=category['id'],
+                            entry_id=template_entry_id,
+                        )
+                        if moderation != category['moderation']:
+                            kaltura.update_category_object(category['id'], moderation=moderation)
         except Exception as e:
             _mark_error(
                 schedule_updates,

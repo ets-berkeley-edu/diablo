@@ -255,8 +255,11 @@
                   <div id="publish-type-name">
                     {{ displayLabels[course.publishType] }}
                   </div>
-                  <div v-if="publishType && publishType.startsWith('kaltura_media_gallery') && course.canvasSiteId" id="publish-linked-canvas-site">
-                    Linked bCourses site: <CanvasCourseSite :site-id="publishCanvasSiteId" :course-site="courseSite" />
+                  <div v-if="publishType && publishType.startsWith('kaltura_media_gallery') && course.canvasSiteIds" id="publish-linked-canvas-site">
+                    Linked bCourses site(s):
+                    <div v-for="site in courseSites" :key="site.canvasSiteId">
+                      <CanvasCourseSite :site-id="site.canvasSiteId" :course-site="site" />
+                    </div>
                   </div>
                   <v-btn
                     id="btn-publish-type-edit"
@@ -280,52 +283,104 @@
                     :label="displayLabels[publishTypeOption]"
                   ></v-radio>
                 </v-radio-group>
-                <div v-if="publishTypeEditing && publishType && publishType.startsWith('kaltura_media_gallery')" class="mb-4">
-                  <v-select
-                    v-if="publishTypeEditing"
-                    id="select-canvas-site"
-                    v-model="publishCanvasSiteId"
-                    :disabled="publishTypeUpdating"
-                    :full-width="true"
-                    hide-details
-                    item-text="name"
-                    item-value="canvasSiteId"
-                    :items="publishCanvasSiteOptions"
-                    label="Select course site"
-                    solo
-                  >
-                    <span :id="`menu-option-canvas-site-${data.item.canvasSiteId}`" slot="item" slot-scope="data">
-                      {{ data.item.name }} ({{ data.item.courseCode }})
-                    </span>
-                  </v-select>
-                </div>
-                <div v-if="publishTypeEditing">
-                  <v-btn
-                    id="btn-publish-type-save"
-                    color="success"
-                    :disabled="publishTypeUpdating || (publishType && publishType.startsWith('kaltura_media_gallery') && !publishCanvasSiteId)"
-                    @click="updatePublishType"
-                  >
-                    <v-progress-circular
-                      v-if="publishTypeUpdating"
-                      class="mr-2"
-                      color="primary"
-                      indeterminate
-                      size="18"
-                      width="3"
-                    ></v-progress-circular>
-                    {{ publishTypeUpdating ? 'Saving' : 'Save' }}
-                  </v-btn>
-                  <v-btn
-                    id="btn-publish-type-cancel"
-                    color="default"
-                    :disabled="publishTypeUpdating"
-                    class="mx-2"
-                    @click="updatePublishTypeCancel"
-                  >
-                    Cancel
-                  </v-btn>
-                </div>
+                <v-card v-if="publishTypeEditing && publishType && publishType.startsWith('kaltura_media_gallery')" class="my-4 background-shaded">
+                  <v-container>
+                    <v-row
+                      align="center"
+                      justify="start"
+                    >
+                      <v-col cols="12">
+                        <h4>
+                          Linked bCourses site(s):
+                        </h4>
+                      </v-col>
+                    </v-row>
+                    <v-row
+                      align="end"
+                      justify="start"
+                    >
+                      <v-col cols="9">
+                        <v-select
+                          v-if="publishTypeEditing"
+                          id="select-canvas-site"
+                          v-model="pendingCanvasSite"
+                          :disabled="publishTypeUpdating"
+                          :full-width="true"
+                          hide-details
+                          item-text="name"
+                          return-object
+                          :items="publishCanvasSiteOptions"
+                          label="Select course site"
+                          solo
+                        >
+                          <span :id="`menu-option-canvas-site-${data.item.canvasSiteId}`" slot="item" slot-scope="data">
+                            {{ data.item.name }} ({{ data.item.courseCode }})
+                          </span>
+                        </v-select>
+                      </v-col>
+                      <v-col cols="3">
+                        <v-btn
+                          id="btn-canvas-site-add"
+                          color="success"
+                          :disabled="!pendingCanvasSite"
+                          @click="addCanvasSiteConfirm"
+                        >
+                          Add
+                        </v-btn>
+                      </v-col>
+                    </v-row>
+                    <v-row
+                      align="center"
+                      justify="start"
+                    >
+                      <v-col cols="12">
+                        <div
+                          v-for="site in publishCanvasSites"
+                          :id="`canvas-site-${site.canvasSiteId}`"
+                          :key="site.canvasSiteId"
+                          class="my-2"
+                        >
+                          {{ site.name }} ({{ site.courseCode }})
+                          <v-btn
+                            :id="`btn-canvas-site-remove-${site.canvasSiteId}`"
+                            :disabled="publishTypeUpdating"
+                            small
+                            @click="removeCanvasSite(site.canvasSiteId)"
+                          >
+                            Remove
+                          </v-btn>
+                        </div>
+                        <div>
+                          <v-btn
+                            id="btn-publish-type-save"
+                            color="success"
+                            :disabled="publishTypeUpdating || (publishType && publishType.startsWith('kaltura_media_gallery') && !publishCanvasSites)"
+                            @click="updatePublishType"
+                          >
+                            <v-progress-circular
+                              v-if="publishTypeUpdating"
+                              class="mr-2"
+                              color="primary"
+                              indeterminate
+                              size="18"
+                              width="3"
+                            ></v-progress-circular>
+                            {{ publishTypeUpdating ? 'Saving' : 'Save' }}
+                          </v-btn>
+                          <v-btn
+                            id="btn-publish-type-cancel"
+                            color="default"
+                            :disabled="publishTypeUpdating"
+                            class="mx-2"
+                            @click="updatePublishTypeCancel"
+                          >
+                            Cancel
+                          </v-btn>
+                        </div>
+                      </v-col>
+                    </v-row>
+                  </v-container>
+                </v-card>
               </v-col>
             </v-row>
             <v-row v-if="!$currentUser.isAdmin">
@@ -486,7 +541,7 @@ export default {
       collaboratorsUpdating: undefined,
       course: undefined,
       courseDisplayTitle: null,
-      courseSite: undefined,
+      courseSites: undefined,
       displayLabels: {
         'kaltura_media_gallery': 'Publish automatically to the Media Gallery (all members of the bCourses site will have access)',
         'kaltura_media_gallery_moderated': 'Publish to Pending tab (Teacher/TA/Designer members of the bCourses site can approve recordings for viewing)',
@@ -500,7 +555,8 @@ export default {
       instructorProxyPrivileges: undefined,
       location: undefined,
       pendingCollaborator: undefined,
-      publishCanvasSiteId: undefined,
+      pendingCanvasSite: undefined,
+      publishCanvasSites: undefined,
       publishCanvasSiteOptions: undefined,
       publishType: undefined,
       publishTypeEditing: false,
@@ -557,6 +613,14 @@ export default {
     })
   },
   methods: {
+    addCanvasSiteConfirm() {
+      if (this.pendingCanvasSite && !this.$_.find(this.publishCanvasSites, {'canvasSiteId': this.pendingCanvasSite.canvasSiteId})) {
+        this.publishCanvasSites.push(this.pendingCanvasSite)
+      }
+      console.log(this.publishCanvasSites)
+      this.alertScreenReader(`Site ${this.pendingCanvasSite.name} added.`)
+      this.pendingCanvasSite = null
+    },
     addCollaboratorConfirm() {
       if (!this.$_.find(this.collaborators, {'uid': this.pendingCollaborator.uid})) {
         this.collaborators.push(this.pendingCollaborator)
@@ -571,6 +635,9 @@ export default {
       if (collaborator) {
         this.pendingCollaborator = collaborator
       }
+    },
+    removeCanvasSite(canvasSiteId) {
+      this.publishCanvasSites = this.$_.filter(this.publishCanvasSites, c => c.canvasSiteId !== canvasSiteId)
     },
     removeCollaborator(uid) {
       this.collaborators = this.$_.filter(this.collaborators, c => c.uid !== uid)
@@ -598,9 +665,9 @@ export default {
       this.recordingType = this.course.recordingType
       this.recordingTypeOptions = this.meeting.room ? Object.keys(this.meeting.room.recordingTypeOptions) : []
       getCanvasSitesTeaching(this.$currentUser.uid).then(data => {
-        this.publishCanvasSiteId = this.course.canvasSiteId
         this.publishCanvasSiteOptions = data
-        this.courseSite = this.$_.find(this.publishCanvasSiteOptions, {canvasSiteId: this.publishCanvasSiteId})
+        this.courseSites = this.$_.filter(this.publishCanvasSiteOptions, site => this.course.canvasSiteIds.includes(site.canvasSiteId))
+        this.publishCanvasSites = this.courseSites || []
       })
       this.$ready(this.courseDisplayTitle)
     },
@@ -638,15 +705,15 @@ export default {
     updatePublishType() {
       this.publishTypeUpdating = true
       updatePublishType(
-        this.publishCanvasSiteId,
+        this.$_.map(this.publishCanvasSites, 'canvasSiteId'),
         this.publishType,
         this.course.sectionId,
         this.course.termId,
       ).then(data => {
         const message = `Recording placement updated to ${data.publishTypeName}.`
         this.alertScreenReader(message)
-        this.course.canvasSiteId = parseInt(data.canvasSiteId, 10)
-        this.courseSite = this.$_.find(this.publishCanvasSiteOptions, {canvasSiteId: this.course.canvasSiteId})
+        this.course.canvasSiteIds = parseInt(data.canvasSiteIds, 10)
+        this.courseSites = this.$_.filter(this.publishCanvasSiteOptions, site => this.$_.find(this.publishCanvasSites, {'canvasSiteId': site.canvasSiteId}))
         this.course.publishType = data.publishType
         this.course.publishTypeName = data.publishTypeName
         this.publishTypeEditing = false

@@ -146,7 +146,7 @@ CREATE TABLE course_preferences (
     collaborator_uids VARCHAR(80)[],
     publish_type publish_types NOT NULL,
     recording_type recording_types NOT NULL,
-    canvas_site_id INTEGER,
+    canvas_site_ids INTEGER[],
     created_at TIMESTAMP WITH TIME ZONE NOT NULL
 );
 ALTER TABLE course_preferences OWNER TO diablo;

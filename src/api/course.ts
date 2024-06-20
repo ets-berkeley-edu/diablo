@@ -51,14 +51,14 @@ export function updateOptOut(instructorUid, termId, sectionId, optOut) {
 }
 
 export function updatePublishType(
-    canvasSiteId: string,
+    canvasSiteIds: string[],
     publishType: boolean,
     sectionId: string,
     termId: string
 ) {
   return axios
     .post(`${utils.apiBaseUrl()}/api/course/publish_type/update`, {
-      canvasSiteId,
+      canvasSiteIds,
       publishType,
       sectionId,
       termId

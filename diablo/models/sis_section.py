@@ -578,13 +578,16 @@ def _to_api_json(term_id, rows, include_rooms=True, include_update_history=False
             else:
                 preferences = {}
 
-            canvas_site_id = int(preferences['canvasSiteId']) if preferences.get('canvasSiteId') else None
+            if preferences.get('canvasSiteIds'):
+                canvas_site_ids = [int(site_id) for site_id in preferences['canvasSiteIds']]
+            else:
+                canvas_site_ids = None
 
             course = {
                 'allowedUnits': row['allowed_units'],
                 'collaborators': preferences.get('collaborators'),
                 'collaboratorUids': preferences.get('collaboratorUids'),
-                'canvasSiteId': canvas_site_id,
+                'canvasSiteIds': canvas_site_ids,
                 'courseName': row['course_name'],
                 'courseTitle': row['course_title'],
                 'crossListings': cross_listed_courses,

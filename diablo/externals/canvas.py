@@ -89,7 +89,7 @@ def get_user(user_id, api_call=True, api_url=None):
         return user
 
 
-def get_current_teaching_courses(uid):
+def get_teaching_courses(uid):
     teaching_courses = []
     try:
         user = get_user(f'sis_login_id:{uid}', api_call=False)
@@ -97,16 +97,16 @@ def get_current_teaching_courses(uid):
         if profile:
             # Load all courses because ResourceDoesNotExist is possible when paging.
             courses = [course for course in user.get_courses(include=['term'])]
-            canvas_sis_term_id = get_canvas_sis_term_id(app.config['CURRENT_TERM_ID'])
             for canvas_course in courses:
-                if canvas_course.term['sis_term_id'] == canvas_sis_term_id:
-                    enrollments = list(filter(lambda e: e.get('user_id') == profile['id'], canvas_course.enrollments))
-                    current_user_roles = [e['role'] for e in enrollments]
-                    if next((role for role in current_user_roles if role in ['TeacherEnrollment', 'CanvasAdmin']), None):
-                        teaching_courses.append(_canvas_site_to_api_json(canvas_course))
+                enrollments = list(filter(lambda e: e.get('user_id') == profile['id'], canvas_course.enrollments))
+                current_user_roles = [e['role'] for e in enrollments]
+                if next((role for role in current_user_roles if role in ['TeacherEnrollment', 'CanvasAdmin']), None):
+                    teaching_courses.append(_canvas_site_to_api_json(canvas_course))
     except Exception as e:
         app.logger.error(f'Failed to retrieve courses which UID {uid} is currently teaching.')
         app.logger.exception(e)
+    # TODO filter current term first
+    # canvas_sis_term_id = get_canvas_sis_term_id(app.config['CURRENT_TERM_ID'])
     return teaching_courses
 
 
