@@ -269,23 +269,24 @@
                     Edit
                   </v-btn>
                 </div>
-                <v-radio-group
-                  v-if="publishTypeEditing"
-                  id="select-publish-type"
-                  v-model="publishType"
-                  :disabled="publishTypeUpdating"
-                >
-                  <v-radio
-                    v-for="publishTypeOption in publishTypeOptions"
-                    :id="`radio-publish-type-${publishTypeOption}`"
-                    :key="publishTypeOption"
-                    :value="publishTypeOption"
-                    :label="displayLabels[publishTypeOption]"
-                  ></v-radio>
-                </v-radio-group>
-                <v-card v-if="publishTypeEditing && publishType && publishType.startsWith('kaltura_media_gallery')" class="my-4 background-shaded">
+                <v-card v-if="publishTypeEditing" class="my-4 background-shaded">
                   <v-container>
+                    <v-radio-group
+                      id="select-publish-type"
+                      v-model="publishType"
+                      class="mt-0"
+                      :disabled="publishTypeUpdating"
+                    >
+                      <v-radio
+                        v-for="publishTypeOption in publishTypeOptions"
+                        :id="`radio-publish-type-${publishTypeOption}`"
+                        :key="publishTypeOption"
+                        :value="publishTypeOption"
+                        :label="displayLabels[publishTypeOption]"
+                      ></v-radio>
+                    </v-radio-group>
                     <v-row
+                      v-if="publishType && publishType.startsWith('kaltura_media_gallery')"
                       align="center"
                       justify="start"
                     >
@@ -296,12 +297,12 @@
                       </v-col>
                     </v-row>
                     <v-row
+                      v-if="publishType && publishType.startsWith('kaltura_media_gallery')"
                       align="end"
                       justify="start"
                     >
                       <v-col cols="9">
                         <v-select
-                          v-if="publishTypeEditing"
                           id="select-canvas-site"
                           v-model="pendingCanvasSite"
                           :disabled="publishTypeUpdating"
@@ -330,6 +331,7 @@
                       </v-col>
                     </v-row>
                     <v-row
+                      v-if="publishType && publishType.startsWith('kaltura_media_gallery')"
                       align="center"
                       justify="start"
                     >
@@ -350,6 +352,13 @@
                             Remove
                           </v-btn>
                         </div>
+                      </v-col>
+                    </v-row>
+                    <v-row
+                      align="center"
+                      justify="start"
+                    >
+                      <v-col cols="12">
                         <div>
                           <v-btn
                             id="btn-publish-type-save"
