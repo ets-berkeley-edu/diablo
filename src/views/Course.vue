@@ -604,6 +604,13 @@ export default {
       show &&= (this.$currentUser.isAdmin || this.$_.map(this.instructors, 'uid').includes(this.$currentUser.uid))
       return show
     },
+    teachingUid() {
+      if (this.course.instructors) {
+        return this.course.instructors[0].uid
+      } else {
+        return this.$currentUser.uid
+      }
+    },
     updatesQueued() {
       return !!this.$_.find(this.course.updateHistory, {'status': 'queued'})
     }
@@ -673,7 +680,7 @@ export default {
       this.publishType = this.course.publishType
       this.recordingType = this.course.recordingType
       this.recordingTypeOptions = this.meeting.room ? Object.keys(this.meeting.room.recordingTypeOptions) : []
-      getCanvasSitesTeaching(this.$currentUser.uid).then(data => {
+      getCanvasSitesTeaching(this.teachingUid).then(data => {
         this.publishCanvasSiteOptions = data
         this.courseSites = this.$_.filter(this.publishCanvasSiteOptions, site => this.course.canvasSiteIds.includes(site.canvasSiteId))
         this.publishCanvasSites = this.courseSites || []
