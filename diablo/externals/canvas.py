@@ -105,9 +105,17 @@ def get_teaching_courses(uid):
     except Exception as e:
         app.logger.error(f'Failed to retrieve courses which UID {uid} is currently teaching.')
         app.logger.exception(e)
-    # TODO filter current term first
-    # canvas_sis_term_id = get_canvas_sis_term_id(app.config['CURRENT_TERM_ID'])
-    return teaching_courses
+
+    # Sort order: current-term sites, then project sites, then past terms descending.
+    def _sort_key(canvas_site):
+        if canvas_site['sisTermId'] == app.config['CURRENT_TERM_ID']:
+            return 'Z'
+        elif canvas_site['sisTermId'] == 'TERM:Projects':
+            return 'Y'
+        else:
+            return canvas_site['sisTermId']
+
+    return sorted(teaching_courses, key=_sort_key, reverse=True)
 
 
 def ping_canvas():
@@ -151,6 +159,7 @@ def _canvas_site_to_api_json(canvas_site):
         'courseCode': canvas_site.course_code,
         'name': canvas_site.name.strip(),
         'sisCourseId': canvas_site.sis_course_id,
+        'sisTermId': canvas_site.term['sis_term_id'],
         'url': f"{app.config['CANVAS_API_URL']}/courses/{canvas_site.id}",
     }
 
