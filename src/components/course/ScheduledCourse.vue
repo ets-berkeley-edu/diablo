@@ -38,14 +38,6 @@
           </v-list-item-subtitle>
         </v-list-item-content>
       </v-list-item>
-      <v-list-item v-if="$currentUser.isAdmin && adminAlerts.length" two-line class="pb-3">
-        <v-list-item-content>
-          <v-list-item-title>
-            <v-icon class="pb-1 pr-1" color="red">mdi-alert</v-icon>
-            {{ $_.capitalize(oxfordJoin(adminAlerts).toLowerCase()) }}
-          </v-list-item-title>
-        </v-list-item-content>
-      </v-list-item>
     </v-list>
   </div>
 </template>
@@ -64,13 +56,7 @@ export default {
     }
   },
   data: () => ({
-    adminAlerts: undefined,
     agreedToTerms: false,
-  }),
-  created() {
-    const alertKeys = this.$_.filter(this.course.scheduled.alerts, alert => alert.includes('admin'))
-    this.adminAlerts = this.$_.map(alertKeys, key => this.$config.emailTemplateTypes[key].replace('Admin alert: ', ''))
-      && !this.$currentUser.isAdmin
-  }
+  })
 }
 </script>
