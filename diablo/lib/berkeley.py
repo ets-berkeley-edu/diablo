@@ -134,8 +134,8 @@ def are_scheduled_dates_obsolete(meeting, scheduled):
         recording_end_date = get_recording_end_date(meeting)
         end_date_mismatch = safe_strftime(recording_end_date, '%Y-%m-%d') != scheduled['meetingEndDate']
 
-        # If recordings were scheduled AFTER the meeting_start_date then we will ignore start_date_mismatch
-        scheduled_after_start_date = formatted_start_date and scheduled['createdAt'][0:10] > formatted_start_date
+        # If we've moved beyond the SIS start date, ignore start_date mismatch
+        scheduled_after_start_date = formatted_start_date and datetime.now().strftime('%Y-%m-%d') > formatted_start_date
         return end_date_mismatch if scheduled_after_start_date else (start_date_mismatch or end_date_mismatch)
     else:
         return True
