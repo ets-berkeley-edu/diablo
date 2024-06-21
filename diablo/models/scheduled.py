@@ -185,16 +185,6 @@ class Scheduled(db.Model):
             },
         )
 
-    @classmethod
-    def add_alert(cls, scheduled_id, template_type):
-        row = cls.query.filter_by(id=scheduled_id).first()
-        if row.alerts:
-            row.alerts = list(set(row.alerts + [template_type]))
-        else:
-            row.alerts = [template_type]
-        db.session.add(row)
-        std_commit()
-
     def update(self, **kwargs):
         for key, value in kwargs.items():
             setattr(self, key, value)
@@ -212,7 +202,6 @@ class Scheduled(db.Model):
         collaborator_attributes = get_loch_basic_attributes(self.collaborator_uids) if self.collaborator_uids else []
         return {
             'id': self.id,
-            'alerts': self.alerts or [],
             'courseDisplayName': self.course_display_name,
             'createdAt': to_isoformat(self.created_at),
             'instructorUids': self.instructor_uids,
