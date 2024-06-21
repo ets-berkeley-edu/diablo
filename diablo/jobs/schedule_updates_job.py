@@ -51,9 +51,9 @@ def _queue_schedule_updates(term_id):
     for course in SisSection.get_course_changes(term_id=term_id):
         eligible_meetings = course.get('meetings', {}).get('eligible', [])
         ineligible_meetings = course.get('meetings', {}).get('ineligible', [])
-        if course['deletedAt'] or (len(eligible_meetings) + len(ineligible_meetings) == 0):
+        if course['deletedAt'] or (_valid_meeting_count(eligible_meetings) + _valid_meeting_count(ineligible_meetings) == 0):
             _queue_not_scheduled_update(course)
-        elif len(eligible_meetings) == 0 and len(ineligible_meetings) > 0:
+        elif _valid_meeting_count(eligible_meetings) == 0 and _valid_meeting_count(ineligible_meetings) > 0:
             _queue_room_not_eligible_update(course)
         else:
             _queue_meeting_updates(course)
@@ -81,6 +81,17 @@ def _queue_room_not_eligible_update(course):
         field_value_old=json.dumps(_get_room_summary(scheduled)),
         field_value_new=json.dumps(_get_room_summary(meeting)),
     )
+
+
+def _is_invalid_schedule(meeting):
+    for key in ['days', 'startTime', 'endTime', 'startDate', 'endDate']:
+        if not meeting.get(key):
+            return True
+    return False
+
+
+def _valid_meeting_count(meetings):
+    return len([m for m in meetings if not _is_invalid_schedule(m)])
 
 
 def _queue_meeting_updates(course):
@@ -125,7 +136,7 @@ def _queue_meeting_updates(course):
                 }),
             )
 
-        elif not meeting:
+        elif not meeting or _is_invalid_schedule(meeting):
             ScheduleUpdate.queue(
                 term_id=course['termId'],
                 section_id=course['sectionId'],
