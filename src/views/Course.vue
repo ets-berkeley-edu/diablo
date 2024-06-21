@@ -605,7 +605,7 @@ export default {
       return show
     },
     teachingUid() {
-      if (this.course.instructors) {
+      if (this.course.instructors.length) {
         return this.course.instructors[0].uid
       } else {
         return this.$currentUser.uid
@@ -633,7 +633,6 @@ export default {
       if (this.pendingCanvasSite && !this.$_.find(this.publishCanvasSites, {'canvasSiteId': this.pendingCanvasSite.canvasSiteId})) {
         this.publishCanvasSites.push(this.pendingCanvasSite)
       }
-      console.log(this.publishCanvasSites)
       this.alertScreenReader(`Site ${this.pendingCanvasSite.name} added.`)
       this.pendingCanvasSite = null
     },
@@ -682,7 +681,9 @@ export default {
       this.recordingTypeOptions = this.meeting.room ? Object.keys(this.meeting.room.recordingTypeOptions) : []
       getCanvasSitesTeaching(this.teachingUid).then(data => {
         this.publishCanvasSiteOptions = data
-        this.courseSites = this.$_.filter(this.publishCanvasSiteOptions, site => this.course.canvasSiteIds.includes(site.canvasSiteId))
+        this.courseSites = this.$_.filter(this.publishCanvasSiteOptions, site => {
+          return this.course.canvasSiteIds && this.course.canvasSiteIds.includes(site.canvasSiteId)
+        })
         this.publishCanvasSites = this.courseSites || []
       })
       this.$ready(this.courseDisplayTitle)
@@ -728,7 +729,7 @@ export default {
       ).then(data => {
         const message = `Recording placement updated to ${data.publishTypeName}.`
         this.alertScreenReader(message)
-        this.course.canvasSiteIds = parseInt(data.canvasSiteIds, 10)
+        this.course.canvasSiteIds = data.canvasSiteIds
         this.courseSites = this.$_.filter(this.publishCanvasSiteOptions, site => this.$_.find(this.publishCanvasSites, {'canvasSiteId': site.canvasSiteId}))
         this.course.publishType = data.publishType
         this.course.publishTypeName = data.publishTypeName
