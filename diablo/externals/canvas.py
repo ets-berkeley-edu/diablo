@@ -106,11 +106,11 @@ def get_teaching_courses(uid):
         app.logger.error(f'Failed to retrieve courses which UID {uid} is currently teaching.')
         app.logger.exception(e)
 
-    # Sort order: current-term sites, then project sites, then past terms descending.
+    # Sort order: current-term sites, then termless sites (including project sites), then past terms descending.
     def _sort_key(canvas_site):
         if canvas_site['sisTermId'] == app.config['CURRENT_TERM_ID']:
             return 'Z'
-        elif canvas_site['sisTermId'] == 'TERM:Projects':
+        elif canvas_site['sisTermId'] == 'TERM:Projects' or not canvas_site['sisTermId']:
             return 'Y'
         else:
             return canvas_site['sisTermId']
