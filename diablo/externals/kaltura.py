@@ -305,13 +305,16 @@ class Kaltura:
         # response = self.client.category.update(KalturaCategory(id=update, moderation=KalturaNullableBoolean(1 if moderation else 0)))
 
     @skip_when_pytest()
-    def update_schedule_event(self, meeting_attributes, scheduled_model):
+    def update_schedule_event(self, scheduled_model, meeting_attributes=None, description=None):
         term_name = term_name_for_sis_id(scheduled_model.term_id)
         recurring_event = KalturaRecordScheduleEvent(summary=f'{scheduled_model.course_display_name} ({term_name})')
-        self._set_event_meeting_attributes(recurring_event, meeting_attributes, meeting_attributes.get('room'))
+        if meeting_attributes:
+            self._set_event_meeting_attributes(recurring_event, meeting_attributes, meeting_attributes.get('room'))
+        if description:
+            recurring_event.setDescription(description)
         self.client.schedule.scheduleEvent.update(scheduled_model.kaltura_schedule_id, recurring_event)
 
-        if 'room' in meeting_attributes:
+        if meeting_attributes and 'room' in meeting_attributes:
             self._detach_scheduled_recordings_from_room(
                 kaltura_schedule_id=scheduled_model.kaltura_schedule_id,
             )
