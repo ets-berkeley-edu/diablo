@@ -171,6 +171,16 @@ def _queue_meeting_updates(course):
                 meeting_old.update({'room': _get_room_summary(scheduled)})
                 meeting_new.update({'room': _get_room_summary(meeting)})
 
+                # Downgrade recording type if moving out of an auditorium.
+                if scheduled['recordingType'] == 'presenter_presentation_audio_with_operator' and not _is_in_auditorium(meeting):
+                    ScheduleUpdate.queue(
+                        term_id=course['termId'],
+                        section_id=course['sectionId'],
+                        field_name='recording_type',
+                        field_value_old='presenter_presentation_audio_with_operator',
+                        field_value_new='presenter_presentation_audio',
+                    )
+
             ScheduleUpdate.queue(
                 term_id=course['termId'],
                 section_id=course['sectionId'],
@@ -228,6 +238,13 @@ def _queue_instructor_updates(course):
             field_value_old=scheduled_collaborator_uids,
             field_value_new=list(set(scheduled_collaborator_uids).union(collaborator_uids_to_add).difference(collaborator_uids_to_remove)),
         )
+
+
+def _is_in_auditorium(meeting):
+    room = meeting.get('room')
+    if room and 'presenter_presentation_audio_with_operator' in room.get('recordingTypeOptions', {}):
+        return True
+    return False
 
 
 def _get_room_summary(meeting):
