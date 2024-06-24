@@ -363,7 +363,7 @@
                           <v-btn
                             id="btn-publish-type-save"
                             color="success"
-                            :disabled="publishTypeUpdating || (publishType && publishType.startsWith('kaltura_media_gallery') && !publishCanvasSites)"
+                            :disabled="publishTypeUpdating || (publishType && publishType.startsWith('kaltura_media_gallery') && !publishCanvasSites.length)"
                             @click="updatePublishType"
                           >
                             <v-progress-circular
@@ -565,7 +565,7 @@ export default {
       location: undefined,
       pendingCollaborator: undefined,
       pendingCanvasSite: undefined,
-      publishCanvasSites: undefined,
+      publishCanvasSites: [],
       publishCanvasSiteOptions: undefined,
       publishType: undefined,
       publishTypeEditing: false,
