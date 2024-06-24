@@ -57,7 +57,7 @@
                       </div>
                     </td>
                     <td :id="`course-${course.sectionId}-recording-type`" class="text-no-wrap">
-                      {{ course.scheduled.recordingTypeName }}
+                      {{ $_.get(course, 'scheduled[0].recordingTypeName') }}
                     </td>
                   </tr>
                 </template>
