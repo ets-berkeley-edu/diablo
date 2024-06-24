@@ -35,6 +35,7 @@ from diablo.lib.kaltura_util import get_classification_name, get_recurrence_name
 from diablo.lib.util import default_timezone, epoch_time_to_isoformat, format_days
 from flask import current_app as app
 from KalturaClient import KalturaClient, KalturaConfiguration
+from KalturaClient.exceptions import KalturaClientException
 from KalturaClient.Plugins.Core import KalturaBaseEntry, KalturaCategory, KalturaCategoryEntry, KalturaCategoryEntryFilter, \
     KalturaCategoryEntryStatus, KalturaCategoryFilter, KalturaEntryDisplayInSearchType, KalturaEntryModerationStatus, \
     KalturaEntryStatus, KalturaEntryType, KalturaFilterPager, KalturaMediaEntryFilter, KalturaNullableBoolean
@@ -51,11 +52,15 @@ DEFAULT_KALTURA_PAGE_SIZE = 200
 class Kaltura:
 
     @skip_when_pytest()
-    def __init__(self):
+    def __init__(self, timeout=None):
         expiry = app.config['KALTURA_EXPIRY']
         partner_id = app.config['KALTURA_PARTNER_ID']
 
-        self.client = KalturaClient(KalturaConfiguration())
+        configuration = KalturaConfiguration()
+        if timeout:
+            configuration.requestTimeout = timeout
+
+        self.client = KalturaClient(configuration)
         result = self.client.session.startWidgetSession(
             expiry=expiry,
             widgetId=f'_{partner_id}',
@@ -266,10 +271,13 @@ class Kaltura:
     def ping(self):
         filter_ = KalturaMediaEntryFilter()
         filter_.nameLike = "Love is the drug I'm thinking of"
-        result = self.client.baseEntry.list(
-            filter=filter_,
-            pager=KalturaFilterPager(pageSize=1),
-        )
+        try:
+            result = self.client.baseEntry.list(
+                filter=filter_,
+                pager=KalturaFilterPager(pageSize=1),
+            )
+        except KalturaClientException:
+            return False
         return result.totalCount is not None
 
     @skip_when_pytest()

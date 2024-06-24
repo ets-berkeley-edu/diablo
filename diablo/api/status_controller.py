@@ -43,11 +43,12 @@ def ping():
     canvas_ping = False
     db_ping = False
     kaltura_ping = False
+    timeout = app.config['PING_TIMEOUT_SECONDS']
     try:
-        b_connected_ping = BConnected().ping()
-        canvas_ping = _ping_canvas()
+        b_connected_ping = BConnected().ping(timeout=timeout)
+        canvas_ping = _ping_canvas(timeout=timeout)
         db_ping = _db_status()
-        kaltura_ping = Kaltura().ping()
+        kaltura_ping = Kaltura(timeout=timeout).ping()
     except Exception as e:
         subject = str(e)
         subject = f'{subject[:100]}...' if len(subject) > 100 else subject
@@ -85,9 +86,9 @@ def _db_status():
         return False
 
 
-def _ping_canvas():
+def _ping_canvas(timeout):
     try:
-        return ping_canvas()
+        return ping_canvas(timeout=timeout)
     except CanvasException as e:
         app.logger.error('Canvas error during /api/ping')
         app.logger.exception(e)
