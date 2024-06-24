@@ -64,6 +64,13 @@ def insert_or_update_instructors(instructor_uids):
     Instructor.upsert(instructors)
 
 
+def is_valid_meeting_schedule(meeting):
+    for key in ['days', 'startTime', 'endTime', 'startDate', 'endDate']:
+        if not meeting.get(key):
+            return False
+    return True
+
+
 def refresh_rooms():
     locations = SisSection.get_distinct_meeting_locations()
     existing_locations = Room.get_all_locations()
@@ -201,7 +208,11 @@ def schedule_recordings(course, is_semester_start=False, updates=None):
         room = Room.find_room(location=meeting.get('location'))
         if not room:
             _report_error(subject=f"{course['label']} not scheduled. Room change: {room.location} to {meeting['location']}")
-            return None
+            continue
+
+        if not is_valid_meeting_schedule(meeting):
+            _report_error(subject=f"{course['label']} not scheduled. Invalid SIS meeting schedule.")
+            continue
 
         term_id = course['termId']
         section_id = int(course['sectionId'])

@@ -25,6 +25,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 import json
 
 from diablo.jobs.base_job import BaseJob
+from diablo.jobs.util import is_valid_meeting_schedule
 from diablo.lib.berkeley import are_scheduled_dates_obsolete, are_scheduled_times_obsolete, get_recording_end_date, get_recording_start_date
 from diablo.lib.util import safe_strftime
 from diablo.models.schedule_update import ScheduleUpdate
@@ -83,15 +84,8 @@ def _queue_room_not_eligible_update(course):
     )
 
 
-def _is_invalid_schedule(meeting):
-    for key in ['days', 'startTime', 'endTime', 'startDate', 'endDate']:
-        if not meeting.get(key):
-            return True
-    return False
-
-
 def _valid_meeting_count(meetings):
-    return len([m for m in meetings if not _is_invalid_schedule(m)])
+    return len([m for m in meetings if is_valid_meeting_schedule(m)])
 
 
 def _queue_meeting_updates(course):
@@ -120,7 +114,7 @@ def _queue_meeting_updates(course):
         meeting = unmatched_sis_meetings[i] if i < len(unmatched_sis_meetings) else None
         scheduled = unmatched_scheduled_meetings[i] if i < len(unmatched_scheduled_meetings) else None
 
-        if not scheduled:
+        if not scheduled and is_valid_meeting_schedule(meeting):
             ScheduleUpdate.queue(
                 term_id=course['termId'],
                 section_id=course['sectionId'],
@@ -136,7 +130,7 @@ def _queue_meeting_updates(course):
                 }),
             )
 
-        elif not meeting or _is_invalid_schedule(meeting):
+        elif not meeting or not is_valid_meeting_schedule(meeting):
             ScheduleUpdate.queue(
                 term_id=course['termId'],
                 section_id=course['sectionId'],
