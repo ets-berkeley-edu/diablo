@@ -234,6 +234,7 @@ def _handle_instructor_updates(
             uids_entitled_to_edit=uids_entitled_to_edit,
             uids_entitled_to_publish=uids_entitled_to_edit,
         )
+        kaltura.update_schedule_event(scheduled_model, description=description)
         scheduled_model.update(instructor_uids=instructor_uids, collaborator_uids=collaborator_uids)
         CoursePreference.update_collaborator_uids(
             term_id=course['termId'],
@@ -294,7 +295,7 @@ def _handle_meeting_removed(kaltura, course, scheduled, schedule_updates):
 def _handle_meeting_updates(kaltura, meetings_updated_by_schedule_id, kaltura_schedule_id, scheduled_model, schedule_updates):
     meeting = meetings_updated_by_schedule_id[kaltura_schedule_id]
     try:
-        kaltura.update_schedule_event(meeting, scheduled_model)
+        kaltura.update_schedule_event(scheduled_model, meeting_attributes=meeting)
         if 'days' in meeting:
             scheduled_model.update(
                 meeting_days=meeting['days'],
