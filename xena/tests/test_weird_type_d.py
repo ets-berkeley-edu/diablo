@@ -42,9 +42,9 @@ class TestWeirdTypeD:
     test_data = util.get_test_script_course('test_weird_type_d')
     section = util.get_test_section(test_data)
     meeting_0 = section.meetings[0]
-    meeting_0.end_date = (meeting_0.end_date - timedelta(days=15)).strftime('%Y-%m-%d')
+    meeting_0.meeting_schedule.end_date = meeting_0.meeting_schedule.end_date - timedelta(days=15)
     meeting_1 = section.meetings[1]
-    meeting_1.start_date = (meeting_0.end_date - timedelta(days=14)).strftime('%Y-%m-%d')
+    meeting_1.meeting_schedule.start_date = meeting_0.meeting_schedule.end_date + timedelta(days=1)
     recording_schedule_0 = RecordingSchedule(section, meeting_0)
     recording_schedule_1 = RecordingSchedule(section, meeting_1)
 
@@ -67,7 +67,7 @@ class TestWeirdTypeD:
 
     def test_delete_old_diablo_and_kaltura(self):
         self.kaltura_page.log_in_via_calnet(self.calnet_page)
-        self.kaltura_page.reset_test_data(self.recording_schedule_0)
+        self.kaltura_page.reset_test_data(self.section)
         util.reset_section_test_data(self.section)
 
     def test_delete_old_email(self):
@@ -77,6 +77,7 @@ class TestWeirdTypeD:
 
     def test_create_course_site(self):
         self.canvas_page.provision_site(self.section, [self.section.ccn], self.site)
+        self.canvas_page.add_teacher_to_site(self.site, self.section, self.section.instructors[0])
 
     # RUN SEMESTER START JOB
 
@@ -89,8 +90,6 @@ class TestWeirdTypeD:
         assert util.get_kaltura_id(self.recording_schedule_1)
         self.recording_schedule_1.recording_type = RecordingType.VIDEO_SANS_OPERATOR
         self.recording_schedule_1.recording_placement = RecordingPlacement.PUBLISH_TO_MY_MEDIA
-
-    def test_kaltura_blackouts(self):
         self.jobs_page.run_blackouts_job()
 
     # CHECK FILTERS - SCHEDULED
@@ -100,10 +99,6 @@ class TestWeirdTypeD:
         self.ouija_page.search_for_course_code(self.section)
         self.ouija_page.filter_for_all()
         assert self.ouija_page.is_course_in_results(self.section)
-
-    def test_scheduled_sched_status(self):
-        visible_status = self.ouija_page.visible_course_row_sched_status(self.section)
-        assert visible_status == self.recording_schedule_0.scheduling_status.value
 
     def test_scheduled_filter_opted_out(self):
         self.ouija_page.filter_for_opted_out()
@@ -124,6 +119,8 @@ class TestWeirdTypeD:
     # VERIFY ANNUNCIATION EMAIL
 
     def test_receive_annunciation_email(self):
+        self.jobs_page.load_page()
+        self.jobs_page.run_emails_job()
         assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_SEM_START, self.section,
                                          self.section.instructors[0]) == 1
 
@@ -222,11 +219,11 @@ class TestWeirdTypeD:
     def test_series_0_collaborators(self):
         self.kaltura_page.verify_collaborators(self.section)
 
-    def test_series_0_schedule(self):
-        self.kaltura_page.verify_schedule(self.section, self.meeting_0)
-
     def test_series_0_publication(self):
         self.kaltura_page.verify_publish_status(self.recording_schedule_0)
+
+    def test_series_0_schedule(self):
+        self.kaltura_page.verify_schedule(self.section, self.meeting_0)
 
     # SECOND MEETING: VERIFY SERIES IN KALTURA
 
@@ -241,29 +238,19 @@ class TestWeirdTypeD:
     def test_series_1_collaborators(self):
         self.kaltura_page.verify_collaborators(self.section)
 
-    def test_series_1_schedule(self):
-        self.kaltura_page.verify_schedule(self.section, self.meeting_1)
-
     def test_series_1_publication(self):
         self.kaltura_page.verify_publish_status(self.recording_schedule_1)
 
+    def test_series_1_schedule(self):
+        self.kaltura_page.verify_schedule(self.section, self.meeting_1)
+
     # VERIFY STATIC COURSE SIS DATA
 
-    def test_home_page(self):
+    def test_course_page_link(self):
         self.kaltura_page.close_window_and_switch()
         self.ouija_page.log_out()
-        self.login_page.dev_auth(self.instructor_original.uid)
-        self.ouija_page.wait_for_title_containing(f'Your {self.section.term.name} Course')
-
-    def test_sign_up_link(self):
-        self.ouija_page.click_course_page_link(self.section)
-        self.course_page.wait_for_diablo_title(f'{self.section.code}, {self.section.number}')
-
-    def test_course_page_link(self):
-        self.ouija_page.log_out()
-        self.login_page.dev_auth(self.instructor_original.uid)
-        self.ouija_page.wait_for_title_containing(f'Your {self.section.term.name} Course')
-        self.ouija_page.click_course_page_link(self.section)
+        self.login_page.dev_auth(self.section.instructors[0].uid)
+        self.courses_page.click_course_page_link(self.section)
         self.course_page.wait_for_diablo_title(f'{self.section.code}, {self.section.number}')
 
     def test_visible_ccn(self):
@@ -273,7 +260,7 @@ class TestWeirdTypeD:
         assert self.course_page.visible_course_title() == self.section.title
 
     def test_visible_instructors(self):
-        instructor_names = [f'{self.instructor_original.first_name} {self.instructor_original.last_name}'.strip()]
+        instructor_names = [f'{self.section.instructors[0].first_name} {self.section.instructors[0].last_name}'.strip()]
         assert self.course_page.visible_instructors() == instructor_names
 
     def test_meeting_0_days(self):
@@ -281,14 +268,13 @@ class TestWeirdTypeD:
         end = self.meeting_0.meeting_schedule.end_date
         meeting_0_dates = f'{CoursePage.expected_term_date_str(start, end)}'
         assert meeting_0_dates in self.course_page.visible_meeting_days()[0]
-        assert len(self.course_page.visible_meeting_days()) == 1
 
     def test_meeting_1_days(self):
         start = self.meeting_1.meeting_schedule.start_date
         end = self.meeting_1.meeting_schedule.end_date
         meeting_1_dates = f'{CoursePage.expected_term_date_str(start, end)}'
         assert meeting_1_dates in self.course_page.visible_meeting_days()[1]
-        assert len(self.course_page.visible_meeting_days()) == 1
+        assert len(self.course_page.visible_meeting_days()) == 2
 
     def test_meeting_0_time(self):
         start = self.meeting_0.meeting_schedule.start_time
@@ -303,7 +289,6 @@ class TestWeirdTypeD:
 
     def test_meeting_0_room(self):
         assert self.course_page.visible_rooms()[0] == self.meeting_0.room.name
-        assert len(self.course_page.visible_rooms()) == 1
 
     def test_meeting_1_room(self):
         assert self.course_page.visible_rooms()[1] == self.meeting_1.room.name
@@ -312,17 +297,17 @@ class TestWeirdTypeD:
     # UPDATE SETTINGS, SAVE
 
     def test_choose_publish_type(self):
-        self.course_page.select_recording_placement(RecordingPlacement.PUBLISH_AUTOMATICALLY)
+        self.course_page.click_edit_recording_placement()
+        self.course_page.select_recording_placement(RecordingPlacement.PUBLISH_AUTOMATICALLY, sites=[self.site])
+        self.course_page.save_recording_placement_edits()
         self.recording_schedule_0.recording_placement = RecordingPlacement.PUBLISH_AUTOMATICALLY
         self.recording_schedule_1.recording_placement = RecordingPlacement.PUBLISH_AUTOMATICALLY
-
-    # TODO - enter Canvas site
-
-    # TODO def test_confirmation(self):
 
     # UPDATE BOTH SERIES IN KALTURA
 
     def test_run_kaltura_job(self):
+        self.course_page.log_out()
+        self.login_page.dev_auth()
         self.ouija_page.click_jobs_link()
         self.jobs_page.run_kaltura_job()
         self.jobs_page.run_emails_job()

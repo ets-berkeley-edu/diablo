@@ -44,7 +44,7 @@ class TestCollaborators0:
 
     def test_setup(self):
         self.kaltura_page.log_in_via_calnet(self.calnet_page)
-        self.kaltura_page.reset_test_data(self.recording_schedule)
+        self.kaltura_page.reset_test_data(self.section)
         util.reset_section_test_data(self.section)
 
         self.login_page.load_page()
@@ -154,8 +154,7 @@ class TestCollaborators1:
 
     def test_setup(self):
         self.kaltura_page.log_in_via_calnet(self.calnet_page)
-        self.kaltura_page.reset_test_data(self.recording_schedule_0)
-        self.kaltura_page.reset_test_data(self.recording_schedule_1)
+        self.kaltura_page.reset_test_data(self.section)
         util.reset_section_test_data(self.section)
         util.delete_course_instructor_row(self.section, self.proxy)
 
@@ -265,7 +264,7 @@ class TestCollaborators2:
 
     def test_setup(self):
         self.kaltura_page.log_in_via_calnet(self.calnet_page)
-        self.kaltura_page.reset_test_data(self.recording_schedule)
+        self.kaltura_page.reset_test_data(self.section)
         util.reset_section_test_data(self.section)
 
         self.login_page.load_page()

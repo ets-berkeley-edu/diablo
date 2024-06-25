@@ -188,18 +188,17 @@ class KalturaPage(Page):
 
     # DELETION
 
-    def reset_test_data(self, recording_schedule):
-        old_schedule = util.get_kaltura_id(recording_schedule)
-        if old_schedule:
-            recording_schedule.series_id = old_schedule
-            app.logger.info(f'Deleting an existing Kaltura series id {recording_schedule.series_id}')
-            self.delete_series(recording_schedule)
+    def reset_test_data(self, section):
+        series_ids = util.get_kaltura_ids(section)
+        for series_id in series_ids:
+            app.logger.info(f'Deleting an existing Kaltura series {series_id}')
+            self.delete_series(series_id)
         else:
             app.logger.info('Cannot find any existing Kaltura series')
 
-    def delete_series(self, recording_schedule):
+    def delete_series(self, series_id):
         app.logger.info('Clicking the delete button')
-        self.load_event_edit_page(recording_schedule.series_id)
+        self.load_event_edit_page(series_id)
         self.wait_for_element(KalturaPage.SERIES_DELETE_BUTTON, util.get_medium_timeout())
         self.scroll_to_bottom()
         self.wait_for_page_and_click(KalturaPage.SERIES_DELETE_BUTTON, 3)

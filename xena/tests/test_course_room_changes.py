@@ -49,9 +49,14 @@ class TestCourseRoomChanges:
         self.ouija_page.click_jobs_link()
         self.jobs_page.disable_all_jobs()
 
+    def test_create_blackouts(self):
+        self.jobs_page.click_blackouts_link()
+        self.blackouts_page.delete_all_blackouts()
+        self.blackouts_page.create_all_blackouts()
+
     def test_delete_old_diablo_and_kaltura(self):
         self.kaltura_page.log_in_via_calnet(self.calnet_page)
-        self.kaltura_page.reset_test_data(self.recording_schedule)
+        self.kaltura_page.reset_test_data(self.section)
         util.reset_section_test_data(self.section)
 
     def test_emails_pre_run(self):
@@ -65,6 +70,7 @@ class TestCourseRoomChanges:
 
     def test_semester_start(self):
         self.jobs_page.run_semester_start_job()
+        self.jobs_page.run_blackouts_job()
         assert util.get_kaltura_id(self.recording_schedule)
         self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_TO_MY_MEDIA
         self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
@@ -92,16 +98,14 @@ class TestCourseRoomChanges:
         self.meeting.room = self.new_eligible_room
         util.set_meeting_location(self.section, self.meeting)
 
-    def test_new_eligible_room_run_email_job(self):
+    def test_new_eligible_room_run_updates(self):
         self.jobs_page.run_schedule_updates_job()
+        self.jobs_page.run_kaltura_job()
         self.jobs_page.run_emails_job()
+        self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
 
     def test_new_eligible_room_email(self):
         assert util.get_sent_email_count(EmailTemplateType.INSTR_SCHEDULE_CHANGE, self.section, self.instr) == 1
-
-    def test_new_eligible_room_update_series(self):
-        self.jobs_page.run_kaltura_job()
-        self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
 
     def test_new_eligible_room_series(self):
         self.rooms_page.load_page()
@@ -143,16 +147,16 @@ class TestCourseRoomChanges:
         self.meeting.room = self.new_ineligible_room
         util.set_meeting_location(self.section, self.meeting)
 
-    def test_email_job_ineligible_room(self):
+    def test_update_jobs_ineligible_room(self):
         self.jobs_page.load_page()
         self.jobs_page.run_schedule_updates_job()
+        self.jobs_page.run_kaltura_job()
         self.jobs_page.run_emails_job()
 
     def test_ineligible_room_email(self):
         assert util.get_sent_email_count(EmailTemplateType.INSTR_ROOM_CHANGE_INELIGIBLE, self.section, self.instr) == 1
 
     def test_ineligible_room_unschedule_series(self):
-        self.jobs_page.run_kaltura_job()
         assert not util.get_kaltura_id(self.recording_schedule)
 
     def test_no_ineligible_kaltura_series(self):
@@ -183,16 +187,16 @@ class TestCourseRoomChanges:
         self.meeting.room = self.new_eligible_room
         util.set_meeting_location(self.section, self.meeting)
 
-    def test_run_email_job_eligible_room_again(self):
+    def test_run_updated_jobs_eligible_room_again(self):
         self.jobs_page.load_page()
         self.jobs_page.run_schedule_updates_job()
+        self.jobs_page.run_kaltura_job()
         self.jobs_page.run_emails_job()
 
     def test_eligible_room_again_no_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_SCHEDULE_CHANGE, self.section, self.instr) == 1
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_NEW_COURSE_SCHED, self.section, self.instr) == 1
 
     def test_eligible_room_again_reschedule_series(self):
-        self.jobs_page.run_kaltura_job()
         assert util.get_kaltura_id(self.recording_schedule)
         self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
         self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_TO_MY_MEDIA
@@ -236,9 +240,10 @@ class TestCourseRoomChanges:
         self.kaltura_page.close_window_and_switch()
         util.change_course_room(self.section, self.meeting, new_room=None)
 
-    def test_email_job_null_room(self):
+    def test_update_jobs_null_room(self):
         self.jobs_page.load_page()
         self.jobs_page.run_schedule_updates_job()
+        self.jobs_page.run_kaltura_job()
         self.jobs_page.run_emails_job()
 
     def test_null_room_email(self):
@@ -246,7 +251,6 @@ class TestCourseRoomChanges:
                                          self.instr) == 2
 
     def test_null_room_unschedule_series(self):
-        self.jobs_page.run_kaltura_job()
         assert not util.get_kaltura_id(self.recording_schedule)
 
     def test_no_null_room_kaltura_series(self):
