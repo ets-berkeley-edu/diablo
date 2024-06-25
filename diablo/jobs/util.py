@@ -27,10 +27,13 @@ import re
 import traceback
 
 from diablo import db, std_commit
-from diablo.externals.kaltura import Kaltura
+from diablo.externals.kaltura import CREATED_BY_DIABLO_TAG, Kaltura
 from diablo.lib.berkeley import get_recording_end_date, get_recording_start_date
+from diablo.lib.kaltura_util import represents_recording_series
+from diablo.lib.util import localize_datetime, utc_now
 from diablo.merged.calnet import get_calnet_users_for_uids
 from diablo.merged.emailer import send_system_error_email
+from diablo.models.blackout import Blackout
 from diablo.models.course_preference import CoursePreference
 from diablo.models.cross_listing import CrossListing
 from diablo.models.instructor import Instructor
@@ -39,6 +42,7 @@ from diablo.models.room import Room
 from diablo.models.scheduled import Scheduled
 from diablo.models.sis_section import AUTHORIZED_INSTRUCTOR_ROLE_CODES, SisSection
 from flask import current_app as app
+from KalturaClient.Plugins.Schedule import KalturaScheduleEventRecurrenceType
 from sqlalchemy import text
 
 
@@ -182,6 +186,27 @@ def register_cross_listings(rows, term_id):
 
     std_commit()
     return cross_listings
+
+
+def remove_blackout_events():
+    kaltura = Kaltura()
+    for blackout in Blackout.all_blackouts():
+        if blackout.end_date < utc_now():
+            app.logger.info(f'Removing past blackout: {blackout}')
+            Blackout.delete_blackout(blackout.id)
+        else:
+            end_date = localize_datetime(blackout.end_date)
+            start_date = localize_datetime(blackout.start_date)
+            events = kaltura.get_events_in_date_range(
+                end_date=end_date,
+                recurrence_type=KalturaScheduleEventRecurrenceType.RECURRENCE,
+                start_date=start_date,
+            )
+            for event in events:
+                created_by_diablo = CREATED_BY_DIABLO_TAG in event['tags']
+                if created_by_diablo and not represents_recording_series(event):
+                    kaltura.delete(event['id'])
+                    app.logger.info(f"'Event {event['summary']} deleted per {blackout}.")
 
 
 def schedule_recordings(course, is_semester_start=False, updates=None):
