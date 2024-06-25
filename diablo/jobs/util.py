@@ -205,9 +205,10 @@ def schedule_recordings(course, is_semester_start=False, updates=None):
     all_scheduled = []
 
     for meeting in meetings:
-        room = Room.find_room(location=meeting.get('location'))
+        location = meeting.get('room', {}).get('location')
+        room = Room.find_room(location=location)
         if not room:
-            _report_error(subject=f"{course['label']} not scheduled. Room change: {room.location} to {meeting['location']}")
+            _report_error(subject=f"{course['label']} not scheduled. Room {meeting['location']} not found.")
             continue
 
         if not is_valid_meeting_schedule(meeting):
