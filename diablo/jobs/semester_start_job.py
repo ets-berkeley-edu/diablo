@@ -23,7 +23,7 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 from diablo.jobs.base_job import BaseJob
-from diablo.jobs.util import get_eligible_unscheduled_courses, schedule_recordings
+from diablo.jobs.util import get_eligible_unscheduled_courses, remove_blackout_events, schedule_recordings
 from diablo.models.email_template import EmailTemplate
 from diablo.models.queued_email import announce_semester_start
 from diablo.models.sis_section import AUTHORIZED_INSTRUCTOR_ROLE_CODES
@@ -47,6 +47,8 @@ class SemesterStartJob(BaseJob):
                 if instructor['uid'] not in courses_by_instructor_uid:
                     courses_by_instructor_uid[instructor['uid']] = {'instructor': instructor, 'courses': []}
                 courses_by_instructor_uid[instructor['uid']]['courses'].append(course)
+
+        remove_blackout_events()
 
         # Queue semester start emails
         for uid, instructor_courses in courses_by_instructor_uid.items():

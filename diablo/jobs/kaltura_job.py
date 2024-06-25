@@ -26,7 +26,7 @@ import traceback
 
 from diablo.externals.kaltura import Kaltura
 from diablo.jobs.base_job import BaseJob
-from diablo.jobs.util import get_eligible_unscheduled_courses, schedule_recordings
+from diablo.jobs.util import get_eligible_unscheduled_courses, remove_blackout_events, schedule_recordings
 from diablo.lib.berkeley import get_recording_end_date, get_recording_start_date, term_name_for_sis_id
 from diablo.lib.kaltura_util import get_series_description
 from diablo.merged.emailer import send_system_error_email
@@ -45,6 +45,7 @@ class KalturaJob(BaseJob):
     def _run(self):
         _schedule_new_courses()
         _update_already_scheduled_events()
+        remove_blackout_events()
 
     @classmethod
     def description(cls):
