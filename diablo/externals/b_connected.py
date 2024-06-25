@@ -126,10 +126,13 @@ class BConnected:
 
         return True
 
-    def ping(self):
-        with SMTP(self.bcop_smtp_server, port=self.bcop_smtp_port) as smtp:
-            smtp.noop()
-            return True
+    def ping(self, timeout):
+        with SMTP(self.bcop_smtp_server, port=self.bcop_smtp_port, timeout=timeout) as smtp:
+            try:
+                smtp.noop()
+                return True
+            except TimeoutError:
+                return False
 
     @classmethod
     def get_email_addresses(cls, user):

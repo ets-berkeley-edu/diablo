@@ -31,6 +31,7 @@ from diablo import skip_when_pytest
 from diablo.lib.berkeley import get_canvas_sis_term_id
 from diablo.lib.util import resolve_xml_template
 from flask import current_app as app
+import requests
 
 
 def get_account():
@@ -118,8 +119,14 @@ def get_teaching_courses(uid):
     return sorted(teaching_courses, key=_sort_key, reverse=True)
 
 
-def ping_canvas():
-    return get_account() is not None
+def ping_canvas(timeout):
+    url = f"{app.config['CANVAS_API_URL']}/accounts/{app.config['CANVAS_BERKELEY_ACCOUNT_ID']}"
+    headers = {'Authorization': f"Bearer {app.config['CANVAS_ACCESS_TOKEN']}"}
+    try:
+        response = requests.get(url, headers=headers, timeout=timeout)
+        return bool(response and response.status_code == 200)
+    except Exception:
+        return False
 
 
 def update_lti_configurations():
