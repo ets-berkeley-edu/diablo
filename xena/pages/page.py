@@ -252,8 +252,11 @@ class Page(object):
         self.driver.switch_to.window(windows[-1])
 
     def close_window_and_switch(self):
-        self.driver.close()
-        self.driver.switch_to.window(self.window_handles()[0])
+        if len(self.window_handles()) > 1:
+            self.driver.close()
+            self.driver.switch_to.window(self.window_handles()[0])
+        else:
+            app.logger.info('Only one window is open, not closing it')
 
     def external_link_valid(self, locator, expected_page_title):
         self.wait_for_element_and_click(locator)
@@ -271,5 +274,4 @@ class Page(object):
                     f'Expecting page title {expected_page_title}, but visible page title is {self.driver.title()}')
                 return False
         finally:
-            if len(self.window_handles()) > 1:
-                self.close_window_and_switch()
+            self.close_window_and_switch()

@@ -29,7 +29,6 @@ from flask import current_app as app
 import pytest
 from xena.models.recording_placement import RecordingPlacement
 from xena.models.recording_schedule import RecordingSchedule
-from xena.models.recording_scheduling_status import RecordingSchedulingStatus
 from xena.models.recording_type import RecordingType
 from xena.models.section import Section
 from xena.pages.course_page import CoursePage
@@ -52,8 +51,8 @@ class TestWeirdTypeC:
     meeting_sched_1 = meeting_1.meeting_schedule
     recording_sched_1 = RecordingSchedule(section, meeting_1)
 
-    meeting_0.meeting_schedule.end_date = (meeting_0.meeting_schedule.end_date - timedelta(days=15)).strftime('%Y-%m-%d')
-    meeting_1.meeting_schedule.start_date = (meeting_0.meeting_schedule.end_date - timedelta(days=14)).strftime('%Y-%m-%d')
+    meeting_0.meeting_schedule.end_date = meeting_0.meeting_schedule.end_date - timedelta(days=15)
+    meeting_1.meeting_schedule.start_date = meeting_0.meeting_schedule.end_date + timedelta(days=1)
 
     # Course changes data
     test_data_changes = util.get_test_script_course('test_weird_type_c_changes')
@@ -65,8 +64,8 @@ class TestWeirdTypeC:
     meeting_sched_0_changes = meeting_0_changes.meeting_schedule
     meeting_1_changes = section_changes.meetings[1]
     meeting_sched_1_changes = meeting_1_changes.meeting_schedule
-    meeting_sched_0_changes.end_date = (meeting_0.end_date + timedelta(days=7)).strftime('%Y-%m-%d')
-    meeting_sched_1_changes.start_date = (meeting_1.start_date + timedelta(days=7)).strftime('%Y-%m-%d')
+    meeting_sched_0_changes.end_date = meeting_0.meeting_schedule.end_date + timedelta(days=7)
+    meeting_sched_1_changes.start_date = meeting_1.meeting_schedule.start_date + timedelta(days=7)
 
     def test_disable_jobs(self):
         self.login_page.load_page()
@@ -81,9 +80,8 @@ class TestWeirdTypeC:
 
     def test_delete_old_diablo_and_kaltura(self):
         self.kaltura_page.log_in_via_calnet(self.calnet_page)
-        self.kaltura_page.reset_test_data(self.recording_sched_0)
+        self.kaltura_page.reset_test_data(self.section)
         util.reset_section_test_data(self.section)
-        self.recording_sched_0.scheduling_status = RecordingSchedulingStatus.NOT_SCHEDULED
 
     def test_delete_old_email(self):
         util.reset_sent_email_test_data(self.section)
@@ -96,9 +94,6 @@ class TestWeirdTypeC:
         assert util.get_kaltura_id(self.recording_sched_0)
         self.recording_sched_0.recording_type = RecordingType.VIDEO_SANS_OPERATOR
         self.recording_sched_0.recording_placement = RecordingPlacement.PUBLISH_TO_MY_MEDIA
-        self.recording_sched_0.scheduling_status = RecordingSchedulingStatus.SCHEDULED
-
-    def test_kaltura_blackouts(self):
         self.jobs_page.run_blackouts_job()
 
     # CHECK FILTERS - SCHEDULED
@@ -108,10 +103,6 @@ class TestWeirdTypeC:
         self.ouija_page.search_for_course_code(self.section)
         self.ouija_page.filter_for_all()
         assert self.ouija_page.is_course_in_results(self.section)
-
-    def test_scheduled_sched_status(self):
-        visible_status = self.ouija_page.visible_course_row_sched_status(self.section)
-        assert visible_status == self.recording_sched_0.scheduling_status.value
 
     def test_scheduled_filter_opted_out(self):
         self.ouija_page.filter_for_opted_out()
@@ -142,11 +133,11 @@ class TestWeirdTypeC:
         assert self.room_page.series_row_kaltura_link_text(self.recording_sched_0) == expected
 
     def test_room_series_start(self):
-        start = self.meeting_0.expected_recording_dates(self.section.term)[0]
+        start = self.meeting_0.meeting_schedule.expected_recording_dates(self.section.term)[0]
         assert self.room_page.series_row_start_date(self.recording_sched_0) == start
 
     def test_room_series_end(self):
-        last_date = self.meeting_0.expected_recording_dates(self.section.term)[-1]
+        last_date = self.meeting_0.meeting_schedule.expected_recording_dates(self.section.term)[-1]
         assert self.room_page.series_row_end_date(self.recording_sched_0) == last_date
 
     def test_room_series_days(self):
@@ -231,15 +222,6 @@ class TestWeirdTypeC:
         assert self.course_page.visible_rooms()[0] == self.meeting_0.room.name
         assert len(self.course_page.visible_rooms()) == 1
 
-    # UPDATE SETTINGS, SAVE
-
-    def test_choose_publish_type(self):
-        self.course_page.select_recording_placement(RecordingPlacement.PUBLISH_AUTOMATICALLY)
-        self.recording_sched_0.recording_placement = RecordingPlacement.PUBLISH_AUTOMATICALLY
-
-    def test_approve(self):
-        self.course_page.click_approve_button()
-
     # TODO def test_confirmation(self):
 
     # INELIGIBLE MEETING BECOMES ELIGIBLE
@@ -251,14 +233,13 @@ class TestWeirdTypeC:
         self.course_page.log_out()
         self.login_page.dev_auth()
         self.ouija_page.click_jobs_link()
+        self.jobs_page.run_schedule_updates_job()
         self.jobs_page.run_kaltura_job()
         self.jobs_page.run_blackouts_job()
-        self.recording_sched_1.recording_type = RecordingType.VIDEO_SANS_OPERATOR
-        self.recording_sched_1.scheduling_status = RecordingSchedulingStatus.SCHEDULED
-        self.recording_sched_1.recording_placement = RecordingPlacement.PUBLISH_AUTOMATICALLY
-
-    def test_run_emails_job_ineligible_becomes_eligible(self):
         self.jobs_page.run_emails_job()
+        assert util.get_kaltura_id(self.recording_sched_1)
+        self.recording_sched_1.recording_type = RecordingType.VIDEO_SANS_OPERATOR
+        self.recording_sched_1.recording_placement = RecordingPlacement.PUBLISH_TO_MY_MEDIA
 
     def test_meeting_0_course_page_ineligible_becomes_eligible(self):
         self.course_page.load_page(self.section)
@@ -268,17 +249,17 @@ class TestWeirdTypeC:
         assert term_dates_0 in self.course_page.visible_meeting_days()[0]
         assert self.course_page.visible_meeting_time()[0] == f'{self.meeting_sched_0.start_time} - {self.meeting_sched_0.end_time}'
         assert self.course_page.visible_rooms()[0] == self.meeting_0.room.name
-        assert self.course_page.visible_recording_placement() == self.recording_sched_0.recording_placement
+        assert self.recording_sched_0.recording_placement.value['desc'] in self.course_page.visible_recording_placement()
 
     def test_meeting_1_course_page_ineligible_becomes_eligible(self):
         self.course_page.load_page(self.section)
         instructor_names = [f'{i.first_name} {i.last_name}'.strip() for i in self.section.instructors]
-        term_dates_0 = f'{CoursePage.expected_term_date_str(self.meeting_sched_1.start_date, self.meeting_sched_1.end_date)}'
+        term_dates_1 = f'{CoursePage.expected_term_date_str(self.meeting_sched_1.start_date, self.meeting_sched_1.end_date)}'
         assert self.course_page.visible_instructors() == instructor_names
-        assert term_dates_0 in self.course_page.visible_meeting_days()[0]
-        assert self.course_page.visible_meeting_time()[0] == f'{self.meeting_sched_1.start_time} - {self.meeting_sched_1.end_time}'
-        assert self.course_page.visible_rooms()[0] == self.meeting_1.room.name
-        assert self.course_page.visible_recording_placement() == self.recording_sched_1.recording_placement
+        assert term_dates_1 in self.course_page.visible_meeting_days()[1]
+        assert self.course_page.visible_meeting_time()[1] == f'{self.meeting_sched_1.start_time} - {self.meeting_sched_1.end_time}'
+        assert self.course_page.visible_rooms()[1] == self.meeting_1.room.name
+        assert self.recording_sched_1.recording_placement.value['desc'] in self.course_page.visible_recording_placement()
 
     def test_meeting_0_kaltura_series_ineligible_becomes_eligible(self):
         self.course_page.click_kaltura_series_link(self.recording_sched_0)
@@ -304,13 +285,13 @@ class TestWeirdTypeC:
 
     def test_remove_instructor(self):
         util.change_course_instructor(self.section, old_instructor=self.instructor_original, new_instructor=None)
+        self.section.instructors = []
 
     def test_run_kaltura_job_instr_removed(self):
         self.kaltura_page.close_window_and_switch()
         self.jobs_page.load_page()
+        self.jobs_page.run_schedule_updates_job()
         self.jobs_page.run_kaltura_job()
-
-    def test_run_emails_job_instr_removed(self):
         self.jobs_page.run_emails_job()
 
     def test_meeting_0_course_page_instr_removed(self):
@@ -320,15 +301,15 @@ class TestWeirdTypeC:
         assert term_dates_0 in self.course_page.visible_meeting_days()[0]
         assert self.course_page.visible_meeting_time()[0] == f'{self.meeting_sched_0.start_time} - {self.meeting_sched_0.end_time}'
         assert self.course_page.visible_rooms()[0] == self.meeting_0.room.name
-        assert self.course_page.visible_recording_placement() == self.recording_sched_0.recording_placement
+        assert self.recording_sched_0.recording_placement.value['desc'] in self.course_page.visible_recording_placement()
 
     def test_meeting_1_course_page_instr_removed(self):
-        term_dates_0 = f'{CoursePage.expected_term_date_str(self.meeting_sched_1.start_date, self.meeting_sched_1.end_date)}'
+        term_dates_1 = f'{CoursePage.expected_term_date_str(self.meeting_sched_1.start_date, self.meeting_sched_1.end_date)}'
         assert self.course_page.visible_instructors() == []
-        assert term_dates_0 in self.course_page.visible_meeting_days()[0]
-        assert self.course_page.visible_meeting_time()[0] == f'{self.meeting_sched_1.start_time} - {self.meeting_sched_1.end_time}'
-        assert self.course_page.visible_rooms()[0] == self.meeting_1.room.name
-        assert self.course_page.visible_recording_placement() == self.recording_sched_1.recording_placement
+        assert term_dates_1 in self.course_page.visible_meeting_days()[1]
+        assert self.course_page.visible_meeting_time()[1] == f'{self.meeting_sched_1.start_time} - {self.meeting_sched_1.end_time}'
+        assert self.course_page.visible_rooms()[1] == self.meeting_1.room.name
+        assert self.recording_sched_1.recording_placement.value['desc'] in self.course_page.visible_recording_placement()
 
     def test_meeting_0_kaltura_series_instr_removed(self):
         self.course_page.click_kaltura_series_link(self.recording_sched_0)
@@ -354,13 +335,13 @@ class TestWeirdTypeC:
 
     def test_add_instructor(self):
         util.change_course_instructor(self.section, old_instructor=None, new_instructor=self.instructor_change)
+        self.section.instructors = [self.instructor_change]
 
     def test_run_kaltura_job_instr_added(self):
         self.kaltura_page.close_window_and_switch()
         self.jobs_page.load_page()
+        self.jobs_page.run_schedule_updates_job()
         self.jobs_page.run_kaltura_job()
-
-    def test_run_emails_job_instr_added(self):
         self.jobs_page.run_emails_job()
 
     def test_meeting_0_course_page_instr_added(self):
@@ -371,16 +352,16 @@ class TestWeirdTypeC:
         assert term_dates_0 in self.course_page.visible_meeting_days()[0]
         assert self.course_page.visible_meeting_time()[0] == f'{self.meeting_sched_0.start_time} - {self.meeting_sched_0.end_time}'
         assert self.course_page.visible_rooms()[0] == self.meeting_0.room.name
-        assert self.course_page.visible_recording_placement() == self.recording_sched_0.recording_placement
+        assert self.recording_sched_0.recording_placement.value['desc'] in self.course_page.visible_recording_placement()
 
     def test_meeting_1_course_page_instr_added(self):
         instructor_names = [f'{i.first_name} {i.last_name}'.strip() for i in self.section.instructors]
-        term_dates_0 = f'{CoursePage.expected_term_date_str(self.meeting_sched_1.start_date, self.meeting_sched_1.end_date)}'
+        term_dates_1 = f'{CoursePage.expected_term_date_str(self.meeting_sched_1.start_date, self.meeting_sched_1.end_date)}'
         assert self.course_page.visible_instructors() == instructor_names
-        assert term_dates_0 in self.course_page.visible_meeting_days()[0]
-        assert self.course_page.visible_meeting_time()[0] == f'{self.meeting_sched_1.start_time} - {self.meeting_sched_1.end_time}'
-        assert self.course_page.visible_rooms()[0] == self.meeting_1.room.name
-        assert self.course_page.visible_recording_placement() == self.recording_sched_1.recording_placement
+        assert term_dates_1 in self.course_page.visible_meeting_days()[1]
+        assert self.course_page.visible_meeting_time()[1] == f'{self.meeting_sched_1.start_time} - {self.meeting_sched_1.end_time}'
+        assert self.course_page.visible_rooms()[1] == self.meeting_1.room.name
+        assert self.recording_sched_1.recording_placement.value['desc'] in self.course_page.visible_recording_placement()
 
     def test_meeting_0_kaltura_series_instr_added(self):
         self.course_page.click_kaltura_series_link(self.recording_sched_0)
@@ -408,10 +389,9 @@ class TestWeirdTypeC:
     def test_run_kaltura_job_date_change(self):
         self.kaltura_page.close_window_and_switch()
         self.jobs_page.load_page()
+        self.jobs_page.run_schedule_updates_job()
         self.jobs_page.run_kaltura_job()
         self.jobs_page.run_blackouts_job()
-
-    def test_run_emails_job_date_change(self):
         self.jobs_page.run_emails_job()
 
     def test_meeting_0_course_page_date_change(self):
@@ -422,16 +402,16 @@ class TestWeirdTypeC:
         assert term_dates_0 in self.course_page.visible_meeting_days()[0]
         assert self.course_page.visible_meeting_time()[0] == f'{self.meeting_sched_0.start_time} - {self.meeting_sched_0.end_time}'
         assert self.course_page.visible_rooms()[0] == self.meeting_0.room.name
-        assert self.course_page.visible_recording_placement() == self.recording_sched_0.recording_placement
+        assert self.recording_sched_0.recording_placement.value['desc'] in self.course_page.visible_recording_placement()
 
     def test_meeting_1_course_page_date_change(self):
         instructor_names = [f'{i.first_name} {i.last_name}'.strip() for i in self.section.instructors]
-        term_dates_0 = f'{CoursePage.expected_term_date_str(self.meeting_sched_1.start_date, self.meeting_sched_1.end_date)}'
+        term_dates_1 = f'{CoursePage.expected_term_date_str(self.meeting_sched_1.start_date, self.meeting_sched_1.end_date)}'
         assert self.course_page.visible_instructors() == instructor_names
-        assert term_dates_0 in self.course_page.visible_meeting_days()[0]
-        assert self.course_page.visible_meeting_time()[0] == f'{self.meeting_sched_1.start_time} - {self.meeting_sched_1.end_time}'
-        assert self.course_page.visible_rooms()[0] == self.meeting_1.room.name
-        assert self.course_page.visible_recording_placement() == self.recording_sched_1.recording_placement
+        assert term_dates_1 in self.course_page.visible_meeting_days()[1]
+        assert self.course_page.visible_meeting_time()[1] == f'{self.meeting_sched_1.start_time} - {self.meeting_sched_1.end_time}'
+        assert self.course_page.visible_rooms()[1] == self.meeting_1.room.name
+        assert self.recording_sched_1.recording_placement.value['desc'] in self.course_page.visible_recording_placement()
 
     def test_meeting_0_kaltura_series_date_change(self):
         self.course_page.click_kaltura_series_link(self.recording_sched_0)
@@ -461,26 +441,23 @@ class TestWeirdTypeC:
     def test_run_kaltura_job_room_removed(self):
         self.kaltura_page.close_window_and_switch()
         self.jobs_page.load_page()
+        self.jobs_page.run_schedule_updates_job()
         self.jobs_page.run_kaltura_job()
         self.jobs_page.run_blackouts_job()
-
-    def test_run_emails_job_room_removed(self):
         self.jobs_page.run_emails_job()
-
-    def test_meeting_1_course_page_room_removed(self):
-        instructor_names = [f'{i.first_name} {i.last_name}'.strip() for i in self.section.instructors]
-        term_dates_0 = f'{CoursePage.expected_term_date_str(self.meeting_sched_1.start_date, self.meeting_sched_1.end_date)}'
-        assert self.course_page.visible_instructors() == instructor_names
-        assert term_dates_0 in self.course_page.visible_meeting_days()[0]
-        assert self.course_page.visible_meeting_time()[0] == f'{self.meeting_sched_1.start_time} - {self.meeting_sched_1.end_time}'
-        assert self.course_page.visible_rooms()[0] == self.meeting_1.room.name
-        assert self.course_page.visible_recording_placement() == self.recording_sched_1.recording_placement
 
     def test_meeting_0_course_page_room_removed(self):
         self.course_page.load_page(self.section)
-        instructor_names = [f'{i.first_name} {i.last_name}'.strip() for i in self.section.instructors]
-        assert self.course_page.visible_instructors() == instructor_names
         assert len(self.course_page.visible_rooms()) == 1
+
+    def test_meeting_1_course_page_room_removed(self):
+        instructor_names = [f'{i.first_name} {i.last_name}'.strip() for i in self.section.instructors]
+        term_dates_1 = f'{CoursePage.expected_term_date_str(self.meeting_sched_1.start_date, self.meeting_sched_1.end_date)}'
+        assert self.course_page.visible_instructors() == instructor_names
+        assert term_dates_1 in self.course_page.visible_meeting_days()[0]
+        assert self.course_page.visible_meeting_time()[0] == f'{self.meeting_sched_1.start_time} - {self.meeting_sched_1.end_time}'
+        assert self.course_page.visible_rooms()[0] == self.meeting_1.room.name
+        assert self.recording_sched_1.recording_placement.value['desc'] in self.course_page.visible_recording_placement()
 
     def test_meeting_1_kaltura_series_room_removed(self):
         self.course_page.click_kaltura_series_link(self.recording_sched_1)

@@ -69,7 +69,7 @@ class TestScheduling2:
 
     def test_delete_old_diablo_and_kaltura(self):
         self.kaltura_page.log_in_via_calnet(self.calnet_page)
-        self.kaltura_page.reset_test_data(self.recording_schedule)
+        self.kaltura_page.reset_test_data(self.section)
         util.reset_section_test_data(self.section)
 
     def test_delete_old_email(self):

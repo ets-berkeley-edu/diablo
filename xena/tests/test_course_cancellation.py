@@ -52,7 +52,7 @@ class TestCourseCancellation:
 
     def test_delete_old_diablo_and_kaltura(self):
         self.kaltura_page.log_in_via_calnet(self.calnet_page)
-        self.kaltura_page.reset_test_data(self.recording_schedule)
+        self.kaltura_page.reset_test_data(self.section)
         util.reset_section_test_data(self.section)
 
     def test_emails_pre_run(self):
@@ -115,9 +115,6 @@ class TestCourseCancellation:
         assert util.get_kaltura_id(self.recording_schedule)
         self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
         self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_TO_MY_MEDIA
-
-    def test_kaltura_blackouts(self):
-        self.jobs_page.run_blackouts_job()
 
     # COURSE CANCELED AGAIN
 

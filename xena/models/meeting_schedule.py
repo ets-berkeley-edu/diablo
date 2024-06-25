@@ -39,10 +39,10 @@ class MeetingSchedule(object):
     @property
     def start_date(self):
         try:
-            date_str = self.data['start_date']
+            return self.data['start_date']
         except KeyError:
             date_str = app.config['CURRENT_TERM_BEGIN']
-        return datetime.strptime(date_str, '%Y-%m-%d')
+            return datetime.strptime(date_str, '%Y-%m-%d')
 
     @start_date.setter
     def start_date(self, value):
@@ -56,18 +56,18 @@ class MeetingSchedule(object):
 
         term_record_start_date = datetime.strptime(term_record_start_str, '%Y-%m-%d')
         meeting_start_date = datetime.strptime(meeting_start_str, '%Y-%m-%d')
-        now = datetime.now()
+        today = datetime.today()
 
         start_date = meeting_start_date if meeting_start_date > term_record_start_date else term_record_start_date
-        return start_date if start_date > now else now
+        return start_date if start_date > today else today
 
     @property
     def end_date(self):
         try:
-            date_str = self.data['end_date']
+            return self.data['end_date']
         except KeyError:
             date_str = app.config['CURRENT_TERM_END']
-        return datetime.strptime(date_str, '%Y-%m-%d')
+            return datetime.strptime(date_str, '%Y-%m-%d')
 
     @end_date.setter
     def end_date(self, value):
@@ -112,11 +112,11 @@ class MeetingSchedule(object):
     def get_berkeley_end_time(self):
         return self.add_minutes(self.end_time, 2)
 
-    def __weekday_indices(self, term):
+    def __weekday_indices(self):
         weekdays = ['MO', 'TU', 'WE', 'TH', 'FR']
         weekday_indices = []
         for day in weekdays:
-            if day in self.days:
+            if self.days and day in self.days:
                 weekday_indices.append(weekdays.index(day))
         return weekday_indices
 
@@ -130,14 +130,10 @@ class MeetingSchedule(object):
         return holidays
 
     def expected_recording_dates(self, term):
-        weekday_indices = self.__weekday_indices(term)
+        weekday_indices = self.__weekday_indices()
         holidays = self.__holidays()
 
-        # Don't expect a recording for today if it's past the start time when you schedule it
-        start_time = datetime.strptime(f'{self.record_start.date()} {self.start_time}', '%Y-%m-%d %I:%M %p')
-        now_time = datetime.now()
-        start = self.record_start.date() if now_time < start_time else (self.record_start.date() + timedelta(days=1))
-
+        start = self.record_start.date()
         end = term.last_record_date.date() if self.end_date > term.last_record_date else self.end_date.date()
         delta = end - start
 
@@ -149,7 +145,7 @@ class MeetingSchedule(object):
         return recording_dates
 
     def expected_blackout_dates(self, term):
-        weekday_indices = self.__weekday_indices(term)
+        weekday_indices = self.__weekday_indices()
         holidays = self.__holidays()
 
         today = date.today()

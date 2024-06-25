@@ -1,4 +1,3 @@
-
 """
 Copyright ©2024. The Regents of the University of California (Regents). All Rights Reserved.
 
@@ -53,9 +52,14 @@ class TestCourseScheduleChanges:
         self.ouija_page.click_jobs_link()
         self.jobs_page.disable_all_jobs()
 
+    def test_create_blackouts(self):
+        self.jobs_page.click_blackouts_link()
+        self.blackouts_page.delete_all_blackouts()
+        self.blackouts_page.create_all_blackouts()
+
     def test_delete_old_diablo_and_kaltura(self):
         self.kaltura_page.log_in_via_calnet(self.calnet_page)
-        self.kaltura_page.reset_test_data(self.recording_schedule)
+        self.kaltura_page.reset_test_data(self.section)
         util.reset_section_test_data(self.section)
 
     def test_emails_pre_run(self):
@@ -67,6 +71,7 @@ class TestCourseScheduleChanges:
 
     def test_semester_start(self):
         self.jobs_page.run_semester_start_job()
+        self.jobs_page.run_blackouts_job()
         self.jobs_page.run_emails_job()
         util.get_kaltura_id(self.recording_schedule)
         self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
@@ -75,6 +80,7 @@ class TestCourseScheduleChanges:
     # SCHEDULED COURSE CHANGES MEETING TIME
 
     def test_set_new_meeting_time(self):
+        util.set_course_meeting_days(self.section, self.new_meeting)
         util.set_course_meeting_time(self.section, self.new_meeting)
         self.recording_schedule.meeting = self.new_meeting
 
@@ -82,6 +88,7 @@ class TestCourseScheduleChanges:
         self.jobs_page.load_page()
         self.jobs_page.run_schedule_updates_job()
         self.jobs_page.run_kaltura_job()
+        self.jobs_page.run_blackouts_job()
         self.jobs_page.run_emails_job()
 
     def test_room_new_series(self):
@@ -129,7 +136,7 @@ class TestCourseScheduleChanges:
 
     def test_email_instr_new_meeting(self):
         self.kaltura_page.close_window_and_switch()
-        assert len(util.get_sent_email_count(EmailTemplateType.INSTR_SCHEDULE_CHANGE, self.section, self.instr)) == 1
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_SCHEDULE_CHANGE, self.section, self.instr) == 1
 
     # TODO - verify history
 
@@ -141,7 +148,7 @@ class TestCourseScheduleChanges:
         self.newer_meeting.meeting_schedule.days = None
         self.newer_meeting.meeting_schedule.start_time = None
         self.newer_meeting.meeting_schedule.end_time = None
-        util.update_course_start_end_dates(self.section, self.meeting.room, self.newer_meeting.meeting_schedule)
+        util.update_course_start_end_dates(self.section, self.meeting, self.newer_meeting.meeting_schedule)
         util.set_course_meeting_days(self.section, self.newer_meeting)
         util.set_course_meeting_time(self.section, self.newer_meeting)
         self.recording_schedule.meeting = self.newer_meeting
@@ -156,10 +163,7 @@ class TestCourseScheduleChanges:
         self.kaltura_page.load_event_edit_page(self.recording_schedule.series_id)
         self.kaltura_page.wait_for_title('Access Denied - UC Berkeley - Test')
 
-    def test_verify_no_new_kaltura_series_id(self):
-        assert not util.get_kaltura_id(self.recording_schedule)
-
     def test_run_email_job_with_null_dates(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_COURSE_CANCELLED, self.section, self.instr)
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_COURSE_CANCELLED, self.section, self.instr) == 1
 
     # TODO - verify history

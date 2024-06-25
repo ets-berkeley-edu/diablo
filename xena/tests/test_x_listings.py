@@ -28,7 +28,6 @@ from xena.models.canvas_site import CanvasSite
 from xena.models.email_template_type import EmailTemplateType
 from xena.models.recording_placement import RecordingPlacement
 from xena.models.recording_schedule import RecordingSchedule
-from xena.models.recording_scheduling_status import RecordingSchedulingStatus
 from xena.models.recording_type import RecordingType
 from xena.test_utils import util
 
@@ -64,7 +63,8 @@ class TestCrossListings:
 
     def test_delete_old_diablo_and_kaltura(self):
         self.kaltura_page.log_in_via_calnet(self.calnet_page)
-        self.kaltura_page.reset_test_data(self.recording_schedule)
+        self.kaltura_page.reset_test_data(self.section)
+        self.kaltura_page.reset_test_data(self.x_listed_section)
 
     # TODO - delete old course sites?
 
@@ -72,7 +72,6 @@ class TestCrossListings:
         util.reset_section_test_data(self.section)
         util.delete_sis_sections_rows(self.x_listed_section)
         util.add_sis_sections_rows(self.x_listed_section)
-        self.recording_schedule.scheduling_status = RecordingSchedulingStatus.NOT_SCHEDULED
 
     def test_delete_old_email(self):
         util.reset_sent_email_test_data(self.section)
@@ -97,7 +96,6 @@ class TestCrossListings:
         util.get_kaltura_id(self.recording_schedule)
         self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
         self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_TO_MY_MEDIA
-        self.recording_schedule.scheduling_status = RecordingSchedulingStatus.SCHEDULED
 
     def test_kaltura_blackouts(self):
         self.jobs_page.run_blackouts_job()

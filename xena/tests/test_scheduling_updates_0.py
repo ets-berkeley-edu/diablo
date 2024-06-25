@@ -64,7 +64,7 @@ class TestScheduling0:
 
     def test_delete_old_diablo_and_kaltura(self):
         self.kaltura_page.log_in_via_calnet(self.calnet_page)
-        self.kaltura_page.reset_test_data(self.recording_schedule)
+        self.kaltura_page.reset_test_data(self.section)
         util.reset_section_test_data(self.section)
 
     def test_delete_old_email(self):
@@ -121,12 +121,10 @@ class TestScheduling0:
     def test_semester_start(self):
         self.jobs_page.load_page()
         self.jobs_page.run_semester_start_job()
+        self.jobs_page.run_blackouts_job()
         assert util.get_kaltura_id(self.recording_schedule)
         self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
         self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_TO_MY_MEDIA
-
-    def test_kaltura_blackouts(self):
-        self.jobs_page.run_blackouts_job()
 
     # CHECK FILTERS - SCHEDULED
 
@@ -279,8 +277,14 @@ class TestScheduling0:
 
     # SELECT OPTIONS, SAVE
 
-    def test_choose_rec_type(self):
+    def test_choose_rec_placement(self):
         self.course_page.cancel_recording_placement_edits()
+        self.course_page.click_edit_recording_placement()
+        self.course_page.select_recording_placement(RecordingPlacement.PUBLISH_TO_PENDING, sites=[self.site])
+        self.course_page.save_recording_placement_edits()
+        self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_TO_PENDING
+
+    def test_choose_rec_type(self):
         self.course_page.click_rec_type_edit_button()
         self.course_page.select_rec_type(RecordingType.VIDEO_WITH_OPERATOR)
         self.course_page.save_recording_type_edits()
@@ -288,12 +292,6 @@ class TestScheduling0:
 
     def test_rec_type_operator_no_going_back(self):
         assert not self.course_page.is_present(self.course_page.RECORDING_TYPE_EDIT_BUTTON)
-
-    def test_choose_rec_placement(self):
-        self.course_page.click_edit_recording_placement()
-        self.course_page.select_recording_placement(RecordingPlacement.PUBLISH_TO_PENDING, sites=[self.site])
-        self.course_page.save_recording_placement_edits()
-        self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_TO_PENDING
 
     def test_visible_site_ids_updated(self):
         assert self.course_page.visible_course_site_ids() == [self.site.site_id]

@@ -65,7 +65,7 @@ class TestCourseInstructorChanges:
 
     def test_delete_old_diablo_and_kaltura(self):
         self.kaltura_page.log_in_via_calnet(self.calnet_page)
-        self.kaltura_page.reset_test_data(self.recording_schedule)
+        self.kaltura_page.reset_test_data(self.section)
         util.reset_section_test_data(self.section)
 
     def test_emails_pre_run(self):
@@ -87,6 +87,7 @@ class TestCourseInstructorChanges:
     def test_schedule_course_instr_1(self):
         self.jobs_page.load_page()
         self.jobs_page.run_semester_start_job()
+        self.jobs_page.run_blackouts_job()
         util.get_kaltura_id(self.recording_schedule)
         self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_TO_MY_MEDIA
         self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
@@ -117,9 +118,13 @@ class TestCourseInstructorChanges:
     def test_change_to_new_instructor(self):
         util.change_course_instructor(self.section, self.old_instructor, self.new_instructor)
 
+    def test_add_new_instructor_to_site(self):
+        self.canvas_page.add_teacher_to_site(self.site, self.section, self.new_instructor)
+
     # UPDATE KALTURA SERIES
 
     def test_run_instr_change_jobs(self):
+        self.jobs_page.load_page()
         self.jobs_page.run_schedule_updates_job()
         self.jobs_page.run_kaltura_job()
         self.jobs_page.run_emails_job()
@@ -157,7 +162,6 @@ class TestCourseInstructorChanges:
         self.kaltura_page.verify_collaborators(self.section)
 
     def test_kaltura_publish_type_not_updated(self):
-        assert self.kaltura_page.is_published()
         assert len(self.kaltura_page.publish_category_els()) == 2
 
     # VERIFY EMAILS

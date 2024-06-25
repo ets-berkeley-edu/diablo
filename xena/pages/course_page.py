@@ -75,8 +75,8 @@ class CoursePage(DiabloPages):
     INSTRUCTORS = (By.ID, 'instructors')
     INSTRUCTOR = (By.XPATH, '//div[@id="instructors"]//*[contains(@id, "instructor-") and not(contains(@id, "proxy"))]')
     PROXY = (By.XPATH, '//div[@id="instructors"]//span[contains(@id, "instructor-proxy-")]')
-    MEETING_DAYS = (By.XPATH, '//*[contains(@id, "meeting-days-")]')
-    MEETING_TIMES = (By.XPATH, '//*[contains(@id, "meeting-times-")]')
+    MEETING_DAYS = (By.XPATH, '//div[contains(@id, "meeting-days-")]')
+    MEETING_TIMES = (By.XPATH, '//div[contains(@id, "meeting-times-")]')
     ROOMS = (By.XPATH, '//*[contains(@id, "rooms-")]')
     CROSS_LISTING = (By.XPATH, '//div[contains(@id, "cross-listing-")]')
 
@@ -261,10 +261,15 @@ class CoursePage(DiabloPages):
 
     PLACEMENT_SITE_SELECT = By.ID, 'select-canvas-site'
     PLACEMENT_SITE_LINK = By.XPATH, '//a[contains(@id, "canvas-course-site-")]'
+    PLACEMENT_SITE_ADD_BUTTON = By.ID, 'btn-canvas-site-add'
 
     @staticmethod
     def placement_site_option_loc(site):
-        return By.ID, f'menu-option-canvas-site-{site.site_id}'
+        return By.XPATH, f'//span[@id="menu-option-canvas-site-{site.site_id}"]/..'
+
+    @staticmethod
+    def placement_site_remove_button_loc(site):
+        return By.ID, f'btn-canvas-site-remove-{site.site_id}'
 
     @staticmethod
     def selected_placement_site_loc(site):
@@ -294,12 +299,14 @@ class CoursePage(DiabloPages):
                 for site in sites:
                     self.wait_for_element_and_click(self.PLACEMENT_SITE_SELECT)
                     self.wait_for_element_and_click(self.placement_site_option_loc(site))
+                    self.wait_for_element_and_click(self.PLACEMENT_SITE_ADD_BUTTON)
         else:
             self.wait_for_page_and_click_js(self.PLACEMENT_AUTOMATIC_RADIO)
             if sites:
                 for site in sites:
                     self.wait_for_element_and_click(self.PLACEMENT_SITE_SELECT)
                     self.wait_for_element_and_click(self.placement_site_option_loc(site))
+                    self.wait_for_element_and_click(self.PLACEMENT_SITE_ADD_BUTTON)
 
     def save_recording_placement_edits(self):
         self.wait_for_element_and_click(self.PLACEMENT_SAVE_BUTTON)

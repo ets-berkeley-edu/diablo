@@ -31,7 +31,6 @@ import dateutil.parser
 from diablo import db, std_commit
 from flask import current_app as app
 from sqlalchemy import text
-from xena.models.recording_scheduling_status import RecordingSchedulingStatus
 from xena.models.section import Section
 from xena.models.term import Term
 from xena.models.user import User
@@ -103,6 +102,23 @@ def get_test_script_course(test_script_str):
             return course
 
 
+def get_kaltura_ids(section):
+    sql = f"""SELECT kaltura_schedule_id
+                FROM scheduled
+               WHERE scheduled.term_id = {section.term.id}
+                 AND scheduled.section_id = {section.ccn}
+                 AND scheduled.deleted_at IS NULL
+    """
+    ids = []
+    app.logger.info(f'Checking for all Kaltura IDs for term {section.term.id} section {section.ccn}')
+    app.logger.info(sql)
+    result = db.session.execute(text(sql))
+    std_commit(allow_test_environment=True)
+    for row in result:
+        ids.append(dict(row).get('kaltura_schedule_id'))
+    return ids
+
+
 def get_kaltura_id(recording_schedule):
     section = recording_schedule.section
     meeting = recording_schedule.meeting
@@ -133,7 +149,6 @@ def get_kaltura_id(recording_schedule):
         kaltura_id = ids[0]
         app.logger.info(f'ID is {kaltura_id}')
         recording_schedule.series_id = kaltura_id
-        recording_schedule.scheduling_status = RecordingSchedulingStatus.SCHEDULED
         return kaltura_id
     else:
         return None
@@ -504,7 +519,7 @@ def set_meeting_location(section, meeting):
 
 
 def change_course_room(section, meeting, new_room=None):
-    if meeting.room:
+    if meeting.room and meeting.room.name:
         old_name = meeting.room.name.replace("'", "''")
         old = f"= '{old_name}'"
     else:
@@ -550,8 +565,9 @@ def update_course_start_end_dates(section, meeting, new_schedule):
 
 def set_course_meeting_days(section, meeting):
     schedule = meeting.meeting_schedule
+    days = schedule.days.replace(',', '').replace(' ', '') if schedule.days else None
     sql = f"""UPDATE sis_sections
-                 SET meeting_days = {"'" + schedule.days + "'" if schedule.days else "NULL"}
+                 SET meeting_days = {"'" + days + "'" if days else "NULL"}
                WHERE section_id = {section.ccn}
                  AND term_id = {section.term.id}
     """
@@ -598,12 +614,6 @@ def change_course_instructor(section, old_instructor=None, new_instructor=None):
     app.logger.info(sql)
     db.session.execute(text(sql))
     std_commit(allow_test_environment=True)
-    if old_instructor and old_instructor in section.instructors:
-        app.logger.info(f'Removing old instructor {vars(old_instructor)}')
-        section.instructors.remove(old_instructor)
-    if new_instructor and new_instructor not in section.instructors:
-        app.logger.info(f'Adding new instructor {vars(new_instructor)}')
-        section.instructors.append(new_instructor)
 
 
 def delete_course_instructor_row(section, instructor):
