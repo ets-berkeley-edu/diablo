@@ -253,7 +253,7 @@ def _handle_instructor_updates(
         )
 
 
-def _handle_meeting_added(meeting_added, course, updated_publish_type, updated_recording_type, updated_collaborator_uids):
+def _handle_meeting_added(course, meeting_added, updated_publish_type, updated_recording_type, updated_collaborator_uids):
     meeting = meeting_added.deserialize('field_value_new')
     updates = {
         'publishType': updated_publish_type or course['scheduled'][0]['publishType'],
