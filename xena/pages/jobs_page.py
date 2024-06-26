@@ -119,6 +119,19 @@ class JobsPage(DiabloPages):
         self.wait_for_page_and_click(JobsPage.RUN_SIS_DATA_REFRESH_JOB_BUTTON)
         self.wait_for_most_recent_job_success(AsyncJob.SIS_DATA_REFRESH)
 
+    def run_semester_start_job_sequence(self):
+        self.run_semester_start_job()
+        self.run_emails_job()
+
+    def run_schedule_update_job_sequence(self):
+        self.run_schedule_updates_job()
+        self.run_kaltura_job()
+        self.run_emails_job()
+
+    def run_settings_update_job_sequence(self):
+        self.run_kaltura_job()
+        self.run_emails_job()
+
     def wait_for_jobs_table(self):
         locator = By.XPATH, '//h1[contains(., "The Chancel")]/../../following-sibling::div//table'
         Wait(self.driver, util.get_short_timeout()).until(ec.presence_of_element_located(locator))

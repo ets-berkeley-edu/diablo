@@ -52,27 +52,22 @@ class TestCourseInstructorChanges:
         site_id=None,
     )
 
-    def test_disable_jobs(self):
+    def test_setup(self):
         self.login_page.load_page()
         self.login_page.dev_auth()
+
         self.ouija_page.click_jobs_link()
         self.jobs_page.disable_all_jobs()
 
-    def test_create_blackouts(self):
         self.jobs_page.click_blackouts_link()
         self.blackouts_page.delete_all_blackouts()
         self.blackouts_page.create_all_blackouts()
 
-    def test_delete_old_diablo_and_kaltura(self):
         self.kaltura_page.log_in_via_calnet(self.calnet_page)
         self.kaltura_page.reset_test_data(self.section)
+
         util.reset_section_test_data(self.section)
 
-    def test_emails_pre_run(self):
-        self.jobs_page.load_page()
-        self.jobs_page.run_emails_job()
-
-    def test_delete_old_email(self):
         util.reset_sent_email_test_data(self.section)
 
     def test_set_old_instructor_first(self):
@@ -86,8 +81,7 @@ class TestCourseInstructorChanges:
 
     def test_schedule_course_instr_1(self):
         self.jobs_page.load_page()
-        self.jobs_page.run_semester_start_job()
-        self.jobs_page.run_blackouts_job()
+        self.jobs_page.run_semester_start_job_sequence()
         util.get_kaltura_id(self.recording_schedule)
         self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_TO_MY_MEDIA
         self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
@@ -111,7 +105,7 @@ class TestCourseInstructorChanges:
         self.course_page.log_out()
         self.login_page.dev_auth()
         self.ouija_page.click_jobs_link()
-        self.jobs_page.run_kaltura_job()
+        self.jobs_page.run_settings_update_job_sequence()
 
     # INSTRUCTOR 1 REPLACED BY INSTRUCTOR 2
 
@@ -125,9 +119,7 @@ class TestCourseInstructorChanges:
 
     def test_run_instr_change_jobs(self):
         self.jobs_page.load_page()
-        self.jobs_page.run_schedule_updates_job()
-        self.jobs_page.run_kaltura_job()
-        self.jobs_page.run_emails_job()
+        self.jobs_page.run_schedule_update_job_sequence()
 
     # VERIFY SERIES INSTRUCTOR UPDATED BUT SETTINGS UNCHANGED
 

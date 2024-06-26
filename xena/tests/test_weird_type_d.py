@@ -32,7 +32,6 @@ from xena.models.email_template_type import EmailTemplateType
 from xena.models.recording_placement import RecordingPlacement
 from xena.models.recording_schedule import RecordingSchedule
 from xena.models.recording_type import RecordingType
-from xena.pages.course_page import CoursePage
 from xena.test_utils import util
 
 
@@ -54,23 +53,22 @@ class TestWeirdTypeD:
         site_id=None,
     )
 
-    def test_disable_jobs(self):
+    def test_setup(self):
         self.login_page.load_page()
         self.login_page.dev_auth()
+
         self.ouija_page.click_jobs_link()
         self.jobs_page.disable_all_jobs()
 
-    def test_create_blackouts(self):
         self.jobs_page.click_blackouts_link()
         self.blackouts_page.delete_all_blackouts()
         self.blackouts_page.create_all_blackouts()
 
-    def test_delete_old_diablo_and_kaltura(self):
         self.kaltura_page.log_in_via_calnet(self.calnet_page)
         self.kaltura_page.reset_test_data(self.section)
+
         util.reset_section_test_data(self.section)
 
-    def test_delete_old_email(self):
         util.reset_sent_email_test_data(self.section)
 
     # CREATE COURSE SITE
@@ -83,14 +81,15 @@ class TestWeirdTypeD:
 
     def test_semester_start(self):
         self.jobs_page.load_page()
-        self.jobs_page.run_semester_start_job()
+        self.jobs_page.run_semester_start_job_sequence()
+
         assert util.get_kaltura_id(self.recording_schedule_0)
         self.recording_schedule_0.recording_type = RecordingType.VIDEO_SANS_OPERATOR
         self.recording_schedule_0.recording_placement = RecordingPlacement.PUBLISH_TO_MY_MEDIA
+
         assert util.get_kaltura_id(self.recording_schedule_1)
         self.recording_schedule_1.recording_type = RecordingType.VIDEO_SANS_OPERATOR
         self.recording_schedule_1.recording_placement = RecordingPlacement.PUBLISH_TO_MY_MEDIA
-        self.jobs_page.run_blackouts_job()
 
     # CHECK FILTERS - SCHEDULED
 
@@ -119,8 +118,6 @@ class TestWeirdTypeD:
     # VERIFY ANNUNCIATION EMAIL
 
     def test_receive_annunciation_email(self):
-        self.jobs_page.load_page()
-        self.jobs_page.run_emails_job()
         assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_SEM_START, self.section,
                                          self.section.instructors[0]) == 1
 
@@ -253,46 +250,14 @@ class TestWeirdTypeD:
         self.courses_page.click_course_page_link(self.section)
         self.course_page.wait_for_diablo_title(f'{self.section.code}, {self.section.number}')
 
-    def test_visible_ccn(self):
-        assert self.course_page.visible_ccn() == self.section.ccn
+    def test_visible_section_sis_data(self):
+        self.course_page.verify_section_sis_data(self.section)
 
-    def test_visible_course_title(self):
-        assert self.course_page.visible_course_title() == self.section.title
+    def test_visible_meeting_0_sis_data(self):
+        self.course_page.verify_meeting_sis_data(self.meeting_0, idx=0)
 
-    def test_visible_instructors(self):
-        instructor_names = [f'{self.section.instructors[0].first_name} {self.section.instructors[0].last_name}'.strip()]
-        assert self.course_page.visible_instructors() == instructor_names
-
-    def test_meeting_0_days(self):
-        start = self.meeting_0.meeting_schedule.start_date
-        end = self.meeting_0.meeting_schedule.end_date
-        meeting_0_dates = f'{CoursePage.expected_term_date_str(start, end)}'
-        assert meeting_0_dates in self.course_page.visible_meeting_days()[0]
-
-    def test_meeting_1_days(self):
-        start = self.meeting_1.meeting_schedule.start_date
-        end = self.meeting_1.meeting_schedule.end_date
-        meeting_1_dates = f'{CoursePage.expected_term_date_str(start, end)}'
-        assert meeting_1_dates in self.course_page.visible_meeting_days()[1]
-        assert len(self.course_page.visible_meeting_days()) == 2
-
-    def test_meeting_0_time(self):
-        start = self.meeting_0.meeting_schedule.start_time
-        end = self.meeting_0.meeting_schedule.end_time
-        assert self.course_page.visible_meeting_time()[0] == f'{start} - {end}'
-
-    def test_meeting_1_time(self):
-        start = self.meeting_1.meeting_schedule.start_time
-        end = self.meeting_1.meeting_schedule.end_time
-        assert self.course_page.visible_meeting_time()[1] == f'{start} - {end}'
-        assert len(self.course_page.visible_meeting_time()) == 2
-
-    def test_meeting_0_room(self):
-        assert self.course_page.visible_rooms()[0] == self.meeting_0.room.name
-
-    def test_meeting_1_room(self):
-        assert self.course_page.visible_rooms()[1] == self.meeting_1.room.name
-        assert len(self.course_page.visible_rooms()) == 2
+    def test_visible_meeting_1_sis_data(self):
+        self.course_page.verify_meeting_sis_data(self.meeting_1, idx=1)
 
     # UPDATE SETTINGS, SAVE
 
@@ -309,8 +274,7 @@ class TestWeirdTypeD:
         self.course_page.log_out()
         self.login_page.dev_auth()
         self.ouija_page.click_jobs_link()
-        self.jobs_page.run_kaltura_job()
-        self.jobs_page.run_emails_job()
+        self.jobs_page.run_settings_update_job_sequence()
 
     def test_meeting_0_series(self):
         self.kaltura_page.load_event_edit_page(self.recording_schedule_0.series_id)

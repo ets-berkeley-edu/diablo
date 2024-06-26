@@ -46,33 +46,26 @@ class TestCourseScheduleChanges:
     newer_meeting = Section(util.get_test_script_course('test_course_changes_faker')).meetings[0]
     newer_meeting.room = room
 
-    def test_disable_jobs(self):
+    def test_setup(self):
         self.login_page.load_page()
         self.login_page.dev_auth()
+
         self.ouija_page.click_jobs_link()
         self.jobs_page.disable_all_jobs()
 
-    def test_create_blackouts(self):
         self.jobs_page.click_blackouts_link()
         self.blackouts_page.delete_all_blackouts()
         self.blackouts_page.create_all_blackouts()
 
-    def test_delete_old_diablo_and_kaltura(self):
         self.kaltura_page.log_in_via_calnet(self.calnet_page)
         self.kaltura_page.reset_test_data(self.section)
+
         util.reset_section_test_data(self.section)
 
-    def test_emails_pre_run(self):
-        self.jobs_page.load_page()
-        self.jobs_page.run_emails_job()
-
-    def test_delete_old_email(self):
         util.reset_sent_email_test_data(self.section)
 
     def test_semester_start(self):
-        self.jobs_page.run_semester_start_job()
-        self.jobs_page.run_blackouts_job()
-        self.jobs_page.run_emails_job()
+        self.jobs_page.run_semester_start_job_sequence()
         util.get_kaltura_id(self.recording_schedule)
         self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
         self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_TO_MY_MEDIA
@@ -86,10 +79,7 @@ class TestCourseScheduleChanges:
 
     def test_reschedule_with_new_times(self):
         self.jobs_page.load_page()
-        self.jobs_page.run_schedule_updates_job()
-        self.jobs_page.run_kaltura_job()
-        self.jobs_page.run_blackouts_job()
-        self.jobs_page.run_emails_job()
+        self.jobs_page.run_schedule_update_job_sequence()
 
     def test_room_new_series(self):
         self.rooms_page.load_page()
@@ -155,9 +145,7 @@ class TestCourseScheduleChanges:
 
     def test_unschedule_with_null_schedule(self):
         self.jobs_page.load_page()
-        self.jobs_page.run_schedule_updates_job()
-        self.jobs_page.run_kaltura_job()
-        self.jobs_page.run_emails_job()
+        self.jobs_page.run_schedule_update_job_sequence()
 
     def test_verify_updated_kaltura_series_gone(self):
         self.kaltura_page.load_event_edit_page(self.recording_schedule.series_id)

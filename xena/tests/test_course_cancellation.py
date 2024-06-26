@@ -44,22 +44,22 @@ class TestCourseCancellation:
     meeting = section.meetings[0]
     recording_schedule = RecordingSchedule(section, meeting)
 
-    def test_disable_jobs(self):
+    def test_setup(self):
         self.login_page.load_page()
         self.login_page.dev_auth()
+
         self.ouija_page.click_jobs_link()
         self.jobs_page.disable_all_jobs()
 
-    def test_delete_old_diablo_and_kaltura(self):
+        self.jobs_page.click_blackouts_link()
+        self.blackouts_page.delete_all_blackouts()
+        self.blackouts_page.create_all_blackouts()
+
         self.kaltura_page.log_in_via_calnet(self.calnet_page)
         self.kaltura_page.reset_test_data(self.section)
+
         util.reset_section_test_data(self.section)
 
-    def test_emails_pre_run(self):
-        self.jobs_page.load_page()
-        self.jobs_page.run_emails_job()
-
-    def test_delete_old_email(self):
         util.reset_sent_email_test_data(self.section)
 
     # COURSE IS CANCELLED BEFORE SCHEDULING
@@ -92,8 +92,7 @@ class TestCourseCancellation:
         self.courses_page.log_out()
         self.login_page.dev_auth()
         self.ouija_page.click_jobs_link()
-        self.jobs_page.run_semester_start_job()
-        self.jobs_page.run_emails_job()
+        self.jobs_page.run_semester_start_job_sequence()
 
     def test_cancel_pre_sched_no_kaltura_schedule_id(self):
         assert not util.get_kaltura_id(self.recording_schedule)
@@ -107,9 +106,7 @@ class TestCourseCancellation:
     def test_restored_pre_sched(self):
         util.restore_section(self.section)
         self.ouija_page.click_jobs_link()
-        self.jobs_page.run_schedule_updates_job()
-        self.jobs_page.run_kaltura_job()
-        self.jobs_page.run_emails_job()
+        self.jobs_page.run_schedule_update_job_sequence()
 
     def test_kaltura_schedule_id(self):
         assert util.get_kaltura_id(self.recording_schedule)
@@ -135,9 +132,7 @@ class TestCourseCancellation:
 
     def test_unsched_canceled(self):
         self.jobs_page.load_page()
-        self.jobs_page.run_schedule_updates_job()
-        self.jobs_page.run_kaltura_job()
-        self.jobs_page.run_emails_job()
+        self.jobs_page.run_schedule_update_job_sequence()
 
     def test_no_kaltura_series_canceled_unsched(self):
         self.kaltura_page.load_event_edit_page(self.recording_schedule.series_id)
