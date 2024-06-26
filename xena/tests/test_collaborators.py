@@ -43,20 +43,25 @@ class TestCollaborators0:
     manual_collaborator = util.get_test_collaborator()
 
     def test_setup(self):
-        self.kaltura_page.log_in_via_calnet(self.calnet_page)
-        self.kaltura_page.reset_test_data(self.section)
-        util.reset_section_test_data(self.section)
-
         self.login_page.load_page()
         self.login_page.dev_auth()
+
         self.ouija_page.click_jobs_link()
         self.jobs_page.disable_all_jobs()
-        self.jobs_page.run_emails_job()
+
+        self.jobs_page.click_blackouts_link()
+        self.blackouts_page.delete_all_blackouts()
+        self.blackouts_page.create_all_blackouts()
+
+        self.kaltura_page.log_in_via_calnet(self.calnet_page)
+        self.kaltura_page.reset_test_data(self.section)
+
+        util.reset_section_test_data(self.section)
+
         util.reset_sent_email_test_data(self.section)
 
     def test_semester_start(self):
-        self.jobs_page.run_schedule_updates_job()
-        self.jobs_page.run_kaltura_job()
+        self.jobs_page.run_schedule_update_job_sequence()
         assert util.get_kaltura_id(self.recording_schedule)
 
     def test_kaltura_proxy_collaborator(self):
@@ -75,7 +80,7 @@ class TestCollaborators0:
         self.login_page.dev_auth(self.instructor.uid)
         self.instructor_page.click_course_page_link(self.section)
         self.course_page.wait_for_instructors()
-        assert self.course_page.visible_instructors() == [f'{self.instructor.first_name} {self.instructor.last_name}'.strip()]
+        self.course_page.verify_instructors(self.section)
         assert self.course_page.visible_proxies() == [f'{self.proxy.first_name} {self.proxy.last_name}'.strip()]
 
     def test_proxy_collaborator_by_default(self):
@@ -92,7 +97,7 @@ class TestCollaborators0:
         self.login_page.load_page()
         self.login_page.dev_auth()
         self.ouija_page.click_jobs_link()
-        self.jobs_page.run_kaltura_job()
+        self.jobs_page.run_settings_update_job_sequence()
 
     def test_kaltura_new_collaborator(self):
         self.kaltura_page.load_event_edit_page(self.recording_schedule.series_id)
@@ -110,8 +115,7 @@ class TestCollaborators0:
 
     def test_run_kaltura_job_room_removed(self):
         self.jobs_page.load_page()
-        self.jobs_page.run_schedule_updates_job()
-        self.jobs_page.run_kaltura_job()
+        self.jobs_page.run_schedule_update_job_sequence()
 
     def test_series_canceled_room_removed(self):
         self.kaltura_page.load_event_edit_page(self.recording_schedule.series_id)
@@ -122,8 +126,7 @@ class TestCollaborators0:
 
     def test_run_kaltura_job_room_restored(self):
         self.jobs_page.load_page()
-        self.jobs_page.run_schedule_updates_job()
-        self.jobs_page.run_kaltura_job()
+        self.jobs_page.run_schedule_update_job_sequence()
 
     def test_kaltura_collaborators_restored(self):
         util.get_kaltura_id(self.recording_schedule)
@@ -157,22 +160,20 @@ class TestCollaborators1:
         self.kaltura_page.reset_test_data(self.section)
         util.reset_section_test_data(self.section)
         util.delete_course_instructor_row(self.section, self.proxy)
+        util.reset_sent_email_test_data(self.section)
 
         self.login_page.load_page()
         self.login_page.dev_auth()
-        self.ouija_page.click_jobs_link()
-        self.jobs_page.disable_all_jobs()
-        self.jobs_page.run_emails_job()
-        util.reset_sent_email_test_data(self.section)
 
     def test_update_jobs(self):
-        self.jobs_page.run_semester_start_job()
+        self.ouija_page.click_jobs_link()
+        self.jobs_page.run_semester_start_job_sequence()
         assert util.get_kaltura_id(self.recording_schedule_0)
         assert util.get_kaltura_id(self.recording_schedule_1)
 
     def test_load_course_page(self):
         self.course_page.load_page(self.section)
-        assert self.course_page.visible_instructors() == [f'{self.instructor.first_name} {self.instructor.last_name}'.strip()]
+        self.course_page.verify_instructors(self.section)
         assert self.course_page.visible_proxies() == []
 
     def test_add_collaborator(self):
@@ -186,7 +187,7 @@ class TestCollaborators1:
         self.login_page.load_page()
         self.login_page.dev_auth()
         self.ouija_page.click_jobs_link()
-        self.jobs_page.run_kaltura_job()
+        self.jobs_page.run_settings_update_job_sequence()
 
     def test_kaltura_new_collaborator_meeting_0(self):
         self.kaltura_page.load_event_edit_page(self.recording_schedule_0.series_id)
@@ -203,8 +204,7 @@ class TestCollaborators1:
     def test_proxy_added(self):
         util.add_sis_sections_rows(self.section, instructors=[self.proxy])
         self.jobs_page.load_page()
-        self.jobs_page.run_schedule_updates_job()
-        self.jobs_page.run_kaltura_job()
+        self.jobs_page.run_schedule_update_job_sequence()
 
     def test_kaltura_new_proxy_meeting_0(self):
         self.kaltura_page.load_event_edit_page(self.recording_schedule_0.series_id)
@@ -221,7 +221,7 @@ class TestCollaborators1:
     def test_course_page_new_proxy(self):
         self.course_page.load_page(self.section)
         self.course_page.wait_for_instructors()
-        assert self.course_page.visible_instructors() == [f'{self.instructor.first_name} {self.instructor.last_name}'.strip()]
+        self.course_page.verify_instructors(self.section)
         assert self.course_page.visible_proxies() == [f'{self.proxy.first_name} {self.proxy.last_name}'.strip()]
 
     def test_new_collaborators(self):
@@ -234,7 +234,7 @@ class TestCollaborators1:
 
     def test_run_updates_remove_collaborator(self):
         self.jobs_page.load_page()
-        self.jobs_page.run_kaltura_job()
+        self.jobs_page.run_settings_update_job_sequence()
 
     def test_kaltura_collaborator_removed_meeting_0(self):
         self.kaltura_page.load_event_edit_page(self.recording_schedule_0.series_id)
@@ -266,17 +266,14 @@ class TestCollaborators2:
         self.kaltura_page.log_in_via_calnet(self.calnet_page)
         self.kaltura_page.reset_test_data(self.section)
         util.reset_section_test_data(self.section)
+        util.reset_sent_email_test_data(self.section)
 
         self.login_page.load_page()
         self.login_page.dev_auth()
-        self.ouija_page.click_jobs_link()
-        self.jobs_page.disable_all_jobs()
-        self.jobs_page.run_emails_job()
-        util.reset_sent_email_test_data(self.section)
 
     def test_run_updates(self):
+        self.ouija_page.click_jobs_link()
         self.jobs_page.run_schedule_updates_job()
-        self.jobs_page.run_kaltura_job()
         util.get_kaltura_id(self.recording_schedule)
 
     def test_kaltura_proxy_collaborator(self):
@@ -312,7 +309,7 @@ class TestCollaborators2:
         self.login_page.load_page()
         self.login_page.dev_auth()
         self.ouija_page.click_jobs_link()
-        self.jobs_page.run_kaltura_job()
+        self.jobs_page.run_settings_update_job_sequence()
 
     def test_kaltura_proxy_collaborator_removed(self):
         self.kaltura_page.load_event_edit_page(self.recording_schedule.series_id)
@@ -325,8 +322,7 @@ class TestCollaborators2:
 
     def test_run_updates_no_proxies(self):
         self.jobs_page.load_page()
-        self.jobs_page.run_schedule_updates_job()
-        self.jobs_page.run_kaltura_job()
+        self.jobs_page.run_schedule_update_job_sequence()
 
     def test_kaltura_no_proxy_collaborators(self):
         self.kaltura_page.load_event_edit_page(self.recording_schedule.series_id)

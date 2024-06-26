@@ -51,12 +51,6 @@ class CoursePage(DiabloPages):
         return By.XPATH, f'//span[contains(text(), "Sorry, you are unauthorized to view the course {section.code}, {section.number}")]'
 
     @staticmethod
-    def expected_term_date_str(start_date, end_date):
-        start_str = start_date.strftime('%b %-d, %Y')
-        end_str = end_date.strftime('%b %-d, %Y')
-        return f'{start_str} to {end_str}'
-
-    @staticmethod
     def expected_final_record_date_str(meeting, term):
         return meeting.meeting_schedule.expected_recording_dates(term)[-1].strftime('%b %-d, %Y')
 
@@ -68,16 +62,13 @@ class CoursePage(DiabloPages):
         self.hit_url(section.term.id, section.ccn)
         self.wait_for_diablo_title(f'{section.code}, {section.number}')
 
-    # SIS DATA
+    # SIS DATA - section
 
     SECTION_ID = (By.ID, 'section-id')
     COURSE_TITLE = (By.ID, 'course-title')
     INSTRUCTORS = (By.ID, 'instructors')
     INSTRUCTOR = (By.XPATH, '//div[@id="instructors"]//*[contains(@id, "instructor-") and not(contains(@id, "proxy"))]')
     PROXY = (By.XPATH, '//div[@id="instructors"]//span[contains(@id, "instructor-proxy-")]')
-    MEETING_DAYS = (By.XPATH, '//div[contains(@id, "meeting-days-")]')
-    MEETING_TIMES = (By.XPATH, '//div[contains(@id, "meeting-times-")]')
-    ROOMS = (By.XPATH, '//*[contains(@id, "rooms-")]')
     CROSS_LISTING = (By.XPATH, '//div[contains(@id, "cross-listing-")]')
 
     def is_canceled(self):
@@ -96,9 +87,43 @@ class CoursePage(DiabloPages):
         els = self.elements(CoursePage.INSTRUCTOR)
         return [el.text for el in els]
 
+    def verify_instructors(self, section):
+        expected_instructors = [f'{i.first_name} {i.last_name}'.strip() for i in section.instructors]
+        visible_instructors = self.visible_instructors()
+        if visible_instructors != expected_instructors:
+            app.logger.info(f"Expected '{expected_instructors}', got '{visible_instructors}'")
+        assert visible_instructors == expected_instructors
+
+    def verify_section_sis_data(self, section):
+        expected_ccn = section.ccn
+        visible_ccn = self.visible_ccn()
+        if visible_ccn != expected_ccn:
+            app.logger.info(f"Expected '{expected_ccn}', got '{visible_ccn}'")
+
+        expected_title = section.title
+        visible_title = self.visible_course_title()
+        if visible_title != expected_title:
+            app.logger.info(f"Expected '{expected_title}', got '{visible_title}'")
+
+        self.verify_instructors(section)
+        assert visible_ccn == expected_ccn
+        assert visible_title == expected_title
+
     def visible_proxies(self):
         els = self.elements(CoursePage.PROXY)
         return [el.text for el in els]
+
+    def visible_cross_listing_codes(self):
+        return [el.text for el in self.elements(CoursePage.CROSS_LISTING)]
+
+    def visible_cross_listing_ccns(self):
+        return [el.get_attribute('id').split('-')[2] for el in self.elements(CoursePage.CROSS_LISTING)]
+
+    # SIS DATA - meeting
+
+    MEETING_DAYS = (By.XPATH, '//div[contains(@id, "meeting-days-")]')
+    MEETING_TIMES = (By.XPATH, '//div[contains(@id, "meeting-times-")]')
+    ROOMS = (By.XPATH, '//*[contains(@id, "rooms-")]')
 
     def visible_meeting_days(self):
         els = self.elements(CoursePage.MEETING_DAYS)
@@ -114,17 +139,33 @@ class CoursePage(DiabloPages):
         els = self.elements(CoursePage.ROOMS)
         return [el.get_attribute('innerText').replace('Location:', '').strip() for el in els]
 
-    def visible_cross_listing_codes(self):
-        return [el.text for el in self.elements(CoursePage.CROSS_LISTING)]
-
-    def visible_cross_listing_ccns(self):
-        return [el.get_attribute('id').split('-')[2] for el in self.elements(CoursePage.CROSS_LISTING)]
-
     def visible_opt_out(self):
         return self.element(CoursePage.OPTED_OUT).get_attribute('innerText').strip()
 
     def click_room_link(self, room):
         self.wait_for_element_and_click(self.room_link_locator(room))
+
+    def verify_meeting_sis_data(self, meeting, idx):
+        expected_room = meeting.room.name
+        visible_room = self.visible_rooms()[idx]
+        if visible_room != expected_room:
+            app.logger.info(f"Expected room '{expected_room}', got '{visible_room}'")
+
+        start_date = meeting.meeting_schedule.start_date.strftime('%b %-d, %Y')
+        end_date = meeting.meeting_schedule.end_date.strftime('%b %-d, %Y')
+        expected_dates = f'{start_date} to {end_date}'
+        visible_dates = self.visible_meeting_days()[idx]
+        if expected_dates not in visible_dates:
+            app.logger.info(f"Expected '{expected_dates}' to be in '{visible_dates}'")
+
+        expected_times = f'{meeting.meeting_schedule.start_time} - {meeting.meeting_schedule.end_time}'
+        visible_times = self.visible_meeting_time()[idx]
+        if expected_times not in visible_times:
+            app.logger.info(f"Expected '{expected_times}' to be in '{visible_times}'")
+
+        assert visible_room == expected_room
+        assert expected_dates in visible_dates
+        assert expected_times in visible_times
 
     # CAPTURE SETTINGS - instructors
 

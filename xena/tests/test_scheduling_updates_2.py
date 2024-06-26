@@ -55,37 +55,32 @@ class TestScheduling2:
 
     # DELETE PRE-EXISTING DATA
 
-    def test_disable_jobs(self):
+    def test_setup(self):
         self.login_page.load_page()
         self.login_page.dev_auth()
+
         self.ouija_page.click_jobs_link()
-        self.jobs_page.run_emails_job()
         self.jobs_page.disable_all_jobs()
 
-    def test_create_blackouts(self):
         self.jobs_page.click_blackouts_link()
         self.blackouts_page.delete_all_blackouts()
         self.blackouts_page.create_all_blackouts()
 
-    def test_delete_old_diablo_and_kaltura(self):
         self.kaltura_page.log_in_via_calnet(self.calnet_page)
         self.kaltura_page.reset_test_data(self.section)
+
         util.reset_section_test_data(self.section)
 
-    def test_delete_old_email(self):
         util.reset_sent_email_test_data(self.section)
 
     # RUN SEMESTER START JOB
 
     def test_semester_start(self):
         self.jobs_page.load_page()
-        self.jobs_page.run_semester_start_job()
+        self.jobs_page.run_semester_start_job_sequence()
         assert util.get_kaltura_id(self.recording_schedule)
         self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
         self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_TO_MY_MEDIA
-
-    def test_kaltura_blackouts(self):
-        self.jobs_page.run_blackouts_job()
 
     # VERIFY SERIES IN DIABLO
 
@@ -137,9 +132,6 @@ class TestScheduling2:
     # VERIFY ANNUNCIATION EMAILS
 
     def test_receive_annunciation_email(self):
-        self.kaltura_page.close_window_and_switch()
-        self.jobs_page.load_page()
-        self.jobs_page.run_emails_job()
         assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_SEM_START, self.section,
                                          self.instructor_0) == 1
         assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_SEM_START, self.section,
@@ -148,6 +140,7 @@ class TestScheduling2:
     # CREATE COURSE SITE
 
     def test_create_course_site(self):
+        self.kaltura_page.close_window_and_switch()
         self.canvas_page.provision_site(self.section, [self.section.ccn], self.site_0)
         self.canvas_page.add_teacher_to_site(self.site_0, self.section, self.instructor_0)
         self.canvas_page.add_teacher_to_site(self.site_0, self.section, self.instructor_1)
@@ -159,26 +152,12 @@ class TestScheduling2:
         self.ouija_page.log_out()
         self.login_page.dev_auth(self.instructor_0.uid)
 
-    def test_visible_ccn(self):
+    def test_visible_section_sis_data(self):
         self.instructor_page.click_course_page_link(self.section)
-        assert self.course_page.visible_ccn() == self.section.ccn
+        self.course_page.verify_section_sis_data(self.section)
 
-    def test_visible_course_title(self):
-        assert self.course_page.visible_course_title() == self.section.title
-
-    def test_visible_instructors(self):
-        instructor_names = [f'{i.first_name} {i.last_name}'.strip() for i in self.section.instructors]
-        assert self.course_page.visible_instructors() == instructor_names
-
-    def test_visible_meeting_days(self):
-        term_dates = f'{CoursePage.expected_term_date_str(self.meeting_schedule.start_date, self.meeting_schedule.end_date)}'
-        assert term_dates in self.course_page.visible_meeting_days()[0]
-
-    def test_visible_meeting_time(self):
-        assert self.course_page.visible_meeting_time()[0] == f'{self.meeting_schedule.start_time} - {self.meeting_schedule.end_time}'
-
-    def test_visible_room(self):
-        assert self.course_page.visible_rooms()[0] == self.meeting.room.name
+    def test_visible_meeting_sis_data(self):
+        self.course_page.verify_meeting_sis_data(self.meeting, idx=0)
 
     def test_visible_listings(self):
         listing_codes = [li.code for li in self.section.listings]
@@ -216,7 +195,7 @@ class TestScheduling2:
         self.course_page.log_out()
         self.login_page.dev_auth()
         self.ouija_page.click_jobs_link()
-        self.jobs_page.run_kaltura_job()
+        self.jobs_page.run_settings_update_job_sequence()
 
     # VERIFY SERIES IN KALTURA
 
@@ -235,9 +214,6 @@ class TestScheduling2:
     # VERIFY EMAILS
 
     def test_update_receive_schedule_conf_email_instr_1(self):
-        self.kaltura_page.close_window_and_switch()
-        self.jobs_page.load_page()
-        self.jobs_page.run_emails_job()
         assert util.get_sent_email_count(EmailTemplateType.INSTR_CHANGES_CONFIRMED, self.section,
                                          self.instructor_0) == 1
 
@@ -248,6 +224,7 @@ class TestScheduling2:
     # CREATE COURSE SITE
 
     def test_create_another_course_site(self):
+        self.kaltura_page.close_window_and_switch()
         self.canvas_page.provision_site(self.section, [self.section.ccn], self.site_1)
         self.canvas_page.add_teacher_to_site(self.site_1, self.section, self.instructor_0)
         self.canvas_page.add_teacher_to_site(self.site_1, self.section, self.instructor_1)
@@ -262,8 +239,7 @@ class TestScheduling2:
 
     def test_another_site_run_kaltura_job(self):
         self.ouija_page.click_jobs_link()
-        self.jobs_page.run_kaltura_job()
-        self.jobs_page.run_emails_job()
+        self.jobs_page.run_settings_update_job_sequence()
 
     # VERIFY SERIES IN KALTURA
 
@@ -283,7 +259,6 @@ class TestScheduling2:
     # VERIFY EMAILS
 
     def test_update_receive_site_conf_email_instr_1(self):
-        self.kaltura_page.close_window_and_switch()
         assert util.get_sent_email_count(EmailTemplateType.INSTR_CHANGES_CONFIRMED, self.section,
                                          self.instructor_0) == 2
 
@@ -294,6 +269,7 @@ class TestScheduling2:
     # DELETE ONE COURSE SITE
 
     def test_delete_course_site(self):
+        self.kaltura_page.close_window_and_switch()
         self.ouija_page.load_page()
         self.ouija_page.log_out()
         self.login_page.dev_auth(self.instructor_1.uid)
@@ -305,7 +281,7 @@ class TestScheduling2:
         self.course_page.log_out()
         self.login_page.dev_auth()
         self.jobs_page.load_page()
-        self.jobs_page.run_kaltura_job()
+        self.jobs_page.run_settings_update_job_sequence()
 
     def test_kaltura_course_site_deleted(self):
         self.kaltura_page.load_event_edit_page(self.recording_schedule.series_id)
@@ -343,8 +319,7 @@ class TestScheduling2:
 
     def test_run_kaltura_job(self):
         self.ouija_page.click_jobs_link()
-        self.jobs_page.run_kaltura_job()
-        self.jobs_page.run_emails_job()
+        self.jobs_page.run_settings_update_job_sequence()
 
     # VERIFY SERIES IN KALTURA
 

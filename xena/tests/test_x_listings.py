@@ -54,26 +54,25 @@ class TestCrossListings:
 
     # DELETE PRE-EXISTING DATA
 
-    def test_disable_jobs(self):
+    def test_setup(self):
         self.login_page.load_page()
         self.login_page.dev_auth()
+
         self.ouija_page.click_jobs_link()
-        self.jobs_page.run_emails_job()
         self.jobs_page.disable_all_jobs()
 
-    def test_delete_old_diablo_and_kaltura(self):
+        self.jobs_page.click_blackouts_link()
+        self.blackouts_page.delete_all_blackouts()
+        self.blackouts_page.create_all_blackouts()
+
         self.kaltura_page.log_in_via_calnet(self.calnet_page)
         self.kaltura_page.reset_test_data(self.section)
         self.kaltura_page.reset_test_data(self.x_listed_section)
 
-    # TODO - delete old course sites?
-
-    def test_delete_old_diablo_data(self):
         util.reset_section_test_data(self.section)
         util.delete_sis_sections_rows(self.x_listed_section)
         util.add_sis_sections_rows(self.x_listed_section)
 
-    def test_delete_old_email(self):
         util.reset_sent_email_test_data(self.section)
         util.reset_sent_email_test_data(self.x_listed_section)
 
