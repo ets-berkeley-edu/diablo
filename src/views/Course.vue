@@ -257,7 +257,7 @@
                   </div>
                   <div v-if="publishType && publishType.startsWith('kaltura_media_gallery') && course.canvasSiteIds" id="publish-linked-canvas-site">
                     Linked bCourses site(s):
-                    <div v-for="site in courseSites" :key="site.canvasSiteId">
+                    <div v-for="site in course.canvasSites" :key="site.canvasSiteId">
                       <CanvasCourseSite :site-id="site.canvasSiteId" :course-site="site" />
                     </div>
                   </div>
@@ -297,7 +297,7 @@
                       </v-col>
                     </v-row>
                     <v-row
-                      v-if="publishType && publishType.startsWith('kaltura_media_gallery')"
+                      v-if="!$currentUser.isAdmin && publishType && publishType.startsWith('kaltura_media_gallery')"
                       align="end"
                       justify="start"
                     >
@@ -325,6 +325,34 @@
                           color="success"
                           :disabled="!pendingCanvasSite"
                           @click="addCanvasSiteConfirm"
+                        >
+                          Add
+                        </v-btn>
+                      </v-col>
+                    </v-row>
+                    <v-row
+                      v-if="$currentUser.isAdmin && publishType && publishType.startsWith('kaltura_media_gallery')"
+                      align="end"
+                      justify="start"
+                    >
+                      <v-col cols="9">
+                        <v-text-field
+                          id="input-canvas-site-id"
+                          v-model="pendingCanvasSiteId"
+                          label="Enter Canvas site id"
+                          :disabled="publishTypeUpdating"
+                          hide-details="auto"
+                          outlined
+                          dense
+                        >
+                        </v-text-field>
+                      </v-col>
+                      <v-col cols="3">
+                        <v-btn
+                          id="btn-canvas-site-add"
+                          color="success"
+                          :disabled="!pendingCanvasSiteId || !/^\d+$/.test(pendingCanvasSiteId)"
+                          @click="addCanvasSiteById"
                         >
                           Add
                         </v-btn>
@@ -526,7 +554,7 @@ import PageTitle from '@/components/util/PageTitle'
 import PersonLookup from '@/components/util/PersonLookup'
 import ScheduledCourse from '@/components/course/ScheduledCourse'
 import Utils from '@/mixins/Utils'
-import {getCourse, updateCollaborators, updatePublishType, updateRecordingType} from '@/api/course'
+import {getCourse, getCourseSite, updateCollaborators, updatePublishType, updateRecordingType} from '@/api/course'
 import {getAuditoriums} from '@/api/room'
 import {getCanvasSitesTeaching} from '@/api/user'
 
@@ -550,7 +578,6 @@ export default {
       collaboratorsUpdating: undefined,
       course: undefined,
       courseDisplayTitle: null,
-      courseSites: undefined,
       displayLabels: {
         'kaltura_media_gallery': 'Publish automatically to the Media Gallery (all members of the bCourses site will have access)',
         'kaltura_media_gallery_moderated': 'Publish to Pending tab (Teacher/TA/Designer members of the bCourses site can approve recordings for viewing)',
@@ -565,8 +592,9 @@ export default {
       location: undefined,
       pendingCollaborator: undefined,
       pendingCanvasSite: undefined,
+      pendingCanvasSiteId: undefined,
       publishCanvasSites: [],
-      publishCanvasSiteOptions: undefined,
+      publishCanvasSiteOptions: [],
       publishType: undefined,
       publishTypeEditing: false,
       publishTypeOptions: undefined,
@@ -604,13 +632,6 @@ export default {
       show &&= (this.$currentUser.isAdmin || this.$_.map(this.instructors, 'uid').includes(this.$currentUser.uid))
       return show
     },
-    teachingUid() {
-      if (this.course.instructors.length) {
-        return this.course.instructors[0].uid
-      } else {
-        return this.$currentUser.uid
-      }
-    },
     updatesQueued() {
       return !!this.$_.find(this.course.updateHistory, {'status': 'queued'})
     }
@@ -629,6 +650,17 @@ export default {
     })
   },
   methods: {
+    addCanvasSiteById() {
+      if (this.pendingCanvasSiteId) {
+        getCourseSite(this.pendingCanvasSiteId).then(data => {
+          if (data) {
+            this.publishCanvasSites.push(data)
+            this.alertScreenReader(`Site ${data.name} added.`)
+          }
+        })
+      }
+      this.pendingCanvasSiteId = null
+    },
     addCanvasSiteConfirm() {
       if (this.pendingCanvasSite && !this.$_.find(this.publishCanvasSites, {'canvasSiteId': this.pendingCanvasSite.canvasSiteId})) {
         this.publishCanvasSites.push(this.pendingCanvasSite)
@@ -678,14 +710,13 @@ export default {
       this.collaborators = this.$_.clone(this.course.collaborators)
       this.publishType = this.course.publishType
       this.recordingType = this.course.recordingType
+      this.publishCanvasSites = this.course.canvasSites
       this.recordingTypeOptions = this.meeting.room ? Object.keys(this.meeting.room.recordingTypeOptions) : []
-      getCanvasSitesTeaching(this.teachingUid).then(data => {
-        this.publishCanvasSiteOptions = data
-        this.courseSites = this.$_.filter(this.publishCanvasSiteOptions, site => {
-          return this.course.canvasSiteIds && this.course.canvasSiteIds.includes(site.canvasSiteId)
+      if (!this.$currentUser.isAdmin) {
+        getCanvasSitesTeaching(this.$currentUser.uid).then(data => {
+          this.publishCanvasSiteOptions = data
         })
-        this.publishCanvasSites = this.courseSites || []
-      })
+      }
       this.$ready(this.courseDisplayTitle)
     },
     toggleCollaboratorsEditing() {
@@ -730,7 +761,7 @@ export default {
         const message = `Recording placement updated to ${data.publishTypeName}.`
         this.alertScreenReader(message)
         this.course.canvasSiteIds = data.canvasSiteIds
-        this.courseSites = this.$_.filter(this.publishCanvasSiteOptions, site => this.$_.find(this.publishCanvasSites, {'canvasSiteId': site.canvasSiteId}))
+        this.course.canvasSites = data.canvasSites
         this.course.publishType = data.publishType
         this.course.publishTypeName = data.publishTypeName
         this.publishTypeEditing = false

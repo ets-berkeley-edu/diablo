@@ -25,6 +25,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 from datetime import datetime
 
 from diablo import db, std_commit
+from diablo.externals.canvas import get_course_sites_by_id
 from diablo.externals.loch import get_loch_basic_attributes
 from diablo.lib.util import basic_attributes_to_api_json, to_isoformat
 from diablo.models.cross_listing import CrossListing
@@ -185,8 +186,8 @@ class CoursePreference(db.Model):
         else:
             return []
 
-    def to_api_json(self):
-        return {
+    def to_api_json(self, include_canvas_sites=False):
+        feed = {
             'termId': self.term_id,
             'sectionId': self.section_id,
             'collaborators': self.get_collaborator_attributes(),
@@ -198,6 +199,9 @@ class CoursePreference(db.Model):
             'canvasSiteIds': self.canvas_site_ids,
             'createdAt': to_isoformat(self.created_at),
         }
+        if include_canvas_sites:
+            feed['canvasSites'] = get_course_sites_by_id(self.canvas_site_ids)
+        return feed
 
 
 def get_all_publish_types():

@@ -264,6 +264,30 @@ class TestGetCourse:
             assert 'recordingEndDate' not in api_json['meetings']['ineligible'][0]
 
 
+class TestGetCourseSite:
+
+    @staticmethod
+    def _api_course_site(client, site_id, expected_status_code=200):
+        response = client.get(f'/api/course_site/{site_id}')
+        assert response.status_code == expected_status_code
+        return response.json
+
+    def test_not_authenticated(self, client):
+        """Deny anonymous access."""
+        self._api_course_site(client, site_id='1234567', expected_status_code=401)
+
+    def test_not_admin(self, client, fake_auth):
+        """Deny non-admin access."""
+        fake_auth.login(collaborator_uid)
+        self._api_course_site(client, site_id='1234567', expected_status_code=401)
+
+    def test_admin(self, client, fake_auth):
+        """Admin can view site properties."""
+        fake_auth.login(admin_uid)
+        response = self._api_course_site(client, site_id='1234567')
+        assert response['canvasSiteId'] == '1234567'
+
+
 class TestGetCourses:
 
     @property

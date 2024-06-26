@@ -27,6 +27,7 @@ import re
 
 from diablo.api.errors import BadRequestError, ForbiddenRequestError, InternalServerError, ResourceNotFoundError
 from diablo.api.util import admin_required, csv_download_response, get_search_filter_options
+from diablo.externals.canvas import get_course_site
 from diablo.externals.kaltura import Kaltura
 from diablo.lib.http import tolerant_jsonify
 from diablo.lib.interpolator import get_sign_up_url
@@ -46,6 +47,7 @@ def get_course(term_id, section_id):
     course = SisSection.get_course(
         term_id,
         section_id,
+        include_canvas_sites=True,
         include_deleted=True,
         include_update_history=True,
     )
@@ -60,6 +62,14 @@ def get_course(term_id, section_id):
             event_id = scheduled.get('kalturaScheduleId')
             scheduled['kalturaSchedule'] = Kaltura().get_event(event_id)
     return tolerant_jsonify(course)
+
+
+@app.route('/api/course_site/<course_site_id>')
+@admin_required
+def get_course_site_by_id(course_site_id):
+    if not re.match(r'\A\d+\Z', str(course_site_id)):
+        raise BadRequestError('Course site id must be numeric')
+    return tolerant_jsonify(get_course_site(course_site_id))
 
 
 @app.route('/api/courses', methods=['POST'])
@@ -269,7 +279,7 @@ def update_publish_type():
                 requested_by_name=current_user.name,
             )
 
-    return tolerant_jsonify(preferences.to_api_json())
+    return tolerant_jsonify(preferences.to_api_json(include_canvas_sites=True))
 
 
 @app.route('/api/course/recording_type/update', methods=['POST'])

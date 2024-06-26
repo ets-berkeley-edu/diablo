@@ -17,6 +17,10 @@ export function getCourse(termId: number, sectionId: number) {
   return axios.get(`${utils.apiBaseUrl()}/api/course/${termId}/${sectionId}`)
 }
 
+export function getCourseSite(siteId: number) {
+  return axios.get(`${utils.apiBaseUrl()}/api/course_site/${siteId}`)
+}
+
 export function getCourses(filter, termId) {
   return axios.post(`${utils.apiBaseUrl()}/api/courses`, {
     filter,
