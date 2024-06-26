@@ -76,6 +76,33 @@ def get_canvas_enrollment_term(sis_term_id):
     return canvas_enrollment_term
 
 
+@skip_when_pytest(mock_object={'canvasSiteId': '1234567'})
+def get_course_site(site_id):
+    c = _get_canvas()
+    course = None
+    try:
+        course = c.get_course(site_id, include=['term'])
+    except Exception as e:
+        app.logger.error(f'Failed to retrieve Canvas course (id={site_id})')
+        app.logger.exception(e)
+    return _canvas_site_to_api_json(course) if course else None
+
+
+@skip_when_pytest(mock_object=[])
+def get_course_sites_by_id(site_ids):
+    c = _get_canvas()
+    courses = []
+    for site_id in site_ids or []:
+        try:
+            course = c.get_course(site_id, include=['term'])
+            if course:
+                courses.append(course)
+        except Exception as e:
+            app.logger.error(f'Failed to retrieve Canvas course (id={site_id})')
+            app.logger.exception(e)
+    return [_canvas_site_to_api_json(course) for course in courses]
+
+
 def get_user(user_id, api_call=True, api_url=None):
     c = _get_canvas()
     if api_call is False:
