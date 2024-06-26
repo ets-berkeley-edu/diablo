@@ -261,6 +261,32 @@ ALTER TABLE ONLY jobs
 
 --
 
+CREATE TABLE notes (
+    id INTEGER NOT NULL,
+    term_id INTEGER,
+    section_id INTEGER,
+    uid VARCHAR(80),
+    body TEXT,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    deleted_at TIMESTAMP WITH TIME ZONE
+);
+ALTER TABLE notes OWNER TO diablo;
+CREATE SEQUENCE notes_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+ALTER TABLE notes_id_seq OWNER TO diablo;
+ALTER SEQUENCE notes_id_seq OWNED BY notes.id;
+ALTER TABLE ONLY notes ALTER COLUMN id SET DEFAULT nextval('notes_id_seq'::regclass);
+ALTER TABLE ONLY notes ADD CONSTRAINT notes_pkey PRIMARY KEY (id);
+CREATE UNIQUE INDEX term_id_section_id_idx ON notes (term_id, section_id) WHERE uid IS NULL;
+CREATE UNIQUE INDEX uid_idx ON notes (uid) WHERE section_id IS NULL;
+
+--
+
 CREATE TABLE opt_outs (
     id INTEGER NOT NULL,
     instructor_uid VARCHAR(80) NOT NULL,

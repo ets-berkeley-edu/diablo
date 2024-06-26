@@ -30,6 +30,7 @@ from diablo.lib.berkeley import get_recording_end_date, get_recording_start_date
 from diablo.lib.util import format_days, format_time, get_names_of_days, safe_strftime
 from diablo.models.course_preference import CoursePreference
 from diablo.models.cross_listing import CrossListing
+from diablo.models.note import Note
 from diablo.models.opt_out import OptOut
 from diablo.models.room import Room
 from diablo.models.schedule_update import ScheduleUpdate
@@ -163,6 +164,7 @@ class SisSection(db.Model):
             section_id,
             include_canvas_sites=False,
             include_deleted=False,
+            include_notes=False,
             include_update_history=True,
     ):
         sql = f"""
@@ -194,7 +196,12 @@ class SisSection(db.Model):
                 'term_id': term_id,
             },
         )
-        api_json = _to_api_json(term_id=term_id, rows=rows, include_update_history=include_update_history)
+        api_json = _to_api_json(
+            term_id=term_id,
+            rows=rows,
+            include_notes=include_notes,
+            include_update_history=include_update_history,
+        )
         feed = api_json[0] if api_json else None
         if feed and include_canvas_sites:
             feed['canvasSites'] = get_course_sites_by_id(feed['canvasSiteIds'])
@@ -516,7 +523,7 @@ class SisSection(db.Model):
         return set([row['section_id'] for row in rows])
 
 
-def _to_api_json(term_id, rows, include_rooms=True, include_update_history=False):  # noqa C901
+def _to_api_json(term_id, rows, include_notes=False, include_rooms=True, include_update_history=False):  # noqa C901
     rows = rows.fetchall()
     section_ids = list(set(int(row['section_id']) for row in rows))
     courses_per_id = {}
@@ -549,6 +556,10 @@ def _to_api_json(term_id, rows, include_rooms=True, include_update_history=False
         if s.section_id not in scheduled_by_section_id:
             scheduled_by_section_id[s.section_id] = []
         scheduled_by_section_id[s.section_id].append(s.to_api_json(rooms_by_id=rooms_by_id))
+
+    if include_notes:
+        note_results = Note.get_notes_for_section_ids(section_ids=section_ids, term_id=term_id)
+        notes_by_section_id = {note.section_id: note.body for note in note_results}
 
     cross_listings_per_section_id, instructors_per_section_id = _get_cross_listed_courses(
         section_ids=section_ids,
@@ -676,6 +687,9 @@ def _to_api_json(term_id, rows, include_rooms=True, include_update_history=False
                 ineligible_meetings.sort(key=lambda m: f"{m['startDate']} {m['startTime']}")
             if include_rooms:
                 meeting['room'] = room.to_api_json() if room else None
+
+        if include_notes and section_id in notes_by_section_id:
+            course['note'] = notes_by_section_id[section_id]
 
     # Next, construct the feed
     api_json = []
