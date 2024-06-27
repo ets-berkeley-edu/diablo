@@ -27,6 +27,61 @@
       <v-row>
         <v-col lg="3" cols="3" sm="3">
           <CoursePageSidebar :course="course" />
+          <v-card v-if="$currentUser.isAdmin" outlined class="elevation-1 mt-4">
+            <v-card-title>
+              Notes
+            </v-card-title>
+            <v-card-text v-if="!noteEditing" id="note-body">
+              {{ course.note || 'No notes.' }}
+            </v-card-text>
+            <v-card-actions v-if="!noteEditing" class="px-4 pb-4">
+              <v-btn
+                id="btn-edit-note"
+                :disabled="noteUpdating"
+                @click="editNote"
+              >
+                Edit
+              </v-btn>
+              <v-btn
+                v-if="course.note"
+                id="btn-delete-note"
+                class="mx-3"
+                :disabled="noteUpdating"
+                @click="deleteNote"
+              >
+                Delete
+              </v-btn>
+            </v-card-actions>
+            <v-card-text v-if="noteEditing">
+              <v-textarea
+                id="note-body-edit"
+                v-model="noteBody"
+                outlined
+                hide-details="auto"
+                density="compact"
+                placeholder="Enter note text"
+              >
+              </v-textarea>
+            </v-card-text>
+            <v-card-actions v-if="noteEditing" class="px-4 pb-4">
+              <v-btn
+                id="btn-save-note"
+                color="success"
+                :disabled="noteUpdating"
+                @click="saveNote"
+              >
+                Save
+              </v-btn>
+              <v-btn
+                id="btn-cancel-note"
+                class="mx-3"
+                :disabled="noteUpdating"
+                @click="cancelNote"
+              >
+                Cancel
+              </v-btn>
+            </v-card-actions>
+          </v-card>
         </v-col>
         <v-col>
           <v-container v-if="isCurrentTerm && capability && hasValidMeetingTimes && !course.hasOptedOut" class="elevation-2 pa-6">
@@ -554,7 +609,10 @@ import PageTitle from '@/components/util/PageTitle'
 import PersonLookup from '@/components/util/PersonLookup'
 import ScheduledCourse from '@/components/course/ScheduledCourse'
 import Utils from '@/mixins/Utils'
-import {getCourse, getCourseSite, updateCollaborators, updatePublishType, updateRecordingType} from '@/api/course'
+import {
+  deleteCourseNote, getCourse, getCourseSite, updateCollaborators,
+  updateCourseNote, updatePublishType, updateRecordingType
+} from '@/api/course'
 import {getAuditoriums} from '@/api/room'
 import {getCanvasSitesTeaching} from '@/api/user'
 
@@ -590,6 +648,9 @@ export default {
       instructorProxies: undefined,
       instructorProxyPrivileges: undefined,
       location: undefined,
+      noteBody: undefined,
+      noteEditing: false,
+      noteUpdating: false,
       pendingCollaborator: undefined,
       pendingCanvasSite: undefined,
       pendingCanvasSiteId: undefined,
@@ -683,6 +744,25 @@ export default {
         this.pendingCollaborator = collaborator
       }
     },
+    cancelNote() {
+      this.noteBody = this.course.note
+      this.noteEditing = false
+      this.noteUpdating = false
+      this.alertScreenReader('Note edit canceled.')
+    },
+    deleteNote() {
+      this.isUpdatingNote = true
+      deleteCourseNote(this.course.termId, this.course.sectionId).then(() => {
+        this.course.note = this.noteBody = null
+        this.noteEditing = false
+        this.noteUpdating = false
+        this.alertScreenReader('Note deleted.')
+      })
+    },
+    editNote() {
+      this.noteEditing = true
+      this.alertScreenReader('Editing note.')
+    },
     removeCanvasSite(canvasSiteId) {
       this.publishCanvasSites = this.$_.filter(this.publishCanvasSites, c => c.canvasSiteId !== canvasSiteId)
     },
@@ -708,6 +788,7 @@ export default {
       })
       this.courseDisplayTitle = this.getCourseCodes(this.course)[0]
       this.collaborators = this.$_.clone(this.course.collaborators)
+      this.noteBody = this.course.note
       this.publishType = this.course.publishType
       this.recordingType = this.course.recordingType
       this.publishCanvasSites = this.course.canvasSites
@@ -718,6 +799,15 @@ export default {
         })
       }
       this.$ready(this.courseDisplayTitle)
+    },
+    saveNote() {
+      this.noteUpdating = true
+      updateCourseNote(this.course.termId, this.course.sectionId, this.noteBody).then(data => {
+        this.course.note = this.noteBody = data.note
+        this.noteEditing = false
+        this.noteUpdating = false
+        this.alertScreenReader('Note updated.')
+      })
     },
     toggleCollaboratorsEditing() {
       this.collaboratorsEditing = true

@@ -1,6 +1,10 @@
 import axios from 'axios'
 import utils from '@/api/api-utils'
 
+export function deleteUserNote(uid) {
+  return axios.post(`${utils.apiBaseUrl()}/api/user/${uid}/note/delete`)
+}
+
 export function getUser(uid) {
   return axios.get(`${utils.apiBaseUrl()}/api/user/${uid}`)
 }
@@ -19,4 +23,8 @@ export function searchUsers(snippet: string) {
 
 export function getCanvasSitesTeaching(uid) {
   return axios.get(`${utils.apiBaseUrl()}/api/user/${uid}/teaching_sites`)
+}
+
+export function updateUserNote(uid, body: string) {
+  return axios.post(`${utils.apiBaseUrl()}/api/user/${uid}/note/update`, {body})
 }
