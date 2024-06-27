@@ -155,6 +155,58 @@ class TestAdminUsers:
             assert 'uid' in admin_user
 
 
+class TestNote:
+
+    @staticmethod
+    def _api_update_note(client, uid, body, expected_status_code=200):
+        response = client.post(
+            f'/api/user/{uid}/note/update',
+            data=json.dumps({'body': body}),
+            content_type='application/json',
+        )
+        assert response.status_code == expected_status_code
+        return response.json
+
+    @staticmethod
+    def _api_delete_note(client, uid, expected_status_code=200):
+        response = client.post(f'/api/user/{uid}/note/delete')
+        assert response.status_code == expected_status_code
+        return response.json
+
+    def test_anonymous(self, client):
+        """Denies anonymous access."""
+        self._api_update_note(client, uid='10000', body='Nota bene', expected_status_code=401)
+        self._api_delete_note(client, uid='10000', expected_status_code=401)
+
+    def test_unauthorized(self, client, fake_auth):
+        """Denies non-admin access."""
+        fake_auth.login(instructor_uid)
+        self._api_update_note(client, uid='10000', body='Nota bene', expected_status_code=401)
+        self._api_delete_note(client, uid='10000', expected_status_code=401)
+
+    def test_no_body(self, client, fake_auth):
+        """Updates require note body."""
+        fake_auth.login(admin_uid)
+        self._api_update_note(client, uid='10000', body=None, expected_status_code=400)
+
+    def test_admin(self, client, fake_auth):
+        """Admin can create, update and delete note."""
+        fake_auth.login(admin_uid)
+        assert 'note' not in client.get('/api/user/10000').json
+
+        response = self._api_update_note(client, uid='10000', body='Nota bene')
+        assert response['note'] == 'Nota bene'
+        assert client.get('/api/user/10000').json['note'] == 'Nota bene'
+
+        response = self._api_update_note(client, uid='10000', body='Nota male')
+        assert response['note'] == 'Nota male'
+        assert client.get('/api/user/10000').json['note'] == 'Nota male'
+
+        response = self._api_delete_note(client, uid='10000')
+        assert response == {'deleted': True}
+        assert 'note' not in client.get('/api/user/10000').json
+
+
 class TestGetCalnetUser:
     """Admin user can fetch CalNet user profile."""
 

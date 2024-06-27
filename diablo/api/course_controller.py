@@ -32,6 +32,7 @@ from diablo.externals.kaltura import Kaltura
 from diablo.lib.http import tolerant_jsonify
 from diablo.lib.interpolator import get_sign_up_url
 from diablo.models.course_preference import CoursePreference, get_all_publish_types, get_all_recording_types
+from diablo.models.note import Note
 from diablo.models.opt_out import OptOut
 from diablo.models.queued_email import QueuedEmail
 from diablo.models.schedule_update import ScheduleUpdate
@@ -49,6 +50,7 @@ def get_course(term_id, section_id):
         section_id,
         include_canvas_sites=True,
         include_deleted=True,
+        include_notes=current_user.is_admin,
         include_update_history=True,
     )
     if not course:
@@ -163,6 +165,37 @@ def update_collaborator_uids():
         )
 
     return tolerant_jsonify(preferences.to_api_json())
+
+
+@app.route('/api/course/note/delete', methods=['POST'])
+@admin_required
+def delete_course_note():
+    params = request.get_json()
+    term_id = params.get('termId')
+    section_id = params.get('sectionId')
+    if not term_id or not section_id:
+        raise BadRequestError('Required params missing or invalid')
+    course = SisSection.get_course(term_id, section_id)
+    if not course:
+        raise BadRequestError('No matching course found')
+    Note.delete(term_id=term_id, section_id=section_id)
+    return tolerant_jsonify({'deleted': True})
+
+
+@app.route('/api/course/note/update', methods=['POST'])
+@admin_required
+def update_course_note():
+    params = request.get_json()
+    term_id = params.get('termId')
+    section_id = params.get('sectionId')
+    body = params.get('body')
+    if not term_id or not section_id or not body:
+        raise BadRequestError('Required params missing or invalid')
+    course = SisSection.get_course(term_id, section_id)
+    if not course:
+        raise BadRequestError('No matching course found')
+    note = Note.create_or_update(body=body, term_id=term_id, section_id=section_id)
+    return tolerant_jsonify({'note': note.body})
 
 
 @app.route('/api/course/opt_out/update', methods=['POST'])

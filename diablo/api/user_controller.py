@@ -22,7 +22,7 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from diablo.api.errors import ResourceNotFoundError
+from diablo.api.errors import BadRequestError, ResourceNotFoundError
 from diablo.api.util import admin_required
 from diablo.externals.canvas import get_teaching_courses
 from diablo.externals.loch import get_loch_basic_attributes_by_uid_or_email
@@ -30,6 +30,7 @@ from diablo.lib.http import tolerant_jsonify
 from diablo.lib.util import basic_attributes_to_api_json
 from diablo.merged.calnet import get_calnet_user_for_uid, get_calnet_users_for_uids
 from diablo.models.admin_user import AdminUser
+from diablo.models.note import Note
 from diablo.models.sis_section import SisSection
 from flask import current_app as app, request
 from flask_login import current_user, login_required
@@ -53,6 +54,11 @@ def get_user(uid):
             instructor_uid=uid,
         )
         user['courses'] = courses
+
+        note = Note.get_note_for_uid(uid)
+        if note:
+            user['note'] = note.body
+
         return tolerant_jsonify(user)
 
 
@@ -60,6 +66,24 @@ def get_user(uid):
 @login_required
 def get_calnet_user(uid):
     return tolerant_jsonify(get_calnet_user_for_uid(app=app, uid=uid))
+
+
+@app.route('/api/user/<uid>/note/delete', methods=['POST'])
+@admin_required
+def delete_user_note(uid):
+    Note.delete(uid=uid)
+    return tolerant_jsonify({'deleted': True})
+
+
+@app.route('/api/user/<uid>/note/update', methods=['POST'])
+@admin_required
+def update_user_note(uid):
+    params = request.get_json()
+    body = params.get('body')
+    if not body:
+        raise BadRequestError('Required params missing or invalid')
+    note = Note.create_or_update(body=body, uid=uid)
+    return tolerant_jsonify({'note': note.body})
 
 
 @app.route('/api/user/<uid>/teaching_sites')

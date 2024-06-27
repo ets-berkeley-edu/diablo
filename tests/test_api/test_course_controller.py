@@ -1091,6 +1091,133 @@ class TestUpdateOptOut:
             assert api_json['hasOptedOut'] is False
 
 
+class TestNote:
+
+    @property
+    def term_id(self):
+        return app.config['CURRENT_TERM_ID']
+
+    @staticmethod
+    def _api_update_note(client, term_id, section_id, body, expected_status_code=200):
+        response = client.post(
+            '/api/course/note/update',
+            data=json.dumps({
+                'termId': term_id,
+                'sectionId': section_id,
+                'body': body,
+            }),
+            content_type='application/json',
+        )
+        assert response.status_code == expected_status_code
+        return response.json
+
+    @staticmethod
+    def _api_delete_note(client, term_id, section_id, expected_status_code=200):
+        response = client.post(
+            '/api/course/note/delete',
+            data=json.dumps({
+                'termId': term_id,
+                'sectionId': section_id,
+            }),
+            content_type='application/json',
+        )
+        assert response.status_code == expected_status_code
+        return response.json
+
+    def test_anonymous(self, client):
+        """Denies anonymous access."""
+        self._api_update_note(
+            client,
+            term_id=self.term_id,
+            section_id=section_1_id,
+            body='Nota bene',
+            expected_status_code=401,
+        )
+        self._api_delete_note(
+            client,
+            term_id=self.term_id,
+            section_id=section_1_id,
+            expected_status_code=401,
+        )
+
+    def test_unauthorized(self, client, fake_auth):
+        """Denies non-admin access."""
+        instructor_uids = get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
+        fake_auth.login(instructor_uids[0])
+        self._api_update_note(
+            client,
+            term_id=self.term_id,
+            section_id=section_1_id,
+            body='Nota bene',
+            expected_status_code=401,
+        )
+        self._api_delete_note(
+            client,
+            term_id=self.term_id,
+            section_id=section_1_id,
+            expected_status_code=401,
+        )
+
+    def test_no_body(self, client, fake_auth):
+        """Updates require note body."""
+        fake_auth.login(admin_uid)
+        self._api_update_note(
+            client,
+            term_id=self.term_id,
+            section_id=section_1_id,
+            body=None,
+            expected_status_code=400,
+        )
+
+    def test_nonexistent_section(self, client, fake_auth):
+        """Updates require matching section."""
+        fake_auth.login(admin_uid)
+        self._api_update_note(
+            client,
+            term_id=self.term_id,
+            section_id='0',
+            body='Nota bene',
+            expected_status_code=400,
+        )
+
+    def test_admin(self, client, fake_auth):
+        """Admin can create, update and delete note."""
+        fake_auth.login(admin_uid)
+        assert 'note' not in client.get(f'/api/course/{self.term_id}/{section_1_id}').json
+
+        response = self._api_update_note(
+            client,
+            term_id=self.term_id,
+            section_id=section_1_id,
+            body='Nota bene',
+        )
+        assert response['note'] == 'Nota bene'
+        assert client.get(f'/api/course/{self.term_id}/{section_1_id}').json['note'] == 'Nota bene'
+
+        # Notes are not visible to non-admins.
+        instructor_uids = get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
+        fake_auth.login(instructor_uids[0])
+        assert 'note' not in client.get(f'/api/course/{self.term_id}/{section_1_id}').json
+
+        fake_auth.login(admin_uid)
+        response = self._api_update_note(
+            client,
+            term_id=self.term_id,
+            section_id=section_1_id,
+            body='Nota male',
+        )
+        assert response['note'] == 'Nota male'
+        assert client.get(f'/api/course/{self.term_id}/{section_1_id}').json['note'] == 'Nota male'
+
+        response = self._api_delete_note(
+            client,
+            term_id=self.term_id,
+            section_id=section_1_id,
+        )
+        assert response == {'deleted': True}
+        assert 'note' not in client.get(f'/api/course/{self.term_id}/{section_1_id}').json
+
+
 class TestCoursesReport:
 
     @property
