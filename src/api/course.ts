@@ -3,6 +3,13 @@ import axios from 'axios'
 import moment from 'moment-timezone'
 import utils from '@/api/api-utils'
 
+export function deleteCourseNote(termId: number, sectionId: number) {
+  return axios.post(`${utils.apiBaseUrl()}/api/course/note/delete`, {
+    sectionId,
+    termId
+  })
+}
+
 export function downloadCSV(filter, termId) {
   const fileDownload = require('js-file-download')
   const now = moment().format('YYYY-MM-DD_HH-mm-ss')
@@ -43,6 +50,18 @@ export function updateCollaborators(
       sectionId,
       termId
     })
+}
+
+export function updateCourseNote(
+  termId: number,
+  sectionId: number,
+  body: string
+) {
+  return axios.post(`${utils.apiBaseUrl()}/api/course/note/update`, {
+    sectionId,
+    termId,
+    body
+  })
 }
 
 export function updateOptOut(instructorUid, termId, sectionId, optOut) {
