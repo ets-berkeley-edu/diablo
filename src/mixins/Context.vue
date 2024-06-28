@@ -24,7 +24,7 @@ export default {
       if (courses.length > 1) {
         let message = `${courses.length} course${courses.length === 1 ? '' : 's'}`
         const scheduled = this.$_.filter(courses, 'scheduled')
-        if (scheduled.length) {
+        if (scheduled && scheduled.length) {
           return `${message}. ${scheduled.length} ${scheduled.length === 1 ? 'has' : 'have'} recordings scheduled.`
         } else {
           return message
