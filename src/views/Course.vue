@@ -132,7 +132,7 @@
                 <div v-for="collaborator in collaborators" :id="`collaborator-${collaborator.uid}`" :key="collaborator.uid">
                   {{ collaborator.firstName }} {{ collaborator.lastName }} ({{ collaborator.email }}) ({{ collaborator.uid }})
                 </div>
-                <div v-if="!collaborators.length" id="collaborators-none">
+                <div v-if="!collaborators || !collaborators.length" id="collaborators-none">
                   None
                 </div>
                 <v-btn
