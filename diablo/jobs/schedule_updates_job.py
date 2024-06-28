@@ -25,9 +25,10 @@ ENHANCEMENTS, OR MODIFICATIONS.
 import json
 
 from diablo.jobs.base_job import BaseJob
-from diablo.jobs.util import is_valid_meeting_schedule
+from diablo.jobs.util import build_merged_collaborators_list, is_valid_meeting_schedule
 from diablo.lib.berkeley import are_scheduled_dates_obsolete, are_scheduled_times_obsolete, get_recording_end_date, get_recording_start_date
 from diablo.lib.util import safe_strftime
+from diablo.models.course_preference import CoursePreference
 from diablo.models.schedule_update import ScheduleUpdate
 from diablo.models.sis_section import AUTHORIZED_INSTRUCTOR_ROLE_CODES, SisSection
 from flask import current_app as app
@@ -70,11 +71,17 @@ def _queue_not_scheduled_update(course):
         field_value_old=json.dumps(scheduled),
         field_value_new=None,
     )
+    _downgrade_recording_type(course)
 
 
 def _queue_room_not_eligible_update(course):
     meeting = course.get('meetings', {}).get('ineligible', [])[0]
     scheduled = course['scheduled'][0]
+    CoursePreference.update_recording_type(
+        term_id=course['termId'],
+        section_id=course['sectionId'],
+        recording_type='presenter_presentation_audio',
+    )
     ScheduleUpdate.queue(
         term_id=course['termId'],
         section_id=course['sectionId'],
@@ -82,6 +89,7 @@ def _queue_room_not_eligible_update(course):
         field_value_old=json.dumps(_get_room_summary(scheduled)),
         field_value_new=json.dumps(_get_room_summary(meeting)),
     )
+    _downgrade_recording_type(course)
 
 
 def _valid_meeting_count(meetings):
@@ -180,6 +188,7 @@ def _queue_meeting_updates(course):
                         field_value_old='presenter_presentation_audio_with_operator',
                         field_value_new='presenter_presentation_audio',
                     )
+                    _downgrade_recording_type(course)
 
             ScheduleUpdate.queue(
                 term_id=course['termId'],
@@ -193,11 +202,7 @@ def _queue_meeting_updates(course):
 
 def _queue_instructor_updates(course):
     instructors = list(filter(lambda i: i['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES and not i['deletedAt'], course['instructors']))
-    collaborators = list(filter(lambda i: i['roleCode'] == 'APRX' and not i['deletedAt'], course['instructors']))
-    collaborator_uids = set(c['uid'] for c in collaborators)
-
     scheduled_instructor_uids = course['scheduled'][0].get('instructorUids') or []
-    scheduled_collaborator_uids = course['scheduled'][0].get('collaboratorUids') or []
 
     if set(i['uid'] for i in instructors) != set(scheduled_instructor_uids):
         ScheduleUpdate.queue(
@@ -208,36 +213,35 @@ def _queue_instructor_updates(course):
             field_value_new=[i['uid'] for i in instructors],
         )
 
-    collaborator_uids_to_add = set()
-    for c in collaborators:
-        if c['uid'] not in scheduled_collaborator_uids:
-            previous_manual_removal = ScheduleUpdate.find_collaborator_removed(
-                term_id=course['termId'],
-                section_id=course['sectionId'],
-                collaborator_uid=c['uid'],
-            )
-            if not previous_manual_removal:
-                collaborator_uids_to_add.add(c['uid'])
+    scheduled_collaborator_uids = course['scheduled'][0].get('collaboratorUids') or []
+    new_collaborator_uids = build_merged_collaborators_list(course, scheduled_collaborator_uids)
 
-    collaborator_uids_to_remove = set()
-    for u in scheduled_collaborator_uids:
-        if u not in collaborator_uids:
-            previous_manual_addition = ScheduleUpdate.find_collaborator_added(
-                term_id=course['termId'],
-                section_id=course['sectionId'],
-                collaborator_uid=u,
-            )
-            if not previous_manual_addition:
-                collaborator_uids_to_remove.add(u)
-
-    if len(collaborator_uids_to_add) or len(collaborator_uids_to_remove):
+    if new_collaborator_uids != set(scheduled_collaborator_uids):
+        new_collaborator_uids = list(new_collaborator_uids)
         ScheduleUpdate.queue(
             term_id=course['termId'],
             section_id=course['sectionId'],
             field_name='collaborator_uids',
             field_value_old=scheduled_collaborator_uids,
-            field_value_new=list(set(scheduled_collaborator_uids).union(collaborator_uids_to_add).difference(collaborator_uids_to_remove)),
+            field_value_new=new_collaborator_uids,
         )
+        CoursePreference.update_collaborator_uids(
+            term_id=course['termId'],
+            section_id=course['sectionId'],
+            collaborator_uids=new_collaborator_uids,
+        )
+
+
+def _downgrade_recording_type(course):
+    # When a course moves out of an auditorium, or loses its room entirely, ensure recording_type is set to the default
+    # (without operator), since the with-operator setting requires the course to be located in an auditorium.
+    # Other user-set preferences (publish type and collaborator UIDs) should persist through unscheduling, since they may
+    # later be rescheduled.
+    CoursePreference.update_recording_type(
+        term_id=course['termId'],
+        section_id=course['sectionId'],
+        recording_type='presenter_presentation_audio',
+    )
 
 
 def _is_in_auditorium(meeting):

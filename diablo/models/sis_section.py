@@ -244,7 +244,7 @@ class SisSection(db.Model):
                 'term_id': term_id,
             },
         )
-        return _to_api_json(term_id=term_id, rows=rows)
+        return _to_api_json(term_id=term_id, rows=rows, include_administrative_proxies=True)
 
     @classmethod
     def get_courses(
@@ -297,7 +297,7 @@ class SisSection(db.Model):
             ORDER BY s.course_name, s.section_id, s.instructor_uid, r.capability NULLS LAST
         """
         rows = db.session.execute(text(sql), params)
-        return _to_api_json(term_id=term_id, rows=rows)
+        return _to_api_json(term_id=term_id, rows=rows, include_administrative_proxies=include_administrative_proxies)
 
     @classmethod
     def get_courses_opted_out(cls, term_id):
@@ -523,7 +523,7 @@ class SisSection(db.Model):
         return set([row['section_id'] for row in rows])
 
 
-def _to_api_json(term_id, rows, include_notes=False, include_rooms=True, include_update_history=False):  # noqa C901
+def _to_api_json(term_id, rows, include_administrative_proxies=False, include_notes=False, include_rooms=True, include_update_history=False):  # noqa C901
     rows = rows.fetchall()
     section_ids = list(set(int(row['section_id']) for row in rows))
     courses_per_id = {}
@@ -562,6 +562,7 @@ def _to_api_json(term_id, rows, include_notes=False, include_rooms=True, include
         notes_by_section_id = {note.section_id: note.body for note in note_results}
 
     cross_listings_per_section_id, instructors_per_section_id = _get_cross_listed_courses(
+        include_administrative_proxies=include_administrative_proxies,
         section_ids=section_ids,
         term_id=term_id,
     )
@@ -713,7 +714,7 @@ def _decorate_course_meeting_type(course):
         course['meetingType'] = 'A'
 
 
-def _get_cross_listed_courses(section_ids, term_id):
+def _get_cross_listed_courses(section_ids, term_id, include_administrative_proxies=False):
     # Return course and instructor info for cross-listings as well as the
     # principal section. Although cross-listed sections were "deleted" during SIS data refresh job, we still rely
     # on metadata from those deleted records.
@@ -740,7 +741,7 @@ def _get_cross_listed_courses(section_ids, term_id):
         text(sql),
         {
             'all_cross_listing_ids': all_cross_listing_ids,
-            'instructor_role_codes': ALL_INSTRUCTOR_ROLE_CODES,
+            'instructor_role_codes': ALL_INSTRUCTOR_ROLE_CODES if include_administrative_proxies else AUTHORIZED_INSTRUCTOR_ROLE_CODES,
             'term_id': term_id,
         },
     )
