@@ -273,7 +273,9 @@ def schedule_recordings(course, is_semester_start=False, updates=None):
         recording_type = course.get('recordingType') or 'presenter_presentation_audio'
         collaborator_uids = build_merged_collaborators_list(course, course.get('collaboratorUids'))
 
-    collaborators = [{'uid': collaborator_uid} for collaborator_uid in collaborator_uids]
+    # Add a dummy 'roleCode' type for all collaborators, whether or not they teach in SIS. This will tell downstream
+    # code to give these users access in Kaltura but not include them in the series description.
+    collaborators = [{'uid': collaborator_uid, 'roleCode': 'Collaborator'} for collaborator_uid in collaborator_uids]
 
     all_scheduled = []
 
