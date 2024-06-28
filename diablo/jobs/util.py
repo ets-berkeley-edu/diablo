@@ -39,11 +39,51 @@ from diablo.models.cross_listing import CrossListing
 from diablo.models.instructor import Instructor
 from diablo.models.queued_email import notify_instructors_recordings_scheduled
 from diablo.models.room import Room
+from diablo.models.schedule_update import ScheduleUpdate
 from diablo.models.scheduled import Scheduled
 from diablo.models.sis_section import AUTHORIZED_INSTRUCTOR_ROLE_CODES, SisSection
 from flask import current_app as app
 from KalturaClient.Plugins.Schedule import KalturaScheduleEventRecurrenceType
 from sqlalchemy import text
+
+
+def build_merged_collaborators_list(course, manually_set_collaborator_uids):
+    # On the SIS side, pick up anyone who's an administrative proxy.
+    sis_collaborators = list(filter(lambda i: i['roleCode'] == 'APRX' and not i['deletedAt'], course['instructors']))
+    sis_collaborator_uids = set(c['uid'] for c in sis_collaborators)
+
+    if not manually_set_collaborator_uids:
+        return sis_collaborator_uids
+
+    # Compare to our most recent list of manually set collaborators on the Diablo/Kaltura side. If we have a SIS collaborator
+    # who doesn't show up in that last, add them unless they've been manually removed.
+    collaborator_uids_to_add = set()
+    for c in sis_collaborators:
+        if c['uid'] not in manually_set_collaborator_uids:
+            previous_manual_removal = ScheduleUpdate.find_collaborator_removed(
+                term_id=course['termId'],
+                section_id=course['sectionId'],
+                collaborator_uid=c['uid'],
+            )
+            if not previous_manual_removal:
+                collaborator_uids_to_add.add(c['uid'])
+
+    # Run the same comparison, removing any collaborator who's not present in SIS and was not manually added.
+    collaborator_uids_to_remove = set()
+    for u in manually_set_collaborator_uids:
+        if u not in sis_collaborator_uids:
+            previous_manual_addition = ScheduleUpdate.find_collaborator_added(
+                term_id=course['termId'],
+                section_id=course['sectionId'],
+                collaborator_uid=u,
+            )
+            if not previous_manual_addition:
+                collaborator_uids_to_remove.add(u)
+
+    if len(collaborator_uids_to_add) or len(collaborator_uids_to_remove):
+        return set(manually_set_collaborator_uids).union(collaborator_uids_to_add).difference(collaborator_uids_to_remove)
+    else:
+        return set(manually_set_collaborator_uids)
 
 
 def get_eligible_unscheduled_courses(term_id):
@@ -222,10 +262,18 @@ def schedule_recordings(course, is_semester_start=False, updates=None):
 
     instructors = list(filter(lambda i: i['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES and not i['deletedAt'], course['instructors']))
 
+    # When scheduling a new course, we derive user-set properties from, in fallback order: 1) recent updates made through the UI; 2)
+    # course preferences that persist in Diablo's database from an earlier instance of scheduling; 3) default values.
     if updates:
-        collaborators = [{'uid': collaborator_uid} for collaborator_uid in updates['collaboratorUids']]
+        publish_type = updates['publishType']
+        recording_type = updates['recordingType']
+        collaborator_uids = updates['collaboratorUids']
     else:
-        collaborators = list(filter(lambda i: i['roleCode'] == 'APRX' and not i['deletedAt'], course['instructors']))
+        publish_type = course.get('publishType') or 'kaltura_my_media'
+        recording_type = course.get('recordingType') or 'presenter_presentation_audio'
+        collaborator_uids = build_merged_collaborators_list(course, course.get('collaboratorUids'))
+
+    collaborators = [{'uid': collaborator_uid} for collaborator_uid in collaborator_uids]
 
     all_scheduled = []
 
@@ -244,8 +292,6 @@ def schedule_recordings(course, is_semester_start=False, updates=None):
         section_id = int(course['sectionId'])
         if room.kaltura_resource_id:
             try:
-                publish_type = updates['publishType'] if updates else 'kaltura_my_media'
-                recording_type = updates['recordingType'] if updates else 'presenter_presentation_audio'
                 kaltura_schedule_id = Kaltura().schedule_recording(
                     canvas_course_site_ids=course['canvasSiteIds'],
                     course_label=course['label'],
