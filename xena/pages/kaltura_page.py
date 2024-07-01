@@ -22,8 +22,8 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-
 from datetime import datetime
+import time
 
 from flask import current_app as app
 from selenium.webdriver.common.by import By
@@ -209,6 +209,7 @@ class KalturaPage(Page):
     # ACTUAL VS EXPECTED
 
     def verify_title_and_desc(self, section, meeting):
+        self.wait_for_delete_button()
         expected = f'{section.code}, {section.number} ({section.term.name})'
         assert self.visible_series_title() == expected
 
@@ -223,6 +224,7 @@ class KalturaPage(Page):
         assert self.visible_series_desc() == expected
 
     def verify_collaborators(self, section, addl_collaborators=None):
+        self.wait_for_delete_button()
         all_collabs = []
         all_collabs.extend(section.instructors)
         if addl_collaborators:
@@ -234,6 +236,7 @@ class KalturaPage(Page):
         assert len(self.collaborator_rows()) == len(all_collabs)
 
     def verify_schedule(self, section, meeting):
+        self.wait_for_delete_button()
         schedule = meeting.meeting_schedule
         self.open_recurrence_modal()
         assert self.is_weekly_checked()
@@ -256,9 +259,37 @@ class KalturaPage(Page):
         assert visible_end == end
 
     def verify_publish_status(self, recording_schedule):
+        self.wait_for_delete_button()
+        self.wait_for_element(self.SERIES_PUBLICATION_CHANNELS, util.get_short_timeout())
+        time.sleep(3)
+
+        app.logger.info(f"Pub channels el class is {self.element(self.SERIES_PUBLICATION_CHANNELS).get_attribute('class')}")
+
         if recording_schedule.recording_placement == RecordingPlacement.PUBLISH_TO_MY_MEDIA:
             assert self.is_private()
         elif recording_schedule.recording_placement == RecordingPlacement.PUBLISH_TO_PENDING:
             assert self.is_unlisted()
         else:
             assert self.is_published()
+
+    def verify_site_categories(self, sites):
+        expected_count = len(sites) * 2
+        self.wait_for_delete_button()
+        self.scroll_to_bottom()
+        if expected_count > 0:
+            self.wait_for_element(self.SERIES_CATEGORY_ROW, util.get_short_timeout())
+        else:
+            self.wait_for_element(self.SERIES_PUBLICATION_CHANNELS, util.get_short_timeout())
+        visible_count = len(self.publish_category_els())
+        if visible_count != expected_count:
+            app.logger.info(f'Expected {expected_count} categories, got {visible_count}')
+        assert visible_count == expected_count
+
+        expected_ids = list(map(lambda site: site.site_id, sites))
+        expected_ids.sort()
+        visible_ids = list(map(lambda el: el.text, self.publish_category_els()))
+        visible_ids = list(set(visible_ids))
+        visible_ids.sort()
+        if visible_ids != expected_ids:
+            app.logger.info(f'Expected site IDs {expected_ids}, got {visible_ids}')
+        assert visible_ids == expected_ids

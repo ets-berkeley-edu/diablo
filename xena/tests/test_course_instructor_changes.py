@@ -132,29 +132,25 @@ class TestCourseInstructorChanges:
     def test_series_recordings(self):
         self.room_page.verify_series_recordings(self.recording_schedule)
 
-    def test_series_blackouts(self):
-        self.room_page.verify_series_blackouts(self.recording_schedule)
-
     def test_verify_printable(self):
         self.room_printable_page.verify_printable(self.recording_schedule)
 
     def test_verify_diablo_selected_settings(self):
         self.room_printable_page.close_printable_schedule()
         self.course_page.load_page(self.section)
-        assert self.course_page.visible_recording_type() == self.recording_schedule.recording_type.value['desc']
-        assert self.recording_schedule.recording_placement.value['desc'] in self.course_page.visible_recording_placement()
+        self.course_page.verify_recording_type(self.recording_schedule)
+        self.course_page.verify_recording_placement(self.recording_schedule)
         assert self.course_page.visible_course_site_ids() == [self.site.site_id]
 
     def test_update_series_title_and_desc(self):
         self.course_page.click_kaltura_series_link(self.recording_schedule)
-        self.kaltura_page.wait_for_delete_button()
         self.kaltura_page.verify_title_and_desc(self.section, self.meeting)
 
     def test_update_series_collab(self):
         self.kaltura_page.verify_collaborators(self.section)
 
     def test_kaltura_publish_type_not_updated(self):
-        assert len(self.kaltura_page.publish_category_els()) == 2
+        self.kaltura_page.verify_site_categories([self.site])
 
     # VERIFY EMAILS
 

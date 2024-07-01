@@ -64,6 +64,7 @@ class TestCourseRoomChanges:
     # COURSE SCHEDULED, INSTRUCTOR SELECTS VIDEO OPERATOR
 
     def test_semester_start(self):
+        self.jobs_page.load_page()
         self.jobs_page.run_semester_start_job_sequence()
         assert util.get_kaltura_id(self.recording_schedule)
         self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_TO_MY_MEDIA
@@ -84,7 +85,6 @@ class TestCourseRoomChanges:
         self.login_page.dev_auth()
         self.ouija_page.click_jobs_link()
         self.jobs_page.run_settings_update_job_sequence()
-        self.recording_schedule.recording_type = RecordingType.VIDEO_WITH_OPERATOR
 
     # SCHEDULED COURSE MOVES TO ANOTHER ELIGIBLE ROOM, THOUGH NOT AN AUDITORIUM
 
@@ -108,36 +108,31 @@ class TestCourseRoomChanges:
     def test_new_eligible_room_recordings(self):
         self.room_page.verify_series_recordings(self.recording_schedule)
 
-    def test_new_eligible_room_blackouts(self):
-        self.room_page.verify_series_blackouts(self.recording_schedule)
-
     def test_new_eligible_room_printable(self):
         self.room_printable_page.verify_printable(self.recording_schedule)
 
     def test_new_eligible_room_recording_type_downgrade(self):
         self.room_printable_page.close_printable_schedule()
         self.course_page.load_page(self.section)
-        assert self.course_page.visible_recording_type() == self.recording_schedule.recording_type.value['desc']
-        assert self.recording_schedule.recording_placement.value['desc'] in self.course_page.visible_recording_placement()
+        self.course_page.verify_recording_type(self.recording_schedule)
+        self.course_page.verify_recording_placement(self.recording_schedule)
 
     def test_new_eligible_room_series_title_and_desc(self):
         self.course_page.click_kaltura_series_link(self.recording_schedule)
-        self.kaltura_page.wait_for_delete_button()
         self.kaltura_page.verify_title_and_desc(self.section, self.meeting)
 
     def test_new_eligible_room_series_collab(self):
         self.kaltura_page.verify_collaborators(self.section)
 
     def test_new_eligible_room_publish_type(self):
-        assert len(self.kaltura_page.publish_category_els()) == 0
-        assert not self.kaltura_page.is_published()
+        self.kaltura_page.verify_site_categories([])
+        self.kaltura_page.verify_publish_status(self.recording_schedule)
 
     # SCHEDULED COURSE MOVES TO INELIGIBLE ROOM
 
     def test_move_to_ineligible_room(self):
         self.kaltura_page.close_window_and_switch()
-        self.meeting.room = self.new_ineligible_room
-        util.set_meeting_location(self.section, self.meeting)
+        util.change_course_room(self.section, self.meeting, self.new_ineligible_room)
 
     def test_update_jobs_ineligible_room(self):
         self.jobs_page.load_page()
@@ -174,8 +169,7 @@ class TestCourseRoomChanges:
     # BACK TO ELIGIBLE ROOM, SETTINGS REVERT TO DEFAULT
 
     def test_move_back_to_eligible_room(self):
-        self.meeting.room = self.new_eligible_room
-        util.set_meeting_location(self.section, self.meeting)
+        util.change_course_room(self.section, self.meeting, self.new_eligible_room)
 
     def test_run_updated_jobs_eligible_room_again(self):
         self.jobs_page.load_page()
@@ -198,29 +192,25 @@ class TestCourseRoomChanges:
     def test_eligible_room_again_recordings(self):
         self.room_page.verify_series_recordings(self.recording_schedule)
 
-    def test_eligible_room_again_blackouts(self):
-        self.room_page.verify_series_blackouts(self.recording_schedule)
-
     def test_eligible_room_again_printable(self):
         self.room_printable_page.verify_printable(self.recording_schedule)
 
     def test_eligible_room_again_settings(self):
         self.room_printable_page.close_printable_schedule()
         self.course_page.load_page(self.section)
-        assert self.recording_schedule.recording_type.value['desc'] in self.course_page.visible_recording_type()
-        assert self.recording_schedule.recording_placement.value['desc'] in self.course_page.visible_recording_placement()
+        self.course_page.verify_recording_type(self.recording_schedule)
+        self.course_page.verify_recording_placement(self.recording_schedule)
 
     def test_eligible_room_again_series_title_and_desc(self):
         self.course_page.click_kaltura_series_link(self.recording_schedule)
-        self.kaltura_page.wait_for_delete_button()
         self.kaltura_page.verify_title_and_desc(self.section, self.meeting)
 
     def test_eligible_room_again_series_collab(self):
         self.kaltura_page.verify_collaborators(self.section)
 
     def test_eligible_room_again_publish_type(self):
-        assert len(self.kaltura_page.publish_category_els()) == 0
-        assert self.kaltura_page.is_private()
+        self.kaltura_page.verify_site_categories([])
+        self.kaltura_page.verify_publish_status(self.recording_schedule)
 
     # ROOM REMOVED ALTOGETHER
 

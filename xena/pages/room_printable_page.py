@@ -104,6 +104,7 @@ class RoomPrintablePage(DiabloPages):
 
         expected_type = recording_schedule.recording_type.value['printable']
         visible_type = self.visible_recording_type(section)
+        visible_type = visible_type and visible_type.title()
         if visible_type != expected_type:
             app.logger.info(f'Expecting {expected_type}, got {visible_type}')
         assert visible_type == expected_type

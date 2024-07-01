@@ -290,6 +290,13 @@ class CoursePage(DiabloPages):
     def cancel_recording_type_edits(self):
         self.wait_for_page_and_click_js(self.RECORDING_TYPE_CXL_BUTTON)
 
+    def verify_recording_type(self, recording_schedule):
+        expected = recording_schedule.recording_type.value['desc']
+        visible = self.visible_recording_type()
+        if visible != expected:
+            app.logger.info(f"Expected recording type '{expected}', got '{visible}'")
+        assert visible == expected
+
     # CAPTURE SETTINGS - recording placement
 
     PLACEMENT_TEXT = By.ID, 'publish-type-name'
@@ -303,6 +310,7 @@ class CoursePage(DiabloPages):
     PLACEMENT_SITE_SELECT = By.ID, 'select-canvas-site'
     PLACEMENT_SITE_LINK = By.XPATH, '//a[contains(@id, "canvas-course-site-")]'
     PLACEMENT_SITE_ADD_BUTTON = By.ID, 'btn-canvas-site-add'
+    PLACEMENT_SITE_INPUT = By.ID, 'input-canvas-site-id'
 
     @staticmethod
     def placement_site_option_loc(site):
@@ -349,11 +357,38 @@ class CoursePage(DiabloPages):
                     self.wait_for_element_and_click(self.placement_site_option_loc(site))
                     self.wait_for_element_and_click(self.PLACEMENT_SITE_ADD_BUTTON)
 
+    def enter_recording_placement(self, publish_type, sites=None):
+        app.logger.info(f'Selecting the radio button for {publish_type}')
+        if publish_type == RecordingPlacement.PUBLISH_TO_MY_MEDIA:
+            self.wait_for_page_and_click_js(self.PLACEMENT_MY_MEDIA_RADIO)
+        elif publish_type == RecordingPlacement.PUBLISH_TO_PENDING:
+            self.wait_for_page_and_click_js(self.PLACEMENT_PENDING_RADIO)
+            if sites:
+                for site in sites:
+                    self.wait_for_element_and_type(self.PLACEMENT_SITE_INPUT, str(site.site_id))
+                    self.wait_for_element_and_click(self.PLACEMENT_SITE_ADD_BUTTON)
+        else:
+            self.wait_for_page_and_click_js(self.PLACEMENT_AUTOMATIC_RADIO)
+            if sites:
+                for site in sites:
+                    self.wait_for_element_and_type(self.PLACEMENT_SITE_INPUT, str(site.site_id))
+                    self.wait_for_element_and_click(self.PLACEMENT_SITE_ADD_BUTTON)
+
+    def remove_recording_placement_site(self, site):
+        self.wait_for_page_and_click_js(self.placement_site_remove_button_loc(site))
+
     def save_recording_placement_edits(self):
         self.wait_for_element_and_click(self.PLACEMENT_SAVE_BUTTON)
 
     def cancel_recording_placement_edits(self):
         self.wait_for_page_and_click_js(self.PLACEMENT_CXL_BUTTON)
+
+    def verify_recording_placement(self, recording_schedule):
+        expected = recording_schedule.recording_placement.value['desc']
+        visible = self.visible_recording_placement()
+        if expected not in visible:
+            app.logger.info(f"Expected '{expected}' to be in '{visible}'")
+        assert expected in visible
 
     # KALTURA SERIES INFO
 
@@ -376,12 +411,12 @@ class CoursePage(DiabloPages):
         for r in row_els:
             node = str(row_els.index(r) + 1)
             rows.append({
-                'field': self.element((By.XPATH, f'{xpath}{node}/td[1]')).text,
-                'old_value': self.element((By.XPATH, f'{xpath}{node}/td[2]')).text,
-                'new_value': self.element((By.XPATH, f'{xpath}{node}/td[3]')).text,
-                'requested_by': self.element((By.XPATH, f'{xpath}{node}/td[4]')).text.split('(')[-1][0:-1],
-                'requested_at': self.element((By.XPATH, f'{xpath}{node}/td[5]')).text.split(',')[0],
-                'published_at': self.element((By.XPATH, f'{xpath}{node}/td[6]')).text.split(',')[0],
-                'status': self.element((By.XPATH, f'{xpath}{node}/td[7]')).text,
+                'field': self.element((By.XPATH, f'{xpath}[{node}]/td[1]')).text,
+                'old_value': self.element((By.XPATH, f'{xpath}[{node}]/td[2]')).text,
+                'new_value': self.element((By.XPATH, f'{xpath}[{node}]/td[3]')).text,
+                'requested_by': self.element((By.XPATH, f'{xpath}[{node}]/td[4]')).text.split('(')[-1][0:-1],
+                'requested_at': self.element((By.XPATH, f'{xpath}[{node}]/td[5]')).text.split(',')[0],
+                'published_at': self.element((By.XPATH, f'{xpath}[{node}]/td[6]')).text.split(',')[0],
+                'status': self.element((By.XPATH, f'{xpath}[{node}]/td[7]')).text,
             })
         return rows
