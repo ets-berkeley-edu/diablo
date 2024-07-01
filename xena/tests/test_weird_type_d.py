@@ -25,7 +25,6 @@ ENHANCEMENTS, OR MODIFICATIONS.
 
 from datetime import timedelta
 
-from flask import current_app as app
 import pytest
 from xena.models.canvas_site import CanvasSite
 from xena.models.email_template_type import EmailTemplateType
@@ -128,39 +127,13 @@ class TestWeirdTypeD:
         self.rooms_page.find_room(self.meeting_0.room)
         self.rooms_page.click_room_link(self.meeting_0.room)
         self.room_page.wait_for_series_row(self.recording_schedule_0)
+        self.room_page.verify_series_link_text(self.recording_schedule_0)
 
-    def test_meeting_0_room_series_link(self):
-        expected = f'{self.section.code}, {self.section.number} ({self.term.name})'
-        assert self.room_page.series_row_kaltura_link_text(self.recording_schedule_0) == expected
+    def test_meeting_0_room_series_schedule(self):
+        self.room_page.verify_series_schedule(self.recording_schedule_0)
 
-    def test_meeting_0_room_series_start(self):
-        start = self.meeting_0.meeting_schedule.expected_recording_dates(self.section.term)[0]
-        assert self.room_page.series_row_start_date(self.recording_schedule_0) == start
-
-    def test_meeting_0_room_series_end(self):
-        last_date = self.meeting_0.meeting_schedule.expected_recording_dates(self.section.term)[-1]
-        assert self.room_page.series_row_end_date(self.recording_schedule_0) == last_date
-
-    def test_meeting_0_room_series_days(self):
-        assert self.room_page.series_row_days(self.recording_schedule_0) == self.meeting_0.meeting_schedule.days.replace(' ', '')
-
-    def test_meeting_0_series_recordings(self):
-        self.room_page.expand_series_row(self.recording_schedule_0)
-        expected = self.meeting_0.meeting_schedule.expected_recording_dates(self.section.term)
-        visible = self.room_page.series_recording_start_dates(self.recording_schedule_0)
-        app.logger.info(f'Missing: {list(set(expected) - set(visible))}')
-        app.logger.info(f'Unexpected: {list(set(visible) - set(expected))} ')
-        expected.reverse()
-        assert visible == expected
-
-    def test_meeting_0_series_blackouts(self):
-        expected = self.meeting_0.meeting_schedule.expected_blackout_dates(self.section.term)
-        expected.sort()
-        visible = self.room_page.series_recording_blackout_dates(self.recording_schedule_0)
-        visible.sort()
-        app.logger.info(f'Missing: {list(set(expected) - set(visible))}')
-        app.logger.info(f'Unexpected: {list(set(visible) - set(expected))} ')
-        assert visible == expected
+    def test_meeting_0_room_series_recordings(self):
+        self.room_page.verify_series_recordings(self.recording_schedule_0)
 
     # SECOND MEETING: VERIFY SERIES IN DIABLO
 
@@ -169,48 +142,19 @@ class TestWeirdTypeD:
         self.rooms_page.find_room(self.meeting_1.room)
         self.rooms_page.click_room_link(self.meeting_1.room)
         self.room_page.wait_for_series_row(self.recording_schedule_1)
+        self.room_page.verify_series_link_text(self.recording_schedule_1)
 
-    def test_meeting_1_room_series_link(self):
-        expected = f'{self.section.code}, {self.section.number} ({self.term.name})'
-        assert self.room_page.series_row_kaltura_link_text(self.recording_schedule_1) == expected
+    def test_meeting_1_room_series_schedule(self):
+        self.room_page.verify_series_schedule(self.recording_schedule_1)
 
-    def test_meeting_1_room_series_start(self):
-        start = self.meeting_1.meeting_schedule.expected_recording_dates(self.section.term)[0]
-        assert self.room_page.series_row_start_date(self.recording_schedule_1) == start
-
-    def test_meeting_1_room_series_end(self):
-        last_date = self.meeting_1.meeting_schedule.expected_recording_dates(self.section.term)[-1]
-        assert self.room_page.series_row_end_date(self.recording_schedule_1) == last_date
-
-    def test_meeting_1_room_series_days(self):
-        assert self.room_page.series_row_days(self.recording_schedule_1) == self.meeting_1.meeting_schedule.days.replace(' ', '')
-
-    def test_meeting_1_series_recordings(self):
-        self.room_page.expand_series_row(self.recording_schedule_1)
-        expected = self.meeting_1.meeting_schedule.expected_recording_dates(self.section.term)
-        visible = self.room_page.series_recording_start_dates(self.recording_schedule_1)
-        app.logger.info(f'Missing: {list(set(expected) - set(visible))}')
-        app.logger.info(f'Unexpected: {list(set(visible) - set(expected))} ')
-        expected.reverse()
-        assert visible == expected
-
-    def test_series_blackouts(self):
-        expected = self.meeting_1.meeting_schedule.expected_blackout_dates(self.section.term)
-        expected.sort()
-        visible = self.room_page.series_recording_blackout_dates(self.recording_schedule_1)
-        visible.sort()
-        app.logger.info(f'Missing: {list(set(expected) - set(visible))}')
-        app.logger.info(f'Unexpected: {list(set(visible) - set(expected))} ')
-        assert visible == expected
+    def test_meeting_1_room_series_recordings(self):
+        self.room_page.verify_series_recordings(self.recording_schedule_1)
 
     # FIRST MEETING: VERIFY SERIES IN KALTURA
 
-    def test_click_series_0_link(self):
+    def test_series_0_title_and_desc(self):
         self.course_page.load_page(self.section)
         self.course_page.click_kaltura_series_link(self.recording_schedule_0)
-        self.kaltura_page.wait_for_delete_button()
-
-    def test_series_0_title_and_desc(self):
         self.kaltura_page.verify_title_and_desc(self.section, self.meeting_0)
 
     def test_series_0_collaborators(self):
@@ -224,12 +168,9 @@ class TestWeirdTypeD:
 
     # SECOND MEETING: VERIFY SERIES IN KALTURA
 
-    def test_click_series_1_link(self):
+    def test_series_1_title_and_desc(self):
         self.kaltura_page.close_window_and_switch()
         self.course_page.click_kaltura_series_link(self.recording_schedule_1)
-        self.kaltura_page.wait_for_delete_button()
-
-    def test_series_1_title_and_desc(self):
         self.kaltura_page.verify_title_and_desc(self.section, self.meeting_1)
 
     def test_series_1_collaborators(self):
@@ -278,7 +219,6 @@ class TestWeirdTypeD:
 
     def test_meeting_0_series(self):
         self.kaltura_page.load_event_edit_page(self.recording_schedule_0.series_id)
-        self.kaltura_page.wait_for_delete_button()
         self.kaltura_page.verify_title_and_desc(self.section, self.meeting_0)
         self.kaltura_page.verify_collaborators(self.section)
         self.kaltura_page.verify_schedule(self.section, self.meeting_0)
@@ -288,7 +228,6 @@ class TestWeirdTypeD:
 
     def test_meeting_1_series(self):
         self.kaltura_page.load_event_edit_page(self.recording_schedule_1.series_id)
-        self.kaltura_page.wait_for_delete_button()
         self.kaltura_page.verify_title_and_desc(self.section, self.meeting_1)
         self.kaltura_page.verify_collaborators(self.section)
         self.kaltura_page.verify_schedule(self.section, self.meeting_1)

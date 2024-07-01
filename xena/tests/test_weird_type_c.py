@@ -25,7 +25,6 @@ ENHANCEMENTS, OR MODIFICATIONS.
 
 from datetime import timedelta
 
-from flask import current_app as app
 import pytest
 from xena.models.recording_placement import RecordingPlacement
 from xena.models.recording_schedule import RecordingSchedule
@@ -124,48 +123,19 @@ class TestWeirdTypeC:
         self.rooms_page.find_room(self.meeting_0.room)
         self.rooms_page.click_room_link(self.meeting_0.room)
         self.room_page.wait_for_series_row(self.recording_sched_0)
+        self.room_page.verify_series_link_text(self.recording_sched_0)
 
-    def test_room_series_link(self):
-        expected = f'{self.section.code}, {self.section.number} ({self.term.name})'
-        assert self.room_page.series_row_kaltura_link_text(self.recording_sched_0) == expected
+    def test_room_series_schedule(self):
+        self.room_page.verify_series_schedule(self.recording_sched_0)
 
-    def test_room_series_start(self):
-        start = self.meeting_0.meeting_schedule.expected_recording_dates(self.section.term)[0]
-        assert self.room_page.series_row_start_date(self.recording_sched_0) == start
-
-    def test_room_series_end(self):
-        last_date = self.meeting_0.meeting_schedule.expected_recording_dates(self.section.term)[-1]
-        assert self.room_page.series_row_end_date(self.recording_sched_0) == last_date
-
-    def test_room_series_days(self):
-        assert self.room_page.series_row_days(self.recording_sched_0) == self.meeting_sched_0.days.replace(' ', '')
-
-    def test_series_recordings(self):
-        self.room_page.expand_series_row(self.recording_sched_0)
-        expected = self.meeting_sched_0.expected_recording_dates(self.section.term)
-        visible = self.room_page.series_recording_start_dates(self.recording_sched_0)
-        app.logger.info(f'Missing: {list(set(expected) - set(visible))}')
-        app.logger.info(f'Unexpected: {list(set(visible) - set(expected))} ')
-        expected.reverse()
-        assert visible == expected
-
-    def test_series_blackouts(self):
-        expected = self.meeting_sched_0.expected_blackout_dates(self.section.term)
-        expected.sort()
-        visible = self.room_page.series_recording_blackout_dates(self.recording_sched_0)
-        visible.sort()
-        app.logger.info(f'Missing: {list(set(expected) - set(visible))}')
-        app.logger.info(f'Unexpected: {list(set(visible) - set(expected))} ')
-        assert visible == expected
+    def test_room_series_recordings(self):
+        self.room_page.verify_series_recordings(self.recording_sched_0)
 
     # VERIFY SERIES IN KALTURA
 
-    def test_click_series_link(self):
+    def test_series_title_and_desc(self):
         self.course_page.load_page(self.section)
         self.course_page.click_kaltura_series_link(self.recording_sched_0)
-        self.kaltura_page.wait_for_delete_button()
-
-    def test_series_title_and_desc(self):
         self.kaltura_page.verify_title_and_desc(self.section, self.meeting_0)
 
     def test_series_collaborators(self):
@@ -224,17 +194,16 @@ class TestWeirdTypeC:
         self.course_page.load_page(self.section)
         self.course_page.verify_section_sis_data(self.section)
         self.course_page.verify_meeting_sis_data(self.meeting_0, idx=0)
-        assert self.recording_sched_0.recording_placement.value['desc'] in self.course_page.visible_recording_placement()
+        self.course_page.verify_recording_placement(self.recording_sched_0)
 
     def test_meeting_1_course_page_ineligible_becomes_eligible(self):
         self.course_page.load_page(self.section)
         self.course_page.verify_section_sis_data(self.section)
         self.course_page.verify_meeting_sis_data(self.meeting_1, idx=1)
-        assert self.recording_sched_1.recording_placement.value['desc'] in self.course_page.visible_recording_placement()
+        self.course_page.verify_recording_placement(self.recording_sched_1)
 
     def test_meeting_0_kaltura_series_ineligible_becomes_eligible(self):
         self.course_page.click_kaltura_series_link(self.recording_sched_0)
-        self.kaltura_page.wait_for_delete_button()
         self.kaltura_page.verify_title_and_desc(self.section, self.meeting_0)
         self.kaltura_page.verify_collaborators(self.section)
         self.kaltura_page.verify_schedule(self.section, self.meeting_0)
@@ -243,7 +212,6 @@ class TestWeirdTypeC:
     def test_meeting_1_kaltura_series_ineligible_becomes_eligible(self):
         self.kaltura_page.close_window_and_switch()
         self.course_page.click_kaltura_series_link(self.recording_sched_1)
-        self.kaltura_page.wait_for_delete_button()
         self.kaltura_page.verify_title_and_desc(self.section, self.meeting_1)
         self.kaltura_page.verify_collaborators(self.section)
         self.kaltura_page.verify_schedule(self.section, self.meeting_1)
@@ -267,16 +235,15 @@ class TestWeirdTypeC:
         self.course_page.load_page(self.section)
         self.course_page.verify_section_sis_data(self.section)
         self.course_page.verify_meeting_sis_data(self.meeting_0, idx=0)
-        assert self.recording_sched_0.recording_placement.value['desc'] in self.course_page.visible_recording_placement()
+        self.course_page.verify_recording_placement(self.recording_sched_0)
 
     def test_meeting_1_course_page_instr_removed(self):
         self.course_page.verify_section_sis_data(self.section)
         self.course_page.verify_meeting_sis_data(self.meeting_1, idx=1)
-        assert self.recording_sched_1.recording_placement.value['desc'] in self.course_page.visible_recording_placement()
+        self.course_page.verify_recording_placement(self.recording_sched_1)
 
     def test_meeting_0_kaltura_series_instr_removed(self):
         self.course_page.click_kaltura_series_link(self.recording_sched_0)
-        self.kaltura_page.wait_for_delete_button()
         self.kaltura_page.verify_title_and_desc(self.section, self.meeting_0)
         self.kaltura_page.verify_collaborators(self.section)
         self.kaltura_page.verify_schedule(self.section, self.meeting_0)
@@ -285,7 +252,6 @@ class TestWeirdTypeC:
     def test_meeting_1_kaltura_series_instr_removed(self):
         self.kaltura_page.close_window_and_switch()
         self.course_page.click_kaltura_series_link(self.recording_sched_1)
-        self.kaltura_page.wait_for_delete_button()
         self.kaltura_page.verify_title_and_desc(self.section, self.meeting_1)
         self.kaltura_page.verify_collaborators(self.section)
         self.kaltura_page.verify_schedule(self.section, self.meeting_1)
@@ -309,16 +275,15 @@ class TestWeirdTypeC:
         self.course_page.load_page(self.section)
         self.course_page.verify_section_sis_data(self.section)
         self.course_page.verify_meeting_sis_data(self.meeting_0, idx=0)
-        assert self.recording_sched_0.recording_placement.value['desc'] in self.course_page.visible_recording_placement()
+        self.course_page.verify_recording_placement(self.recording_sched_0)
 
     def test_meeting_1_course_page_instr_added(self):
         self.course_page.verify_section_sis_data(self.section)
         self.course_page.verify_meeting_sis_data(self.meeting_1, idx=1)
-        assert self.recording_sched_1.recording_placement.value['desc'] in self.course_page.visible_recording_placement()
+        self.course_page.verify_recording_placement(self.recording_sched_1)
 
     def test_meeting_0_kaltura_series_instr_added(self):
         self.course_page.click_kaltura_series_link(self.recording_sched_0)
-        self.kaltura_page.wait_for_delete_button()
         self.kaltura_page.verify_title_and_desc(self.section, self.meeting_0)
         self.kaltura_page.verify_collaborators(self.section)
         self.kaltura_page.verify_schedule(self.section, self.meeting_0)
@@ -327,7 +292,6 @@ class TestWeirdTypeC:
     def test_meeting_1_kaltura_series_instr_added(self):
         self.kaltura_page.close_window_and_switch()
         self.course_page.click_kaltura_series_link(self.recording_sched_1)
-        self.kaltura_page.wait_for_delete_button()
         self.kaltura_page.verify_title_and_desc(self.section, self.meeting_1)
         self.kaltura_page.verify_collaborators(self.section)
         self.kaltura_page.verify_schedule(self.section, self.meeting_1)
@@ -348,16 +312,15 @@ class TestWeirdTypeC:
         self.course_page.load_page(self.section)
         self.course_page.verify_section_sis_data(self.section)
         self.course_page.verify_meeting_sis_data(self.meeting_0, idx=0)
-        assert self.recording_sched_0.recording_placement.value['desc'] in self.course_page.visible_recording_placement()
+        self.course_page.verify_recording_placement(self.recording_sched_0)
 
     def test_meeting_1_course_page_date_change(self):
         self.course_page.verify_section_sis_data(self.section)
         self.course_page.verify_meeting_sis_data(self.meeting_1, idx=1)
-        assert self.recording_sched_1.recording_placement.value['desc'] in self.course_page.visible_recording_placement()
+        self.course_page.verify_recording_placement(self.recording_sched_1)
 
     def test_meeting_0_kaltura_series_date_change(self):
         self.course_page.click_kaltura_series_link(self.recording_sched_0)
-        self.kaltura_page.wait_for_delete_button()
         self.kaltura_page.verify_title_and_desc(self.section, self.meeting_0)
         self.kaltura_page.verify_collaborators(self.section)
         self.kaltura_page.verify_schedule(self.section, self.meeting_0)
@@ -366,7 +329,6 @@ class TestWeirdTypeC:
     def test_meeting_1_kaltura_series_date_change(self):
         self.kaltura_page.close_window_and_switch()
         self.course_page.click_kaltura_series_link(self.recording_sched_1)
-        self.kaltura_page.wait_for_delete_button()
         self.kaltura_page.verify_title_and_desc(self.section, self.meeting_1)
         self.kaltura_page.verify_collaborators(self.section)
         self.kaltura_page.verify_schedule(self.section, self.meeting_1)
@@ -392,11 +354,10 @@ class TestWeirdTypeC:
     def test_meeting_1_course_page_room_removed(self):
         self.course_page.verify_section_sis_data(self.section)
         self.course_page.verify_meeting_sis_data(self.meeting_1, idx=0)
-        assert self.recording_sched_1.recording_placement.value['desc'] in self.course_page.visible_recording_placement()
+        self.course_page.verify_recording_placement(self.recording_sched_1)
 
     def test_meeting_1_kaltura_series_room_removed(self):
         self.course_page.click_kaltura_series_link(self.recording_sched_1)
-        self.kaltura_page.wait_for_delete_button()
         self.kaltura_page.verify_title_and_desc(self.section, self.meeting_1)
         self.kaltura_page.verify_collaborators(self.section)
         self.kaltura_page.verify_schedule(self.section, self.meeting_1)

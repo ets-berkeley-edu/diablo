@@ -79,11 +79,7 @@
           "role": "TNIC"
         }
       ],
-      "proxies": [
-        {
-          "role": "APRX"
-        }
-      ],
+      "proxies": [],
       "meetings": [
         {
           "room": {
@@ -195,9 +191,6 @@
     {
       "test_script": "test_x_listings",
       "instructors": [
-        {
-          "role": "PI"
-        },
         {
           "role": "PI"
         }

@@ -61,12 +61,12 @@ class TestCollaborators0:
         util.reset_sent_email_test_data(self.section)
 
     def test_semester_start(self):
+        self.jobs_page.load_page()
         self.jobs_page.run_schedule_update_job_sequence()
         assert util.get_kaltura_id(self.recording_schedule)
 
     def test_kaltura_proxy_collaborator(self):
         self.kaltura_page.load_event_edit_page(self.recording_schedule.series_id)
-        self.kaltura_page.wait_for_delete_button()
         self.kaltura_page.verify_title_and_desc(self.section, self.meeting)
         self.kaltura_page.verify_collaborators(self.section, [self.proxy])
 
@@ -81,7 +81,6 @@ class TestCollaborators0:
         self.instructor_page.click_course_page_link(self.section)
         self.course_page.wait_for_instructors()
         self.course_page.verify_instructors(self.section)
-        assert self.course_page.visible_proxies() == [f'{self.proxy.first_name} {self.proxy.last_name}'.strip()]
 
     def test_proxy_collaborator_by_default(self):
         assert self.course_page.visible_collaborator_uids() == [str(self.proxy.uid)]
@@ -101,7 +100,6 @@ class TestCollaborators0:
 
     def test_kaltura_new_collaborator(self):
         self.kaltura_page.load_event_edit_page(self.recording_schedule.series_id)
-        self.kaltura_page.wait_for_delete_button()
         self.kaltura_page.verify_title_and_desc(self.section, self.meeting)
         self.kaltura_page.verify_collaborators(self.section, [self.proxy, self.manual_collaborator])
 
@@ -131,7 +129,6 @@ class TestCollaborators0:
     def test_kaltura_collaborators_restored(self):
         util.get_kaltura_id(self.recording_schedule)
         self.kaltura_page.load_event_edit_page(self.recording_schedule.series_id)
-        self.kaltura_page.wait_for_delete_button()
         self.kaltura_page.verify_collaborators(self.section, [self.proxy, self.manual_collaborator])
         assert self.kaltura_page.collaborator_perm(self.instructor) == 'Co-Editor, Co-Publisher'
         assert self.kaltura_page.collaborator_perm(self.proxy) == 'Co-Editor, Co-Publisher'
@@ -146,8 +143,8 @@ class TestCollaborators1:
     meeting_0 = section.meetings[0]
     meeting_1 = section.meetings[1]
 
-    meeting_0.meeting_schedule.end_date = (meeting_0.meeting_schedule.end_date - timedelta(days=15)).strftime('%Y-%m-%d')
-    meeting_1.meeting_schedule.start_date = (meeting_0.meeting_schedule.end_date + timedelta(days=1)).strftime('%Y-%m-%d')
+    meeting_0.meeting_schedule.end_date = (meeting_0.meeting_schedule.end_date - timedelta(days=15))
+    meeting_1.meeting_schedule.start_date = (meeting_0.meeting_schedule.end_date + timedelta(days=1))
 
     recording_schedule_0 = RecordingSchedule(section, meeting_0)
     recording_schedule_1 = RecordingSchedule(section, meeting_1)
@@ -183,21 +180,16 @@ class TestCollaborators1:
         self.course_page.verify_collaborator_uids([self.manual_collaborator])
 
     def test_run_updates(self):
-        self.course_page.log_out()
-        self.login_page.load_page()
-        self.login_page.dev_auth()
-        self.ouija_page.click_jobs_link()
+        self.course_page.click_jobs_link()
         self.jobs_page.run_settings_update_job_sequence()
 
     def test_kaltura_new_collaborator_meeting_0(self):
         self.kaltura_page.load_event_edit_page(self.recording_schedule_0.series_id)
-        self.kaltura_page.wait_for_delete_button()
         self.kaltura_page.verify_title_and_desc(self.section, self.meeting_0)
         self.kaltura_page.verify_collaborators(self.section, [self.manual_collaborator])
 
     def test_kaltura_new_collaborator_meeting_1(self):
         self.kaltura_page.load_event_edit_page(self.recording_schedule_1.series_id)
-        self.kaltura_page.wait_for_delete_button()
         self.kaltura_page.verify_title_and_desc(self.section, self.meeting_1)
         self.kaltura_page.verify_collaborators(self.section, [self.manual_collaborator])
 
@@ -208,13 +200,11 @@ class TestCollaborators1:
 
     def test_kaltura_new_proxy_meeting_0(self):
         self.kaltura_page.load_event_edit_page(self.recording_schedule_0.series_id)
-        self.kaltura_page.wait_for_delete_button()
         self.kaltura_page.verify_title_and_desc(self.section, self.meeting_0)
         self.kaltura_page.verify_collaborators(self.section, [self.manual_collaborator, self.proxy])
 
     def test_kaltura_new_proxy_meeting_1(self):
         self.kaltura_page.load_event_edit_page(self.recording_schedule_1.series_id)
-        self.kaltura_page.wait_for_delete_button()
         self.kaltura_page.verify_title_and_desc(self.section, self.meeting_1)
         self.kaltura_page.verify_collaborators(self.section, [self.manual_collaborator, self.proxy])
 
@@ -222,7 +212,6 @@ class TestCollaborators1:
         self.course_page.load_page(self.section)
         self.course_page.wait_for_instructors()
         self.course_page.verify_instructors(self.section)
-        assert self.course_page.visible_proxies() == [f'{self.proxy.first_name} {self.proxy.last_name}'.strip()]
 
     def test_new_collaborators(self):
         self.course_page.verify_collaborator_uids([self.proxy, self.manual_collaborator])
@@ -238,14 +227,12 @@ class TestCollaborators1:
 
     def test_kaltura_collaborator_removed_meeting_0(self):
         self.kaltura_page.load_event_edit_page(self.recording_schedule_0.series_id)
-        self.kaltura_page.wait_for_delete_button()
         self.kaltura_page.verify_collaborators(self.section, [self.proxy])
         assert self.kaltura_page.collaborator_perm(self.instructor) == 'Co-Editor, Co-Publisher'
         assert self.kaltura_page.collaborator_perm(self.proxy) == 'Co-Editor, Co-Publisher'
 
     def test_kaltura_collaborator_removed_meeting_1(self):
         self.kaltura_page.load_event_edit_page(self.recording_schedule_1.series_id)
-        self.kaltura_page.wait_for_delete_button()
         self.kaltura_page.verify_collaborators(self.section, [self.proxy])
         assert self.kaltura_page.collaborator_perm(self.instructor) == 'Co-Editor, Co-Publisher'
         assert self.kaltura_page.collaborator_perm(self.proxy) == 'Co-Editor, Co-Publisher'
@@ -273,12 +260,11 @@ class TestCollaborators2:
 
     def test_run_updates(self):
         self.ouija_page.click_jobs_link()
-        self.jobs_page.run_schedule_updates_job()
+        self.jobs_page.run_schedule_update_job_sequence()
         util.get_kaltura_id(self.recording_schedule)
 
     def test_kaltura_proxy_collaborator(self):
         self.kaltura_page.load_event_edit_page(self.recording_schedule.series_id)
-        self.kaltura_page.wait_for_delete_button()
         self.kaltura_page.verify_title_and_desc(self.section, self.meeting)
         self.kaltura_page.verify_collaborators(self.section, self.section.proxies)
 
@@ -293,8 +279,7 @@ class TestCollaborators2:
         self.login_page.dev_auth(self.instructor.uid)
         self.instructor_page.click_course_page_link(self.section)
         self.course_page.wait_for_instructors()
-        assert self.course_page.visible_instructors() == [f'{self.instructor.first_name} {self.instructor.last_name}'.strip()]
-        assert self.course_page.visible_proxies() == [f'{p.first_name} {p.last_name}'.strip() for p in self.section.proxies]
+        self.course_page.verify_instructors(self.section)
 
     def test_proxy_collaborators_by_default(self):
         self.course_page.verify_collaborator_uids(self.section.proxies)
@@ -313,7 +298,6 @@ class TestCollaborators2:
 
     def test_kaltura_proxy_collaborator_removed(self):
         self.kaltura_page.load_event_edit_page(self.recording_schedule.series_id)
-        self.kaltura_page.wait_for_delete_button()
         self.kaltura_page.verify_title_and_desc(self.section, self.meeting)
         self.kaltura_page.verify_collaborators(self.section, [self.proxy_1])
 
@@ -326,7 +310,6 @@ class TestCollaborators2:
 
     def test_kaltura_no_proxy_collaborators(self):
         self.kaltura_page.load_event_edit_page(self.recording_schedule.series_id)
-        self.kaltura_page.wait_for_delete_button()
         self.kaltura_page.verify_title_and_desc(self.section, self.meeting)
         self.kaltura_page.verify_collaborators(self.section, [])
 

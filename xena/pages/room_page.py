@@ -109,32 +109,53 @@ class RoomPage(DiabloPages):
 
     # ACTUAL VS EXPECTED
 
+    def verify_series_link_text(self, recording_schedule):
+        section = recording_schedule.section
+        expected = f'{section.code}, {section.number} ({section.term.name})'
+        visible = self.series_row_kaltura_link_text(recording_schedule)
+        if visible != expected:
+            app.logger.info(f"Expected link text '{expected}', got '{visible}'")
+        assert visible == expected
+
     def verify_series_schedule(self, recording_schedule):
         section = recording_schedule.section
         schedule = recording_schedule.meeting.meeting_schedule
-        start = schedule.expected_recording_dates(section.term)[0]
-        assert self.series_row_start_date(recording_schedule) == start
+        expected_start = schedule.expected_recording_dates(section.term)[0]
+        visible_start = self.series_row_start_date(recording_schedule)
+        if visible_start != expected_start:
+            app.logger.info(f"Expected start date '{expected_start}', got '{visible_start}'")
 
-        last_date = schedule.expected_recording_dates(section.term)[-1]
-        assert self.series_row_end_date(recording_schedule) == last_date
+        expected_last_date = schedule.expected_recording_dates(section.term)[-1]
+        visible_last_date = self.series_row_end_date(recording_schedule)
+        if visible_last_date != expected_last_date:
+            app.logger.info(f"Expected last date '{expected_last_date}', got '{visible_last_date}'")
 
-        assert self.series_row_days(recording_schedule) == schedule.days.replace(' ', '')
+        expected_days = schedule.days.replace(' ', '')
+        visible_days = self.series_row_days(recording_schedule)
+        if visible_days != expected_days:
+            app.logger.info(f"Expected days '{expected_days}', got '{visible_days}'")
+
+        assert visible_start == expected_start
+        assert visible_last_date == expected_last_date
+        assert visible_days == expected_days
 
     def verify_series_recordings(self, recording_schedule):
         section = recording_schedule.section
         self.expand_series_row(recording_schedule)
-        expected = recording_schedule.meeting.meeting_schedule.expected_recording_dates(section.term)
-        visible = self.series_recording_start_dates(recording_schedule)
-        app.logger.info(f'Missing: {list(set(expected) - set(visible))}')
-        app.logger.info(f'Unexpected: {list(set(visible) - set(expected))} ')
-        expected.reverse()
-        assert visible == expected
 
-    def verify_series_blackouts(self, recording_schedule):
-        section = recording_schedule.section
-        expected = recording_schedule.meeting.meeting_schedule.expected_blackout_dates(section.term)
-        visible = self.series_recording_blackout_dates(recording_schedule)
-        app.logger.info(f'Missing: {list(set(expected) - set(visible))}')
-        app.logger.info(f'Unexpected: {list(set(visible) - set(expected))} ')
-        expected.reverse()
-        assert visible == expected
+        expected_recordings = recording_schedule.meeting.meeting_schedule.expected_recording_dates(section.term)
+        visible_recordings = self.series_recording_start_dates(recording_schedule)
+        if visible_recordings != expected_recordings:
+            app.logger.info(f'Missing recordings: {list(set(expected_recordings) - set(visible_recordings))}')
+            app.logger.info(f'Unexpected recordings: {list(set(visible_recordings) - set(expected_recordings))} ')
+        expected_recordings.reverse()
+
+        expected_blackouts = recording_schedule.meeting.meeting_schedule.expected_blackout_dates(section.term)
+        visible_blackouts = self.series_recording_blackout_dates(recording_schedule)
+        if visible_blackouts != expected_blackouts:
+            app.logger.info(f'Missing blackouts: {list(set(expected_blackouts) - set(visible_blackouts))}')
+            app.logger.info(f'Unexpected blackouts: {list(set(visible_blackouts) - set(expected_blackouts))} ')
+        expected_blackouts.reverse()
+
+        assert visible_recordings == expected_recordings
+        assert visible_blackouts == expected_blackouts

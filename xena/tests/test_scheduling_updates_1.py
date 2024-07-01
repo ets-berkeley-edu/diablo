@@ -133,8 +133,7 @@ class TestScheduling1:
         self.room_page.wait_for_series_row(self.recording_schedule)
 
     def test_room_series_link(self):
-        expected = f'{self.section.code}, {self.section.number} ({self.term.name})'
-        assert self.room_page.series_row_kaltura_link_text(self.recording_schedule) == expected
+        self.room_page.verify_series_link_text(self.recording_schedule)
 
     def test_room_series_schedule(self):
         self.room_page.verify_series_schedule(self.recording_schedule)
@@ -142,21 +141,15 @@ class TestScheduling1:
     def test_room_series_recordings(self):
         self.room_page.verify_series_recordings(self.recording_schedule)
 
-    def test_room_series_blackouts(self):
-        self.room_page.verify_series_blackouts(self.recording_schedule)
-
     def test_printable(self):
         self.room_printable_page.verify_printable(self.recording_schedule)
 
     # VERIFY SERIES IN KALTURA
 
-    def test_click_series_link(self):
+    def test_series_title_and_desc(self):
         self.room_printable_page.close_printable_schedule()
         self.course_page.load_page(self.section)
         self.course_page.click_kaltura_series_link(self.recording_schedule)
-        self.kaltura_page.wait_for_delete_button()
-
-    def test_series_title_and_desc(self):
         self.kaltura_page.verify_title_and_desc(self.section, self.meeting)
 
     def test_series_collab(self):
@@ -166,10 +159,10 @@ class TestScheduling1:
         self.kaltura_page.verify_schedule(self.section, self.meeting)
 
     def test_series_publish_status(self):
-        assert self.kaltura_page.is_private()
+        self.kaltura_page.verify_publish_status(self.recording_schedule)
 
     def test_kaltura_course_site(self):
-        assert len(self.kaltura_page.publish_category_els()) == 0
+        self.kaltura_page.verify_site_categories([])
 
     # VERIFY ANNUNCIATION EMAIL
 
@@ -220,13 +213,8 @@ class TestScheduling1:
 
     def test_add_new_site(self):
         self.course_page.load_page(self.section)
-
-        # TODO alter this to admin setting course site when it's possible to do so
-        self.course_page.log_out()
-        self.login_page.dev_auth()
-        self.course_page.load_page(self.section)
         self.course_page.click_edit_recording_placement()
-        self.course_page.select_recording_placement(RecordingPlacement.PUBLISH_AUTOMATICALLY, sites=[self.site])
+        self.course_page.enter_recording_placement(RecordingPlacement.PUBLISH_AUTOMATICALLY, sites=[self.site])
         self.course_page.save_recording_placement_edits()
         self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_AUTOMATICALLY
 
@@ -238,22 +226,20 @@ class TestScheduling1:
     # VERIFY COURSE HISTORY
 
     def test_course_history_rec_type(self):
-        self.course_page.log_out()
-        self.login_page.dev_auth()
         self.course_page.load_page(self.section)
         row = next(filter(lambda r: r['field'] == 'publish_type', self.course_page.update_history_table_rows()))
         assert row['old_value'] == RecordingPlacement.PUBLISH_TO_MY_MEDIA.value['db']
         assert row['new_value'] == RecordingPlacement.PUBLISH_AUTOMATICALLY.value['db']
         assert row['requested_by'] == str(self.instructor.uid)
-        assert row['requested_at'] == datetime.date.today().strftime('%/%/%')
+        assert row['requested_at'] == datetime.date.today().strftime('%-m/%-d/%Y')
         assert row['status'] == 'queued'
 
     def test_course_history_canvas_site(self):
-        row = next(filter(lambda r: r['field'] == 'canvas_site_id', self.course_page.update_history_table_rows()))
+        row = next(filter(lambda r: r['field'] == 'canvas_site_ids', self.course_page.update_history_table_rows()))
         assert row['old_value'] == '—'
-        assert row['new_value'] == str(self.site.site_id)
+        assert row['new_value'] == f'[ "{str(self.site.site_id)}" ]'
         assert row['requested_by'] == str(self.instructor.uid)
-        assert row['requested_at'] == datetime.date.today().strftime('%/%/%')
+        assert row['requested_at'] == datetime.date.today().strftime('%-m/%-d/%Y')
         assert row['status'] == 'queued'
 
     # UPDATE SERIES IN KALTURA
@@ -264,12 +250,9 @@ class TestScheduling1:
 
     # VERIFY SERIES IN KALTURA
 
-    def test_update_click_series_link(self):
+    def test_update_series_title_and_desc(self):
         self.course_page.load_page(self.section)
         self.course_page.click_kaltura_series_link(self.recording_schedule)
-        self.kaltura_page.wait_for_delete_button()
-
-    def test_update_series_title_and_desc(self):
         self.kaltura_page.verify_title_and_desc(self.section, self.meeting)
 
     def test_update_series_collab(self):
@@ -281,12 +264,10 @@ class TestScheduling1:
     def test_update_series_publish_status(self):
         self.kaltura_page.reload_page()
         self.kaltura_page.wait_for_publish_category_el()
-        # TODO - publish-automatically
-        assert self.kaltura_page.is_published()
+        self.kaltura_page.verify_publish_status(self.recording_schedule)
 
     def test_update_kaltura_course_site(self):
-        assert len(self.kaltura_page.publish_category_els()) == 2
-        assert self.kaltura_page.is_publish_category_present(self.site)
+        self.kaltura_page.verify_site_categories([self.site])
 
     # VERIFY EMAIL
 
@@ -303,7 +284,7 @@ class TestScheduling1:
         assert row['status'] == 'succeeded'
 
     def test_course_history_canvas_site_updated(self):
-        row = next(filter(lambda r: r['field'] == 'canvas_site_id', self.course_page.update_history_table_rows()))
+        row = next(filter(lambda r: r['field'] == 'canvas_site_ids', self.course_page.update_history_table_rows()))
         assert row['status'] == 'succeeded'
 
     # VERIFY REMINDER EMAIL

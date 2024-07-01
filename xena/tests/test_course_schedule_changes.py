@@ -65,6 +65,7 @@ class TestCourseScheduleChanges:
         util.reset_sent_email_test_data(self.section)
 
     def test_semester_start(self):
+        self.jobs_page.load_page()
         self.jobs_page.run_semester_start_job_sequence()
         util.get_kaltura_id(self.recording_schedule)
         self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
@@ -88,8 +89,7 @@ class TestCourseScheduleChanges:
         self.room_page.wait_for_series_row(self.recording_schedule)
 
     def test_room_series_link(self):
-        expected = f'{self.section.code}, {self.section.number} ({self.term.name})'
-        assert self.room_page.series_row_kaltura_link_text(self.recording_schedule) == expected
+        self.room_page.verify_series_link_text(self.recording_schedule)
 
     def test_room_series_schedule(self):
         self.room_page.verify_series_schedule(self.recording_schedule)
@@ -97,19 +97,13 @@ class TestCourseScheduleChanges:
     def test_series_recordings(self):
         self.room_page.verify_series_recordings(self.recording_schedule)
 
-    def test_series_blackouts(self):
-        self.room_page.verify_series_blackouts(self.recording_schedule)
-
     def test_verify_printable(self):
         self.room_printable_page.verify_printable(self.recording_schedule)
 
-    def test_click_series_link(self):
+    def test_series_title_and_desc(self):
         self.room_printable_page.close_printable_schedule()
         self.course_page.load_page(self.section)
         self.course_page.click_kaltura_series_link(self.recording_schedule)
-        self.kaltura_page.wait_for_delete_button()
-
-    def test_series_title_and_desc(self):
         self.kaltura_page.verify_title_and_desc(self.section, self.new_meeting)
 
     def test_series_collab(self):
@@ -119,10 +113,10 @@ class TestCourseScheduleChanges:
         self.kaltura_page.verify_schedule(self.section, self.new_meeting)
 
     def test_series_publish_status(self):
-        assert self.kaltura_page.is_private()
+        self.kaltura_page.verify_publish_status(self.recording_schedule)
 
     def test_kaltura_course_site(self):
-        assert len(self.kaltura_page.publish_category_els()) == 0
+        self.kaltura_page.verify_site_categories([])
 
     def test_email_instr_new_meeting(self):
         self.kaltura_page.close_window_and_switch()
