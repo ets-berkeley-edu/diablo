@@ -280,7 +280,7 @@ def _handle_meeting_added(course, meeting_added, updated_publish_type, updated_r
 def _handle_meeting_removed(kaltura, course, scheduled, schedule_updates):
     try:
         kaltura.delete(scheduled['kalturaScheduleId'])
-        Scheduled.delete(term_id=course['termId'], section_id=course['sectionId'])
+        Scheduled.delete(term_id=course['termId'], section_id=course['sectionId'], kaltura_schedule_id=scheduled['kalturaScheduleId'])
         _mark_success(schedule_updates, 'meeting_removed', scheduled['kalturaScheduleId'])
     except Exception as e:
         _mark_error(
