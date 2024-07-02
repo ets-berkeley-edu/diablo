@@ -179,7 +179,16 @@ def _update_already_scheduled_events():  # noqa C901
 
         _mark_success(
             schedule_updates,
-            ('publish_type', 'recording_type', 'instructor_uids', 'collaborator_uids', 'not_scheduled', 'opted_out', 'room_not_eligible'),
+            (
+                'publish_type',
+                'recording_type',
+                'instructor_uids',
+                'collaborator_uids',
+                'canvas_site_ids',
+                'not_scheduled',
+                'opted_out',
+                'room_not_eligible',
+            ),
         )
 
         if no_longer_scheduled:
@@ -242,15 +251,12 @@ def _handle_instructor_updates(
             section_id=course['sectionId'],
             collaborator_uids=collaborator_uids,
         )
-        _mark_success(schedule_updates, ('collaborator_uids', 'instructor_uids'), scheduled['kalturaScheduleId'])
-
     except Exception as e:
         _mark_error(
             schedule_updates,
             e,
             ('collaborator_uids', 'instructor_uids'),
             f"Failed to update Kaltura base entry: {kaltura_schedule['templateEntryId']}",
-            kaltura_schedule_id=scheduled['kalturaScheduleId'],
         )
 
 
@@ -349,8 +355,7 @@ def _handle_course_site_categories(kaltura, course, kaltura_schedule, publish_to
                 schedule_updates,
                 e,
                 f'Failed to add Kaltura categories: {template_entry_id}',
-                'publish_type',
-                kaltura_schedule_id=kaltura_schedule['id'],
+                'canvas_site_ids',
             )
     else:
         try:
@@ -367,8 +372,7 @@ def _handle_course_site_categories(kaltura, course, kaltura_schedule, publish_to
                 schedule_updates,
                 e,
                 f'Failed to remove Kaltura categories: {template_entry_id}',
-                'publish_type',
-                kaltura_schedule_id=kaltura_schedule['id'],
+                'canvas_site_ids',
             )
 
 
@@ -382,6 +386,8 @@ def _mark_success(schedule_updates, field_names, kaltura_schedule_id=None):
 
 def _mark_error(schedule_updates, e, message, field_names, kaltura_schedule_id=None):
     if message:
+        su = schedule_updates[0]
+        message = f'Schedule update error: term {su.term_id}, section {su.section_id}, fields {field_names}\n' + message
         app.logger.error(message)
         app.logger.exception(e)
         send_system_error_email(
