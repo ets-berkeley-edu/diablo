@@ -302,3 +302,23 @@ def notify_instructors_recordings_scheduled(course, scheduled, template_type):
             No email template of type {template_type} is available.
             {course['label']} instructors were NOT notified of scheduled: {scheduled}.
         """)
+
+
+def remind_instructors_scheduled(instructor, courses):
+    template = _get_email_template(course=courses[0], template_type='remind_scheduled')
+    if not template:
+        return
+    message = interpolate_content(
+        templated_string=template.message,
+        recipient_name=instructor['name'],
+        course=None,
+        course_list=courses,
+    )
+    QueuedEmail.create(
+        message=message,
+        recipient=instructor,
+        section_id=courses[0]['sectionId'],
+        subject_line=template.subject_line,
+        template_type='remind_scheduled',
+        term_id=courses[0]['termId'],
+    )

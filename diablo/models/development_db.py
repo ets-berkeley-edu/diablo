@@ -157,8 +157,8 @@ def _create_email_templates():
     EmailTemplate.create(
         template_type='remind_scheduled',
         name='Blessed are those who are scheduled',
-        subject_line='You are scheduled!',
-        message='Did you remember??',
+        subject_line='Did you remember??',
+        message='You are scheduled, <code>recipient.name</code>!\n<code>courseList</code>',
     )
     EmailTemplate.create(
         template_type='room_change_no_longer_eligible',
@@ -196,7 +196,7 @@ def _set_up_and_run_jobs():
     Job.create(job_schedule_type='day_at', job_schedule_value='22:00', key='house_keeping')
     Job.create(disabled=True, job_schedule_type='minutes', job_schedule_value='120', key='blackouts')
     Job.create(disabled=True, job_schedule_type='minutes', job_schedule_value='5', key='doomed_to_fail')
-    Job.create(is_schedulable=False, job_schedule_type='day_at', job_schedule_value='16:00', key='remind_invitees')
+    Job.create(is_schedulable=False, job_schedule_type='day_at', job_schedule_value='16:00', key='remind_instructors')
     Job.create(is_schedulable=False, job_schedule_type='minutes', job_schedule_value='820', key='schedule_updates')
     Job.create(is_schedulable=False, job_schedule_type='minutes', job_schedule_value='720', key='semester_start')
     background_job_manager.start(app)
