@@ -249,7 +249,7 @@ def remove_blackout_events():
                     app.logger.info(f"'Event {event['summary']} deleted per {blackout}.")
 
 
-def schedule_recordings(course, is_semester_start=False, updates=None):
+def schedule_recordings(course, send_notifications=False, updates=None):
     def _report_error(subject):
         message = f'{subject}\n\n<pre>{course}</pre>'
         app.logger.error(message)
@@ -326,7 +326,7 @@ def schedule_recordings(course, is_semester_start=False, updates=None):
                     collaborator_uids=[collaborator['uid'] for collaborator in collaborators],
                 )
 
-                if not is_semester_start:
+                if send_notifications:
                     notify_instructors_recordings_scheduled(course=course, scheduled=scheduled, template_type='new_class_scheduled')
                 all_scheduled.append(scheduled)
                 app.logger.info(f'Recordings scheduled for course {section_id}')

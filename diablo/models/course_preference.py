@@ -51,9 +51,11 @@ recording_type = ENUM(
 )
 
 
+# The 'kaltura_media_gallery_moderated' publish type is available in the database but not the UI, because of limitations on
+# the Kaltura side.
+
 NAMES_PER_PUBLISH_TYPE = {
-    'kaltura_media_gallery': 'Publish Automatically to Course Site',
-    'kaltura_media_gallery_moderated': 'Publish to Pending Tab in Course Site',
+    'kaltura_media_gallery': 'Publish to Course Site',
     'kaltura_my_media': 'Publish to My Media',
 }
 
