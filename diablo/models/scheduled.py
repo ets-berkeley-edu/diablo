@@ -22,11 +22,11 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from diablo import db, std_commit
 from diablo.externals.loch import get_loch_basic_attributes
-from diablo.lib.util import basic_attributes_to_api_json, format_days, format_time, get_names_of_days, to_isoformat
+from diablo.lib.util import basic_attributes_to_api_json, format_days, format_time, get_names_of_days, local_now, to_isoformat
 from diablo.models.course_preference import NAMES_PER_PUBLISH_TYPE, NAMES_PER_RECORDING_TYPE, publish_type, recording_type
 from diablo.models.email_template import email_template_type
 from diablo.models.room import Room
@@ -225,3 +225,20 @@ class Scheduled(db.Model):
             'sectionId': self.section_id,
             'termId': self.term_id,
         }
+
+
+def is_meeting_in_session(scheduled_json):
+    now = local_now()
+    if datetime.strftime(now, '%A') not in scheduled_json['meetingDaysNames']:
+        return False
+    if datetime.strftime(now, '%Y-%m-%d') < scheduled_json['meetingStartDate']:
+        return False
+    if datetime.strftime(now, '%Y-%m-%d') > scheduled_json['meetingEndDate']:
+        return False
+
+    grace_period = timedelta(minutes=5)
+    if datetime.strftime(now - grace_period, '%H:%M') < scheduled_json['meetingStartTime']:
+        return False
+    if datetime.strftime(now + grace_period, '%H:%M') > scheduled_json['meetingEndTime']:
+        return False
+    return True
