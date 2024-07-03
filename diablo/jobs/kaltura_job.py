@@ -340,7 +340,7 @@ def _handle_course_site_categories(kaltura, course, kaltura_schedule, publish_to
         try:
             moderation = True if publish_to_course_sites == 'moderated' else False
             for canvas_course_site_id in course['canvasSiteIds'] or []:
-                if canvas_course_site_id not in [c['name'] for c in categories]:
+                if str(canvas_course_site_id) not in [c['name'] for c in categories]:
                     category = kaltura.get_or_create_canvas_category_object(canvas_course_site_id=canvas_course_site_id, moderation=moderation)
                     if category:
                         app.logger.info(f"{course['label']}: add Kaltura category for canvas_course_site {canvas_course_site_id}")
