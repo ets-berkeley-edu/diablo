@@ -304,10 +304,13 @@ def schedule_recordings(course, send_notifications=False, updates=None):
                     room=room,
                     term_id=term_id,
                 )
+
+                collaborator_uids = [collaborator['uid'] for collaborator in collaborators]
+
                 scheduled = Scheduled.create(
                     course_display_name=course['label'],
                     instructor_uids=[instructor['uid'] for instructor in instructors],
-                    collaborator_uids=[collaborator['uid'] for collaborator in collaborators],
+                    collaborator_uids=collaborator_uids,
                     kaltura_schedule_id=kaltura_schedule_id,
                     meeting_days=meeting['days'],
                     meeting_end_date=get_recording_end_date(meeting),
@@ -323,11 +326,16 @@ def schedule_recordings(course, send_notifications=False, updates=None):
                 CoursePreference.update_collaborator_uids(
                     term_id=term_id,
                     section_id=section_id,
-                    collaborator_uids=[collaborator['uid'] for collaborator in collaborators],
+                    collaborator_uids=collaborator_uids,
                 )
 
                 if send_notifications:
-                    notify_instructors_recordings_scheduled(course=course, scheduled=scheduled, template_type='new_class_scheduled')
+                    notify_instructors_recordings_scheduled(
+                        course=course,
+                        scheduled=scheduled,
+                        instructors=instructors,
+                        collaborator_uids=collaborator_uids,
+                    )
                 all_scheduled.append(scheduled)
                 app.logger.info(f'Recordings scheduled for course {section_id}')
 
