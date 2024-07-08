@@ -121,11 +121,7 @@ class QueuedEmail(db.Model):
     def notify_instructors_changes_confirmed(cls, course, collaborator_uids, publish_type, recording_type):
         publish_type_name = NAMES_PER_PUBLISH_TYPE[publish_type]
         recording_type_name = NAMES_PER_RECORDING_TYPE[recording_type]
-        if collaborator_uids:
-            collaborator_attributes = get_loch_basic_attributes(collaborator_uids)
-            collaborator_names = [f"{r['first_name']} {r['last_name']}" for r in collaborator_attributes]
-        else:
-            collaborator_names = []
+        collaborator_names = _get_collaborator_names(collaborator_uids)
 
         for instructor in filter(lambda i: i['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES, course['instructors']):
             cls._queue_instructor_email(
@@ -240,17 +236,6 @@ class QueuedEmail(db.Model):
         }
 
 
-def _get_email_template(course, template_type):
-    template = EmailTemplate.get_template_by_type(template_type)
-    if not template:
-        subject = f"No {template_type} email template found; failed to queue email for section_id {course['sectionId']}"
-        send_system_error_email(
-            message=f'{subject}\n\n<pre>{course}</pre>',
-            subject=subject,
-        )
-    return template
-
-
 def announce_semester_start(instructor, courses):
     template = _get_email_template(course=courses[0], template_type='semester_start')
     if not template:
@@ -271,12 +256,12 @@ def announce_semester_start(instructor, courses):
     )
 
 
-def notify_instructors_recordings_scheduled(course, scheduled, template_type):
-    email_template = EmailTemplate.get_template_by_type(template_type)
+def notify_instructors_recordings_scheduled(course, scheduled, instructors, collaborator_uids):
+    email_template = EmailTemplate.get_template_by_type('new_class_scheduled')
     if email_template:
         publish_type_name = NAMES_PER_PUBLISH_TYPE[scheduled.publish_type]
         recording_type_name = NAMES_PER_RECORDING_TYPE[scheduled.recording_type]
-        instructors = list(filter(lambda i: i['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES, course['instructors']))
+        collaborator_names = _get_collaborator_names(collaborator_uids)
         for instructor in instructors:
             message = interpolate_content(
                 templated_string=email_template.message,
@@ -284,6 +269,8 @@ def notify_instructors_recordings_scheduled(course, scheduled, template_type):
                 recipient_name=instructor['name'],
                 publish_type_name=publish_type_name,
                 recording_type_name=recording_type_name,
+                instructor_names=[i['name'] for i in instructors if i['name']],
+                collaborator_names=collaborator_names,
             )
             subject_line = interpolate_content(
                 templated_string=email_template.subject_line,
@@ -300,7 +287,7 @@ def notify_instructors_recordings_scheduled(course, scheduled, template_type):
             )
     else:
         send_system_error_email(f"""
-            No email template of type {template_type} is available.
+            No email template of type 'new_class_scheduled' is available.
             {course['label']} instructors were NOT notified of scheduled: {scheduled}.
         """)
 
@@ -323,3 +310,22 @@ def remind_instructors_scheduled(instructor, courses):
         template_type='remind_scheduled',
         term_id=courses[0]['termId'],
     )
+
+
+def _get_collaborator_names(collaborator_uids):
+    if collaborator_uids:
+        collaborator_attributes = get_loch_basic_attributes(collaborator_uids)
+        return [f"{r['first_name']} {r['last_name']}" for r in collaborator_attributes]
+    else:
+        return []
+
+
+def _get_email_template(course, template_type):
+    template = EmailTemplate.get_template_by_type(template_type)
+    if not template:
+        subject = f"No {template_type} email template found; failed to queue email for section_id {course['sectionId']}"
+        send_system_error_email(
+            message=f'{subject}\n\n<pre>{course}</pre>',
+            subject=subject,
+        )
+    return template

@@ -40,6 +40,7 @@ def interpolate_content(
     previous_recording_type_name=None,
     publish_type_name=None,
     recording_type_name=None,
+    instructor_names=None,
     collaborator_names=None,
 ):
     interpolated = templated_string
@@ -52,6 +53,7 @@ def interpolate_content(
         previous_recording_type_name=previous_recording_type_name,
         publish_type_name=publish_type_name,
         recording_type_name=recording_type_name,
+        instructor_names=instructor_names,
         collaborator_names=collaborator_names,
     )
     for token, value in substitutions.items():
@@ -69,15 +71,16 @@ def get_sign_up_url(term_id, section_id):
 
 
 def get_template_substitutions(
-        course,
-        recipient_name,
-        course_list=None,
-        pending_instructors=None,
-        previous_publish_type_name=None,
-        previous_recording_type_name=None,
-        publish_type_name=None,
-        recording_type_name=None,
-        collaborator_names=None,
+    course,
+    recipient_name,
+    course_list=None,
+    pending_instructors=None,
+    previous_publish_type_name=None,
+    previous_recording_type_name=None,
+    publish_type_name=None,
+    recording_type_name=None,
+    instructor_names=None,
+    collaborator_names=None,
 ):
     term_id = (course and course['termId']) or app.config['CURRENT_TERM_ID']
 
@@ -91,9 +94,14 @@ def get_template_substitutions(
         meetings = meetings or course.get('meetings', {}).get('ineligible', [])
         meeting = meetings and meetings[0]
         days = meeting and get_names_of_days(meeting['daysFormatted'])
+        if instructor_names is None:
+            instructor_name_string = _join_names(course.get('instructors'))
+        else:
+            instructor_name_string = ', '.join(instructor_names)
     else:
         days = None
         meeting = None
+        instructor_name_string = None
 
     course_list = course_list or []
 
@@ -110,7 +118,7 @@ def get_template_substitutions(
         'course.time.start': meeting and meeting['startTimeFormatted'],
         'course.title': course and course['courseTitle'],
         'courseList': '\n'.join([f"{course['courseName']}: {course['courseTitle']}" for course in course_list]),
-        'instructors.all': course and _join_names(course.get('instructors')),
+        'instructors.all': instructor_name_string,
         'instructors.pending': _join_names(pending_instructors),
         'instructors.previous': course and course.get('scheduled') and _join_names(course['scheduled'][0].get('instructors')),
         'publish.type': publish_type_name,
