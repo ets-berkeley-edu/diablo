@@ -518,15 +518,9 @@ def _category_entry_object_to_json(obj):
 
 
 def _category_object_to_json(obj):
-    _moderation_value_decoder = {
-        -1: None,
-        0: False,
-        1: True,
-    }
     return {
         'id': obj.id,
         'name': obj.name,
-        'moderation': _moderation_value_decoder.get(obj.moderation.value),
     }
 
 
