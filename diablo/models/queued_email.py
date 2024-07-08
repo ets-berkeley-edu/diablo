@@ -192,6 +192,7 @@ class QueuedEmail(db.Model):
                 templated_string=template.message,
                 course=course,
                 recipient_name=instructor['name'],
+                **kwargs,
             )
             subject_line = interpolate_content(
                 templated_string=template.subject_line,

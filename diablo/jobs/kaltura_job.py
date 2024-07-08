@@ -203,10 +203,13 @@ def _update_already_scheduled_events():  # noqa C901
             QueuedEmail.notify_instructors_no_longer_eligible(course)
         else:
             scheduled = (course['scheduled'] or [{}])[0]
-            if updated_collaborator_uids or updated_publish_type or updated_recording_type:
+            if updated_publish_type or updated_recording_type or updated_collaborator_uids is not None:
+                collaborator_uids = updated_collaborator_uids
+                if collaborator_uids is None:
+                    collaborator_uids = scheduled['collaboratorUids']
                 QueuedEmail.notify_instructors_changes_confirmed(
                     course,
-                    collaborator_uids=updated_collaborator_uids or scheduled['collaboratorUids'],
+                    collaborator_uids=collaborator_uids,
                     publish_type=updated_publish_type or scheduled['publishType'],
                     recording_type=updated_recording_type or scheduled['recordingType'],
                 )
