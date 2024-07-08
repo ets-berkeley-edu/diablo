@@ -89,11 +89,11 @@ class TestGetEmailTemplate:
 
     def test_get_email_template(self, client, admin_session):
         """Admin user has access to email_template data."""
-        email_template = next((t for t in EmailTemplate.all_templates() if 'Devil' in t.name), None)
+        email_template = next((t for t in EmailTemplate.all_templates() if t.name == 'Instructor(s) removed from class'), None)
         assert email_template
         api_json = self._api_email_template(client, email_template.id)
         assert api_json['id'] == email_template.id
-        assert 'Devil' in api_json['name']
+        assert api_json['name'] == 'Instructor(s) removed from class'
 
 
 class TestUpdateEmailTemplate:
@@ -128,7 +128,7 @@ class TestUpdateEmailTemplate:
         self._api_update_email_template(
             client,
             email_template_id=1,
-            template_type='notify_instructor_of_changes',
+            template_type='changes_confirmed',
             name='Captain who?',
             subject_line='Captain Howdy.',
             message="Who's Captain Howdy?",
@@ -140,7 +140,7 @@ class TestUpdateEmailTemplate:
         self._api_update_email_template(
             client,
             email_template_id=1,
-            template_type='notify_instructor_of_changes',
+            template_type='changes_confirmed',
             name='Captain who?',
             subject_line='Captain Howdy.',
             message="Who's Captain Howdy?",
@@ -152,7 +152,7 @@ class TestUpdateEmailTemplate:
         self._api_update_email_template(
             client,
             email_template_id=999999999,
-            template_type='notify_instructor_of_changes',
+            template_type='changes_confirmed',
             name='Father Dyer',
             subject_line='My idea of Heaven',
             message='My idea of Heaven is a solid white nightclub with me as a headliner for all eternity, and they love me!',
@@ -205,7 +205,7 @@ class TestCreateEmailTemplate:
         """Denies anonymous access."""
         self._api_create_email_template(
             client,
-            template_type='notify_instructor_of_changes',
+            template_type='changes_confirmed',
             name='Captain who?',
             subject_line='Captain Howdy.',
             message="Who's Captain Howdy?",
@@ -216,7 +216,7 @@ class TestCreateEmailTemplate:
         """Denies access if user is not an admin."""
         self._api_create_email_template(
             client,
-            template_type='notify_instructor_of_changes',
+            template_type='changes_confirmed',
             name='Captain who?',
             subject_line='Captain Howdy.',
             message="Who's Captain Howdy?",
@@ -227,7 +227,7 @@ class TestCreateEmailTemplate:
         """Admin user has success."""
         email_template = self._api_create_email_template(
             client,
-            template_type='notify_instructor_of_changes',
+            template_type='changes_confirmed',
             name='Captain who?',
             subject_line='Captain Howdy.',
             message="Who's Captain Howdy?",

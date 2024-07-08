@@ -44,7 +44,6 @@ CREATE TYPE email_template_types AS ENUM (
     'instructors_removed',
     'new_class_scheduled',
     'no_longer_scheduled',
-    'notify_instructor_of_changes',
     'opted_out',
     'remind_scheduled',
     'room_change_no_longer_eligible',
