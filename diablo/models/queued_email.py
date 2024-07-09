@@ -261,11 +261,16 @@ def announce_semester_start(instructor, courses):
         course=None,
         course_list=courses,
     )
+    subject_line = interpolate_content(
+        templated_string=template.subject_line,
+        recipient_name=instructor['name'],
+        course=None,
+    )
     QueuedEmail.create(
         message=message,
         recipient=instructor,
         section_id=courses[0]['sectionId'],
-        subject_line=template.subject_line,
+        subject_line=subject_line,
         template_type='semester_start',
         term_id=courses[0]['termId'],
     )
