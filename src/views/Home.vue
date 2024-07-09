@@ -74,7 +74,7 @@
                   </div>
                   {{ course.meeting.startTimeFormatted }} - {{ course.meeting.endTimeFormatted }}
                 </td>
-                <td class="text-no-wrap">
+                <td :class="{'border-bottom-zero': course.meetings.eligible.length > 1}" class="text-no-wrap">
                   <ToggleOptOut
                     :term-id="`${course.termId}`"
                     :section-id="`${course.sectionId}`"
