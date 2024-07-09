@@ -24,8 +24,8 @@
         :class="inputClass"
         dense
         :disabled="disabled"
-        :error="required && !suppressValidation && !!$_.size(errors)"
-        :error-messages="required && !suppressValidation ? errors : []"
+        :error="!!errorMessage"
+        :error-messages="errorMessage && [errorMessage]"
         hide-details
         :hide-no-data="isSearching || !search"
         :items="suggestions"
@@ -40,7 +40,6 @@
         :search-input.sync="search"
         single-line
         @blur="onBlur"
-        @change="suppressValidation = false"
         @update:list-index="onHighlight"
       >
         <template #selection="data">
@@ -62,13 +61,13 @@
     </div>
     <div :class="{'col col-2 pl-0': inline}">
       <div
-        v-if="required && !this.suppressValidation && errors && errors[0]"
+        v-if="errorMessage"
         :id="`${id}-error`"
         class="v-messages error--text px-3 mt-1"
         :class="$vuetify.theme.dark ? 'text--lighten-2' : ''"
         role="alert"
       >
-        {{ errors[0] }}
+        {{ errorMessage }}
       </div>
     </div>
   </div>
@@ -83,6 +82,11 @@ export default {
     disabled: {
       required: false,
       type: Boolean
+    },
+    errorMessage: {
+      default: undefined,
+      required: false,
+      type: String
     },
     id: {
       default: 'input-person-lookup-autocomplete',
@@ -117,14 +121,9 @@ export default {
       default: 'Name or UID',
       required: false,
       type: String
-    },
-    required: {
-      required: false,
-      type: Boolean
     }
   },
   data: () => ({
-    errors: [],
     highlightedItem: undefined,
     isSearching: false,
     menuProps: {
@@ -134,7 +133,6 @@ export default {
     searchTokenMatcher: undefined,
     selected: undefined,
     suggestions: [],
-    suppressValidation: true
   }),
   computed: {
     containerClass() {
@@ -147,7 +145,6 @@ export default {
       this.debouncedSearch(snippet)
     },
     selected(suggestion) {
-      this.validate(suggestion)
       if (!suggestion) {
         this.search = null
       }
@@ -186,15 +183,6 @@ export default {
     },
     toLabel(user) {
       return user && user instanceof Object ? `${user.firstName || ''} ${user.lastName || ''} (${user.email}) (${user.uid})`.trim() : user
-    },
-    validate(suggestion) {
-      this.$_.delay(() => {
-        if (!suggestion && this.required && !this.suppressValidation) {
-          this.errors = ['Required']
-        } else {
-          this.errors = []
-        }
-      }, 300)
     }
   },
   created() {

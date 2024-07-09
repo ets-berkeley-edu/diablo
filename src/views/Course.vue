@@ -109,7 +109,7 @@
                 <h4>
                   Instructor(s) listed will have editing and publishing access:
                 </h4>
-                <div v-for="instructor in course.instructors" :id="`instructor-${instructor.uid}`" :key="instructor.uid">
+                <div v-for="instructor in course.instructors" :id="`instructor-${instructor.uid}`" :key="`instructor-${instructor.uid}`">
                   {{ instructor.name }} ({{ instructor.uid }})
                   <span v-if="instructor.hasOptedOut" :id="`instructor-${instructor.uid}-opt-out`">
                     (opted out)
@@ -126,7 +126,7 @@
                 <h4>
                   Collaborator(s) listed will have editing and publishing access:
                 </h4>
-                <div v-for="collaborator in collaborators" :id="`collaborator-${collaborator.uid}`" :key="collaborator.uid">
+                <div v-for="collaborator in collaborators" :id="`collaborator-${collaborator.uid}`" :key="`collaborator-${collaborator.uid}`">
                   {{ collaborator.firstName }} {{ collaborator.lastName }} ({{ collaborator.email }}) ({{ collaborator.uid }})
                 </div>
                 <div v-if="!collaborators || !collaborators.length" id="collaborators-none">
@@ -165,6 +165,7 @@
                       label="Find collaborator by UID or email address: "
                       placeholder="UID or email"
                       :on-select-result="addCollaboratorPending"
+                      :error-message="addCollaboratorError"
                     />
                   </v-col>
                   <v-col cols="3">
@@ -628,6 +629,7 @@ export default {
   },
   data() {
     return {
+      addCollaboratorError: null,
       agreedToTerms: false,
       auditoriums: undefined,
       capability: undefined,
@@ -721,8 +723,13 @@ export default {
       this.pendingCanvasSite = null
     },
     addCollaboratorConfirm() {
-      if (!this.$_.find(this.collaborators, {'uid': this.pendingCollaborator.uid})) {
+      if (this.$_.find(this.collaborators, {'uid': this.pendingCollaborator.uid})) {
+        this.addCollaboratorError = `${this.pendingCollaborator.firstName} ${this.pendingCollaborator.lastName} is already a collaborator.`
+        this.alertScreenReader(this.addCollaboratorError)
+      } else {
+        this.addCollaboratorError = null
         this.collaborators.push(this.pendingCollaborator)
+        this.alertScreenReader(`Collaborator ${this.pendingCollaborator.firstName} ${this.pendingCollaborator.lastName} added.`)
       }
       this.alertScreenReader(`Collaborator ${this.pendingCollaborator.firstName} ${this.pendingCollaborator.lastName} added.`)
       this.pendingCollaborator = null
@@ -733,6 +740,7 @@ export default {
     addCollaboratorPending(collaborator) {
       if (collaborator) {
         this.pendingCollaborator = collaborator
+        this.addCollaboratorError = null
       }
     },
     cancelNote() {
@@ -823,12 +831,14 @@ export default {
         this.course.collaborators = data.collaborators
         this.collaboratorsEditing = false
         this.collaboratorsUpdating = false
+        this.addCollaboratorError = null
       })
     },
     updateCollaboratorsCancel() {
       this.alertScreenReader('Collaborator update cancelled.')
       this.collaboratorsEditing = false
       this.collaboratorsUpdating = false
+      this.addCollaboratorError = null
       this.collaborators = this.$_.clone(this.course.collaborators)
     },
     updatePublishType() {
