@@ -160,12 +160,17 @@ def _update_already_scheduled_events():  # noqa C901
 
                 # Updates to publish type or Canvas course sites may require the Kaltura series to be deleted and recreated, and will
                 # not be processed if recording is currently underway.
-                if not is_currently_recording:
-                    publish_to_course_sites = bool(scheduled['publishType'] and scheduled['publishType'].startswith('kaltura_media_gallery'))
-                    if updated_publish_type:
+                publish_to_course_sites = bool(scheduled['publishType'] and scheduled['publishType'].startswith('kaltura_media_gallery'))
+                if updated_publish_type:
+                    if is_currently_recording:
+                        app.logger.info(f"{course['label']}: skipping publish type update because class is currently in session")
+                    else:
                         publish_to_course_sites = _handle_publish_type_update(updated_publish_type, scheduled_model)
 
-                    if scheduled['kalturaScheduleId'] in meetings_updated_by_schedule_id:
+                if scheduled['kalturaScheduleId'] in meetings_updated_by_schedule_id:
+                    if is_currently_recording:
+                        app.logger.info(f"{course['label']}: skipping meeting time update because class is currently in session")
+                    else:
                         _handle_meeting_updates(
                             kaltura,
                             meetings_updated_by_schedule_id,
@@ -174,7 +179,7 @@ def _update_already_scheduled_events():  # noqa C901
                             schedule_updates,
                         )
 
-                    _handle_course_site_categories(kaltura, course, kaltura_schedule, publish_to_course_sites, schedule_updates)
+                _handle_course_site_categories(kaltura, course, kaltura_schedule, publish_to_course_sites, schedule_updates, is_currently_recording)
 
             else:
                 app.logger.warn(f"The previously scheduled {course['label']} schedule id {scheduled['kalturaScheduleId']} was not found in Kaltura.")
@@ -203,7 +208,7 @@ def _update_already_scheduled_events():  # noqa C901
             QueuedEmail.notify_instructors_no_longer_eligible(course)
         else:
             scheduled = (course['scheduled'] or [{}])[0]
-            if updated_publish_type or updated_recording_type or updated_collaborator_uids is not None:
+            if (updated_publish_type and not is_currently_recording) or updated_recording_type or updated_collaborator_uids is not None:
                 collaborator_uids = updated_collaborator_uids
                 if collaborator_uids is None:
                     collaborator_uids = scheduled['collaboratorUids']
@@ -213,7 +218,7 @@ def _update_already_scheduled_events():  # noqa C901
                     publish_type=updated_publish_type or scheduled['publishType'],
                     recording_type=updated_recording_type or scheduled['recordingType'],
                 )
-            if meetings_added or meetings_removed_by_schedule_id or meetings_updated_by_schedule_id:
+            if meetings_added or meetings_removed_by_schedule_id or (meetings_updated_by_schedule_id and not is_currently_recording):
                 QueuedEmail.notify_instructors_schedule_change(course)
             if updated_instructor_uids:
                 previously_scheduled_instructor_uids = scheduled.get('instructorUids') or []
@@ -339,7 +344,7 @@ def _handle_publish_type_update(updated_publish_type, scheduled_model):
     return publish_to_course_sites
 
 
-def _handle_course_site_categories(kaltura, course, kaltura_schedule, publish_to_course_sites, schedule_updates):
+def _handle_course_site_categories(kaltura, course, kaltura_schedule, publish_to_course_sites, schedule_updates, is_currently_recording):
     template_entry_id = kaltura_schedule['templateEntryId']
     categories = kaltura.get_categories(template_entry_id)
     common_category = kaltura.get_category_object(name=app.config['KALTURA_COMMON_CATEGORY'])
@@ -361,7 +366,10 @@ def _handle_course_site_categories(kaltura, course, kaltura_schedule, publish_to
         categories_to_remove = kaltura_category_names
         categories_to_add = set()
 
-    if categories_to_remove:
+    if is_currently_recording and (categories_to_remove or categories_to_add):
+        app.logger.info(f"{course['label']}: skipping Canvas category update because class is currently in session")
+
+    if categories_to_remove and not is_currently_recording:
         try:
             app.logger.info(f"{course['label']}: will delete and recreate Kaltura schedule to unlink categories {categories_to_remove}")
             kaltura.delete(kaltura_schedule['id'])
@@ -375,7 +383,7 @@ def _handle_course_site_categories(kaltura, course, kaltura_schedule, publish_to
                 'canvas_site_ids',
             )
 
-    if categories_to_add:
+    if categories_to_add and not is_currently_recording:
         try:
             for canvas_course_site_id in categories_to_add:
                 category = kaltura.get_or_create_canvas_category_object(canvas_course_site_id=canvas_course_site_id)
