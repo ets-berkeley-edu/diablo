@@ -106,7 +106,7 @@ def get_template_substitutions(
     course_list = course_list or []
 
     return {
-        'collaborators': '\n'.join(collaborator_names) if collaborator_names else '',
+        'collaborators': ', '.join(collaborator_names) if collaborator_names else None,
         'course.date.end': meeting and meeting['endDate'],
         'course.date.start': meeting and meeting['startDate'],
         'course.days': days and readable_join(days),
