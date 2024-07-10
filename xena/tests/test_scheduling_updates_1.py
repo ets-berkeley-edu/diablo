@@ -23,14 +23,14 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-import datetime
-
 import pytest
 from xena.models.canvas_site import CanvasSite
 from xena.models.email_template_type import EmailTemplateType
 from xena.models.recording_placement import RecordingPlacement
 from xena.models.recording_schedule import RecordingSchedule
 from xena.models.recording_type import RecordingType
+from xena.models.user import User
+from xena.pages.course_page import CoursePage
 from xena.test_utils import util
 
 
@@ -38,6 +38,7 @@ from xena.test_utils import util
 class TestScheduling1:
 
     test_data = util.get_test_script_course('test_scheduling_1')
+    admin = User({'uid': util.get_admin_uid()})
     section = util.get_test_section(test_data)
     instructor = section.instructors[0]
     meeting = section.meetings[0]
@@ -198,11 +199,10 @@ class TestScheduling1:
         self.course_page.cancel_recording_type_edits()
         self.course_page.click_edit_recording_placement()
         assert self.course_page.is_present(self.course_page.PLACEMENT_MY_MEDIA_RADIO)
-        assert self.course_page.is_present(self.course_page.PLACEMENT_PENDING_RADIO)
-        assert self.course_page.is_present(self.course_page.PLACEMENT_AUTOMATIC_RADIO)
+        assert self.course_page.is_present(self.course_page.PLACEMENT_MEDIA_GALLERY_RADIO)
 
     def test_no_changes_to_rec_placement(self):
-        self.course_page.select_recording_placement(RecordingPlacement.PUBLISH_AUTOMATICALLY)
+        self.course_page.select_recording_placement(RecordingPlacement.PUBLISH_TO_MEDIA_GALLERY)
         assert not self.course_page.element(self.course_page.PLACEMENT_SAVE_BUTTON).is_enabled()
 
     # CREATE COURSE SITE
@@ -214,33 +214,28 @@ class TestScheduling1:
     def test_add_new_site(self):
         self.course_page.load_page(self.section)
         self.course_page.click_edit_recording_placement()
-        self.course_page.enter_recording_placement(RecordingPlacement.PUBLISH_AUTOMATICALLY, sites=[self.site])
+        self.course_page.enter_recording_placement(RecordingPlacement.PUBLISH_TO_MEDIA_GALLERY, sites=[self.site])
         self.course_page.save_recording_placement_edits()
-        self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_AUTOMATICALLY
+        self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_TO_MEDIA_GALLERY
 
     def test_visible_site_ids_updated(self):
         assert self.course_page.visible_course_site_ids() == [self.site.site_id]
-
-    # TODO - confirmation of changes message?
 
     # VERIFY COURSE HISTORY
 
     def test_course_history_rec_type(self):
         self.course_page.load_page(self.section)
-        row = next(filter(lambda r: r['field'] == 'publish_type', self.course_page.update_history_table_rows()))
-        assert row['old_value'] == RecordingPlacement.PUBLISH_TO_MY_MEDIA.value['db']
-        assert row['new_value'] == RecordingPlacement.PUBLISH_AUTOMATICALLY.value['db']
-        assert row['requested_by'] == str(self.instructor.uid)
-        assert row['requested_at'] == datetime.date.today().strftime('%-m/%-d/%Y')
-        assert row['status'] == 'queued'
+        old_val = RecordingPlacement.PUBLISH_TO_MY_MEDIA.value['db']
+        new_val = RecordingPlacement.PUBLISH_TO_MEDIA_GALLERY.value['db']
+        self.course_page.verify_history_row('publish_type', old_val, new_val, self.admin, 'queued')
 
     def test_course_history_canvas_site(self):
-        row = next(filter(lambda r: r['field'] == 'canvas_site_ids', self.course_page.update_history_table_rows()))
-        assert row['old_value'] == '—'
-        assert row['new_value'] == f'[ "{str(self.site.site_id)}" ]'
-        assert row['requested_by'] == str(self.instructor.uid)
-        assert row['requested_at'] == datetime.date.today().strftime('%-m/%-d/%Y')
-        assert row['status'] == 'queued'
+        old_val = '—'
+        new_val = CoursePage.expected_site_ids_converter([self.site])
+        self.course_page.verify_history_row('canvas_site_ids', old_val, new_val, self.admin, 'queued')
+
+    def test_changes_queued(self):
+        assert self.course_page.is_queued_changes_msg_present()
 
     # UPDATE SERIES IN KALTURA
 
@@ -280,13 +275,14 @@ class TestScheduling1:
     def test_course_history_rec_type_updated(self):
         self.kaltura_page.close_window_and_switch()
         self.course_page.load_page(self.section)
-        row = next(filter(lambda r: r['field'] == 'publish_type', self.course_page.update_history_table_rows()))
-        assert row['status'] == 'succeeded'
+        old_val = RecordingPlacement.PUBLISH_TO_MY_MEDIA.value['db']
+        new_val = RecordingPlacement.PUBLISH_TO_MEDIA_GALLERY.value['db']
+        self.course_page.verify_history_row('publish_type', old_val, new_val, self.admin, 'succeeded', published=True)
 
     def test_course_history_canvas_site_updated(self):
-        row = next(filter(lambda r: r['field'] == 'canvas_site_ids', self.course_page.update_history_table_rows()))
-        assert row['status'] == 'succeeded'
+        old_val = '—'
+        new_val = CoursePage.expected_site_ids_converter([self.site])
+        self.course_page.verify_history_row('canvas_site_ids', old_val, new_val, self.admin, 'succeeded', published=True)
 
-    # VERIFY REMINDER EMAIL
-
-    # TODO
+    def test_changes_no_longer_queued(self):
+        assert not self.course_page.is_queued_changes_msg_present()

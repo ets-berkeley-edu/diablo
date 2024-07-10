@@ -47,7 +47,6 @@ class KalturaPage(Page):
     SERIES_RECUR_DESC = (By.ID, 'CreateEvent-RecurrenceDescription')
     SERIES_COLLABORATOR_ROW = (By.XPATH, '//tr[contains(@id, "collaborator_")]')
     SERIES_STATUS_PRIVATE_RADIO = (By.ID, 'private_upload1')
-    SERIES_STATUS_UNLISTED_RADIO = (By.ID, 'unlisted')
     SERIES_STATUS_PUBLISHED_RADIO = (By.ID, 'published_upload1')
     SERIES_PUBLICATION_CHANNELS = (By.ID, 'pblPublish_upload1')
     SERIES_CATEGORY_ROW = (By.XPATH, '//div[@class="pblBadge"]/dl//span')
@@ -84,6 +83,7 @@ class KalturaPage(Page):
             Wait(self.driver, util.get_medium_timeout()).until(ec.presence_of_element_located(KalturaPage.LOG_OUT_LINK))
 
     def load_event_edit_page(self, series_id):
+        app.logger.info(f'Loading Kaltura series {series_id}')
         self.driver.get(f'{app.config["KALTURA_MEDIA_SPACE_URL"]}/recscheduling/index/edit-event/eventid/{series_id}')
 
     def wait_for_delete_button(self):
@@ -103,9 +103,6 @@ class KalturaPage(Page):
 
     def is_private(self):
         return self.element(self.SERIES_PUBLICATION_CHANNELS).get_attribute('class') == 'hidden'
-
-    def is_unlisted(self):
-        return self.element(KalturaPage.SERIES_STATUS_UNLISTED_RADIO).is_selected()
 
     def is_published(self):
         return self.element(self.SERIES_PUBLICATION_CHANNELS).get_attribute('class') != 'hidden'
@@ -267,9 +264,7 @@ class KalturaPage(Page):
 
         if recording_schedule.recording_placement == RecordingPlacement.PUBLISH_TO_MY_MEDIA:
             assert self.is_private()
-        elif recording_schedule.recording_placement == RecordingPlacement.PUBLISH_TO_PENDING:
-            assert self.is_unlisted()
-        else:
+        elif recording_schedule.recording_placement == RecordingPlacement.PUBLISH_TO_MEDIA_GALLERY:
             assert self.is_published()
 
     def verify_site_categories(self, sites):

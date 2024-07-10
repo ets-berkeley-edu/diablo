@@ -84,6 +84,8 @@ class RoomPrintablePage(DiabloPages):
 
         expected_instr = [f'{inst.first_name} {inst.last_name} ({inst.uid})'.strip() for inst in section.instructors]
         visible_instr = self.visible_instructors(section)
+        expected_instr.sort()
+        visible_instr.sort()
         if visible_instr != expected_instr:
             app.logger.info(f'Expecting {expected_instr}, got {visible_instr}')
         assert visible_instr == expected_instr

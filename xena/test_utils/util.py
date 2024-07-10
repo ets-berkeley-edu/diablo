@@ -123,6 +123,7 @@ def get_kaltura_id(recording_schedule):
     section = recording_schedule.section
     meeting = recording_schedule.meeting
     schedule = meeting.meeting_schedule
+    kaltura_series_start = schedule.kaltura_series_start(section.term)
     recording_dates = schedule.expected_recording_dates(section.term)
     if meeting.room and meeting.room.name:
         room_clause = f"""AND rooms.location = '{meeting.room.name.replace("'", "''")}'"""
@@ -133,7 +134,7 @@ def get_kaltura_id(recording_schedule):
                 JOIN rooms ON rooms.id = scheduled.room_id
                WHERE scheduled.term_id = {section.term.id}
                  AND scheduled.section_id = {section.ccn}
-                 AND scheduled.meeting_start_date = '{recording_dates[0].strftime('%Y-%m-%d %H:%M:%S')}'
+                 AND scheduled.meeting_start_date = '{kaltura_series_start.strftime('%Y-%m-%d %H:%M:%S')}'
                  AND scheduled.meeting_end_date = '{recording_dates[-1].strftime('%Y-%m-%d %H:%M:%S')}'
                  {room_clause}
                  AND scheduled.deleted_at IS NULL
@@ -284,8 +285,7 @@ def get_test_opt_out_sections():
     for sec_data in test_sections_data:
         for instr in sec_data['instructors']:
             idx = sec_data['instructors'].index(instr)
-            instr = test_instructor_data[idx]
-            instr.update({'role': 'PI'})
+            instr.update(test_instructor_data[idx])
         sections.append(get_test_section(sec_data, test_section_instructor_data=True))
     return sections
 
@@ -313,7 +313,11 @@ def get_test_x_listed_sections(test_data):
     std_commit(allow_test_environment=True)
     app.logger.info(f'{result}')
 
-    sql = f'SELECT course_name FROM sis_sections WHERE section_id = {result["listing_ccn"]};'
+    sql = f"""SELECT course_name
+                FROM sis_sections
+               WHERE section_id = {result["listing_ccn"]}
+                 AND term_id = {app.config['CURRENT_TERM_ID']};
+    """
     app.logger.info(sql)
     listing_result = db.session.execute(text(sql)).first()
     std_commit(allow_test_environment=True)
@@ -434,7 +438,7 @@ def get_sent_email_count(template, section, instructor=None):
 
 
 def reset_email_template_test_data(template_type):
-    sql = f"DELETE FROM email_templates WHERE template_type = '{template_type}'"
+    sql = f"DELETE FROM email_templates WHERE template_type = '{template_type.value['type']}'"
     db.session.execute(text(sql))
     std_commit(allow_test_environment=True)
 

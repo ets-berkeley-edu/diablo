@@ -70,6 +70,9 @@ class TestCourseRoomChanges:
         self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_TO_MY_MEDIA
         self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
 
+    def test_welcome_email(self):
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_SEM_START, self.section, self.instr) == 1
+
     def test_modify_recording_settings(self):
         self.ouija_page.load_page()
         self.ouija_page.log_out()
@@ -86,6 +89,12 @@ class TestCourseRoomChanges:
         self.ouija_page.click_jobs_link()
         self.jobs_page.run_settings_update_job_sequence()
 
+    def test_settings_update_email(self):
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_CHANGES_CONFIRMED, self.section, self.instr) == 1
+
+    def test_paging_operator_email(self):
+        assert util.get_sent_email_count(EmailTemplateType.ADMIN_OPERATOR_REQUESTED, self.section) == 1
+
     # SCHEDULED COURSE MOVES TO ANOTHER ELIGIBLE ROOM, THOUGH NOT AN AUDITORIUM
 
     def test_move_to_new_eligible_room(self):
@@ -98,6 +107,9 @@ class TestCourseRoomChanges:
 
     def test_new_eligible_room_email(self):
         assert util.get_sent_email_count(EmailTemplateType.INSTR_SCHEDULE_CHANGE, self.section, self.instr) == 1
+
+    def test_settings_downgrade_email(self):
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_CHANGES_CONFIRMED, self.section, self.instr) == 2
 
     def test_new_eligible_room_series(self):
         self.rooms_page.load_page()
@@ -138,7 +150,7 @@ class TestCourseRoomChanges:
         self.jobs_page.load_page()
         self.jobs_page.run_schedule_update_job_sequence()
 
-    def test_ineligible_room_email(self):
+    def test_room_ineligible_email(self):
         assert util.get_sent_email_count(EmailTemplateType.INSTR_ROOM_CHANGE_INELIGIBLE, self.section, self.instr) == 1
 
     def test_ineligible_room_unschedule_series(self):
@@ -175,7 +187,7 @@ class TestCourseRoomChanges:
         self.jobs_page.load_page()
         self.jobs_page.run_schedule_update_job_sequence()
 
-    def test_eligible_room_again_no_email(self):
+    def test_eligible_room_again_email(self):
         assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_NEW_COURSE_SCHED, self.section, self.instr) == 1
 
     def test_eligible_room_again_reschedule_series(self):
@@ -250,3 +262,46 @@ class TestCourseRoomChanges:
     def test_null_room_filter_no_instructors(self):
         self.ouija_page.filter_for_no_instructors()
         assert not self.ouija_page.is_course_in_results(self.section)
+
+    # VERIFY TOTAL EMAILS
+
+    def test_welcome_email_ttl(self):
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_SEM_START, self.section, self.instr) == 1
+
+    def test_settings_update_email_ttl(self):
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_CHANGES_CONFIRMED, self.section, self.instr) == 2
+
+    def test_paging_operator_email_ttl(self):
+        assert util.get_sent_email_count(EmailTemplateType.ADMIN_OPERATOR_REQUESTED, self.section) == 1
+
+    def test_schedule_change_email(self):
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_SCHEDULE_CHANGE, self.section, self.instr) == 1
+
+    def test_room_ineligible_email_ttl(self):
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_ROOM_CHANGE_INELIGIBLE, self.section, self.instr) == 2
+
+    def test_eligible_room_again_email_ttl(self):
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_NEW_COURSE_SCHED, self.section, self.instr) == 1
+
+    # HISTORY
+
+    def test_history_rec_type_upgrade(self):
+        old_val = RecordingType.VIDEO_SANS_OPERATOR.value['db']
+        new_val = RecordingType.VIDEO_WITH_OPERATOR.value['db']
+        self.course_page.load_page(self.section)
+        self.course_page.verify_history_row('recording_type', old_val, new_val, self.instr, 'succeeded', published=True)
+
+    def test_history_rec_type_downgrade(self):
+        old_val = RecordingType.VIDEO_WITH_OPERATOR.value['db']
+        new_val = RecordingType.VIDEO_SANS_OPERATOR.value['db']
+        self.course_page.verify_history_row('recording_type', old_val, new_val, None, 'succeeded', published=True)
+
+    def test_history_new_eligible_room(self):
+        old_val = None
+        new_val = None
+        self.course_page.verify_history_row('meeting_updated', old_val, new_val, None, 'succeeded', published=True)
+
+    def test_history_no_room(self):
+        old_val = None
+        new_val = '—'
+        self.course_page.verify_history_row('room_not_eligible', old_val, new_val, None, 'succeeded', published=True)

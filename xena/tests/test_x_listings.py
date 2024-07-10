@@ -72,7 +72,7 @@ class TestCrossListings:
         util.reset_sent_email_test_data(self.section)
         util.reset_sent_email_test_data(self.x_listed_section)
 
-    # CREATE A COURSE SITE FOR EACH OF THE LISTINGS
+    # CREATE A COURSE SITE
 
     def test_create_course_site_one(self):
         self.canvas_page.provision_site(self.section, [self.section.ccn], self.site_1)
@@ -113,9 +113,9 @@ class TestCrossListings:
     def test_update_publish_type(self):
         self.course_page.load_page(self.section)
         self.course_page.click_edit_recording_placement()
-        self.course_page.enter_recording_placement(RecordingPlacement.PUBLISH_AUTOMATICALLY, sites=[self.site_1])
+        self.course_page.enter_recording_placement(RecordingPlacement.PUBLISH_TO_MEDIA_GALLERY, sites=[self.site_1])
         self.course_page.save_recording_placement_edits()
-        self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_AUTOMATICALLY
+        self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_TO_MEDIA_GALLERY
 
     # TODO def test_course_history_updates_pending(self):
 

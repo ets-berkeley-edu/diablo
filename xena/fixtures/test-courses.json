@@ -540,7 +540,7 @@
     },
     {
      "test_script": "test_opt_out_1",
-      "dept_code": "COMPSCI",
+      "dept_code": "PHYSICS",
       "instructors": [
         {
           "role": "PI"

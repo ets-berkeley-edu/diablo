@@ -122,12 +122,6 @@ class TestCourseCancellation:
         self.course_page.load_page(self.section)
         assert self.course_page.is_canceled()
 
-    def test_search_canceled(self):
-        self.ouija_page.load_page()
-        self.ouija_page.search_for_course_code(self.section)
-        self.ouija_page.filter_for_scheduled()
-        assert not self.ouija_page.is_course_in_results(self.section)
-
     # UNSCHEDULE CANCELED COURSE
 
     def test_unsched_canceled(self):
@@ -147,3 +141,12 @@ class TestCourseCancellation:
     def test_instructor_email_canceled_ineligible(self):
         assert util.get_sent_email_count(EmailTemplateType.INSTR_COURSE_CANCELLED, self.section,
                                          self.instructor) == 1
+
+    def test_history(self):
+        self.course_page.load_page(self.section)
+        self.course_page.verify_history_row(field='not_scheduled',
+                                            old_value=None,
+                                            new_value='—',
+                                            requestor=None,
+                                            status='succeeded',
+                                            published=True)
