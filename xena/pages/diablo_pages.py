@@ -86,7 +86,7 @@ class DiabloPages(Page):
         self.mouseover(self.element(DiabloPages.MENU_BUTTON))
 
     def click_menu_button(self):
-        self.wait_for_element_and_click(DiabloPages.MENU_BUTTON)
+        self.wait_for_page_and_click_js(DiabloPages.MENU_BUTTON)
 
     def open_menu(self):
         if not self.is_present(DiabloPages.LOG_OUT_LINK) or not self.element(DiabloPages.LOG_OUT_LINK).is_displayed():
@@ -105,12 +105,12 @@ class DiabloPages(Page):
     def log_out(self):
         app.logger.info('Logging out')
         self.open_menu()
-        self.wait_for_element_and_click(DiabloPages.LOG_OUT_LINK)
+        self.wait_for_page_and_click_js(DiabloPages.LOG_OUT_LINK)
         # Logging out is not working the first time in some cases, retry for now
         time.sleep(2)
         if self.is_present(DiabloPages.LOG_OUT_LINK):
             self.open_menu()
-            self.wait_for_element_and_click(DiabloPages.LOG_OUT_LINK)
+            self.wait_for_page_and_click_js(DiabloPages.LOG_OUT_LINK)
 
     def click_menu_option(self, option_text):
         app.logger.info(f"Clicking the option '{option_text}'")

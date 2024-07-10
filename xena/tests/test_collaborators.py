@@ -26,7 +26,10 @@ import copy
 from datetime import timedelta
 
 import pytest
+from xena.models.email_template_type import EmailTemplateType
 from xena.models.recording_schedule import RecordingSchedule
+from xena.models.user import User
+from xena.pages.course_page import CoursePage
 from xena.test_utils import util
 
 
@@ -74,6 +77,14 @@ class TestCollaborators0:
         assert self.kaltura_page.collaborator_perm(self.instructor) == 'Co-Editor, Co-Publisher'
         assert self.kaltura_page.collaborator_perm(self.proxy) == 'Co-Editor, Co-Publisher'
 
+    def test_email_new_course_scheduled(self):
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_NEW_COURSE_SCHED, self.section,
+                                         self.instructor) == 1
+
+    def test_history_new_course_scheduled(self):
+        self.course_page.load_page(self.section)
+        assert not self.course_page.update_history_table_rows()
+
     def test_course_page_sis_data(self):
         self.jobs_page.load_page()
         self.jobs_page.log_out()
@@ -83,7 +94,9 @@ class TestCollaborators0:
         self.course_page.verify_instructors(self.section)
 
     def test_proxy_collaborator_by_default(self):
-        assert self.course_page.visible_collaborator_uids() == [str(self.proxy.uid)]
+        self.course_page.verify_collaborator_uids([self.proxy])
+
+    # Add manual collaborator
 
     def test_add_collaborator(self):
         self.course_page.click_edit_collaborators()
@@ -103,10 +116,18 @@ class TestCollaborators0:
         self.kaltura_page.verify_title_and_desc(self.section, self.meeting)
         self.kaltura_page.verify_collaborators(self.section, [self.proxy, self.manual_collaborator])
 
-    def test_kaltura_new_collaborator_perms(self):
-        assert self.kaltura_page.collaborator_perm(self.instructor) == 'Co-Editor, Co-Publisher'
-        assert self.kaltura_page.collaborator_perm(self.proxy) == 'Co-Editor, Co-Publisher'
-        assert self.kaltura_page.collaborator_perm(self.manual_collaborator) == 'Co-Editor, Co-Publisher'
+    def test_email_new_collaborator(self):
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_CHANGES_CONFIRMED, self.section,
+                                         self.instructor) == 1
+
+    def test_history_new_collaborator(self):
+        old_val = CoursePage.expected_uids_converter([self.proxy])
+        new_val = CoursePage.expected_uids_converter([self.proxy, self.manual_collaborator])
+        self.course_page.load_page(self.section)
+        self.course_page.verify_history_row('collaborator_uids', old_val, new_val, self.instructor, 'succeeded',
+                                            published=True)
+
+    # Room removed, unscheduled
 
     def test_room_removed(self):
         util.change_course_room(self.section, self.meeting, new_room=None)
@@ -118,6 +139,19 @@ class TestCollaborators0:
     def test_series_canceled_room_removed(self):
         self.kaltura_page.load_event_edit_page(self.recording_schedule.series_id)
         self.kaltura_page.wait_for_title('Access Denied - UC Berkeley - Test')
+
+    def test_email_room_removed(self):
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_ROOM_CHANGE_INELIGIBLE, self.section,
+                                         self.instructor) == 1
+
+    def test_history_room_removed(self):
+        old_val = None
+        new_val = '—'
+        self.course_page.load_page(self.section)
+        self.course_page.verify_history_row('room_not_eligible', old_val, new_val, None, 'succeeded',
+                                            published=True)
+
+    # Room restored, rescheduled.  Manual collaborator also restored.
 
     def test_room_restored(self):
         util.change_course_room(self.section, self.meeting, new_room=self.meeting_room)
@@ -134,11 +168,20 @@ class TestCollaborators0:
         assert self.kaltura_page.collaborator_perm(self.proxy) == 'Co-Editor, Co-Publisher'
         assert self.kaltura_page.collaborator_perm(self.manual_collaborator) == 'Co-Editor, Co-Publisher'
 
+    def test_email_room_restored(self):
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_NEW_COURSE_SCHED, self.section,
+                                         self.instructor) == 2
+
+    def test_no_email_new_collaborator(self):
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_CHANGES_CONFIRMED, self.section,
+                                         self.instructor) == 1
+
 
 @pytest.mark.usefixtures('page_objects')
 class TestCollaborators1:
 
     test_data = util.get_test_script_course('test_collaborators_1')
+    admin = User({'uid': util.get_admin_uid()})
     section = util.get_test_section(test_data)
     meeting_0 = section.meetings[0]
     meeting_1 = section.meetings[1]
@@ -173,6 +216,8 @@ class TestCollaborators1:
         self.course_page.verify_instructors(self.section)
         assert self.course_page.visible_proxies() == []
 
+    # Add manual collaborator
+
     def test_add_collaborator(self):
         self.course_page.click_edit_collaborators()
         self.course_page.add_collaborator_by_uid(self.manual_collaborator)
@@ -192,6 +237,23 @@ class TestCollaborators1:
         self.kaltura_page.load_event_edit_page(self.recording_schedule_1.series_id)
         self.kaltura_page.verify_title_and_desc(self.section, self.meeting_1)
         self.kaltura_page.verify_collaborators(self.section, [self.manual_collaborator])
+
+    def test_email_new_scheduled(self):
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_SEM_START, self.section,
+                                         self.instructor) == 1
+
+    def test_email_new_collaborator(self):
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_CHANGES_CONFIRMED, self.section,
+                                         self.instructor) == 1
+
+    def test_history_new_collaborator(self):
+        old_val = CoursePage.expected_uids_converter([])
+        new_val = CoursePage.expected_uids_converter([self.manual_collaborator])
+        self.course_page.load_page(self.section)
+        self.course_page.verify_history_row('collaborator_uids', old_val, new_val, self.admin, 'succeeded',
+                                            published=True)
+
+    # Add proxy in SIS, becomes collaborator automatically
 
     def test_proxy_added(self):
         util.add_sis_sections_rows(self.section, instructors=[self.proxy])
@@ -216,6 +278,19 @@ class TestCollaborators1:
     def test_new_collaborators(self):
         self.course_page.verify_collaborator_uids([self.proxy, self.manual_collaborator])
 
+    def test_email_new_proxy(self):
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_CHANGES_CONFIRMED, self.section,
+                                         self.instructor) == 2
+
+    def test_history_new_proxy(self):
+        old_val = CoursePage.expected_uids_converter([self.manual_collaborator])
+        new_val = CoursePage.expected_uids_converter([self.manual_collaborator, self.proxy])
+        self.course_page.load_page(self.section)
+        self.course_page.verify_history_row('collaborator_uids', old_val, new_val, None, 'succeeded',
+                                            published=True)
+
+    # Remove manual collaborator
+
     def test_remove_collaborator(self):
         self.course_page.click_edit_collaborators()
         self.course_page.click_remove_collaborator(self.manual_collaborator)
@@ -236,6 +311,17 @@ class TestCollaborators1:
         self.kaltura_page.verify_collaborators(self.section, [self.proxy])
         assert self.kaltura_page.collaborator_perm(self.instructor) == 'Co-Editor, Co-Publisher'
         assert self.kaltura_page.collaborator_perm(self.proxy) == 'Co-Editor, Co-Publisher'
+
+    def test_email_collaborator_removed(self):
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_CHANGES_CONFIRMED, self.section,
+                                         self.instructor) == 3
+
+    def test_history_collaborator_removed(self):
+        old_val = CoursePage.expected_uids_converter([self.manual_collaborator, self.proxy])
+        new_val = CoursePage.expected_uids_converter([self.proxy])
+        self.course_page.load_page(self.section)
+        self.course_page.verify_history_row('collaborator_uids', old_val, new_val, self.admin, 'succeeded',
+                                            published=True)
 
 
 @pytest.mark.usefixtures('page_objects')
@@ -268,10 +354,9 @@ class TestCollaborators2:
         self.kaltura_page.verify_title_and_desc(self.section, self.meeting)
         self.kaltura_page.verify_collaborators(self.section, self.section.proxies)
 
-    def test_kaltura_proxy_collaborator_perms(self):
-        assert self.kaltura_page.collaborator_perm(self.instructor) == 'Co-Editor, Co-Publisher'
-        assert self.kaltura_page.collaborator_perm(self.proxy_0) == 'Co-Editor, Co-Publisher'
-        assert self.kaltura_page.collaborator_perm(self.proxy_1) == 'Co-Editor, Co-Publisher'
+    def test_email_new_course(self):
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_NEW_COURSE_SCHED, self.section,
+                                         self.instructor) == 1
 
     def test_course_page_sis_data(self):
         self.jobs_page.load_page()
@@ -283,6 +368,8 @@ class TestCollaborators2:
 
     def test_proxy_collaborators_by_default(self):
         self.course_page.verify_collaborator_uids(self.section.proxies)
+
+    # Remove proxy collaborator manually
 
     def test_remove_proxy(self):
         self.course_page.click_edit_collaborators()
@@ -301,6 +388,12 @@ class TestCollaborators2:
         self.kaltura_page.verify_title_and_desc(self.section, self.meeting)
         self.kaltura_page.verify_collaborators(self.section, [self.proxy_1])
 
+    def test_email_proxy_collaborator_removed(self):
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_CHANGES_CONFIRMED, self.section,
+                                         self.instructor) == 1
+
+    # SIS removes other proxy
+
     def test_remove_other_proxy(self):
         util.delete_course_instructor_row(self.section, self.proxy_1)
 
@@ -315,3 +408,21 @@ class TestCollaborators2:
 
     def test_kaltura_no_proxy_collaborator_perms(self):
         assert self.kaltura_page.collaborator_perm(self.instructor) == 'Co-Editor, Co-Publisher'
+
+    def test_email_other_proxy_removed(self):
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_CHANGES_CONFIRMED, self.section,
+                                         self.instructor) == 2
+
+    def test_history_proxy_removed(self):
+        old_val = CoursePage.expected_uids_converter(self.section.proxies)
+        new_val = CoursePage.expected_uids_converter([self.proxy_1])
+        self.course_page.load_page(self.section)
+        self.course_page.verify_history_row('collaborator_uids', old_val, new_val, self.instructor, 'succeeded',
+                                            published=True)
+
+    def test_history_other_proxy_removed(self):
+        old_val = CoursePage.expected_uids_converter([self.proxy_1])
+        new_val = CoursePage.expected_uids_converter([])
+        self.course_page.load_page(self.section)
+        self.course_page.verify_history_row('collaborator_uids', old_val, new_val, None, 'succeeded',
+                                            published=True)

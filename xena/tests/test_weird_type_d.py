@@ -204,10 +204,10 @@ class TestWeirdTypeD:
 
     def test_choose_publish_type(self):
         self.course_page.click_edit_recording_placement()
-        self.course_page.select_recording_placement(RecordingPlacement.PUBLISH_AUTOMATICALLY, sites=[self.site])
+        self.course_page.select_recording_placement(RecordingPlacement.PUBLISH_TO_MEDIA_GALLERY, sites=[self.site])
         self.course_page.save_recording_placement_edits()
-        self.recording_schedule_0.recording_placement = RecordingPlacement.PUBLISH_AUTOMATICALLY
-        self.recording_schedule_1.recording_placement = RecordingPlacement.PUBLISH_AUTOMATICALLY
+        self.recording_schedule_0.recording_placement = RecordingPlacement.PUBLISH_TO_MEDIA_GALLERY
+        self.recording_schedule_1.recording_placement = RecordingPlacement.PUBLISH_TO_MEDIA_GALLERY
 
     # UPDATE BOTH SERIES IN KALTURA
 

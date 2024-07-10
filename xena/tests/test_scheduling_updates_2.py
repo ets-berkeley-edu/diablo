@@ -163,15 +163,14 @@ class TestScheduling2:
     def test_rec_placement_options(self):
         self.course_page.click_edit_recording_placement()
         assert self.course_page.is_present(self.course_page.PLACEMENT_MY_MEDIA_RADIO)
-        assert self.course_page.is_present(self.course_page.PLACEMENT_PENDING_RADIO)
-        assert self.course_page.is_present(self.course_page.PLACEMENT_AUTOMATIC_RADIO)
+        assert self.course_page.is_present(self.course_page.PLACEMENT_MEDIA_GALLERY_RADIO)
 
     # SELECT OPTIONS, SAVE
 
     def test_choose_rec_placement(self):
-        self.course_page.select_recording_placement(RecordingPlacement.PUBLISH_AUTOMATICALLY, sites=[self.site_0])
+        self.course_page.select_recording_placement(RecordingPlacement.PUBLISH_TO_MEDIA_GALLERY, sites=[self.site_0])
         self.course_page.save_recording_placement_edits()
-        self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_AUTOMATICALLY
+        self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_TO_MEDIA_GALLERY
 
     def test_visible_site_ids_updated(self):
         assert self.course_page.visible_course_site_ids() == [self.site_0.site_id]
@@ -179,7 +178,9 @@ class TestScheduling2:
     def test_site_link(self):
         assert self.course_page.external_link_valid(CoursePage.selected_placement_site_loc(self.site_0), self.site_0.name)
 
-    # TODO - confirmation of changes message?
+    def test_changes_queued(self):
+        self.course_page.load_page(self.section)
+        assert self.course_page.is_queued_changes_msg_present()
 
     # UPDATE SERIES IN KALTURA
 
@@ -224,9 +225,9 @@ class TestScheduling2:
         self.instructor_page.click_course_page_link(self.section)
         self.course_page.load_page(self.section)
         self.course_page.click_edit_recording_placement()
-        self.course_page.select_recording_placement(RecordingPlacement.PUBLISH_TO_PENDING, sites=[self.site_1])
+        self.course_page.select_recording_placement(RecordingPlacement.PUBLISH_TO_MEDIA_GALLERY, sites=[self.site_1])
         self.course_page.save_recording_placement_edits()
-        self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_TO_PENDING
+        self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_TO_MEDIA_GALLERY
 
     def test_another_site_visible_site_ids_updated(self):
         assert self.course_page.visible_course_site_ids() == [self.site_0.site_id, self.site_1.site_id]
@@ -234,6 +235,10 @@ class TestScheduling2:
     def test_another_site_link(self):
         assert self.course_page.external_link_valid(CoursePage.selected_placement_site_loc(self.site_1),
                                                     self.site_1.name)
+
+    def test_changes_queued_again(self):
+        self.course_page.load_page(self.section)
+        assert self.course_page.is_queued_changes_msg_present()
 
     def test_another_site_run_kaltura_job(self):
         self.course_page.log_out()
@@ -276,13 +281,22 @@ class TestScheduling2:
     def test_removed_site_visible_site_ids_updated(self):
         assert self.course_page.visible_course_site_ids() == [self.site_0.site_id]
 
+    def test_changes_queued_removed_site(self):
+        self.course_page.load_page(self.section)
+        assert self.course_page.is_queued_changes_msg_present()
+
     def test_run_jobs(self):
         self.course_page.log_out()
         self.login_page.dev_auth()
         self.jobs_page.click_jobs_link()
         self.jobs_page.run_settings_update_job_sequence()
 
-    def test_kaltura_course_site_deleted(self):
+    def test_kaltura_removed_site_series_deleted(self):
+        self.kaltura_page.load_event_edit_page(self.recording_schedule.series_id)
+        self.kaltura_page.wait_for_title('Access Denied - UC Berkeley - Test')
+
+    def test_kaltura_new_series_course_site_deleted(self):
+        assert util.get_kaltura_id(self.recording_schedule)
         self.kaltura_page.load_event_edit_page(self.recording_schedule.series_id)
         self.kaltura_page.verify_site_categories([self.site_0])
 
@@ -301,21 +315,24 @@ class TestScheduling2:
         self.course_page.save_recording_placement_edits()
         self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_TO_MY_MEDIA
 
-    # TODO - confirmation of changes message?
-
-    # VERIFY COURSE HISTORY
-
-    def test_update_course_history_updates_pending(self):
-        self.course_page.log_out()
-        self.login_page.dev_auth()
-
-    # TODO
+    def test_changes_queued_publish_type(self):
+        self.course_page.load_page(self.section)
+        assert self.course_page.is_queued_changes_msg_present()
 
     # UPDATE SERIES IN KALTURA
 
     def test_run_kaltura_job(self):
+        self.course_page.log_out()
+        self.login_page.dev_auth()
         self.ouija_page.click_jobs_link()
         self.jobs_page.run_settings_update_job_sequence()
+
+    def test_deleted_kaltura_series(self):
+        self.kaltura_page.load_event_edit_page(self.recording_schedule.series_id)
+        self.kaltura_page.wait_for_title('Access Denied - UC Berkeley - Test')
+
+    def test_new_kaltura_series(self):
+        assert util.get_kaltura_id(self.recording_schedule)
 
     # VERIFY SERIES IN KALTURA
 
@@ -341,4 +358,32 @@ class TestScheduling2:
 
     # VERIFY COURSE HISTORY
 
-    # TODO
+    def test_history_pub_type_automatic(self):
+        old_val = RecordingPlacement.PUBLISH_TO_MY_MEDIA.value['db']
+        new_val = RecordingPlacement.PUBLISH_TO_MEDIA_GALLERY.value['db']
+        self.course_page.verify_history_row('publish_type', old_val, new_val, self.instructor_0, 'succeeded',
+                                            published=True)
+
+    def test_history_add_site_0(self):
+        old_val = '—'
+        new_val = CoursePage.expected_site_ids_converter([self.site_0])
+        self.course_page.verify_history_row('canvas_site_ids', old_val, new_val, self.instructor_0, 'succeeded',
+                                            published=True)
+
+    def test_history_add_site_1(self):
+        old_val = CoursePage.expected_site_ids_converter([self.site_0])
+        new_val = CoursePage.expected_site_ids_converter([self.site_0, self.site_1])
+        self.course_page.verify_history_row('canvas_site_ids', old_val, new_val, self.instructor_1, 'succeeded',
+                                            published=True)
+
+    def test_history_pub_type_private(self):
+        old_val = RecordingPlacement.PUBLISH_TO_MEDIA_GALLERY.value['db']
+        new_val = RecordingPlacement.PUBLISH_TO_MY_MEDIA.value['db']
+        self.course_page.verify_history_row('publish_type', old_val, new_val, self.instructor_1, 'succeeded',
+                                            published=True)
+
+    def test_history_remove_site_1(self):
+        old_val = CoursePage.expected_site_ids_converter([self.site_0, self.site_1])
+        new_val = CoursePage.expected_site_ids_converter([self.site_0])
+        self.course_page.verify_history_row('canvas_site_ids', old_val, new_val, self.instructor_1, 'succeeded',
+                                            published=True)

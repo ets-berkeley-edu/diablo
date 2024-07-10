@@ -41,7 +41,7 @@ class JobsPage(DiabloPages):
     RUN_HOUSEKEEPING_JOB_BUTTON = (By.ID, 'run-job-house_keeping')
     RUN_KALTURA_JOB_BUTTON = (By.ID, 'run-job-kaltura')
     RUN_EMAILS_JOB_BUTTON = (By.ID, 'run-job-emails')
-    RUN_REMIND_SCHEDULED_BUTTON = (By.ID, 'run-job-remind_scheduled')
+    RUN_REMIND_INSTRUCTORS_BUTTON = (By.ID, 'run-job-remind_instructors')
     RUN_SCHEDULE_UPDATES_JOB_BUTTON = (By.ID, 'run-job-schedule_updates')
     RUN_SEMESTER_START_JOB_BUTTON = (By.ID, 'run-job-semester_start')
     RUN_SIS_DATA_REFRESH_JOB_BUTTON = (By.ID, 'run-job-sis_data_refresh')
@@ -91,12 +91,12 @@ class JobsPage(DiabloPages):
         self.wait_for_page_and_click(JobsPage.RUN_EMAILS_JOB_BUTTON)
         self.wait_for_most_recent_job_success(AsyncJob.EMAILS)
 
-    def run_remind_scheduled_job(self):
-        app.logger.info('Running remind scheduled job')
+    def run_remind_instructors_job(self):
+        app.logger.info('Running remind instructors job')
         self.scroll_to_top()
         time.sleep(1)
-        self.wait_for_page_and_click(JobsPage.RUN_REMIND_SCHEDULED_BUTTON)
-        self.wait_for_most_recent_job_success(AsyncJob.REMIND_SCHEDULED)
+        self.wait_for_page_and_click(JobsPage.RUN_REMIND_INSTRUCTORS_BUTTON)
+        self.wait_for_most_recent_job_success(AsyncJob.REMIND_INSTRUCTORS)
 
     def run_schedule_updates_job(self):
         app.logger.info('Running Schedule Updates job')
@@ -130,6 +130,10 @@ class JobsPage(DiabloPages):
 
     def run_settings_update_job_sequence(self):
         self.run_kaltura_job()
+        self.run_emails_job()
+
+    def run_remind_instructors_job_sequence(self):
+        self.run_remind_instructors_job()
         self.run_emails_job()
 
     def wait_for_jobs_table(self):
@@ -174,10 +178,7 @@ class JobsPage(DiabloPages):
 
     def disable_all_jobs(self):
         for job in AsyncJob:
-            if job == AsyncJob.REMIND_SCHEDULED:
-                app.logger.info(f'Skipping #{job.value}')
-            else:
-                self.disable_job(job)
+            self.disable_job(job)
 
     def search_job_history(self, async_job):
         app.logger.info(f'Searching for {async_job.value}')

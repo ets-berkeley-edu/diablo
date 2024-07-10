@@ -23,6 +23,7 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
+import datetime
 import time
 
 from flask import current_app as app
@@ -61,6 +62,9 @@ class CoursePage(DiabloPages):
         app.logger.info(f'Loading course page for term {section.term.id} section ID {section.ccn}')
         self.hit_url(section.term.id, section.ccn)
         self.wait_for_diablo_title(f'{section.code}, {section.number}')
+
+    def is_queued_changes_msg_present(self):
+        return self.is_present(self.UPDATES_QUEUED_MSG)
 
     # SIS DATA - section
 
@@ -302,8 +306,7 @@ class CoursePage(DiabloPages):
     PLACEMENT_TEXT = By.ID, 'publish-type-name'
     PLACEMENT_EDIT_BUTTON = By.ID, 'btn-publish-type-edit'
     PLACEMENT_MY_MEDIA_RADIO = By.ID, 'radio-publish-type-kaltura_my_media'
-    PLACEMENT_PENDING_RADIO = By.ID, 'radio-publish-type-kaltura_media_gallery_moderated'
-    PLACEMENT_AUTOMATIC_RADIO = By.ID, 'radio-publish-type-kaltura_media_gallery'
+    PLACEMENT_MEDIA_GALLERY_RADIO = By.ID, 'radio-publish-type-kaltura_media_gallery'
     PLACEMENT_SAVE_BUTTON = By.ID, 'btn-publish-type-save'
     PLACEMENT_CXL_BUTTON = By.ID, 'btn-publish-type-cancel'
 
@@ -342,15 +345,8 @@ class CoursePage(DiabloPages):
         app.logger.info(f'Selecting the radio button for {publish_type}')
         if publish_type == RecordingPlacement.PUBLISH_TO_MY_MEDIA:
             self.wait_for_page_and_click_js(self.PLACEMENT_MY_MEDIA_RADIO)
-        elif publish_type == RecordingPlacement.PUBLISH_TO_PENDING:
-            self.wait_for_page_and_click_js(self.PLACEMENT_PENDING_RADIO)
-            if sites:
-                for site in sites:
-                    self.wait_for_element_and_click(self.PLACEMENT_SITE_SELECT)
-                    self.wait_for_element_and_click(self.placement_site_option_loc(site))
-                    self.wait_for_element_and_click(self.PLACEMENT_SITE_ADD_BUTTON)
-        else:
-            self.wait_for_page_and_click_js(self.PLACEMENT_AUTOMATIC_RADIO)
+        elif publish_type == RecordingPlacement.PUBLISH_TO_MEDIA_GALLERY:
+            self.wait_for_page_and_click_js(self.PLACEMENT_MEDIA_GALLERY_RADIO)
             if sites:
                 for site in sites:
                     self.wait_for_element_and_click(self.PLACEMENT_SITE_SELECT)
@@ -361,14 +357,8 @@ class CoursePage(DiabloPages):
         app.logger.info(f'Selecting the radio button for {publish_type}')
         if publish_type == RecordingPlacement.PUBLISH_TO_MY_MEDIA:
             self.wait_for_page_and_click_js(self.PLACEMENT_MY_MEDIA_RADIO)
-        elif publish_type == RecordingPlacement.PUBLISH_TO_PENDING:
-            self.wait_for_page_and_click_js(self.PLACEMENT_PENDING_RADIO)
-            if sites:
-                for site in sites:
-                    self.wait_for_element_and_type(self.PLACEMENT_SITE_INPUT, str(site.site_id))
-                    self.wait_for_element_and_click(self.PLACEMENT_SITE_ADD_BUTTON)
-        else:
-            self.wait_for_page_and_click_js(self.PLACEMENT_AUTOMATIC_RADIO)
+        elif publish_type == RecordingPlacement.PUBLISH_TO_MEDIA_GALLERY:
+            self.wait_for_page_and_click_js(self.PLACEMENT_MEDIA_GALLERY_RADIO)
             if sites:
                 for site in sites:
                     self.wait_for_element_and_type(self.PLACEMENT_SITE_INPUT, str(site.site_id))
@@ -410,13 +400,56 @@ class CoursePage(DiabloPages):
         row_els = self.elements((By.XPATH, xpath))
         for r in row_els:
             node = str(row_els.index(r) + 1)
+            old_val = self.visible_value_converter(self.element((By.XPATH, f'{xpath}[{node}]/td[2]')).text)
+            new_val = self.visible_value_converter(self.element((By.XPATH, f'{xpath}[{node}]/td[3]')).text)
             rows.append({
                 'field': self.element((By.XPATH, f'{xpath}[{node}]/td[1]')).text,
-                'old_value': self.element((By.XPATH, f'{xpath}[{node}]/td[2]')).text,
-                'new_value': self.element((By.XPATH, f'{xpath}[{node}]/td[3]')).text,
+                'old_value': old_val,
+                'new_value': new_val,
                 'requested_by': self.element((By.XPATH, f'{xpath}[{node}]/td[4]')).text.split('(')[-1][0:-1],
                 'requested_at': self.element((By.XPATH, f'{xpath}[{node}]/td[5]')).text.split(',')[0],
                 'published_at': self.element((By.XPATH, f'{xpath}[{node}]/td[6]')).text.split(',')[0],
                 'status': self.element((By.XPATH, f'{xpath}[{node}]/td[7]')).text,
             })
         return rows
+
+    def verify_history_row(self, field, old_value, new_value, requestor, status, published=False):
+        all_visible_rows = self.update_history_table_rows()
+        visible_field_rows = [row for row in all_visible_rows if row['field'] == field]
+        expected_row = {
+            'field': field,
+            'old_value': old_value,
+            'new_value': new_value,
+            'requested_by': (str(requestor.uid) if requestor else ''),
+            'requested_at': datetime.date.today().strftime('%-m/%-d/%Y'),
+            'published_at': (datetime.date.today().strftime('%-m/%-d/%Y') if published else '—'),
+            'status': status,
+        }
+        app.logger.info(f'Expecting {expected_row}')
+        app.logger.info(f'Visible rows of type {field} are {visible_field_rows}')
+        assert expected_row in visible_field_rows
+
+    @staticmethod
+    def expected_uids_converter(users):
+        ary = [str(p.uid) for p in users]
+        ary.sort()
+        return ary
+
+    @staticmethod
+    def expected_site_ids_converter(sites):
+        ary = [s.site_id for s in sites]
+        ary.sort()
+        return ary
+
+    @staticmethod
+    def visible_value_converter(val):
+        if val[0] == '{':
+            return None
+        elif val == '[]':
+            return []
+        elif '[ "' in val:
+            val_as_ary = val.replace('[ "', '').replace('" ]', '').split('", "')
+            val_as_ary.sort()
+            return val_as_ary
+        else:
+            return val

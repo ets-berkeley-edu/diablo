@@ -30,6 +30,7 @@ from xena.models.recording_placement import RecordingPlacement
 from xena.models.recording_schedule import RecordingSchedule
 from xena.models.recording_type import RecordingType
 from xena.models.section import Section
+from xena.pages.course_page import CoursePage
 from xena.test_utils import util
 
 
@@ -92,9 +93,9 @@ class TestCourseInstructorChanges:
         self.ouija_page.click_course_page_link(self.section)
 
         self.course_page.click_edit_recording_placement()
-        self.course_page.select_recording_placement(RecordingPlacement.PUBLISH_AUTOMATICALLY, sites=[self.site])
+        self.course_page.select_recording_placement(RecordingPlacement.PUBLISH_TO_MEDIA_GALLERY, sites=[self.site])
         self.course_page.save_recording_placement_edits()
-        self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_AUTOMATICALLY
+        self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_TO_MEDIA_GALLERY
 
         self.course_page.click_rec_type_edit_button()
         self.course_page.select_rec_type(RecordingType.VIDEO_WITH_OPERATOR)
@@ -160,3 +161,25 @@ class TestCourseInstructorChanges:
 
     def test_new_instructor_added_email(self):
         assert util.get_sent_email_count(EmailTemplateType.INSTR_ADDED, self.section, self.new_instructor) == 1
+
+    # HISTORY
+
+    def test_history_rec_placement(self):
+        old_val = RecordingPlacement.PUBLISH_TO_MY_MEDIA.value['db']
+        new_val = RecordingPlacement.PUBLISH_TO_MEDIA_GALLERY.value['db']
+        self.course_page.verify_history_row('publish_type', old_val, new_val, self.old_instructor, 'succeeded', published=True)
+
+    def test_history_rec_type(self):
+        old_val = RecordingType.VIDEO_SANS_OPERATOR.value['db']
+        new_val = RecordingType.VIDEO_WITH_OPERATOR.value['db']
+        self.course_page.verify_history_row('recording_type', old_val, new_val, self.old_instructor, 'succeeded', published=True)
+
+    def test_history_canvas_site(self):
+        old_val = '—'
+        new_val = CoursePage.expected_site_ids_converter([self.site])
+        self.course_page.verify_history_row('canvas_site_ids', old_val, new_val, self.old_instructor, 'succeeded', published=True)
+
+    def test_history_new_instructor(self):
+        old_val = CoursePage.expected_uids_converter([self.old_instructor])
+        new_val = CoursePage.expected_uids_converter([self.new_instructor])
+        self.course_page.verify_history_row('instructor_uids', old_val, new_val, None, 'succeeded', published=True)

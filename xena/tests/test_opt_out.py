@@ -35,13 +35,13 @@ sections = util.get_test_opt_out_sections()
 section_0 = sections[0]
 meeting_0_0 = section_0.meetings[0].meeting_schedule
 meeting_0_1 = section_0.meetings[1].meeting_schedule
-meeting_0_0.end_date = (meeting_0_0.end_date - timedelta(days=15)).strftime('%Y-%m-%d')
-meeting_0_1.start_date = (meeting_0_1.end_date - timedelta(days=14)).strftime('%Y-%m-%d')
+meeting_0_0.end_date = meeting_0_0.end_date - timedelta(days=15)
+meeting_0_1.start_date = meeting_0_0.end_date + timedelta(days=1)
 
 section_1 = sections[1]
 
-instructor_0 = section_0.instructors[0]
-instructor_1 = section_0.instructors[1]
+instructor_0 = section_1.instructors[0]
+instructor_1 = next(filter(lambda inst: inst.uid != instructor_0.uid, section_0.instructors))
 
 recording_schedule_0_0 = RecordingSchedule(section_0, section_0.meetings[0])
 recording_schedule_0_1 = RecordingSchedule(section_0, section_0.meetings[1])
@@ -119,7 +119,7 @@ class TestOptOut1:
         util.reset_section_test_data(section_1, delete_opt_outs=False)
 
     def test_semester_start_up(self):
-        self.ouija_page.load_jobs_page()
+        self.jobs_page.load_page()
         self.jobs_page.run_semester_start_job()
         self.jobs_page.run_emails_job()
 

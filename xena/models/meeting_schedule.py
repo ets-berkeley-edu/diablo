@@ -159,3 +159,13 @@ class MeetingSchedule(object):
             if day.weekday() in weekday_indices and day in holidays and day >= today:
                 blackout_dates.append(day)
         return blackout_dates
+
+    # Needed because Diablo can claim a series begins on a blackout date
+    def kaltura_series_start(self, term):
+        start = self.record_start.date()
+        end = term.last_record_date.date() if self.end_date > term.last_record_date else self.end_date.date()
+        delta = end - start
+        for i in range(delta.days + 1):
+            day = start + timedelta(i)
+            if day.weekday() in self.__weekday_indices():
+                return day

@@ -48,9 +48,27 @@ class EmailTemplatesPage(DiabloPages):
     @staticmethod
     def template_codes():
         return [
-            'course.aprx', 'course.days', 'course.format', 'course.name', 'course.room', 'course.section', 'course.time.end',
-            'course.time.start', 'course.title', 'instructors.all', 'instructors.pending', 'publish.type',
-            'publish.type.previous', 'recipient.name', 'recording.type', 'recording.type.previous', 'signup.url',
+            'collaborators',
+            'course.date.end',
+            'course.date.start',
+            'course.days',
+            'course.format',
+            'course.name',
+            'course.room',
+            'course.section',
+            'course.time.end',
+            'course.time.start',
+            'course.title',
+            'courseList',
+            'instructors.all',
+            'instructors.pending',
+            'instructors.previous',
+            'publish.type',
+            'publish.type.previous',
+            'recipient.name',
+            'recording.type',
+            'recording.type.previous',
+            'signup.url',
             'term.name',
         ]
 
@@ -114,7 +132,6 @@ class EmailTemplatesPage(DiabloPages):
     def enter_all_codes_in_body(self):
         codes = EmailTemplatesPage.template_codes()
         self.wait_for_element_and_click(EmailTemplatesPage.TEMPLATE_BODY_INPUT)
-        self.element(EmailTemplatesPage.TEMPLATE_BODY_INPUT).send_keys('There is nothing like Lockdown KS ')
         for code in codes:
             self.element(EmailTemplatesPage.TEMPLATE_BODY_INPUT).send_keys(f'{code} ')
             self.enter_body_code(code)

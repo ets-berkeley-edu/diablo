@@ -123,8 +123,8 @@ class OuijaBoardPage(CoursesPage):
 
     def filter_for_option(self, opt_locator):
         if not self.is_present(opt_locator) or not self.element(opt_locator).is_displayed():
-            self.wait_for_element_and_click(OuijaBoardPage.SEARCH_SELECT_BUTTON)
-        self.wait_for_page_and_click(opt_locator)
+            self.wait_for_page_and_click_js(OuijaBoardPage.SEARCH_SELECT_BUTTON)
+        self.wait_for_page_and_click_js(opt_locator)
         time.sleep(2)
         self.wait_for_filter_search()
 
@@ -164,7 +164,7 @@ class OuijaBoardPage(CoursesPage):
         self.filter_for_option(OuijaBoardPage.FILTER_SCHEDULED_OPTION)
 
     def filter_for_no_instructors(self):
-        app.logger.info('Filtering by option Scheduled (Nonstandard Dates)')
+        app.logger.info('Filtering by option No Instructors')
         self.filter_for_option(OuijaBoardPage.FILTER_NO_INSTRUCTORS_OPTION)
 
     # COURSES

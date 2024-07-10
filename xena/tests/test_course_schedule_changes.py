@@ -71,6 +71,9 @@ class TestCourseScheduleChanges:
         self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
         self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_TO_MY_MEDIA
 
+    def test_welcome_email(self):
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_SEM_START, self.section, self.instr) == 1
+
     # SCHEDULED COURSE CHANGES MEETING TIME
 
     def test_set_new_meeting_time(self):
@@ -81,6 +84,9 @@ class TestCourseScheduleChanges:
     def test_reschedule_with_new_times(self):
         self.jobs_page.load_page()
         self.jobs_page.run_schedule_update_job_sequence()
+
+    def test_schedule_change_email(self):
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_SCHEDULE_CHANGE, self.section, self.instr) == 1
 
     def test_room_new_series(self):
         self.rooms_page.load_page()
@@ -122,7 +128,11 @@ class TestCourseScheduleChanges:
         self.kaltura_page.close_window_and_switch()
         assert util.get_sent_email_count(EmailTemplateType.INSTR_SCHEDULE_CHANGE, self.section, self.instr) == 1
 
-    # TODO - verify history
+    def test_history_new_eligible_room(self):
+        old_val = None
+        new_val = None
+        self.course_page.load_page(self.section)
+        self.course_page.verify_history_row('meeting_updated', old_val, new_val, None, 'succeeded', published=True)
 
     # SCHEDULED COURSE MEETING START/END AND MEETING DAYS/TIMES CHANGE TO NULL
 
@@ -148,4 +158,11 @@ class TestCourseScheduleChanges:
     def test_run_email_job_with_null_dates(self):
         assert util.get_sent_email_count(EmailTemplateType.INSTR_COURSE_CANCELLED, self.section, self.instr) == 1
 
-    # TODO - verify history
+    def test_no_new_schedule_update_email(self):
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_SCHEDULE_CHANGE, self.section, self.instr) == 1
+
+    def test_history_no_room(self):
+        old_val = None
+        new_val = '—'
+        self.course_page.load_page(self.section)
+        self.course_page.verify_history_row('not_scheduled', old_val, new_val, None, 'succeeded', published=True)

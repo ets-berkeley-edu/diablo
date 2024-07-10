@@ -29,46 +29,46 @@ from enum import Enum
 class EmailTemplateType(Enum):
 
     ADMIN_OPERATOR_REQUESTED = {
-        # TODO 'desc': '',
+        'desc': 'Admin alert: operator requested',
         'type': 'admin_operator_requested',
     }
     INSTR_ADDED = {
-        # TODO 'desc': '',
+        'desc': 'Instructor(s) added to class',
         'type': 'instructors_added',
     }
     INSTR_ANNUNCIATION_NEW_COURSE_SCHED = {
-        # TODO 'desc': '',
+        'desc': 'New class scheduled',
         'type': 'new_class_scheduled',
     }
     INSTR_ANNUNCIATION_REMINDER = {
-        # TODO 'desc': '',
+        'desc': 'Remind scheduled instructors',
         'type': 'remind_scheduled',
     }
     INSTR_ANNUNCIATION_SEM_START = {
-        # TODO 'desc': '',
+        'desc': 'Semester start',
         'type': 'semester_start',
     }
     INSTR_CHANGES_CONFIRMED = {
-        # TODO 'desc': '',
+        'desc': 'Changes confirmed',
         'type': 'changes_confirmed',
     }
     INSTR_COURSE_CANCELLED = {
-        # TODO 'desc': '',
+        'desc': 'Class no longer scheduled',
         'type': 'no_longer_scheduled',
     }
     INSTR_OPTED_OUT = {
-        # TODO 'desc': '',
+        'desc': 'Opted out',
         'type': 'opted_out',
     }
     INSTR_REMOVED = {
-        # TODO 'desc': '',
+        'desc': 'Instructor(s) removed from class',
         'type': 'instructors_removed',
     }
     INSTR_ROOM_CHANGE_INELIGIBLE = {
-        # TODO 'desc': '',
+        'desc': 'Room change: no longer eligible',
         'type': 'room_change_no_longer_eligible',
     }
     INSTR_SCHEDULE_CHANGE = {
-        # TODO 'desc': '',
+        'desc': 'Schedule change',
         'type': 'schedule_change',
     }

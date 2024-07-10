@@ -48,7 +48,14 @@ class TestUserPerms:
         util.delete_term_instructor_rows(self.section.term, self.instructor)
         util.reset_test_data(self.section)
 
+    def test_schedule_section(self):
+        self.login_page.load_page()
+        self.login_page.dev_auth()
+        self.ouija_page.click_jobs_link()
+        self.jobs_page.run_semester_start_job_sequence()
+
     def test_instructor_login(self):
+        self.jobs_page.log_out()
         self.login_page.load_page()
         self.login_page.dev_auth(self.instructor.uid)
         self.instructor_page.wait_for_title_containing(f'Your {self.section.term.name} Course')
@@ -96,19 +103,19 @@ class TestUserPerms:
 
     def test_pi_role(self):
         self.course_page.load_page(self.section)
-        assert self.course_page.is_present(CoursePage.APPROVE_BUTTON)
+        assert self.course_page.is_present(CoursePage.COLLAB_EDIT_BUTTON)
 
     def test_icnt_role(self):
         util.set_instructor_role(self.section, self.instructor, 'ICNT')
         self.course_page.load_page(self.section)
         time.sleep(1)
-        assert self.course_page.is_present(CoursePage.APPROVE_BUTTON)
+        assert self.course_page.is_present(CoursePage.COLLAB_EDIT_BUTTON)
 
     def test_tnic_role(self):
         util.set_instructor_role(self.section, self.instructor, 'TNIC')
         self.course_page.load_page(self.section)
         time.sleep(1)
-        assert self.course_page.is_present(CoursePage.APPROVE_BUTTON)
+        assert self.course_page.is_present(CoursePage.COLLAB_EDIT_BUTTON)
 
     def test_aprx_role(self):
         self.course_page.log_out()
