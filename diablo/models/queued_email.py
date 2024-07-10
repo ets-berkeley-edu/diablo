@@ -118,7 +118,7 @@ class QueuedEmail(db.Model):
         cls._queue_admin_email('admin_operator_requested', course)
 
     @classmethod
-    def notify_instructors_changes_confirmed(cls, course, collaborator_uids, publish_type, recording_type):
+    def notify_instructors_changes_confirmed(cls, course, collaborator_uids, canvas_site_ids, publish_type, recording_type):
         publish_type_name = NAMES_PER_PUBLISH_TYPE[publish_type]
         recording_type_name = NAMES_PER_RECORDING_TYPE[recording_type]
         collaborator_names = _get_collaborator_names(collaborator_uids)
@@ -131,6 +131,7 @@ class QueuedEmail(db.Model):
                 publish_type_name=publish_type_name,
                 recording_type_name=recording_type_name,
                 collaborator_names=collaborator_names,
+                canvas_site_ids=canvas_site_ids,
             )
 
     @classmethod

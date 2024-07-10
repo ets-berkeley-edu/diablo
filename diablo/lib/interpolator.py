@@ -35,26 +35,22 @@ def interpolate_content(
     recipient_name,
     templated_string,
     course_list=None,
-    pending_instructors=None,
-    previous_publish_type_name=None,
-    previous_recording_type_name=None,
     publish_type_name=None,
     recording_type_name=None,
     instructor_names=None,
     collaborator_names=None,
+    canvas_site_ids=None,
 ):
     interpolated = templated_string
     substitutions = get_template_substitutions(
         course=course,
         course_list=course_list,
         recipient_name=recipient_name,
-        pending_instructors=pending_instructors,
-        previous_publish_type_name=previous_publish_type_name,
-        previous_recording_type_name=previous_recording_type_name,
         publish_type_name=publish_type_name,
         recording_type_name=recording_type_name,
         instructor_names=instructor_names,
         collaborator_names=collaborator_names,
+        canvas_site_ids=canvas_site_ids,
     )
     for token, value in substitutions.items():
         if value is None:
@@ -74,13 +70,11 @@ def get_template_substitutions(
     course,
     recipient_name,
     course_list=None,
-    pending_instructors=None,
-    previous_publish_type_name=None,
-    previous_recording_type_name=None,
     publish_type_name=None,
     recording_type_name=None,
     instructor_names=None,
     collaborator_names=None,
+    canvas_site_ids=None,
 ):
     term_id = (course and course['termId']) or app.config['CURRENT_TERM_ID']
 
@@ -106,6 +100,7 @@ def get_template_substitutions(
     course_list = course_list or []
 
     return {
+        'canvasSiteIds': ', '.join(canvas_site_ids) if canvas_site_ids else None,
         'collaborators': ', '.join(collaborator_names) if collaborator_names else None,
         'course.date.end': meeting and meeting['endDate'],
         'course.date.start': meeting and meeting['startDate'],
@@ -119,13 +114,9 @@ def get_template_substitutions(
         'course.title': course and course['courseTitle'],
         'courseList': '\n'.join([f"{course['courseName']}: {course['courseTitle']}" for course in course_list]),
         'instructors.all': instructor_name_string,
-        'instructors.pending': _join_names(pending_instructors),
-        'instructors.previous': course and course.get('scheduled') and _join_names(course['scheduled'][0].get('instructors')),
         'publish.type': publish_type_name,
-        'publish.type.previous': previous_publish_type_name,
         'recipient.name': recipient_name,
         'recording.type': recording_type_name,
-        'recording.type.previous': previous_recording_type_name,
         'signup.url': course and get_sign_up_url(term_id, course['sectionId']),
         'term.name': term_name_for_sis_id(term_id),
     }
