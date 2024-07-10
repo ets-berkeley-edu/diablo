@@ -186,7 +186,7 @@ def _update_already_scheduled_events():  # noqa C901
                 publish_to_course_sites = _handle_publish_type_update(updated_publish_type, scheduled_model)
 
         update_options = _construct_schedule_update_options(course, updated_publish_type, updated_recording_type, updated_collaborator_uids)
-        _handle_course_site_categories(
+        updated_canvas_site_ids = _handle_course_site_categories(
             kaltura,
             course,
             publish_to_course_sites,
@@ -219,13 +219,22 @@ def _update_already_scheduled_events():  # noqa C901
             QueuedEmail.notify_instructors_no_longer_eligible(course)
         else:
             scheduled = (course['scheduled'] or [{}])[0]
-            if (updated_publish_type and not is_currently_recording) or updated_recording_type or updated_collaborator_uids is not None:
+            if (updated_publish_type and not is_currently_recording) or\
+                    updated_recording_type or\
+                    updated_collaborator_uids is not None or\
+                    updated_canvas_site_ids is not None:
                 collaborator_uids = updated_collaborator_uids
                 if collaborator_uids is None:
                     collaborator_uids = scheduled['collaboratorUids']
+
+                canvas_site_ids = updated_canvas_site_ids
+                if canvas_site_ids is None:
+                    canvas_site_ids = scheduled['canvasSiteIds']
+
                 QueuedEmail.notify_instructors_changes_confirmed(
                     course,
                     collaborator_uids=collaborator_uids,
+                    canvas_site_ids=canvas_site_ids,
                     publish_type=updated_publish_type or scheduled['publishType'],
                     recording_type=updated_recording_type or scheduled['recordingType'],
                 )
@@ -349,11 +358,15 @@ def _handle_publish_type_update(updated_publish_type, scheduled_model):
 
 
 def _handle_course_site_categories(kaltura, course, publish_to_course_sites, schedule_updates, is_currently_recording, update_options):  # noqa C901
-    if not course['scheduled']:
-        return
-    kaltura_schedule = kaltura.get_event(event_id=course['scheduled'][0]['kalturaScheduleId'])
-    template_entry_id = kaltura_schedule['templateEntryId']
-    categories = kaltura.get_categories(template_entry_id)
+    categories = []
+    for scheduled in course['scheduled'] or []:
+        kaltura_schedule = kaltura.get_event(event_id=course['scheduled'][0]['kalturaScheduleId'])
+        if kaltura_schedule:
+            template_entry_id = kaltura_schedule['templateEntryId']
+            categories = kaltura.get_categories(template_entry_id) or []
+            if categories:
+                break
+
     common_category = kaltura.get_category_object(name=app.config['KALTURA_COMMON_CATEGORY'])
 
     kaltura_category_names = set(c['name'] for c in categories if c['id'] != common_category['id'])
@@ -375,10 +388,14 @@ def _handle_course_site_categories(kaltura, course, publish_to_course_sites, sch
 
     if is_currently_recording and (categories_to_remove or categories_to_add):
         app.logger.info(f"{course['label']}: skipping Canvas category update because class is currently in session")
+        return None
+    elif not (categories_to_remove or categories_to_add):
+        return None
 
     kaltura_schedule_ids = [s['kalturaScheduleId'] for s in course['scheduled']]
 
-    if categories_to_remove and not is_currently_recording:
+    if categories_to_remove:
+        updated_canvas_site_ids = []
         try:
             app.logger.info(f"{course['label']}: will delete and recreate Kaltura schedule to unlink categories {categories_to_remove}")
             kaltura.delete(kaltura_schedule['id'])
@@ -392,20 +409,24 @@ def _handle_course_site_categories(kaltura, course, publish_to_course_sites, sch
                 f"Failed to remove categories {categories_to_remove} from Kaltura series {kaltura_schedule['id']}, entry {template_entry_id}",
                 'canvas_site_ids',
             )
+    else:
+        updated_canvas_site_ids = list(kaltura_category_names)
 
-    if categories_to_add and not is_currently_recording:
+    if categories_to_add:
         try:
             for kaltura_schedule_id in kaltura_schedule_ids:
                 kaltura_schedule = kaltura.get_event(event_id=course['scheduled'][0]['kalturaScheduleId'])
-                template_entry_id = kaltura_schedule['templateEntryId']
-                for canvas_course_site_id in categories_to_add:
-                    category = kaltura.get_or_create_canvas_category_object(canvas_course_site_id=canvas_course_site_id)
-                    if category:
-                        app.logger.info(f"{course['label']}: add Kaltura category for canvas_course_site {canvas_course_site_id}")
-                        kaltura.add_to_kaltura_category(
-                            category_id=category['id'],
-                            entry_id=template_entry_id,
-                        )
+                if kaltura_schedule:
+                    template_entry_id = kaltura_schedule['templateEntryId']
+                    for canvas_course_site_id in categories_to_add:
+                        category = kaltura.get_or_create_canvas_category_object(canvas_course_site_id=canvas_course_site_id)
+                        if category:
+                            app.logger.info(f"{course['label']}: add Kaltura category for canvas_course_site {canvas_course_site_id}")
+                            kaltura.add_to_kaltura_category(
+                                category_id=category['id'],
+                                entry_id=template_entry_id,
+                            )
+            updated_canvas_site_ids += list(categories_to_add)
         except Exception as e:
             _mark_error(
                 schedule_updates,
@@ -413,6 +434,8 @@ def _handle_course_site_categories(kaltura, course, publish_to_course_sites, sch
                 f"Failed to add categories: {categories_to_add} to Kaltura series {kaltura_schedule['id']}, entry {template_entry_id}",
                 'canvas_site_ids',
             )
+
+    return updated_canvas_site_ids
 
 
 def _construct_schedule_update_options(course, updated_publish_type=None, updated_recording_type=None, updated_collaborator_uids=None):

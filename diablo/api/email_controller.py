@@ -100,9 +100,6 @@ def test_email_template(template_id):
         def _get_interpolated_content(templated_string):
             return interpolate_content(
                 course=course,
-                pending_instructors=course['instructors'],
-                previous_publish_type_name=NAMES_PER_PUBLISH_TYPE[publish_types[0]],
-                previous_recording_type_name=NAMES_PER_RECORDING_TYPE[recording_types[0]],
                 publish_type_name=NAMES_PER_PUBLISH_TYPE[publish_types[1]],
                 recording_type_name=NAMES_PER_RECORDING_TYPE[recording_types[1]],
                 recipient_name=current_user.name,
