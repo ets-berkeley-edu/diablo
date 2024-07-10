@@ -105,6 +105,8 @@ def _update_already_scheduled_events():  # noqa C901
         no_longer_eligible = False
         no_longer_scheduled = False
 
+        publish_to_course_sites = False
+
         # Track individual meeting patterns.
         meetings_added = []
         meetings_removed_by_schedule_id = {}
@@ -158,14 +160,8 @@ def _update_already_scheduled_events():  # noqa C901
                 if updated_recording_type:
                     scheduled_model.update(recording_type=updated_recording_type)
 
-                # Updates to publish type or Canvas course sites may require the Kaltura series to be deleted and recreated, and will
-                # not be processed if recording is currently underway.
-                publish_to_course_sites = bool(scheduled['publishType'] and scheduled['publishType'].startswith('kaltura_media_gallery'))
-                if updated_publish_type:
-                    if is_currently_recording:
-                        app.logger.info(f"{course['label']}: skipping publish type update because class is currently in session")
-                    else:
-                        publish_to_course_sites = _handle_publish_type_update(updated_publish_type, scheduled_model)
+                if scheduled['publishType'] and scheduled['publishType'].startswith('kaltura_media_gallery'):
+                    publish_to_course_sites = True
 
                 if scheduled['kalturaScheduleId'] in meetings_updated_by_schedule_id:
                     if is_currently_recording:
@@ -178,11 +174,26 @@ def _update_already_scheduled_events():  # noqa C901
                             scheduled_model,
                             schedule_updates,
                         )
-
-                _handle_course_site_categories(kaltura, course, kaltura_schedule, publish_to_course_sites, schedule_updates, is_currently_recording)
-
             else:
                 app.logger.warn(f"The previously scheduled {course['label']} schedule id {scheduled['kalturaScheduleId']} was not found in Kaltura.")
+
+        # Updates to publish type or Canvas course sites may require the Kaltura series to be deleted and recreated, and will
+        # not be processed if recording is currently underway.
+        if updated_publish_type:
+            if is_currently_recording:
+                app.logger.info(f"{course['label']}: skipping publish type update because class is currently in session")
+            else:
+                publish_to_course_sites = _handle_publish_type_update(updated_publish_type, scheduled_model)
+
+        update_options = _construct_schedule_update_options(course, updated_publish_type, updated_recording_type, updated_collaborator_uids)
+        _handle_course_site_categories(
+            kaltura,
+            course,
+            publish_to_course_sites,
+            schedule_updates,
+            is_currently_recording,
+            update_options,
+        )
 
         _mark_success(
             schedule_updates,
@@ -276,14 +287,7 @@ def _handle_instructor_updates(
 
 def _handle_meeting_added(course, meeting_added, updated_publish_type, updated_recording_type, updated_collaborator_uids):
     meeting = meeting_added.deserialize('field_value_new')
-    updates = {
-        'publishType': updated_publish_type or course['scheduled'][0]['publishType'],
-        'recordingType': updated_recording_type or course['scheduled'][0]['recordingType'],
-    }
-    if updated_collaborator_uids is None:
-        updates['collaboratorUids'] = course['scheduled'][0]['collaboratorUids']
-    else:
-        updates['collaboratorUids'] = updated_collaborator_uids
+    updates = _construct_schedule_update_options(course, updated_publish_type, updated_recording_type, updated_collaborator_uids)
 
     newly_scheduled = schedule_recordings(
         {**course, **{'meetings': {'eligible': [meeting]}}},
@@ -344,7 +348,10 @@ def _handle_publish_type_update(updated_publish_type, scheduled_model):
     return publish_to_course_sites
 
 
-def _handle_course_site_categories(kaltura, course, kaltura_schedule, publish_to_course_sites, schedule_updates, is_currently_recording):
+def _handle_course_site_categories(kaltura, course, publish_to_course_sites, schedule_updates, is_currently_recording, update_options):  # noqa C901
+    if not course['scheduled']:
+        return
+    kaltura_schedule = kaltura.get_event(event_id=course['scheduled'][0]['kalturaScheduleId'])
     template_entry_id = kaltura_schedule['templateEntryId']
     categories = kaltura.get_categories(template_entry_id)
     common_category = kaltura.get_category_object(name=app.config['KALTURA_COMMON_CATEGORY'])
@@ -369,12 +376,15 @@ def _handle_course_site_categories(kaltura, course, kaltura_schedule, publish_to
     if is_currently_recording and (categories_to_remove or categories_to_add):
         app.logger.info(f"{course['label']}: skipping Canvas category update because class is currently in session")
 
+    kaltura_schedule_ids = [s['kalturaScheduleId'] for s in course['scheduled']]
+
     if categories_to_remove and not is_currently_recording:
         try:
             app.logger.info(f"{course['label']}: will delete and recreate Kaltura schedule to unlink categories {categories_to_remove}")
             kaltura.delete(kaltura_schedule['id'])
             Scheduled.delete(term_id=course['termId'], section_id=course['sectionId'], kaltura_schedule_id=kaltura_schedule['id'])
-            schedule_recordings(course, send_notifications=False, updates=schedule_updates)
+            all_scheduled = schedule_recordings(course, send_notifications=False, updates=update_options)
+            kaltura_schedule_ids = [s.kaltura_schedule_id for s in all_scheduled]
         except Exception as e:
             _mark_error(
                 schedule_updates,
@@ -385,14 +395,17 @@ def _handle_course_site_categories(kaltura, course, kaltura_schedule, publish_to
 
     if categories_to_add and not is_currently_recording:
         try:
-            for canvas_course_site_id in categories_to_add:
-                category = kaltura.get_or_create_canvas_category_object(canvas_course_site_id=canvas_course_site_id)
-                if category:
-                    app.logger.info(f"{course['label']}: add Kaltura category for canvas_course_site {canvas_course_site_id}")
-                    kaltura.add_to_kaltura_category(
-                        category_id=category['id'],
-                        entry_id=template_entry_id,
-                    )
+            for kaltura_schedule_id in kaltura_schedule_ids:
+                kaltura_schedule = kaltura.get_event(event_id=course['scheduled'][0]['kalturaScheduleId'])
+                template_entry_id = kaltura_schedule['templateEntryId']
+                for canvas_course_site_id in categories_to_add:
+                    category = kaltura.get_or_create_canvas_category_object(canvas_course_site_id=canvas_course_site_id)
+                    if category:
+                        app.logger.info(f"{course['label']}: add Kaltura category for canvas_course_site {canvas_course_site_id}")
+                        kaltura.add_to_kaltura_category(
+                            category_id=category['id'],
+                            entry_id=template_entry_id,
+                        )
         except Exception as e:
             _mark_error(
                 schedule_updates,
@@ -400,6 +413,18 @@ def _handle_course_site_categories(kaltura, course, kaltura_schedule, publish_to
                 f"Failed to add categories: {categories_to_add} to Kaltura series {kaltura_schedule['id']}, entry {template_entry_id}",
                 'canvas_site_ids',
             )
+
+
+def _construct_schedule_update_options(course, updated_publish_type=None, updated_recording_type=None, updated_collaborator_uids=None):
+    updates = {
+        'publishType': updated_publish_type or course['scheduled'][0]['publishType'],
+        'recordingType': updated_recording_type or course['scheduled'][0]['recordingType'],
+    }
+    if updated_collaborator_uids is None:
+        updates['collaboratorUids'] = course['scheduled'][0]['collaboratorUids']
+    else:
+        updates['collaboratorUids'] = updated_collaborator_uids
+    return updates
 
 
 def _mark_success(schedule_updates, field_names, kaltura_schedule_id=None):
