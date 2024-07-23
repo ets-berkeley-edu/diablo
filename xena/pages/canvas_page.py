@@ -146,7 +146,7 @@ class CanvasPage(Page):
         self.wait_for_ripley_frame_and_switch()
         self.wait_for_page_and_click_js(self.SEARCH_BY_UID)
         self.remove_and_enter_chars(self.SEARCH_TERM_INPUT, user.uid)
-        self.wait_for_element_and_click(self.SEARCH_BUTTON)
+        self.wait_for_page_and_click_js(self.SEARCH_BUTTON)
         self.wait_for_element_and_click(self.user_cbx_loc(user))
         opt = self.element((By.XPATH, f'//option[contains(text(), "{section.code} {section.number}")]'))
         opt.click()

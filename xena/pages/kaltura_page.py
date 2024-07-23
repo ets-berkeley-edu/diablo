@@ -55,7 +55,7 @@ class KalturaPage(Page):
     SERIES_DELETE_CONFIRM_BUTTON = (By.XPATH, '//div[@class="modal-footer"]/a[text()="Delete"]')
 
     RECUR_DESC = (By.ID, 'CreateEvent-RecurrenceDescription')
-    RECUR_MODAL_H3 = (By.XPATH, '//h3[text()="Event Recurrence"]')
+    RECUR_MODAL_HEADING = (By.XPATH, '//h2[text()="Event Recurrence"]')
     RECUR_WEEKLY_RADIO = (By.ID, 'EventRecurrence-recurrence-weeks')
     RECUR_WEEKLY_FREQUENCY = (By.ID, 'EventRecurrence-weekly_index')
     RECUR_WEEKLY_MON_CBX = (By.ID, 'EventRecurrence-weekly_days-MO')
@@ -116,7 +116,7 @@ class KalturaPage(Page):
     def open_recurrence_modal(self):
         app.logger.info('Clicking recurrence button')
         self.wait_for_element_and_click(KalturaPage.SERIES_RECUR_BUTTON)
-        self.wait_for_element(KalturaPage.RECUR_MODAL_H3, util.get_medium_timeout())
+        self.wait_for_element(KalturaPage.RECUR_MODAL_HEADING, util.get_medium_timeout())
 
     def close_recurrence_modal(self):
         app.logger.info('Closing recurrence modal')

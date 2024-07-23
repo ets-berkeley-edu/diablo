@@ -186,7 +186,7 @@ class TestCollaborators1:
     meeting_0 = section.meetings[0]
     meeting_1 = section.meetings[1]
 
-    meeting_0.meeting_schedule.end_date = (meeting_0.meeting_schedule.end_date - timedelta(days=15))
+    meeting_0.meeting_schedule.end_date = (meeting_0.meeting_schedule.end_date - timedelta(days=8))
     meeting_1.meeting_schedule.start_date = (meeting_0.meeting_schedule.end_date + timedelta(days=1))
 
     recording_schedule_0 = RecordingSchedule(section, meeting_0)

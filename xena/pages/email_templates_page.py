@@ -48,6 +48,7 @@ class EmailTemplatesPage(DiabloPages):
     @staticmethod
     def template_codes():
         return [
+            'canvasSiteIds',
             'collaborators',
             'course.date.end',
             'course.date.start',
@@ -61,13 +62,9 @@ class EmailTemplatesPage(DiabloPages):
             'course.title',
             'courseList',
             'instructors.all',
-            'instructors.pending',
-            'instructors.previous',
             'publish.type',
-            'publish.type.previous',
             'recipient.name',
             'recording.type',
-            'recording.type.previous',
             'signup.url',
             'term.name',
         ]

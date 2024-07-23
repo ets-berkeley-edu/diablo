@@ -26,6 +26,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 from datetime import timedelta
 
 import pytest
+from xena.models.email_template_type import EmailTemplateType
 from xena.models.recording_placement import RecordingPlacement
 from xena.models.recording_schedule import RecordingSchedule
 from xena.models.recording_type import RecordingType
@@ -120,10 +121,6 @@ class TestWeirdTypeB:
         self.ouija_page.filter_for_no_instructors()
         assert not self.ouija_page.is_course_in_results(self.section)
 
-    # VERIFY COURSE HISTORY
-
-    # TODO - admin view of just-scheduled course
-
     # INSTRUCTOR LOGS IN
 
     def test_home_page(self):
@@ -206,8 +203,8 @@ class TestWeirdTypeB:
     def test_series_publish_status_instr_removed(self):
         self.kaltura_page.verify_publish_status(self.recording_schedule)
 
-    # TODO - verify course history
-    # TODO - verify no instr-removed email sent
+    def test_no_instructor_removed_email(self):
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_REMOVED, self.section) == 0
 
     # INSTRUCTOR ADDED
 
@@ -239,8 +236,8 @@ class TestWeirdTypeB:
     def test_series_publish_status_instr_added(self):
         self.kaltura_page.verify_publish_status(self.recording_schedule)
 
-    # TODO - verify course history
-    # TODO - verify instr-added email sent
+    def test_instructor_added_email(self):
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_ADDED, self.section, self.new_instructor) == 1
 
     # START / END DATES CHANGE FOR ELIGIBLE SECTION
 
@@ -271,8 +268,9 @@ class TestWeirdTypeB:
     def test_series_publish_status_new_dates(self):
         self.kaltura_page.verify_publish_status(self.recording_schedule)
 
-    # TODO - verify course history
-    # TODO - verify schedule change email sent
+    def test_schedule_change_email(self):
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_SCHEDULE_CHANGE, self.section,
+                                         self.new_instructor) == 1
 
     # ROOM REMOVED
 
@@ -292,8 +290,9 @@ class TestWeirdTypeB:
         self.kaltura_page.load_event_edit_page(self.recording_schedule.series_id)
         self.kaltura_page.wait_for_title('Access Denied - UC Berkeley - Test')
 
-    # TODO - verify course history
-    # TODO - verify instructor_room_change_no_longer_eligible email sent
+    def test_room_no_longer_eligible_email(self):
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_ROOM_CHANGE_INELIGIBLE, self.section,
+                                         self.new_instructor) == 1
 
     # ROOM ADDED
 
@@ -311,5 +310,44 @@ class TestWeirdTypeB:
         self.course_page.verify_meeting_sis_data(self.meeting_physical, idx=0)
         self.course_page.verify_recording_placement(self.recording_schedule)
 
-    # TODO - verify course history
-    # TODO - verify instructor-room-change email sent
+    def test_course_scheduled_email(self):
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_NEW_COURSE_SCHED, self.section,
+                                         self.new_instructor) == 1
+
+    # COURSE HISTORY
+
+    def test_course_history_instructor_removed(self):
+        old_val = CoursePage.expected_uids_converter([self.original_instructor])
+        new_val = []
+        self.course_page.verify_history_row(field='instructor_uids',
+                                            old_value=old_val,
+                                            new_value=new_val,
+                                            requestor=None,
+                                            status='succeeded',
+                                            published=True)
+
+    def test_course_history_instructor_added(self):
+        old_val = []
+        new_val = CoursePage.expected_uids_converter([self.new_instructor])
+        self.course_page.verify_history_row(field='instructor_uids',
+                                            old_value=old_val,
+                                            new_value=new_val,
+                                            requestor=None,
+                                            status='succeeded',
+                                            published=True)
+
+    def test_course_history_dates_changed(self):
+        self.course_page.verify_history_row(field='meeting_updated',
+                                            old_value=None,
+                                            new_value=None,
+                                            requestor=None,
+                                            status='succeeded',
+                                            published=True)
+
+    def test_course_history_room_removed(self):
+        self.course_page.verify_history_row(field='room_not_eligible',
+                                            old_value=None,
+                                            new_value=None,
+                                            requestor=None,
+                                            status='succeeded',
+                                            published=True)

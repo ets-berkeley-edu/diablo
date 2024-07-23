@@ -491,11 +491,10 @@ def reset_section_test_data(section, delete_opt_outs=True):
     db.session.execute(text(sql))
     std_commit(allow_test_environment=True)
     if delete_opt_outs:
-        for i in section.instructors:
-            sql = f"DELETE FROM opt_outs WHERE instructor_uid = '{i.uid}'"
-            app.logger.info(sql)
-            db.session.execute(text(sql))
-            std_commit(allow_test_environment=True)
+        sql = 'DELETE FROM opt_outs'
+        app.logger.info(sql)
+        db.session.execute(text(sql))
+        std_commit(allow_test_environment=True)
 
 
 def set_past_term_opt_out(instructor):
