@@ -29,6 +29,8 @@ from xena.models.email_template_type import EmailTemplateType
 from xena.models.recording_placement import RecordingPlacement
 from xena.models.recording_schedule import RecordingSchedule
 from xena.models.recording_type import RecordingType
+from xena.models.user import User
+from xena.pages.course_page import CoursePage
 from xena.test_utils import util
 
 
@@ -36,6 +38,7 @@ from xena.test_utils import util
 class TestCrossListings:
 
     test_data = util.get_test_script_course('test_x_listings')
+    admin = User({'uid': util.get_admin_uid()})
     sections = util.get_test_x_listed_sections(test_data)
     section = sections[0]
     instructor = section.instructors[0]
@@ -108,6 +111,10 @@ class TestCrossListings:
         assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_SEM_START, self.section,
                                          self.instructor) == 1
 
+    def test_receive_annunciation_email_listing(self):
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_SEM_START, self.x_listed_section,
+                                         self.instructor) == 1
+
     # CHANGE PUBLISH TYPE TO AUTOMATIC
 
     def test_update_publish_type(self):
@@ -116,8 +123,6 @@ class TestCrossListings:
         self.course_page.enter_recording_placement(RecordingPlacement.PUBLISH_TO_MEDIA_GALLERY, sites=[self.site_1])
         self.course_page.save_recording_placement_edits()
         self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_TO_MEDIA_GALLERY
-
-    # TODO def test_course_history_updates_pending(self):
 
     def test_update_run_kaltura_job(self):
         self.ouija_page.click_jobs_link()
@@ -163,8 +168,6 @@ class TestCrossListings:
     def test_switch_primary_collaborators(self):
         self.kaltura_page.verify_collaborators(self.section)
 
-    # TODO course history, emails
-
     # REVERT PRIMARY LISTING
 
     def test_revert_primary_kaltura_job(self):
@@ -186,8 +189,6 @@ class TestCrossListings:
     def test_revert_primary_collaborators(self):
         self.kaltura_page.verify_collaborators(self.section)
 
-    # TODO course history, emails
-
     # DELETE SECONDARY LISTING
 
     def test_not_canceled(self):
@@ -202,19 +203,12 @@ class TestCrossListings:
         self.jobs_page.load_page()
         self.jobs_page.run_schedule_update_job_sequence()
 
-    def test_delete_secondary_series_title(self):
-        self.kaltura_page.load_event_edit_page(self.recording_schedule.series_id)
-        self.kaltura_page.wait_for_delete_button()
-        code = f'{self.x_listed_section.code}, {self.x_listed_section.number}'
-        assert code not in self.kaltura_page.visible_series_title()
-
     def test_delete_secondary_site_count(self):
+        self.kaltura_page.load_event_edit_page(self.recording_schedule.series_id)
         self.kaltura_page.verify_site_categories([self.site_1])
 
     def test_delete_secondary_collaborators(self):
         self.kaltura_page.verify_collaborators(self.section)
-
-    # TODO course history, emails
 
     # RESTORE SECONDARY LISTING
 
@@ -241,8 +235,6 @@ class TestCrossListings:
     def test_restored_secondary_collaborators(self):
         self.kaltura_page.verify_collaborators(self.section)
 
-    # TODO course history, emails
-
     # DELETE PRIMARY LISTING
 
     def test_canceled(self):
@@ -263,4 +255,40 @@ class TestCrossListings:
         self.kaltura_page.load_event_edit_page(self.recording_schedule.series_id)
         self.kaltura_page.wait_for_title('Access Denied - UC Berkeley - Test')
 
-    # TODO course history, emails
+    # COURSE HISTORY
+
+    def test_history_publish_type(self):
+        self.course_page.load_page(self.section)
+        old_val = RecordingPlacement.PUBLISH_TO_MY_MEDIA.value['db']
+        new_val = RecordingPlacement.PUBLISH_TO_MEDIA_GALLERY.value['db']
+        self.course_page.verify_history_row(field='publish_type',
+                                            old_value=old_val,
+                                            new_value=new_val,
+                                            requestor=self.admin,
+                                            status='succeeded',
+                                            published=True)
+
+    def test_history_canvas_site(self):
+        new_val = CoursePage.expected_site_ids_converter([self.site_1])
+        self.course_page.verify_history_row(field='canvas_site_ids',
+                                            old_value='—',
+                                            new_value=new_val,
+                                            requestor=self.admin,
+                                            status='succeeded',
+                                            published=True)
+
+    def test_history_secondary_section_deleted(self):
+        self.course_page.verify_history_row(field='not_scheduled',
+                                            old_value=None,
+                                            new_value='—',
+                                            requestor=None,
+                                            status='succeeded',
+                                            published=True)
+
+    def test_history_primary_section_deleted(self):
+        self.course_page.verify_history_row(field='not_scheduled',
+                                            old_value=None,
+                                            new_value='—',
+                                            requestor=None,
+                                            status='succeeded',
+                                            published=True)

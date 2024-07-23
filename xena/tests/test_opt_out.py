@@ -35,7 +35,7 @@ sections = util.get_test_opt_out_sections()
 section_0 = sections[0]
 meeting_0_0 = section_0.meetings[0].meeting_schedule
 meeting_0_1 = section_0.meetings[1].meeting_schedule
-meeting_0_0.end_date = meeting_0_0.end_date - timedelta(days=15)
+meeting_0_0.end_date = meeting_0_0.end_date - timedelta(days=8)
 meeting_0_1.start_date = meeting_0_0.end_date + timedelta(days=1)
 
 section_1 = sections[1]
@@ -89,8 +89,7 @@ class TestOptOut0:
         self.instructor_page.log_out()
         self.login_page.dev_auth()
         self.ouija_page.click_jobs_link()
-        self.jobs_page.run_kaltura_job()
-        self.jobs_page.run_emails_job()
+        self.jobs_page.run_settings_update_job_sequence()
 
     def test_both_sections_unscheduled(self):
         self.kaltura_page.load_event_edit_page(recording_schedule_0_0.series_id)
@@ -266,6 +265,7 @@ class TestOptOut4:
         util.reset_section_test_data(section_1)
 
     def test_opt_out_all_terms(self):
+        self.jobs_page.load_page()
         self.jobs_page.log_out()
         self.login_page.load_page()
         self.login_page.dev_auth(instructor_0.uid)

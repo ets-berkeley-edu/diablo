@@ -31,6 +31,7 @@ from xena.models.email_template_type import EmailTemplateType
 from xena.models.recording_placement import RecordingPlacement
 from xena.models.recording_schedule import RecordingSchedule
 from xena.models.recording_type import RecordingType
+from xena.pages.course_page import CoursePage
 from xena.test_utils import util
 
 
@@ -40,7 +41,7 @@ class TestWeirdTypeD:
     test_data = util.get_test_script_course('test_weird_type_d')
     section = util.get_test_section(test_data)
     meeting_0 = section.meetings[0]
-    meeting_0.meeting_schedule.end_date = meeting_0.meeting_schedule.end_date - timedelta(days=15)
+    meeting_0.meeting_schedule.end_date = meeting_0.meeting_schedule.end_date - timedelta(days=8)
     meeting_1 = section.meetings[1]
     meeting_1.meeting_schedule.start_date = meeting_0.meeting_schedule.end_date + timedelta(days=1)
     recording_schedule_0 = RecordingSchedule(section, meeting_0)
@@ -109,10 +110,6 @@ class TestWeirdTypeD:
     def test_scheduled_filter_no_instructors(self):
         self.ouija_page.filter_for_no_instructors()
         assert not self.ouija_page.is_course_in_results(self.section)
-
-    # VERIFY COURSE HISTORY
-
-    # TODO - admin view of just-scheduled course with 2 scheduled meetings
 
     # VERIFY ANNUNCIATION EMAIL
 
@@ -237,4 +234,22 @@ class TestWeirdTypeD:
 
     # VERIFY COURSE HISTORY
 
-    # TODO - admin view of updated course with 2 scheduled meetings
+    def test_history_publish_type(self):
+        self.course_page.load_page(self.section)
+        old_val = RecordingPlacement.PUBLISH_TO_MY_MEDIA.value['db']
+        new_val = RecordingPlacement.PUBLISH_TO_MEDIA_GALLERY.value['db']
+        self.course_page.verify_history_row(field='publish_type',
+                                            old_value=old_val,
+                                            new_value=new_val,
+                                            requestor=self.section.instructors[0],
+                                            status='succeeded',
+                                            published=True)
+
+    def test_history_site_id(self):
+        new_val = CoursePage.expected_site_ids_converter([self.site])
+        self.course_page.verify_history_row(field='canvas_site_ids',
+                                            old_value=[],
+                                            new_value=new_val,
+                                            requestor=self.section.instructors[0],
+                                            status='succeeded',
+                                            published=True)
