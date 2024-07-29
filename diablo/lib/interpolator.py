@@ -26,7 +26,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 import re
 
 from diablo.lib.berkeley import term_name_for_sis_id
-from diablo.lib.util import get_names_of_days, readable_join
+from diablo.lib.util import format_days, get_names_of_days, readable_join
 from flask import current_app as app
 
 
@@ -87,7 +87,8 @@ def get_template_substitutions(
         meetings = course.get('meetings', {}).get('eligible', [])
         meetings = meetings or course.get('meetings', {}).get('ineligible', [])
         meeting = meetings and meetings[0]
-        days = meeting and get_names_of_days(meeting['daysFormatted'])
+        days_formatted = meeting and (meeting.get('daysFormatted') or format_days(meeting.get('days')))
+        days = meeting and get_names_of_days(days_formatted)
         if instructor_names is None:
             instructor_name_string = _join_names(course.get('instructors'))
         else:
