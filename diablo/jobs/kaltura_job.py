@@ -225,18 +225,18 @@ def _update_already_scheduled_events():  # noqa C901
                     updated_canvas_site_ids is not None:
                 collaborator_uids = updated_collaborator_uids
                 if collaborator_uids is None:
-                    collaborator_uids = scheduled['collaboratorUids']
+                    collaborator_uids = scheduled.get('collaboratorUids', [])
 
                 canvas_site_ids = updated_canvas_site_ids
                 if canvas_site_ids is None:
-                    canvas_site_ids = scheduled['canvasSiteIds']
+                    canvas_site_ids = scheduled.get('canvasSiteIds', [])
 
                 QueuedEmail.notify_instructors_changes_confirmed(
                     course,
                     collaborator_uids=collaborator_uids,
                     canvas_site_ids=canvas_site_ids,
-                    publish_type=updated_publish_type or scheduled['publishType'],
-                    recording_type=updated_recording_type or scheduled['recordingType'],
+                    publish_type=updated_publish_type or scheduled.get('publishType'),
+                    recording_type=updated_recording_type or scheduled.get('recordingType'),
                 )
             if meetings_added or meetings_removed_by_schedule_id or (meetings_updated_by_schedule_id and not is_currently_recording):
                 QueuedEmail.notify_instructors_schedule_change(course)
