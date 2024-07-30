@@ -189,6 +189,7 @@ def _set_up_and_run_jobs():
     Job.create(job_schedule_type='minutes', job_schedule_value='60', key='emails')
     Job.create(job_schedule_type='day_at', job_schedule_value='22:00', key='house_keeping')
     Job.create(disabled=True, job_schedule_type='minutes', job_schedule_value='120', key='blackouts')
+    Job.create(disabled=True, job_schedule_type='minutes', job_schedule_value='120', key='clear_schedules')
     Job.create(disabled=True, job_schedule_type='minutes', job_schedule_value='5', key='doomed_to_fail')
     Job.create(is_schedulable=False, job_schedule_type='day_at', job_schedule_value='16:00', key='remind_instructors')
     Job.create(is_schedulable=False, job_schedule_type='minutes', job_schedule_value='820', key='schedule_updates')
