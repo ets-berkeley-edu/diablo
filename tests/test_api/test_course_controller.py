@@ -33,7 +33,7 @@ from diablo.models.scheduled import Scheduled
 from diablo.models.sent_email import SentEmail
 from diablo.models.sis_section import SisSection
 from flask import current_app as app
-from tests.test_api.api_test_utils import api_get_course, get_instructor_uids, mock_scheduled
+from tests.test_api.api_test_utils import api_get_course, api_get_user, get_instructor_uids, mock_scheduled
 from tests.util import override_config, simply_yield, test_scheduling_workflow
 
 admin_uid = '90001'
@@ -1069,6 +1069,38 @@ class TestUpdateOptOut:
             )
             api_json = api_get_course(client, section_id=section_1_id, term_id=self.term_id)
             assert api_json['hasOptedOut'] is False
+
+    def test_admin_toggle_blanket_opt_out(self, client, fake_auth):
+        fake_auth.login(admin_uid)
+        with test_scheduling_workflow(app):
+            instructor_uids = get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
+            self._api_opt_out_update(
+                client,
+                instructor_uid=instructor_uids[0],
+                term_id=self.term_id,
+                section_id='all',
+                opt_out=True,
+            )
+            std_commit(allow_test_environment=True)
+
+            api_json = api_get_course(client, section_id=section_1_id, term_id=self.term_id)
+            assert api_json['hasOptedOut'] is True
+            api_json = api_get_user(client, uid=instructor_uids[0])
+            assert api_json['hasOptedOutForTerm'] is True
+
+            self._api_opt_out_update(
+                client,
+                instructor_uid=instructor_uids[0],
+                term_id=self.term_id,
+                section_id='all',
+                opt_out=False,
+            )
+            std_commit(allow_test_environment=True)
+
+            api_json = api_get_course(client, section_id=section_1_id, term_id=self.term_id)
+            assert api_json['hasOptedOut'] is False
+            api_json = api_get_user(client, uid=instructor_uids[0])
+            assert api_json['hasOptedOutForTerm'] is False
 
 
 class TestNote:

@@ -41,6 +41,16 @@ def api_get_course(client, term_id, section_id, expected_status_code=200):
     return response.json
 
 
+def api_get_user(client, uid, expected_status_code=200):
+    response = client.get(f'/api/user/{uid}')
+    assert response.status_code == expected_status_code, f"""
+        Expected status code: {expected_status_code}
+        Actual status code: {response.status_code}
+        uid: {uid}
+    """
+    return response.json
+
+
 def get_eligible_meeting(section_id, term_id):
     feed = SisSection.get_course(term_id=term_id, section_id=section_id, include_deleted=True)
     return (feed['meetings']['eligible'] + feed['meetings']['ineligible'])[0]
