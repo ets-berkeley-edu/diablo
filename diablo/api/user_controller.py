@@ -31,7 +31,7 @@ from diablo.lib.util import basic_attributes_to_api_json
 from diablo.merged.calnet import get_calnet_user_for_uid, get_calnet_users_for_uids
 from diablo.models.admin_user import AdminUser
 from diablo.models.note import Note
-from diablo.models.sis_section import SisSection
+from diablo.models.user import User
 from flask import current_app as app, request
 from flask_login import current_user, login_required
 
@@ -45,21 +45,16 @@ def my_profile():
 @app.route('/api/user/<uid>')
 @admin_required
 def get_user(uid):
-    user = get_calnet_user_for_uid(app=app, uid=uid)
-    if user.get('isExpiredPerLdap', True):
+    user = User(uid)
+    if user.is_expired:
         raise ResourceNotFoundError('No such user')
-    else:
-        courses = SisSection.get_courses_per_instructor_uid(
-            term_id=app.config['CURRENT_TERM_ID'],
-            instructor_uid=uid,
-        )
-        user['courses'] = courses
 
-        note = Note.get_note_for_uid(uid)
-        if note:
-            user['note'] = note.body
+    feed = user.to_api_json(include_courses=True)
+    note = Note.get_note_for_uid(uid)
+    if note:
+        feed['note'] = note.body
 
-        return tolerant_jsonify(user)
+    return tolerant_jsonify(feed)
 
 
 @app.route('/api/user/<uid>/calnet')

@@ -70,6 +70,10 @@ class User(UserMixin):
         return self.user['isAdmin']
 
     @property
+    def is_expired(self):
+        return self.user['isExpired']
+
+    @property
     def is_teaching(self):
         return self.user['isTeaching']
 
@@ -121,6 +125,7 @@ class User(UserMixin):
                 'isAdmin': is_admin,
                 'isAnonymous': not is_active,
                 'isAuthenticated': is_active,
+                'isExpired': expired,
                 'isTeaching': is_teaching,
                 'name': calnet_profile.get('name') or f'UID {uid}',
                 'uid': uid,
