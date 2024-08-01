@@ -28,11 +28,15 @@ from enum import Enum
 
 class RecordingPlacement(Enum):
 
+    PUBLISH_AUTOMATICALLY = {
+        'desc': 'Publish automatically to the Media Gallery',
+        'db': 'kaltura_media_gallery',
+    }
     PUBLISH_TO_MY_MEDIA = {
         'desc': 'Publish to My Media',
         'db': 'kaltura_my_media',
     }
-    PUBLISH_TO_MEDIA_GALLERY = {
-        'desc': 'Publish to Media Gallery in bCourses',
-        'db': 'kaltura_media_gallery',
+    PUBLISH_TO_PENDING = {
+        'desc': 'Publish to Pending tab',
+        'db': 'kaltura_media_gallery_moderated',
     }

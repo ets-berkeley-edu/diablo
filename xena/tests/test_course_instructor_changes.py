@@ -93,9 +93,9 @@ class TestCourseInstructorChanges:
         self.ouija_page.click_course_page_link(self.section)
 
         self.course_page.click_edit_recording_placement()
-        self.course_page.select_recording_placement(RecordingPlacement.PUBLISH_TO_MEDIA_GALLERY, sites=[self.site])
+        self.course_page.select_recording_placement(RecordingPlacement.PUBLISH_AUTOMATICALLY, sites=[self.site])
         self.course_page.save_recording_placement_edits()
-        self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_TO_MEDIA_GALLERY
+        self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_AUTOMATICALLY
 
         self.course_page.click_rec_type_edit_button()
         self.course_page.select_rec_type(RecordingType.VIDEO_WITH_OPERATOR)
@@ -166,7 +166,7 @@ class TestCourseInstructorChanges:
 
     def test_history_rec_placement(self):
         old_val = RecordingPlacement.PUBLISH_TO_MY_MEDIA.value['db']
-        new_val = RecordingPlacement.PUBLISH_TO_MEDIA_GALLERY.value['db']
+        new_val = RecordingPlacement.PUBLISH_AUTOMATICALLY.value['db']
         self.course_page.verify_history_row('publish_type', old_val, new_val, self.old_instructor, 'succeeded', published=True)
 
     def test_history_rec_type(self):

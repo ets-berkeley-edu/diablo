@@ -199,10 +199,11 @@ class TestScheduling1:
         self.course_page.cancel_recording_type_edits()
         self.course_page.click_edit_recording_placement()
         assert self.course_page.is_present(self.course_page.PLACEMENT_MY_MEDIA_RADIO)
-        assert self.course_page.is_present(self.course_page.PLACEMENT_MEDIA_GALLERY_RADIO)
+        assert self.course_page.is_present(self.course_page.PLACEMENT_PENDING_RADIO)
+        assert self.course_page.is_present(self.course_page.PLACEMENT_AUTOMATIC_RADIO)
 
     def test_no_changes_to_rec_placement(self):
-        self.course_page.select_recording_placement(RecordingPlacement.PUBLISH_TO_MEDIA_GALLERY)
+        self.course_page.select_recording_placement(RecordingPlacement.PUBLISH_AUTOMATICALLY)
         assert not self.course_page.element(self.course_page.PLACEMENT_SAVE_BUTTON).is_enabled()
 
     # CREATE COURSE SITE
@@ -214,9 +215,9 @@ class TestScheduling1:
     def test_add_new_site(self):
         self.course_page.load_page(self.section)
         self.course_page.click_edit_recording_placement()
-        self.course_page.enter_recording_placement(RecordingPlacement.PUBLISH_TO_MEDIA_GALLERY, sites=[self.site])
+        self.course_page.enter_recording_placement(RecordingPlacement.PUBLISH_AUTOMATICALLY, sites=[self.site])
         self.course_page.save_recording_placement_edits()
-        self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_TO_MEDIA_GALLERY
+        self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_AUTOMATICALLY
 
     def test_visible_site_ids_updated(self):
         assert self.course_page.visible_course_site_ids() == [self.site.site_id]
@@ -226,7 +227,7 @@ class TestScheduling1:
     def test_course_history_rec_type(self):
         self.course_page.load_page(self.section)
         old_val = RecordingPlacement.PUBLISH_TO_MY_MEDIA.value['db']
-        new_val = RecordingPlacement.PUBLISH_TO_MEDIA_GALLERY.value['db']
+        new_val = RecordingPlacement.PUBLISH_AUTOMATICALLY.value['db']
         self.course_page.verify_history_row('publish_type', old_val, new_val, self.admin, 'queued')
 
     def test_course_history_canvas_site(self):
@@ -276,7 +277,7 @@ class TestScheduling1:
         self.kaltura_page.close_window_and_switch()
         self.course_page.load_page(self.section)
         old_val = RecordingPlacement.PUBLISH_TO_MY_MEDIA.value['db']
-        new_val = RecordingPlacement.PUBLISH_TO_MEDIA_GALLERY.value['db']
+        new_val = RecordingPlacement.PUBLISH_AUTOMATICALLY.value['db']
         self.course_page.verify_history_row('publish_type', old_val, new_val, self.admin, 'succeeded', published=True)
 
     def test_course_history_canvas_site_updated(self):

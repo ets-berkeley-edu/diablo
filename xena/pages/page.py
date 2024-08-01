@@ -275,3 +275,9 @@ class Page(object):
                 return False
         finally:
             self.close_window_and_switch()
+
+    @staticmethod
+    def assert_equivalence(actual, expected):
+        if actual != expected:
+            app.logger.info(f'Expecting {expected}, got {actual}')
+        assert actual == expected

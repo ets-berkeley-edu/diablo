@@ -49,6 +49,7 @@ class KalturaPage(Page):
     SERIES_STATUS_PRIVATE_RADIO = (By.ID, 'private_upload1')
     SERIES_STATUS_PUBLISHED_RADIO = (By.ID, 'published_upload1')
     SERIES_PUBLICATION_CHANNELS = (By.ID, 'pblPublish_upload1')
+    # TODO - 'moderated' indicator
     SERIES_CATEGORY_ROW = (By.XPATH, '//div[@class="pblBadge"]/dl//span')
     SERIES_RECUR_BUTTON = (By.ID, 'CreateEvent-recurrenceMain')
     SERIES_DELETE_BUTTON = (By.ID, 'CreateEvent-btnDelete')
@@ -103,6 +104,8 @@ class KalturaPage(Page):
 
     def is_private(self):
         return self.element(self.SERIES_PUBLICATION_CHANNELS).get_attribute('class') == 'hidden'
+
+    # TODO def is_moderated
 
     def is_published(self):
         return self.element(self.SERIES_PUBLICATION_CHANNELS).get_attribute('class') != 'hidden'
@@ -208,7 +211,7 @@ class KalturaPage(Page):
     def verify_title_and_desc(self, section, meeting):
         self.wait_for_delete_button()
         expected = f'{section.code}, {section.number} ({section.term.name})'
-        assert self.visible_series_title() == expected
+        self.assert_equivalence(self.visible_series_title(), expected)
 
         instructors = []
         for instr in section.instructors:
@@ -218,7 +221,7 @@ class KalturaPage(Page):
         copy = f"Copyright ©{datetime.strftime(meeting.meeting_schedule.start_date, '%Y')} UC Regents; all rights reserved."
         expected = f'{course} is taught by {instructors}. {copy}'
         app.logger.info(f'Expecting {expected}, got {self.visible_series_desc()}')
-        assert self.visible_series_desc() == expected
+        self.assert_equivalence(self.visible_series_desc(), expected)
 
     def verify_collaborators(self, section, addl_collaborators=None):
         self.wait_for_delete_button()
@@ -230,7 +233,7 @@ class KalturaPage(Page):
             app.logger.info(f'Verifying collaborator UID {collab.uid} perms')
             assert self.collaborator_perm(collab) == 'Co-Editor, Co-Publisher'
         app.logger.info(f'Expecting {len(all_collabs)} collaborators, got {len(self.collaborator_rows())}')
-        assert len(self.collaborator_rows()) == len(all_collabs)
+        self.assert_equivalence(len(self.collaborator_rows()), len(all_collabs))
 
     def verify_schedule(self, section, meeting):
         self.wait_for_delete_button()
@@ -242,18 +245,18 @@ class KalturaPage(Page):
         self.verify_recur_days(schedule.days)
 
         start = util.get_kaltura_term_date_str(schedule.expected_recording_dates(section.term)[0])
-        assert self.visible_start_date() == start
+        self.assert_equivalence(self.visible_start_date(), start)
 
         end = util.get_kaltura_term_date_str(schedule.expected_recording_dates(section.term)[-1])
-        assert self.visible_end_date() == end
+        self.assert_equivalence(self.visible_end_date(), end)
 
         start = schedule.get_berkeley_start_time()
         visible_start = datetime.strptime(self.visible_start_time(), '%I:%M %p')
-        assert visible_start == start
+        self.assert_equivalence(visible_start, start)
 
         end = schedule.get_berkeley_end_time()
         visible_end = datetime.strptime(self.visible_end_time(), '%I:%M %p')
-        assert visible_end == end
+        self.assert_equivalence(visible_end, end)
 
     def verify_publish_status(self, recording_schedule):
         self.wait_for_delete_button()
@@ -264,8 +267,9 @@ class KalturaPage(Page):
 
         if recording_schedule.recording_placement == RecordingPlacement.PUBLISH_TO_MY_MEDIA:
             assert self.is_private()
-        elif recording_schedule.recording_placement == RecordingPlacement.PUBLISH_TO_MEDIA_GALLERY:
+        else:
             assert self.is_published()
+            # TODO - assert is moderated if RecordingPlacement.PUBLISH_TO_PENDING else not moderated
 
     def verify_site_categories(self, sites):
         expected_count = len(sites) * 2
@@ -276,15 +280,11 @@ class KalturaPage(Page):
         else:
             self.wait_for_element(self.SERIES_PUBLICATION_CHANNELS, util.get_short_timeout())
         visible_count = len(self.publish_category_els())
-        if visible_count != expected_count:
-            app.logger.info(f'Expected {expected_count} categories, got {visible_count}')
-        assert visible_count == expected_count
+        self.assert_equivalence(visible_count, expected_count)
 
         expected_ids = list(map(lambda site: site.site_id, sites))
         expected_ids.sort()
         visible_ids = list(map(lambda el: el.text, self.publish_category_els()))
         visible_ids = list(set(visible_ids))
         visible_ids.sort()
-        if visible_ids != expected_ids:
-            app.logger.info(f'Expected site IDs {expected_ids}, got {visible_ids}')
-        assert visible_ids == expected_ids
+        self.assert_equivalence(visible_ids, expected_ids)
