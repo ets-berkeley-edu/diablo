@@ -644,6 +644,21 @@ class TestUpdatePublishType:
             expected_status_code=400,
         )
 
+    def test_canvas_site_ids_required_moderated(self, client, fake_auth):
+        # kaltura_media_gallery_moderated setting requires Canvas site IDs.
+        instructor_uids = get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
+        fake_auth.login(instructor_uids[0])
+
+        course = SisSection.get_course(section_id=section_1_id, term_id=self.term_id)
+        assert course['publishType'] == 'kaltura_my_media'
+        self._api_publish_type_update(
+            client,
+            term_id=self.term_id,
+            section_id=section_1_id,
+            publish_type='kaltura_media_gallery_moderated',
+            expected_status_code=400,
+        )
+
     def test_publish_authorized(self, client, fake_auth):
         """Update the 'publish_type' course preference."""
         instructor_uids = get_instructor_uids(section_id=section_1_id, term_id=self.term_id)

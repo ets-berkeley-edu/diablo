@@ -38,7 +38,7 @@ from KalturaClient import KalturaClient, KalturaConfiguration
 from KalturaClient.exceptions import KalturaClientException
 from KalturaClient.Plugins.Core import KalturaBaseEntry, KalturaCategory, KalturaCategoryEntry, KalturaCategoryEntryFilter, \
     KalturaCategoryEntryStatus, KalturaCategoryFilter, KalturaEntryDisplayInSearchType, KalturaEntryModerationStatus, \
-    KalturaEntryStatus, KalturaEntryType, KalturaFilterPager, KalturaMediaEntryFilter
+    KalturaEntryStatus, KalturaEntryType, KalturaFilterPager, KalturaMediaEntryFilter, KalturaNullableBoolean
 from KalturaClient.Plugins.Schedule import KalturaRecordScheduleEvent, KalturaRecordScheduleEventFilter, \
     KalturaScheduleEventClassificationType, KalturaScheduleEventFilter, KalturaScheduleEventRecurrence, \
     KalturaScheduleEventRecurrenceFrequency, KalturaScheduleEventRecurrenceType, KalturaScheduleEventResource, \
@@ -52,7 +52,7 @@ DEFAULT_KALTURA_PAGE_SIZE = 200
 class Kaltura:
 
     @skip_when_pytest()
-    def __init__(self, timeout=None):
+    def __init__(self, disable_entitlements=False, timeout=None):
         expiry = app.config['KALTURA_EXPIRY']
         partner_id = app.config['KALTURA_PARTNER_ID']
 
@@ -68,9 +68,11 @@ class Kaltura:
         self.client.setKs(result.ks)
 
         token_hash = hashlib.sha256((result.ks + app.config['KALTURA_APP_TOKEN']).encode('ascii')).hexdigest()
+        session_privileges = 'all:*,disableentitlement' if disable_entitlements else ''
         result = self.client.appToken.startSession(
             expiry=expiry,
             id=app.config['KALTURA_APP_TOKEN_ID'],
+            sessionPrivileges=session_privileges,
             tokenHash=token_hash,
             type=KalturaSessionType.ADMIN,
         )
@@ -168,7 +170,7 @@ class Kaltura:
         return [{'id': o.id, 'name': o.name} for o in _get_kaltura_objects(_fetch)]
 
     @skip_when_pytest()
-    def get_or_create_canvas_category_object(self, canvas_course_site_id):
+    def get_or_create_canvas_category_object(self, canvas_course_site_id, moderation=False):
         o = self.get_category_object(name=f'Canvas>site>channels>{canvas_course_site_id}')
         if o:
             return o
@@ -177,6 +179,7 @@ class Kaltura:
             response = self.client.category.add(KalturaCategory(
                 name=canvas_course_site_id,
                 parentId=parent['id'],
+                moderation=KalturaNullableBoolean(1 if moderation else 0),
             ))
             return _category_object_to_json(response) if response else None
 
@@ -211,8 +214,9 @@ class Kaltura:
             category_ids.append(common_category['id'])
 
         if publish_type and publish_type.startswith('kaltura_media_gallery'):
+            moderation = publish_type == 'kaltura_media_gallery_moderated'
             for canvas_course_site_id in canvas_course_site_ids:
-                category = self.get_or_create_canvas_category_object(canvas_course_site_id=canvas_course_site_id)
+                category = self.get_or_create_canvas_category_object(canvas_course_site_id=canvas_course_site_id, moderation=moderation)
                 if category:
                     category_ids.append(category['id'])
 
@@ -303,6 +307,10 @@ class Kaltura:
                 userId='RecordScheduleGroup',
             ),
         )
+
+    @skip_when_pytest()
+    def update_category_object(self, category_id, moderation):
+        self.client.category.update(id=category_id, category=KalturaCategory(moderation=KalturaNullableBoolean(1 if moderation else 0)))
 
     @skip_when_pytest()
     def update_schedule_event(self, scheduled_model, meeting_attributes=None, description=None):
@@ -518,9 +526,15 @@ def _category_entry_object_to_json(obj):
 
 
 def _category_object_to_json(obj):
+    _moderation_value_decoder = {
+        -1: None,
+        0: False,
+        1: True,
+    }
     return {
         'id': obj.id,
         'name': obj.name,
+        'moderation': _moderation_value_decoder.get(obj.moderation.value) if obj.moderation else None,
     }
 
 
