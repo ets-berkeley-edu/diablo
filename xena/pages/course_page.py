@@ -167,9 +167,9 @@ class CoursePage(DiabloPages):
         if expected_times not in visible_times:
             app.logger.info(f"Expected '{expected_times}' to be in '{visible_times}'")
 
-        assert visible_room == expected_room
-        assert expected_dates in visible_dates
-        assert expected_times in visible_times
+        self.assert_equivalence(visible_room, expected_room)
+        self.assert_equivalence(visible_dates, expected_dates)
+        self.assert_equivalence(visible_times, expected_times)
 
     # CAPTURE SETTINGS - instructors
 
@@ -207,7 +207,7 @@ class CoursePage(DiabloPages):
         visible.sort()
         expected = list(map(lambda c: str(c.uid), collaborators))
         expected.sort()
-        app.logger.info(f'Expecting collaborator UIDs {expected}, got {visible}')
+        self.assert_equivalence(visible, expected)
         assert visible == expected
 
     def click_edit_collaborators(self):
@@ -297,16 +297,15 @@ class CoursePage(DiabloPages):
     def verify_recording_type(self, recording_schedule):
         expected = recording_schedule.recording_type.value['desc']
         visible = self.visible_recording_type()
-        if visible != expected:
-            app.logger.info(f"Expected recording type '{expected}', got '{visible}'")
-        assert visible == expected
+        self.assert_equivalence(visible, expected)
 
     # CAPTURE SETTINGS - recording placement
 
     PLACEMENT_TEXT = By.ID, 'publish-type-name'
     PLACEMENT_EDIT_BUTTON = By.ID, 'btn-publish-type-edit'
     PLACEMENT_MY_MEDIA_RADIO = By.ID, 'radio-publish-type-kaltura_my_media'
-    PLACEMENT_MEDIA_GALLERY_RADIO = By.ID, 'radio-publish-type-kaltura_media_gallery'
+    PLACEMENT_AUTOMATIC_RADIO = By.ID, 'radio-publish-type-kaltura_media_gallery'
+    PLACEMENT_PENDING_RADIO = By.ID, 'radio-publish-type-kaltura_media_gallery_moderated'
     PLACEMENT_SAVE_BUTTON = By.ID, 'btn-publish-type-save'
     PLACEMENT_CXL_BUTTON = By.ID, 'btn-publish-type-cancel'
 
@@ -341,28 +340,40 @@ class CoursePage(DiabloPages):
         app.logger.info('Clicking the edit recording placement button')
         self.wait_for_element_and_click(self.PLACEMENT_EDIT_BUTTON)
 
+    def select_recording_placement_sites(self, sites):
+        if sites:
+            for site in sites:
+                self.wait_for_element_and_click(self.PLACEMENT_SITE_SELECT)
+                self.wait_for_element_and_click(self.placement_site_option_loc(site))
+                self.wait_for_element_and_click(self.PLACEMENT_SITE_ADD_BUTTON)
+
     def select_recording_placement(self, publish_type, sites=None):
         app.logger.info(f'Selecting the radio button for {publish_type}')
         if publish_type == RecordingPlacement.PUBLISH_TO_MY_MEDIA:
             self.wait_for_page_and_click_js(self.PLACEMENT_MY_MEDIA_RADIO)
-        elif publish_type == RecordingPlacement.PUBLISH_TO_MEDIA_GALLERY:
-            self.wait_for_page_and_click_js(self.PLACEMENT_MEDIA_GALLERY_RADIO)
-            if sites:
-                for site in sites:
-                    self.wait_for_element_and_click(self.PLACEMENT_SITE_SELECT)
-                    self.wait_for_element_and_click(self.placement_site_option_loc(site))
-                    self.wait_for_element_and_click(self.PLACEMENT_SITE_ADD_BUTTON)
+        elif publish_type == RecordingPlacement.PUBLISH_TO_PENDING:
+            self.wait_for_page_and_click_js(self.PLACEMENT_PENDING_RADIO)
+            self.select_recording_placement_sites(sites)
+        else:
+            self.wait_for_page_and_click_js(self.PLACEMENT_AUTOMATIC_RADIO)
+            self.select_recording_placement_sites(sites)
+
+    def enter_recording_placement_sites(self, sites):
+        if sites:
+            for site in sites:
+                self.wait_for_element_and_type(self.PLACEMENT_SITE_INPUT, str(site.site_id))
+                self.wait_for_element_and_click(self.PLACEMENT_SITE_ADD_BUTTON)
 
     def enter_recording_placement(self, publish_type, sites=None):
         app.logger.info(f'Selecting the radio button for {publish_type}')
         if publish_type == RecordingPlacement.PUBLISH_TO_MY_MEDIA:
             self.wait_for_page_and_click_js(self.PLACEMENT_MY_MEDIA_RADIO)
-        elif publish_type == RecordingPlacement.PUBLISH_TO_MEDIA_GALLERY:
-            self.wait_for_page_and_click_js(self.PLACEMENT_MEDIA_GALLERY_RADIO)
-            if sites:
-                for site in sites:
-                    self.wait_for_element_and_type(self.PLACEMENT_SITE_INPUT, str(site.site_id))
-                    self.wait_for_element_and_click(self.PLACEMENT_SITE_ADD_BUTTON)
+        elif publish_type == RecordingPlacement.PUBLISH_TO_PENDING:
+            self.wait_for_page_and_click_js(self.PLACEMENT_PENDING_RADIO)
+            self.enter_recording_placement_sites(sites)
+        else:
+            self.wait_for_page_and_click_js(self.PLACEMENT_AUTOMATIC_RADIO)
+            self.enter_recording_placement_sites(sites)
 
     def remove_recording_placement_site(self, site):
         self.wait_for_page_and_click_js(self.placement_site_remove_button_loc(site))

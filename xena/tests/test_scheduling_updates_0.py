@@ -246,16 +246,17 @@ class TestScheduling0:
         self.course_page.cancel_recording_type_edits()
         self.course_page.click_edit_recording_placement()
         assert self.course_page.is_present(self.course_page.PLACEMENT_MY_MEDIA_RADIO)
-        assert self.course_page.is_present(self.course_page.PLACEMENT_MEDIA_GALLERY_RADIO)
+        assert self.course_page.is_present(self.course_page.PLACEMENT_PENDING_RADIO)
+        assert self.course_page.is_present(self.course_page.PLACEMENT_AUTOMATIC_RADIO)
 
     # SELECT OPTIONS, SAVE
 
     def test_choose_rec_placement(self):
         self.course_page.cancel_recording_placement_edits()
         self.course_page.click_edit_recording_placement()
-        self.course_page.select_recording_placement(RecordingPlacement.PUBLISH_TO_MEDIA_GALLERY, sites=[self.site])
+        self.course_page.select_recording_placement(RecordingPlacement.PUBLISH_TO_PENDING, sites=[self.site])
         self.course_page.save_recording_placement_edits()
-        self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_TO_MEDIA_GALLERY
+        self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_TO_PENDING
 
     def test_choose_rec_type(self):
         self.course_page.click_rec_type_edit_button()
@@ -292,7 +293,7 @@ class TestScheduling0:
 
     def test_course_history_rec_placement(self):
         old_val = RecordingPlacement.PUBLISH_TO_MY_MEDIA.value['db']
-        new_val = RecordingPlacement.PUBLISH_TO_MEDIA_GALLERY.value['db']
+        new_val = RecordingPlacement.PUBLISH_TO_PENDING.value['db']
         self.course_page.verify_history_row('publish_type', old_val, new_val, self.instructor, 'queued')
 
     def test_course_history_canvas_site(self):
@@ -359,7 +360,7 @@ class TestScheduling0:
 
     def test_course_history_rec_placement_updated(self):
         old_val = RecordingPlacement.PUBLISH_TO_MY_MEDIA.value['db']
-        new_val = RecordingPlacement.PUBLISH_TO_MEDIA_GALLERY.value['db']
+        new_val = RecordingPlacement.PUBLISH_TO_PENDING.value['db']
         self.course_page.verify_history_row('publish_type', old_val, new_val, self.instructor, 'succeeded', published=True)
 
     def test_course_history_canvas_site_updated(self):

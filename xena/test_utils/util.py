@@ -124,7 +124,7 @@ def get_kaltura_id(recording_schedule):
     meeting = recording_schedule.meeting
     schedule = meeting.meeting_schedule
     kaltura_series_start = schedule.kaltura_series_start(section.term)
-    recording_dates = schedule.expected_recording_dates(section.term)
+    kaltura_series_end = schedule.kaltura_series_end(section.term)
     if meeting.room and meeting.room.name:
         room_clause = f"""AND rooms.location = '{meeting.room.name.replace("'", "''")}'"""
     else:
@@ -135,7 +135,7 @@ def get_kaltura_id(recording_schedule):
                WHERE scheduled.term_id = {section.term.id}
                  AND scheduled.section_id = {section.ccn}
                  AND scheduled.meeting_start_date = '{kaltura_series_start.strftime('%Y-%m-%d %H:%M:%S')}'
-                 AND scheduled.meeting_end_date = '{recording_dates[-1].strftime('%Y-%m-%d %H:%M:%S')}'
+                 AND scheduled.meeting_end_date = '{kaltura_series_end.strftime('%Y-%m-%d %H:%M:%S')}'
                  {room_clause}
                  AND scheduled.deleted_at IS NULL
     """

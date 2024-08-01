@@ -160,12 +160,22 @@ class MeetingSchedule(object):
                 blackout_dates.append(day)
         return blackout_dates
 
-    # Needed because Diablo can claim a series begins on a blackout date
-    def kaltura_series_start(self, term):
+    # Needed because Diablo can claim a series begins or ends on a blackout date
+    def kaltura_series_days(self, term):
         start = self.record_start.date()
         end = term.last_record_date.date() if self.end_date > term.last_record_date else self.end_date.date()
         delta = end - start
+        days = []
         for i in range(delta.days + 1):
             day = start + timedelta(i)
             if day.weekday() in self.__weekday_indices():
-                return day
+                days.append(day)
+        return days
+
+    def kaltura_series_start(self, term):
+        days = self.kaltura_series_days(term)
+        return days[0]
+
+    def kaltura_series_end(self, term):
+        days = self.kaltura_series_days(term)
+        return days[-1]

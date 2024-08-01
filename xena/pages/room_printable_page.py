@@ -78,35 +78,25 @@ class RoomPrintablePage(DiabloPages):
 
         expected_course = f'{section.code}, {section.number}'
         visible_course = self.visible_course(section)
-        if visible_course != expected_course:
-            app.logger.info(f'Expecting {expected_course}, got {visible_course}')
-        assert visible_course == expected_course
+        self.assert_equivalence(visible_course, expected_course)
 
         expected_instr = [f'{inst.first_name} {inst.last_name} ({inst.uid})'.strip() for inst in section.instructors]
         visible_instr = self.visible_instructors(section)
         expected_instr.sort()
         visible_instr.sort()
-        if visible_instr != expected_instr:
-            app.logger.info(f'Expecting {expected_instr}, got {visible_instr}')
-        assert visible_instr == expected_instr
+        self.assert_equivalence(visible_instr, expected_instr)
 
         expected_days = [f'{schedule.days}']
         visible_days = self.visible_days(section)
-        if visible_days != expected_days:
-            app.logger.info(f'Expecting {expected_days}, got {visible_days}')
-        assert visible_days == expected_days
+        self.assert_equivalence(visible_days, expected_days)
 
         dates = f'{schedule.start_date.strftime("%b %-d, %Y")} - {schedule.end_date.strftime("%b %-d, %Y")}'
         times = f'{schedule.start_time} - {schedule.end_time}'
         expected_date_times = [f'{dates}\n{times}']
         visible_times = self.visible_times(section)
-        if visible_times != expected_date_times:
-            app.logger.info(f'Expecting {expected_date_times}, got {visible_times}')
-        assert visible_times == expected_date_times
+        self.assert_equivalence(visible_times, expected_date_times)
 
         expected_type = recording_schedule.recording_type.value['printable']
         visible_type = self.visible_recording_type(section)
         visible_type = visible_type and visible_type.title()
-        if visible_type != expected_type:
-            app.logger.info(f'Expecting {expected_type}, got {visible_type}')
-        assert visible_type == expected_type
+        self.assert_equivalence(visible_type, expected_type)

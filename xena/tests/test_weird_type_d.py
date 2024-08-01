@@ -201,10 +201,10 @@ class TestWeirdTypeD:
 
     def test_choose_publish_type(self):
         self.course_page.click_edit_recording_placement()
-        self.course_page.select_recording_placement(RecordingPlacement.PUBLISH_TO_MEDIA_GALLERY, sites=[self.site])
+        self.course_page.select_recording_placement(RecordingPlacement.PUBLISH_AUTOMATICALLY, sites=[self.site])
         self.course_page.save_recording_placement_edits()
-        self.recording_schedule_0.recording_placement = RecordingPlacement.PUBLISH_TO_MEDIA_GALLERY
-        self.recording_schedule_1.recording_placement = RecordingPlacement.PUBLISH_TO_MEDIA_GALLERY
+        self.recording_schedule_0.recording_placement = RecordingPlacement.PUBLISH_AUTOMATICALLY
+        self.recording_schedule_1.recording_placement = RecordingPlacement.PUBLISH_AUTOMATICALLY
 
     # UPDATE BOTH SERIES IN KALTURA
 
@@ -237,7 +237,7 @@ class TestWeirdTypeD:
     def test_history_publish_type(self):
         self.course_page.load_page(self.section)
         old_val = RecordingPlacement.PUBLISH_TO_MY_MEDIA.value['db']
-        new_val = RecordingPlacement.PUBLISH_TO_MEDIA_GALLERY.value['db']
+        new_val = RecordingPlacement.PUBLISH_TO_PENDING.value['db']
         self.course_page.verify_history_row(field='publish_type',
                                             old_value=old_val,
                                             new_value=new_val,
