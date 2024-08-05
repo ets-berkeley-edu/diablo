@@ -144,7 +144,7 @@ class Kaltura:
         return events[0] if events else None
 
     @skip_when_pytest()
-    def get_events_in_date_range(self, end_date, start_date, recurrence_type=None):
+    def get_events_in_date_range(self, end_date, start_date, kaltura_schedule_id=None, recurrence_type=None):
         end_date_timestamp = int(end_date.timestamp())
         start_date_timestamp = int(start_date.timestamp())
         if recurrence_type is None:
@@ -152,9 +152,16 @@ class Kaltura:
                 endDateLessThanOrEqual=end_date_timestamp,
                 startDateGreaterThanOrEqual=start_date_timestamp,
             )
+        elif kaltura_schedule_id is None:
+            event_filter = KalturaRecordScheduleEventFilter(
+                endDateLessThanOrEqual=end_date_timestamp,
+                recurrenceTypeEqual=recurrence_type,
+                startDateGreaterThanOrEqual=start_date_timestamp,
+            )
         else:
             event_filter = KalturaRecordScheduleEventFilter(
                 endDateLessThanOrEqual=end_date_timestamp,
+                parentIdEqual=kaltura_schedule_id,
                 recurrenceTypeEqual=recurrence_type,
                 startDateGreaterThanOrEqual=start_date_timestamp,
             )
@@ -230,14 +237,6 @@ class Kaltura:
             room=room,
             term_id=term_id,
         )
-        recurrences_filter = KalturaScheduleEventFilter(parentIdEqual=kaltura_schedule.id)
-        for recurrence in self._get_events(kaltura_event_filter=recurrences_filter):
-            if recurrence['blackoutConflicts']:
-                self.client.schedule.scheduleEvent.cancel(recurrence['id'])
-                app.logger.warn(f"""
-                    {course_label}: Event {recurrence['id']}), a child of Kaltura series {kaltura_schedule.id},
-                    cancelled due to blackout conflict(s): {recurrence['blackoutConflicts']}
-                """)
 
         # Link the schedule to the room (ie, capture agent)
         self._attach_scheduled_recordings_to_room(kaltura_schedule_id=kaltura_schedule.id, room=room.to_api_json())
@@ -574,9 +573,7 @@ def _events_to_api_json(events):
 
 
 def _event_to_json(event):
-    conflicts = [_blackout_to_json(e) for e in event.blackoutConflicts] if hasattr(event, 'blackoutConflicts') and event.blackoutConflicts else None
     api_json = {
-        'blackoutConflicts': conflicts,
         'categoryIds': json.loads(event.categoryIds) if hasattr(event, 'categoryIds') and event.categoryIds else [],
         'classificationType': get_classification_name(event.classificationType),
         'comment': event.comment,
@@ -627,28 +624,3 @@ def _event_to_json(event):
             'until': epoch_time_to_isoformat(event.recurrence.until),
         }
     return api_json
-
-
-def _blackout_to_json(event):
-    return {
-        'classificationType': get_classification_name(event.classificationType),
-        'comment': event.comment,
-        'contact': event.contact,
-        'createdAt': epoch_time_to_isoformat(event.createdAt),
-        'description': event.description,
-        'duration': event.duration,
-        'durationFormatted': str(timedelta(seconds=event.duration)) if event.duration else None,
-        'endDate': epoch_time_to_isoformat(event.endDate),
-        'geoLatitude': event.geoLatitude,
-        'geoLongitude': event.geoLongitude,
-        'id': event.id,
-        'organizer': event.organizer,
-        'ownerId': event.ownerId,
-        'partnerId': event.partnerId,
-        'recurrenceType': get_recurrence_name(event.recurrenceType),
-        'startDate': epoch_time_to_isoformat(event.startDate),
-        'status': get_status_name(event.status),
-        'summary': event.summary,
-        'tags': event.tags,
-        'updatedAt': epoch_time_to_isoformat(event.updatedAt),
-    }

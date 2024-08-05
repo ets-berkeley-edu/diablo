@@ -68,22 +68,6 @@
               <tbody>
                 <tr v-for="event in item.recurrences" :key="event.id">
                   <td>
-                    <v-tooltip v-if="$_.size(event.blackoutConflicts)" :id="`blackout-conflicts-${event.id}`" top>
-                      <template #activator="{on, attrs}">
-                        <v-icon
-                          color="red"
-                          class="pa-0"
-                          v-bind="attrs"
-                          v-on="on"
-                        >
-                          mdi-alert
-                        </v-icon>
-                      </template>
-                      Event has blackout-conflict:
-                      <pre>
-                        {{ event.blackoutConflicts }}
-                      </pre>
-                    </v-tooltip>
                     <a
                       :id="`kaltura-recurrence-${event.id}`"
                       :href="`${$config.kalturaMediaSpaceUrl}/recscheduling/index/edit-event/eventid/${event.id}`"
