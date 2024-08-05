@@ -228,7 +228,7 @@ def register_cross_listings(rows, term_id):
     return cross_listings
 
 
-def remove_blackout_events():
+def remove_blackout_events(kaltura_schedule_id=None):
     kaltura = Kaltura()
     for blackout in Blackout.all_blackouts():
         if blackout.end_date < utc_now():
@@ -239,6 +239,7 @@ def remove_blackout_events():
             start_date = localize_datetime(blackout.start_date)
             events = kaltura.get_events_in_date_range(
                 end_date=end_date,
+                kaltura_schedule_id=kaltura_schedule_id,
                 recurrence_type=KalturaScheduleEventRecurrenceType.RECURRENCE,
                 start_date=start_date,
             )
@@ -249,7 +250,7 @@ def remove_blackout_events():
                     app.logger.info(f"'Event {event['summary']} deleted per {blackout}.")
 
 
-def schedule_recordings(course, send_notifications=False, updates=None):
+def schedule_recordings(course, remove_blackout_conflicts=False, send_notifications=False, updates=None):
     def _report_error(subject):
         message = f'{subject}\n\n<pre>{course}</pre>'
         app.logger.error(message)
@@ -304,6 +305,9 @@ def schedule_recordings(course, send_notifications=False, updates=None):
                     room=room,
                     term_id=term_id,
                 )
+
+                if remove_blackout_conflicts:
+                    remove_blackout_events(kaltura_schedule_id=kaltura_schedule_id)
 
                 collaborator_uids = [collaborator['uid'] for collaborator in collaborators]
 

@@ -45,7 +45,6 @@ class KalturaJob(BaseJob):
     def _run(self):
         _schedule_new_courses()
         _update_already_scheduled_events()
-        remove_blackout_events()
 
     @classmethod
     def description(cls):
@@ -79,7 +78,7 @@ def _schedule_new_courses():
     for course in unscheduled_courses:
         if course['hasOptedOut']:
             continue
-        schedule_recordings(course, send_notifications=True)
+        schedule_recordings(course, remove_blackout_conflicts=True, send_notifications=True)
 
 
 def _update_already_scheduled_events():  # noqa C901
@@ -293,6 +292,7 @@ def _handle_meeting_added(course, meeting_added, updated_publish_type, updated_r
 
     newly_scheduled = schedule_recordings(
         {**course, **{'meetings': {'eligible': [meeting]}}},
+        remove_blackout_conflicts=True,
         send_notifications=True,
         updates=updates,
     )
@@ -331,6 +331,7 @@ def _handle_meeting_updates(kaltura, meetings_updated_by_schedule_id, kaltura_sc
                 meeting_start_date=get_recording_start_date(meeting, return_today_if_past_start=True),
                 meeting_start_time=meeting['startTime'],
             )
+            remove_blackout_events(kaltura_schedule_id=scheduled_model.kaltura_schedule_id)
         if 'room' in meeting:
             scheduled_model.update(
                 room_id=meeting['room']['id'],
