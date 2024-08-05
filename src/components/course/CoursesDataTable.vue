@@ -123,8 +123,8 @@
               </td>
             </tr>
             <tr v-for="index in $_.size(course.displayMeetings) - 1" :key="`${course.sectionId}-${index}`">
-              <td colspan="2"></td>
-              <td v-if="includeRoomColumn">
+              <td colspan="2" :class="tdcLower(course)"></td>
+              <td v-if="includeRoomColumn" :class="tdcLower(course)">
                 <router-link
                   v-if="course.displayMeetings[index].room"
                   :id="`course-${course.sectionId}-room-${course.displayMeetings[index].room.id}`"
@@ -134,11 +134,11 @@
                 </router-link>
                 <span v-if="!course.displayMeetings[index].room">&mdash;</span>
               </td>
-              <td class="text-no-wrap">
+              <td class="text-no-wrap" :class="tdcLower(course)">
                 <Days v-if="course.displayMeetings[index].daysNames.length" :names-of-days="course.displayMeetings[index].daysNames" />
                 <span v-if="!course.displayMeetings[index].daysNames.length">&mdash;</span>
               </td>
-              <td class="text-no-wrap">
+              <td class="text-no-wrap" :class="tdcLower(course)">
                 <div v-if="course.nonstandardMeetingDates">
                   <span class="text-no-wrap">{{ course.displayMeetings[index].startDate | moment('MMM D, YYYY') }} - </span>
                   <span class="text-no-wrap">{{ course.displayMeetings[index].endDate | moment('MMM D, YYYY') }}</span>
@@ -147,7 +147,7 @@
                   {{ course.displayMeetings[index].startTimeFormatted }} - {{ course.displayMeetings[index].endTimeFormatted }}
                 </div>
               </td>
-              <td colspan="4"></td>
+              <td colspan="4" :class="tdcLower(course)"></td>
             </tr>
             <tr v-if="course.scheduled" :key="`approvals-${course.sectionId}`">
               <td :colspan="headers.length + 1" class="pb-2">
@@ -270,8 +270,13 @@ export default {
     },
     tdc(course) {
       return {
-        'border-bottom-zero': this.getDisplayMeetings(course).length > 1,
+        'border-bottom-zero': this.getDisplayMeetings(course).length > 1 || course.scheduled,
         'pt-3 pb-3': this.$_.size(course.courseCodes) > 1
+      }
+    },
+    tdcLower(course) {
+      return {
+        'border-bottom-zero': course.scheduled
       }
     }
   }
