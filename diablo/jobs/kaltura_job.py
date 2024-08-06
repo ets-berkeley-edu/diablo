@@ -137,7 +137,7 @@ def _update_already_scheduled_events():  # noqa C901
             _handle_meeting_added(course, meeting_added, updated_publish_type, updated_recording_type, updated_collaborator_uids)
 
         is_currently_recording = False
-        for scheduled in course['scheduled']:
+        for scheduled in course['scheduled'] or []:
             if is_meeting_in_session(scheduled):
                 is_currently_recording = True
                 break
