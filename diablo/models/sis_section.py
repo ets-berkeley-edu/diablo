@@ -626,7 +626,7 @@ def _to_api_json(term_id, rows, include_administrative_proxies=False, include_no
                     'ineligible': [],
                 },
                 'nonstandardMeetingDates': False,
-                'optOuts': [o.to_api_json() for o in opt_outs],
+                'optOuts': [],
                 'publishType': preferences.get('publishType'),
                 'publishTypeName': preferences.get('publishTypeName'),
                 'recordingType': preferences.get('recordingType'),
@@ -658,15 +658,18 @@ def _to_api_json(term_id, rows, include_administrative_proxies=False, include_no
             if blanket_opt_outs_for_instructor:
                 instructor_has_opted_out = True
                 blanket_opt_outs += blanket_opt_outs_for_instructor
-            elif next((o for o in opt_outs if o.instructor_uid == i['uid']), None):
-                instructor_has_opted_out = True
+            else:
+                instructor_opt_out = next((o for o in opt_outs if o.instructor_uid == i['uid']), None)
+                if instructor_opt_out:
+                    course['optOuts'].append(instructor_opt_out.to_api_json())
+                    instructor_has_opted_out = True
             decorated_course_instructors.append({**i, **{'hasOptedOut': instructor_has_opted_out}})
         course['instructors'] = decorated_course_instructors
         if blanket_opt_outs:
             course['hasBlanketOptedOut'] = True
-            course['hasOptedOut'] = True
             course['optOuts'] += [o.to_api_json() for o in blanket_opt_outs]
-
+        if len(course['optOuts']):
+            course['hasOptedOut'] = True
         meeting = _to_meeting_json(row)
         eligible_meetings = course['meetings']['eligible']
         ineligible_meetings = course['meetings']['ineligible']

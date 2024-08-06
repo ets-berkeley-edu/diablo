@@ -101,7 +101,7 @@ def get_template_substitutions(
     course_list = course_list or []
 
     return {
-        'canvasSiteIds': ', '.join(canvas_site_ids) if canvas_site_ids else None,
+        'canvasSiteIds': ', '.join([str(c) for c in canvas_site_ids]) if canvas_site_ids else None,
         'collaborators': ', '.join(collaborator_names) if collaborator_names else None,
         'course.date.end': meeting and meeting['endDate'],
         'course.date.start': meeting and meeting['startDate'],
