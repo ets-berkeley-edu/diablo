@@ -362,6 +362,7 @@
                           :full-width="true"
                           hide-details
                           item-text="name"
+                          :item-disabled="item => isCanvasSiteIdStaged(item.canvasSiteId)"
                           return-object
                           :items="publishCanvasSiteOptions"
                           label="Select course site"
@@ -404,7 +405,7 @@
                         <v-btn
                           id="btn-canvas-site-add"
                           color="success"
-                          :disabled="!pendingCanvasSiteId || !/^\d+$/.test(pendingCanvasSiteId)"
+                          :disabled="!pendingCanvasSiteId || !/^\d+$/.test(pendingCanvasSiteId) || isCanvasSiteIdStaged(pendingCanvasSiteId)"
                           @click="addCanvasSiteById"
                         >
                           Add
@@ -706,7 +707,7 @@ export default {
   },
   methods: {
     addCanvasSiteById() {
-      if (this.pendingCanvasSiteId) {
+      if (this.pendingCanvasSiteId && !this.isCanvasSiteIdStaged(this.pendingCanvasSiteId)) {
         getCourseSite(this.pendingCanvasSiteId).then(data => {
           if (data) {
             this.publishCanvasSites.push(data)
@@ -717,7 +718,7 @@ export default {
       this.pendingCanvasSiteId = null
     },
     addCanvasSiteConfirm() {
-      if (this.pendingCanvasSite && !this.$_.find(this.publishCanvasSites, {'canvasSiteId': this.pendingCanvasSite.canvasSiteId})) {
+      if (this.pendingCanvasSite && !this.isCanvasSiteIdStaged(this.pendingCanvasSite.canvasSiteId)) {
         this.publishCanvasSites.push(this.pendingCanvasSite)
       }
       this.alertScreenReader(`Site ${this.pendingCanvasSite.name} added.`)
@@ -762,6 +763,9 @@ export default {
     editNote() {
       this.noteEditing = true
       this.alertScreenReader('Editing note.')
+    },
+    isCanvasSiteIdStaged(siteId) {
+      return !!this.$_.find(this.publishCanvasSites, {'canvasSiteId': parseInt(siteId, 10)})
     },
     removeCanvasSite(canvasSiteId) {
       this.publishCanvasSites = this.$_.filter(this.publishCanvasSites, c => c.canvasSiteId !== canvasSiteId)
