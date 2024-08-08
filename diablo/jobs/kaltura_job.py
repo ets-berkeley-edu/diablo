@@ -92,6 +92,16 @@ def _update_already_scheduled_events():  # noqa C901
                 su.mark_error()
             continue
 
+        # Schedule updates may require the Kaltura series to be deleted and recreated, and will not be processed if recording is currently underway.
+        is_currently_recording = False
+        for scheduled in course['scheduled'] or []:
+            if is_meeting_in_session(scheduled):
+                is_currently_recording = True
+                break
+        if is_currently_recording:
+            app.logger.info(f"{course['label']}: skipping queued schedule updates because class is currently in session")
+            continue
+
         app.logger.info(f"Preparing schedule update for {course['courseName']} {course['instructionFormat']} "
                         f"{course ['sectionNum']} (term {term_id}, section {section_id})")
 
@@ -136,12 +146,6 @@ def _update_already_scheduled_events():  # noqa C901
         for meeting_added in meetings_added:
             _handle_meeting_added(course, meeting_added, updated_publish_type, updated_recording_type, updated_collaborator_uids)
 
-        is_currently_recording = False
-        for scheduled in course['scheduled'] or []:
-            if is_meeting_in_session(scheduled):
-                is_currently_recording = True
-                break
-
         for scheduled in course['scheduled'] or []:
             kaltura_schedule = kaltura.get_event(event_id=scheduled['kalturaScheduleId'])
             scheduled_model = Scheduled.get_by_id(scheduled['id'])
@@ -168,27 +172,26 @@ def _update_already_scheduled_events():  # noqa C901
                     publish_to_course_sites = None
 
                 if scheduled['kalturaScheduleId'] in meetings_updated_by_schedule_id:
-                    if is_currently_recording:
-                        app.logger.info(f"{course['label']}: skipping meeting time update because class is currently in session")
-                    else:
-                        _handle_meeting_updates(
-                            kaltura,
-                            meetings_updated_by_schedule_id,
-                            scheduled['kalturaScheduleId'],
-                            scheduled_model,
-                            schedule_updates,
-                        )
+                    _handle_meeting_updates(
+                        kaltura,
+                        meetings_updated_by_schedule_id,
+                        scheduled['kalturaScheduleId'],
+                        scheduled_model,
+                        schedule_updates,
+                    )
             else:
                 app.logger.warn(f"The previously scheduled {course['label']} schedule id {scheduled['kalturaScheduleId']} was not found in Kaltura.")
 
         if updated_publish_type:
             publish_to_course_sites = _handle_publish_type_update(updated_publish_type, scheduled_model)
 
+        update_options = _construct_schedule_update_options(course, updated_publish_type, updated_recording_type, updated_collaborator_uids)
         updated_canvas_site_ids = _handle_course_site_categories(
             kaltura,
             course,
             publish_to_course_sites,
             schedule_updates,
+            update_options,
         )
 
         _mark_success(
@@ -230,7 +233,7 @@ def _update_already_scheduled_events():  # noqa C901
                     publish_type=updated_publish_type or scheduled.get('publishType'),
                     recording_type=updated_recording_type or scheduled.get('recordingType'),
                 )
-            if meetings_added or meetings_removed_by_schedule_id or (meetings_updated_by_schedule_id and not is_currently_recording):
+            if meetings_added or meetings_removed_by_schedule_id or meetings_updated_by_schedule_id:
                 QueuedEmail.notify_instructors_schedule_change(course)
             if updated_instructor_uids:
                 previously_scheduled_instructor_uids = scheduled.get('instructorUids') or []
@@ -345,73 +348,88 @@ def _handle_publish_type_update(updated_publish_type, scheduled_model):
     if updated_publish_type == 'kaltura_media_gallery':
         scheduled_model.update(publish_type='kaltura_media_gallery')
         publish_to_course_sites = 'unmoderated'
-    elif updated_publish_type == 'kaltura_media_gallery_moderated':
-        scheduled_model.update(publish_type='kaltura_media_gallery_moderated')
-        publish_to_course_sites = 'moderated'
     elif updated_publish_type == 'kaltura_my_media':
         scheduled_model.update(publish_type='kaltura_my_media')
         publish_to_course_sites = None
     return publish_to_course_sites
 
 
-def _handle_course_site_categories(kaltura, course, publish_to_course_sites, schedule_updates):  # noqa C901
+def _handle_course_site_categories(kaltura, course, publish_to_course_sites, schedule_updates, update_options):  # noqa C901
     updated_canvas_site_ids = course['canvasSiteIds'] or []
     diablo_category_names = set(str(site_id) for site_id in updated_canvas_site_ids)
     common_category = kaltura.get_category_object(name=app.config['KALTURA_COMMON_CATEGORY'])
 
-    for scheduled in course['scheduled'] or []:
-        kaltura_schedule = kaltura.get_event(event_id=scheduled['kalturaScheduleId'])
-        if not kaltura_schedule:
-            continue
-        template_entry_id = kaltura_schedule['templateEntryId']
-        kaltura_categories = kaltura.get_categories(template_entry_id) or []
-        kaltura_category_names = set(c['name'] for c in kaltura_categories if c['id'] != common_category['id'])
+    schedule_ids_to_update = []
 
-        if publish_to_course_sites:
-            moderation = True if publish_to_course_sites == 'moderated' else False
-            for diablo_category_name in diablo_category_names:
-                if diablo_category_name not in kaltura_category_names:
-                    try:
-                        category = kaltura.get_or_create_canvas_category_object(canvas_course_site_id=diablo_category_name, moderation=moderation)
-                        if category:
-                            app.logger.info(
-                                f"{course['label']}, Kaltura series {kaltura_schedule['id']}: "
-                                f'add Kaltura category for canvas_course_site {diablo_category_name}')
-                            kaltura.add_to_kaltura_category(
-                                category_id=category['id'],
-                                entry_id=template_entry_id,
-                            )
-                            if moderation != category['moderation']:
-                                kaltura.update_category_object(category['id'], moderation=moderation)
-                    except Exception as e:
-                        _mark_error(
-                            schedule_updates,
-                            e,
-                            (f'Failed to add Kaltura category {diablo_category_name} '
-                                f"to Kaltura series {kaltura_schedule['id']}, entry {template_entry_id}"),
-                            'canvas_site_ids',
+    if not publish_to_course_sites:
+        schedule_deletion_required = True
+    else:
+        schedule_deletion_required = False
+        for scheduled in course['scheduled'] or []:
+            try:
+                kaltura_schedule = kaltura.get_event(event_id=scheduled['kalturaScheduleId'])
+                template_entry_id = kaltura_schedule['templateEntryId']
+                kaltura_categories = kaltura.get_categories(template_entry_id) or []
+                kaltura_category_names = set(c['name'] for c in kaltura_categories if c['id'] != common_category['id'])
+
+                if kaltura_category_names.difference(diablo_category_names):
+                    schedule_deletion_required = True
+                elif diablo_category_names.difference(kaltura_category_names):
+                    schedule_ids_to_update.append(scheduled['kalturaScheduleId'])
+            except Exception as e:
+                _mark_error(
+                    schedule_updates,
+                    e,
+                    f"Failed to retrieve existing Kaltura categories from schedule {scheduled['kalturaScheduleId']}",
+                    'canvas_site_ids',
+                )
+                return None
+
+    if not (schedule_deletion_required or schedule_ids_to_update):
+        return None
+
+    if schedule_deletion_required:
+        try:
+            app.logger.info(f"{course['label']}: will delete and recreate Kaltura schedule(s) to remove existing categories")
+            for scheduled in course['scheduled']:
+                kaltura.delete(scheduled['kalturaScheduleId'])
+                Scheduled.delete(term_id=course['termId'], section_id=course['sectionId'], kaltura_schedule_id=kaltura_schedule['id'])
+            rescheduled = schedule_recordings(course, send_notifications=False, updates=update_options)
+            if publish_to_course_sites and updated_canvas_site_ids:
+                schedule_ids_to_update = [scheduled['kalturaScheduleId'] for scheduled in rescheduled]
+        except Exception as e:
+            _mark_error(
+                schedule_updates,
+                e,
+                'Failed to delete and recreate Kaltura schedules',
+                'canvas_site_ids',
+            )
+            return None
+
+    for kaltura_schedule_id in schedule_ids_to_update:
+        try:
+            kaltura_schedule = kaltura.get_event(event_id=kaltura_schedule_id)
+            template_entry_id = kaltura_schedule['templateEntryId']
+            kaltura_categories = kaltura.get_categories(template_entry_id) or []
+            kaltura_category_names = set(c['name'] for c in kaltura_categories if c['id'] != common_category['id'])
+
+            for canvas_course_site_id in updated_canvas_site_ids:
+                if str(canvas_course_site_id) not in kaltura_category_names:
+                    category = kaltura.get_or_create_canvas_category_object(canvas_course_site_id=canvas_course_site_id)
+                    if category:
+                        app.logger.info(f"{course['label']}: add Kaltura category for canvas_course_site {canvas_course_site_id}")
+                        kaltura.add_to_kaltura_category(
+                            category_id=category['id'],
+                            entry_id=template_entry_id,
                         )
-                        updated_canvas_site_ids = None
-
-        for kaltura_category in kaltura_categories:
-            if kaltura_category['id'] != common_category['id'] and\
-                    (not publish_to_course_sites or kaltura_category['name'] not in diablo_category_names):
-                try:
-                    app.logger.info(f"{course['label']}, Kaltura series {kaltura_schedule['id']}: "
-                                    f"delete Kaltura category for canvas_course_site {kaltura_category['name']}")
-                    kaltura.delete_kaltura_category(
-                        category_id=kaltura_category['id'],
-                        entry_id=template_entry_id,
-                    )
-                except Exception as e:
-                    _mark_error(
-                        schedule_updates,
-                        e,
-                        (f'Failed to remove Kaltura category {diablo_category_name} '
-                            f"from Kaltura series {kaltura_schedule['id']}, entry {template_entry_id}"),
-                        'canvas_site_ids',
-                    )
-                    updated_canvas_site_ids = None
+        except Exception as e:
+            _mark_error(
+                schedule_updates,
+                e,
+                (f'Failed to add Kaltura categories {updated_canvas_site_ids} to Kaltura series {kaltura_schedule_id}'),
+                'canvas_site_ids',
+            )
+            return None
 
     return updated_canvas_site_ids
 

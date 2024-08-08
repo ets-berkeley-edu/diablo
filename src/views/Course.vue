@@ -640,8 +640,7 @@ export default {
       course: undefined,
       courseDisplayTitle: null,
       displayLabels: {
-        'kaltura_media_gallery': 'Publish automatically to the Media Gallery (all members of the bCourses site will have access)',
-        'kaltura_media_gallery_moderated': 'Publish to Pending tab (Teacher/TA/Designer members of the bCourses site can approve recordings for viewing)',
+        'kaltura_media_gallery': 'Publish to the Media Gallery (all members of the bCourses site will have access)',
         'kaltura_my_media': 'Publish to My Media (I will decide if and how I want to share)',
         'presenter_presentation_audio': 'Camera Without Operator',
         'presenter_presentation_audio_with_operator': `Camera With Operator ($${this.$config.courseCapturePremiumCost} fee)`
