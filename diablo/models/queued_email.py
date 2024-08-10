@@ -308,11 +308,16 @@ def remind_instructors_scheduled(instructor, courses):
         course=None,
         course_list=courses,
     )
+    subject_line = interpolate_content(
+        templated_string=template.subject_line,
+        course=courses[0],
+        recipient_name=instructor['name'],
+    )
     QueuedEmail.create(
         message=message,
         recipient=instructor,
         section_id=courses[0]['sectionId'],
-        subject_line=template.subject_line,
+        subject_line=subject_line,
         template_type='remind_scheduled',
         term_id=courses[0]['termId'],
     )
