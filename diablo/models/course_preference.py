@@ -206,7 +206,7 @@ class CoursePreference(db.Model):
 
 
 def get_all_publish_types():
-    return publish_type.enums
+    return [e for e in publish_type.enums if e != 'kaltura_media_gallery_moderated']
 
 
 def get_all_recording_types():
