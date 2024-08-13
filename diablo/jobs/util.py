@@ -177,7 +177,7 @@ def refresh_cross_listings(term_id):
     register_cross_listings(rows, term_id)
 
 
-def register_cross_listings(rows, term_id):
+def register_cross_listings(rows, term_id):  # noqa C901
     cross_listings = {}
     previous_schedule = None
     primary_section = None
@@ -200,6 +200,12 @@ def register_cross_listings(rows, term_id):
     for section_id, section_ids in cross_listings.copy().items():
         if not section_ids:
             cross_listings.pop(section_id)
+
+    # Before refreshing the cross-listing table, update any Diablo tables pointing to deleted sections
+    # that were cross-listed with extant sections.
+    section_linked_tables = ('course_preferences', 'opt_outs', 'queued_emails', 'schedule_updates', 'scheduled')
+    for table in section_linked_tables:
+        refresh_deleted_cross_listing_references(term_id, table)
 
     # Prepare for refresh by deleting old rows
     db.session.execute(CrossListing.__table__.delete().where(CrossListing.term_id == term_id))
@@ -224,8 +230,38 @@ def register_cross_listings(rows, term_id):
     # Mark cross-listed section_ids as non-principal listings to keep duplicate results out of SisSection queries.
     SisSection.set_non_principal_listings(section_ids=non_principal_section_ids, term_id=term_id)
 
+    # Update any Diablo tables pointing to no-longer-principal section listings.
+    for table in section_linked_tables:
+        refresh_secondary_cross_listing_references(term_id, table)
+
     std_commit()
     return cross_listings
+
+
+def refresh_deleted_cross_listing_references(term_id, tablename):
+    # Handle references to deleted sections cross-listed with extant sections.
+    sql = f"""UPDATE {tablename} t1
+        SET section_id = cl_lookups.section_id
+        FROM sis_sections ss
+        JOIN (SELECT ss2.term_id, ss2.section_id, cl.section_id AS cl_section_id
+            FROM cross_listings cl
+            JOIN sis_sections ss2
+                ON ss2.term_id = cl.term_id
+                AND ss2.section_id = ANY(cl.cross_listed_section_ids) AND ss2.deleted_at IS NULL) cl_lookups
+        ON ss.term_id = :term_id AND ss.term_id = cl_lookups.term_id AND ss.section_id = cl_lookups.cl_section_id AND ss.deleted_at IS NOT NULL
+        WHERE t1.term_id = ss.term_id AND t1.section_id = ss.section_id"""
+    db.session.execute(text(sql), {'term_id': term_id})
+
+
+def refresh_secondary_cross_listing_references(term_id, tablename):
+    # Handle references to extant sections that are no longer the principal cross-listing.
+    sql = f"""UPDATE {tablename} t1
+        SET section_id = cl_lookups.section_id
+        FROM sis_sections ss
+        JOIN (SELECT term_id, section_id, UNNEST(cross_listed_section_ids) AS cl_section_id FROM cross_listings) cl_lookups
+            ON ss.term_id = :term_id AND ss.term_id = cl_lookups.term_id AND ss.section_id = cl_lookups.cl_section_id
+        WHERE t1.term_id = ss.term_id AND t1.section_id = ss.section_id"""
+    db.session.execute(text(sql), {'term_id': term_id})
 
 
 def remove_blackout_events(kaltura_schedule_id=None):
