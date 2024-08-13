@@ -114,6 +114,7 @@ def _update_already_scheduled_events():  # noqa C901
 
         no_longer_eligible = False
         no_longer_scheduled = False
+        opted_out = False
 
         publish_to_course_sites = False
 
@@ -142,7 +143,7 @@ def _update_already_scheduled_events():  # noqa C901
             elif schedule_update.field_name == 'not_scheduled':
                 no_longer_scheduled = True
             elif schedule_update.field_name == 'opted_out':
-                no_longer_scheduled = True if schedule_update.field_value_new is not None else False
+                opted_out = True if schedule_update.field_value_new is not None else False
             elif schedule_update.field_name == 'room_not_eligible':
                 no_longer_eligible = True
 
@@ -153,7 +154,7 @@ def _update_already_scheduled_events():  # noqa C901
             kaltura_schedule = kaltura.get_event(event_id=scheduled['kalturaScheduleId'])
             scheduled_model = Scheduled.get_by_id(scheduled['id'])
             if kaltura_schedule:
-                if no_longer_scheduled or no_longer_eligible or scheduled['kalturaScheduleId'] in meetings_removed_by_schedule_id:
+                if no_longer_scheduled or no_longer_eligible or opted_out or scheduled['kalturaScheduleId'] in meetings_removed_by_schedule_id:
                     _handle_meeting_removed(kaltura, course, scheduled, schedule_updates)
                     continue
 
@@ -216,6 +217,8 @@ def _update_already_scheduled_events():  # noqa C901
             QueuedEmail.notify_instructors_no_longer_scheduled(course)
         elif no_longer_eligible:
             QueuedEmail.notify_instructors_no_longer_eligible(course)
+        elif opted_out:
+            QueuedEmail.notify_instructors_opted_out(course)
         else:
             scheduled = (course['scheduled'] or [{}])[0]
             if updated_publish_type or\
