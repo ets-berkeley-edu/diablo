@@ -491,7 +491,7 @@
               </v-col>
             </v-row>
           </v-container>
-          <v-container v-if="isCurrentTerm && capability && hasValidMeetingTimes && (course.hasOptedOut || !course.scheduled)" class="elevation-2 pa-6">
+          <v-container v-if="isCurrentTerm && capability && hasValidMeetingTimes && (course.hasOptedOut || !course.scheduled || !course.deletedAt)" class="elevation-2 pa-6">
             <v-row>
               <v-col class="font-weight-bold mb-1">
                 <span v-if="course.hasOptedOut" id="notice-opt-out" class="red--text">
