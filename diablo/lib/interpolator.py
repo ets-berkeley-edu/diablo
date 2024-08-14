@@ -108,7 +108,7 @@ def get_template_substitutions(
         'course.days': days and readable_join(days),
         'course.format': course and course['instructionFormat'],
         'course.name': course and course['courseName'],
-        'course.room': 'CANCELED' if course and course['deletedAt'] else (meeting and meeting['location']),
+        'course.room': 'CANCELED' if course and course['deletedAt'] else (meeting and meeting.get('room', {}).get('location')),
         'course.section': course and course['sectionNum'],
         'course.time.end': meeting and meeting['endTimeFormatted'],
         'course.time.start': meeting and meeting['startTimeFormatted'],
