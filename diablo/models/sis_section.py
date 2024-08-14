@@ -209,44 +209,6 @@ class SisSection(db.Model):
         return feed
 
     @classmethod
-    def get_course_changes(cls, term_id):
-        sql = """
-            SELECT
-                s.*,
-                i.dept_code AS instructor_dept_code,
-                i.email AS instructor_email,
-                i.first_name || ' ' || i.last_name AS instructor_name,
-                i.uid AS instructor_uid,
-                r.id AS room_id,
-                r.location AS room_location
-            FROM sis_sections s
-            LEFT JOIN rooms r ON r.location = s.meeting_location
-            JOIN scheduled d ON
-                d.section_id = s.section_id
-                AND d.term_id = :term_id
-                AND d.deleted_at IS NULL
-            LEFT JOIN instructors i ON i.uid = s.instructor_uid
-            WHERE
-                s.term_id = :term_id
-                AND (
-                    s.deleted_at IS NOT NULL
-                    OR (
-                        (s.instructor_uid IS NULL OR s.instructor_role_code = ANY(:instructor_role_codes))
-                        AND s.is_principal_listing IS TRUE
-                    )
-                )
-            ORDER BY s.course_name, s.section_id, s.instructor_uid, r.capability NULLS LAST
-        """
-        rows = db.session.execute(
-            text(sql),
-            {
-                'instructor_role_codes': ALL_INSTRUCTOR_ROLE_CODES,
-                'term_id': term_id,
-            },
-        )
-        return _to_api_json(term_id=term_id, rows=rows, include_administrative_proxies=True)
-
-    @classmethod
     def get_courses(
             cls,
             term_id,
@@ -417,12 +379,13 @@ class SisSection(db.Model):
         return _to_api_json(term_id=term_id, rows=rows, include_rooms=False)
 
     @classmethod
-    def get_courses_scheduled(cls, term_id):
+    def get_courses_scheduled(cls, term_id, include_administrative_proxies=False):
         scheduled_section_ids = list(cls._section_ids_scheduled(term_id))
         return cls.get_courses(
-            include_deleted=True,
-            section_ids=scheduled_section_ids,
             term_id=term_id,
+            section_ids=scheduled_section_ids,
+            include_deleted=True,
+            include_administrative_proxies=include_administrative_proxies,
         )
 
     @classmethod

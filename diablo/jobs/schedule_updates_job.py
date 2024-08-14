@@ -50,11 +50,13 @@ class ScheduleUpdatesJob(BaseJob):
 
 
 def _queue_schedule_updates(term_id):
-    for course in SisSection.get_course_changes(term_id=term_id):
+    for course in SisSection.get_courses_scheduled(term_id=term_id, include_administrative_proxies=True):
         eligible_meetings = course.get('meetings', {}).get('eligible', [])
         ineligible_meetings = course.get('meetings', {}).get('ineligible', [])
         if course['deletedAt'] or (_valid_meeting_count(eligible_meetings) + _valid_meeting_count(ineligible_meetings) == 0):
             _queue_not_scheduled_update(course)
+        if course['optOuts']:
+            _queue_opt_out_update(course)
         elif _valid_meeting_count(eligible_meetings) == 0 and _valid_meeting_count(ineligible_meetings) > 0:
             _queue_room_not_eligible_update(course)
         else:
@@ -70,6 +72,18 @@ def _queue_not_scheduled_update(course):
         field_name='not_scheduled',
         field_value_old=json.dumps(scheduled),
         field_value_new=None,
+    )
+    _downgrade_recording_type(course)
+
+
+def _queue_opt_out_update(course):
+    opted_out_instructor_uid = course['optOuts'][0].get('instructorUid')
+    ScheduleUpdate.queue(
+        term_id=course['termId'],
+        section_id=course['sectionId'],
+        field_name='opted_out',
+        field_value_old=None,
+        field_value_new=opted_out_instructor_uid,
     )
     _downgrade_recording_type(course)
 
