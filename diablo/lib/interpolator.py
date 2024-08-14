@@ -26,7 +26,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 import re
 
 from diablo.lib.berkeley import term_name_for_sis_id
-from diablo.lib.util import format_days, get_names_of_days, readable_join
+from diablo.lib.util import format_days, format_time, get_names_of_days, readable_join
 from flask import current_app as app
 
 
@@ -87,15 +87,22 @@ def get_template_substitutions(
         meetings = course.get('meetings', {}).get('eligible', [])
         meetings = meetings or course.get('meetings', {}).get('ineligible', [])
         meeting = meetings and meetings[0]
+
         days_formatted = meeting and (meeting.get('daysFormatted') or format_days(meeting.get('days')))
         days = meeting and get_names_of_days(days_formatted)
+        start_time = meeting and (meeting.get('startTimeFormatted') or format_time(meeting.get('startTime')))
+        end_time = meeting and (meeting.get('endTimeFormatted') or format_time(meeting.get('endTime')))
+
         if instructor_names is None:
             instructor_name_string = _join_names(course.get('instructors'))
         else:
             instructor_name_string = ', '.join(instructor_names)
+
     else:
-        days = None
         meeting = None
+        days = None
+        start_time = None
+        end_time = None
         instructor_name_string = None
 
     course_list = course_list or []
@@ -110,8 +117,8 @@ def get_template_substitutions(
         'course.name': course and course['courseName'],
         'course.room': 'CANCELED' if course and course['deletedAt'] else (meeting and meeting.get('room', {}).get('location')),
         'course.section': course and course['sectionNum'],
-        'course.time.end': meeting and meeting['endTimeFormatted'],
-        'course.time.start': meeting and meeting['startTimeFormatted'],
+        'course.time.end': end_time,
+        'course.time.start': start_time,
         'course.title': course and course['courseTitle'],
         'courseList': '\n'.join([f"{course['courseName']}: {course['courseTitle']}" for course in course_list]),
         'instructors.all': instructor_name_string,
