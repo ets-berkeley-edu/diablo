@@ -320,7 +320,7 @@ def schedule_recordings(course, remove_blackout_conflicts=False, send_notificati
         location = meeting.get('room', {}).get('location')
         room = Room.find_room(location=location)
         if not room:
-            _report_error(subject=f"{course['label']} not scheduled. Room {meeting['location']} not found.")
+            _report_error(subject=f"{course['label']} not scheduled. Room {location} not found.")
             continue
 
         if not is_valid_meeting_schedule(meeting):
