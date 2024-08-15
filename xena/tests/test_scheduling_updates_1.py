@@ -60,7 +60,6 @@ class TestScheduling1:
         self.jobs_page.disable_all_jobs()
 
         self.jobs_page.click_blackouts_link()
-        self.blackouts_page.delete_all_blackouts()
         self.blackouts_page.create_all_blackouts()
 
         self.kaltura_page.log_in_via_calnet(self.calnet_page)
@@ -93,11 +92,11 @@ class TestScheduling1:
         self.ouija_page.filter_for_no_instructors()
         assert not self.ouija_page.is_course_in_results(self.section)
 
-    # RUN SEMESTER START JOB
+    # SCHEDULE RECORDINGS
 
     def test_semester_start(self):
         self.jobs_page.load_page()
-        self.jobs_page.run_semester_start_job_sequence()
+        self.jobs_page.run_schedule_update_job_sequence()
         assert util.get_kaltura_id(self.recording_schedule)
         self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
         self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_TO_MY_MEDIA
@@ -168,7 +167,7 @@ class TestScheduling1:
     # VERIFY ANNUNCIATION EMAIL
 
     def test_receive_annunciation_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_SEM_START, self.section,
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_NEW_COURSE_SCHED, self.section,
                                          self.instructor) == 1
 
     # VERIFY STATIC COURSE SIS DATA
@@ -199,7 +198,6 @@ class TestScheduling1:
         self.course_page.cancel_recording_type_edits()
         self.course_page.click_edit_recording_placement()
         assert self.course_page.is_present(self.course_page.PLACEMENT_MY_MEDIA_RADIO)
-        assert self.course_page.is_present(self.course_page.PLACEMENT_PENDING_RADIO)
         assert self.course_page.is_present(self.course_page.PLACEMENT_AUTOMATIC_RADIO)
 
     def test_no_changes_to_rec_placement(self):

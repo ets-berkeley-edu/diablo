@@ -29,6 +29,7 @@ from xena.models.email_template_type import EmailTemplateType
 from xena.models.recording_placement import RecordingPlacement
 from xena.models.recording_schedule import RecordingSchedule
 from xena.models.recording_type import RecordingType
+from xena.models.user import User
 from xena.pages.course_page import CoursePage
 from xena.test_utils import util
 
@@ -37,6 +38,7 @@ from xena.test_utils import util
 class TestScheduling0:
     test_data = util.get_test_script_course('test_scheduling_0')
     section = util.get_test_section(test_data)
+    admin = User({'uid': util.get_admin_uid()})
     instructor = section.instructors[0]
     meeting = section.meetings[0]
     meeting_schedule = meeting.meeting_schedule
@@ -57,7 +59,6 @@ class TestScheduling0:
         self.jobs_page.disable_all_jobs()
 
         self.jobs_page.click_blackouts_link()
-        self.blackouts_page.delete_all_blackouts()
         self.blackouts_page.create_all_blackouts()
 
         self.kaltura_page.log_in_via_calnet(self.calnet_page)
@@ -246,7 +247,6 @@ class TestScheduling0:
         self.course_page.cancel_recording_type_edits()
         self.course_page.click_edit_recording_placement()
         assert self.course_page.is_present(self.course_page.PLACEMENT_MY_MEDIA_RADIO)
-        assert self.course_page.is_present(self.course_page.PLACEMENT_PENDING_RADIO)
         assert self.course_page.is_present(self.course_page.PLACEMENT_AUTOMATIC_RADIO)
 
     # SELECT OPTIONS, SAVE
@@ -254,9 +254,9 @@ class TestScheduling0:
     def test_choose_rec_placement(self):
         self.course_page.cancel_recording_placement_edits()
         self.course_page.click_edit_recording_placement()
-        self.course_page.select_recording_placement(RecordingPlacement.PUBLISH_TO_PENDING, sites=[self.site])
+        self.course_page.select_recording_placement(RecordingPlacement.PUBLISH_AUTOMATICALLY, sites=[self.site])
         self.course_page.save_recording_placement_edits()
-        self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_TO_PENDING
+        self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_AUTOMATICALLY
 
     def test_choose_rec_type(self):
         self.course_page.click_rec_type_edit_button()
@@ -287,19 +287,25 @@ class TestScheduling0:
         self.login_page.dev_auth()
         self.ouija_page.click_jobs_link()
         self.course_page.load_page(self.section)
-        old_val = RecordingType.VIDEO_SANS_OPERATOR.value['db']
-        new_val = RecordingType.VIDEO_WITH_OPERATOR.value['db']
-        self.course_page.verify_history_row('recording_type', old_val, new_val, self.instructor, 'queued')
+        self.course_page.verify_history_row(field='recording_type',
+                                            old_value=RecordingType.VIDEO_SANS_OPERATOR.value['db'],
+                                            new_value=RecordingType.VIDEO_WITH_OPERATOR.value['db'],
+                                            requestor=self.instructor,
+                                            status='queued')
 
     def test_course_history_rec_placement(self):
-        old_val = RecordingPlacement.PUBLISH_TO_MY_MEDIA.value['db']
-        new_val = RecordingPlacement.PUBLISH_TO_PENDING.value['db']
-        self.course_page.verify_history_row('publish_type', old_val, new_val, self.instructor, 'queued')
+        self.course_page.verify_history_row(field='publish_type',
+                                            old_value=RecordingPlacement.PUBLISH_TO_MY_MEDIA.value['db'],
+                                            new_value=RecordingPlacement.PUBLISH_AUTOMATICALLY.value['db'],
+                                            requestor=self.instructor,
+                                            status='queued')
 
     def test_course_history_canvas_site(self):
-        old_val = '—'
-        new_val = CoursePage.expected_site_ids_converter([self.site])
-        self.course_page.verify_history_row('canvas_site_ids', old_val, new_val, self.instructor, 'queued')
+        self.course_page.verify_history_row(field='canvas_site_ids',
+                                            old_value='—',
+                                            new_value=CoursePage.expected_site_ids_converter([self.site]),
+                                            requestor=self.instructor,
+                                            status='queued')
 
     # UPDATE SERIES IN KALTURA
 
@@ -349,24 +355,89 @@ class TestScheduling0:
     def test_update_admin_email_operator_requested(self):
         assert util.get_sent_email_count(EmailTemplateType.ADMIN_OPERATOR_REQUESTED, self.section) == 1
 
+    # REVERT TO MY MEDIA PLACEMENT TYPE
+
+    def test_course_page_revert_placement(self):
+        self.course_page.load_page(self.section)
+        self.course_page.click_edit_recording_placement()
+        self.course_page.select_recording_placement(RecordingPlacement.PUBLISH_TO_MY_MEDIA)
+        self.course_page.save_recording_placement_edits()
+        self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_TO_MY_MEDIA
+
+    def test_update_jobs_revert_placement(self):
+        self.course_page.click_jobs_link()
+        self.jobs_page.run_settings_update_job_sequence()
+
+    def test_kaltura_old_series_deleted(self):
+        self.kaltura_page.load_event_edit_page(self.recording_schedule.series_id)
+        self.kaltura_page.wait_for_title('Access Denied - UC Berkeley - Test')
+
+    def test_kaltura_new_series(self):
+        util.get_kaltura_id(self.recording_schedule)
+        self.kaltura_page.load_event_edit_page(self.recording_schedule.series_id)
+        self.kaltura_page.verify_title_and_desc(self.section, self.meeting)
+
+    def test_kaltura_new_series_collab(self):
+        self.kaltura_page.verify_collaborators(self.section)
+
+    def test_kaltura_new_series_schedule(self):
+        self.kaltura_page.verify_schedule(self.section, self.meeting)
+
+    def test_kaltura_new_series_publish_status(self):
+        self.kaltura_page.verify_publish_status(self.recording_schedule)
+
+    def test_kaltura_new_series_course_site(self):
+        assert len(self.kaltura_page.publish_category_els()) == 0
+        assert not self.kaltura_page.is_publish_category_present(self.site)
+
+    # VERIFY REVERTED PLACEMENT EMAIL
+
+    def test_reverted_schedule_conf_email(self):
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_CHANGES_CONFIRMED, self.section,
+                                         self.instructor) == 2
+
     # VERIFY COURSE HISTORY
 
     def test_course_history_rec_type_updated(self):
-        self.kaltura_page.close_window_and_switch()
         self.course_page.load_page(self.section)
-        old_val = RecordingType.VIDEO_SANS_OPERATOR.value['db']
-        new_val = RecordingType.VIDEO_WITH_OPERATOR.value['db']
-        self.course_page.verify_history_row('recording_type', old_val, new_val, self.instructor, 'succeeded', published=True)
+        self.course_page.verify_history_row(field='recording_type',
+                                            old_value=RecordingType.VIDEO_SANS_OPERATOR.value['db'],
+                                            new_value=RecordingType.VIDEO_WITH_OPERATOR.value['db'],
+                                            requestor=self.instructor,
+                                            status='succeeded',
+                                            published=True)
 
     def test_course_history_rec_placement_updated(self):
-        old_val = RecordingPlacement.PUBLISH_TO_MY_MEDIA.value['db']
-        new_val = RecordingPlacement.PUBLISH_TO_PENDING.value['db']
-        self.course_page.verify_history_row('publish_type', old_val, new_val, self.instructor, 'succeeded', published=True)
+        self.course_page.verify_history_row(field='publish_type',
+                                            old_value=RecordingPlacement.PUBLISH_TO_MY_MEDIA.value['db'],
+                                            new_value=RecordingPlacement.PUBLISH_AUTOMATICALLY.value['db'],
+                                            requestor=self.instructor,
+                                            status='succeeded',
+                                            published=True)
 
     def test_course_history_canvas_site_updated(self):
-        old_val = '—'
-        new_val = CoursePage.expected_site_ids_converter([self.site])
-        self.course_page.verify_history_row('canvas_site_ids', old_val, new_val, self.instructor, 'succeeded', published=True)
+        self.course_page.verify_history_row(field='canvas_site_ids',
+                                            old_value='—',
+                                            new_value=CoursePage.expected_site_ids_converter([self.site]),
+                                            requestor=self.instructor,
+                                            status='succeeded',
+                                            published=True)
+
+    def test_course_history_rec_placement_reverted(self):
+        self.course_page.verify_history_row(field='publish_type',
+                                            old_value=RecordingPlacement.PUBLISH_AUTOMATICALLY.value['db'],
+                                            new_value=RecordingPlacement.PUBLISH_TO_MY_MEDIA.value['db'],
+                                            requestor=self.admin,
+                                            status='succeeded',
+                                            published=True)
+
+    def test_course_history_canvas_site_reverted(self):
+        self.course_page.verify_history_row(field='canvas_site_ids',
+                                            old_value=CoursePage.expected_site_ids_converter([self.site]),
+                                            new_value='—',
+                                            requestor=self.admin,
+                                            status='succeeded',
+                                            published=True)
 
     # VERIFY REMINDER EMAIL
 

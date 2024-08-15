@@ -61,7 +61,6 @@ class TestCrossListings:
         self.jobs_page.disable_all_jobs()
 
         self.jobs_page.click_blackouts_link()
-        self.blackouts_page.delete_all_blackouts()
         self.blackouts_page.create_all_blackouts()
 
         self.kaltura_page.log_in_via_calnet(self.calnet_page)
@@ -81,11 +80,11 @@ class TestCrossListings:
         self.canvas_page.provision_site(self.section, [self.section.ccn], self.site_1)
         self.canvas_page.add_teacher_to_site(self.site_1, self.section, self.instructor)
 
-    # RUN SEMESTER START JOB
+    # SCHEDULE RECORDINGS
 
     def test_semester_start(self):
         self.jobs_page.load_page()
-        self.jobs_page.run_semester_start_job_sequence()
+        self.jobs_page.run_schedule_update_job_sequence()
         assert util.get_kaltura_id(self.recording_schedule)
         self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
         self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_TO_MY_MEDIA
@@ -108,11 +107,11 @@ class TestCrossListings:
         self.kaltura_page.verify_site_categories([])
 
     def test_receive_annunciation_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_SEM_START, self.section,
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_NEW_COURSE_SCHED, self.section,
                                          self.instructor) == 1
 
     def test_receive_annunciation_email_listing(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_SEM_START, self.x_listed_section,
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_NEW_COURSE_SCHED, self.x_listed_section,
                                          self.instructor) == 1
 
     # CHANGE PUBLISH TYPE TO AUTOMATIC

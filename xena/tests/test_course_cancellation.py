@@ -52,7 +52,6 @@ class TestCourseCancellation:
         self.jobs_page.disable_all_jobs()
 
         self.jobs_page.click_blackouts_link()
-        self.blackouts_page.delete_all_blackouts()
         self.blackouts_page.create_all_blackouts()
 
         self.kaltura_page.log_in_via_calnet(self.calnet_page)
@@ -92,7 +91,7 @@ class TestCourseCancellation:
         self.courses_page.log_out()
         self.login_page.dev_auth()
         self.ouija_page.click_jobs_link()
-        self.jobs_page.run_semester_start_job_sequence()
+        self.jobs_page.run_schedule_update_job_sequence()
 
     def test_cancel_pre_sched_no_kaltura_schedule_id(self):
         assert not util.get_kaltura_id(self.recording_schedule)

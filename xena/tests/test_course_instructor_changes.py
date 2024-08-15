@@ -61,7 +61,6 @@ class TestCourseInstructorChanges:
         self.jobs_page.disable_all_jobs()
 
         self.jobs_page.click_blackouts_link()
-        self.blackouts_page.delete_all_blackouts()
         self.blackouts_page.create_all_blackouts()
 
         self.kaltura_page.log_in_via_calnet(self.calnet_page)
@@ -82,7 +81,7 @@ class TestCourseInstructorChanges:
 
     def test_schedule_course_instr_1(self):
         self.jobs_page.load_page()
-        self.jobs_page.run_semester_start_job_sequence()
+        self.jobs_page.run_schedule_update_job_sequence()
         util.get_kaltura_id(self.recording_schedule)
         self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_TO_MY_MEDIA
         self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR

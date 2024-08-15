@@ -118,7 +118,7 @@ class OuijaBoardPage(CoursesPage):
 
     def search_for_course_code(self, section):
         app.logger.info(f'Searching for course code {section.code}')
-        self.wait_for_element_and_type(OuijaBoardPage.SEARCH_INPUT, section.code)
+        self.remove_and_enter_chars(OuijaBoardPage.SEARCH_INPUT, section.code)
         time.sleep(1)
 
     def filter_for_option(self, opt_locator):
