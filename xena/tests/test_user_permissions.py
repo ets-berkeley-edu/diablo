@@ -52,7 +52,7 @@ class TestUserPerms:
         self.login_page.load_page()
         self.login_page.dev_auth()
         self.ouija_page.click_jobs_link()
-        self.jobs_page.run_semester_start_job_sequence()
+        self.jobs_page.run_schedule_update_job_sequence()
 
     def test_instructor_login(self):
         self.jobs_page.log_out()

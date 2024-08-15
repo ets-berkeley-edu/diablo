@@ -168,7 +168,7 @@ class CoursePage(DiabloPages):
             app.logger.info(f"Expected '{expected_times}' to be in '{visible_times}'")
 
         self.assert_equivalence(visible_room, expected_room)
-        self.assert_equivalence(visible_dates, expected_dates)
+        assert expected_dates in visible_dates
         self.assert_equivalence(visible_times, expected_times)
 
     # CAPTURE SETTINGS - instructors
@@ -305,7 +305,6 @@ class CoursePage(DiabloPages):
     PLACEMENT_EDIT_BUTTON = By.ID, 'btn-publish-type-edit'
     PLACEMENT_MY_MEDIA_RADIO = By.ID, 'radio-publish-type-kaltura_my_media'
     PLACEMENT_AUTOMATIC_RADIO = By.ID, 'radio-publish-type-kaltura_media_gallery'
-    PLACEMENT_PENDING_RADIO = By.ID, 'radio-publish-type-kaltura_media_gallery_moderated'
     PLACEMENT_SAVE_BUTTON = By.ID, 'btn-publish-type-save'
     PLACEMENT_CXL_BUTTON = By.ID, 'btn-publish-type-cancel'
 
@@ -351,9 +350,6 @@ class CoursePage(DiabloPages):
         app.logger.info(f'Selecting the radio button for {publish_type}')
         if publish_type == RecordingPlacement.PUBLISH_TO_MY_MEDIA:
             self.wait_for_page_and_click_js(self.PLACEMENT_MY_MEDIA_RADIO)
-        elif publish_type == RecordingPlacement.PUBLISH_TO_PENDING:
-            self.wait_for_page_and_click_js(self.PLACEMENT_PENDING_RADIO)
-            self.select_recording_placement_sites(sites)
         else:
             self.wait_for_page_and_click_js(self.PLACEMENT_AUTOMATIC_RADIO)
             self.select_recording_placement_sites(sites)
@@ -368,9 +364,6 @@ class CoursePage(DiabloPages):
         app.logger.info(f'Selecting the radio button for {publish_type}')
         if publish_type == RecordingPlacement.PUBLISH_TO_MY_MEDIA:
             self.wait_for_page_and_click_js(self.PLACEMENT_MY_MEDIA_RADIO)
-        elif publish_type == RecordingPlacement.PUBLISH_TO_PENDING:
-            self.wait_for_page_and_click_js(self.PLACEMENT_PENDING_RADIO)
-            self.enter_recording_placement_sites(sites)
         else:
             self.wait_for_page_and_click_js(self.PLACEMENT_AUTOMATIC_RADIO)
             self.enter_recording_placement_sites(sites)

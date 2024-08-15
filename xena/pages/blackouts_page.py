@@ -65,19 +65,27 @@ class BlackoutsPage(DiabloPages):
         if blackout_date_pair[1] < today:
             app.logger.info('Skipping blackout date since the end date is in the past')
         else:
-            if blackout_date_pair[0] < today:
-                blackout_date_pair[0] = today
+            self.when_present(self.CREATE_NEW_BUTTON, util.get_short_timeout())
+            time.sleep(1)
             start_date_str = blackout_date_pair[0].strftime('%Y-%m-%d')
             end_date_str = blackout_date_pair[1].strftime('%Y-%m-%d')
-            app.logger.info(f'Creating blackout called "{start_date_str}" starting "{start_date_str}" ending "{end_date_str}"')
-            self.reload_page()
-            self.wait_for_element_and_click(BlackoutsPage.CREATE_NEW_BUTTON)
-            self.wait_for_element_and_type(BlackoutsPage.NAME_INPUT, start_date_str)
-            self.select_blackout_date(blackout_date_pair)
-            self.wait_for_element_and_click(BlackoutsPage.SAVE_BUTTON)
-            Wait(self.driver, util.get_short_timeout()).until(
-                ec.presence_of_element_located(BlackoutsPage.blackout_delete_loc(blackout_date_pair[0])),
-            )
+            if self.is_present(
+                    (By.XPATH, f'//td[contains(@id, "start-date")][text()=" {start_date_str} "]')) and self.is_present(
+                    (By.XPATH, f'//td[contains(@id, "end-date")][text()=" {end_date_str} "]')):
+                app.logger.info('Skipping blackout date since it already exists')
+            else:
+                if blackout_date_pair[0] < today:
+                    blackout_date_pair[0] = today
+                app.logger.info(
+                    f'Creating blackout called "{start_date_str}" starting "{start_date_str}" ending "{end_date_str}"')
+                self.reload_page()
+                self.wait_for_element_and_click(BlackoutsPage.CREATE_NEW_BUTTON)
+                self.wait_for_element_and_type(BlackoutsPage.NAME_INPUT, start_date_str)
+                self.select_blackout_date(blackout_date_pair)
+                self.wait_for_element_and_click(BlackoutsPage.SAVE_BUTTON)
+                Wait(self.driver, util.get_short_timeout()).until(
+                    ec.presence_of_element_located(BlackoutsPage.blackout_delete_loc(blackout_date_pair[0])),
+                )
 
     def delete_blackout(self, blackout_date):
         app.logger.info(f'Deleting a blackout on "{blackout_date.strftime("%Y-%m-%d")}"')

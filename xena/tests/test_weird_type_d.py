@@ -61,7 +61,6 @@ class TestWeirdTypeD:
         self.jobs_page.disable_all_jobs()
 
         self.jobs_page.click_blackouts_link()
-        self.blackouts_page.delete_all_blackouts()
         self.blackouts_page.create_all_blackouts()
 
         self.kaltura_page.log_in_via_calnet(self.calnet_page)
@@ -77,11 +76,11 @@ class TestWeirdTypeD:
         self.canvas_page.provision_site(self.section, [self.section.ccn], self.site)
         self.canvas_page.add_teacher_to_site(self.site, self.section, self.section.instructors[0])
 
-    # RUN SEMESTER START JOB
+    # SCHEDULE RECORDINGS
 
-    def test_semester_start(self):
+    def test_schedule_recordings(self):
         self.jobs_page.load_page()
-        self.jobs_page.run_semester_start_job_sequence()
+        self.jobs_page.run_schedule_update_job_sequence()
 
         assert util.get_kaltura_id(self.recording_schedule_0)
         self.recording_schedule_0.recording_type = RecordingType.VIDEO_SANS_OPERATOR
@@ -114,8 +113,8 @@ class TestWeirdTypeD:
     # VERIFY ANNUNCIATION EMAIL
 
     def test_receive_annunciation_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_SEM_START, self.section,
-                                         self.section.instructors[0]) == 1
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_NEW_COURSE_SCHED, self.section,
+                                         self.section.instructors[0]) == 2
 
     # FIRST MEETING: VERIFY SERIES IN DIABLO
 
@@ -237,7 +236,7 @@ class TestWeirdTypeD:
     def test_history_publish_type(self):
         self.course_page.load_page(self.section)
         old_val = RecordingPlacement.PUBLISH_TO_MY_MEDIA.value['db']
-        new_val = RecordingPlacement.PUBLISH_TO_PENDING.value['db']
+        new_val = RecordingPlacement.PUBLISH_AUTOMATICALLY.value['db']
         self.course_page.verify_history_row(field='publish_type',
                                             old_value=old_val,
                                             new_value=new_val,
@@ -248,7 +247,7 @@ class TestWeirdTypeD:
     def test_history_site_id(self):
         new_val = CoursePage.expected_site_ids_converter([self.site])
         self.course_page.verify_history_row(field='canvas_site_ids',
-                                            old_value=[],
+                                            old_value='—',
                                             new_value=new_val,
                                             requestor=self.section.instructors[0],
                                             status='succeeded',

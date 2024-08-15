@@ -53,7 +53,6 @@ class TestCollaborators0:
         self.jobs_page.disable_all_jobs()
 
         self.jobs_page.click_blackouts_link()
-        self.blackouts_page.delete_all_blackouts()
         self.blackouts_page.create_all_blackouts()
 
         self.kaltura_page.log_in_via_calnet(self.calnet_page)
@@ -207,7 +206,7 @@ class TestCollaborators1:
 
     def test_update_jobs(self):
         self.ouija_page.click_jobs_link()
-        self.jobs_page.run_semester_start_job_sequence()
+        self.jobs_page.run_schedule_update_job_sequence()
         assert util.get_kaltura_id(self.recording_schedule_0)
         assert util.get_kaltura_id(self.recording_schedule_1)
 
@@ -239,8 +238,8 @@ class TestCollaborators1:
         self.kaltura_page.verify_collaborators(self.section, [self.manual_collaborator])
 
     def test_email_new_scheduled(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_SEM_START, self.section,
-                                         self.instructor) == 1
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_NEW_COURSE_SCHED, self.section,
+                                         self.instructor) == 2
 
     def test_email_new_collaborator(self):
         assert util.get_sent_email_count(EmailTemplateType.INSTR_CHANGES_CONFIRMED, self.section,

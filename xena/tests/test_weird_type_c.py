@@ -75,7 +75,6 @@ class TestWeirdTypeC:
         self.jobs_page.disable_all_jobs()
 
         self.jobs_page.click_blackouts_link()
-        self.blackouts_page.delete_all_blackouts()
         self.blackouts_page.create_all_blackouts()
 
         self.kaltura_page.log_in_via_calnet(self.calnet_page)
@@ -85,11 +84,11 @@ class TestWeirdTypeC:
 
         util.reset_sent_email_test_data(self.section)
 
-    # RUN SEMESTER START JOB
+    # SCHEDULE RECORDINGS
 
-    def test_semester_start(self):
+    def test_schedule_recordings(self):
         self.jobs_page.load_page()
-        self.jobs_page.run_semester_start_job_sequence()
+        self.jobs_page.run_schedule_update_job_sequence()
         assert util.get_kaltura_id(self.recording_sched_0)
         self.recording_sched_0.recording_type = RecordingType.VIDEO_SANS_OPERATOR
         self.recording_sched_0.recording_placement = RecordingPlacement.PUBLISH_TO_MY_MEDIA
@@ -188,6 +187,22 @@ class TestWeirdTypeC:
         self.recording_sched_1.recording_type = RecordingType.VIDEO_SANS_OPERATOR
         self.recording_sched_1.recording_placement = RecordingPlacement.PUBLISH_TO_MY_MEDIA
 
+    def test_meeting_0_room_page_ineligible_becomes_eligible(self):
+        self.rooms_page.load_page()
+        self.rooms_page.find_room(self.meeting_0.room)
+        self.rooms_page.click_room_link(self.meeting_0.room)
+        self.room_page.wait_for_series_row(self.recording_sched_0)
+        self.room_page.verify_series_schedule(self.recording_sched_0)
+        self.room_page.verify_series_recordings(self.recording_sched_0)
+
+    def test_meeting_1_room_page_ineligible_becomes_eligible(self):
+        self.rooms_page.load_page()
+        self.rooms_page.find_room(self.meeting_1.room)
+        self.rooms_page.click_room_link(self.meeting_1.room)
+        self.room_page.wait_for_series_row(self.recording_sched_1)
+        self.room_page.verify_series_schedule(self.recording_sched_1)
+        self.room_page.verify_series_recordings(self.recording_sched_1)
+
     def test_meeting_0_course_page_ineligible_becomes_eligible(self):
         self.course_page.load_page(self.section)
         self.course_page.verify_section_sis_data(self.section)
@@ -256,6 +271,13 @@ class TestWeirdTypeC:
         self.kaltura_page.verify_schedule(self.section, self.meeting_1)
         self.kaltura_page.verify_publish_status(self.recording_sched_1)
 
+    def test_ouija_filter_instr_removed(self):
+        self.kaltura_page.close_window_and_switch()
+        self.ouija_page.load_page()
+        self.ouija_page.search_for_course_code(self.section)
+        self.ouija_page.filter_for_no_instructors()
+        assert self.ouija_page.is_course_in_results(self.section)
+
     def test_no_instructor_removed_email(self):
         assert util.get_sent_email_count(EmailTemplateType.INSTR_REMOVED, self.section,
                                          self.instructor_original) == 0
@@ -267,7 +289,6 @@ class TestWeirdTypeC:
         self.section.instructors = [self.instructor_change]
 
     def test_run_kaltura_job_instr_added(self):
-        self.kaltura_page.close_window_and_switch()
         self.jobs_page.load_page()
         self.jobs_page.run_schedule_update_job_sequence()
 
@@ -311,6 +332,22 @@ class TestWeirdTypeC:
         self.kaltura_page.close_window_and_switch()
         self.jobs_page.load_page()
         self.jobs_page.run_schedule_update_job_sequence()
+
+    def test_meeting_0_room_page_date_change(self):
+        self.rooms_page.load_page()
+        self.rooms_page.find_room(self.meeting_0.room)
+        self.rooms_page.click_room_link(self.meeting_0.room)
+        self.room_page.wait_for_series_row(self.recording_sched_0)
+        self.room_page.verify_series_schedule(self.recording_sched_0)
+        self.room_page.verify_series_recordings(self.recording_sched_0)
+
+    def test_meeting_1_room_page_date_change(self):
+        self.rooms_page.load_page()
+        self.rooms_page.find_room(self.meeting_1.room)
+        self.rooms_page.click_room_link(self.meeting_1.room)
+        self.room_page.wait_for_series_row(self.recording_sched_1)
+        self.room_page.verify_series_schedule(self.recording_sched_1)
+        self.room_page.verify_series_recordings(self.recording_sched_1)
 
     def test_meeting_0_course_page_date_change(self):
         self.course_page.load_page(self.section)

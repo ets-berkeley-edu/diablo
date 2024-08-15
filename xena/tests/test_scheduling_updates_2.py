@@ -63,7 +63,6 @@ class TestScheduling2:
         self.jobs_page.disable_all_jobs()
 
         self.jobs_page.click_blackouts_link()
-        self.blackouts_page.delete_all_blackouts()
         self.blackouts_page.create_all_blackouts()
 
         self.kaltura_page.log_in_via_calnet(self.calnet_page)
@@ -73,11 +72,11 @@ class TestScheduling2:
 
         util.reset_sent_email_test_data(self.section)
 
-    # RUN SEMESTER START JOB
+    # SCHEDULE RECORDINGS
 
-    def test_semester_start(self):
+    def test_schedule_recordings(self):
         self.jobs_page.load_page()
-        self.jobs_page.run_semester_start_job_sequence()
+        self.jobs_page.run_schedule_update_job_sequence()
         assert util.get_kaltura_id(self.recording_schedule)
         self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
         self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_TO_MY_MEDIA
@@ -125,9 +124,9 @@ class TestScheduling2:
     # VERIFY ANNUNCIATION EMAILS
 
     def test_receive_annunciation_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_SEM_START, self.section,
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_NEW_COURSE_SCHED, self.section,
                                          self.instructor_0) == 1
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_SEM_START, self.section,
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_NEW_COURSE_SCHED, self.section,
                                          self.instructor_1) == 1
 
     # CREATE COURSE SITE
@@ -163,7 +162,6 @@ class TestScheduling2:
     def test_rec_placement_options(self):
         self.course_page.click_edit_recording_placement()
         assert self.course_page.is_present(self.course_page.PLACEMENT_MY_MEDIA_RADIO)
-        assert self.course_page.is_present(self.course_page.PLACEMENT_PENDING_RADIO)
         assert self.course_page.is_present(self.course_page.PLACEMENT_AUTOMATIC_RADIO)
 
     # SELECT OPTIONS, SAVE
@@ -226,9 +224,9 @@ class TestScheduling2:
         self.instructor_page.click_course_page_link(self.section)
         self.course_page.load_page(self.section)
         self.course_page.click_edit_recording_placement()
-        self.course_page.select_recording_placement(RecordingPlacement.PUBLISH_TO_PENDING, sites=[self.site_1])
+        self.course_page.select_recording_placement(RecordingPlacement.PUBLISH_AUTOMATICALLY, sites=[self.site_1])
         self.course_page.save_recording_placement_edits()
-        self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_TO_PENDING
+        self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_AUTOMATICALLY
 
     def test_another_site_visible_site_ids_updated(self):
         assert self.course_page.visible_course_site_ids() == [self.site_0.site_id, self.site_1.site_id]
@@ -375,12 +373,6 @@ class TestScheduling2:
         old_val = CoursePage.expected_site_ids_converter([self.site_0])
         new_val = CoursePage.expected_site_ids_converter([self.site_0, self.site_1])
         self.course_page.verify_history_row('canvas_site_ids', old_val, new_val, self.instructor_1, 'succeeded',
-                                            published=True)
-
-    def test_history_pub_type_private(self):
-        old_val = RecordingPlacement.PUBLISH_TO_PENDING.value['db']
-        new_val = RecordingPlacement.PUBLISH_TO_MY_MEDIA.value['db']
-        self.course_page.verify_history_row('publish_type', old_val, new_val, self.instructor_1, 'succeeded',
                                             published=True)
 
     def test_history_remove_site_1(self):

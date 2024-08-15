@@ -49,7 +49,6 @@ class KalturaPage(Page):
     SERIES_STATUS_PRIVATE_RADIO = (By.ID, 'private_upload1')
     SERIES_STATUS_PUBLISHED_RADIO = (By.ID, 'published_upload1')
     SERIES_PUBLICATION_CHANNELS = (By.ID, 'pblPublish_upload1')
-    # TODO - 'moderated' indicator
     SERIES_CATEGORY_ROW = (By.XPATH, '//div[@class="pblBadge"]/dl//span')
     SERIES_RECUR_BUTTON = (By.ID, 'CreateEvent-recurrenceMain')
     SERIES_DELETE_BUTTON = (By.ID, 'CreateEvent-btnDelete')
@@ -105,8 +104,6 @@ class KalturaPage(Page):
     def is_private(self):
         return self.element(self.SERIES_PUBLICATION_CHANNELS).get_attribute('class') == 'hidden'
 
-    # TODO def is_moderated
-
     def is_published(self):
         return self.element(self.SERIES_PUBLICATION_CHANNELS).get_attribute('class') != 'hidden'
 
@@ -114,7 +111,10 @@ class KalturaPage(Page):
         return self.elements(KalturaPage.SERIES_CATEGORY_ROW)
 
     def is_publish_category_present(self, site):
-        return self.is_present((By.XPATH, f'//div[@class="pblBadge"][contains(., "{site.code}")]'))
+        return self.is_present(
+            (By.XPATH, f'//div[@class="pblBadge"][contains(., "{site.code}")]')) or self.is_present(
+            (By.XPATH, f'//div[@class="pblBadge"][contains(., "{site.site_id}")]'),
+        )
 
     def open_recurrence_modal(self):
         app.logger.info('Clicking recurrence button')
@@ -244,10 +244,10 @@ class KalturaPage(Page):
 
         self.verify_recur_days(schedule.days)
 
-        start = util.get_kaltura_term_date_str(schedule.expected_recording_dates(section.term)[0])
+        start = util.get_kaltura_term_date_str(schedule.kaltura_series_start(section.term))
         self.assert_equivalence(self.visible_start_date(), start)
 
-        end = util.get_kaltura_term_date_str(schedule.expected_recording_dates(section.term)[-1])
+        end = util.get_kaltura_term_date_str(schedule.kaltura_series_end(section.term))
         self.assert_equivalence(self.visible_end_date(), end)
 
         start = schedule.get_berkeley_start_time()
@@ -260,6 +260,7 @@ class KalturaPage(Page):
 
     def verify_publish_status(self, recording_schedule):
         self.wait_for_delete_button()
+        self.scroll_to_bottom()
         self.wait_for_element(self.SERIES_PUBLICATION_CHANNELS, util.get_short_timeout())
         time.sleep(3)
 
@@ -269,7 +270,6 @@ class KalturaPage(Page):
             assert self.is_private()
         else:
             assert self.is_published()
-            # TODO - assert is moderated if RecordingPlacement.PUBLISH_TO_PENDING else not moderated
 
     def verify_site_categories(self, sites):
         expected_count = len(sites) * 2

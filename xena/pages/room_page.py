@@ -120,12 +120,12 @@ class RoomPage(DiabloPages):
     def verify_series_schedule(self, recording_schedule):
         section = recording_schedule.section
         schedule = recording_schedule.meeting.meeting_schedule
-        expected_start = schedule.expected_recording_dates(section.term)[0]
+        expected_start = schedule.kaltura_series_start(section.term)
         visible_start = self.series_row_start_date(recording_schedule)
         if visible_start != expected_start:
             app.logger.info(f"Expected start date '{expected_start}', got '{visible_start}'")
 
-        expected_last_date = schedule.expected_recording_dates(section.term)[-1]
+        expected_last_date = schedule.kaltura_series_end(section.term)
         visible_last_date = self.series_row_end_date(recording_schedule)
         if visible_last_date != expected_last_date:
             app.logger.info(f"Expected last date '{expected_last_date}', got '{visible_last_date}'")
