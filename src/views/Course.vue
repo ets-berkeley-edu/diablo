@@ -491,11 +491,14 @@
               </v-col>
             </v-row>
           </v-container>
-          <v-container v-if="isCurrentTerm && capability && hasValidMeetingTimes && (course.hasOptedOut || !course.scheduled || !course.deletedAt)" class="elevation-2 pa-6">
+          <v-container v-if="isCurrentTerm && capability && hasValidMeetingTimes && !course.deletedAt && (course.hasOptedOut || !course.scheduled)" class="elevation-2 pa-6">
             <v-row>
               <v-col class="font-weight-bold mb-1">
-                <span v-if="course.hasOptedOut" id="notice-opt-out" class="red--text">
+                <span v-if="course.hasOptedOut && !course.scheduled" id="notice-opt-out" class="red--text">
                   {{ $currentUser.isAdmin ? 'The' : 'Your' }} course is not scheduled for Course Capture because one or more instructors have opted out. To schedule recordings, please have all instructors remove their opt-out status.
+                </span>
+                <span v-if="course.hasOptedOut && course.scheduled" id="notice-opt-out-pending" class="red--text">
+                  {{ $currentUser.isAdmin ? 'The' : 'Your' }} course is scheduled for Course Capture, but will be unscheduled shortly because one or more instructors have opted out. To keep recordings scheduled, please have all instructors remove their opt-out status.
                 </span>
                 <span v-if="!course.hasOptedOut" id="notice-eligible-not-scheduled" class="green--text">
                   This course is eligible for scheduling, but has not yet been scheduled. Instructors will be notified when scheduling has taken place.
