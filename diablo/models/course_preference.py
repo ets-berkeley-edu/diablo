@@ -187,11 +187,10 @@ class CoursePreference(db.Model):
         else:
             return []
 
-    def to_api_json(self, include_canvas_sites=False):
+    def to_api_json(self, include_canvas_sites=False, include_collaborator_attributes=True):
         feed = {
             'termId': self.term_id,
             'sectionId': self.section_id,
-            'collaborators': self.get_collaborator_attributes(),
             'collaboratorUids': self.collaborator_uids,
             'publishType': self.publish_type,
             'publishTypeName': NAMES_PER_PUBLISH_TYPE[self.publish_type],
@@ -202,6 +201,8 @@ class CoursePreference(db.Model):
         }
         if include_canvas_sites:
             feed['canvasSites'] = get_course_sites_by_id(self.canvas_site_ids)
+        if include_collaborator_attributes:
+            feed['collaborators'] = self.get_collaborator_attributes()
         return feed
 
 

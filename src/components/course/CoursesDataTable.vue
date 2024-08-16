@@ -53,7 +53,7 @@
               </td>
               <td :id="`section-id-${course.sectionId}`" :class="tdc(course)">{{ course.sectionId }}</td>
               <td v-if="includeRoomColumn" :class="tdc(course)">
-                <div v-if="course.room" :class="{'line-through': course.deletedAt}">
+                <div v-if="course.room && course.room.id" :class="{'line-through': course.deletedAt}">
                   <router-link
                     :id="`course-${course.sectionId}-room-${course.room.id}`"
                     :to="`/room/${course.room.id}`"
@@ -61,7 +61,10 @@
                     {{ course.room.location }}
                   </router-link>
                 </div>
-                <span v-if="!course.room">&mdash;</span>
+                <span v-if="course.room && course.room.location && !course.room.id" :class="{'line-through': course.deletedAt}">
+                  {{ course.room.location }}
+                </span>
+                <span v-if="!course.room && !course.room.location">&mdash;</span>
               </td>
               <td :id="`meeting-days-${course.sectionId}-0`" :class="tdc(course)">
                 <div :class="{'line-through': course.deletedAt}">

@@ -363,13 +363,14 @@ def _get_courses_per_filter(filter_, term_id):
         raise BadRequestError('One or more required params are missing or invalid')
 
     if filter_ == 'All':
-        courses = SisSection.get_courses(term_id)
+        courses = SisSection.get_courses(term_id, include_full_schedules=False, include_ineligible=True)
+    elif filter_ == 'Eligible':
+        courses = SisSection.get_courses(term_id, include_full_schedules=False)
     elif filter_ == 'Opted Out':
-        courses = SisSection.get_courses_opted_out(term_id)
+        courses = SisSection.get_courses_opted_out(term_id, include_full_schedules=False)
     elif filter_ == 'Scheduled':
-        courses = SisSection.get_courses_scheduled(term_id)
+        courses = SisSection.get_courses_scheduled(term_id, include_full_schedules=False)
     elif filter_ == 'No Instructors':
-        courses = SisSection.get_courses_without_instructors(term_id)
-    else:
-        raise BadRequestError(f'Invalid filter: {filter_}')
+        courses = SisSection.get_courses_without_instructors(term_id, include_full_schedules=False)
+
     return courses

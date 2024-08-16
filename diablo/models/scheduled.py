@@ -192,7 +192,7 @@ class Scheduled(db.Model):
         db.session.add(self)
         std_commit()
 
-    def to_api_json(self, rooms_by_id=None):
+    def to_api_json(self, include_full_schedule=True, rooms_by_id=None):
         room_feed = None
         if self.room_id:
             if rooms_by_id:
@@ -200,31 +200,38 @@ class Scheduled(db.Model):
             else:
                 room_feed = Room.get_room(self.room_id).to_api_json()
         formatted_days = format_days(self.meeting_days)
-        collaborator_attributes = get_loch_basic_attributes(self.collaborator_uids) if self.collaborator_uids else []
-        return {
-            'id': self.id,
-            'courseDisplayName': self.course_display_name,
-            'createdAt': to_isoformat(self.created_at),
-            'instructorUids': self.instructor_uids,
-            'collaborators': [basic_attributes_to_api_json(a) for a in collaborator_attributes],
-            'collaboratorUids': self.collaborator_uids,
-            'kalturaScheduleId': self.kaltura_schedule_id,
-            'meetingDays': formatted_days,
-            'meetingDaysNames': get_names_of_days(formatted_days),
-            'meetingEndDate': datetime.strftime(self.meeting_end_date, '%Y-%m-%d'),
-            'meetingEndTime': self.meeting_end_time,
-            'meetingEndTimeFormatted': format_time(self.meeting_end_time),
-            'meetingStartDate': datetime.strftime(self.meeting_start_date, '%Y-%m-%d'),
-            'meetingStartTime': self.meeting_start_time,
-            'meetingStartTimeFormatted': format_time(self.meeting_start_time),
-            'publishType': self.publish_type,
-            'publishTypeName': NAMES_PER_PUBLISH_TYPE[self.publish_type],
-            'recordingType': self.recording_type,
-            'recordingTypeName': NAMES_PER_RECORDING_TYPE[self.recording_type],
-            'room': room_feed,
-            'sectionId': self.section_id,
-            'termId': self.term_id,
-        }
+        if include_full_schedule:
+            collaborator_attributes = get_loch_basic_attributes(self.collaborator_uids) if self.collaborator_uids else []
+            return {
+                'id': self.id,
+                'courseDisplayName': self.course_display_name,
+                'createdAt': to_isoformat(self.created_at),
+                'instructorUids': self.instructor_uids,
+                'collaborators': [basic_attributes_to_api_json(a) for a in collaborator_attributes],
+                'collaboratorUids': self.collaborator_uids,
+                'kalturaScheduleId': self.kaltura_schedule_id,
+                'meetingDays': formatted_days,
+                'meetingDaysNames': get_names_of_days(formatted_days),
+                'meetingEndDate': datetime.strftime(self.meeting_end_date, '%Y-%m-%d'),
+                'meetingEndTime': self.meeting_end_time,
+                'meetingEndTimeFormatted': format_time(self.meeting_end_time),
+                'meetingStartDate': datetime.strftime(self.meeting_start_date, '%Y-%m-%d'),
+                'meetingStartTime': self.meeting_start_time,
+                'meetingStartTimeFormatted': format_time(self.meeting_start_time),
+                'publishType': self.publish_type,
+                'publishTypeName': NAMES_PER_PUBLISH_TYPE[self.publish_type],
+                'recordingType': self.recording_type,
+                'recordingTypeName': NAMES_PER_RECORDING_TYPE[self.recording_type],
+                'room': room_feed,
+                'sectionId': self.section_id,
+                'termId': self.term_id,
+            }
+        else:
+            return {
+                'id': self.id,
+                'publishTypeName': NAMES_PER_PUBLISH_TYPE[self.publish_type],
+                'createdAt': to_isoformat(self.created_at),
+            }
 
 
 def is_meeting_in_session(scheduled_json):
