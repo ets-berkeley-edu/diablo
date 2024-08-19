@@ -34,6 +34,18 @@ from xena.test_utils import util
 
 @pytest.mark.usefixtures('page_objects')
 class TestCourseRoomChanges:
+    """
+    SCENARIO.
+
+    - Section has instructor and single meeting
+    - Recordings scheduled
+    - Instructor adds operator
+    - Course moved to eligible, non-auditorium room
+    - Series updated, operator removed automatically
+    - Course moved to ineligible room, recordings unscheduled
+    - Course moved back to eligible, non-auditorium room, recordings rescheduled
+    - Room removed altogether, recordings unscheduled
+    """
 
     section = util.get_test_section(util.get_test_script_course('test_course_changes_auditorium'))
     instr = section.instructors[0]
@@ -62,7 +74,7 @@ class TestCourseRoomChanges:
 
     # COURSE SCHEDULED, INSTRUCTOR SELECTS VIDEO OPERATOR
 
-    def test_semester_start(self):
+    def test_schedule_recordings(self):
         self.jobs_page.load_page()
         self.jobs_page.run_schedule_update_job_sequence()
         assert util.get_kaltura_id(self.recording_schedule)

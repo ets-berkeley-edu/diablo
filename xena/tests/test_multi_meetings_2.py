@@ -37,6 +37,15 @@ from xena.test_utils import util
 
 @pytest.mark.usefixtures('page_objects')
 class TestWeirdTypeD:
+    """
+    SCENARIO.
+
+    - Section has two sequential meetings, both eligible
+    - bCourses site created for section
+    - Recordings scheduled for both meetings
+    - Recording placement switched to auto-publish, course site added
+    - Series updated
+    """
 
     test_data = util.get_test_script_course('test_weird_type_d')
     section = util.get_test_section(test_data)

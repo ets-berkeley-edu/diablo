@@ -34,6 +34,14 @@ from xena.test_utils import util
 
 @pytest.mark.usefixtures('page_objects')
 class TestCourseScheduleChanges:
+    """
+    SCENARIO.
+
+    - Section has one instructor and one meeting
+    - Recordings scheduled
+    - Meeting days and times change, series updated
+    - SIS schedule vanishes altogether, recordings unscheduled
+    """
 
     section = util.get_test_section(util.get_test_script_course('test_course_changes_auditorium'))
     instr = section.instructors[0]
@@ -127,7 +135,7 @@ class TestCourseScheduleChanges:
         self.kaltura_page.close_window_and_switch()
         assert util.get_sent_email_count(EmailTemplateType.INSTR_SCHEDULE_CHANGE, self.section, self.instr) == 1
 
-    def test_history_new_eligible_room(self):
+    def test_history_new_eligible_times(self):
         old_val = None
         new_val = None
         self.course_page.load_page(self.section)

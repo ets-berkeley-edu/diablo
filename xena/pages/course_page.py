@@ -36,8 +36,12 @@ from xena.test_utils import util
 
 class CoursePage(DiabloPages):
 
+    SCHEDULING_TO_COME_MSG = By.ID, 'notice-eligible-not-scheduled'
+    SCHEDULED_MSG = By.ID, 'notice-scheduled'
     UPDATES_QUEUED_MSG = By.XPATH, '//div[contains(text(), "Recent updates to recording settings are currently queued")]'
-    NOT_ELIGIBLE_MSG = (By.ID, 'course-not-eligible')
+    OPT_OUT_QUEUED_MSG = By.ID, 'notice-opt-out-pending'
+    OPT_OUT_DONE_MSG = By.ID, 'notice-opt-out'
+    NOT_ELIGIBLE_MSG = By.ID, 'course-not-eligible'
 
     @staticmethod
     def instructor_link_locator(instructor):
@@ -62,9 +66,6 @@ class CoursePage(DiabloPages):
         app.logger.info(f'Loading course page for term {section.term.id} section ID {section.ccn}')
         self.hit_url(section.term.id, section.ccn)
         self.wait_for_diablo_title(f'{section.code}, {section.number}')
-
-    def is_queued_changes_msg_present(self):
-        return self.is_present(self.UPDATES_QUEUED_MSG)
 
     # SIS DATA - section
 

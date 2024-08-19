@@ -28,6 +28,7 @@ from datetime import timedelta
 import pytest
 from xena.models.email_template_type import EmailTemplateType
 from xena.models.recording_schedule import RecordingSchedule
+from xena.pages.course_page import CoursePage
 from xena.test_utils import util
 
 sections = util.get_test_opt_out_sections()
@@ -50,11 +51,14 @@ recording_schedule_1 = RecordingSchedule(section_1, section_1.meetings[0])
 
 @pytest.mark.usefixtures('page_objects')
 class TestOptOut0:
+    """
+    SCENARIO.
 
-    # Instructor opted out of previous term.
-    # Recordings scheduled for current term.
-    # Instructor opts out of all terms.
-    # Recordings unscheduled.
+    - Instructor opted out of previous term
+    - Recordings scheduled for current term
+    - Instructor opts out of all terms
+    - Recordings unscheduled
+    """
 
     def test_set_up(self):
         self.login_page.load_page()
@@ -103,8 +107,16 @@ class TestOptOut0:
         self.login_page.dev_auth(instructor_0.uid)
         self.instructor_page.enable_opt_out_all_terms()
 
+    def test_opt_out_pending(self):
+        self.instructor_page.click_course_page_link(section_0)
+        self.course_page.when_present(self.course_page.OPT_OUT_QUEUED_MSG, util.get_short_timeout())
+        assert not self.course_page.is_present(CoursePage.SCHEDULING_TO_COME_MSG)
+        assert not self.course_page.is_present(CoursePage.SCHEDULED_MSG)
+        assert not self.course_page.is_present(CoursePage.UPDATES_QUEUED_MSG)
+        assert not self.course_page.is_present(CoursePage.OPT_OUT_DONE_MSG)
+
     def test_run_update(self):
-        self.instructor_page.log_out()
+        self.course_page.log_out()
         self.login_page.dev_auth()
         self.ouija_page.click_jobs_link()
         self.jobs_page.run_settings_update_job_sequence()
@@ -127,6 +139,14 @@ class TestOptOut0:
         self.ouija_page.search_for_course_code(section_1)
         assert self.ouija_page.is_course_in_results(section_1)
 
+    def test_opt_out_completed(self):
+        self.course_page.load_page(section_0)
+        self.course_page.when_present(CoursePage.OPT_OUT_DONE_MSG, util.get_short_timeout())
+        assert not self.course_page.is_present(CoursePage.SCHEDULING_TO_COME_MSG)
+        assert not self.course_page.is_present(CoursePage.SCHEDULED_MSG)
+        assert not self.course_page.is_present(CoursePage.UPDATES_QUEUED_MSG)
+        assert not self.course_page.is_present(CoursePage.OPT_OUT_QUEUED_MSG)
+
     def test_opt_out_emails_sent(self):
         assert util.get_sent_email_count(EmailTemplateType.INSTR_OPTED_OUT, section_0, instructor_0) == 1
         assert util.get_sent_email_count(EmailTemplateType.INSTR_OPTED_OUT, section_0, instructor_1) == 1
@@ -135,11 +155,14 @@ class TestOptOut0:
 
 @pytest.mark.usefixtures('page_objects')
 class TestOptOut1:
+    """
+    SCENARIO.
 
-    # Instructor is opted out of all terms.
-    # Recordings in the current term are not scheduled.
-    # Instructor opts in all terms.
-    # Recordings are scheduled.
+    - Instructor is opted out of all terms
+    - Recordings in the current term are not scheduled
+    - Instructor opts in all terms
+    - Recordings are scheduled
+    """
 
     def test_set_up(self):
         util.reset_sent_email_test_data(section_0)
@@ -185,11 +208,14 @@ class TestOptOut1:
 
 @pytest.mark.usefixtures('page_objects')
 class TestOptOut2:
+    """
+    SCENARIO.
 
-    # Instructor has no opt-outs
-    # Recordings are scheduled
-    # Instructor opts out of one section
-    # That section's recordings unscheduled
+    - Instructor has no opt-outs
+    - Recordings are scheduled
+    - Instructor opts out of one section
+    - That section's recordings unscheduled
+    """
 
     def test_set_up(self):
         util.reset_sent_email_test_data(section_0)
@@ -239,11 +265,14 @@ class TestOptOut2:
 
 @pytest.mark.usefixtures('page_objects')
 class TestOptOut3:
+    """
+    SCENARIO.
 
-    # Instructor has opted out of a previous term
-    # Recordings scheduled in the current term
-    # Instructor opts out of current term also
-    # All instructor sections unscheduled
+    - Instructor has opted out of a previous term
+    - Recordings scheduled in the current term
+    - Instructor opts out of current term also
+    - All instructor sections unscheduled
+    """
 
     def test_set_up(self):
         util.reset_sent_email_test_data(section_0)
@@ -296,11 +325,14 @@ class TestOptOut3:
 
 @pytest.mark.usefixtures('page_objects')
 class TestOptOut4:
+    """
+    SCENARIO.
 
-    # Instructor is opted out of all terms
-    # Recordings not scheduled
-    # Instructor opts in to one section
-    # Recordings scheduled for that section only
+    - Instructor is opted out of all terms
+    - Recordings not scheduled
+    - Instructor opts in to one section
+    - Recordings scheduled for that section only
+    """
 
     def test_set_up(self):
         util.reset_sent_email_test_data(section_0)
@@ -363,11 +395,14 @@ class TestOptOut4:
 
 @pytest.mark.usefixtures('page_objects')
 class TestOptOut5:
+    """
+    SCENARIO.
 
-    # Instructor is not opted out
-    # Recordings scheduled
-    # Instructor opts out of all terms
-    # Recordings unscheduled for all sections
+    - Instructor is not opted out
+    - Recordings scheduled
+    - Instructor opts out of all terms
+    - Recordings unscheduled for all sections
+    """
 
     def test_set_up(self):
         util.reset_sent_email_test_data(section_0)
@@ -417,11 +452,14 @@ class TestOptOut5:
 
 @pytest.mark.usefixtures('page_objects')
 class TestOptOut6:
+    """
+    SCENARIO.
 
-    # A section has no instructor
-    # Recordings are scheduled
-    # An instructor who has opted out of all terms is added to the section
-    # Recordings are unscheduled
+    - A section has no instructor
+    - Recordings are scheduled
+    - An instructor who has opted out of all terms is added to the section
+    - Recordings are unscheduled
+    """
 
     def test_set_up(self):
         util.reset_sent_email_test_data(section_1)
@@ -466,11 +504,14 @@ class TestOptOut6:
 
 @pytest.mark.usefixtures('page_objects')
 class TestOptOut7:
+    """
+    SCENARIO.
 
-    # A section has an instructor opted out of all terms
-    # Recordings are not scheduled
-    # The instructor is removed
-    # Recordings are scheduled
+    - A section has an instructor opted out of all terms
+    - Recordings are not scheduled
+    - The instructor is removed
+    - Recordings are scheduled
+    """
 
     def test_set_up(self):
         util.reset_sent_email_test_data(section_1)

@@ -37,6 +37,16 @@ from xena.test_utils import util
 
 @pytest.mark.usefixtures('page_objects')
 class TestWeirdTypeC:
+    """
+    SCENARIO.
+
+    - Section has two sequential meetings, one eligible and one ineligible
+    - Recordings scheduled for eligible meeting
+    - Ineligible meeting becomes eligible, recordings scheduled for it as well
+    - Instructor is removed and then new one added
+    - Start and end dates change for both meetings
+    - Room is removed from first eligible meeting
+    """
 
     # Initial course data
     test_data = util.get_test_script_course('test_weird_type_c')
@@ -146,17 +156,8 @@ class TestWeirdTypeC:
 
     # VERIFY STATIC COURSE SIS DATA
 
-    def test_home_page(self):
-        self.kaltura_page.close_window_and_switch()
-        self.ouija_page.log_out()
-        self.login_page.dev_auth(self.instructor_original.uid)
-        self.ouija_page.wait_for_title_containing(f'Your {self.section.term.name} Course')
-
-    def test_sign_up_link(self):
-        self.ouija_page.click_course_page_link(self.section)
-        self.course_page.wait_for_diablo_title(f'{self.section.code}, {self.section.number}')
-
     def test_course_page_link(self):
+        self.kaltura_page.close_window_and_switch()
         self.ouija_page.log_out()
         self.login_page.dev_auth(self.instructor_original.uid)
         self.ouija_page.wait_for_title_containing(f'Your {self.section.term.name} Course')

@@ -700,3 +700,17 @@ def switch_principal_listing(old_primary, new_primary):
     app.logger.info(sql_3)
     db.session.execute(text(sql_3))
     std_commit(allow_test_environment=True)
+
+
+def delete_course_note(section):
+    sql = f"DELETE FROM notes WHERE term_id = '{section.term.id}' AND section_id = '{section.ccn}'"
+    app.logger.info(sql)
+    db.session.execute(text(sql))
+    std_commit(allow_test_environment=True)
+
+
+def delete_instructor_note(user):
+    sql = f"DELETE FROM notes WHERE uid = '{user.uid}'"
+    app.logger.info(sql)
+    db.session.execute(text(sql))
+    std_commit(allow_test_environment=True)

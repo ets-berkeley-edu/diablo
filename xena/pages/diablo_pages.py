@@ -162,3 +162,39 @@ class DiabloPages(Page):
 
     def wait_for_404(self):
         Wait(self.driver, util.get_medium_timeout()).until(ec.url_contains('404'))
+
+    # NOTES
+
+    EDIT_NOTE_BUTTON = By.ID, 'btn-edit-note'
+    SAVE_NOTE_BUTTON = By.ID, 'btn-save-note'
+    CXL_NOTE_BUTTON = By.ID, 'btn-cancel-note'
+    DELETE_NOTE_BUTTON = By.ID, 'btn-delete-note'
+    NOTE_BODY = By.ID, 'note-body'
+    NOTE_TEXT_AREA = By.ID, 'note-body-edit'
+
+    def click_edit_note(self):
+        self.wait_for_element_and_click(self.EDIT_NOTE_BUTTON)
+
+    def click_save_note(self):
+        self.wait_for_element_and_click(self.SAVE_NOTE_BUTTON)
+
+    def click_cancel_note(self):
+        self.wait_for_element_and_click(self.CXL_NOTE_BUTTON)
+
+    def click_delete_note(self):
+        self.wait_for_element_and_click(self.DELETE_NOTE_BUTTON)
+
+    def enter_note_body(self, string):
+        self.remove_and_enter_chars(self.NOTE_TEXT_AREA, string)
+
+    def edit_note(self, string):
+        self.click_edit_note()
+        self.enter_note_body(string)
+        self.click_save_note()
+
+    def note_text(self):
+        time.sleep(util.get_click_sleep())
+        return self.element(self.NOTE_BODY).text.strip()
+
+    def delete_note(self):
+        self.click_delete_note()

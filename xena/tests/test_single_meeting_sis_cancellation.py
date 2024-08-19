@@ -35,6 +35,16 @@ from xena.test_utils import util
 
 @pytest.mark.usefixtures('page_objects')
 class TestCourseCancellation:
+    """
+    SCENARIO.
+
+    - Eligible section canceled prior to scheduling
+    - Recordings not scheduled
+    - Section restored
+    - Recordings scheduled
+    - Section canceled again
+    - Recordings unscheduled
+    """
 
     # INITIALIZE TESTS
 
@@ -85,7 +95,7 @@ class TestCourseCancellation:
         self.courses_page.wait_for_title_contains('Eligible for Capture')
         assert not self.courses_page.is_present(OuijaBoardPage.course_row_link_locator(self.section))
 
-    # SEMESTER START JOB SKIPS CANCELLED COURSE
+    # RECORDINGS NOT SCHEDULED FOR CANCELLED COURSE
 
     def test_cancel_pre_sched_jobs(self):
         self.courses_page.log_out()
