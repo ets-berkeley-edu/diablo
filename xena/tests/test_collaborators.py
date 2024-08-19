@@ -35,6 +35,15 @@ from xena.test_utils import util
 
 @pytest.mark.usefixtures('page_objects')
 class TestCollaborators0:
+    """
+    SCENARIO.
+
+    - Section has an instructor and a SIS proxy collaborator
+    - Recordings are scheduled
+    - Instructor adds a manual collaborator, series updated
+    - Meeting room is removed, recordings unscheduled
+    - Meeting room is restored, recordings rescheduled with manual collaborator included
+    """
 
     test_data = util.get_test_script_course('test_collaborators_0')
     section = util.get_test_section(test_data)
@@ -178,6 +187,15 @@ class TestCollaborators0:
 
 @pytest.mark.usefixtures('page_objects')
 class TestCollaborators1:
+    """
+    SCENARIO.
+
+    - Section has an instructor and two eligible meetings
+    - Recordings are scheduled
+    - Instructor adds a manual collaborator, series updated
+    - SIS adds a proxy, who automatically becomes a collaborator, series updated
+    - Admin removes the manual collaborator, series updated
+    """
 
     test_data = util.get_test_script_course('test_collaborators_1')
     admin = User({'uid': util.get_admin_uid()})
@@ -325,6 +343,15 @@ class TestCollaborators1:
 
 @pytest.mark.usefixtures('page_objects')
 class TestCollaborators2:
+    """
+    SCENARIO.
+
+    - Section has an instructor and two SIS proxy collaborators
+    - Recordings are scheduled
+    - Instructor removes one proxy collaborator, series updated
+    - SIS removes the other proxy, series updated to remove other proxy collaborator
+    - Manually removed proxy collaborator is not re-added automatically when SIS updates run
+    """
 
     test_data = util.get_test_script_course('test_collaborators_2')
     section = util.get_test_section(test_data)

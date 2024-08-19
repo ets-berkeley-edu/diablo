@@ -35,6 +35,17 @@ from xena.test_utils import util
 
 @pytest.mark.usefixtures('page_objects')
 class TestScheduling2:
+    """
+    SCENARIO.
+
+    - Section has two instructors and one meeting
+    - Recordings scheduled via scheduling update job
+    - Course site created, instructor selects auto-publish and selects course site
+    - Second course site created, other instructor adds the new site as well
+    - Instructor two removes the second course site
+    - Instructor two reverts to no auto-publish
+    """
+
     test_data = util.get_test_script_course('test_scheduling_2')
     section = util.get_test_section(test_data)
     instructor_0 = section.instructors[0]
@@ -179,7 +190,8 @@ class TestScheduling2:
 
     def test_changes_queued(self):
         self.course_page.load_page(self.section)
-        assert self.course_page.is_queued_changes_msg_present()
+        assert self.course_page.is_present(CoursePage.UPDATES_QUEUED_MSG)
+        assert self.course_page.is_present(CoursePage.SCHEDULED_MSG)
 
     # UPDATE SERIES IN KALTURA
 
@@ -237,7 +249,8 @@ class TestScheduling2:
 
     def test_changes_queued_again(self):
         self.course_page.load_page(self.section)
-        assert self.course_page.is_queued_changes_msg_present()
+        assert self.course_page.is_present(CoursePage.UPDATES_QUEUED_MSG)
+        assert self.course_page.is_present(CoursePage.SCHEDULED_MSG)
 
     def test_another_site_run_kaltura_job(self):
         self.course_page.log_out()
@@ -282,7 +295,8 @@ class TestScheduling2:
 
     def test_changes_queued_removed_site(self):
         self.course_page.load_page(self.section)
-        assert self.course_page.is_queued_changes_msg_present()
+        assert self.course_page.is_present(CoursePage.UPDATES_QUEUED_MSG)
+        assert self.course_page.is_present(CoursePage.SCHEDULED_MSG)
 
     def test_run_jobs(self):
         self.course_page.log_out()
@@ -316,7 +330,8 @@ class TestScheduling2:
 
     def test_changes_queued_publish_type(self):
         self.course_page.load_page(self.section)
-        assert self.course_page.is_queued_changes_msg_present()
+        assert self.course_page.is_present(CoursePage.UPDATES_QUEUED_MSG)
+        assert self.course_page.is_present(CoursePage.SCHEDULED_MSG)
 
     # UPDATE SERIES IN KALTURA
 

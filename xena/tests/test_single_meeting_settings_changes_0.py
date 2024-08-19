@@ -36,6 +36,17 @@ from xena.test_utils import util
 
 @pytest.mark.usefixtures('page_objects')
 class TestScheduling0:
+    """
+    SCENARIO.
+
+    - Section has one instructor, one meeting, and one course site
+    - Recordings scheduled via semester start job
+    - Instructor selects camera operator and auto-publish, adding course site
+    - Series updated
+    - Admin reverts to no camera operator and no auto-publish
+    - Series updated
+    """
+
     test_data = util.get_test_script_course('test_scheduling_0')
     section = util.get_test_section(test_data)
     admin = User({'uid': util.get_admin_uid()})
@@ -108,6 +119,14 @@ class TestScheduling0:
 
     def test_no_recording_placement_edits(self):
         assert not self.course_page.is_present(CoursePage.PLACEMENT_EDIT_BUTTON)
+
+    def test_scheduling_upcoming_msg(self):
+        assert self.course_page.is_present(CoursePage.SCHEDULING_TO_COME_MSG)
+        assert not self.course_page.is_present(CoursePage.SCHEDULED_MSG)
+        assert not self.course_page.is_present(CoursePage.UPDATES_QUEUED_MSG)
+        assert not self.course_page.is_present(CoursePage.OPT_OUT_QUEUED_MSG)
+        assert not self.course_page.is_present(CoursePage.OPT_OUT_DONE_MSG)
+        assert not self.course_page.is_present(CoursePage.NOT_ELIGIBLE_MSG)
 
     # VERIFY COURSE HISTORY
 
@@ -217,6 +236,14 @@ class TestScheduling0:
         listing_codes = [li.code for li in self.section.listings]
         assert self.course_page.visible_cross_listing_codes() == listing_codes
 
+    def test_course_scheduled_msg(self):
+        assert self.course_page.is_present(CoursePage.SCHEDULED_MSG)
+        assert not self.course_page.is_present(CoursePage.SCHEDULING_TO_COME_MSG)
+        assert not self.course_page.is_present(CoursePage.UPDATES_QUEUED_MSG)
+        assert not self.course_page.is_present(CoursePage.OPT_OUT_QUEUED_MSG)
+        assert not self.course_page.is_present(CoursePage.OPT_OUT_DONE_MSG)
+        assert not self.course_page.is_present(CoursePage.NOT_ELIGIBLE_MSG)
+
     # VERIFY DEFAULT SETTINGS AND EXTERNAL LINKS
 
     def test_default_instructors(self):
@@ -278,7 +305,8 @@ class TestScheduling0:
         assert not self.course_page.update_history_table_rows()
 
     def test_changes_queued(self):
-        assert self.course_page.is_queued_changes_msg_present()
+        assert self.course_page.is_present(CoursePage.UPDATES_QUEUED_MSG)
+        assert self.course_page.is_present(CoursePage.SCHEDULED_MSG)
 
     # VERIFY COURSE HISTORY
 
@@ -355,7 +383,7 @@ class TestScheduling0:
     def test_update_admin_email_operator_requested(self):
         assert util.get_sent_email_count(EmailTemplateType.ADMIN_OPERATOR_REQUESTED, self.section) == 1
 
-    # REVERT TO MY MEDIA PLACEMENT TYPE
+    # REVERT TO MY MEDIA PLACEMENT TYPE AND NO CAMERA OPERATOR
 
     def test_course_page_revert_placement(self):
         self.course_page.load_page(self.section)
@@ -363,6 +391,12 @@ class TestScheduling0:
         self.course_page.select_recording_placement(RecordingPlacement.PUBLISH_TO_MY_MEDIA)
         self.course_page.save_recording_placement_edits()
         self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_TO_MY_MEDIA
+
+    def test_course_page_revert_operator(self):
+        self.course_page.click_rec_type_edit_button()
+        self.course_page.select_rec_type(RecordingType.VIDEO_SANS_OPERATOR)
+        self.course_page.save_recording_type_edits()
+        self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
 
     def test_update_jobs_revert_placement(self):
         self.course_page.click_jobs_link()
@@ -431,10 +465,10 @@ class TestScheduling0:
                                             status='succeeded',
                                             published=True)
 
-    def test_course_history_canvas_site_reverted(self):
-        self.course_page.verify_history_row(field='canvas_site_ids',
-                                            old_value=CoursePage.expected_site_ids_converter([self.site]),
-                                            new_value='—',
+    def test_course_history_rec_type_reverted(self):
+        self.course_page.verify_history_row(field='recording_type',
+                                            old_value=RecordingType.VIDEO_WITH_OPERATOR.value['db'],
+                                            new_value=RecordingType.VIDEO_SANS_OPERATOR.value['db'],
                                             requestor=self.admin,
                                             status='succeeded',
                                             published=True)

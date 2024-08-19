@@ -54,11 +54,49 @@ class TestUserPerms:
         self.ouija_page.click_jobs_link()
         self.jobs_page.run_schedule_update_job_sequence()
 
+    # NOTES
+
+    def test_admin_cancel_course_note(self):
+        util.delete_course_note(self.section)
+        self.course_page.load_page(self.section)
+        self.course_page.click_edit_note()
+        self.course_page.click_cancel_note()
+        assert self.course_page.note_text() == 'No notes.'
+
+    def test_admin_edit_course_note(self):
+        note = 'El Diablo (también ñuzco) es la personificación del mal tal como se concibe en diversas culturas'
+        self.course_page.edit_note(note)
+        assert self.course_page.note_text() == note
+
+    def test_admin_delete_course_note(self):
+        self.course_page.delete_note()
+        assert self.course_page.note_text() == 'No notes.'
+
+    def test_admin_edit_instructor_note(self):
+        util.delete_instructor_note(self.instructor)
+        note = "Satan (Hebraice הַשָּׂטָן, ha-Shatan, 'adversarius'), est nomen populare Diaboli"
+        self.instructor_page.hit_admin_url(self.instructor)
+        self.instructor_page.edit_note(note)
+        assert self.instructor_page.note_text() == note
+
+    def test_admin_delete_instructor_note(self):
+        self.instructor_page.delete_note()
+        assert self.instructor_page.note_text() == 'No notes.'
+
+    # INSTRUCTOR RESTRICTIONS
+
     def test_instructor_login(self):
         self.jobs_page.log_out()
         self.login_page.load_page()
         self.login_page.dev_auth(self.instructor.uid)
+
+    def test_no_instructor_notes(self):
         self.instructor_page.wait_for_title_containing(f'Your {self.section.term.name} Course')
+        assert not self.instructor_page.is_present(self.instructor_page.NOTE_BODY)
+
+    def test_no_course_notes(self):
+        self.course_page.load_page(self.section)
+        assert not self.course_page.is_present(self.course_page.NOTE_BODY)
 
     def test_no_ouija(self):
         self.ouija_page.hit_url()

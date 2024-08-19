@@ -36,6 +36,14 @@ from xena.test_utils import util
 
 @pytest.mark.usefixtures('page_objects')
 class TestScheduling1:
+    """
+    SCENARIO.
+
+    - Section has one instructor and one meeting
+    - Recordings scheduled via scheduling update job
+    - Course site created, admin selects auto-publish and enters course site ID
+    - Series updated
+    """
 
     test_data = util.get_test_script_course('test_scheduling_1')
     admin = User({'uid': util.get_admin_uid()})
@@ -234,7 +242,8 @@ class TestScheduling1:
         self.course_page.verify_history_row('canvas_site_ids', old_val, new_val, self.admin, 'queued')
 
     def test_changes_queued(self):
-        assert self.course_page.is_queued_changes_msg_present()
+        assert self.course_page.is_present(CoursePage.UPDATES_QUEUED_MSG)
+        assert self.course_page.is_present(CoursePage.SCHEDULED_MSG)
 
     # UPDATE SERIES IN KALTURA
 
@@ -281,7 +290,8 @@ class TestScheduling1:
     def test_course_history_canvas_site_updated(self):
         old_val = '—'
         new_val = CoursePage.expected_site_ids_converter([self.site])
-        self.course_page.verify_history_row('canvas_site_ids', old_val, new_val, self.admin, 'succeeded', published=True)
+        self.course_page.verify_history_row('canvas_site_ids', old_val, new_val, self.admin, 'succeeded',
+                                            published=True)
 
     def test_changes_no_longer_queued(self):
-        assert not self.course_page.is_queued_changes_msg_present()
+        assert not self.course_page.is_present(CoursePage.UPDATES_QUEUED_MSG)

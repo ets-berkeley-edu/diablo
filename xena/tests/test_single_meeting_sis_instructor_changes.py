@@ -36,6 +36,15 @@ from xena.test_utils import util
 
 @pytest.mark.usefixtures('page_objects')
 class TestCourseInstructorChanges:
+    """
+    SCENARIO.
+
+    - Section has one meeting, one instructor, and a course site
+    - Recordings are scheduled
+    - Instructor adds operator and auto-publish, adding site
+    - Instructor is replaced by new Instructor
+    - Series updated - instructor replaced, no other changes
+    """
 
     new_instructor_test_data = util.get_test_script_course('test_course_changes_auditorium')
     section = util.get_test_section(new_instructor_test_data)

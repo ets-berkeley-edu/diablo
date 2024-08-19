@@ -45,7 +45,7 @@ class TestCrossListings:
     x_listed_section = sections[1]
     meeting = section.meetings[0]
     recording_schedule = RecordingSchedule(section, meeting)
-    site_1 = CanvasSite(
+    site = CanvasSite(
         code=f'XENA X-Listing - {section.code}',
         name=f'XENA X-Listing - {section.code}',
         site_id=None,
@@ -76,9 +76,9 @@ class TestCrossListings:
 
     # CREATE A COURSE SITE
 
-    def test_create_course_site_one(self):
-        self.canvas_page.provision_site(self.section, [self.section.ccn], self.site_1)
-        self.canvas_page.add_teacher_to_site(self.site_1, self.section, self.instructor)
+    def test_create_course_site(self):
+        self.canvas_page.provision_site(self.section, [self.section.ccn], self.site)
+        self.canvas_page.add_teacher_to_site(self.site, self.section, self.instructor)
 
     # SCHEDULE RECORDINGS
 
@@ -119,7 +119,7 @@ class TestCrossListings:
     def test_update_publish_type(self):
         self.course_page.load_page(self.section)
         self.course_page.click_edit_recording_placement()
-        self.course_page.enter_recording_placement(RecordingPlacement.PUBLISH_AUTOMATICALLY, sites=[self.site_1])
+        self.course_page.enter_recording_placement(RecordingPlacement.PUBLISH_AUTOMATICALLY, sites=[self.site])
         self.course_page.save_recording_placement_edits()
         self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_AUTOMATICALLY
 
@@ -143,7 +143,7 @@ class TestCrossListings:
         self.kaltura_page.verify_publish_status(self.recording_schedule)
 
     def test_update_kaltura_course_site_count(self):
-        self.kaltura_page.verify_site_categories([self.site_1])
+        self.kaltura_page.verify_site_categories([self.site])
 
     # CHANGE PRIMARY LISTING
 
@@ -162,7 +162,7 @@ class TestCrossListings:
             assert code in self.kaltura_page.visible_series_title()
 
     def test_switch_primary_site_count(self):
-        self.kaltura_page.verify_site_categories([self.site_1])
+        self.kaltura_page.verify_site_categories([self.site])
 
     def test_switch_primary_collaborators(self):
         self.kaltura_page.verify_collaborators(self.section)
@@ -183,7 +183,7 @@ class TestCrossListings:
             assert code in self.kaltura_page.visible_series_title()
 
     def test_revert_primary_site_count(self):
-        self.kaltura_page.verify_site_categories([self.site_1])
+        self.kaltura_page.verify_site_categories([self.site])
 
     def test_revert_primary_collaborators(self):
         self.kaltura_page.verify_collaborators(self.section)
@@ -204,7 +204,7 @@ class TestCrossListings:
 
     def test_delete_secondary_site_count(self):
         self.kaltura_page.load_event_edit_page(self.recording_schedule.series_id)
-        self.kaltura_page.verify_site_categories([self.site_1])
+        self.kaltura_page.verify_site_categories([self.site])
 
     def test_delete_secondary_collaborators(self):
         self.kaltura_page.verify_collaborators(self.section)
@@ -229,7 +229,7 @@ class TestCrossListings:
         assert code in self.kaltura_page.visible_series_title()
 
     def test_restored_secondary_site_count(self):
-        self.kaltura_page.verify_site_categories([self.site_1])
+        self.kaltura_page.verify_site_categories([self.site])
 
     def test_restored_secondary_collaborators(self):
         self.kaltura_page.verify_collaborators(self.section)
@@ -268,7 +268,7 @@ class TestCrossListings:
                                             published=True)
 
     def test_history_canvas_site(self):
-        new_val = CoursePage.expected_site_ids_converter([self.site_1])
+        new_val = CoursePage.expected_site_ids_converter([self.site])
         self.course_page.verify_history_row(field='canvas_site_ids',
                                             old_value='—',
                                             new_value=new_val,

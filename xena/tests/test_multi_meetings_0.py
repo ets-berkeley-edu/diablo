@@ -34,17 +34,18 @@ from xena.models.section import Section
 from xena.pages.course_page import CoursePage
 from xena.test_utils import util
 
-"""
-SCENARIO:
-- Course has two meetings at the same time, one physical and one online
-- Sole instructor visits sign-up page, approves
-- Recordings scheduled
-- Instructor, physical room, and schedule then change
-"""
-
 
 @pytest.mark.usefixtures('page_objects')
 class TestWeirdTypeB:
+    """
+    SCENARIO.
+
+    - Section has two meetings at the same time, one physical and one online
+    - Recordings scheduled for eligible meeting
+    - Instructor is removed and then new one added
+    - Physical meeting room is removed and then new one added
+    - Physical meeting start and end dates change
+    """
 
     # Initial course data
     test_data = util.get_test_script_course('test_weird_type_b')
@@ -205,10 +206,16 @@ class TestWeirdTypeB:
     def test_no_instructor_removed_email(self):
         assert util.get_sent_email_count(EmailTemplateType.INSTR_REMOVED, self.section) == 0
 
+    def test_ouija_no_instructor_filter(self):
+        self.kaltura_page.close_window_and_switch()
+        self.ouija_page.load_page()
+        self.ouija_page.search_for_course_code(self.section)
+        self.ouija_page.filter_for_no_instructors()
+        assert self.ouija_page.is_course_in_results(self.section)
+
     # INSTRUCTOR ADDED
 
     def test_add_instructor(self):
-        self.kaltura_page.close_window_and_switch()
         util.change_course_instructor(self.section, old_instructor=None, new_instructor=self.new_instructor)
         self.section.instructors = [self.new_instructor]
 
