@@ -24,6 +24,7 @@
  */
 
 ALTER TABLE course_preferences DROP COLUMN can_aprx_instructors_edit_recordings;
+ALTER TABLE course_preferences DROP COLUMN has_opted_out;
 ALTER TABLE course_preferences ADD COLUMN collaborator_uids VARCHAR(80)[];
 ALTER TABLE course_preferences ADD COLUMN publish_type publish_types;
 ALTER TABLE course_preferences ADD COLUMN recording_type recording_types;
