@@ -67,7 +67,7 @@
               <v-btn
                 id="btn-save-note"
                 color="success"
-                :disabled="noteUpdating"
+                :disabled="!noteBody || noteUpdating"
                 @click="saveNote"
               >
                 Save
