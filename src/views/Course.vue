@@ -754,10 +754,9 @@ export default {
       this.alertScreenReader('Note edit canceled.')
     },
     deleteNote() {
-      this.isUpdatingNote = true
+      this.noteUpdating = true
       deleteCourseNote(this.course.termId, this.course.sectionId).then(() => {
         this.course.note = this.noteBody = null
-        this.noteEditing = false
         this.noteUpdating = false
         this.alertScreenReader('Note deleted.')
       })
