@@ -46,7 +46,8 @@ def get_search_filter_options():
         'Scheduled': 'Courses with scheduled recordings.',
         'Opted Out': 'Courses in eligible rooms that have opted out.',
         'No Instructors': 'Courses in eligible rooms with no assigned instructors.',
-        'All': 'All courses.',
+        'Eligible': 'All courses in eligible rooms.',
+        'All': 'All courses, including those not in eligible rooms.',
     }
 
 

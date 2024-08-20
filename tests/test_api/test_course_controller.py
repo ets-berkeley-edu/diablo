@@ -386,8 +386,25 @@ class TestGetCourses:
             assert api_json[0]['sectionId'] == section_8_id
             assert api_json[0]['instructors'] == []
 
+    def test_eligible_filter(self, client, fake_auth):
+        """The 'eligible' filter returns all courses in eligible rooms."""
+        fake_auth.login(admin_uid)
+        with test_scheduling_workflow(app):
+            # Put courses in a few different states.
+            mock_scheduled(
+                section_id=section_1_id,
+                term_id=self.term_id,
+            )
+            std_commit(allow_test_environment=True)
+            # We gotta catch 'em all.
+            api_json = self._api_courses(client, term_id=self.term_id, filter_='Eligible')
+            assert len(api_json) == 11
+            for section_id in [section_1_id, section_3_id, section_4_id, section_5_id, section_6_id]:
+                assert _find_course(api_json=api_json, section_id=section_id, term_id=self.term_id)
+            assert not _find_course(api_json=api_json, section_id=section_in_ineligible_room, term_id=self.term_id)
+
     def test_all_filter(self, client, fake_auth):
-        """The 'all' filter returns all courses in eligible rooms."""
+        """The 'all' filter returns even ineligible courses."""
         fake_auth.login(admin_uid)
         with test_scheduling_workflow(app):
             # Put courses in a few different states.
@@ -398,10 +415,10 @@ class TestGetCourses:
             std_commit(allow_test_environment=True)
             # We gotta catch 'em all.
             api_json = self._api_courses(client, term_id=self.term_id, filter_='All')
-            assert len(api_json) == 11
+            assert len(api_json) == 14
             for section_id in [section_1_id, section_3_id, section_4_id, section_5_id, section_6_id]:
                 assert _find_course(api_json=api_json, section_id=section_id, term_id=self.term_id)
-            assert not _find_course(api_json=api_json, section_id=section_in_ineligible_room, term_id=self.term_id)
+            assert _find_course(api_json=api_json, section_id=section_in_ineligible_room, term_id=self.term_id)
 
 
 class TestDownloadCoursesCsv:

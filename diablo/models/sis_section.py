@@ -215,6 +215,8 @@ class SisSection(db.Model):
             exclude_scheduled=False,
             include_administrative_proxies=False,
             include_deleted=False,
+            include_full_schedules=True,
+            include_ineligible=False,
             include_non_principal_sections=False,
             include_null_meeting_locations=False,
             section_ids=None,
@@ -225,8 +227,12 @@ class SisSection(db.Model):
             'term_id': term_id,
         }
         if section_ids is None:
-            # If no section IDs are specified, return any section with at least one eligible room.
-            course_filter = f's.section_id IN ({_sections_with_at_least_one_eligible_room()})'
+            # If no section IDs are specified, return any section with at least one eligible room, unless we've been told to ignore
+            # eligibility altogether.
+            if include_ineligible:
+                course_filter = 'TRUE'
+            else:
+                course_filter = f's.section_id IN ({_sections_with_at_least_one_eligible_room()})'
         else:
             course_filter = 's.section_id = ANY(:section_ids)'
             params['section_ids'] = section_ids
@@ -246,7 +252,7 @@ class SisSection(db.Model):
                 r.id AS room_id,
                 r.location AS room_location
             FROM sis_sections s
-            {'LEFT' if include_null_meeting_locations else ''} JOIN rooms r ON r.location = s.meeting_location
+            {'LEFT' if include_null_meeting_locations or include_ineligible else ''} JOIN rooms r ON r.location = s.meeting_location
             LEFT JOIN instructors i ON i.uid = s.instructor_uid
             {exclude_scheduled_join}
             WHERE
@@ -259,10 +265,15 @@ class SisSection(db.Model):
             ORDER BY s.course_name, s.section_id, s.instructor_uid, r.capability NULLS LAST
         """
         rows = db.session.execute(text(sql), params)
-        return _to_api_json(term_id=term_id, rows=rows, include_administrative_proxies=include_administrative_proxies)
+        return _to_api_json(
+            term_id=term_id,
+            rows=rows,
+            include_administrative_proxies=include_administrative_proxies,
+            include_full_schedules=include_full_schedules,
+        )
 
     @classmethod
-    def get_courses_opted_out(cls, term_id):
+    def get_courses_opted_out(cls, term_id, include_full_schedules=True):
         sql = f"""
             SELECT
                 s.*,
@@ -294,7 +305,7 @@ class SisSection(db.Model):
                 'term_id': term_id,
             },
         )
-        return _to_api_json(term_id=term_id, rows=rows)
+        return _to_api_json(term_id=term_id, rows=rows, include_full_schedules=include_full_schedules)
 
     @classmethod
     def get_courses_per_instructor_uid(cls, term_id, instructor_uid):
@@ -379,17 +390,18 @@ class SisSection(db.Model):
         return _to_api_json(term_id=term_id, rows=rows, include_rooms=False)
 
     @classmethod
-    def get_courses_scheduled(cls, term_id, include_administrative_proxies=False):
+    def get_courses_scheduled(cls, term_id, include_administrative_proxies=False, include_full_schedules=True):
         scheduled_section_ids = list(cls._section_ids_scheduled(term_id))
         return cls.get_courses(
             term_id=term_id,
             section_ids=scheduled_section_ids,
             include_deleted=True,
             include_administrative_proxies=include_administrative_proxies,
+            include_full_schedules=include_full_schedules,
         )
 
     @classmethod
-    def get_courses_without_instructors(cls, term_id):
+    def get_courses_without_instructors(cls, term_id, include_full_schedules=True):
         sql = f"""
             SELECT
                 s.*,
@@ -416,7 +428,7 @@ class SisSection(db.Model):
                 'term_id': term_id,
             },
         )
-        return _to_api_json(term_id=term_id, rows=rows)
+        return _to_api_json(term_id=term_id, rows=rows, include_full_schedules=include_full_schedules)
 
     @classmethod
     def get_random_co_taught_course(cls, term_id):
@@ -486,7 +498,15 @@ class SisSection(db.Model):
         return set([row['section_id'] for row in rows])
 
 
-def _to_api_json(term_id, rows, include_administrative_proxies=False, include_notes=False, include_rooms=True, include_update_history=False):  # noqa C901
+def _to_api_json(  # noqa C901
+    term_id,
+    rows,
+    include_administrative_proxies=False,
+    include_full_schedules=True,
+    include_notes=False,
+    include_rooms=True,
+    include_update_history=False,
+):
     rows = rows.fetchall()
     section_ids = list(set(int(row['section_id']) for row in rows))
     courses_per_id = {}
@@ -518,7 +538,7 @@ def _to_api_json(term_id, rows, include_administrative_proxies=False, include_no
     for s in scheduled_results:
         if s.section_id not in scheduled_by_section_id:
             scheduled_by_section_id[s.section_id] = []
-        scheduled_by_section_id[s.section_id].append(s.to_api_json(rooms_by_id=rooms_by_id))
+        scheduled_by_section_id[s.section_id].append(s.to_api_json(include_full_schedule=include_full_schedules, rooms_by_id=rooms_by_id))
 
     if include_notes:
         note_results = Note.get_notes_for_section_ids(section_ids=section_ids, term_id=term_id)
@@ -545,7 +565,6 @@ def _to_api_json(term_id, rows, include_administrative_proxies=False, include_no
 
             cross_listed_section_ids = [c['sectionId'] for c in cross_listed_courses]
             cross_listed_section_ids.append(section_id)
-            schedule_updates = ScheduleUpdate.get_update_history_for_section_ids(term_id=row['term_id'], section_ids=cross_listed_section_ids)
 
             # Construct course
             scheduled = scheduled_by_section_id.get(section_id)
@@ -553,7 +572,7 @@ def _to_api_json(term_id, rows, include_administrative_proxies=False, include_no
 
             preferences = course_preferences_by_section_id.get(section_id)
             if preferences:
-                preferences = preferences.to_api_json()
+                preferences = preferences.to_api_json(include_collaborator_attributes=include_full_schedules)
             elif scheduled:
                 preferences = scheduled[0]
             else:
@@ -566,7 +585,6 @@ def _to_api_json(term_id, rows, include_administrative_proxies=False, include_no
 
             course = {
                 'allowedUnits': row['allowed_units'],
-                'collaborators': preferences.get('collaborators'),
                 'collaboratorUids': preferences.get('collaboratorUids'),
                 'canvasSiteIds': canvas_site_ids,
                 'courseName': row['course_name'],
@@ -598,8 +616,15 @@ def _to_api_json(term_id, rows, include_administrative_proxies=False, include_no
                 'sectionNum': row['section_num'],
                 'scheduled': scheduled,
                 'termId': row['term_id'],
-                'updateHistory': [u.to_api_json() for u in schedule_updates],
             }
+
+            if include_full_schedules:
+                course['collaborators'] = preferences.get('collaborators')
+
+            if include_update_history:
+                schedule_updates = ScheduleUpdate.get_update_history_for_section_ids(term_id=row['term_id'], section_ids=cross_listed_section_ids)
+                course['updateHistory'] = [u.to_api_json() for u in schedule_updates]
+
             courses_per_id[section_id] = course
 
         # Note: Instructors associated with cross-listings are slurped up separately.
@@ -653,7 +678,12 @@ def _to_api_json(term_id, rows, include_administrative_proxies=False, include_no
                 ineligible_meetings.append(meeting)
                 ineligible_meetings.sort(key=lambda m: f"{m['startDate']} {m['startTime']}")
             if include_rooms:
-                meeting['room'] = room.to_api_json() if room else None
+                if room:
+                    meeting['room'] = room.to_api_json()
+                elif 'meeting_location' in row.keys():
+                    meeting['room'] = {'location': row['meeting_location']}
+                else:
+                    meeting['room'] = None
 
         if include_notes and section_id in notes_by_section_id:
             course['note'] = notes_by_section_id[section_id]
