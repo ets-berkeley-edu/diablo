@@ -474,14 +474,24 @@
                 </v-card>
               </v-col>
             </v-row>
-            <v-row v-if="!$currentUser.isAdmin">
+            <v-row v-if="!$currentUser.isAdmin && $_.get(course, 'publishType', '') === 'kaltura_my_media'">
               <v-col cols="12">
                 Based on the selected Recording Placement, please review the following KB articles:
                 <ul>
-                  <li><a href="https://www.berkeley.edu">How to Publish with Selected Students</a></li>
-                  <li><a href="https://www.berkeley.edu">How to Embed</a></li>
-                  <li><a href="https://www.berkeley.edu">How to Publish with All Students</a></li>
-                  <li><a href="https://www.berkeley.edu">How to Unpublish</a></li>
+                  <li><a href="https://berkeley.service-now.com/kb?id=kb_article_view&sysparm_article=KB0013882">How to Publish from My Media</a></li>
+                  <li><a href="https://berkeley.service-now.com/kb?id=kb_article_view&sysparm_article=KB0013623">How to Embed in bCourses using the Rich Content Editor</a></li>
+                  <li><a href="https://berkeley.service-now.com/kb?id=kb_article_view&sysparm_article=KB0014115">How to Download the Second Stream of the Recording</a></li>
+                  <li><a href="https://rtl.berkeley.edu/services-programs/course-capture/instructors-getting-started/course-capture-faq">Course Capture FAQ</a></li>
+                </ul>
+              </v-col>
+            </v-row>
+            <v-row v-if="!$currentUser.isAdmin && $_.get(course, 'publishType', '').startsWith('kaltura_media_gallery')">
+              <v-col cols="12">
+                Based on the selected Recording Placement, please review the following KB articles:
+                <ul>
+                  <li><a href="https://berkeley.service-now.com/kb?id=kb_article_view&sysparm_article=KB0014032">How to Remove a Recording from the Media Gallery</a></li>
+                  <li><a href="https://berkeley.service-now.com/kb?id=kb_article_view&sysparm_article=KB0014115">How to Download the Second Stream of the Recording</a></li>
+                  <li><a href="https://rtl.berkeley.edu/services-programs/course-capture/instructors-getting-started/course-capture-faq">Course Capture FAQ</a></li>
                 </ul>
               </v-col>
             </v-row>
