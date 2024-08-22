@@ -121,6 +121,8 @@ def get_template_substitutions(
         'course.time.start': start_time,
         'course.title': course and course['courseTitle'],
         'courseList': '\n'.join([f"{course['courseName']}: {course['courseTitle']}" for course in course_list]),
+        'courseList.optedOut': '\n'.join([f"{course['courseName']}: {course['courseTitle']}" for course in course_list if course['scheduled']]),
+        'courseList.scheduled': '\n'.join([f"{course['courseName']}: {course['courseTitle']}" for course in course_list if course['hasOptedOut']]),
         'instructors.all': instructor_name_string,
         'publish.type': publish_type_name,
         'recipient.name': recipient_name,

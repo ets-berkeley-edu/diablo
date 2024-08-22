@@ -142,7 +142,10 @@ class QueuedEmail(db.Model):
     @classmethod
     def notify_instructors_no_longer_eligible(cls, course):
         for instructor in filter(lambda i: i['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES, course['instructors']):
-            cls._queue_instructor_email('room_change_no_longer_eligible', instructor, course)
+            if len(course['meetings']['eligible']) + len(course['meetings']['ineligible']) > 1:
+                cls._queue_instructor_email('multiple_meeting_pattern_change', instructor, course)
+            else:
+                cls._queue_instructor_email('room_change_no_longer_eligible', instructor, course)
 
     @classmethod
     def notify_instructors_opted_out(cls, course):
@@ -152,7 +155,10 @@ class QueuedEmail(db.Model):
     @classmethod
     def notify_instructors_schedule_change(cls, course):
         for instructor in filter(lambda i: i['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES, course['instructors']):
-            cls._queue_instructor_email('schedule_change', instructor, course)
+            if len(course['meetings']['eligible']) + len(course['meetings']['ineligible']) > 1:
+                cls._queue_instructor_email('multiple_meeting_pattern_change', instructor, course)
+            else:
+                cls._queue_instructor_email('schedule_change', instructor, course)
 
     @classmethod
     def notify_instructor_added(cls, instructor, course):

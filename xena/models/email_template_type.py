@@ -56,6 +56,10 @@ class EmailTemplateType(Enum):
         'desc': 'Class no longer scheduled',
         'type': 'no_longer_scheduled',
     }
+    INSTR_MULTIPLE_MEETING_PATTERN_CHANGE = {
+        'desc': 'Multiple meeting pattern change',
+        'type': 'multiple_meeting_pattern_change',
+    }
     INSTR_OPTED_OUT = {
         'desc': 'Opted out',
         'type': 'opted_out',

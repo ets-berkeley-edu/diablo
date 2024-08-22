@@ -131,6 +131,12 @@ def _create_email_templates():
         message='Instructor(s) removed from class <code>course.name</code>',
     )
     EmailTemplate.create(
+        template_type='multiple_meeting_pattern_change',
+        name='Multiple meeting pattern change',
+        subject_line='Marvelous multiple meeting patterns',
+        message='<code>course.name</code> had a complicated change, better go check it out in Diablo.',
+    )
+    EmailTemplate.create(
         template_type='new_class_scheduled',
         name='New class scheduled',
         subject_line='New class scheduled: <code>course.name</code>',
