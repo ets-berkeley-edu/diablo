@@ -37,6 +37,7 @@ from diablo.models.blackout import Blackout
 from diablo.models.course_preference import CoursePreference
 from diablo.models.cross_listing import CrossListing
 from diablo.models.instructor import Instructor
+from diablo.models.opt_out import OptOut
 from diablo.models.queued_email import notify_instructors_recordings_scheduled
 from diablo.models.room import Room
 from diablo.models.schedule_update import ScheduleUpdate
@@ -201,11 +202,15 @@ def register_cross_listings(rows, term_id):  # noqa C901
         if not section_ids:
             cross_listings.pop(section_id)
 
+    # These tables link by section id to the principal cross-listing only.
+    principal_listing_linked_tables = ('queued_emails', 'schedule_updates', 'scheduled')
+    # These tables link by section id to all cross-listings.
+    all_listing_linked_tables = ('course_preferences', 'opt_outs')
+
     # Before refreshing the cross-listing table, update any Diablo tables pointing to deleted sections
     # that were cross-listed with extant sections.
-    section_linked_tables = ('course_preferences', 'opt_outs', 'queued_emails', 'schedule_updates', 'scheduled')
-    for table in section_linked_tables:
-        refresh_deleted_cross_listing_references(term_id, table)
+    for table in principal_listing_linked_tables:
+        update_deleted_principal_listing_references(term_id, table)
 
     # Prepare for refresh by deleting old rows
     db.session.execute(CrossListing.__table__.delete().where(CrossListing.term_id == term_id))
@@ -231,14 +236,20 @@ def register_cross_listings(rows, term_id):  # noqa C901
     SisSection.set_non_principal_listings(section_ids=non_principal_section_ids, term_id=term_id)
 
     # Update any Diablo tables pointing to no-longer-principal section listings.
-    for table in section_linked_tables:
-        refresh_secondary_cross_listing_references(term_id, table)
+    for table in principal_listing_linked_tables:
+        update_no_longer_principal_listing_references(term_id, table)
+
+    # Add in any needed Diablo table rows for entirely new cross-listings.
+    for section_id, section_ids in cross_listings.items():
+        all_section_ids = section_ids + [section_id]
+        for tablename in all_listing_linked_tables:
+            update_new_cross_listings(term_id, all_section_ids, tablename)
 
     std_commit()
     return cross_listings
 
 
-def refresh_deleted_cross_listing_references(term_id, tablename):
+def update_deleted_principal_listing_references(term_id, tablename):
     # Handle references to deleted sections cross-listed with extant sections.
     sql = f"""UPDATE {tablename} t1
         SET section_id = cl_lookups.section_id
@@ -253,7 +264,7 @@ def refresh_deleted_cross_listing_references(term_id, tablename):
     db.session.execute(text(sql), {'term_id': term_id})
 
 
-def refresh_secondary_cross_listing_references(term_id, tablename):
+def update_no_longer_principal_listing_references(term_id, tablename):
     # Handle references to extant sections that are no longer the principal cross-listing.
     sql = f"""UPDATE {tablename} t1
         SET section_id = cl_lookups.section_id
@@ -262,6 +273,31 @@ def refresh_secondary_cross_listing_references(term_id, tablename):
             ON ss.term_id = :term_id AND ss.term_id = cl_lookups.term_id AND ss.section_id = cl_lookups.cl_section_id
         WHERE t1.term_id = ss.term_id AND t1.section_id = ss.section_id"""
     db.session.execute(text(sql), {'term_id': term_id})
+
+
+def update_new_cross_listings(term_id, section_ids, tablename):
+    # Copy preferences and opt-out settings to any newly added cross-listings.
+    sql = f'SELECT * FROM {tablename} WHERE term_id = :term_id AND section_id = ANY(:section_ids)'
+    rows = list(db.session.execute(text(sql), {'term_id': term_id, 'section_ids': section_ids}))
+    if not rows:
+        return
+    new_section_ids = set(section_ids) - set(r['section_id'] for r in rows)
+    for new_section_id in new_section_ids:
+        if tablename == 'course_preferences':
+            db.session.add(CoursePreference(
+                term_id=term_id,
+                section_id=new_section_id,
+                publish_type=rows[0]['publish_type'],
+                recording_type=rows[0]['recording_type'],
+                canvas_site_ids=rows[0]['canvas_site_ids'],
+                collaborator_uids=rows[0]['collaborator_uids'],
+            ))
+        elif tablename == 'opt_outs':
+            db.session.add(OptOut(
+                term_id=term_id,
+                section_id=new_section_id,
+                instructor_uid=rows[0]['instructor_uid'],
+            ))
 
 
 def remove_blackout_events(kaltura_schedule_id=None):
