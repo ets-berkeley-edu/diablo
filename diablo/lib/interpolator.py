@@ -86,6 +86,7 @@ def get_template_substitutions(
     if course:
         meetings = course.get('meetings', {}).get('eligible', [])
         meetings = meetings or course.get('meetings', {}).get('ineligible', [])
+        multiple_meetings = len(meetings) > 1
         meeting = meetings and meetings[0]
 
         days_formatted = meeting and (meeting.get('daysFormatted') or format_days(meeting.get('days')))
@@ -100,12 +101,21 @@ def get_template_substitutions(
 
     else:
         meeting = None
+        multiple_meetings = False
         days = None
         start_time = None
         end_time = None
         instructor_name_string = None
 
+    def _get_course_name(course):
+        name = f"{course['courseName']}: {course['courseTitle']}"
+        if multiple_meetings:
+            name += '*'
+        return name
+
     course_list = course_list or []
+    scheduled_courses = [_get_course_name(course) for course in course_list if course['scheduled']]
+    opted_out_courses = [_get_course_name(course) for course in course_list if course['hasOptedOut']]
 
     return {
         'canvasSiteIds': ', '.join([str(c) for c in canvas_site_ids]) if canvas_site_ids else None,
@@ -121,8 +131,8 @@ def get_template_substitutions(
         'course.time.start': start_time,
         'course.title': course and course['courseTitle'],
         'courseList': '\n'.join([f"{course['courseName']}: {course['courseTitle']}" for course in course_list]),
-        'courseList.optedOut': '\n'.join([f"{course['courseName']}: {course['courseTitle']}" for course in course_list if course['scheduled']]),
-        'courseList.scheduled': '\n'.join([f"{course['courseName']}: {course['courseTitle']}" for course in course_list if course['hasOptedOut']]),
+        'courseList.optedOut': '\n'.join(opted_out_courses) if opted_out_courses else None,
+        'courseList.scheduled': '\n'.join(scheduled_courses) if scheduled_courses else None,
         'instructors.all': instructor_name_string,
         'publish.type': publish_type_name,
         'recipient.name': recipient_name,
