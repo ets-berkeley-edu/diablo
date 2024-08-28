@@ -36,12 +36,15 @@ class SisDataRefreshJob(BaseJob):
 
     def _run(self, args=None):
         term_id = app.config['CURRENT_TERM_ID']
-        refresh = execute(resolve_sql_template('update_rds_sis_sections.template.sql'))
-        if refresh:
+        try:
+            refresh = execute(resolve_sql_template('update_rds_sis_sections.template.sql'))
+            if not refresh:
+                raise BackgroundJobError('Failed to update RDS SIS sections from Nessie.')
             self.after_sis_data_refresh(term_id)
             _queue_schedule_updates(term_id)
-        else:
-            raise BackgroundJobError('Failed to update SIS data from Nessie.')
+        except Exception as e:
+            app.logger.exception(e)
+            raise BackgroundJobError('Failed to refresh SIS data.')
 
     @classmethod
     def description(cls):
