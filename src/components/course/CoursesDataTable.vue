@@ -111,7 +111,7 @@
                 </div>
               </td>
               <td :id="`course-${course.sectionId}-publish-types`" :class="tdc(course)">
-                {{ course.publishTypeName || '&mdash;' }}
+                {{ (course.scheduled && course.publishTypeName) || '&mdash;' }}
               </td>
               <td v-if="includeOptOutColumnForUid" :class="tdc(course)">
                 <ToggleOptOut
