@@ -31,15 +31,26 @@
         />
       </v-row>
       <Spinner v-if="refreshingCourses" />
-      <CoursesDataTable
-        v-if="!refreshingCourses"
-        class="pt-5"
-        :courses="user.courses"
-        :include-room-column="true"
-        :include-opt-out-column-for-uid="user.uid"
-        :message-for-courses="summarize(user.courses)"
-        :refreshing="false"
-      />
+      <div v-if="!refreshingCourses && eligibleCourses.length" id="user-courses-eligible">
+        <CoursesDataTable
+          class="pt-5"
+          :courses="eligibleCourses"
+          :include-room-column="true"
+          :include-opt-out-column-for-uid="user.uid"
+          :message-for-courses="summarize(eligibleCourses)"
+          :refreshing="false"
+        />
+      </div>
+      <div v-if="!refreshingCourses && ineligibleCourses.length" id="user-courses-ineligible">
+        <h2 class="px-4">Courses not in a course capture classroom</h2>
+        <CoursesDataTable
+          class="pt-5"
+          :courses="ineligibleCourses"
+          :include-room-column="true"
+          :message-for-courses="summarize(ineligibleCourses)"
+          :refreshing="false"
+        />
+      </div>
     </v-card>
     <v-card v-if="$currentUser.isAdmin" outlined class="elevation-1 mt-4">
       <v-card-title>
@@ -113,6 +124,8 @@ export default {
   mixins: [Context, Utils],
   components: {CoursesDataTable, PageTitle, Spinner, ToggleOptOut},
   data: () => ({
+    eligibleCourses: [],
+    ineligibleCourses: [],
     isEditingNote: false,
     isUpdatingNote: false,
     noteBody: undefined,
@@ -152,6 +165,9 @@ export default {
           course.courseCodes = this.getCourseCodes(course)
         })
         this.noteBody = user.note
+        const partitioned = this.$_.partition(user.courses, c => c.meetings.eligible.length)
+        this.eligibleCourses = partitioned[0]
+        this.ineligibleCourses = partitioned[1]
         this.$ready(this.user.name)
         this.refreshingCourses = false
       })

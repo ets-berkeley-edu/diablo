@@ -96,8 +96,11 @@
                 <div v-if="!course.deletedAt && course.scheduled">
                   Scheduled
                 </div>
-                <div v-if="!course.deletedAt && !course.scheduled">
+                <div v-if="!course.deletedAt && !course.scheduled && course.meetings.eligible.length">
                   Not Scheduled
+                </div>
+                <div v-if="!course.deletedAt && !course.scheduled && !course.meetings.eligible.length">
+                  Not Eligible
                 </div>
               </td>
               <td :class="tdc(course)">
