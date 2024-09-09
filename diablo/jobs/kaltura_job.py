@@ -404,7 +404,7 @@ def _handle_course_site_categories(kaltura, course, publish_to_course_sites, sch
                 Scheduled.delete(term_id=course['termId'], section_id=course['sectionId'], kaltura_schedule_id=scheduled['kalturaScheduleId'])
             rescheduled = schedule_recordings(course, send_notifications=False, updates=update_options)
             if publish_to_course_sites and updated_canvas_site_ids:
-                schedule_ids_to_update = [scheduled['kalturaScheduleId'] for scheduled in rescheduled]
+                schedule_ids_to_update = [scheduled.kaltura_schedule_id for scheduled in rescheduled]
         except Exception as e:
             _mark_error(
                 schedule_updates,
