@@ -87,6 +87,13 @@ def build_merged_collaborators_list(course, manually_set_collaborator_uids):
         return set(manually_set_collaborator_uids)
 
 
+def get_eligible_courses(term_id):
+    return SisSection.get_courses(
+        include_administrative_proxies=True,
+        term_id=term_id,
+    )
+
+
 def get_eligible_unscheduled_courses(term_id):
     return SisSection.get_courses(
         exclude_scheduled=True,

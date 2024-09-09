@@ -23,8 +23,9 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 from diablo.jobs.base_job import BaseJob
+from diablo.jobs.util import get_eligible_courses
 from diablo.models.queued_email import remind_instructors_scheduled
-from diablo.models.sis_section import AUTHORIZED_INSTRUCTOR_ROLE_CODES, SisSection
+from diablo.models.sis_section import AUTHORIZED_INSTRUCTOR_ROLE_CODES
 from flask import current_app as app
 
 
@@ -32,11 +33,10 @@ class RemindInstructorsJob(BaseJob):
 
     def _run(self):
         term_id = app.config['CURRENT_TERM_ID']
-        scheduled_courses = SisSection.get_courses_scheduled(term_id)
         courses_by_instructor_uid = {}
 
         # Schedule recordings
-        for course in scheduled_courses:
+        for course in get_eligible_courses(term_id):
             for instructor in list(filter(lambda i: i['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES, course['instructors'])):
                 if instructor['uid'] not in courses_by_instructor_uid:
                     courses_by_instructor_uid[instructor['uid']] = {'instructor': instructor, 'courses': []}

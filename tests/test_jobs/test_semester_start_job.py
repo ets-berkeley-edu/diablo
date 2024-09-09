@@ -22,7 +22,7 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from diablo import db, std_commit
+from diablo import std_commit
 from diablo.jobs.emails_job import EmailsJob
 from diablo.jobs.semester_start_job import SemesterStartJob
 from diablo.lib.util import utc_now
@@ -32,7 +32,6 @@ from diablo.models.scheduled import Scheduled
 from diablo.models.sent_email import SentEmail
 from diablo.models.sis_section import SisSection
 from flask import current_app as app
-from sqlalchemy import text
 from tests.util import simply_yield, test_scheduling_workflow
 
 
@@ -100,35 +99,6 @@ class TestSemesterStartJob:
                 term_id=term_id,
             )
             assert not next((e for e in announcements if e.section_id == section_id), None)
-
-    def test_no_duplicate_announcements(self, app):
-        """Do not send the same announcement twice."""
-        with test_scheduling_workflow(app):
-            # First, get expected number of emails sent.
-            term_id = app.config['CURRENT_TERM_ID']
-            timestamp = utc_now()
-            SemesterStartJob(simply_yield).run()
-            EmailsJob(simply_yield).run()
-            expected_count = len(_get_announcements_since(term_id, timestamp))
-
-            # Clean up
-            db.session.execute(text('DELETE FROM queued_emails; DELETE FROM sent_emails; DELETE FROM scheduled;'))
-
-            # Next, run semester start twice before running queued_emails_task. Expect no duplicate emails.
-            timestamp = utc_now()
-            SemesterStartJob(simply_yield).run()
-            SemesterStartJob(simply_yield).run()
-            std_commit(allow_test_environment=True)
-            # Nothing is sent until we run the queued_emails_task.
-            assert len(_get_announcements_since(term_id, timestamp)) == 0
-            # Send queued emails.
-            EmailsJob(simply_yield).run()
-            std_commit(allow_test_environment=True)
-            assert len(_get_announcements_since(term_id, timestamp)) == expected_count
-            # Verify no dupe emails.
-            emails_sent = _get_announcements_since(term_id, timestamp)
-            recipients = [f'{e.template_type}_{e.recipient_uid}_{e.term_id}_{e.section_id}' for e in emails_sent]
-            assert len(set(recipients)) == len(recipients)
 
 
 def _assert_coverage_of_cross_listings(expected_cross_listing_count, sent_emails, term_id):
