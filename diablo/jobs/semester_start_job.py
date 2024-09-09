@@ -23,7 +23,7 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 from diablo.jobs.base_job import BaseJob
-from diablo.jobs.util import get_eligible_unscheduled_courses, remove_blackout_events, schedule_recordings
+from diablo.jobs.util import get_eligible_courses, remove_blackout_events, schedule_recordings
 from diablo.models.email_template import EmailTemplate
 from diablo.models.queued_email import announce_semester_start
 from diablo.models.sis_section import AUTHORIZED_INSTRUCTOR_ROLE_CODES
@@ -34,15 +34,15 @@ class SemesterStartJob(BaseJob):
 
     def _run(self):
         term_id = app.config['CURRENT_TERM_ID']
-        unscheduled_courses = get_eligible_unscheduled_courses(term_id)
-        app.logger.info(f'Preparing to schedule recordings for {len(unscheduled_courses)} courses.')
+        courses = get_eligible_courses(term_id)
+        app.logger.info(f'Preparing to schedule recordings for {len(courses)} eligible courses.')
         courses_by_instructor_uid = {}
 
         # Schedule recordings
-        for course in unscheduled_courses:
-            if course['hasOptedOut']:
-                continue
-            schedule_recordings(course, send_notifications=False)
+        for course in courses:
+            if not course['scheduled'] and not course['hasOptedOut']:
+                scheduled = schedule_recordings(course, send_notifications=False)
+                course['scheduled'] = [s.to_api_json() for s in scheduled]
             for instructor in list(filter(lambda i: i['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES, course['instructors'])):
                 if instructor['uid'] not in courses_by_instructor_uid:
                     courses_by_instructor_uid[instructor['uid']] = {'instructor': instructor, 'courses': []}
