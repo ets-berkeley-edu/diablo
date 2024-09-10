@@ -176,9 +176,10 @@ class JobsPage(DiabloPages):
         else:
             app.logger.info('Job is already enabled')
 
-    def disable_all_jobs(self):
+    @staticmethod
+    def disable_all_jobs():
         for job in AsyncJob:
-            self.disable_job(job)
+            app.logger.info(f'Not disabling {job}')
 
     def search_job_history(self, async_job):
         app.logger.info(f'Searching for {async_job.value}')

@@ -82,8 +82,8 @@ class TestScheduling0:
     # CREATE COURSE SITE
 
     def test_create_course_site(self):
-        self.canvas_page.provision_site(self.section, [self.section.ccn], self.site)
-        self.canvas_page.add_teacher_to_site(self.site, self.section, self.instructor)
+        self.canvas_page.create_site(self.section, self.site)
+        self.canvas_page.add_teacher_to_site(self.site, self.instructor)
 
     # CHECK FILTERS - NOT SCHEDULED
 
@@ -261,7 +261,24 @@ class TestScheduling0:
     def test_no_instructor_kaltura_link(self):
         assert not self.course_page.is_present(self.course_page.kaltura_series_link(self.recording_schedule))
 
-    # TODO - tests for variable links
+    def test_how_to_publish_from_my_media_link(self):
+        title = 'IT - How do I publish media from My Media to a Media Gallery in bCourses?'
+        assert self.course_page.external_link_valid(self.course_page.HOW_TO_PUBLISH_LINK, title)
+
+    def test_how_to_embed_in_bcourses_link(self):
+        title = 'IT - How do I embed Kaltura media in bCourses using the Rich Content Editor?'
+        assert self.course_page.external_link_valid(self.course_page.HOW_TO_EMBED_LINK, title)
+
+    def test_no_how_to_remove_a_recording_link(self):
+        assert not self.course_page.is_present(self.course_page.HOW_TO_EMBED_LINK)
+
+    def test_how_to_download_second_stream_link(self):
+        title = 'IT - How do I download the second stream of a dual-stream video? '
+        assert self.course_page.external_link_valid(self.course_page.HOW_TO_DOWNLOAD_LINK, title)
+
+    def test_course_capture_faq_link(self):
+        title = 'Course Capture FAQ | Research, Teaching, and Learning'
+        assert self.course_page.external_link_valid(self.course_page.HOW_TO_DOWNLOAD_LINK, title)
 
     # VERIFY AVAILABLE OPTIONS
 
@@ -299,6 +316,24 @@ class TestScheduling0:
 
     def test_site_link(self):
         assert self.course_page.external_link_valid(CoursePage.selected_placement_site_loc(self.site), self.site.name)
+
+    def test_no_publish_from_my_media_link(self):
+        assert not self.course_page.is_present(self.course_page.HOW_TO_PUBLISH_LINK)
+
+    def test_no_how_to_embed_in_bcourses_link(self):
+        assert not self.course_page.is_present(self.course_page.HOW_TO_EMBED_LINK)
+
+    def test_how_to_remove_a_recording_link(self):
+        title = 'IT - How do I remove media from a bCourses Media Gallery or from My Media?'
+        assert self.course_page.external_link_valid(self.course_page.HOW_TO_EMBED_LINK, title)
+
+    def test_how_to_download_second_stream_link_again(self):
+        title = 'IT - How do I download the second stream of a dual-stream video? '
+        assert self.course_page.external_link_valid(self.course_page.HOW_TO_DOWNLOAD_LINK, title)
+
+    def test_course_capture_faq_link_again(self):
+        title = 'Course Capture FAQ | Research, Teaching, and Learning'
+        assert self.course_page.external_link_valid(self.course_page.HOW_TO_DOWNLOAD_LINK, title)
 
     def test_no_history_for_instructors(self):
         self.course_page.load_page(self.section)
@@ -397,6 +432,25 @@ class TestScheduling0:
         self.course_page.select_rec_type(RecordingType.VIDEO_SANS_OPERATOR)
         self.course_page.save_recording_type_edits()
         self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
+
+    def test_rever_how_to_publish_from_my_media_link(self):
+        title = 'IT - How do I publish media from My Media to a Media Gallery in bCourses?'
+        assert self.course_page.external_link_valid(self.course_page.HOW_TO_PUBLISH_LINK, title)
+
+    def test_revert_how_to_embed_in_bcourses_link(self):
+        title = 'IT - How do I embed Kaltura media in bCourses using the Rich Content Editor?'
+        assert self.course_page.external_link_valid(self.course_page.HOW_TO_EMBED_LINK, title)
+
+    def test_revert_no_how_to_remove_a_recording_link(self):
+        assert not self.course_page.is_present(self.course_page.HOW_TO_EMBED_LINK)
+
+    def test_revert_how_to_download_second_stream_link(self):
+        title = 'IT - How do I download the second stream of a dual-stream video? '
+        assert self.course_page.external_link_valid(self.course_page.HOW_TO_DOWNLOAD_LINK, title)
+
+    def test_revert_course_capture_faq_link(self):
+        title = 'Course Capture FAQ | Research, Teaching, and Learning'
+        assert self.course_page.external_link_valid(self.course_page.HOW_TO_DOWNLOAD_LINK, title)
 
     def test_update_jobs_revert_placement(self):
         self.course_page.click_jobs_link()

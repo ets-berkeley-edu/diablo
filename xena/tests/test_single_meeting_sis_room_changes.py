@@ -123,6 +123,10 @@ class TestCourseRoomChanges:
     def test_settings_downgrade_email(self):
         assert util.get_sent_email_count(EmailTemplateType.INSTR_CHANGES_CONFIRMED, self.section, self.instr) == 2
 
+    def test_no_multi_meeting_new_room_email(self):
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_MULTIPLE_MEETING_PATTERN_CHANGE, self.section,
+                                         self.instr) == 0
+
     def test_new_eligible_room_series(self):
         self.rooms_page.load_page()
         self.rooms_page.find_room(self.meeting.room)
@@ -164,6 +168,10 @@ class TestCourseRoomChanges:
 
     def test_room_ineligible_email(self):
         assert util.get_sent_email_count(EmailTemplateType.INSTR_ROOM_CHANGE_INELIGIBLE, self.section, self.instr) == 1
+
+    def test_no_multi_meeting_room_ineligible_email(self):
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_MULTIPLE_MEETING_PATTERN_CHANGE, self.section,
+                                         self.instr) == 0
 
     def test_ineligible_room_unschedule_series(self):
         assert not util.get_kaltura_id(self.recording_schedule)

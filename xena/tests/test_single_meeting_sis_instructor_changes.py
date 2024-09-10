@@ -83,8 +83,8 @@ class TestCourseInstructorChanges:
         util.change_course_instructor(self.section, self.new_instructor, self.old_instructor)
 
     def test_create_course_site(self):
-        self.canvas_page.provision_site(self.section, [self.section.ccn], self.site)
-        self.canvas_page.add_teacher_to_site(self.site, self.section, self.old_instructor)
+        self.canvas_page.create_site(self.section, self.site)
+        self.canvas_page.add_teacher_to_site(self.site, self.old_instructor)
 
     # COURSE SCHEDULED WITH INSTRUCTOR 1, WHO MODIFIES RECORDING SETTINGS
 
@@ -122,7 +122,7 @@ class TestCourseInstructorChanges:
         util.change_course_instructor(self.section, self.old_instructor, self.new_instructor)
 
     def test_add_new_instructor_to_site(self):
-        self.canvas_page.add_teacher_to_site(self.site, self.section, self.new_instructor)
+        self.canvas_page.add_teacher_to_site(self.site, self.new_instructor)
 
     # UPDATE KALTURA SERIES
 

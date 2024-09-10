@@ -385,6 +385,14 @@ class CoursePage(DiabloPages):
             app.logger.info(f"Expected '{expected}' to be in '{visible}'")
         assert expected in visible
 
+    # KB LINKS
+
+    HOW_TO_PUBLISH_LINK = By.XPATH, '//a[contains(text(), "How to Publish from My Media")]'
+    HOW_TO_REMOVE_LINK = By.XPATH, '//a[contains(text(), "How to Remove a Recording from the Media Gallery")]'
+    HOW_TO_EMBED_LINK = By.XPATH, '//a[contains(text(), "How to Embed in bCourses using the Rich Content Editor")]'
+    HOW_TO_DOWNLOAD_LINK = By.XPATH, '//a[contains(text(), "How to Download the Second Stream of the Recording")]'
+    COURSE_CAPTURE_FAQ_LINK = By.XPATH, '//a[contains(text(), "Course Capture FAQ")]'
+
     # KALTURA SERIES INFO
 
     @staticmethod

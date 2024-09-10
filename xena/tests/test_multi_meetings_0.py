@@ -61,15 +61,15 @@ class TestWeirdTypeB:
     test_data_changes = util.get_test_script_course('test_weird_type_b_changes')
     uids_to_exclude = list(map(lambda i: i.uid, section.instructors))
     util.get_test_section_instructor_data(test_data_changes, uids_to_exclude=uids_to_exclude)
-    changes = Section(test_data_changes)
-    meeting_changes = changes.meetings[0]
+    changed_section = Section(test_data_changes)
+    changed_meeting = changed_section.meetings[0]
 
-    new_instructor = changes.instructors[0]
-    new_room = meeting_changes.room
+    new_instructor = changed_section.instructors[0]
+    new_room = changed_meeting.room
     # Set changed physical meeting start/end dates relative to original dates
-    schedule_change = meeting_changes.meeting_schedule
-    schedule_change.start_date = meeting_schedule.end_date - timedelta(days=14)
-    schedule_change.end_date = meeting_schedule.end_date - timedelta(days=7)
+    changed_schedule = changed_meeting.meeting_schedule
+    changed_schedule.start_date = meeting_schedule.end_date - timedelta(days=14)
+    changed_schedule.end_date = meeting_schedule.end_date - timedelta(days=7)
 
     def test_setup(self):
         self.login_page.load_page()
@@ -249,7 +249,7 @@ class TestWeirdTypeB:
 
     def test_change_dates(self):
         self.kaltura_page.close_window_and_switch()
-        util.update_course_start_end_dates(self.section, self.meeting_physical, self.schedule_change)
+        util.update_course_start_end_dates(self.section, self.meeting_physical, self.changed_schedule)
 
     def test_run_kaltura_job_new_dates(self):
         self.jobs_page.load_page()
@@ -263,19 +263,23 @@ class TestWeirdTypeB:
 
     def test_series_title_and_desc_new_dates(self):
         self.course_page.click_kaltura_series_link(self.recording_schedule)
-        self.kaltura_page.verify_title_and_desc(self.section, self.meeting_changes)
+        self.kaltura_page.verify_title_and_desc(self.section, self.changed_meeting)
 
     def test_series_collab_new_dates(self):
         self.kaltura_page.verify_collaborators(self.section)
 
     def test_series_schedule_new_dates(self):
-        self.kaltura_page.verify_schedule(self.section, self.meeting_changes)
+        self.kaltura_page.verify_schedule(self.section, self.changed_meeting)
 
     def test_series_publish_status_new_dates(self):
         self.kaltura_page.verify_publish_status(self.recording_schedule)
 
-    def test_schedule_change_email(self):
+    def test_no_schedule_change_email(self):
         assert util.get_sent_email_count(EmailTemplateType.INSTR_SCHEDULE_CHANGE, self.section,
+                                         self.new_instructor) == 0
+
+    def test_multi_meet_schedule_change_email(self):
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_MULTIPLE_MEETING_PATTERN_CHANGE, self.section,
                                          self.new_instructor) == 1
 
     # ROOM REMOVED
@@ -296,9 +300,13 @@ class TestWeirdTypeB:
         self.kaltura_page.load_event_edit_page(self.recording_schedule.series_id)
         self.kaltura_page.wait_for_title('Access Denied - UC Berkeley - Test')
 
-    def test_room_no_longer_eligible_email(self):
+    def test_no_room_no_longer_eligible_email(self):
         assert util.get_sent_email_count(EmailTemplateType.INSTR_ROOM_CHANGE_INELIGIBLE, self.section,
-                                         self.new_instructor) == 1
+                                         self.new_instructor) == 0
+
+    def test_multi_meet_room_change_email(self):
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_MULTIPLE_MEETING_PATTERN_CHANGE, self.section,
+                                         self.new_instructor) == 2
 
     # ROOM ADDED
 
