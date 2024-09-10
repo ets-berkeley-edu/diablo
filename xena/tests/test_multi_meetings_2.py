@@ -82,14 +82,14 @@ class TestWeirdTypeD:
     # CREATE COURSE SITE
 
     def test_create_course_site(self):
-        self.canvas_page.provision_site(self.section, [self.section.ccn], self.site)
-        self.canvas_page.add_teacher_to_site(self.site, self.section, self.section.instructors[0])
+        self.canvas_page.create_site(self.section, self.site)
+        self.canvas_page.add_teacher_to_site(self.site, self.section.instructors[0])
 
     # SCHEDULE RECORDINGS
 
     def test_schedule_recordings(self):
         self.jobs_page.load_page()
-        self.jobs_page.run_schedule_update_job_sequence()
+        self.jobs_page.run_semester_start_job_sequence()
 
         assert util.get_kaltura_id(self.recording_schedule_0)
         self.recording_schedule_0.recording_type = RecordingType.VIDEO_SANS_OPERATOR
@@ -122,8 +122,8 @@ class TestWeirdTypeD:
     # VERIFY ANNUNCIATION EMAIL
 
     def test_receive_annunciation_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_NEW_COURSE_SCHED, self.section,
-                                         self.section.instructors[0]) == 2
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_SEM_START, self.section,
+                                         self.section.instructors[0]) == 1
 
     # FIRST MEETING: VERIFY SERIES IN DIABLO
 

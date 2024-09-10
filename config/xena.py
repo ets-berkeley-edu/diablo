@@ -36,10 +36,8 @@ BASE_URL = 'https://manage-dev.coursecapture.berkeley.edu'
 CANVAS_ADD_USER_TOOL = '12345'
 CANVAS_ADMIN_ID = '123456'
 CANVAS_BASE_URL = 'https://ucberkeley.beta.instructure.com'
+CANVAS_QA_ACCOUNT = '123456'
 CANVAS_ROOT_ACCOUNT = '123456'
-CANVAS_SITE_CREATION_TOOL = '654321'
-CANVAS_MEDIA_GALLERY_TOOL = '13579'
-CANVAS_MY_MEDIA_TOOL = '24680'
 
 CLICK_SLEEP = 0.5
 
@@ -57,7 +55,6 @@ RIPLEY_BASE_URL = 'https://ripley-dev.ets.berkeley.edu'
 TESTING = True
 
 TEST_DATA_COURSES = f'{BASE_DIR}/xena/fixtures/test-courses.json'
-TEST_DATA_ROOMS = f'{BASE_DIR}/xena/fixtures/test-rooms.json'
 TEST_DATA_USER_EMAIL = 'foo@bar.edu'
 TEST_DATA_USER_UID = '1234567'
 

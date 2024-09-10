@@ -51,7 +51,7 @@ class TestWeirdTypeC:
     # Initial course data
     test_data = util.get_test_script_course('test_weird_type_c')
     section = util.get_test_section(test_data)
-    instructor_original = section.instructors[0]
+    original_instructor = section.instructors[0]
 
     meeting_0 = section.meetings[0]
     meeting_sched_0 = meeting_0.meeting_schedule
@@ -68,14 +68,14 @@ class TestWeirdTypeC:
     test_data_changes = util.get_test_script_course('test_weird_type_c_changes')
     uids_to_exclude = list(map(lambda i: i.uid, section.instructors))
     util.get_test_section_instructor_data(test_data_changes, uids_to_exclude=uids_to_exclude)
-    section_changes = Section(test_data_changes)
-    instructor_change = section_changes.instructors[0]
-    meeting_0_changes = section_changes.meetings[0]
-    meeting_sched_0_changes = meeting_0_changes.meeting_schedule
-    meeting_1_changes = section_changes.meetings[1]
-    meeting_sched_1_changes = meeting_1_changes.meeting_schedule
-    meeting_sched_0_changes.end_date = meeting_0.meeting_schedule.end_date + timedelta(days=7)
-    meeting_sched_1_changes.start_date = meeting_1.meeting_schedule.start_date + timedelta(days=7)
+    changed_section = Section(test_data_changes)
+    new_instructor = changed_section.instructors[0]
+    changed_meeting_0 = changed_section.meetings[0]
+    changed_meeting_sched_0 = changed_meeting_0.meeting_schedule
+    changed_meeting_1 = changed_section.meetings[1]
+    changed_meeting_sched_1 = changed_meeting_1.meeting_schedule
+    changed_meeting_sched_0.end_date = meeting_0.meeting_schedule.end_date + timedelta(days=7)
+    changed_meeting_sched_1.start_date = meeting_1.meeting_schedule.start_date + timedelta(days=7)
 
     def test_setup(self):
         self.login_page.load_page()
@@ -159,7 +159,7 @@ class TestWeirdTypeC:
     def test_course_page_link(self):
         self.kaltura_page.close_window_and_switch()
         self.ouija_page.log_out()
-        self.login_page.dev_auth(self.instructor_original.uid)
+        self.login_page.dev_auth(self.original_instructor.uid)
         self.ouija_page.wait_for_title_containing(f'Your {self.section.term.name} Course')
         self.ouija_page.click_course_page_link(self.section)
         self.course_page.wait_for_diablo_title(f'{self.section.code}, {self.section.number}')
@@ -173,11 +173,15 @@ class TestWeirdTypeC:
         assert len(self.course_page.visible_meeting_time()) == 1
         assert len(self.course_page.visible_rooms()) == 1
 
+    def test_new_course_scheduled_email(self):
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_NEW_COURSE_SCHED, self.section,
+                                         self.original_instructor) == 1
+
     # INELIGIBLE MEETING BECOMES ELIGIBLE
 
     def test_ineligible_becomes_eligible(self):
-        util.change_course_room(self.section, self.meeting_1, new_room=self.meeting_1_changes.room)
-        self.meeting_1.room = self.meeting_1_changes.room
+        util.change_course_room(self.section, self.meeting_1, new_room=self.changed_meeting_1.room)
+        self.meeting_1.room = self.changed_meeting_1.room
 
     def test_run_kaltura_job_ineligible_becomes_eligible(self):
         self.course_page.log_out()
@@ -231,14 +235,18 @@ class TestWeirdTypeC:
         self.kaltura_page.verify_schedule(self.section, self.meeting_1)
         self.kaltura_page.verify_publish_status(self.recording_sched_1)
 
-    def test_schedule_change_email(self):
+    def test_no_schedule_change_email(self):
         assert util.get_sent_email_count(EmailTemplateType.INSTR_SCHEDULE_CHANGE, self.section,
-                                         self.instructor_original) == 1
+                                         self.original_instructor) == 0
+
+    def test_multi_meeting_sched_change_email(self):
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_MULTIPLE_MEETING_PATTERN_CHANGE, self.section,
+                                         self.original_instructor) == 1
 
     # INSTRUCTOR REMOVED
 
     def test_remove_instructor(self):
-        util.change_course_instructor(self.section, old_instructor=self.instructor_original, new_instructor=None)
+        util.change_course_instructor(self.section, old_instructor=self.original_instructor, new_instructor=None)
         self.section.instructors = []
 
     def test_run_kaltura_job_instr_removed(self):
@@ -281,13 +289,13 @@ class TestWeirdTypeC:
 
     def test_no_instructor_removed_email(self):
         assert util.get_sent_email_count(EmailTemplateType.INSTR_REMOVED, self.section,
-                                         self.instructor_original) == 0
+                                         self.original_instructor) == 1
 
     # INSTRUCTOR ADDED
 
     def test_add_instructor(self):
-        util.change_course_instructor(self.section, old_instructor=None, new_instructor=self.instructor_change)
-        self.section.instructors = [self.instructor_change]
+        util.change_course_instructor(self.section, old_instructor=None, new_instructor=self.new_instructor)
+        self.section.instructors = [self.new_instructor]
 
     def test_run_kaltura_job_instr_added(self):
         self.jobs_page.load_page()
@@ -321,13 +329,13 @@ class TestWeirdTypeC:
 
     def test_instructor_added_email(self):
         assert util.get_sent_email_count(EmailTemplateType.INSTR_ADDED, self.section,
-                                         self.instructor_change) == 1
+                                         self.new_instructor) == 1
 
     # START / END DATES CHANGE FOR BOTH SECTIONS
 
     def test_change_dates(self):
-        util.update_course_start_end_dates(self.section, self.meeting_0, self.meeting_sched_0_changes)
-        util.update_course_start_end_dates(self.section, self.meeting_1, self.meeting_sched_1_changes)
+        util.update_course_start_end_dates(self.section, self.meeting_0, self.changed_meeting_sched_0)
+        util.update_course_start_end_dates(self.section, self.meeting_1, self.changed_meeting_sched_1)
 
     def test_run_kaltura_job_date_change(self):
         self.kaltura_page.close_window_and_switch()
@@ -376,9 +384,13 @@ class TestWeirdTypeC:
         self.kaltura_page.verify_schedule(self.section, self.meeting_1)
         self.kaltura_page.verify_publish_status(self.recording_sched_1)
 
-    def test_email_schedule_change_date(self):
+    def test_no_email_schedule_change_date(self):
         assert util.get_sent_email_count(EmailTemplateType.INSTR_SCHEDULE_CHANGE, self.section,
-                                         self.instructor_change) == 1
+                                         self.new_instructor) == 0
+
+    def test_email_multi_meeting_sched_change(self):
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_MULTIPLE_MEETING_PATTERN_CHANGE, self.section,
+                                         self.new_instructor) == 1
 
     # ROOM REMOVED FROM FIRST ELIGIBLE SECTION
 
@@ -410,9 +422,13 @@ class TestWeirdTypeC:
         self.kaltura_page.load_event_edit_page(self.recording_sched_0.series_id)
         self.kaltura_page.wait_for_title('Access Denied - UC Berkeley - Test')
 
-    def test_email_schedule_change_room_removed(self):
+    def test_no_email_schedule_change_room_removed(self):
         assert util.get_sent_email_count(EmailTemplateType.INSTR_SCHEDULE_CHANGE, self.section,
-                                         self.instructor_change) == 2
+                                         self.new_instructor) == 0
+
+    def test_email_multi_meeting_sched_room_removed(self):
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_MULTIPLE_MEETING_PATTERN_CHANGE, self.section,
+                                         self.new_instructor) == 2
 
     # COURSE HISTORY
 
@@ -426,7 +442,7 @@ class TestWeirdTypeC:
                                             published=True)
 
     def test_history_instructor_removed(self):
-        old_val = CoursePage.expected_uids_converter([self.instructor_original])
+        old_val = CoursePage.expected_uids_converter([self.original_instructor])
         self.course_page.verify_history_row(field='instructor_uids',
                                             old_value=old_val,
                                             new_value=[],
@@ -435,7 +451,7 @@ class TestWeirdTypeC:
                                             published=True)
 
     def test_history_instructor_added(self):
-        new_val = CoursePage.expected_uids_converter([self.instructor_change])
+        new_val = CoursePage.expected_uids_converter([self.new_instructor])
         self.course_page.verify_history_row(field='instructor_uids',
                                             old_value=[],
                                             new_value=new_val,

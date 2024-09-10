@@ -83,6 +83,18 @@ class TestScheduling2:
 
         util.reset_sent_email_test_data(self.section)
 
+    # CREATE COURSE SITE
+
+    def test_create_course_site(self):
+        self.canvas_page.create_site(self.section, self.site_0)
+        self.canvas_page.add_teacher_to_site(self.site_0, self.instructor_0)
+        self.canvas_page.add_teacher_to_site(self.site_0, self.instructor_1)
+
+    def test_create_another_course_site(self):
+        self.canvas_page.create_site(self.section, self.site_1)
+        self.canvas_page.add_teacher_to_site(self.site_1, self.instructor_0)
+        self.canvas_page.add_teacher_to_site(self.site_1, self.instructor_1)
+
     # SCHEDULE RECORDINGS
 
     def test_schedule_recordings(self):
@@ -140,17 +152,10 @@ class TestScheduling2:
         assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_NEW_COURSE_SCHED, self.section,
                                          self.instructor_1) == 1
 
-    # CREATE COURSE SITE
-
-    def test_create_course_site(self):
-        self.kaltura_page.close_window_and_switch()
-        self.canvas_page.provision_site(self.section, [self.section.ccn], self.site_0)
-        self.canvas_page.add_teacher_to_site(self.site_0, self.section, self.instructor_0)
-        self.canvas_page.add_teacher_to_site(self.site_0, self.section, self.instructor_1)
-
     # VERIFY STATIC COURSE SIS DATA
 
     def test_visible_section_sis_data(self):
+        self.kaltura_page.close_window_and_switch()
         self.ouija_page.load_page()
         self.ouija_page.log_out()
         self.login_page.dev_auth(self.instructor_0.uid)
@@ -221,15 +226,8 @@ class TestScheduling2:
         assert util.get_sent_email_count(EmailTemplateType.INSTR_CHANGES_CONFIRMED, self.section,
                                          self.instructor_1) == 1
 
-    # CREATE COURSE SITE
-
-    def test_create_another_course_site(self):
-        self.kaltura_page.close_window_and_switch()
-        self.canvas_page.provision_site(self.section, [self.section.ccn], self.site_1)
-        self.canvas_page.add_teacher_to_site(self.site_1, self.section, self.instructor_0)
-        self.canvas_page.add_teacher_to_site(self.site_1, self.section, self.instructor_1)
-
     def test_another_site_add_to_channels(self):
+        self.kaltura_page.close_window_and_switch()
         self.ouija_page.load_page()
         self.ouija_page.log_out()
         self.login_page.dev_auth(self.instructor_1.uid)

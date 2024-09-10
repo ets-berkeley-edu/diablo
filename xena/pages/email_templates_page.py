@@ -61,6 +61,8 @@ class EmailTemplatesPage(DiabloPages):
             'course.time.start',
             'course.title',
             'courseList',
+            'courseList.optedOut',
+            'courseList.scheduled',
             'instructors.all',
             'publish.type',
             'recipient.name',
