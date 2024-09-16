@@ -33,6 +33,6 @@ class RecordingPlacement(Enum):
         'db': 'kaltura_media_gallery',
     }
     PUBLISH_TO_MY_MEDIA = {
-        'desc': 'Publish to My Media',
+        'desc': 'Place in My Media',
         'db': 'kaltura_my_media',
     }
