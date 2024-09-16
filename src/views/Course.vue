@@ -385,6 +385,16 @@
                       </v-col>
                     </v-row>
                     <v-row
+                      v-if="!$currentUser.isAdmin && publishType && publishType.startsWith('kaltura_media_gallery')"
+                      align="end"
+                      justify="start"
+                    >
+                      <v-col cols="12">
+                        To link a bCourses site from a past term, please <a :href="`mailto:${$config.emailCourseCaptureSupport}`" target="_blank">
+                          contact Course Capture support<span class="sr-only"> (this email link opens a new tab)</span></a>.
+                      </v-col>
+                    </v-row>
+                    <v-row
                       v-if="$currentUser.isAdmin && publishType && publishType.startsWith('kaltura_media_gallery')"
                       align="end"
                       justify="start"
