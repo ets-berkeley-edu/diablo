@@ -119,6 +119,13 @@ def get_user(user_id, api_call=True, api_url=None):
 
 def get_teaching_courses(uid):
     teaching_courses = []
+
+    def _is_current_term_site(canvas_site):
+        return canvas_site['sisTermId'] == get_canvas_sis_term_id(app.config['CURRENT_TERM_ID'])
+
+    def _is_termless_site(canvas_site):
+        return canvas_site['sisTermId'] == 'TERM:Projects' or not canvas_site['sisTermId']
+
     try:
         user = get_user(f'sis_login_id:{uid}', api_call=False)
         profile = user.get_profile()
@@ -129,21 +136,15 @@ def get_teaching_courses(uid):
                 enrollments = list(filter(lambda e: e.get('user_id') == profile['id'], canvas_course.enrollments))
                 current_user_roles = [e['role'] for e in enrollments]
                 if next((role for role in current_user_roles if role in ['TeacherEnrollment', 'CanvasAdmin']), None):
-                    teaching_courses.append(_canvas_site_to_api_json(canvas_course))
+                    course_json = _canvas_site_to_api_json(canvas_course)
+                    if _is_current_term_site(course_json) or _is_termless_site(course_json):
+                        teaching_courses.append(course_json)
     except Exception as e:
         app.logger.error(f'Failed to retrieve courses which UID {uid} is currently teaching.')
         app.logger.exception(e)
 
-    # Sort order: current-term sites, then termless sites (including project sites), then past terms descending.
-    def _sort_key(canvas_site):
-        if canvas_site['sisTermId'] == app.config['CURRENT_TERM_ID']:
-            return 'Z'
-        elif canvas_site['sisTermId'] == 'TERM:Projects' or not canvas_site['sisTermId']:
-            return 'Y'
-        else:
-            return canvas_site['sisTermId']
-
-    return sorted(teaching_courses, key=_sort_key, reverse=True)
+    # Sort order: current-term sites, then termless sites (including project sites).
+    return sorted(teaching_courses, key=_is_current_term_site, reverse=True)
 
 
 def ping_canvas(timeout):
