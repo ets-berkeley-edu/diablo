@@ -55,7 +55,7 @@ recording_type = ENUM(
 
 NAMES_PER_PUBLISH_TYPE = {
     'kaltura_media_gallery': 'Publish to Course Site',
-    'kaltura_my_media': 'Publish to My Media',
+    'kaltura_my_media': 'Place in My Media',
 }
 
 

@@ -699,7 +699,7 @@ export default {
       courseDisplayTitle: null,
       displayLabels: {
         'kaltura_media_gallery': 'Publish to the Media Gallery (all members of the bCourses site will have access)',
-        'kaltura_my_media': 'Publish to My Media (I will decide if and how I want to share)',
+        'kaltura_my_media': 'Place in My Media (I will decide if and how I want to share)',
         'presenter_presentation_audio': 'Camera Without Operator',
         'presenter_presentation_audio_with_operator': `Camera With Operator ($${this.$config.courseCapturePremiumCost} fee)`
       },
