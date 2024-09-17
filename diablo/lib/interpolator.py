@@ -86,7 +86,6 @@ def get_template_substitutions(
     if course:
         meetings = course.get('meetings', {}).get('eligible', [])
         meetings = meetings or course.get('meetings', {}).get('ineligible', [])
-        multiple_meetings = len(meetings) > 1
         meeting = meetings and meetings[0]
 
         days_formatted = meeting and (meeting.get('daysFormatted') or format_days(meeting.get('days')))
@@ -101,7 +100,6 @@ def get_template_substitutions(
 
     else:
         meeting = None
-        multiple_meetings = False
         days = None
         start_time = None
         end_time = None
@@ -109,7 +107,8 @@ def get_template_substitutions(
 
     def _get_course_name(course):
         name = f"{course['courseName']}: {course['courseTitle']}"
-        if multiple_meetings:
+        course_meetings = course.get('meetings', {}).get('eligible', []) or course.get('meetings', {}).get('ineligible', [])
+        if len(course_meetings) > 1:
             name += '*'
         return name
 
