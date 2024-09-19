@@ -74,8 +74,11 @@ class SentEmail(db.Model):
         return cls.query.filter_by(recipient_uid=uid).order_by(cls.sent_at).all()
 
     @classmethod
-    def get_emails_of_type(cls, section_ids, template_type, term_id):
-        criteria = and_(cls.section_id.in_(section_ids), cls.template_type == template_type, cls.term_id == term_id)
+    def get_emails_of_type(cls, template_type, term_id, section_ids=None):
+        if section_ids is None:
+            criteria = and_(cls.template_type == template_type, cls.term_id == term_id)
+        else:
+            criteria = and_(cls.section_id.in_(section_ids), cls.template_type == template_type, cls.term_id == term_id)
         return cls.query.filter(criteria).order_by(cls.sent_at).all()
 
     def to_api_json(self):

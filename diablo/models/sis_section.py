@@ -219,6 +219,7 @@ class SisSection(db.Model):
             include_ineligible=False,
             include_non_principal_sections=False,
             include_null_meeting_locations=False,
+            instructor_uids=None,
             section_ids=None,
     ):
         instructor_role_codes = ALL_INSTRUCTOR_ROLE_CODES if include_administrative_proxies else AUTHORIZED_INSTRUCTOR_ROLE_CODES
@@ -236,6 +237,11 @@ class SisSection(db.Model):
         else:
             course_filter = 's.section_id = ANY(:section_ids)'
             params['section_ids'] = section_ids
+
+        if instructor_uids is not None:
+            course_filter += ' AND s.instructor_uid = ANY(:instructor_uids)'
+            params['instructor_uids'] = list(instructor_uids)
+
         if exclude_scheduled:
             exclude_scheduled_join = 'LEFT JOIN scheduled sch ON sch.term_id = s.term_id AND sch.section_id = s.section_id AND sch.deleted_at IS NULL'
         else:
@@ -390,11 +396,12 @@ class SisSection(db.Model):
         return _to_api_json(term_id=term_id, rows=rows, include_rooms=False)
 
     @classmethod
-    def get_courses_scheduled(cls, term_id, include_administrative_proxies=False, include_full_schedules=True):
+    def get_courses_scheduled(cls, term_id, include_administrative_proxies=False, include_full_schedules=True, instructor_uids=None):
         scheduled_section_ids = list(cls._section_ids_scheduled(term_id))
         return cls.get_courses(
             term_id=term_id,
             section_ids=scheduled_section_ids,
+            instructor_uids=instructor_uids,
             include_deleted=True,
             include_administrative_proxies=include_administrative_proxies,
             include_full_schedules=include_full_schedules,

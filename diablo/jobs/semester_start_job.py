@@ -41,7 +41,7 @@ class SemesterStartJob(BaseJob):
         # Schedule recordings
         for course in courses:
             if not course['scheduled'] and not course['hasOptedOut']:
-                scheduled = schedule_recordings(course, send_notifications=False)
+                scheduled = schedule_recordings(course)
                 course['scheduled'] = [s.to_api_json() for s in scheduled]
             for instructor in list(filter(lambda i: i['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES, course['instructors'])):
                 if instructor['uid'] not in courses_by_instructor_uid:
