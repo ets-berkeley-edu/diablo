@@ -38,7 +38,7 @@ from diablo.models.course_preference import CoursePreference
 from diablo.models.cross_listing import CrossListing
 from diablo.models.instructor import Instructor
 from diablo.models.opt_out import OptOut
-from diablo.models.queued_email import notify_instructors_recordings_scheduled
+from diablo.models.queued_email import notify_instructor_recordings_scheduled
 from diablo.models.room import Room
 from diablo.models.schedule_update import ScheduleUpdate
 from diablo.models.scheduled import Scheduled
@@ -98,6 +98,14 @@ def get_eligible_unscheduled_courses(term_id):
     return SisSection.get_courses(
         exclude_scheduled=True,
         include_administrative_proxies=True,
+        term_id=term_id,
+    )
+
+
+def get_scheduled_courses_per_instructor_uids(term_id, instructor_uids):
+    return SisSection.get_courses_scheduled(
+        include_administrative_proxies=True,
+        instructor_uids=instructor_uids,
         term_id=term_id,
     )
 
@@ -329,7 +337,7 @@ def remove_blackout_events(kaltura_schedule_id=None):
                     app.logger.info(f"'Event {event['summary']} deleted per {blackout}.")
 
 
-def schedule_recordings(course, remove_blackout_conflicts=False, send_notifications=False, updates=None):
+def schedule_recordings(course, remove_blackout_conflicts=False, updates=None):
     def _report_error(subject):
         message = f'{subject}\n\n<pre>{course}</pre>'
         app.logger.error(message)
@@ -412,13 +420,6 @@ def schedule_recordings(course, remove_blackout_conflicts=False, send_notificati
                     collaborator_uids=collaborator_uids,
                 )
 
-                if send_notifications:
-                    notify_instructors_recordings_scheduled(
-                        course=course,
-                        scheduled=scheduled,
-                        instructors=instructors,
-                        collaborator_uids=collaborator_uids,
-                    )
                 all_scheduled.append(scheduled)
                 app.logger.info(f'Recordings scheduled for course {section_id}')
 
@@ -441,6 +442,17 @@ def schedule_recordings(course, remove_blackout_conflicts=False, send_notificati
             """)
 
     return all_scheduled
+
+
+def notify_newly_scheduled_instructors(term_id, instructor_uids):
+    courses_by_instructor_uid = {}
+    for course in get_scheduled_courses_per_instructor_uids(term_id, instructor_uids):
+        for instructor in list(filter(lambda i: i['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES, course['instructors'])):
+            if instructor['uid'] not in courses_by_instructor_uid:
+                courses_by_instructor_uid[instructor['uid']] = {'instructor': instructor, 'courses': []}
+            courses_by_instructor_uid[instructor['uid']]['courses'].append(course)
+    for uid, instructor_courses in courses_by_instructor_uid.items():
+        notify_instructor_recordings_scheduled(instructor_courses['instructor'], instructor_courses['courses'])
 
 
 def _join(items, separator=', '):

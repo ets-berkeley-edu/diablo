@@ -26,7 +26,7 @@ import traceback
 
 from diablo.externals.kaltura import Kaltura
 from diablo.jobs.base_job import BaseJob
-from diablo.jobs.util import get_eligible_unscheduled_courses, remove_blackout_events, schedule_recordings
+from diablo.jobs.util import get_eligible_unscheduled_courses, notify_newly_scheduled_instructors, remove_blackout_events, schedule_recordings
 from diablo.lib.berkeley import get_recording_end_date, get_recording_start_date, term_name_for_sis_id
 from diablo.lib.kaltura_util import get_series_description
 from diablo.merged.emailer import send_system_error_email
@@ -43,8 +43,12 @@ from flask import current_app as app
 class KalturaJob(BaseJob):
 
     def _run(self):
-        _schedule_new_courses()
-        _update_already_scheduled_events()
+        term_id = app.config['CURRENT_TERM_ID']
+        newly_scheduled_instructors = set()
+
+        _schedule_new_courses(term_id, newly_scheduled_instructors)
+        _update_already_scheduled_events(term_id, newly_scheduled_instructors)
+        notify_newly_scheduled_instructors(term_id, newly_scheduled_instructors)
 
     @classmethod
     def description(cls):
@@ -71,19 +75,19 @@ def _get_subset_of_instructors(section_id, term_id, uids, include_deleted=False)
     return list(filter(lambda instructor: instructor['uid'] in uids, course['instructors']))
 
 
-def _schedule_new_courses():
-    term_id = app.config['CURRENT_TERM_ID']
+def _schedule_new_courses(term_id, newly_scheduled_instructors):
     unscheduled_courses = get_eligible_unscheduled_courses(term_id)
     app.logger.info(f'Preparing to schedule recordings for {len(unscheduled_courses)} courses.')
     for course in unscheduled_courses:
         if course['hasOptedOut']:
             continue
-        schedule_recordings(course, remove_blackout_conflicts=True, send_notifications=True)
+        schedule_recordings(course, remove_blackout_conflicts=True)
+        for instructor in list(filter(lambda i: i['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES, course['instructors'])):
+            newly_scheduled_instructors.add(instructor['uid'])
 
 
-def _update_already_scheduled_events():  # noqa C901
+def _update_already_scheduled_events(term_id, newly_scheduled_instructors):  # noqa C901
     kaltura = Kaltura(disable_entitlements=True)
-    term_id = app.config['CURRENT_TERM_ID']
     for section_id, schedule_updates in ScheduleUpdate.get_queued_by_section_id(term_id=term_id).items():
         course = SisSection.get_course(term_id=term_id, section_id=section_id, include_deleted=True)
         if not course:
@@ -148,7 +152,14 @@ def _update_already_scheduled_events():  # noqa C901
                 no_longer_eligible = True
 
         for meeting_added in meetings_added:
-            _handle_meeting_added(course, meeting_added, updated_publish_type, updated_recording_type, updated_collaborator_uids)
+            _handle_meeting_added(
+                course,
+                meeting_added,
+                updated_publish_type,
+                updated_recording_type,
+                updated_collaborator_uids,
+                newly_scheduled_instructors,
+            )
 
         for scheduled in course['scheduled'] or []:
             kaltura_schedule = kaltura.get_event(event_id=scheduled['kalturaScheduleId'])
@@ -296,19 +307,23 @@ def _handle_instructor_updates(
         )
 
 
-def _handle_meeting_added(course, meeting_added, updated_publish_type, updated_recording_type, updated_collaborator_uids):
+def _handle_meeting_added(
+    course, meeting_added, updated_publish_type, updated_recording_type,
+    updated_collaborator_uids, newly_scheduled_instructors,
+):
     meeting = meeting_added.deserialize('field_value_new')
     updates = _construct_schedule_update_options(course, updated_publish_type, updated_recording_type, updated_collaborator_uids)
 
     newly_scheduled = schedule_recordings(
         {**course, **{'meetings': {'eligible': [meeting]}}},
         remove_blackout_conflicts=True,
-        send_notifications=True,
         updates=updates,
     )
     if newly_scheduled:
         meeting_added.mark_success()
         course['scheduled'].append(newly_scheduled[0].to_api_json())
+        for instructor in list(filter(lambda i: i['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES, course['instructors'])):
+            newly_scheduled_instructors.add(instructor['uid'])
     else:
         meeting_added.mark_error()
 
@@ -402,7 +417,7 @@ def _handle_course_site_categories(kaltura, course, publish_to_course_sites, sch
             for scheduled in course['scheduled']:
                 kaltura.delete(scheduled['kalturaScheduleId'])
                 Scheduled.delete(term_id=course['termId'], section_id=course['sectionId'], kaltura_schedule_id=scheduled['kalturaScheduleId'])
-            rescheduled = schedule_recordings(course, send_notifications=False, updates=update_options)
+            rescheduled = schedule_recordings(course, updates=update_options)
             if publish_to_course_sites and updated_canvas_site_ids:
                 schedule_ids_to_update = [scheduled.kaltura_schedule_id for scheduled in rescheduled]
         except Exception as e:

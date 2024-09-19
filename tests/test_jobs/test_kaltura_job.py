@@ -60,7 +60,6 @@ class TestKalturaJob:
 
             def _get_emails_sent():
                 return SentEmail.get_emails_of_type(
-                    section_ids=[section_id],
                     template_type='new_class_scheduled',
                     term_id=term_id,
                 )
@@ -70,16 +69,17 @@ class TestKalturaJob:
             KalturaJob(simply_yield).run()
             std_commit(allow_test_environment=True)
             assert Scheduled.get_scheduled(section_id=section_id, term_id=term_id)
+            std_commit(allow_test_environment=True)
 
             # Verify emails sent
             EmailsJob(simply_yield).run()
+            std_commit(allow_test_environment=True)
             emails_sent = _get_emails_sent()
-            assert len(emails_sent) == email_count + 2
-            assert [emails_sent[-1].recipient_uid, emails_sent[-2].recipient_uid] == ['10009', '10010']
-            email_sent = emails_sent[-1]
-            assert email_sent.section_id == section_id
-            assert email_sent.template_type == 'new_class_scheduled'
-            assert email_sent.term_id == term_id
+            assert len(emails_sent) >= email_count + 2
+            for recipient_uid in ['10009', '10010']:
+                email_sent = next(e for e in emails_sent if e.recipient_uid == recipient_uid)
+                assert email_sent.template_type == 'new_class_scheduled'
+                assert email_sent.term_id == term_id
 
             """If recordings were already scheduled then do nothing, send no email."""
             email_count = len(_get_emails_sent())

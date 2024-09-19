@@ -249,68 +249,19 @@ class QueuedEmail(db.Model):
 
 
 def announce_semester_start(instructor, courses):
-    template = _get_email_template(course=courses[0], template_type='semester_start')
-    if not template:
-        return
-    message = interpolate_content(
-        templated_string=template.message,
-        recipient_name=instructor['name'],
-        course=None,
-        course_list=courses,
-    )
-    subject_line = interpolate_content(
-        templated_string=template.subject_line,
-        recipient_name=instructor['name'],
-        course=None,
-    )
-    QueuedEmail.create(
-        message=message,
-        recipient=instructor,
-        section_id=courses[0]['sectionId'],
-        subject_line=subject_line,
-        template_type='semester_start',
-        term_id=courses[0]['termId'],
-    )
+    _send_course_list_email(instructor, courses, 'semester_start')
 
 
-def notify_instructors_recordings_scheduled(course, scheduled, instructors, collaborator_uids):
-    email_template = EmailTemplate.get_template_by_type('new_class_scheduled')
-    if email_template:
-        publish_type_name = NAMES_PER_PUBLISH_TYPE[scheduled.publish_type]
-        recording_type_name = NAMES_PER_RECORDING_TYPE[scheduled.recording_type]
-        collaborator_names = _get_collaborator_names(collaborator_uids)
-        for instructor in instructors:
-            message = interpolate_content(
-                templated_string=email_template.message,
-                course=course,
-                recipient_name=instructor['name'],
-                publish_type_name=publish_type_name,
-                recording_type_name=recording_type_name,
-                instructor_names=[i['name'] for i in instructors if i['name']],
-                collaborator_names=collaborator_names,
-            )
-            subject_line = interpolate_content(
-                templated_string=email_template.subject_line,
-                course=course,
-                recipient_name=instructor['name'],
-            )
-            QueuedEmail.create(
-                message=message,
-                subject_line=subject_line,
-                recipient=instructor,
-                section_id=course['sectionId'],
-                template_type=email_template.template_type,
-                term_id=course['termId'],
-            )
-    else:
-        send_system_error_email(f"""
-            No email template of type 'new_class_scheduled' is available.
-            {course['label']} instructors were NOT notified of scheduled: {scheduled}.
-        """)
+def notify_instructor_recordings_scheduled(instructor, courses):
+    _send_course_list_email(instructor, courses, 'new_class_scheduled')
 
 
 def remind_instructors_scheduled(instructor, courses):
-    template = _get_email_template(course=courses[0], template_type='remind_scheduled')
+    _send_course_list_email(instructor, courses, 'remind_scheduled')
+
+
+def _send_course_list_email(instructor, courses, template_type):
+    template = _get_email_template(course=courses[0], template_type=template_type)
     if not template:
         return
     message = interpolate_content(
@@ -329,7 +280,7 @@ def remind_instructors_scheduled(instructor, courses):
         recipient=instructor,
         section_id=courses[0]['sectionId'],
         subject_line=subject_line,
-        template_type='remind_scheduled',
+        template_type=template_type,
         term_id=courses[0]['termId'],
     )
 
