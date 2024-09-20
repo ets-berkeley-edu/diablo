@@ -34,6 +34,9 @@ from flask import current_app as app
 import requests
 
 
+INSTRUCTOR_ROLES = ['TeacherEnrollment', 'TaEnrollment', 'Lead TA', 'DesignerEnrollment', 'Maintainer', 'Owner', 'CanvasAdmin']
+
+
 def get_account():
     c = _get_canvas()
     return c.get_account(app.config['CANVAS_BERKELEY_ACCOUNT_ID'])
@@ -135,7 +138,7 @@ def get_teaching_courses(uid):
             for canvas_course in courses:
                 enrollments = list(filter(lambda e: e.get('user_id') == profile['id'], canvas_course.enrollments))
                 current_user_roles = [e['role'] for e in enrollments]
-                if next((role for role in current_user_roles if role in ['TeacherEnrollment', 'CanvasAdmin']), None):
+                if next((role for role in current_user_roles if role in INSTRUCTOR_ROLES), None):
                     course_json = _canvas_site_to_api_json(canvas_course)
                     if _is_current_term_site(course_json) or _is_termless_site(course_json):
                         teaching_courses.append(course_json)
