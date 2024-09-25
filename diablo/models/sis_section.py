@@ -222,7 +222,7 @@ class SisSection(db.Model):
             instructor_uids=None,
             section_ids=None,
     ):
-        instructor_role_codes = ALL_INSTRUCTOR_ROLE_CODES if include_administrative_proxies else AUTHORIZED_INSTRUCTOR_ROLE_CODES
+        instructor_role_codes = ALL_INSTRUCTOR_ROLE_CODES
         params = {
             'instructor_role_codes': instructor_role_codes,
             'term_id': term_id,
@@ -551,11 +551,7 @@ def _to_api_json(  # noqa C901
         note_results = Note.get_notes_for_section_ids(section_ids=section_ids, term_id=term_id)
         notes_by_section_id = {note.section_id: note.body for note in note_results}
 
-    cross_listings_per_section_id, instructors_per_section_id = _get_cross_listed_courses(
-        include_administrative_proxies=include_administrative_proxies,
-        section_ids=section_ids,
-        term_id=term_id,
-    )
+    cross_listings_per_section_id, instructors_per_section_id = _get_cross_listed_courses(term_id=term_id, section_ids=section_ids)
 
     # Construct course objects.
     # If course has multiple instructors or multiple rooms then the section_id will be represented across multiple rows.
@@ -634,16 +630,21 @@ def _to_api_json(  # noqa C901
 
             courses_per_id[section_id] = course
 
-        # Note: Instructors associated with cross-listings are slurped up separately.
+        # Note: Instructors associated with cross-listings were slurped up above, as part of the _get_cross_listed_courses method call.
         instructor_uid = row['instructor_uid']
         instructor_uid = instructor_uid.strip() if instructor_uid else None
-        if instructor_uid and instructor_uid not in [i['uid'] for i in course['instructors']]:
-            instructor_json = _to_instructor_json(row)
-            # Note:
-            # 1. If the course IS NOT DELETED then include only non-deleted instructors.
-            # 2. If the course IS DELETED then include deleted instructors.
-            if not instructor_json['deletedAt'] or course['deletedAt']:
-                course['instructors'].append(instructor_json)
+        if instructor_uid:
+            existing_instructor = next((i for i in course['instructors'] if i['uid'] == instructor_uid), None)
+            if existing_instructor:
+                if _get_role_code_rank(row['instructor_role_code']) > _get_role_code_rank(existing_instructor['roleCode']):
+                    existing_instructor['roleCode'] = row['instructor_role_code']
+            else:
+                instructor_json = _to_instructor_json(row)
+                # Note:
+                # 1. If the course IS NOT DELETED then include only non-deleted instructors.
+                # 2. If the course IS DELETED then include deleted instructors.
+                if not instructor_json['deletedAt'] or course['deletedAt']:
+                    course['instructors'].append(instructor_json)
 
         blanket_opt_outs = []
         decorated_course_instructors = []
@@ -659,7 +660,12 @@ def _to_api_json(  # noqa C901
                     course['optOuts'].append(instructor_opt_out.to_api_json())
                     instructor_has_opted_out = True
             decorated_course_instructors.append({**i, **{'hasOptedOut': instructor_has_opted_out}})
-        course['instructors'] = decorated_course_instructors
+
+        if include_administrative_proxies:
+            course['instructors'] = decorated_course_instructors
+        else:
+            course['instructors'] = [i for i in decorated_course_instructors if i['roleCode'] != 'APRX']
+
         if blanket_opt_outs:
             course['hasBlanketOptedOut'] = True
             course['optOuts'] += [o.to_api_json() for o in blanket_opt_outs]
@@ -717,7 +723,7 @@ def _decorate_course_meeting_type(course):
         course['meetingType'] = 'A'
 
 
-def _get_cross_listed_courses(section_ids, term_id, include_administrative_proxies=False):
+def _get_cross_listed_courses(section_ids, term_id):
     # Return course and instructor info for cross-listings as well as the
     # principal section. Although cross-listed sections were "deleted" during SIS data refresh job, we still rely
     # on metadata from those deleted records.
@@ -744,7 +750,7 @@ def _get_cross_listed_courses(section_ids, term_id, include_administrative_proxi
         text(sql),
         {
             'all_cross_listing_ids': all_cross_listing_ids,
-            'instructor_role_codes': ALL_INSTRUCTOR_ROLE_CODES if include_administrative_proxies else AUTHORIZED_INSTRUCTOR_ROLE_CODES,
+            'instructor_role_codes': ALL_INSTRUCTOR_ROLE_CODES,
             'term_id': term_id,
         },
     )
@@ -780,6 +786,7 @@ def _get_cross_listed_courses(section_ids, term_id, include_administrative_proxi
                         uid = (instructor_json['uid'] or '').strip() if instructor_json else None
                         if uid and not instructor_json['deletedAt']:
                             instructors_by_section_id[section_id].append(instructor_json)
+
     return courses_by_section_id, instructors_by_section_id
 
 
@@ -845,3 +852,19 @@ def _construct_course_label(course_name, instruction_format, section_num, cross_
         return ' | '.join(merged)
     else:
         return _label(course_name, instruction_format, section_num)
+
+
+# In the rare case of a single instructor UID having multiple role code assignments for the same course, a higher
+# ranking value wins.
+
+
+INSTRUCTOR_ROLE_CODE_RANK = {
+    'APRX': 0,
+    'ICNT': 1,
+    'TNIC': 2,
+    'PI': 3,
+}
+
+
+def _get_role_code_rank(role_code):
+    return INSTRUCTOR_ROLE_CODE_RANK.get(role_code, -1)
