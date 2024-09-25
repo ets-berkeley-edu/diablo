@@ -47,6 +47,20 @@
       "term_id": 2218
     },
     {
+      "instructor_uid": "10002",
+      "instructor_role_code": "APRX",
+      "meeting_days": "TUTH",
+      "meeting_end_date": "2021-12-11",
+      "meeting_end_time": "10:59",
+      "meeting_location": "O'Brien 212",
+      "meeting_start_date": "2021-08-26",
+      "meeting_start_time": "10:00",
+      "course_name": "COMPSCI C8",
+      "course_title": "Foundations of Data Science",
+      "section_id": 50000,
+      "term_id": 2218
+    },
+    {
       "instructor_uid": "10003",
       "instructor_role_code": "APRX",
       "meeting_days": "TUTH",
