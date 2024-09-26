@@ -415,7 +415,7 @@ class TestGetCourses:
             std_commit(allow_test_environment=True)
             # We gotta catch 'em all.
             api_json = self._api_courses(client, term_id=self.term_id, filter_='All')
-            assert len(api_json) == 14
+            assert len(api_json) == 15
             for section_id in [section_1_id, section_3_id, section_4_id, section_5_id, section_6_id]:
                 assert _find_course(api_json=api_json, section_id=section_id, term_id=self.term_id)
             assert _find_course(api_json=api_json, section_id=section_in_ineligible_room, term_id=self.term_id)
