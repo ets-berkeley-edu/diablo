@@ -60,8 +60,8 @@ class TestSemesterStartJob:
             assert emails_queued_for_instructor[0].template_type == 'semester_start'
             assert emails_queued_for_instructor[0].message == "Well, then let's introduce ourselves. "\
                 "I'm William Kinderman and these are my courses:\n"\
-                'IND ENG 95: Richard Newton Lecture Series\n'\
-                'MATH C51: Linear algebra and differential calculus'
+                'IND ENG 95, COL 001 | IND ENG 195, COL 001: Richard Newton Lecture Series,<br>\n'\
+                'MATH C51, LEC 001 | STAT C51, LEC 003: Linear algebra and differential calculus'
 
             EmailsJob(simply_yield).run()
             emails_sent = SentEmail.get_emails_sent_to(instructor_uid)

@@ -106,7 +106,7 @@ def get_template_substitutions(
         instructor_name_string = None
 
     def _get_course_name(course):
-        name = f"{course['courseName']}: {course['courseTitle']}"
+        name = f"{course['label']}: {course['courseTitle']}"
         course_meetings = course.get('meetings', {}).get('eligible', []) or course.get('meetings', {}).get('ineligible', [])
         if len(course_meetings) > 1:
             name += '*'
@@ -129,9 +129,9 @@ def get_template_substitutions(
         'course.time.end': end_time,
         'course.time.start': start_time,
         'course.title': course and course['courseTitle'],
-        'courseList': '\n'.join([f"{course['courseName']}: {course['courseTitle']}" for course in course_list]),
-        'courseList.optedOut': '\n'.join(opted_out_courses) if opted_out_courses else None,
-        'courseList.scheduled': '\n'.join(scheduled_courses) if scheduled_courses else None,
+        'courseList': ',<br>\n'.join([_get_course_name(course) for course in course_list]),
+        'courseList.optedOut': ',<br>\n'.join(opted_out_courses) if opted_out_courses else None,
+        'courseList.scheduled': ',<br>\n'.join(scheduled_courses) if scheduled_courses else None,
         'instructors.all': instructor_name_string,
         'publish.type': publish_type_name,
         'recipient.name': recipient_name,
