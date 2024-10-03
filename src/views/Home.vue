@@ -161,12 +161,12 @@ export default {
     refreshCourses() {
       this.$_.each(this.$currentUser.courses, course => {
         course.courseCodes = this.getCourseCodes(course)
+      })
+      this.eligibleCourses = []
+      this.ineligibleCourses = []
+      this.partitionCoursesByEligibility(this.$currentUser.courses, this.eligibleCourses, this.ineligibleCourses)
+      this.$_.each([...this.eligibleCourses, ...this.ineligibleCourses], course => {
         course.displayMeetings = this.getDisplayMeetings(course)
-        if (course.meetings.eligible.length) {
-          this.eligibleCourses.push(course)
-        } else {
-          this.ineligibleCourses.push(course)
-        }
       })
     },
     reloadCoursesTable() {
