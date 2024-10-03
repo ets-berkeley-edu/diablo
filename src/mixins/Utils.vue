@@ -43,6 +43,21 @@ export default {
       default: return _.join(_.concat(_.initial(arr), ` and ${_.last(arr)}`), ', ')
       }
     },
+    partitionCoursesByEligibility(courses, eligibleCourses, ineligibleCourses) {
+      _.each(courses, c => {
+        if (c.meetings.eligible.length) {
+          eligibleCourses.push(c)
+          if (c.meetings.ineligible.length) {
+            const courseCopyWithIneligibleMeetings = _.cloneDeep(c)
+            courseCopyWithIneligibleMeetings.meetings.eligible = []
+            courseCopyWithIneligibleMeetings.scheduled = null
+            ineligibleCourses.push(courseCopyWithIneligibleMeetings)
+          }
+        } else {
+          ineligibleCourses.push(c)
+        }
+      })
+    },
     stripAnchorRef: path => _.split(path, '#', 1)[0],
     stripHtmlAndTrim: html => {
       let text = html && html.replace(/<([^>]+)>/ig,'')

@@ -165,9 +165,11 @@ export default {
           course.courseCodes = this.getCourseCodes(course)
         })
         this.noteBody = user.note
-        const partitioned = this.$_.partition(user.courses, c => c.meetings.eligible.length)
-        this.eligibleCourses = partitioned[0]
-        this.ineligibleCourses = partitioned[1]
+
+        this.eligibleCourses = []
+        this.ineligibleCourses = []
+        this.partitionCoursesByEligibility(user.courses, this.eligibleCourses, this.ineligibleCourses)
+
         this.$ready(this.user.name)
         this.refreshingCourses = false
       })
