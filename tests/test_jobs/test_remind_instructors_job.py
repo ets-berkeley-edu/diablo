@@ -60,8 +60,8 @@ class TestRemindInstructorsJob:
 
             assert len(reminders_queued_for_instructor) == 1
             assert reminders_queued_for_instructor[0].message == 'You are scheduled, William Kinderman!\n'\
-                'IND ENG 95: Richard Newton Lecture Series\n'\
-                'MATH C51: Linear algebra and differential calculus'
+                'IND ENG 95, COL 001 | IND ENG 195, COL 001: Richard Newton Lecture Series,<br>\n'\
+                'MATH C51, LEC 001 | STAT C51, LEC 003: Linear algebra and differential calculus'
 
             EmailsJob(simply_yield).run()
             emails_sent = SentEmail.get_emails_sent_to(instructor_uid)
