@@ -245,7 +245,7 @@
                     {{ displayLabels[course.recordingType] }}
                   </div>
                   <v-btn
-                    v-if="recordingTypeEditable"
+                    v-if="!recordingTypeEditing && recordingTypeEditable"
                     id="btn-recording-type-edit"
                     class="mt-3"
                     @click="toggleRecordingTypeEditing"
@@ -253,20 +253,34 @@
                     Edit
                   </v-btn>
                 </div>
-                <v-radio-group
+                <div
                   v-if="recordingTypeEditing && recordingTypeEditable"
                   id="select-recording-type"
-                  v-model="recordingType"
-                  :disabled="recordingTypeUpdating"
+                  :aria-activedescendant="`radio-recording-type-${recordingTypeOption}`"
+                  aria-labelledby="select-recording-type-label"
+                  class="mb-4"
+                  role="radiogroup"
+                  tabindex="0"
                 >
-                  <v-radio
-                    v-for="recordingTypeOption in recordingTypeOptions"
-                    :id="`radio-recording-type-${recordingTypeOption}`"
+                  <div
+                    v-for="(recordingTypeOption, index) in recordingTypeOptions"
                     :key="recordingTypeOption"
-                    :value="recordingTypeOption"
-                    :label="displayLabels[recordingTypeOption]"
-                  ></v-radio>
-                </v-radio-group>
+                    class="d-flex flex-nowrap py-1"
+                  >
+                    <input
+                      :id="`radio-recording-type-${recordingTypeOption}`"
+                      :checked="recordingTypeOption === recordingType ? 'checked' : false"
+                      class="ml-1 mr-3"
+                      :disabled="recordingTypeUpdating"
+                      type="radio"
+                      :value="recordingTypeOption"
+                      @change="() => onRecordingTypeChange(recordingTypeOption, index)"
+                    />
+                    <label class="font-size-16 text--secondary" :for="`radio-recording-type-${recordingTypeOption}`">
+                      {{ displayLabels[recordingTypeOption] }}
+                    </label>
+                  </div>
+                </div>
                 <div v-if="recordingTypeEditing && recordingTypeEditable">
                   <v-btn
                     id="btn-recording-type-save"
@@ -324,20 +338,31 @@
                 </div>
                 <v-card v-if="publishTypeEditing" class="my-4 background-shaded">
                   <v-container>
-                    <v-radio-group
+                    <div
                       id="select-publish-type"
-                      v-model="publishType"
-                      class="mt-0"
-                      :disabled="publishTypeUpdating"
+                      :aria-activedescendant="`radio-publish-type-${publishType}`"
+                      aria-labelledby="select-publish-type-label"
+                      class="mb-4"
+                      role="radiogroup"
+                      tabindex="0"
                     >
-                      <v-radio
-                        v-for="publishTypeOption in publishTypeOptions"
-                        :id="`radio-publish-type-${publishTypeOption}`"
+                      <div
+                        v-for="(publishTypeOption, index) in publishTypeOptions"
                         :key="publishTypeOption"
-                        :value="publishTypeOption"
-                        :label="displayLabels[publishTypeOption]"
-                      ></v-radio>
-                    </v-radio-group>
+                        class="d-flex flex-nowrap py-1"
+                      >
+                        <input
+                          :id="`radio-publish-type-${publishTypeOption}`"
+                          :checked="publishTypeOption === publishType ? 'checked' : false"
+                          class="ml-1 mr-3"
+                          :disabled="publishTypeUpdating"
+                          type="radio"
+                          :value="publishTypeOption"
+                          @change="() => onPublishTypeChange(publishTypeOption, index)"
+                        />
+                        <label class="font-size-16 text--secondary" :for="`radio-publish-type-${publishTypeOption}`">{{ displayLabels[publishTypeOption] }}</label>
+                      </div>
+                    </div>
                     <v-row
                       v-if="publishType && publishType.startsWith('kaltura_media_gallery')"
                       align="center"
@@ -822,6 +847,20 @@ export default {
     },
     isCanvasSiteIdStaged(siteId) {
       return !!this.$_.find(this.publishCanvasSites, {'canvasSiteId': parseInt(siteId, 10)})
+    },
+    onPublishTypeChange(publishTypeOption, index) {
+      if (this.publishType === publishTypeOption) {
+        this.publishType = this.publishTypeOptions[index - 1]
+      } else {
+        this.publishType = publishTypeOption
+      }
+    },
+    onRecordingTypeChange(recordingTypeOption, index) {
+      if (this.recordingType === recordingTypeOption) {
+        this.recordingType = this.recordingTypeOptions[index - 1]
+      } else {
+        this.recordingType = recordingTypeOption
+      }
     },
     removeCanvasSite(canvasSiteId) {
       this.publishCanvasSites = this.$_.filter(this.publishCanvasSites, c => c.canvasSiteId !== canvasSiteId)
