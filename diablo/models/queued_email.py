@@ -25,6 +25,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 from datetime import datetime
 
 from diablo import db, std_commit
+from diablo.externals.canvas import get_course_sites_by_id
 from diablo.externals.loch import get_loch_basic_attributes
 from diablo.lib.interpolator import interpolate_content
 from diablo.lib.util import to_isoformat
@@ -123,6 +124,11 @@ class QueuedEmail(db.Model):
         recording_type_name = NAMES_PER_RECORDING_TYPE[recording_type]
         collaborator_names = _get_collaborator_names(collaborator_uids)
 
+        if canvas_site_ids:
+            canvas_sites = get_course_sites_by_id(canvas_site_ids)
+        else:
+            canvas_sites = None
+
         for instructor in filter(lambda i: i['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES, course['instructors']):
             cls._queue_instructor_email(
                 'changes_confirmed',
@@ -132,6 +138,7 @@ class QueuedEmail(db.Model):
                 recording_type_name=recording_type_name,
                 collaborator_names=collaborator_names,
                 canvas_site_ids=canvas_site_ids,
+                canvas_sites=canvas_sites,
             )
 
     @classmethod

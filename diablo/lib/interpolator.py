@@ -40,6 +40,7 @@ def interpolate_content(
     instructor_names=None,
     collaborator_names=None,
     canvas_site_ids=None,
+    canvas_sites=None,
 ):
     interpolated = templated_string
     substitutions = get_template_substitutions(
@@ -51,6 +52,7 @@ def interpolate_content(
         instructor_names=instructor_names,
         collaborator_names=collaborator_names,
         canvas_site_ids=canvas_site_ids,
+        canvas_sites=canvas_sites,
     )
     for token, value in substitutions.items():
         if value is None:
@@ -75,6 +77,7 @@ def get_template_substitutions(
     instructor_names=None,
     collaborator_names=None,
     canvas_site_ids=None,
+    canvas_sites=None,
 ):
     term_id = (course and course['termId']) or app.config['CURRENT_TERM_ID']
 
@@ -117,6 +120,7 @@ def get_template_substitutions(
     opted_out_courses = [_get_course_name(course) for course in course_list if course['hasOptedOut']]
 
     return {
+        'bcourses.list': ', '.join([f"<a href=\"{site['url']}\">{site['courseCode']}</a>" for site in canvas_sites]) if canvas_sites else None,
         'canvasSiteIds': ', '.join([str(c) for c in canvas_site_ids]) if canvas_site_ids else None,
         'collaborators': ', '.join(collaborator_names) if collaborator_names else None,
         'course.date.end': meeting and meeting['endDate'],
