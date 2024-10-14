@@ -11,7 +11,7 @@
           :instructor-uid="$currentUser.uid"
           :initial-value="$currentUser.hasOptedOutForTerm"
           :disabled="$currentUser.hasOptedOutForAllTerms"
-          label="Opt out for current semester"
+          label="for current semester"
           :before-toggle="() => refreshingCourses = true"
           :on-toggle="reloadCoursesTable"
         />
@@ -22,7 +22,7 @@
           section-id="all"
           :instructor-uid="$currentUser.uid"
           :initial-value="$currentUser.hasOptedOutForAllTerms"
-          label="Opt out for all semesters"
+          label="for all semesters"
           :before-toggle="() => refreshingCourses = true"
           :on-toggle="reloadCoursesTable"
         />
@@ -81,11 +81,12 @@
                     </td>
                     <td v-if="index === 0" :class="{'border-bottom-zero': course.displayMeetings[0].eligible.length > 1}" class="text-no-wrap">
                       <ToggleOptOut
-                        :term-id="`${course.termId}`"
-                        :section-id="`${course.sectionId}`"
-                        :instructor-uid="$currentUser.uid"
-                        :initial-value="course.hasOptedOut"
+                        :aria-label="`Opt out course ${course.courseTitle || $_.get(course.courseCodes, '0', '')}.`"
                         :disabled="course.hasBlanketOptedOut"
+                        :initial-value="course.hasOptedOut"
+                        :instructor-uid="$currentUser.uid"
+                        :section-id="`${course.sectionId}`"
+                        :term-id="`${course.termId}`"
                       />
                     </td>
                   </tr>
@@ -169,10 +170,11 @@ export default {
         course.displayMeetings = this.getDisplayMeetings(course)
       })
     },
-    reloadCoursesTable() {
+    reloadCoursesTable(srAlert = '') {
       this.$refreshCurrentUser().then(() => {
         this.refreshCourses()
         this.refreshingCourses = false
+        this.alertScreenReader(`Courses table refreshed. ${srAlert}`)
       })
     }
   }

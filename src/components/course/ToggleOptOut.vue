@@ -1,12 +1,19 @@
 <template>
-  <v-switch
-    :id="`toggle-opt-out-${switchId}`"
-    v-model="optOut"
-    dense
-    :disabled="disabled"
-    :label="label"
-    @change="toggleOptOut"
-  ></v-switch>
+  <div>
+    <v-switch
+      :id="`toggle-opt-out-${switchId}`"
+      v-model="optOut"
+      :aria-label="ariaLabel"
+      dense
+      :disabled="disabled"
+      inset
+      :label="label ? `Opt out ${label}` : ''"
+      @blur="() => ariaText = ''"
+      @change="toggleOptOut"
+    >
+    </v-switch>
+    <span class="sr-only" aria-live="assertive">{{ ariaText }}</span>
+  </div>
 </template>
 
 <script>
@@ -17,27 +24,7 @@ export default {
   name: 'ToggleOptOut',
   mixins: [Context],
   props: {
-    sectionId: {
-      required: true,
-      type: String
-    },
-    termId: {
-      required: true,
-      type: String
-    },
-    instructorUid: {
-      required: true,
-      type: String
-    },
-    initialValue: {
-      required: true,
-      type: Boolean
-    },
-    disabled: {
-      required: false,
-      type: Boolean
-    },
-    label: {
+    ariaLabel: {
       required: false,
       type: String,
       default: undefined
@@ -47,13 +34,39 @@ export default {
       required: false,
       type: Function
     },
+    disabled: {
+      required: false,
+      type: Boolean
+    },
+    initialValue: {
+      required: true,
+      type: Boolean
+    },
+    instructorUid: {
+      required: true,
+      type: String
+    },
+    label: {
+      required: false,
+      type: String,
+      default: ''
+    },
     onToggle: {
       default: () => {},
       required: false,
       type: Function
+    },
+    sectionId: {
+      required: true,
+      type: String
+    },
+    termId: {
+      required: true,
+      type: String
     }
   },
   data: () => ({
+    ariaText: '',
     optOut: undefined,
     switchId: undefined
   }),
@@ -67,10 +80,10 @@ export default {
   },
   methods: {
     toggleOptOut() {
+      this.ariaText = this.optOut ? 'on' : 'off'
       this.beforeToggle()
       updateOptOut(this.instructorUid, this.termId, this.sectionId, this.optOut).then(data => {
-        this.alertScreenReader(`Opted ${data.hasOptedOut ? 'out' : 'in'}`)
-        this.onToggle()
+        this.onToggle(`Opted ${data.optedOut ? 'out' : 'in'} ${this.label}`)
       })
     }
   }

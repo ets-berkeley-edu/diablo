@@ -24,7 +24,7 @@ export default new Vuetify( {
         accent: '#0d202c',
         black: '#fff',
         error: colors.red.accent3,
-        primary: '#173c55',
+        primary: '#317daf',
         secondary: '#2a5f83',
         'body-background': '#0d202c',
         'header-background': '#122b3c',

@@ -14,7 +14,7 @@
           :instructor-uid="user.uid"
           :initial-value="!!user.hasOptedOutForTerm"
           :disabled="!!user.hasOptedOutForAllTerms"
-          label="Opt out for current semester"
+          label="for current semester"
           :before-toggle="() => refreshingCourses = true"
           :on-toggle="refreshUser"
         />
@@ -25,7 +25,7 @@
           section-id="all"
           :instructor-uid="user.uid"
           :initial-value="!!user.hasOptedOutForAllTerms"
-          label="Opt out for all semesters"
+          label="for all semesters"
           :before-toggle="() => refreshingCourses = true"
           :on-toggle="refreshUser"
         />
