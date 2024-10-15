@@ -146,7 +146,7 @@ class CoursePreference(db.Model):
         criteria = and_(cls.section_id.in_(section_ids), cls.term_id == term_id)
         for existing_row in cls.query.filter(criteria).all():
             existing_row.publish_type = publish_type
-            existing_row.canvas_site_ids = list(canvas_site_ids)
+            existing_row.canvas_site_ids = list(canvas_site_ids) if canvas_site_ids else None
             section_ids.remove(existing_row.section_id)
         for section_id in section_ids:
             preferences = cls(
