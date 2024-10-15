@@ -14,14 +14,23 @@ abbr {
 .border-bottom-zero {
   border-bottom: 0 !important;
 }
+.font-size-12 {
+  font-size: 12px !important;
+}
 .font-size-16 {
   font-size: 16px;
+}
+.height-unset {
+  height: unset !important;
 }
 .line-through {
   text-decoration: line-through;
 }
 .linked-icon {
   color: #f04a00 !important;
+}
+.min-width-unset {
+  min-width: unset !important;
 }
 .not-selectable {
   -webkit-touch-callout: none; /* iOS Safari */
@@ -42,6 +51,21 @@ abbr {
 }
 .sr-skip {
   speak: none;
+}
+.text-transform-unset {
+  text-transform: unset !important;
+}
+.v-table-sort-btn-override {
+  margin-left: -4px;
+}
+.v-table-sort-btn-override .v-btn__content .v-icon {
+  opacity: 0;
+}
+.v-table-sort-btn-override:active .v-btn__content .v-icon,
+.v-table-sort-btn-override:hover .v-btn__content .v-icon,
+.v-table-sort-btn-override:focus .v-btn__content .v-icon,
+.v-table-sort-btn-override.icon-visible .v-btn__content .v-icon {
+  opacity: 1;
 }
 .w-10 {
   width: 10% !important;

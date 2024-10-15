@@ -9,6 +9,7 @@
       :disable-sort="courses.length < 2"
       :headers="headers"
       hide-default-footer
+      hide-default-header
       item-key="sectionId"
       :items="courses"
       :loading="refreshing"
@@ -20,6 +21,40 @@
       :search="searchText"
       @page-count="pageCount = $event"
     >
+      <template #header="{props: {headers: columns, options: {sortBy, sortDesc}}, on: {sort}}">
+        <thead>
+          <tr>
+            <th
+              v-for="(column, index) in columns"
+              :id="`courses-table-${column.id}-th`"
+              :key="index"
+              :aria-sort="getAriaSortIndicator(column, sortBy, sortDesc)"
+              class="text-start text-no-wrap"
+              :class="{'sortable': column.sortable === false}"
+              scope="col"
+            >
+              <template v-if="column.sortable !== false && courses.length >= 2">
+                <v-btn
+                  :id="`courses-table-sort-by-${column.id}-btn`"
+                  :aria-label="getSortButtonAriaLabel(column, sortBy, sortDesc)"
+                  class="font-size-12 font-weight-bold height-unset min-width-unset pa-1 text-transform-unset v-table-sort-btn-override"
+                  :class="{'icon-visible': sortBy[0] === column.value}"
+                  color="white"
+                  density="compact"
+                  plain
+                  @click="() => onClickSort(column, sort, sortDesc)"
+                >
+                  {{ column.text }}
+                  <v-icon :aria-hidden="true" small right>{{ getSortByIcon(column, sortBy, sortDesc) }}</v-icon>
+                </v-btn>
+              </template>
+              <template v-else>
+                <span class="font-size-12 font-weight-bold text-transform-unset v-btn">{{ column.text }}</span>
+              </template>
+            </th>
+          </tr>
+        </thead>
+      </template>
       <template #body="{items}">
         <tbody v-if="refreshing">
           <tr>
@@ -38,7 +73,7 @@
         <tbody v-if="!refreshing && items.length">
           <template v-for="course in items">
             <tr :key="course.sectionId">
-              <td :id="`course-name-${course.sectionId}`" :class="tdc(course)">
+              <td :id="`course-name-${course.sectionId}`" :class="tdc(course)" columnheader="courses-table-course-th">
                 <div v-for="(courseCode, index) in course.courseCodes" :key="courseCode">
                   <router-link
                     v-if="index === 0"
@@ -51,8 +86,8 @@
                   <span v-if="index > 0" class="subtitle-1">{{ courseCode }}</span>
                 </div>
               </td>
-              <td :id="`section-id-${course.sectionId}`" :class="tdc(course)">{{ course.sectionId }}</td>
-              <td v-if="includeRoomColumn" :class="tdc(course)">
+              <td :id="`section-id-${course.sectionId}`" :class="tdc(course)" columnheader="courses-table-section-th">{{ course.sectionId }}</td>
+              <td v-if="includeRoomColumn" :class="tdc(course)" columnheader="courses-table-room-th">
                 <div v-if="course.room && course.room.id" :class="{'line-through': course.deletedAt}">
                   <router-link
                     :id="`course-${course.sectionId}-room-${course.room.id}`"
@@ -66,13 +101,13 @@
                 </span>
                 <span v-if="!course.room && !course.room.location">&mdash;</span>
               </td>
-              <td :id="`meeting-days-${course.sectionId}-0`" :class="tdc(course)">
+              <td :id="`meeting-days-${course.sectionId}-0`" :class="tdc(course)" columnheader="courses-table-days-th">
                 <div :class="{'line-through': course.deletedAt}">
                   <Days v-if="course.displayMeetings[0].daysNames.length" :names-of-days="course.displayMeetings[0].daysNames" />
                   <span v-if="!course.displayMeetings[0].daysNames.length">&mdash;</span>
                 </div>
               </td>
-              <td :id="`meeting-times-${course.sectionId}-0`" :class="tdc(course)">
+              <td :id="`meeting-times-${course.sectionId}-0`" :class="tdc(course)" columnheader="courses-table-time-th">
                 <div :class="{'line-through': course.deletedAt}">
                   <div v-if="course.nonstandardMeetingDates">
                     <span class="text-no-wrap">{{ course.displayMeetings[0].startDate | moment('MMM D, YYYY') }} - </span>
@@ -81,7 +116,7 @@
                   <span class="text-no-wrap">{{ course.displayMeetings[0].startTimeFormatted }} - {{ course.displayMeetings[0].endTimeFormatted }}</span>
                 </div>
               </td>
-              <td :id="`course-${course.sectionId}-status`" :class="tdc(course)">
+              <td :id="`course-${course.sectionId}-status`" :class="tdc(course)" columnheader="courses-table-status-th">
                 <div v-if="course.deletedAt">
                   <v-icon
                     color="red"
@@ -103,7 +138,7 @@
                   Not Eligible
                 </div>
               </td>
-              <td :class="tdc(course)">
+              <td :class="tdc(course)" columnheader="courses-table-instructors-th">
                 <div v-if="course.instructors.length">
                   <div v-for="instructor in course.instructors" :key="instructor.uid" class="mb-1 mt-1">
                     <Instructor :course="course" :instructor="instructor" />
@@ -113,7 +148,7 @@
                   &mdash;
                 </div>
               </td>
-              <td :id="`course-${course.sectionId}-publish-types`" :class="tdc(course)">
+              <td :id="`course-${course.sectionId}-publish-types`" :class="tdc(course)" columnheader="courses-table-publish-th">
                 {{ (course.scheduled && course.publishTypeName) || '&mdash;' }}
               </td>
               <td v-if="includeOptOutColumnForUid" :class="tdc(course)">
@@ -231,15 +266,15 @@ export default {
   },
   data: () => ({
     headers: [
-      {text: 'Course', value: 'label'},
-      {text: 'Section', value: 'sectionId', class: 'w-10'},
-      {text: 'Room', value: 'room.location'},
-      {text: 'Days', sortable: false},
-      {text: 'Time', sortable: false},
-      {text: 'Status', class: 'w-10', sortable: false},
-      {text: 'Instructor(s)', value: 'instructorNames', sortable: false},
-      {text: 'Publish', value: 'publishTypeName', class: 'w-10'},
-      {text: 'Opt out', value: 'hasOptedOut', sortable: false}
+      {id: 'course', text: 'Course', value: 'label'},
+      {id: 'section', text: 'Section', value: 'sectionId', class: 'w-10'},
+      {id: 'room', text: 'Room', value: 'room.location'},
+      {id: 'days', text: 'Days', sortable: false},
+      {id: 'time', text: 'Time', sortable: false},
+      {id: 'status', text: 'Status', class: 'w-10', sortable: false},
+      {id: 'instructors', text: 'Instructor(s)', value: 'instructorNames', sortable: false},
+      {id: 'publish', text: 'Publish', value: 'publishTypeName', class: 'w-10'},
+      {id: 'optOut', text: 'Opt out', value: 'hasOptedOut', sortable: false}
     ],
     pageCount: undefined,
     pageCurrent: 1,
@@ -258,6 +293,30 @@ export default {
     this.refresh()
   },
   methods: {
+    getAriaSortIndicator(column, sortBy, sortDesc) {
+      if (column.value && sortBy[0] === column.value) {
+        return sortDesc[0] ? 'descending' : 'ascending'
+      } else {
+        return undefined
+      }
+    },
+    getSortButtonAriaLabel(column, sortBy, sortDesc) {
+      let label = `${column.text}: `
+      if (sortBy[0] === column.value) {
+        label += `sorted ${sortDesc[0] ? 'descending' : 'ascending'}.`
+        label += ` Activate to sort ${sortDesc[0] ? 'ascending' : 'descending'}.`
+      } else {
+        label += 'not sorted. Activate to sort ascending.'
+      }
+      return label
+    },
+    getSortByIcon(column, sortBy, sortDesc) {
+      return sortBy[0] === column.value && sortDesc[0] ? 'mdi-arrow-down' : 'mdi-arrow-up'
+    },
+    onClickSort(column, sort, sortDesc) {
+      sort(column.value)
+      this.alertScreenReader(`Sorted by ${column.text}, ${sortDesc[0] ? 'ascending' : 'descending'}`)
+    },
     refresh() {
       this.pageCurrent = 1
       if (!this.includeRoomColumn) {
