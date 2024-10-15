@@ -2,27 +2,31 @@
   <v-app :id="$vuetify.theme.dark ? 'dark' : 'light'">
     <v-navigation-drawer
       app
-      permanent
+      class="sidebar-nav"
+      :clipped="$vuetify.breakpoint.lgAndUp"
       color="nav-background"
+      dark
       :expand-on-hover="true"
       :mini-variant="true"
-      :clipped="$vuetify.breakpoint.lgAndUp"
+      permanent
       :right="false"
-      dark
     >
       <v-list nav>
         <template v-for="(item, index) in navItems">
           <v-list-item
             :id="`sidebar-link-${item.title}`"
             :key="`sidebar-link-${index}`"
+            :aria-current="$route.path === item.path"
+            class="nav-list-item"
             link
+            tag="a"
             @click="toRoute(item.path)"
           >
             <v-list-item-icon>
               <v-icon color="icon-nav-default">{{ item.icon }}</v-icon>
             </v-list-item-icon>
             <v-list-item-content>
-              <v-list-item-title>{{ item.title }}</v-list-item-title>
+              <v-list-item-title class="white--text">{{ item.title }}</v-list-item-title>
             </v-list-item-content>
           </v-list-item>
           <v-divider v-if="item.title === 'Rooms'" :key="`sidebar-divider-${index}`" />
@@ -168,9 +172,18 @@ export default {
 }
 </script>
 
+<style>
+.sidebar-nav .v-list-item[aria-current="true"]:not(:focus)::before {
+  opacity: 0.1;
+}
+</style>
+
 <style scoped>
 .mood-ring {
   -webkit-animation:colorchange 300s infinite alternate;
+}
+.nav-list-item {
+  color: var(--v-icon-nav-default) !important;
 }
 @-webkit-keyframes colorchange {
   0% {
