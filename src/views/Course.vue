@@ -127,7 +127,7 @@
                   Collaborator(s) listed will have editing and publishing access:
                 </h4>
                 <div v-for="collaborator in collaborators" :id="`collaborator-${collaborator.uid}`" :key="`collaborator-${collaborator.uid}`">
-                  {{ collaborator.firstName }} {{ collaborator.lastName }} ({{ collaborator.email }}) ({{ collaborator.uid }})
+                  {{ collaboratorLabel(collaborator) }}
                 </div>
                 <div v-if="!collaborators || !collaborators.length" id="collaborators-none">
                   None
@@ -186,17 +186,18 @@
                 >
                   <v-col cols="12">
                     <div
-                      v-for="collaborator in collaborators"
+                      v-for="(collaborator, index) in collaborators"
                       :id="`collaborator-${collaborator.uid}`"
                       :key="collaborator.uid"
                       class="my-2"
                     >
-                      {{ collaborator.firstName }} {{ collaborator.lastName }} ({{ collaborator.email }}) ({{ collaborator.uid }})
+                      {{ collaboratorLabel(collaborator) }}
                       <v-btn
                         :id="`btn-collaborator-remove-${collaborator.uid}`"
+                        :aria-label="`Remove ${collaborator.firstName || ''} ${collaborator.lastName || ''} as collaborator`"
                         :disabled="collaboratorsUpdating"
                         small
-                        @click="removeCollaborator(collaborator.uid)"
+                        @click="removeCollaborator(collaborator.uid, index)"
                       >
                         Remove
                       </v-btn>
@@ -256,7 +257,7 @@
                 <div
                   v-if="recordingTypeEditing && recordingTypeEditable"
                   id="select-recording-type"
-                  :aria-activedescendant="`radio-recording-type-${recordingTypeOption}`"
+                  :aria-activedescendant="`radio-recording-type-${recordingType}`"
                   aria-labelledby="select-recording-type-label"
                   class="mb-4"
                   role="radiogroup"
@@ -454,7 +455,7 @@
                     >
                       <v-col cols="12">
                         <div
-                          v-for="site in publishCanvasSites"
+                          v-for="(site, index) in publishCanvasSites"
                           :id="`canvas-site-${site.canvasSiteId}`"
                           :key="site.canvasSiteId"
                           class="my-2"
@@ -464,7 +465,7 @@
                             :id="`btn-canvas-site-remove-${site.canvasSiteId}`"
                             :disabled="publishTypeUpdating"
                             small
-                            @click="removeCanvasSite(site.canvasSiteId)"
+                            @click="removeCanvasSite(site.canvasSiteId, index)"
                           >
                             Remove
                           </v-btn>
@@ -793,7 +794,8 @@ export default {
         getCourseSite(this.pendingCanvasSiteId).then(data => {
           if (data) {
             this.publishCanvasSites.push(data)
-            this.alertScreenReader(`Site ${data.name} added.`)
+            this.alertScreenReader(`Added site ${data.name}.`)
+            this.$putFocusNextTick('input-canvas-site-id')
           }
         })
       }
@@ -803,7 +805,8 @@ export default {
       if (this.pendingCanvasSite && !this.isCanvasSiteIdStaged(this.pendingCanvasSite.canvasSiteId)) {
         this.publishCanvasSites.push(this.pendingCanvasSite)
       }
-      this.alertScreenReader(`Site ${this.pendingCanvasSite.name} added.`)
+      this.alertScreenReader(`Added site ${this.pendingCanvasSite.name}.`)
+      this.$putFocusNextTick('select-canvas-site')
       this.pendingCanvasSite = null
     },
     addCollaboratorConfirm() {
@@ -813,13 +816,13 @@ export default {
       } else {
         this.addCollaboratorError = null
         this.collaborators.push(this.pendingCollaborator)
-        this.alertScreenReader(`Collaborator ${this.pendingCollaborator.firstName} ${this.pendingCollaborator.lastName} added.`)
+        this.alertScreenReader(`Added collaborator ${this.pendingCollaborator.firstName} ${this.pendingCollaborator.lastName}.`)
       }
-      this.alertScreenReader(`Collaborator ${this.pendingCollaborator.firstName} ${this.pendingCollaborator.lastName} added.`)
       this.pendingCollaborator = null
       if (this.$refs.personLookup) {
         this.$refs.personLookup.clear()
       }
+      this.$putFocusNextTick('input-collaborator-lookup-autocomplete')
     },
     addCollaboratorPending(collaborator) {
       if (collaborator) {
@@ -832,6 +835,15 @@ export default {
       this.noteEditing = false
       this.noteUpdating = false
       this.alertScreenReader('Note edit canceled.')
+      this.$putFocusNextTick('btn-edit-note')
+    },
+    collaboratorLabel(collaborator) {
+      let label = `${collaborator.firstName} ${collaborator.lastName}`
+      if (collaborator.email) {
+        label += ` (${collaborator.email})`
+      }
+      label += ` (${collaborator.uid})`
+      return label
     },
     deleteNote() {
       this.noteUpdating = true
@@ -839,11 +851,13 @@ export default {
         this.course.note = this.noteBody = null
         this.noteUpdating = false
         this.alertScreenReader('Note deleted.')
+        this.$putFocusNextTick('btn-edit-note')
       })
     },
     editNote() {
       this.noteEditing = true
       this.alertScreenReader('Editing note.')
+      this.$putFocusNextTick('note-body-edit')
     },
     isCanvasSiteIdStaged(siteId) {
       return !!this.$_.find(this.publishCanvasSites, {'canvasSiteId': parseInt(siteId, 10)})
@@ -862,11 +876,26 @@ export default {
         this.recordingType = recordingTypeOption
       }
     },
-    removeCanvasSite(canvasSiteId) {
+    removeCanvasSite(canvasSiteId, index) {
+      const nextFocusIndex = (index + 1 === this.$_.size(this.publishCanvasSites)) ? index - 1 : index + 1
+      const nextFocusSiteId = this.$_.get(this.publishCanvasSites, `${nextFocusIndex}.canvasSiteId`)
+      const canvasSite = this.$_.find(this.publishCanvasSites, c => c.canvasSiteId === canvasSiteId)
+      const canvasSiteName = canvasSite.name || ''
       this.publishCanvasSites = this.$_.filter(this.publishCanvasSites, c => c.canvasSiteId !== canvasSiteId)
+      this.alertScreenReader(`Removed bCourses site ${canvasSiteName}.`)
+      let nextFocusId = `btn-canvas-site-remove-${nextFocusSiteId}`
+      if (this.$_.isEmpty(this.publishCanvasSites) || !nextFocusSiteId) {
+        nextFocusId = this.$currentUser.isAdmin ? 'input-canvas-site-id' : 'select-canvas-site'
+      }
+      this.$putFocusNextTick(nextFocusId)
     },
-    removeCollaborator(uid) {
+    removeCollaborator(uid, index) {
+      const nextFocusIndex = (index + 1 === this.$_.size(this.collaborators)) ? index - 1 : index + 1
+      const nextFocusUid = this.$_.get(this.collaborators, `${nextFocusIndex}.uid`)
+      const collaborator = this.$_.find(this.collaborators, c => c.uid === uid)
       this.collaborators = this.$_.filter(this.collaborators, c => c.uid !== uid)
+      this.alertScreenReader(`Removed collaborator ${collaborator.firstName} ${collaborator.lastName}.`)
+      this.$putFocusNextTick(this.$_.isEmpty(this.collaborators) || !nextFocusUid ? 'input-collaborator-lookup-autocomplete' : `btn-collaborator-remove-${nextFocusUid}`)
     },
     render(data) {
       this.$loading()
@@ -906,19 +935,23 @@ export default {
         this.noteEditing = false
         this.noteUpdating = false
         this.alertScreenReader('Note updated.')
+        this.$putFocusNextTick('btn-edit-note')
       })
     },
     toggleCollaboratorsEditing() {
       this.collaboratorsEditing = true
       this.alertScreenReader('Editing collaborators.')
+      this.$putFocusNextTick('input-collaborator-lookup-autocomplete')
     },
     togglePublishTypeEditing() {
       this.publishTypeEditing = true
       this.alertScreenReader('Select recording placement.')
+      this.$putFocusNextTick('select-publish-type')
     },
     toggleRecordingTypeEditing() {
       this.recordingTypeEditing = true
       this.alertScreenReader('Select recording type.')
+      this.$putFocusNextTick('select-recording-type')
     },
     updateCollaborators() {
       this.collaboratorsUpdating = true
@@ -928,6 +961,7 @@ export default {
         this.course.termId,
       ).then(data => {
         this.alertScreenReader('Collaborators updated.')
+        this.$putFocusNextTick('btn-collaborators-edit')
         this.course.collaborators = data.collaborators
         this.collaboratorsEditing = false
         this.collaboratorsUpdating = false
@@ -936,6 +970,7 @@ export default {
     },
     updateCollaboratorsCancel() {
       this.alertScreenReader('Collaborator update cancelled.')
+      this.$putFocusNextTick('btn-collaborators-edit')
       this.collaboratorsEditing = false
       this.collaboratorsUpdating = false
       this.addCollaboratorError = null
@@ -951,6 +986,7 @@ export default {
       ).then(data => {
         const message = `Recording placement updated to ${data.publishTypeName}.`
         this.alertScreenReader(message)
+        this.$putFocusNextTick('btn-publish-type-edit')
         this.course.canvasSiteIds = data.canvasSiteIds
         this.course.canvasSites = data.canvasSites
         this.course.publishType = data.publishType
@@ -961,6 +997,7 @@ export default {
     },
     updatePublishTypeCancel() {
       this.alertScreenReader('Recording placement update cancelled.')
+      this.$putFocusNextTick('btn-publish-type-edit')
       this.publishTypeEditing = false
     },
     updateRecordingType() {
@@ -972,6 +1009,7 @@ export default {
       ).then(data => {
         const message = `Recording type updated to ${this.recordingType.value}.`
         this.alertScreenReader(message)
+        this.$putFocusNextTick('btn-recording-type-edit')
         this.course.recordingType = data.recordingType
         this.course.recordingTypeName = data.recordingTypeName
         this.recordingTypeEditing = false
@@ -980,6 +1018,7 @@ export default {
     },
     updateRecordingTypeCancel() {
       this.alertScreenReader('Recording type update cancelled.')
+      this.$putFocusNextTick('btn-recording-type-edit')
       this.recordingTypeEditing = false
     },
   }
