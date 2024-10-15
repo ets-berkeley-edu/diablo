@@ -34,20 +34,41 @@
             {{ index === 0 ? 'Courses eligible for capture' : 'Courses not in a course capture classroom' }}
           </h2>
           <v-data-table
-            :id="index === 0 ? 'courses-table-eligible' : 'courses-table-ineligible'"
+            :id="getTableId(index)"
             disable-pagination
             disable-sort
             :headers="index === 0 ? eligibleHeaders : ineligibleHeaders"
             :hide-default-footer="true"
+            :hide-default-header="true"
             :items="courses"
             :items-per-page="100"
             class="elevation-1 w-100 ma-4"
           >
+            <template #header="{props: {headers: columns}}">
+              <thead>
+                <tr>
+                  <th
+                    v-for="(column, colIndex) in columns"
+                    :id="`${getTableId(index)}-${column.value}-th`"
+                    :key="colIndex"
+                    class="text-start text-no-wrap"
+                    scope="col"
+                  >
+                    <span class="font-size-12 font-weight-bold">{{ column.text }}</span>
+                  </th>
+                </tr>
+              </thead>
+            </template>
             <template #body="{items}">
               <tbody>
-                <template v-for="course in items" :id="`course-${course.sectionId}`">
+                <template v-for="course in items" :id="`${getTableId(index)}-${course.sectionId}`">
                   <tr :key="course.sectionId">
-                    <td class="text-no-wrap" :class="{'pt-3 pb-3': course.courseCodes.length > 1, 'border-bottom-zero': course.displayMeetings.length > 1}">
+                    <td
+                      :id="`${getTableId(index)}-${course.sectionId}-label`"
+                      class="text-no-wrap"
+                      :class="{'pt-3 pb-3': course.courseCodes.length > 1, 'border-bottom-zero': course.displayMeetings.length > 1}"
+                      :columnheader="`${getTableId(index)}-label-th`"
+                    >
                       <div v-for="(courseCode, courseCodeIndex) in course.courseCodes" :key="courseCode">
                         <router-link
                           v-if="courseCodeIndex === 0"
@@ -59,27 +80,56 @@
                         <span v-if="courseCodeIndex > 0">{{ courseCode }}</span>
                       </div>
                     </td>
-                    <td :class="{'border-bottom-zero': course.displayMeetings.length > 1}">
+                    <td
+                      :id="`${getTableId(index)}-${course.sectionId}-title`"
+                      :class="{'border-bottom-zero': course.displayMeetings.length > 1}"
+                      :columnheader="`${getTableId(index)}-title-th`"
+                    >
                       {{ course.courseTitle || '&mdash;' }}
                     </td>
-                    <td :class="{'border-bottom-zero': course.displayMeetings.length > 1}">
+                    <td
+                      :id="`${getTableId(index)}-${course.sectionId}-instructors`"
+                      :class="{'border-bottom-zero': course.displayMeetings.length > 1}"
+                      :columnheader="`${getTableId(index)}-instructors-th`"
+                    >
                       {{ oxfordJoin($_.map(course.instructors, 'name')) }}
                     </td>
-                    <td :class="{'border-bottom-zero': course.displayMeetings.length > 1}" class="text-no-wrap">
+                    <td
+                      :id="`${getTableId(index)}-${course.sectionId}-room-0`"
+                      :class="{'border-bottom-zero': course.displayMeetings.length > 1}"
+                      class="text-no-wrap"
+                      :columnheader="`${getTableId(index)}-room-th`"
+                    >
                       {{ course.displayMeetings[0].room.location }}
                     </td>
-                    <td :class="{'border-bottom-zero': course.displayMeetings.length > 1}" class="text-no-wrap">
+                    <td
+                      :id="`${getTableId(index)}-${course.sectionId}-days-0`"
+                      :class="{'border-bottom-zero': course.displayMeetings.length > 1}"
+                      class="text-no-wrap"
+                      :columnheader="`${getTableId(index)}-days-th`"
+                    >
                       <Days v-if="course.displayMeetings[0].daysNames.length" :names-of-days="course.displayMeetings[0].daysNames" />
                       <span v-if="!course.displayMeetings[0].daysNames.length">&mdash;</span>
                     </td>
-                    <td :class="{'border-bottom-zero': course.displayMeetings.length > 1}" class="text-no-wrap">
+                    <td
+                      :id="`${getTableId(index)}-${course.sectionId}-time-0`"
+                      :class="{'border-bottom-zero': course.displayMeetings.length > 1}"
+                      class="text-no-wrap"
+                      :columnheader="`${getTableId(index)}-time-th`"
+                    >
                       <div v-if="course.nonstandardMeetingDates" class="pt-2">
                         <span class="text-no-wrap">{{ course.displayMeetings[0].startDate | moment('MMM D, YYYY') }} - </span>
                         <span class="text-no-wrap">{{ course.displayMeetings[0].endDate | moment('MMM D, YYYY') }}</span>
                       </div>
                       {{ course.displayMeetings[0].startTimeFormatted }} - {{ course.displayMeetings[0].endTimeFormatted }}
                     </td>
-                    <td v-if="index === 0" :class="{'border-bottom-zero': course.displayMeetings[0].eligible.length > 1}" class="text-no-wrap">
+                    <td
+                      v-if="index === 0"
+                      :id="`${getTableId(index)}-${course.sectionId}-hasOptedOut`"
+                      :class="{'border-bottom-zero': course.displayMeetings[0].eligible.length > 1}"
+                      class="text-no-wrap"
+                      :columnheader="`${getTableId(index)}-hasOptedOut-th`"
+                    >
                       <ToggleOptOut
                         :aria-label="`Opt out course ${course.courseTitle || $_.get(course.courseCodes, '0', '')}.`"
                         :disabled="course.hasBlanketOptedOut"
@@ -94,13 +144,25 @@
                     <td></td>
                     <td></td>
                     <td></td>
-                    <td class="pt-0 text-no-wrap">
+                    <td
+                      :id="`${getTableId(index)}-${course.sectionId}-room-${index}`"
+                      class="pt-0 text-no-wrap"
+                      :columnheader="`${getTableId(index)}-room-th`"
+                    >
                       {{ course.displayMeetings[meetingIndex].room.location }}
                     </td>
-                    <td class="text-no-wrap">
+                    <td
+                      :id="`${getTableId(index)}-${course.sectionId}-days-${index}`"
+                      class="text-no-wrap"
+                      :columnheader="`${getTableId(index)}-days-th`"
+                    >
                       <Days :names-of-days="course.displayMeetings[meetingIndex].daysNames" />
                     </td>
-                    <td class="text-no-wrap">
+                    <td
+                      :id="`${getTableId(index)}-${course.sectionId}-time-${index}`"
+                      class="text-no-wrap"
+                      :columnheader="`${getTableId(index)}-time-th`"
+                    >
                       <div v-if="course.nonstandardMeetingDates" class="pt-2">
                         <span class="text-no-wrap">{{ course.displayMeetings[meetingIndex].startDate | moment('MMM D, YYYY') }} - </span>
                         <span class="text-no-wrap">{{ course.displayMeetings[meetingIndex].endDate | moment('MMM D, YYYY') }}</span>
@@ -109,7 +171,7 @@
                         {{ course.displayMeetings[meetingIndex].startTimeFormatted }} - {{ course.displayMeetings[meetingIndex].endTimeFormatted }}
                       </div>
                     </td>
-                    <td></td>
+                    <td v-if="index === 0"></td>
                   </tr>
                 </template>
               </tbody>
@@ -159,6 +221,9 @@ export default {
     this.$ready(this.pageTitle)
   },
   methods: {
+    getTableId(index) {
+      return index === 0 ? 'courses-table-eligible' : 'courses-table-ineligible'
+    },
     refreshCourses() {
       this.$_.each(this.$currentUser.courses, course => {
         course.courseCodes = this.getCourseCodes(course)
