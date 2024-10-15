@@ -2,7 +2,7 @@
   <v-container class="elevation-2 pa-6">
     <h2 class="sr-only">Summary of {{ course.label }} course</h2>
     <v-row v-if="instructors.length" id="instructors" :class="{'line-through': course.deletedAt}">
-      <v-col md="auto">
+      <v-col cols="auto">
         <h3 class="sr-only">Instructors</h3>
         <v-icon aria-label="Mortarboard icon">mdi-school-outline</v-icon>
       </v-col>
@@ -27,9 +27,9 @@
       </v-col>
     </v-row>
     <div v-for="(meeting, index) in displayMeetings" :key="index">
-      <h3 class="sr-only">Meeting {{ displayMeetings.length > 1 ? `#${index}` : '' }}</h3>
+      <h3 class="sr-only">Meeting {{ displayMeetings.length > 1 ? `#${index + 1} of ${displayMeetings.length}` : '' }}</h3>
       <v-row v-if="meeting.daysNames" :id="`meeting-days-${index}`" :class="{'line-through': course.deletedAt}">
-        <v-col md="auto" :class="{'pb-0': displayMeetings.length > 1}">
+        <v-col cols="auto" :class="{'pb-0': displayMeetings.length > 1}">
           <v-icon aria-label="Calendar icon">mdi-calendar</v-icon>
         </v-col>
         <v-col :class="{'pb-0': displayMeetings.length > 1}">
@@ -53,7 +53,7 @@
         </v-col>
       </v-row>
       <v-row v-if="meeting.startTimeFormatted" :id="`meeting-times-${index}`" :class="{'line-through': course.deletedAt}">
-        <v-col md="auto" :class="{'pb-1 pt-1': displayMeetings.length > 1}">
+        <v-col cols="auto" :class="{'pb-1 pt-1': displayMeetings.length > 1}">
           <v-icon aria-label="Clock icon">mdi-clock-outline</v-icon>
         </v-col>
         <v-col :class="{'pb-1 pt-1': displayMeetings.length > 1}">
@@ -62,7 +62,7 @@
         </v-col>
       </v-row>
       <v-row v-if="meeting.room" :id="`rooms-${index}`" :class="{'line-through': course.deletedAt}">
-        <v-col md="auto" :class="{'pb-5 pt-1': displayMeetings.length > 1}">
+        <v-col cols="auto" :class="{'pb-5 pt-1': displayMeetings.length > 1}">
           <v-icon aria-label="Map icon">mdi-map-marker</v-icon>
         </v-col>
         <v-col v-if="$currentUser.isAdmin" :class="{'pb-5 pt-1': displayMeetings.length > 1}">
@@ -80,7 +80,7 @@
       </v-row>
     </div>
     <v-row v-if="course.crossListings.length" id="cross-listings">
-      <v-col md="auto">
+      <v-col cols="auto">
         <v-icon aria-label="List icon">mdi-format-line-spacing</v-icon>
       </v-col>
       <v-col>
@@ -95,7 +95,7 @@
       </v-col>
     </v-row>
     <v-row v-if="$currentUser.isAdmin && course.hasOptedOut" id="opted-out">
-      <v-col md="auto">
+      <v-col cols="auto">
         <v-icon aria-label="'Do not disturb' icon">mdi-minus-circle</v-icon>
       </v-col>
       <v-col>

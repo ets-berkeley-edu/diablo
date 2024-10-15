@@ -19,7 +19,7 @@
           large
         >
           {{ icon }}
-        </v-icon> <span id="page-title" :class="clazz()" tabindex="0"> {{ text }}</span>
+        </v-icon> <span id="page-title" :class="clazz()" tabindex="-1"> {{ text }}</span>
       </span>
     </h1>
     <div v-if="subTitle" class="ml-5 pl-8 subtitle-1 text--secondary">
