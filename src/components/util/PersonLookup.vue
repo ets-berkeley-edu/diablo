@@ -182,7 +182,16 @@ export default {
       return this.toLabel(user).replace(this.searchTokenMatcher, match => `<strong>${match}</strong>`)
     },
     toLabel(user) {
-      return user && user instanceof Object ? `${user.firstName || ''} ${user.lastName || ''} (${user.email}) (${user.uid})`.trim() : user
+      if (user && user instanceof Object) {
+        let label = `${user.firstName || ''} ${user.lastName || ''}`
+        if (user.email) {
+          label += ` (${user.email})`
+        }
+        label += ` (${user.uid})`
+        return label
+      } else {
+        return
+      }
     }
   },
   created() {
