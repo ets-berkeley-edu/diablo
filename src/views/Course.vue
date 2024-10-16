@@ -37,6 +37,7 @@
             <v-card-actions v-if="!noteEditing" class="px-4 pb-4">
               <v-btn
                 id="btn-edit-note"
+                aria-label="Edit note"
                 :disabled="noteUpdating"
                 @click="editNote"
               >
@@ -45,6 +46,7 @@
               <v-btn
                 v-if="course.note"
                 id="btn-delete-note"
+                aria-label="Delete Note"
                 class="mx-3"
                 :disabled="noteUpdating"
                 @click="deleteNote"
@@ -66,6 +68,7 @@
             <v-card-actions v-if="noteEditing" class="px-4 pb-4">
               <v-btn
                 id="btn-save-note"
+                aria-label="Save Note"
                 color="success"
                 :disabled="!noteBody || noteUpdating"
                 @click="saveNote"
@@ -74,6 +77,7 @@
               </v-btn>
               <v-btn
                 id="btn-cancel-note"
+                aria-label="Cancel Note Edit"
                 class="mx-3"
                 :disabled="noteUpdating"
                 @click="cancelNote"
@@ -134,6 +138,7 @@
                 </div>
                 <v-btn
                   id="btn-collaborators-edit"
+                  aria-label="Edit Collaborators"
                   class="mt-3"
                   @click="toggleCollaboratorsEditing"
                 >
@@ -171,6 +176,7 @@
                   <v-col cols="3">
                     <v-btn
                       id="btn-collaborator-add"
+                      aria-label="Add Collaborator"
                       color="success"
                       :disabled="!pendingCollaborator"
                       @click="addCollaboratorConfirm"
@@ -205,6 +211,7 @@
                     <div class="mt-4">
                       <v-btn
                         id="btn-collaborators-save"
+                        aria-label="Save Collaborators"
                         color="success"
                         :disabled="$_.isEqual($_.sortBy(collaborators, 'uid'), $_.sortBy(course.collaborators, 'uid')) || collaboratorsUpdating"
                         @click="updateCollaborators"
@@ -221,6 +228,7 @@
                       </v-btn>
                       <v-btn
                         id="btn-collaborators-cancel"
+                        aria-label="Cancel Collaborator Edit"
                         color="default"
                         :disabled="collaboratorsUpdating"
                         class="mx-2"
@@ -248,6 +256,7 @@
                   <v-btn
                     v-if="!recordingTypeEditing && recordingTypeEditable"
                     id="btn-recording-type-edit"
+                    aria-label="Edit Recording Type"
                     class="mt-3"
                     @click="toggleRecordingTypeEditing"
                   >
@@ -285,6 +294,7 @@
                 <div v-if="recordingTypeEditing && recordingTypeEditable">
                   <v-btn
                     id="btn-recording-type-save"
+                    aria-label="Save Recording Type"
                     color="success"
                     :disabled="recordingTypeUpdating"
                     @click="updateRecordingType"
@@ -301,6 +311,7 @@
                   </v-btn>
                   <v-btn
                     id="btn-recording-type-cancel"
+                    aria-label="Cancel Recording Type Edit"
                     class="mx-2"
                     color="default"
                     :disabled="recordingTypeUpdating"
@@ -331,6 +342,7 @@
                   </div>
                   <v-btn
                     id="btn-publish-type-edit"
+                    aria-label="Edit Recording Placement"
                     class="mt-3"
                     @click="togglePublishTypeEditing"
                   >
@@ -402,6 +414,7 @@
                       <v-col cols="3">
                         <v-btn
                           id="btn-canvas-site-add"
+                          aria-label="Add bCourses Site"
                           color="success"
                           :disabled="!pendingCanvasSite"
                           @click="addCanvasSiteConfirm"
@@ -440,6 +453,7 @@
                       <v-col cols="3">
                         <v-btn
                           id="btn-canvas-site-add"
+                          aria-label="Add Canvas Site"
                           color="success"
                           :disabled="!pendingCanvasSiteId || !/^\d+$/.test(pendingCanvasSiteId) || isCanvasSiteIdStaged(pendingCanvasSiteId)"
                           @click="addCanvasSiteById"
@@ -463,6 +477,7 @@
                           {{ site.name }} ({{ site.courseCode }})
                           <v-btn
                             :id="`btn-canvas-site-remove-${site.canvasSiteId}`"
+                            :aria-label="`Remove ${site.name} (${site.courseCode})`"
                             :disabled="publishTypeUpdating"
                             small
                             @click="removeCanvasSite(site.canvasSiteId, index)"
@@ -480,6 +495,7 @@
                         <div>
                           <v-btn
                             id="btn-publish-type-save"
+                            aria-label="Save Recording Placement"
                             color="success"
                             :disabled="publishTypeUpdating || (publishType && publishType.startsWith('kaltura_media_gallery') && !publishCanvasSites.length)"
                             @click="updatePublishType"
@@ -496,6 +512,7 @@
                           </v-btn>
                           <v-btn
                             id="btn-publish-type-cancel"
+                            aria-label="Cancel Recording Placement Edit"
                             color="default"
                             :disabled="publishTypeUpdating"
                             class="mx-2"
