@@ -1,6 +1,7 @@
 <template>
   <v-data-table
     id="kaltura-event-list"
+    :caption="`The Kaltura Events of ${location}`"
     class="elevation-1 mt-3"
     disable-pagination
     disable-sort
@@ -47,7 +48,8 @@
       </span>
     </template>
     <template #item.days="{item}">
-      {{ $_.get(item.recurrence, 'byDay') || '&mdash;' }}
+      <span aria-hidden="true">{{ $_.get(item.recurrence, 'byDay') || '&mdash;' }}</span>
+      <span class="sr-only">{{ $_.get(item.recurrence, 'byDay') || 'blank' }}</span>
     </template>
     <template #expanded-item="{headers, item}">
       <td :colspan="headers.length">
@@ -129,6 +131,10 @@ export default {
     events: {
       required: true,
       type: Array
+    },
+    location: {
+      required: true,
+      type: String
     }
   }
 }

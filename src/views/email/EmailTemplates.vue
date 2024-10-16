@@ -30,13 +30,14 @@
       </v-card-title>
       <v-card-text>
         <v-data-table
+          caption="Email templates"
           disable-pagination
           disable-sort
           :headers="headers"
           hide-default-footer
           :items="emailTemplates"
           :loading="refreshing"
-          no-results-text="No matching emailTemplates"
+          no-results-text="No matching email templates"
         >
           <template #body="{items}">
             <tbody>
@@ -49,18 +50,19 @@
                 <td>
                   <router-link :id="`template-${template.id}`" :to="`/email/template/edit/${template.id}`">{{ template.name }}</router-link>
                 </td>
-                <td :id="`template-${template.typeName}-subject-line`" class="w-50">
+                <td :id="`template-${template.id}-subject-line`" class="w-50">
                   {{ template.subjectLine }}
                 </td>
-                <td :id="`template-${template.typeName}-type-name`">
+                <td :id="`template-${template.id}-type-name`">
                   {{ template.typeName }}
                 </td>
-                <td class="text-no-wrap">
+                <td :id="`template-${template.id}-createdAt`" class="text-no-wrap">
                   {{ template.createdAt | moment('MMM DD, YYYY') }}
                 </td>
                 <td>
                   <v-btn
-                    :id="`send-test-email-${template.typeName}`"
+                    :id="`send-test-email-${template.id}`"
+                    :aria-label="`Send test email using template ${template.typeName}`"
                     icon
                     @click="sendTestEmail(template.id)"
                   >
@@ -69,7 +71,8 @@
                 </td>
                 <td>
                   <v-btn
-                    :id="`delete-email-template-${template.typeName}`"
+                    :id="`delete-email-template-${template.id}`"
+                    :aria-label="`Delete ${template.typeName} email template`"
                     icon
                     @click="deleteEmailTemplate(template.id)"
                   >
@@ -141,6 +144,7 @@ export default {
     sendTestEmail(templateId) {
       sendTestEmail(templateId).then(() => {
         this.snackbarOpen('Test email sent. Check your inbox.')
+        this.$putFocusNextTick('btn-close-alert')
       })
     }
   }

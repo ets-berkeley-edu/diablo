@@ -16,14 +16,31 @@
       <v-card-text>
         <div class="pt-8">
           <v-data-table
+            caption="Blackouts"
             disable-pagination
             disable-sort
             :headers="headers"
             hide-default-footer
+            hide-default-header
             :items="blackouts"
             :loading="refreshing"
             no-results-text="No matching blackouts"
           >
+            <template #header="{props: {headers: columns}}">
+              <thead>
+                <tr>
+                  <th
+                    v-for="(column, colIndex) in columns"
+                    :id="`blackouts-${column.value}-th`"
+                    :key="colIndex"
+                    class="text-start text-no-wrap"
+                    scope="col"
+                  >
+                    <span class="font-size-12 font-weight-bold">{{ column.text }}</span>
+                  </th>
+                </tr>
+              </thead>
+            </template>
             <template #body="{items}">
               <tbody>
                 <tr v-if="!items.length">
@@ -32,18 +49,19 @@
                   </td>
                 </tr>
                 <tr v-for="blackout in items" :key="blackout.id">
-                  <td class="w-50">
+                  <td :id="`blackout-${blackout.id}-name`" class="w-50" columnheader="blackouts-name-th">
                     {{ blackout.name }}
                   </td>
-                  <td :id="`blackout-${blackout.id}-start-date`">
+                  <td :id="`blackout-${blackout.id}-start-date`" columnheader="blackouts-startDate-th">
                     {{ blackout.startDate }}
                   </td>
-                  <td :id="`blackout-${blackout.id}-end-date`">
+                  <td :id="`blackout-${blackout.id}-end-date`" columnheader="blackouts-endDate-th">
                     {{ blackout.endDate }}
                   </td>
-                  <td>
+                  <td :id="`blackout-${blackout.id}-delete`" columnheader="blackouts-delete-th">
                     <v-btn
                       :id="`delete-blackout-${blackout.id}`"
+                      :aria-label="`Delete ${blackout.name} Blackout`"
                       icon
                       @click="deleteBlackout(blackout.id)"
                     >
@@ -77,7 +95,7 @@ export default {
       {text: 'Name', value: 'name'},
       {text: 'Start Date', value: 'startDate'},
       {text: 'End Date', value: 'endDate'},
-      {text: 'Delete', class: 'pl-5 pr-0 mr-0'}
+      {text: 'Delete', class: 'pl-5 pr-0 mr-0', value: 'delete'}
     ],
     refreshing: false
   }),

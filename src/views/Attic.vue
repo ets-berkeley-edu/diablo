@@ -6,6 +6,7 @@
     <div class="ma-3">
       <h2>Report</h2>
       <v-data-table
+        caption="Report"
         disable-pagination
         :headers="[
           {text: 'Key', value: 'key'},
@@ -18,6 +19,7 @@
     <div class="ma-3 pt-3">
       <h2>Admin Users</h2>
       <v-data-table
+        caption="Admin Users"
         disable-pagination
         :headers="[
           {text: 'Name', value: 'name'},

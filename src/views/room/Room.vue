@@ -59,7 +59,7 @@
         Kaltura events tagged with '{{ $config.createdByDiabloTag }}' and
         a start-date between {{ $config.currentTermRecordingsBegin }} and  {{ $config.currentTermRecordingsEnd }}.
       </div>
-      <KalturaEventList :events="kalturaEventList" />
+      <KalturaEventList :events="kalturaEventList" :location="room.location" />
     </div>
   </div>
 </template>

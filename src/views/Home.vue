@@ -35,6 +35,7 @@
           </h2>
           <v-data-table
             :id="getTableId(index)"
+            :caption="index === 0 ? 'Courses eligible for capture' : 'Courses not in a course capture classroom'"
             disable-pagination
             disable-sort
             :headers="index === 0 ? eligibleHeaders : ineligibleHeaders"
@@ -85,7 +86,8 @@
                       :class="{'border-bottom-zero': course.displayMeetings.length > 1}"
                       :columnheader="`${getTableId(index)}-title-th`"
                     >
-                      {{ course.courseTitle || '&mdash;' }}
+                      <span aria-hidden="true">{{ course.courseTitle || '&mdash;' }}</span>
+                      <span class="sr-only">{{ course.courseTitle || 'blank' }}</span>
                     </td>
                     <td
                       :id="`${getTableId(index)}-${course.sectionId}-instructors`"

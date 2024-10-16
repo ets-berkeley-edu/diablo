@@ -662,39 +662,84 @@
       </v-row>
       <v-row v-if="$currentUser.isAdmin">
         <v-col cols="12">
-          <v-container id="update-history" class="elevation-2 pa-6 mx-0">
+          <v-container id="update-history" class="elevation-2 pa-6 mx-0 max-width-unset">
             <h2>Update history</h2>
             <div v-if="!course.updateHistory.length" id="no-updates">No updates.</div>
             <v-data-table
               v-if="course.updateHistory.length"
               id="update-history-table"
+              caption="Course Update History"
               disable-pagination
               :headers="updateHistoryHeaders"
-              :hide-default-footer="true"
+              hide-default-footer
+              hide-default-header
               :items="course.updateHistory"
               :items-per-page="100"
               class="elevation-1"
             >
-              <template #item.fieldName="{ item }">
-                <span :id="`update-fieldName-${item.id}`">{{ item.fieldName || '&mdash;' }}</span>
+              <template #header="{props: {headers: columns, options: {sortBy, sortDesc}}, on: {sort}}">
+                <thead>
+                  <tr>
+                    <th
+                      v-for="(column, index) in columns"
+                      :id="`update-history-${column.id}-th`"
+                      :key="index"
+                      :aria-label="column.text"
+                      :aria-sort="getAriaSortIndicator(column, sortBy, sortDesc)"
+                      class="text-start text-no-wrap"
+                      :class="{'sortable': column.sortable === false}"
+                      scope="col"
+                    >
+                      <v-btn
+                        :id="`update-history-sort-by-${column.id}-btn`"
+                        :aria-label="getSortButtonAriaLabel(column, sortBy, sortDesc)"
+                        class="font-size-12 font-weight-bold height-unset min-width-unset pa-1 text-transform-unset v-table-sort-btn-override"
+                        :class="{'icon-visible': sortBy[0] === column.value}"
+                        color="white"
+                        density="compact"
+                        plain
+                        @click="() => onClickSort(column, sort, sortBy, sortDesc)"
+                      >
+                        {{ column.text }}
+                        <v-icon :aria-hidden="true" small right>{{ getSortByIcon(column, sortBy, sortDesc) }}</v-icon>
+                      </v-btn>
+                    </th>
+                  </tr>
+                </thead>
               </template>
-              <template #item.fieldValueOld="{ item }">
-                <span :id="`update-fieldValueOld-${item.id}`">{{ item.fieldValueOld || '&mdash;' }}</span>
-              </template>
-              <template #item.fieldValueNew="{ item }">
-                <span :id="`update-fieldValueNew-${item.id}`">{{ item.fieldValueNew || '&mdash;' }}</span>
-              </template>
-              <template #item.requestedByName="{ item }">
-                <span :id="`update-requestedByName-${item.id}`">{{ item.requestedByName ? `${item.requestedByName} (${item.requestedByUid})` : '&mdash;' }}</span>
-              </template>
-              <template #item.requestedAt="{ item }">
-                <span :id="`update-requestedAt-${item.id}`">{{ new Date(item.requestedAt).toLocaleString() }}</span>
-              </template>
-              <template #item.publishedAt="{ item }">
-                <span :id="`update-publishedAt-${item.id}`">{{ item.publishedAt ? new Date(item.publishedAt).toLocaleString() : '&mdash;' }}</span>
-              </template>
-              <template #item.status="{ item }">
-                <span :id="`update-status-${item.id}`">{{ item.status || '&mdash;' }}</span>
+              <template #body="{items}">
+                <tbody>
+                  <tr v-for="(item, index) in items" :key="index">
+                    <td :id="`update-fieldName-${item.id}`" columnheader="update-history-fieldName-th">
+                      <span aria-hidden="true">{{ item.fieldName || '&mdash;' }}</span>
+                      <span class="sr-only">{{ item.fieldName || 'blank' }}</span>
+                    </td>
+                    <td :id="`update-fieldValueOld-${item.id}`" columnheader="update-history-fieldValueOld-th">
+                      <span aria-hidden="true">{{ item.fieldValueOld || '&mdash;' }}</span>
+                      <span class="sr-only">{{ item.fieldValueOld || 'blank' }}</span>
+                    </td>
+                    <td :id="`update-fieldValueNew-${item.id}`" columnheader="update-history-fieldValueNew-th">
+                      <span aria-hidden="true">{{ item.fieldValueNew || '&mdash;' }}</span>
+                      <span class="sr-only">{{ item.fieldValueNew || 'blank' }}</span>
+                    </td>
+                    <td :id="`update-requestedByName-${item.id}`" columnheader="update-history-requestedByName-th">
+                      <span aria-hidden="true">{{ item.requestedByName ? `${item.requestedByName} (${item.requestedByUid})` : '&mdash;' }}</span>
+                      <span class="sr-only">{{ item.requestedByName ? `${item.requestedByName} (${item.requestedByUid})` : 'blank' }}</span>
+                    </td>
+                    <td :id="`update-requestedAt-${item.id}`" columnheader="update-history-requestedAt-th">
+                      <span aria-hidden="true">{{ new Date(item.requestedAt).toLocaleString() || '&mdash;' }}</span>
+                      <span class="sr-only">{{ new Date(item.requestedAt).toLocaleString() || 'blank' }}</span>
+                    </td>
+                    <td :id="`update-publishedAt-${item.id}`" columnheader="update-history-publishedAt-th">
+                      <span aria-hidden="true">{{ item.publishedAt ? new Date(item.publishedAt).toLocaleString() : '&mdash;' }}</span>
+                      <span class="sr-only">{{ item.publishedAt ? new Date(item.publishedAt).toLocaleString() : 'blank' }}</span>
+                    </td>
+                    <td :id="`update-status-${item.id}`" columnheader="update-history-status-th">
+                      <span aria-hidden="true">{{ item.status || '&mdash;' }}</span>
+                      <span class="sr-only">{{ item.status || 'blank' }}</span>
+                    </td>
+                  </tr>
+                </tbody>
               </template>
             </v-data-table>
           </v-container>
@@ -876,8 +921,34 @@ export default {
       this.alertScreenReader('Editing note.')
       this.$putFocusNextTick('note-body-edit')
     },
+    getAriaSortIndicator(column, sortBy, sortDesc) {
+      if (column.value && sortBy[0] === column.value) {
+        return sortDesc[0] ? 'descending' : 'ascending'
+      } else {
+        return undefined
+      }
+    },
+    getSortButtonAriaLabel(column, sortBy, sortDesc) {
+      let label = `${column.text}: `
+      if (sortBy[0] === column.value) {
+        label += `sorted ${sortDesc[0] ? 'descending' : 'ascending'}.`
+        label += ` Activate to sort ${sortDesc[0] ? 'ascending' : 'descending'}.`
+      } else {
+        label += 'not sorted. Activate to sort ascending.'
+      }
+      return label
+    },
+    getSortByIcon(column, sortBy, sortDesc) {
+      return sortBy[0] === column.value && sortDesc[0] ? 'mdi-arrow-down' : 'mdi-arrow-up'
+    },
     isCanvasSiteIdStaged(siteId) {
       return !!this.$_.find(this.publishCanvasSites, {'canvasSiteId': parseInt(siteId, 10)})
+    },
+    onClickSort(column, sort, sortBy, sortDesc) {
+      const sortDirection = this.$_.first(sortBy) === column.value && !sortDesc[0] ? 'descending' : 'ascending'
+      sort(column.value)
+      this.alertScreenReader(`Sorted by ${column.text}, ${sortDirection}`)
+      this.$putFocusNextTick(`update-history-sort-by-${column.id}-btn`)
     },
     onPublishTypeChange(publishTypeOption, index) {
       if (this.publishType === publishTypeOption) {

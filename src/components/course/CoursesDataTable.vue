@@ -6,6 +6,7 @@
     <v-data-table
       id="courses-data-table"
       v-model="selectedRows"
+      caption="Courses"
       :disable-sort="courses.length < 2"
       :headers="headers"
       hide-default-footer
@@ -28,6 +29,7 @@
               v-for="(column, index) in columns"
               :id="`courses-table-${column.id}-th`"
               :key="index"
+              :aria-label="column.text"
               :aria-sort="getAriaSortIndicator(column, sortBy, sortDesc)"
               class="text-start text-no-wrap"
               :class="{'sortable': column.sortable === false}"
@@ -42,7 +44,7 @@
                   color="white"
                   density="compact"
                   plain
-                  @click="() => onClickSort(column, sort, sortDesc)"
+                  @click="() => onClickSort(column, sort, sortBy, sortDesc)"
                 >
                   {{ column.text }}
                   <v-icon :aria-hidden="true" small right>{{ getSortByIcon(column, sortBy, sortDesc) }}</v-icon>
@@ -149,7 +151,8 @@
                 </div>
               </td>
               <td :id="`course-${course.sectionId}-publish-types`" :class="tdc(course)" columnheader="courses-table-publish-th">
-                {{ (course.scheduled && course.publishTypeName) || '&mdash;' }}
+                <span aria-hidden="true">{{ (course.scheduled && course.publishTypeName) || '&mdash;' }}</span>
+                <span class="sr-only">{{ (course.scheduled && course.publishTypeName) || 'blank' }}</span>
               </td>
               <td v-if="includeOptOutColumnForUid" :class="tdc(course)">
                 <ToggleOptOut
@@ -313,9 +316,11 @@ export default {
     getSortByIcon(column, sortBy, sortDesc) {
       return sortBy[0] === column.value && sortDesc[0] ? 'mdi-arrow-down' : 'mdi-arrow-up'
     },
-    onClickSort(column, sort, sortDesc) {
+    onClickSort(column, sort, sortBy, sortDesc) {
+      const sortDirection = this.$_.first(sortBy) === column.value && !sortDesc[0] ? 'descending' : 'ascending'
       sort(column.value)
-      this.alertScreenReader(`Sorted by ${column.text}, ${sortDesc[0] ? 'ascending' : 'descending'}`)
+      this.alertScreenReader(`Sorted by ${column.text}, ${sortDirection}`)
+      this.$putFocusNextTick(`courses-table-sort-by-${column.id}-btn`)
     },
     refresh() {
       this.pageCurrent = 1
