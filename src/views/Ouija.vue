@@ -27,6 +27,7 @@
           id="input-search"
           v-model="searchText"
           append-icon="mdi-magnify"
+          aria-label="Search courses table"
           clearable
           :disabled="isDownloading"
           label="Search"
@@ -37,10 +38,11 @@
           <v-select
             id="ouija-filter-options"
             v-model="selectedFilter"
+            aria-label="Filter courses table"
             color="secondary"
             :disabled="isDownloading"
             :items="$_.keys($config.searchFilterOptions)"
-            @change="refresh"
+            @change="() => refresh(`Courses table refreshed. Showing ${$config.searchFilterOptions[selectedFilter]}`)"
           >
             <span :id="`filter-option-${data.item.value}`" slot="item" slot-scope="data">{{ data.item }}</span>
             <template #selection="{item}">
@@ -115,7 +117,7 @@ export default {
         this.snackbarOpen(`${course.label} removed from list.`)
       }
     },
-    refresh() {
+    refresh(srAlert) {
       this.refreshing = true
       return getCourses(this.selectedFilter, this.$config.currentTermId).then(data => {
         this.courses = data
@@ -126,6 +128,9 @@ export default {
           course.isSelectable = !course.hasOptedOut
         })
         this.refreshing = false
+        if (srAlert) {
+          this.alertScreenReader(srAlert)
+        }
       })
     }
   }

@@ -1,22 +1,20 @@
 <template>
-  <v-dialog v-model="dialog" max-width="360">
+  <v-dialog v-model="dialog" aria-labelledby="blackout-modal-header" max-width="360">
     <template #activator="{on, attrs}">
-      <v-btn v-bind="attrs" v-on="on">
+      <v-btn id="create-blackout-btn" v-bind="attrs" v-on="on">
         Create New<span class="sr-only"> Blackout Date</span>
       </v-btn>
     </template>
     <v-card>
       <v-card-title class="pb-1">
-        <h2 class="title">Create New Blackout</h2>
+        <h2 id="blackout-modal-header" class="title">Create New Blackout</h2>
       </v-card-title>
       <v-card-text>
-        <span>
-          To select a date range, click once on the start date and once on end date.
-        </span>
-        <div class="pb-4">
+        <div class="pb-2">
           <v-text-field
             id="input-blackout-name"
             v-model="name"
+            aria-label="Blackout name"
             aria-required="true"
             label="Name"
             maxlength="255"
@@ -24,9 +22,13 @@
             @keypress.enter="disableSave ? $_.noop() : create()"
           />
         </div>
-        <div class="text-center w-100">
+        <span id="create-blackout-desc">
+          To select a date range, click once on the start date and once on end date.
+        </span>
+        <div class="mt-2 text-center w-100">
           <c-date-picker
             v-model="range"
+            aria-describedby="create-blackout-desc"
             :attributes="attributes"
             :disabled-dates="disabledDates"
             is-range
@@ -59,6 +61,7 @@
           </v-btn>
           <v-btn
             id="cancel-edit-of-blackout"
+            class="ml-2"
             text
             @click="cancel"
           >
@@ -134,6 +137,7 @@ export default {
       this.dialog = false
       this.alertScreenReader('Cancelled.')
       this.onClose(false)
+      this.$putFocusNextTick('create-blackout-btn')
     },
     create() {
       this.isSaving = true
@@ -145,6 +149,7 @@ export default {
         this.isSaving = false
         this.dialog = false
         this.onClose(true)
+        this.$putFocusNextTick('create-blackout-btn')
       })
     },
     reset() {

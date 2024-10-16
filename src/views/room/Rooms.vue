@@ -8,6 +8,7 @@
           <v-text-field
             v-model="search"
             append-icon="mdi-magnify"
+            aria-label="Search rooms table"
             label="Search"
             single-line
             hide-details
@@ -18,8 +19,11 @@
       </v-tooltip>
     </v-card-title>
     <v-data-table
+      id="rooms-data-table"
+      caption="Rooms"
       :headers="headers"
       hide-default-footer
+      hide-default-header
       :items="rooms"
       no-results-text="No rooms"
       :options="options"
@@ -27,17 +31,55 @@
       :search="search"
       @page-count="pageCount = $event"
     >
-      <template #item.location="{item}">
-        <router-link :id="`room-${item.id}`" :to="`/room/${item.id}`">{{ item.location }}</router-link>
+      <template #header="{props: {headers: columns, options: {sortBy, sortDesc}}, on: {sort}}">
+        <thead>
+          <tr>
+            <th
+              v-for="(column, index) in columns"
+              :id="`rooms-table-${column.value}-th`"
+              :key="index"
+              :aria-label="column.text"
+              :aria-sort="getAriaSortIndicator(column, sortBy, sortDesc)"
+              class="text-start"
+              :class="{'sortable': column.sortable === false}"
+              scope="col"
+            >
+              <v-btn
+                :id="`rooms-table-sort-by-${column.value}-btn`"
+                :aria-label="getSortButtonAriaLabel(column, sortBy, sortDesc)"
+                class="font-size-12 font-weight-bold height-unset min-width-unset pa-1 text-transform-unset v-table-sort-btn-override"
+                :class="{'icon-visible': sortBy[0] === column.value}"
+                color="white"
+                density="compact"
+                plain
+                @click="() => onClickSort(column, sort, sortBy, sortDesc)"
+              >
+                {{ column.text }}
+                <v-icon :aria-hidden="true" small right>{{ getSortByIcon(column, sortBy, sortDesc) }}</v-icon>
+              </v-btn>
+            </th>
+          </tr>
+        </thead>
       </template>
-      <template #item.kalturaResourceId="{item}">
-        {{ item.kalturaResourceId || '&mdash;' }}
-      </template>
-      <template #item.capabilityName="{item}">
-        {{ item.capability ? item.capabilityName : '&mdash;' }}
-      </template>
-      <template #item.isAuditorium="{item}">
-        {{ item.isAuditorium ? 'Yes' : 'No' }}
+      <template #body="{items}">
+        <tbody>
+          <tr v-for="(item, index) in items" :key="index">
+            <td :id="`room-${item.id}-location`" columnheader="rooms-table-location-th">
+              <router-link :id="`room-${item.id}`" :to="`/room/${item.id}`">{{ item.location }}</router-link>
+            </td>
+            <td :id="`room-${item.id}-kalturaResourceId`" columnheader="rooms-table-kalturaResourceId-th">
+              <span aria-hidden="true">{{ item.kalturaResourceId || '&mdash;' }}</span>
+              <span class="sr-only">{{ item.kalturaResourceId || 'blank' }}</span>
+            </td>
+            <td :id="`room-${item.id}-capability`" columnheader="rooms-table-capability-th">
+              <span aria-hidden="true">{{ item.capability ? item.capabilityName : '&mdash;' }}</span>
+              <span class="sr-only">{{ item.capability ? item.capabilityName : 'blank' }}</span>
+            </td>
+            <td :id="`room-${item.id}-isAuditorium`" columnheader="rooms-table-isAuditorium-th">
+              {{ item.isAuditorium ? 'Yes' : 'No' }}
+            </td>
+          </tr>
+        </tbody>
       </template>
     </v-data-table>
     <div v-if="pageCount > 1" class="text-center pb-4 pt-2">
@@ -86,6 +128,34 @@ export default {
       this.rooms = data
       this.$ready('Rooms')
     })
+  },
+  methods: {
+    getAriaSortIndicator(column, sortBy, sortDesc) {
+      if (column.value && sortBy[0] === column.value) {
+        return sortDesc[0] ? 'descending' : 'ascending'
+      } else {
+        return undefined
+      }
+    },
+    getSortButtonAriaLabel(column, sortBy, sortDesc) {
+      let label = `${column.text}: `
+      if (sortBy[0] === column.value) {
+        label += `sorted ${sortDesc[0] ? 'descending' : 'ascending'}.`
+        label += ` Activate to sort ${sortDesc[0] ? 'ascending' : 'descending'}.`
+      } else {
+        label += 'not sorted. Activate to sort ascending.'
+      }
+      return label
+    },
+    getSortByIcon(column, sortBy, sortDesc) {
+      return sortBy[0] === column.value && sortDesc[0] ? 'mdi-arrow-down' : 'mdi-arrow-up'
+    },
+    onClickSort(column, sort, sortBy, sortDesc) {
+      const sortDirection = this.$_.first(sortBy) === column.value && !sortDesc[0] ? 'descending' : 'ascending'
+      sort(column.value)
+      this.alertScreenReader(`Sorted by ${column.text}, ${sortDirection}`)
+      this.$putFocusNextTick(`rooms-table-sort-by-${column.value}-btn`)
+    }
   }
 }
 </script>

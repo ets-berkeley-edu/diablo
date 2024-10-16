@@ -29,6 +29,9 @@ abbr {
 .linked-icon {
   color: #f04a00 !important;
 }
+.max-width-unset {
+  max-width: unset !important;
+}
 .min-width-unset {
   min-width: unset !important;
 }
@@ -41,7 +44,8 @@ abbr {
             user-select: none; /* Non-prefixed version, currently
                                   supported by Chrome, Edge, Opera and Firefox */
 }
-.sr-only {
+.sr-only,
+table caption {
   position: absolute;
   left: -10000px;
   top: auto;

@@ -2,6 +2,7 @@
   <div>
     <v-dialog
       v-model="dialog"
+      aria-labelledby="template-codes-modal-header"
       width="500"
     >
       <template #activator="{on, attrs}">
@@ -18,7 +19,7 @@
       </template>
 
       <v-card class="pt-2">
-        <v-card-title class="headline" primary-title>
+        <v-card-title id="template-codes-modal-header" class="headline" primary-title>
           Template Codes
         </v-card-title>
         <v-card-text>
