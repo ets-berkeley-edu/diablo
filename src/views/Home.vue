@@ -1,5 +1,10 @@
 <template>
-  <v-card v-if="!loading" outlined class="elevation-1">
+  <v-card
+    v-if="!loading"
+    class="elevation-1"
+    min-width="880"
+    outlined
+  >
     <v-card-title>
       <PageTitle icon="mdi-video-plus" :text="pageTitle" />
     </v-card-title>
@@ -29,7 +34,7 @@
       </v-row>
       <Spinner v-if="refreshingCourses" />
       <template v-for="(courses, index) in [eligibleCourses, ineligibleCourses]">
-        <v-row v-if="!refreshingCourses && courses.length" :key="index">
+        <v-row v-if="!refreshingCourses && courses.length" :key="index" class="py-2">
           <h2 class="px-4">
             {{ index === 0 ? 'Courses eligible for capture' : 'Courses not in a course capture classroom' }}
           </h2>
@@ -123,7 +128,8 @@
                         <span class="text-no-wrap">{{ course.displayMeetings[0].startDate | moment('MMM D, YYYY') }} - </span>
                         <span class="text-no-wrap">{{ course.displayMeetings[0].endDate | moment('MMM D, YYYY') }}</span>
                       </div>
-                      {{ course.displayMeetings[0].startTimeFormatted }} - {{ course.displayMeetings[0].endTimeFormatted }}
+                      <span aria-hidden="true">{{ course.displayMeetings[0].startTimeFormatted }} - {{ course.displayMeetings[0].endTimeFormatted }}</span>
+                      <span class="sr-only">{{ course.displayMeetings[0].startTimeFormatted }} to {{ course.displayMeetings[0].endTimeFormatted }}</span>
                     </td>
                     <td
                       v-if="index === 0"

@@ -113,9 +113,11 @@
                 <div :class="{'line-through': course.deletedAt}">
                   <div v-if="course.nonstandardMeetingDates">
                     <span class="text-no-wrap">{{ course.displayMeetings[0].startDate | moment('MMM D, YYYY') }} - </span>
+                    <span class="sr-only">to</span>
                     <span class="text-no-wrap">{{ course.displayMeetings[0].endDate | moment('MMM D, YYYY') }}</span>
                   </div>
-                  <span class="text-no-wrap">{{ course.displayMeetings[0].startTimeFormatted }} - {{ course.displayMeetings[0].endTimeFormatted }}</span>
+                  <span aria-hidden="true" class="text-no-wrap">{{ course.displayMeetings[0].startTimeFormatted }} - {{ course.displayMeetings[0].endTimeFormatted }}</span>
+                  <span class="sr-only">{{ course.displayMeetings[0].startTimeFormatted }} to {{ course.displayMeetings[0].endTimeFormatted }}</span>
                 </div>
               </td>
               <td :id="`course-${course.sectionId}-status`" :class="tdc(course)" columnheader="courses-table-status-th">
@@ -188,7 +190,8 @@
                   <span class="text-no-wrap">{{ course.displayMeetings[index].endDate | moment('MMM D, YYYY') }}</span>
                 </div>
                 <div :class="{'pb-2': course.nonstandardMeetingDates && index === course.displayMeetings.length - 1}">
-                  {{ course.displayMeetings[index].startTimeFormatted }} - {{ course.displayMeetings[index].endTimeFormatted }}
+                  <span aria-hidden="true">{{ course.displayMeetings[index].startTimeFormatted }} - {{ course.displayMeetings[index].endTimeFormatted }}</span>
+                  <span class="sr-only">{{ course.displayMeetings[index].startTimeFormatted }} to {{ course.displayMeetings[index].endTimeFormatted }}</span>
                 </div>
               </td>
               <td colspan="4" :class="tdcLower(course)"></td>

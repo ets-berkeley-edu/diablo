@@ -1,6 +1,6 @@
 <template>
-  <v-container class="elevation-2 pa-6">
-    <h2 class="sr-only">Summary of {{ course.label }} course</h2>
+  <div aria-labelledby="course-summary-header" class="elevation-2 pa-6" role="region">
+    <h2 id="course-summary-header" class="sr-only">Course summary: {{ course.label }}</h2>
     <v-row v-if="instructors.length" id="instructors" :class="{'line-through': course.deletedAt}">
       <v-col cols="auto">
         <h3 class="sr-only">Instructors</h3>
@@ -58,7 +58,8 @@
         </v-col>
         <v-col :class="{'pb-1 pt-1': displayMeetings.length > 1}">
           <span class="sr-only">Start and end times:</span>
-          {{ meeting.startTimeFormatted }} - {{ meeting.endTimeFormatted }}
+          <span aria-hidden="true">{{ meeting.startTimeFormatted }} - {{ meeting.endTimeFormatted }}</span>
+          <span class="sr-only">{{ meeting.startTimeFormatted }} to {{ meeting.endTimeFormatted }}</span>
         </v-col>
       </v-row>
       <v-row v-if="meeting.room" :id="`rooms-${index}`" :class="{'line-through': course.deletedAt}">
@@ -102,7 +103,7 @@
         Opted out
       </v-col>
     </v-row>
-  </v-container>
+  </div>
 </template>
 
 <script>
