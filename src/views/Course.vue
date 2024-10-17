@@ -1,6 +1,6 @@
 <template>
   <div v-if="!loading">
-    <v-container fluid>
+    <v-container fluid class="px-sm-0">
       <v-row class="pl-3">
         <PageTitle
           v-if="$config.currentTermId === this.course.termId"
@@ -25,7 +25,7 @@
         Section ID: <span id="section-id">{{ course.sectionId }}</span>
       </v-row>
       <v-row>
-        <v-col lg="3" cols="3" sm="3">
+        <v-col cols="12" md="3" sm="4">
           <CoursePageSidebar :course="course" />
           <v-card v-if="$currentUser.isAdmin" outlined class="elevation-1 mt-4">
             <v-card-title>
@@ -87,8 +87,8 @@
             </v-card-actions>
           </v-card>
         </v-col>
-        <v-col>
-          <v-container v-if="isCurrentTerm && capability && hasValidMeetingTimes && !course.hasOptedOut && course.scheduled" class="elevation-2 pa-6">
+        <v-col cols="12" md="9" sm="8">
+          <v-container v-if="isCurrentTerm && capability && hasValidMeetingTimes && !course.hasOptedOut && course.scheduled" class="elevation-2 pa-6 px-sm-2">
             <v-row>
               <v-col class="font-weight-bold mb-1">
                 <v-alert
@@ -146,7 +146,7 @@
                 </v-btn>
               </v-col>
             </v-row>
-            <v-card v-if="collaboratorsEditing" class="my-4 background-shaded">
+            <v-card v-if="collaboratorsEditing" aria-live="polite" class="my-4 background-shaded">
               <v-container>
                 <v-row
                   align="center"
@@ -167,7 +167,7 @@
                       id="input-collaborator-lookup-autocomplete"
                       ref="personLookup"
                       :disabled="collaboratorsUpdating"
-                      label="Find collaborator by UID or email address: "
+                      label="Find collaborator by: "
                       placeholder="UID or email"
                       :on-select-result="addCollaboratorPending"
                       :error-message="addCollaboratorError"
@@ -376,117 +376,119 @@
                         <label class="font-size-16 text--secondary" :for="`radio-publish-type-${publishTypeOption}`">{{ displayLabels[publishTypeOption] }}</label>
                       </div>
                     </div>
-                    <v-row
-                      v-if="publishType && publishType.startsWith('kaltura_media_gallery')"
-                      align="center"
-                      justify="start"
-                    >
-                      <v-col cols="12">
-                        <h4>
-                          Linked bCourses site(s):
-                        </h4>
-                      </v-col>
-                    </v-row>
-                    <v-row
-                      v-if="!$currentUser.isAdmin && publishType && publishType.startsWith('kaltura_media_gallery')"
-                      align="end"
-                      justify="start"
-                    >
-                      <v-col cols="9">
-                        <v-select
-                          id="select-canvas-site"
-                          v-model="pendingCanvasSite"
-                          :disabled="publishTypeUpdating"
-                          :full-width="true"
-                          hide-details
-                          item-text="name"
-                          :item-disabled="item => isCanvasSiteIdStaged(item.canvasSiteId)"
-                          return-object
-                          :items="publishCanvasSiteOptions"
-                          label="Select course site"
-                          solo
-                        >
-                          <span :id="`menu-option-canvas-site-${data.item.canvasSiteId}`" slot="item" slot-scope="data">
-                            {{ data.item.name }} ({{ data.item.courseCode }})
-                          </span>
-                        </v-select>
-                      </v-col>
-                      <v-col cols="3">
-                        <v-btn
-                          id="btn-canvas-site-add"
-                          aria-label="Add bCourses Site"
-                          color="success"
-                          :disabled="!pendingCanvasSite"
-                          @click="addCanvasSiteConfirm"
-                        >
-                          Add
-                        </v-btn>
-                      </v-col>
-                    </v-row>
-                    <v-row
-                      v-if="!$currentUser.isAdmin && publishType && publishType.startsWith('kaltura_media_gallery')"
-                      align="end"
-                      justify="start"
-                    >
-                      <v-col cols="12">
-                        To link a bCourses site from a past term, please <a :href="`mailto:${$config.emailCourseCaptureSupport}`" target="_blank">
-                          contact Course Capture support<span class="sr-only"> (this email link opens a new tab)</span></a>.
-                      </v-col>
-                    </v-row>
-                    <v-row
-                      v-if="$currentUser.isAdmin && publishType && publishType.startsWith('kaltura_media_gallery')"
-                      align="end"
-                      justify="start"
-                    >
-                      <v-col cols="9">
-                        <v-text-field
-                          id="input-canvas-site-id"
-                          v-model="pendingCanvasSiteId"
-                          label="Enter Canvas site id"
-                          :disabled="publishTypeUpdating"
-                          hide-details="auto"
-                          outlined
-                          dense
-                        >
-                        </v-text-field>
-                      </v-col>
-                      <v-col cols="3">
-                        <v-btn
-                          id="btn-canvas-site-add"
-                          aria-label="Add Canvas Site"
-                          color="success"
-                          :disabled="!pendingCanvasSiteId || !/^\d+$/.test(pendingCanvasSiteId) || isCanvasSiteIdStaged(pendingCanvasSiteId)"
-                          @click="addCanvasSiteById"
-                        >
-                          Add
-                        </v-btn>
-                      </v-col>
-                    </v-row>
-                    <v-row
-                      v-if="publishType && publishType.startsWith('kaltura_media_gallery')"
-                      align="center"
-                      justify="start"
-                    >
-                      <v-col cols="12">
-                        <div
-                          v-for="(site, index) in publishCanvasSites"
-                          :id="`canvas-site-${site.canvasSiteId}`"
-                          :key="site.canvasSiteId"
-                          class="my-2"
-                        >
-                          {{ site.name }} ({{ site.courseCode }})
-                          <v-btn
-                            :id="`btn-canvas-site-remove-${site.canvasSiteId}`"
-                            :aria-label="`Remove ${site.name} (${site.courseCode})`"
+                    <!-- v-container doesn't seem to work with aria-live; therefore the following is a div. -->
+                    <div v-if="publishType && publishType.startsWith('kaltura_media_gallery')" aria-live="polite">
+                      <v-row
+                        align="center"
+                        justify="start"
+                      >
+                        <v-col cols="12">
+                          <h4>
+                            Linked bCourses site(s):
+                          </h4>
+                        </v-col>
+                      </v-row>
+                      <v-row
+                        v-if="!$currentUser.isAdmin"
+                        align="end"
+                        justify="start"
+                      >
+                        <v-col cols="9">
+                          <v-select
+                            id="select-canvas-site"
+                            v-model="pendingCanvasSite"
+                            dense
                             :disabled="publishTypeUpdating"
-                            small
-                            @click="removeCanvasSite(site.canvasSiteId, index)"
+                            :full-width="true"
+                            hide-details
+                            item-text="name"
+                            :item-disabled="item => isCanvasSiteIdStaged(item.canvasSiteId)"
+                            return-object
+                            :items="publishCanvasSiteOptions"
+                            label="Select course site"
+                            solo
                           >
-                            Remove
+                            <span :id="`menu-option-canvas-site-${data.item.canvasSiteId}`" slot="item" slot-scope="data">
+                              {{ data.item.name }} ({{ data.item.courseCode }})
+                            </span>
+                          </v-select>
+                        </v-col>
+                        <v-col cols="3">
+                          <v-btn
+                            id="btn-canvas-site-add"
+                            aria-label="Add bCourses Site"
+                            color="success"
+                            :disabled="!pendingCanvasSite"
+                            @click="addCanvasSiteConfirm"
+                          >
+                            Add
                           </v-btn>
-                        </div>
-                      </v-col>
-                    </v-row>
+                        </v-col>
+                      </v-row>
+                      <v-row
+                        v-if="!$currentUser.isAdmin"
+                        align="end"
+                        justify="start"
+                      >
+                        <v-col cols="12">
+                          To link a bCourses site from a past term, please <a :href="`mailto:${$config.emailCourseCaptureSupport}`" target="_blank">
+                            contact Course Capture support<span class="sr-only"> (this email link opens a new tab)</span></a>.
+                        </v-col>
+                      </v-row>
+                      <v-row
+                        v-if="$currentUser.isAdmin"
+                        align="end"
+                        justify="start"
+                      >
+                        <v-col cols="9">
+                          <v-text-field
+                            id="input-canvas-site-id"
+                            v-model="pendingCanvasSiteId"
+                            label="Enter Canvas site id"
+                            :disabled="publishTypeUpdating"
+                            hide-details="auto"
+                            outlined
+                            dense
+                          >
+                          </v-text-field>
+                        </v-col>
+                        <v-col cols="3">
+                          <v-btn
+                            id="btn-canvas-site-add"
+                            aria-label="Add Canvas Site"
+                            color="success"
+                            :disabled="!pendingCanvasSiteId || !/^\d+$/.test(pendingCanvasSiteId) || isCanvasSiteIdStaged(pendingCanvasSiteId)"
+                            @click="addCanvasSiteById"
+                          >
+                            Add
+                          </v-btn>
+                        </v-col>
+                      </v-row>
+                      <v-row
+                        align="center"
+                        justify="start"
+                      >
+                        <v-col cols="12">
+                          <div
+                            v-for="(site, index) in publishCanvasSites"
+                            :id="`canvas-site-${site.canvasSiteId}`"
+                            :key="site.canvasSiteId"
+                            class="my-2"
+                          >
+                            {{ site.name }} ({{ site.courseCode }})
+                            <v-btn
+                              :id="`btn-canvas-site-remove-${site.canvasSiteId}`"
+                              :aria-label="`Remove ${site.name} (${site.courseCode})`"
+                              :disabled="publishTypeUpdating"
+                              small
+                              @click="removeCanvasSite(site.canvasSiteId, index)"
+                            >
+                              Remove
+                            </v-btn>
+                          </div>
+                        </v-col>
+                      </v-row>
+                    </div>
                     <v-row
                       align="center"
                       justify="start"
@@ -918,7 +920,6 @@ export default {
     },
     editNote() {
       this.noteEditing = true
-      this.alertScreenReader('Editing note.')
       this.$putFocusNextTick('note-body-edit')
     },
     getAriaSortIndicator(column, sortBy, sortDesc) {
@@ -1028,17 +1029,14 @@ export default {
     },
     toggleCollaboratorsEditing() {
       this.collaboratorsEditing = true
-      this.alertScreenReader('Editing collaborators.')
       this.$putFocusNextTick('input-collaborator-lookup-autocomplete')
     },
     togglePublishTypeEditing() {
       this.publishTypeEditing = true
-      this.alertScreenReader('Select recording placement.')
       this.$putFocusNextTick('select-publish-type')
     },
     toggleRecordingTypeEditing() {
       this.recordingTypeEditing = true
-      this.alertScreenReader('Select recording type.')
       this.$putFocusNextTick('select-recording-type')
     },
     updateCollaborators() {
@@ -1057,7 +1055,7 @@ export default {
       })
     },
     updateCollaboratorsCancel() {
-      this.alertScreenReader('Collaborator update cancelled.')
+      this.alertScreenReader('Collaborator edit cancelled.')
       this.$putFocusNextTick('btn-collaborators-edit')
       this.collaboratorsEditing = false
       this.collaboratorsUpdating = false
@@ -1084,7 +1082,7 @@ export default {
       })
     },
     updatePublishTypeCancel() {
-      this.alertScreenReader('Recording placement update cancelled.')
+      this.alertScreenReader('Recording placement edit cancelled.')
       this.$putFocusNextTick('btn-publish-type-edit')
       this.publishTypeEditing = false
     },
@@ -1095,7 +1093,7 @@ export default {
         this.course.sectionId,
         this.course.termId,
       ).then(data => {
-        const message = `Recording type updated to ${this.recordingType.value}.`
+        const message = `Recording type updated to ${this.displayLabels[this.recordingType]}.`
         this.alertScreenReader(message)
         this.$putFocusNextTick('btn-recording-type-edit')
         this.course.recordingType = data.recordingType
@@ -1105,7 +1103,7 @@ export default {
       })
     },
     updateRecordingTypeCancel() {
-      this.alertScreenReader('Recording type update cancelled.')
+      this.alertScreenReader('Recording type edit cancelled.')
       this.$putFocusNextTick('btn-recording-type-edit')
       this.recordingTypeEditing = false
     },
