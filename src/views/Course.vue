@@ -146,10 +146,11 @@
                 </v-btn>
               </v-col>
             </v-row>
-            <v-card v-if="collaboratorsEditing" aria-live="polite" class="my-4 background-shaded">
+            <v-card v-if="collaboratorsEditing" class="my-4 background-shaded">
               <v-container>
                 <v-row
                   align="center"
+                  aria-live="polite"
                   justify="start"
                 >
                   <v-col cols="12">
@@ -168,6 +169,7 @@
                       ref="personLookup"
                       :disabled="collaboratorsUpdating"
                       label="Find collaborator by: "
+                      menu-label="collaborators"
                       placeholder="UID or email"
                       :on-select-result="addCollaboratorPending"
                       :error-message="addCollaboratorError"
@@ -858,7 +860,7 @@ export default {
         getCourseSite(this.pendingCanvasSiteId).then(data => {
           if (data) {
             this.publishCanvasSites.push(data)
-            this.alertScreenReader(`Added site ${data.name}.`)
+            this.alertScreenReader(`${data.name} added.`)
             this.$putFocusNextTick('input-canvas-site-id')
           }
         })
@@ -869,7 +871,7 @@ export default {
       if (this.pendingCanvasSite && !this.isCanvasSiteIdStaged(this.pendingCanvasSite.canvasSiteId)) {
         this.publishCanvasSites.push(this.pendingCanvasSite)
       }
-      this.alertScreenReader(`Added site ${this.pendingCanvasSite.name}.`)
+      this.alertScreenReader(`${this.pendingCanvasSite.name} added.`)
       this.$putFocusNextTick('select-canvas-site')
       this.pendingCanvasSite = null
     },
@@ -880,7 +882,7 @@ export default {
       } else {
         this.addCollaboratorError = null
         this.collaborators.push(this.pendingCollaborator)
-        this.alertScreenReader(`Added collaborator ${this.pendingCollaborator.firstName} ${this.pendingCollaborator.lastName}.`)
+        this.alertScreenReader(`${this.pendingCollaborator.firstName} ${this.pendingCollaborator.lastName} added as a collaborator.`)
       }
       this.pendingCollaborator = null
       if (this.$refs.personLookup) {
@@ -892,6 +894,9 @@ export default {
       if (collaborator) {
         this.pendingCollaborator = collaborator
         this.addCollaboratorError = null
+        this.$nextTick(() => {
+          this.alertScreenReader(`${this.pendingCollaborator.firstName} ${this.pendingCollaborator.lastName} selected.`)
+        })
       }
     },
     cancelNote() {
@@ -983,7 +988,7 @@ export default {
       const nextFocusUid = this.$_.get(this.collaborators, `${nextFocusIndex}.uid`)
       const collaborator = this.$_.find(this.collaborators, c => c.uid === uid)
       this.collaborators = this.$_.filter(this.collaborators, c => c.uid !== uid)
-      this.alertScreenReader(`Removed collaborator ${collaborator.firstName} ${collaborator.lastName}.`)
+      this.alertScreenReader(`${collaborator.firstName} ${collaborator.lastName} removed from collaborators.`)
       this.$putFocusNextTick(this.$_.isEmpty(this.collaborators) || !nextFocusUid ? 'input-collaborator-lookup-autocomplete' : `btn-collaborator-remove-${nextFocusUid}`)
     },
     render(data) {

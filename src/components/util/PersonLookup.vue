@@ -10,14 +10,15 @@
         <span v-if="placeholder" class="sr-only">{{ placeholder }}</span>
       </label>
     </div>
-    <div :class="{'col col-6': inline}">
+    <div :class="{'col col-6': inline, 'pt-1': !inline}">
       <v-autocomplete
         :id="id"
+        ref="autocomplete"
         v-model="selected"
         :allow-overflow="false"
         :append-icon="null"
         :aria-disabled="disabled"
-        :aria-labelledby="`${id}-label`"
+        :aria-label="toLabel(selected)"
         auto-select-first
         background-color="white"
         class="person-lookup"
@@ -40,6 +41,7 @@
         :search-input.sync="search"
         single-line
         @blur="onBlur"
+        @focus="onFocus"
         @update:list-index="onHighlight"
       >
         <template #selection="data">
@@ -112,6 +114,10 @@ export default {
       required: false,
       type: String
     },
+    menuLabel: {
+      required: true,
+      type: String
+    },
     onSelectResult: {
       default: () => {},
       required: false,
@@ -126,6 +132,7 @@ export default {
   data: () => ({
     highlightedItem: undefined,
     isSearching: false,
+    menuObserver: undefined,
     menuProps: {
       contentClass: 'v-sheet--outlined autocomplete-menu'
     },
@@ -145,10 +152,33 @@ export default {
       this.debouncedSearch(snippet)
     },
     selected(suggestion) {
+      const inputEl = document.getElementById(this.id)
+      inputEl.setAttribute('aria-expanded', 'false')
       if (!suggestion) {
         this.search = null
       }
       this.onSelectResult(suggestion)
+    },
+    suggestions(newValue, oldValue) {
+      // When the popup listbox of suggestions appears, correct faulty attributes according to
+      // https://www.w3.org/WAI/ARIA/apg/patterns/combobox/examples/combobox-autocomplete-list/
+      const combobox = this.$refs.autocomplete.$el ? this.$refs.autocomplete.$el.querySelector('[role="combobox"]') : null
+      const inputEl = document.getElementById(this.id)
+      if (inputEl && newValue.length && !oldValue.length) {
+        this.$nextTick(() => {
+          const listboxId = combobox.getAttribute('aria-owns')
+          const listbox = document.getElementById(listboxId)
+          inputEl.setAttribute('aria-expanded', 'true')
+          if (listboxId) {
+            inputEl.setAttribute('aria-controls', listboxId)
+          }
+          if (listbox) {
+            listbox.setAttribute('aria-label', this.menuLabel)
+          }
+        })
+      } else if (inputEl && !newValue.length) {
+        inputEl.setAttribute('aria-expanded', 'false')
+      }
     }
   },
   methods: {
@@ -173,6 +203,13 @@ export default {
     onBlur() {
       if (!this.isSearching && !!this.search && this.suggestions.length && !this.selected) {
         this.selected = this.suggestions[0]
+        this.search = this.toLabel(this.selected)
+      }
+    },
+    onFocus() {
+      if (!this.suggestions.length) {
+        const inputEl = document.getElementById(this.id)
+        inputEl.setAttribute('aria-expanded', 'false')
       }
     },
     onHighlight(index) {
@@ -196,6 +233,28 @@ export default {
   },
   created() {
     this.debouncedSearch = this.$_.debounce(this.executeSearch, 300)
+  },
+  mounted() {
+    // Vuetify sets aria-expanded="true" on the element prematurely, before the user enters any text.
+    // It should be set when the popup listbox containing suggestions appears. This workaround listens
+    // for the value of aria-expanded to change and corrects it if necessary.
+    const inputEl = document.getElementById(this.id)
+    if (inputEl) {
+      inputEl.setAttribute('aria-autocomplete', 'list')
+      this.menuObserver = new MutationObserver((mutations) => {
+        const ariaExpandedMutation = this.$_.find(mutations, {attributeName: 'aria-expanded'})
+        const ariaExpanded = ariaExpandedMutation ? ariaExpandedMutation.target.getAttribute('aria-expanded') : null
+        if (!this.suggestions.length && ariaExpanded === 'true') {
+          inputEl.setAttribute('aria-expanded', 'false')
+        }
+      })
+      this.menuObserver.observe(inputEl, {attributes: true})
+    }
+  },
+  beforeUnmount() {
+    if (this.menuObserver) {
+      this.menuObserver.disconnect()
+    }
   }
 }
 </script>
