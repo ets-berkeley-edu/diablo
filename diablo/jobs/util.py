@@ -102,8 +102,8 @@ def get_eligible_unscheduled_courses(term_id):
     )
 
 
-def get_scheduled_courses_per_instructor_uids(term_id, instructor_uids):
-    return SisSection.get_courses_scheduled(
+def get_eligible_courses_per_instructor_uids(term_id, instructor_uids):
+    return SisSection.get_courses(
         include_administrative_proxies=True,
         instructor_uids=instructor_uids,
         term_id=term_id,
@@ -446,7 +446,7 @@ def schedule_recordings(course, remove_blackout_conflicts=False, updates=None):
 
 def notify_newly_scheduled_instructors(term_id, instructor_uids):
     courses_by_instructor_uid = {}
-    for course in get_scheduled_courses_per_instructor_uids(term_id, instructor_uids):
+    for course in get_eligible_courses_per_instructor_uids(term_id, instructor_uids):
         for instructor in list(filter(lambda i: i['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES, course['instructors'])):
             if instructor['uid'] not in courses_by_instructor_uid:
                 courses_by_instructor_uid[instructor['uid']] = {'instructor': instructor, 'courses': []}
