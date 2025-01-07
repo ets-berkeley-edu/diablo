@@ -98,7 +98,7 @@ def download_courses_csv():
         section_id = c.get('sectionId')
 
         if c.get('canvasSiteIds'):
-            canvas_site_urls = ', '.join([f"{app.config['CANVAS_BASE_URL']}/courses/{site_id}" for site_id in {c['canvasSiteIds']}])
+            canvas_site_urls = ', '.join([f"{app.config['CANVAS_BASE_URL']}/courses/{site_id}" for site_id in c['canvasSiteIds']])
         else:
             canvas_site_urls = ''
 
