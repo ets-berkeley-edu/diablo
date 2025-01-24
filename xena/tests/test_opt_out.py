@@ -532,3 +532,51 @@ class TestOptOut7:
 
     def test_no_opt_out_emails_sent(self):
         assert util.get_sent_email_count(EmailTemplateType.INSTR_OPTED_OUT, section_1, instructor_0) == 0
+
+
+@pytest.mark.usefixtures('page_objects')
+class TestOptOut8:
+    """
+    SCENARIO.
+
+    - An instructor opts out of a single section
+    - Recordings are not unscheduled
+    - The instructor is replaced with an instructor with no opt-outs
+    - Recordings are scheduled
+    """
+
+    def test_set_up(self):
+        self.kaltura_page.reset_test_data(section_1)
+        util.reset_section_test_data(section_1)
+
+    def test_schedule_update(self):
+        self.jobs_page.load_page()
+        self.jobs_page.run_schedule_update_job_sequence()
+
+    def test_section_scheduled(self):
+        assert util.get_kaltura_id(recording_schedule_1)
+
+    def test_opt_out_one_section(self):
+        self.jobs_page.log_out()
+        self.login_page.load_page()
+        self.login_page.dev_auth(instructor_0.uid)
+        self.instructor_page.enable_opt_out_section(section_1)
+
+    def test_run_update(self):
+        self.instructor_page.log_out()
+        self.login_page.dev_auth()
+        self.ouija_page.click_jobs_link()
+        self.jobs_page.run_kaltura_job()
+        self.jobs_page.run_emails_job()
+
+    def test_section_not_scheduled(self):
+        assert not util.get_kaltura_id(recording_schedule_1)
+
+    def test_change_instructor(self):
+        util.change_course_instructor(section_1, old_instructor=instructor_0, new_instructor=instructor_1)
+
+    def test_run_update_encore(self):
+        self.jobs_page.run_schedule_update_job_sequence()
+
+    def test_section_rescheduled(self):
+        assert util.get_kaltura_id(recording_schedule_1)

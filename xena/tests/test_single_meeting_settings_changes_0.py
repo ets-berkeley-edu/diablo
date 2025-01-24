@@ -40,7 +40,7 @@ class TestScheduling0:
     SCENARIO.
 
     - Section has one instructor, one meeting, and one course site
-    - Recordings scheduled via semester start job
+    - Recordings scheduled
     - Instructor selects camera operator and auto-publish, adding course site
     - Series updated
     - Admin reverts to no camera operator and no auto-publish
