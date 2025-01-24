@@ -415,7 +415,7 @@ def _handle_course_site_categories(kaltura, course, publish_to_course_sites, sch
         try:
             app.logger.info(f"{course['label']}: will delete and recreate Kaltura schedule(s) to remove existing categories")
             for scheduled in course['scheduled']:
-                kaltura.delete(scheduled['kalturaScheduleId'])
+                kaltura.delete(scheduled['kalturaScheduleId'], force_delete_past_events=True)
                 Scheduled.delete(term_id=course['termId'], section_id=course['sectionId'], kaltura_schedule_id=scheduled['kalturaScheduleId'])
             rescheduled = schedule_recordings(course, updates=update_options)
             if publish_to_course_sites and updated_canvas_site_ids:

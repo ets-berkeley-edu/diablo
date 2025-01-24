@@ -251,7 +251,7 @@ class Kaltura:
         return kaltura_schedule.id
 
     @skip_when_pytest()
-    def delete(self, event_id):
+    def delete(self, event_id, force_delete_past_events=False):
         def is_future(kaltura_event):
             start_date = dateutil.parser.parse(kaltura_event['startDate'])
             return start_date.timestamp() > datetime.now().timestamp()
@@ -261,7 +261,7 @@ class Kaltura:
             recurrence_type = event['recurrenceType']
             if recurrence_type == 'Recurring':
                 # This is a Kaltura series event.
-                if is_future(kaltura_event=event):
+                if is_future(kaltura_event=event) or force_delete_past_events:
                     # Start date of the series in the future. Delete it all.
                     self.client.schedule.scheduleEvent.delete(event_id)
                 else:
