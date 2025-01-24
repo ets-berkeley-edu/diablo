@@ -38,8 +38,8 @@
           },
           "meeting_schedule": {
             "days": "TU, TH",
-            "start_time": "11:00 am",
-            "end_time": "12:29 pm"
+            "start_time": "7:00 am",
+            "end_time": "8:29 am"
           }
         }
       ],
@@ -61,8 +61,8 @@
           },
           "meeting_schedule": {
             "days": "MO, WE",
-            "start_time": "9:00 am",
-            "end_time": "9:59 am"
+            "start_time": "7:00 am",
+            "end_time": "7:59 am"
           }
         }
       ],
@@ -87,8 +87,8 @@
           },
           "meeting_schedule": {
             "days": "TU, TH",
-            "start_time": "12:30 pm",
-            "end_time": "1:59 pm"
+            "start_time": "6:30 am",
+            "end_time": "7:59 am"
           }
         }
       ],
@@ -141,8 +141,8 @@
           },
           "meeting_schedule": {
             "days": "TU, TH",
-            "start_time": "10:00 am",
-            "end_time": "10:59 am"
+            "start_time": "7:00 am",
+            "end_time": "7:59 am"
           }
         },
         {
@@ -151,8 +151,8 @@
           },
           "meeting_schedule": {
             "days": "TU, TH",
-            "start_time": "10:00 am",
-            "end_time": "10:59 am"
+            "start_time": "10:00 pm",
+            "end_time": "10:59 pm"
           }
         }
       ],
@@ -181,8 +181,8 @@
           },
           "meeting_schedule": {
             "days": "TU, TH",
-            "start_time": "7:00 pm",
-            "end_time": "7:59 pm"
+            "start_time": "7:00 am",
+            "end_time": "7:59 am"
           }
         }
       ],
@@ -203,8 +203,8 @@
           },
           "meeting_schedule": {
             "days": "MO, WE, FR",
-            "start_time": "10:00 am",
-            "end_time": "10:59 am"
+            "start_time": "8:00 am",
+            "end_time": "8:59 am"
           }
         }
       ],
@@ -226,8 +226,8 @@
           },
           "meeting_schedule": {
             "days": "MO, WE, FR",
-            "start_time": "4:00 pm",
-            "end_time": "4:59 pm"
+            "start_time": "5:00 pm",
+            "end_time": "5:59 pm"
           }
         }
       ],
@@ -249,8 +249,8 @@
           },
           "meeting_schedule": {
             "days": "MO, WE",
-            "start_time": "9:00 am",
-            "end_time": "9:59 am"
+            "start_time": "6:00 am",
+            "end_time": "6:59 am"
           }
         }
       ]
@@ -274,8 +274,8 @@
           },
           "meeting_schedule": {
             "days": "TU, TH",
-            "start_time": "2:30 pm",
-            "end_time": "3:59 pm"
+            "start_time": "9:30 pm",
+            "end_time": "10:59 pm"
           }
         }
       ]
@@ -295,8 +295,8 @@
           },
           "meeting_schedule": {
             "days": "TU, TH",
-            "start_time": "2:30 pm",
-            "end_time": "3:59 pm"
+            "start_time": "6:30 pm",
+            "end_time": "7:59 pm"
           }
         }
       ]
@@ -316,8 +316,8 @@
           },
           "meeting_schedule": {
             "days": "TU, TH",
-            "start_time": "2:30 pm",
-            "end_time": "3:59 pm"
+            "start_time": "8:30 pm",
+            "end_time": "9:59 pm"
           }
         }
       ]
@@ -338,8 +338,8 @@
           },
           "meeting_schedule": {
             "days": "FR",
-            "start_time": "1:00 pm",
-            "end_time": "2:59 pm"
+            "start_time": "4:00 am",
+            "end_time": "5:59 am"
           }
         }
       ],

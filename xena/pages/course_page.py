@@ -346,6 +346,7 @@ class CoursePage(DiabloPages):
         if sites:
             for site in sites:
                 self.wait_for_element_and_click(self.PLACEMENT_SITE_SELECT)
+                self.enter_chars(self.PLACEMENT_SITE_SELECT, site.name[0:2])
                 self.wait_for_element_and_click(self.placement_site_option_loc(site))
                 self.wait_for_element_and_click(self.PLACEMENT_SITE_ADD_BUTTON)
 
