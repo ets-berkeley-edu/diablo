@@ -76,6 +76,10 @@ class BConnected:
             else:
                 from_address = f"{app.config['EMAIL_SENDER_LABEL']} <{app.config['EMAIL_SENDER_ADDRESS']}>"
 
+                # Insert line breaks after tags, as otherwise smtplib will insert them arbitrarily to honor
+                # a 1000-character line limit.
+                multiline_message = message.replace('<br>', '<br>\n').replace('</p>', '</p>\n')
+
                 for email_address in self.get_email_addresses(user=recipient):
                     msg = MIMEMultipart('alternative')
                     msg['From'] = from_address
@@ -89,8 +93,8 @@ class BConnected:
                         msg['Subject'] = subject_line
 
                     # TODO: 'plain' text version of email?
-                    msg.attach(MIMEText(message, 'plain'))
-                    msg.attach(MIMEText(message, 'html'))
+                    msg.attach(MIMEText(multiline_message, 'plain'))
+                    msg.attach(MIMEText(multiline_message, 'html'))
                     # Send
                     smtp.sendmail(from_addr=from_address, to_addrs=email_address, msg=msg.as_string())
 
