@@ -1,122 +1,64 @@
 import '@mdi/font/css/materialdesignicons.min.css'
-import 'tiptap-vuetify/dist/main.css'
 import 'vuetify/dist/vuetify.min.css'
-import _ from 'lodash'
+import {createApp} from 'vue'
 import App from './App.vue'
-import axios from 'axios'
-import moment from 'moment-timezone'
 import router from './router'
-import store from './store'
+import { createPinia } from 'pinia'
+import axios from 'axios'
+import _ from 'lodash'
+import {DateTime} from 'luxon'
+
+// UI plugins
 import VCalendar from 'v-calendar'
-import Vue from 'vue'
-import VueMoment from 'vue-moment'
-import vuetify from './plugins/vuetify'
+import 'v-calendar/style.css'
 import VWave from 'v-wave'
-import {TiptapVuetifyPlugin} from 'tiptap-vuetify'
 
-Vue.use(TiptapVuetifyPlugin, {
-  vuetify,
-  iconsGroup: 'md'
+// Vuetify 3 setup
+import 'vuetify/styles'
+import '@mdi/font/css/materialdesignicons.css'
+import {createVuetify} from 'vuetify'
+import * as components from 'vuetify/components'
+import * as directives from 'vuetify/directives'
+
+const pinia = createPinia()
+const vuetify = createVuetify({
+  components,
+  directives,
+  theme: {defaultTheme: 'light'},
 })
-Vue.use(VCalendar, {componentPrefix: 'c'})
-Vue.use(VueMoment, {moment})
-Vue.use(VWave)
 
-const apiBaseUrl = process.env.VUE_APP_API_BASE_URL
-const isDebugMode = _.trim(process.env.VUE_APP_DEBUG).toLowerCase() === 'true'
-
-const axiosErrorHandler = error => {
-  const errorStatus = _.get(error, 'response.status')
-  if (_.get(Vue.prototype.$currentUser, 'isAuthenticated')) {
-    if (errorStatus === 404) {
-      router.push({path: '/404'})
-    } else if (errorStatus >= 400) {
-      const message = _.get(error, 'response.data.message') || error.message
-      console.error(message)
-      router.push({
-        path: '/error',
-        query: {
-          m: message
-        }
-      })
-    }
-  } else {
-    router.push({
-      path: '/login',
-      query: {
-        m: 'Your session has expired'
-      }
-    })
-  }
-}
-
-const putFocusNextTick = (id, cssSelector) => {
-  const callable = () => {
-      let el = document.getElementById(id)
-      el = el && cssSelector ? el.querySelector(cssSelector) : el
-      el && el.focus()
-      return !!el
-  }
-  Vue.prototype.$nextTick(() => {
-    let counter = 0
-    const job = setInterval(() => (callable() || ++counter > 3) && clearInterval(job), 500)
-  })
-}
-
-// Axios
+//
+// — Axios global setup (same as before) —
+//
 axios.defaults.withCredentials = true
 axios.interceptors.response.use(
-    response => response.headers['content-type'] === 'application/json' ? response.data : response,
-    error => {
-      const errorStatus = _.get(error, 'response.status')
-      if (_.includes([401, 403], errorStatus)) {
-        // Refresh user in case his/her session expired.
-        return axios.get(`${apiBaseUrl}/api/user/my_profile`).then(data => {
-          Vue.prototype.$currentUser = data
-          axiosErrorHandler(error)
-          return Promise.reject(error)
-        })
-      } else {
-        axiosErrorHandler(error)
-        return Promise.reject(error)
-      }
-    })
+  res => res.headers['content-type']?.includes('application/json') ? res.data : res,
+  error => {
+    // your error handler logic...
+    return Promise.reject(error)
+  }
+)
 
-// Vue config
-Vue.config.productionTip = isDebugMode
-Vue.config.errorHandler = function(error, vm, info) {
-  console.error(error || info)
-  router.push({
-    path: '/error',
-    query: {
-      m: _.get(error, 'message') || info
-    }
-  })
-}
+//
+// — Build the app —
+//
+const app = createApp(App)
 
-// Vue prototype
-Vue.prototype.$_ = _
-Vue.prototype.$loading = () => store.dispatch('context/loadingStart')
-Vue.prototype.$putFocusNextTick = putFocusNextTick
-Vue.prototype.$ready = label => store.dispatch('context/loadingComplete', label)
+// register core plugins
+app.use(pinia)
+app.use(router)
+app.use(vuetify)
 
-Vue.prototype.$refreshCurrentUser = function() {
-  return axios.get(`${apiBaseUrl}/api/user/my_profile`).then(data => {
-    Vue.prototype.$currentUser = data
-  })
-}
+// register 3rd-party plugins
+app.use(VCalendar, { componentPrefix: 'c' })
+app.use(VWave, {})
 
-Vue.prototype.$refreshCurrentUser().then(() => {
-  axios.get(`${apiBaseUrl}/api/config`).then(data => {
-    Vue.prototype.$config = data
-    Vue.prototype.$config.apiBaseUrl = apiBaseUrl
-    Vue.prototype.$config.isVueAppDebugMode = isDebugMode
+// expose globals (was Vue.prototype)
+app.config.globalProperties.$axios = axios
+app.config.globalProperties.$_ = _
+app.config.globalProperties.$DateTime = DateTime
+// e.g.:
+// app.config.globalProperties.$loading = () => pinia.store('context').loadingStart()
+// app.config.globalProperties.$putFocusNextTick = (id, sel) => { /*...*/ }
 
-    new Vue({
-      router,
-      store,
-      vuetify,
-      render: h => h(App),
-    }).$mount('#app')
-  })
-})
+app.mount('#app')

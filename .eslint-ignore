@@ -1,0 +1,4 @@
+dist
+src-vue2
+venv
+vue2.*
