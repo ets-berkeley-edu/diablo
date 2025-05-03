@@ -1,0 +1,88 @@
+a {
+  color: #f04a00 !important;
+  text-decoration: none !important;
+}
+a:hover {
+  color: #ff8900 !important;
+}
+a:active {
+  color: #b83900 !important;
+}
+abbr {
+  text-decoration: none !important;
+}
+.border-bottom-zero {
+  border-bottom: 0 !important;
+}
+.font-size-12 {
+  font-size: 12px !important;
+}
+.font-size-16 {
+  font-size: 16px;
+}
+.height-unset {
+  height: unset !important;
+}
+.line-through {
+  text-decoration: line-through;
+}
+.linked-icon {
+  color: #f04a00 !important;
+}
+.max-width-unset {
+  max-width: unset !important;
+}
+.min-width-unset {
+  min-width: unset !important;
+}
+.not-selectable {
+  -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+     -khtml-user-select: none; /* Konqueror HTML */
+       -moz-user-select: none; /* Old versions of Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+            user-select: none; /* Non-prefixed version, currently
+                                  supported by Chrome, Edge, Opera and Firefox */
+}
+.sr-only,
+table caption {
+  position: absolute;
+  left: -10000px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+.sr-skip {
+  speak: none;
+}
+.text-transform-unset {
+  text-transform: unset !important;
+}
+.v-table-sort-btn-override {
+  margin-left: -4px;
+}
+.v-table-sort-btn-override .v-btn__content .v-icon {
+  opacity: 0;
+}
+.v-table-sort-btn-override:active .v-btn__content .v-icon,
+.v-table-sort-btn-override:hover .v-btn__content .v-icon,
+.v-table-sort-btn-override:focus .v-btn__content .v-icon,
+.v-table-sort-btn-override.icon-visible .v-btn__content .v-icon {
+  opacity: 1;
+}
+.w-10 {
+  width: 10% !important;
+}
+.w-20 {
+  width: 20% !important;
+}
+.w-30 {
+  width: 30% !important;
+}
+.w-50 {
+  width: 50% !important;
+}
+.w-100 {
+  width: 100% !important;
+}
