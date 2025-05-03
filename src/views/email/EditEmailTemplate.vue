@@ -81,34 +81,34 @@ import Context from '@/mixins/Context'
 import PageTitle from '@/components/util/PageTitle'
 import TemplateCodesDialog from '@/components/email/TemplateCodesDialog'
 import Utils from '@/mixins/Utils'
-import {TiptapVuetify, Heading, Bold, Italic, Strike, Underline, Code, Paragraph, BulletList, OrderedList, ListItem, Link, Blockquote, HardBreak, HorizontalRule, History} from 'tiptap-vuetify'
+// import {TiptapVuetify, Heading, Bold, Italic, Strike, Underline, Code, Paragraph, BulletList, OrderedList, ListItem, Link, Blockquote, HardBreak, HorizontalRule, History} from 'tiptap-vuetify'
 import {createEmailTemplate, getEmailTemplate, updateEmailTemplate} from '@/api/email'
 
 export default {
   name: 'CreateEmailTemplate',
-  components: {PageTitle, TemplateCodesDialog, TiptapVuetify},
+  components: {PageTitle, TemplateCodesDialog},
   mixins: [Context, Utils],
   data: () => ({
     extensions: [
       History,
-      Blockquote,
-      Link,
-      Underline,
-      Strike,
-      Italic,
-      ListItem,
-      BulletList,
-      OrderedList,
-      [Heading, {
-        options: {
-          levels: [1, 2, 3]
-        }
-      }],
-      Bold,
-      Code,
-      HorizontalRule,
-      Paragraph,
-      HardBreak
+      // Blockquote,
+      // Link,
+      // Underline,
+      // Strike,
+      // Italic,
+      // ListItem,
+      // BulletList,
+      // OrderedList,
+      // [Heading, {
+      //   options: {
+      //     levels: [1, 2, 3]
+      //   }
+      // }],
+      // Bold,
+      // Code,
+      // HorizontalRule,
+      // Paragraph,
+      // HardBreak
     ],
     latest: false,
     message: undefined,

@@ -25,42 +25,40 @@
                 </tr>
               </thead>
               <tbody v-if="courses.length">
-                <template v-for="course in courses">
-                  <tr :key="course.sectionId">
-                    <td :id="`course-${course.sectionId}-label`" class="font-weight-black w-20">
-                      {{ course.label }}
-                    </td>
-                    <td>
-                      <div
-                        v-for="instructor in course.instructors"
-                        :id="`course-${course.sectionId}-instructor-${instructor.uid}`"
-                        :key="instructor.uid"
-                        class="text-no-wrap"
-                      >
-                        {{ instructor.name }} ({{ instructor.uid }})
+                <tr v-for="course in courses" :key="course.sectionId">
+                  <td :id="`course-${course.sectionId}-label`" class="font-weight-black w-20">
+                    {{ course.label }}
+                  </td>
+                  <td>
+                    <div
+                      v-for="instructor in course.instructors"
+                      :id="`course-${course.sectionId}-instructor-${instructor.uid}`"
+                      :key="instructor.uid"
+                      class="text-no-wrap"
+                    >
+                      {{ instructor.name }} ({{ instructor.uid }})
+                    </div>
+                  </td>
+                  <td :id="`course-${course.sectionId}-days`" class="text-no-wrap">
+                    <div v-for="(meeting, index) in course.displayMeetings" :id="`meeting-days-${index}`" :key="index">
+                      {{ meeting.daysFormatted ? meeting.daysFormatted.join(', ') : '&mdash;' }}
+                    </div>
+                  </td>
+                  <td :id="`course-${course.sectionId}-times`" class="text-no-wrap">
+                    <div v-for="(meeting, index) in course.displayMeetings" :id="`meeting-times-${index}`" :key="index">
+                      <div>
+                        <span class="text-no-wrap">{{ meeting.startDate | moment('MMM D, YYYY') }} - </span>
+                        <span class="text-no-wrap">{{ meeting.endDate | moment('MMM D, YYYY') }}</span>
                       </div>
-                    </td>
-                    <td :id="`course-${course.sectionId}-days`" class="text-no-wrap">
-                      <div v-for="(meeting, index) in course.displayMeetings" :id="`meeting-days-${index}`" :key="index">
-                        {{ meeting.daysFormatted ? meeting.daysFormatted.join(', ') : '&mdash;' }}
+                      <div v-if="meeting.startTimeFormatted">
+                        <span class="text-no-wrap">{{ meeting.startTimeFormatted }} - {{ meeting.endTimeFormatted }}</span>
                       </div>
-                    </td>
-                    <td :id="`course-${course.sectionId}-times`" class="text-no-wrap">
-                      <div v-for="(meeting, index) in course.displayMeetings" :id="`meeting-times-${index}`" :key="index">
-                        <div>
-                          <span class="text-no-wrap">{{ meeting.startDate | moment('MMM D, YYYY') }} - </span>
-                          <span class="text-no-wrap">{{ meeting.endDate | moment('MMM D, YYYY') }}</span>
-                        </div>
-                        <div v-if="meeting.startTimeFormatted">
-                          <span class="text-no-wrap">{{ meeting.startTimeFormatted }} - {{ meeting.endTimeFormatted }}</span>
-                        </div>
-                      </div>
-                    </td>
-                    <td :id="`course-${course.sectionId}-recording-type`" class="text-no-wrap">
-                      {{ $_.get(course, 'scheduled[0].recordingTypeName') }}
-                    </td>
-                  </tr>
-                </template>
+                    </div>
+                  </td>
+                  <td :id="`course-${course.sectionId}-recording-type`" class="text-no-wrap">
+                    {{ $_.get(course, 'scheduled[0].recordingTypeName') }}
+                  </td>
+                </tr>
               </tbody>
               <tbody v-if="!courses.length">
                 <tr>

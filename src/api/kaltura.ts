@@ -1,6 +1,6 @@
 import axios from 'axios'
-import utils from '@/api/api-utils'
+import {getApiBaseUrl} from '@/api/api-utils'
 
 export function getKalturaCategory(courseSiteId) {
-  return axios.get(`${utils.apiBaseUrl()}/api/kaltura/category/canvas/${courseSiteId}`)
+  return axios.get(`${getApiBaseUrl()}/api/kaltura/category/canvas/${courseSiteId}`)
 }

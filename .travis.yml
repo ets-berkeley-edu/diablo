@@ -4,7 +4,7 @@ language: python
 python: "3.8"
 
 before_install:
-  - nvm install 16
+  - nvm install 20
 
 install:
   - echo -e '@neverendingsupport:registry=https://registry.nes.herodevs.com/npm/pkg/\n//registry.nes.herodevs.com/npm/pkg/:_authToken="'${NES_AUTH_TOKEN}'"' > .npmrc
