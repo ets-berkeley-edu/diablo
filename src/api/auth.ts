@@ -1,25 +1,29 @@
+// src/api/auth.ts
 import axios from 'axios'
-import utils from '@/api/api-utils'
-import Vue from 'vue'
+import {getApiBaseUrl} from '@/api/api-utils'
+import {useContextStore} from '@/stores/context'
 
-export function devAuthLogIn(uid: string, password: string) {
-  return axios
-    .post(`${utils.apiBaseUrl()}/api/auth/dev_auth_login`, {
-      uid: uid,
-      password: password
-    })
-    .then(data => {
-      Vue.prototype.$currentUser = data
-      return Vue.prototype.$currentUser
-    }).catch(error => {
-      return error
-    })
+
+export async function devAuthLogIn(uid: string, password: string) {
+  const store = useContextStore()
+  const response = await axios.post(
+    `${getApiBaseUrl()}/api/auth/dev_auth_login`,
+    {uid, password}
+  )
+  const user = response.data
+  // Update Pinia stores'stores currentUser
+  store.setCurrentUser(user)
+  return user
 }
 
 export function getCasLoginURL() {
-  return axios.get(`${utils.apiBaseUrl()}/api/auth/cas_login_url`)
+  return axios.get(
+    `${getApiBaseUrl()}/api/auth/cas_login_url`
+  )
 }
 
 export function getCasLogoutUrl() {
-  return axios.get(`${utils.apiBaseUrl()}/api/auth/logout`)
+  return axios.get(
+    `${getApiBaseUrl()}/api/auth/logout`
+  )
 }

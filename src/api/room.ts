@@ -1,31 +1,31 @@
 import axios from 'axios'
-import utils from '@/api/api-utils'
+import {getApiBaseUrl} from '@/api/api-utils'
 
 export function getAllRooms() {
-  return axios.get(`${utils.apiBaseUrl()}/api/rooms/all`)
+  return axios.get(`${getApiBaseUrl()}/api/rooms/all`)
 }
 
 export function getAuditoriums() {
-  return axios.get(`${utils.apiBaseUrl()}/api/rooms/auditoriums`)
+  return axios.get(`${getApiBaseUrl()}/api/rooms/auditoriums`)
 }
 
 export function getKalturaEventList(kalturaResourceId) {
-  return axios.get(`${utils.apiBaseUrl()}/api/room/${kalturaResourceId}/kaltura_events`)
+  return axios.get(`${getApiBaseUrl()}/api/room/${kalturaResourceId}/kaltura_events`)
 }
 
 export function getRoom(id) {
-  return axios.get(`${utils.apiBaseUrl()}/api/room/${id}`)
+  return axios.get(`${getApiBaseUrl()}/api/room/${id}`)
 }
 
 export function setAuditorium(roomId, isAuditorium) {
-  return axios.post(`${utils.apiBaseUrl()}/api/room/auditorium`, {
+  return axios.post(`${getApiBaseUrl()}/api/room/auditorium`, {
     roomId,
     isAuditorium
   })
 }
 
 export function updateRoomCapability(roomId, capability) {
-  return axios.post(`${utils.apiBaseUrl()}/api/room/update_capability`, {
+  return axios.post(`${getApiBaseUrl()}/api/room/update_capability`, {
     roomId,
     capability
   })

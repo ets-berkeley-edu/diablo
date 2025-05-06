@@ -12,25 +12,24 @@
       :right="false"
     >
       <v-list nav>
-        <template v-for="(item, index) in navItems">
-          <v-list-item
-            :id="`sidebar-link-${item.title}`"
-            :key="`sidebar-link-${index}`"
-            :aria-current="$route.path === item.path"
-            class="nav-list-item"
-            link
-            tag="a"
-            @click="toRoute(item.path)"
-          >
-            <v-list-item-icon>
-              <v-icon color="icon-nav-default">{{ item.icon }}</v-icon>
-            </v-list-item-icon>
-            <v-list-item-content>
-              <v-list-item-title class="white--text">{{ item.title }}</v-list-item-title>
-            </v-list-item-content>
-          </v-list-item>
-          <v-divider v-if="item.title === 'Rooms'" :key="`sidebar-divider-${index}`" />
-        </template>
+        <v-list-item
+          v-for="(item, index) in navItems"
+          :id="`sidebar-link-${item.title}`"
+          :key="`sidebar-link-${index}`"
+          :aria-current="$route.path === item.path"
+          class="nav-list-item"
+          link
+          tag="a"
+          @click="toRoute(item.path)"
+        >
+          <v-list-item-icon>
+            <v-icon color="icon-nav-default">{{ item.icon }}</v-icon>
+          </v-list-item-icon>
+          <v-list-item-content>
+            <v-list-item-title class="white--text">{{ item.title }}</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+        <v-divider v-if="item.title === 'Rooms'" :key="`sidebar-divider-${index}`" />
       </v-list>
     </v-navigation-drawer>
     <v-app-bar

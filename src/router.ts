@@ -1,12 +1,15 @@
+import {createRouter, createWebHistory, NavigationGuardNext, RouteLocationNormalized} from 'vue-router'
 import _ from 'lodash'
-import auth from './auth'
+import {useContextStore} from '@/stores/context'
+import {requiresAdmin, requiresInstructor} from '@/auth'
+
 import Attic from '@/views/Attic.vue'
 import BaseView from '@/views/BaseView.vue'
 import Blackouts from '@/views/blackout/Blackouts.vue'
 import Course from '@/views/Course.vue'
 import EditEmailTemplate from '@/views/email/EditEmailTemplate.vue'
 import EmailTemplates from '@/views/email/EmailTemplates.vue'
-import Error from '@/views/Error.vue'
+import ErrorView from '@/views/Error.vue'
 import Home from '@/views/Home.vue'
 import Jobs from '@/views/Jobs.vue'
 import Login from '@/views/Login.vue'
@@ -16,22 +19,18 @@ import PrintableRoom from '@/views/room/PrintableRoom.vue'
 import Room from '@/views/room/Room.vue'
 import Rooms from '@/views/room/Rooms.vue'
 import User from '@/views/User.vue'
-import Router from 'vue-router'
-import Vue from 'vue'
 
-Vue.use(Router)
-
-const router = new Router({
-  mode: 'history',
+const router = createRouter({
+  history: createWebHistory(),
   routes: [
     {
       path: '/',
       redirect: '/home'
     },
     {
-      beforeEnter: auth.requiresAdmin,
       path: '/room/printable/:id',
       component: PrintableRoom,
+      beforeEnter: requiresAdmin,
       meta: {
         printable: true,
         title: 'Print Room'
@@ -40,12 +39,11 @@ const router = new Router({
     {
       path: '/login',
       component: Login,
-      beforeEnter: (to: any, from: any, next: any) => {
-        if (Vue.prototype.$currentUser.isAuthenticated) {
-          next('/')
-        } else {
-          next()
-        }
+      beforeEnter: (to, from, next) => {
+        const store = useContextStore()
+        store.currentUser.isAuthenticated
+          ? next('/')
+          : next()
       },
       meta: {
         splash: true,
@@ -55,23 +53,21 @@ const router = new Router({
     {
       path: '/',
       component: BaseView,
-      beforeEnter: auth.requiresInstructor,
+      beforeEnter: requiresInstructor,
       children: [
         {
-          beforeEnter: (to: any, from: any, next: any) => {
-            const currentUser = Vue.prototype.$currentUser
-            if (currentUser.isAdmin && !currentUser.isTeaching) {
-              next({path: '/ouija'})
-            } else {
-              next()
-            }
-          },
           path: '/home',
+          name: 'home',
           component: Home,
+          beforeEnter: (to, from, next) => {
+            const {isAdmin, isTeaching} = useContextStore().currentUser
+            isAdmin && !isTeaching
+              ? next({path: '/ouija'})
+              : next()
+          },
           meta: {
             title: 'Home'
-          },
-          name: 'home'
+          }
         },
         {
           path: '/course/:termId/:sectionId',
@@ -81,8 +77,8 @@ const router = new Router({
     },
     {
       path: '/',
-      beforeEnter: auth.requiresAdmin,
       component: BaseView,
+      beforeEnter: requiresAdmin,
       children: [
         {
           path: '/attic',
@@ -169,13 +165,13 @@ const router = new Router({
         },
         {
           path: '/error',
-          component: Error,
+          component: ErrorView,
           meta: {
             title: 'Error'
           }
         },
         {
-          path: '*',
+          path: '/:pathMatch(.*)*',
           redirect: '/404'
         }
       ]
@@ -183,17 +179,27 @@ const router = new Router({
   ]
 })
 
-router.beforeEach((to: any, from: any, next: any) => {
-  const redirect = _.trim(to.query.redirect)
-  if (Vue.prototype.$currentUser.isAuthenticated && redirect) {
-    next(redirect)
-  } else {
-    next()
+router.beforeEach(
+  (
+    to: RouteLocationNormalized,
+    from: RouteLocationNormalized,
+    next: NavigationGuardNext
+  ) => {
+    const redirect = _.trim(
+      (to.query.redirect as string) || ''
+    )
+    const {isAuthenticated} = useContextStore().currentUser
+    isAuthenticated && redirect
+      ? next(redirect)
+      : next()
   }
-})
+)
 
-router.afterEach((to: any) => {
-  const title = _.get(to, 'meta.title') || _.capitalize(to.name) || 'Welcome'
+router.afterEach((to) => {
+  const title =
+    (to.meta.title as string) ||
+    _.capitalize(to.name as string) ||
+    'Welcome'
   document.title = `${title} | Course Capture`
 })
 

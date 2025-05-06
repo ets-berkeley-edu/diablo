@@ -1,5 +1,5 @@
-import Vue from 'vue'
+import {useContextStore} from '@/stores/context'
 
-export default {
-  apiBaseUrl: () => Vue.prototype.$config.apiBaseUrl
+export function getApiBaseUrl() {
+  return useContextStore().config.apiBaseUrl
 }

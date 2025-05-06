@@ -33,42 +33,42 @@
         />
       </v-row>
       <Spinner v-if="refreshingCourses" />
-      <template v-for="(courses, index) in [eligibleCourses, ineligibleCourses]">
-        <v-row v-if="!refreshingCourses && courses.length" :key="index" class="py-2">
-          <h2 class="px-4">
-            {{ index === 0 ? 'Courses eligible for capture' : 'Courses not in a course capture classroom' }}
-          </h2>
-          <v-data-table
-            :id="getTableId(index)"
-            :caption="index === 0 ? 'Courses eligible for capture' : 'Courses not in a course capture classroom'"
-            disable-pagination
-            disable-sort
-            :headers="index === 0 ? eligibleHeaders : ineligibleHeaders"
-            :hide-default-footer="true"
-            :hide-default-header="true"
-            :items="courses"
-            :items-per-page="100"
-            class="elevation-1 w-100 ma-4"
-          >
-            <template #header="{props: {headers: columns}}">
-              <thead>
-                <tr>
-                  <th
-                    v-for="(column, colIndex) in columns"
-                    :id="`${getTableId(index)}-${column.value}-th`"
-                    :key="colIndex"
-                    class="text-start text-no-wrap"
-                    scope="col"
-                  >
-                    <span class="font-size-12 font-weight-bold">{{ column.text }}</span>
-                  </th>
-                </tr>
-              </thead>
-            </template>
-            <template #body="{items}">
-              <tbody>
-                <template v-for="course in items" :id="`${getTableId(index)}-${course.sectionId}`">
-                  <tr :key="course.sectionId">
+      <template>
+        <div v-for="(courses, index) in [eligibleCourses, ineligibleCourses]" :key="index">
+          <v-row v-if="!refreshingCourses && courses.length" class="py-2">
+            <h2 class="px-4">
+              {{ index === 0 ? 'Courses eligible for capture' : 'Courses not in a course capture classroom' }}
+            </h2>
+            <v-data-table
+              :id="getTableId(index)"
+              :caption="index === 0 ? 'Courses eligible for capture' : 'Courses not in a course capture classroom'"
+              disable-pagination
+              disable-sort
+              :headers="index === 0 ? eligibleHeaders : ineligibleHeaders"
+              :hide-default-footer="true"
+              :hide-default-header="true"
+              :items="courses"
+              :items-per-page="100"
+              class="elevation-1 w-100 ma-4"
+            >
+              <template #header="{props: {headers: columns}}">
+                <thead>
+                  <tr>
+                    <th
+                      v-for="(column, colIndex) in columns"
+                      :id="`${getTableId(index)}-${column.value}-th`"
+                      :key="colIndex"
+                      class="text-start text-no-wrap"
+                      scope="col"
+                    >
+                      <span class="font-size-12 font-weight-bold">{{ column.text }}</span>
+                    </th>
+                  </tr>
+                </thead>
+              </template>
+              <template #body="{items}">
+                <tbody>
+                  <tr v-for="course in items" :id="`${getTableId(index)}-${course.sectionId}`" :key="course.sectionId">
                     <td
                       :id="`${getTableId(index)}-${course.sectionId}-label`"
                       class="text-no-wrap"
@@ -181,11 +181,11 @@
                     </td>
                     <td v-if="index === 0"></td>
                   </tr>
-                </template>
-              </tbody>
-            </template>
-          </v-data-table>
-        </v-row>
+                </tbody>
+              </template>
+            </v-data-table>
+          </v-row>
+        </div>
       </template>
       <v-row v-if="!eligibleCourses.length && !ineligibleCourses.length" class="ma-4 text-no-wrap title">
         No courses.

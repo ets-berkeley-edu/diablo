@@ -1,34 +1,55 @@
 <script>
-import store from '@/store'
-import Vue from 'vue'
-import {mapActions, mapGetters} from 'vuex'
+import {nextTick} from 'vue'
+import _ from 'lodash'
+import {useContextStore} from '@/stores/context'
 
 export default {
   name: 'Context',
   computed: {
-    ...mapGetters('context', ['loading', 'screenReaderAlert', 'snackbar']),
+    loading() {
+      return useContextStore().loading
+    },
+    screenReaderAlert() {
+      return useContextStore().screenReaderAlert
+    },
+    snackbar() {
+      return useContextStore().snackbar
+    },
     snackbarShow: {
-      get: () => store.getters['context/snackbarShow'],
-      set: show => store.dispatch(show ? 'context/snackbarOpen' : 'context/snackbarClose')
+      get() {
+        return useContextStore().snackbarShow
+      },
+      set(show) {
+        const store = useContextStore()
+        show ? store.snackbarOpen('') : store.snackbarClose()
+      }
     }
   },
   methods: {
-    ...mapActions('context', ['snackbarClose']),
     alertScreenReader(message) {
-      store.dispatch('context/alertScreenReader', '')
-      Vue.nextTick(() => store.dispatch('context/alertScreenReader', message))
+      const store = useContextStore()
+      store.alertScreenReader('')
+      nextTick(() => store.alertScreenReader(message))
     },
-    reportError: message => store.dispatch('context/snackbarReportError', message),
-    snackbarOpen: message => store.dispatch('context/snackbarOpen', message),
+
+    reportError(message) {
+      useContextStore().snackbarReportError(message)
+    },
+
+    snackbarOpen(message) {
+      useContextStore().snackbarOpen(message)
+    },
+
     summarize(courses) {
-      let message = `${courses.length} course${courses.length === 1 ? '' : 's'}.`
-      const scheduled = this.$_.filter(courses, 'scheduled')
-      if (scheduled && scheduled.length) {
-        return `${message} ${scheduled.length} ${scheduled.length === 1 ? 'has' : 'have'} recordings scheduled.`
-      } else {
-        return message
+      const total = courses.length
+      let msg = `${total} course${total === 1 ? '' : 's'}.`
+      const scheduled = _.filter(courses, 'scheduled')
+      if (scheduled.length) {
+        msg += ` ${scheduled.length} ${scheduled.length === 1 ? 'has' : 'have'} recordings scheduled.`
       }
+      return msg
     }
   }
 }
+
 </script>
