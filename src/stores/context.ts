@@ -3,6 +3,20 @@ import {defineStore} from 'pinia'
 
 export type DiabloConfig = {
   apiBaseUrl: string,
+  devAuthEnabled: boolean,
+  currentTermName: string,
+  currentTermId: number,
+  canvasBaseUrl: string,
+  kalturaMediaSpaceUrl: string,
+  searchItemsPerPage: number,
+  isVueAppDebugMode: boolean,
+  emailCourseCaptureSupport: string,
+  currentTermRecordingsBegin: any,
+  currentTermRecordingsEnd: any,
+  searchFilterOptions: any,
+  emailTemplateTypes: any,
+  courseCaptureExplainedUrl: string,
+  uxBannerColor: any
 }
 
 export const useContextStore = defineStore('context', {
@@ -22,6 +36,7 @@ export const useContextStore = defineStore('context', {
       isAdmin: false,
       isAuthenticated: false,
       isTeaching: false,
+      courses: [] as any[]
     },
     config: {} as DiabloConfig,
   }),
@@ -61,6 +76,7 @@ export const useContextStore = defineStore('context', {
     },
     setCurrentUser(user: any) {
       this.currentUser = user
-    }
+    },
+
   }
 })

@@ -5,7 +5,7 @@
     please read
     <a
       id="link-to-course-capture-overview"
-      :href="$config.courseCaptureExplainedUrl"
+      :href="config.courseCaptureExplainedUrl"
       target="_blank"
       aria-label="Open URL to Course Capture service overview in a new window"
     >
@@ -15,7 +15,10 @@
 </template>
 
 <script>
+import Context from '@/mixins/Context.vue';
+
 export default {
-  name: 'CourseCaptureExplained'
+  name: 'CourseCaptureExplained',
+  mixins: [Context],
 }
 </script>

@@ -97,6 +97,7 @@
 import Context from '@/mixins/Context'
 import PageTitle from '@/components/util/PageTitle'
 import {getAllRooms} from '@/api/room'
+import {putFocusNextTick} from '@/lib/utils';
 
 export default {
   name: 'Rooms',
@@ -126,7 +127,7 @@ export default {
     this.$loading()
     getAllRooms().then(data => {
       this.rooms = data
-      this.$ready('Rooms')
+      // this.$ready('Rooms')  @TODO - must be replaced as part of Vue 3 upgrade
     })
   },
   methods: {
@@ -154,7 +155,7 @@ export default {
       const sortDirection = this.$_.first(sortBy) === column.value && !sortDesc[0] ? 'descending' : 'ascending'
       sort(column.value)
       this.alertScreenReader(`Sorted by ${column.text}, ${sortDirection}`)
-      this.$putFocusNextTick(`rooms-table-sort-by-${column.value}-btn`)
+      putFocusNextTick(`rooms-table-sort-by-${column.value}-btn`)
     }
   }
 }

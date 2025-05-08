@@ -170,7 +170,7 @@ export default {
         this.ineligibleCourses = []
         this.partitionCoursesByEligibility(user.courses, this.eligibleCourses, this.ineligibleCourses)
 
-        this.$ready(this.user.name)
+        // this.$ready(this.user.name)  @TODO - must be replaced as part of Vue 3 upgrade
         this.refreshingCourses = false
       })
     },

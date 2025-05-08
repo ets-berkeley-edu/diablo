@@ -102,7 +102,7 @@ export default {
   created() {
     this.$loading()
     this.refresh().then(() => {
-      this.$ready('Blackouts')
+      // this.$ready('Blackouts') @TODO - must be replaced as part of Vue 3 upgrade
     })
   },
   methods: {

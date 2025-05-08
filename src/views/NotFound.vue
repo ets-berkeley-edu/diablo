@@ -33,7 +33,7 @@ export default {
   mixins: [Context],
   components: {ContactUsPrompt, PageTitle},
   mounted() {
-    this.$ready('Page not found')
+    // this.$ready('Page not found')  @TODO - must be replaced as part of Vue 3 upgrade
   }
 }
 </script>

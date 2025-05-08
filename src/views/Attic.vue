@@ -63,7 +63,7 @@ export default {
 
       getAdminUsers().then(data => {
         this.adminUsers = data
-        this.$ready('Attic')
+        // this.$ready('Attic')  @TODO - must be replaced as part of Vue 3 upgrade
       })
     })
   },
