@@ -34,7 +34,6 @@ app.config.errorHandler = appErrorHandler
 
 app.use(createPinia())
   .use(axiosPlugin, {baseUrl: apiBaseUrl})
-  .use(router)
   .use(vuetify)
   .use(VCalendar, {componentPrefix: 'c'})
   .use(VWave, {})
@@ -42,8 +41,6 @@ app.use(createPinia())
 initializeAxios(axios)
 
 axios.get(`${apiBaseUrl}/api/config`).then(response => {
-  // const isVueAppInDebugMode = useContextStore().config.isVueAppDebugMode
-  useContextStore().setCurrentUser(response.data)
   useContextStore().setConfig({...response.data, apiBaseUrl, isVueAppDebugMode})
   axios.get(`${apiBaseUrl}/api/user/my_profile`).then(response => {
     useContextStore().setCurrentUser(response.data)

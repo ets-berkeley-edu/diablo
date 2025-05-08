@@ -10,27 +10,27 @@
     </v-card-title>
     <v-card-text>
       <v-row class="mx-4">
-        <ToggleOptOut
-          :term-id="`${$config.currentTermId}`"
-          section-id="all"
-          :instructor-uid="$currentUser.uid"
-          :initial-value="$currentUser.hasOptedOutForTerm"
-          :disabled="$currentUser.hasOptedOutForAllTerms"
-          label="for current semester"
-          :before-toggle="() => refreshingCourses = true"
-          :on-toggle="reloadCoursesTable"
-        />
+<!--        <ToggleOptOut-->
+<!--          :term-id="`${$config.currentTermId}`"-->
+<!--          section-id="all"-->
+<!--          :instructor-uid="$currentUser.uid"-->
+<!--          :initial-value="$currentUser.hasOptedOutForTerm"-->
+<!--          :disabled="$currentUser.hasOptedOutForAllTerms"-->
+<!--          label="for current semester"-->
+<!--          :before-toggle="() => refreshingCourses = true"-->
+<!--          :on-toggle="reloadCoursesTable"-->
+<!--        />-->
       </v-row>
       <v-row class="mx-4 mt-0 mb-2">
-        <ToggleOptOut
-          term-id="all"
-          section-id="all"
-          :instructor-uid="$currentUser.uid"
-          :initial-value="$currentUser.hasOptedOutForAllTerms"
-          label="for all semesters"
-          :before-toggle="() => refreshingCourses = true"
-          :on-toggle="reloadCoursesTable"
-        />
+<!--        <ToggleOptOut-->
+<!--          term-id="all"-->
+<!--          section-id="all"-->
+<!--          :instructor-uid="$currentUser.uid"-->
+<!--          :initial-value="$currentUser.hasOptedOutForAllTerms"-->
+<!--          label="for all semesters"-->
+<!--          :before-toggle="() => refreshingCourses = true"-->
+<!--          :on-toggle="reloadCoursesTable"-->
+<!--        />-->
       </v-row>
       <Spinner v-if="refreshingCourses" />
       <template>
@@ -138,14 +138,14 @@
                       class="text-no-wrap"
                       :columnheader="`${getTableId(index)}-hasOptedOut-th`"
                     >
-                      <ToggleOptOut
-                        :aria-label="`Opt out course ${course.courseTitle || $_.get(course.courseCodes, '0', '')}.`"
-                        :disabled="course.hasBlanketOptedOut"
-                        :initial-value="course.hasOptedOut"
-                        :instructor-uid="$currentUser.uid"
-                        :section-id="`${course.sectionId}`"
-                        :term-id="`${course.termId}`"
-                      />
+<!--                      <ToggleOptOut-->
+<!--                        :aria-label="`Opt out course ${course.courseTitle || $_.get(course.courseCodes, '0', '')}.`"-->
+<!--                        :disabled="course.hasBlanketOptedOut"-->
+<!--                        :initial-value="course.hasOptedOut"-->
+<!--                        :instructor-uid="$currentUser.uid"-->
+<!--                        :section-id="`${course.sectionId}`"-->
+<!--                        :term-id="`${course.termId}`"-->
+<!--                      />-->
                     </td>
                   </tr>
                   <tr v-for="meetingIndex in course.displayMeetings.length - 1" :key="meetingIndex">
@@ -164,7 +164,7 @@
                       class="text-no-wrap"
                       :columnheader="`${getTableId(index)}-days-th`"
                     >
-                      <Days :names-of-days="course.displayMeetings[meetingIndex].daysNames" />
+<!--                      <Days :names-of-days="course.displayMeetings[meetingIndex].daysNames" />-->
                     </td>
                     <td
                       :id="`${getTableId(index)}-${course.sectionId}-time-${index}`"
@@ -196,16 +196,16 @@
 
 <script>
 import Context from '@/mixins/Context'
-import Days from '@/components/util/Days'
+// import Days from '@/components/util/Days'
 import PageTitle from '@/components/util/PageTitle'
 import Spinner from '@/components/util/Spinner'
-import ToggleOptOut from '@/components/course/ToggleOptOut'
+// import ToggleOptOut from '@/components/course/ToggleOptOut'
 import Utils from '@/mixins/Utils'
 
 export default {
   name: 'Home',
   mixins: [Context, Utils],
-  components: {Days, PageTitle, Spinner, ToggleOptOut},
+  components: {PageTitle, Spinner},
   data: () => ({
     eligibleCourses: [],
     ineligibleCourses: [],
