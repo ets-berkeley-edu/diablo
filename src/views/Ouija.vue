@@ -97,7 +97,7 @@ export default {
   created() {
     this.$loading()
     this.refresh().then(() => {
-      this.$ready('Ouija Board')
+      // this.$ready('Ouija Board')  @TODO - must be replaced as part of Vue 3 upgrade
     })
   },
   methods: {

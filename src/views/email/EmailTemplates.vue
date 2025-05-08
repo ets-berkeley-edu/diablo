@@ -93,6 +93,7 @@ import Context from '@/mixins/Context'
 import PageTitle from '@/components/util/PageTitle'
 import Utils from '@/mixins/Utils'
 import {deleteTemplate, getAllEmailTemplates, sendTestEmail} from '@/api/email'
+import {putFocusNextTick} from '@/lib/utils';
 
 export default {
   name: 'EmailTemplates',
@@ -114,7 +115,7 @@ export default {
   mounted() {
     this.$loading()
     this.loadAllEmailTemplates().then(() => {
-      this.$ready('Email Templates')
+      // this.$ready('Email Templates')  @TODO - must be replaced as part of Vue 3 upgrade
     })
   },
   methods: {
@@ -144,7 +145,7 @@ export default {
     sendTestEmail(templateId) {
       sendTestEmail(templateId).then(() => {
         this.snackbarOpen('Test email sent. Check your inbox.')
-        this.$putFocusNextTick('btn-close-alert')
+        putFocusNextTick('btn-close-alert')
       })
     }
   }

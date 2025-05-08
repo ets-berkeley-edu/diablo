@@ -1,9 +1,10 @@
 <template>
   <v-app :id="$vuetify.theme.dark ? 'dark' : 'light'">
+<!--          :clipped="$vuetify.breakpoint.lgAndUp"
+-->
     <v-navigation-drawer
       app
       class="sidebar-nav"
-      :clipped="$vuetify.breakpoint.lgAndUp"
       color="nav-background"
       dark
       :expand-on-hover="true"
@@ -29,14 +30,14 @@
             <v-list-item-title class="white--text">{{ item.title }}</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
-        <v-divider v-if="item.title === 'Rooms'" :key="`sidebar-divider-${index}`" />
+    <!--  <v-divider v-if="item.title === 'Rooms'" :key="`sidebar-divider-${index}`" />-->
       </v-list>
     </v-navigation-drawer>
+    <!-- :clipped-left="$vuetify.breakpoint.lgAndUp" -->
     <v-app-bar
       v-if="!$route.meta.printable"
       v-wave="waveOptions"
       app
-      :clipped-left="$vuetify.breakpoint.lgAndUp"
       color="header-background"
       dark
     >
@@ -61,12 +62,12 @@
             dark
             v-on="on"
           >
-            {{ $currentUser.firstName }}
+            {{ currentUser.firstName }}
           </v-btn>
         </template>
         <v-list>
           <v-list-item
-            v-if="$currentUser.isAdmin"
+            v-if="currentUser.isAdmin"
             id="menu-item-attic"
             link
             @click="goToPath('/attic')"
@@ -131,8 +132,8 @@ export default {
   }),
   created() {
     this.prefersColorScheme()
-    this.navItems = this.$currentUser.courses.length ? [{title: 'Home', icon: 'mdi-home', path: '/home'}] : []
-    if (this.$currentUser.isAdmin) {
+    this.navItems = this.currentUser.courses.length ? [{title: 'Home', icon: 'mdi-home', path: '/home'}] : []
+    if (this.currentUser.isAdmin) {
       this.navItems = this.navItems.concat([
         {title: 'Ouija Board', icon: 'mdi-auto-fix', path: '/ouija'},
         {title: 'Rooms', icon: 'mdi-domain', path: '/rooms'},
@@ -141,7 +142,7 @@ export default {
         {title: 'The Chancel', icon: 'mdi-hands-pray', path: '/jobs'}
       ])
     } else {
-      this.$_.each(this.$currentUser.courses, course => {
+      this.$_.each(this.currentUser.courses, course => {
         if (course.meetings.eligible.length) {
           this.navItems.push({
             title: this.getCourseCodes(course)[0],

@@ -226,7 +226,7 @@ export default {
     this.ineligibleHeaders = this.headers
     this.refreshCourses()
     this.pageTitle = `Your ${this.$config.currentTermName} Course${this.$currentUser.courses.length === 1 ? '' : 's'}`
-    this.$ready(this.pageTitle)
+    // this.$ready(this.pageTitle)  @TODO - must be replaced as part of Vue 3 upgrade
   },
   methods: {
     getTableId(index) {

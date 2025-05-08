@@ -5,15 +5,17 @@
       id="diablo-support-mailto"
       aria-label="Open new window to send email"
       :class="hrefMailtoClass"
-      :href="`mailto:${$config.emailCourseCaptureSupport}`"
+      :href="`mailto:${config.emailCourseCaptureSupport}`"
       target="_blank"
     >
-      {{ $config.emailCourseCaptureSupport }}
+      {{ config.emailCourseCaptureSupport }}
     </a>
   </span>
 </template>
 
 <script>
+import Context from '@/mixins/Context.vue';
+
 export default {
   name: 'ContactUsPrompt',
   props: {
@@ -22,6 +24,7 @@ export default {
       required: false,
       type: String
     }
-  }
+  },
+  mixins: [Context]
 }
 </script>

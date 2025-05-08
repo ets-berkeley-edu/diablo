@@ -131,7 +131,7 @@ export default {
     this.templateId = this.$_.get(this.$route, 'params.id')
     this.pageTitle = `${this.templateId ? 'Edit' : 'Create'} Email Template`
     if (this.typeName) {
-      this.$ready(`${this.pageTitle} '${this.typeName}'`)
+      // this.$ready(`${this.pageTitle} '${this.typeName}'`)  @TODO - must be replaced as part of Vue 3 upgrade
     } else {
       getEmailTemplate(this.templateId).then(data => {
         this.name = data.name
@@ -139,7 +139,7 @@ export default {
         this.message = data.message
         this.templateType = data.templateType
         this.typeName = this.$_.get(this.$config.emailTemplateTypes, data.templateType)
-        this.$ready(`${this.pageTitle} '${this.typeName}'`)
+        // this.$ready(`${this.pageTitle} '${this.typeName}'`)  @TODO - must be replaced as part of Vue 3 upgrade
       })
     }
   },

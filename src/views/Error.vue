@@ -30,7 +30,7 @@ export default {
   }),
   mounted() {
     this.message = this.$route.query.m
-    this.$ready('Error')
+    // this.$ready('Error')  @TODO - must be replaced as part of Vue 3 upgrade
   }
 }
 </script>

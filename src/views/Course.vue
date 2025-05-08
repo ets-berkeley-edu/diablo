@@ -767,6 +767,7 @@ import {
 } from '@/api/course'
 import {getAuditoriums} from '@/api/room'
 import {getCanvasSitesTeaching} from '@/api/user'
+import {putFocusNextTick} from '@/lib/utils';
 
 export default {
   name: 'Course',
@@ -861,7 +862,7 @@ export default {
           if (data) {
             this.publishCanvasSites.push(data)
             this.alertScreenReader(`${data.name} added.`)
-            this.$putFocusNextTick('input-canvas-site-id')
+            putFocusNextTick('input-canvas-site-id')
           }
         })
       }
@@ -872,7 +873,7 @@ export default {
         this.publishCanvasSites.push(this.pendingCanvasSite)
       }
       this.alertScreenReader(`${this.pendingCanvasSite.name} added.`)
-      this.$putFocusNextTick('select-canvas-site')
+      putFocusNextTick('select-canvas-site')
       this.pendingCanvasSite = null
     },
     addCollaboratorConfirm() {
@@ -888,7 +889,7 @@ export default {
       if (this.$refs.personLookup) {
         this.$refs.personLookup.clear()
       }
-      this.$putFocusNextTick('input-collaborator-lookup-autocomplete')
+      putFocusNextTick('input-collaborator-lookup-autocomplete')
     },
     addCollaboratorPending(collaborator) {
       if (collaborator) {
@@ -904,7 +905,7 @@ export default {
       this.noteEditing = false
       this.noteUpdating = false
       this.alertScreenReader('Note edit canceled.')
-      this.$putFocusNextTick('btn-edit-note')
+      putFocusNextTick('btn-edit-note')
     },
     collaboratorLabel(collaborator) {
       let label = `${collaborator.firstName} ${collaborator.lastName}`
@@ -920,12 +921,12 @@ export default {
         this.course.note = this.noteBody = null
         this.noteUpdating = false
         this.alertScreenReader('Note deleted.')
-        this.$putFocusNextTick('btn-edit-note')
+        putFocusNextTick('btn-edit-note')
       })
     },
     editNote() {
       this.noteEditing = true
-      this.$putFocusNextTick('note-body-edit')
+      putFocusNextTick('note-body-edit')
     },
     getAriaSortIndicator(column, sortBy, sortDesc) {
       if (column.value && sortBy[0] === column.value) {
@@ -954,7 +955,7 @@ export default {
       const sortDirection = this.$_.first(sortBy) === column.value && !sortDesc[0] ? 'descending' : 'ascending'
       sort(column.value)
       this.alertScreenReader(`Sorted by ${column.text}, ${sortDirection}`)
-      this.$putFocusNextTick(`update-history-sort-by-${column.id}-btn`)
+      putFocusNextTick(`update-history-sort-by-${column.id}-btn`)
     },
     onPublishTypeChange(publishTypeOption, index) {
       if (this.publishType === publishTypeOption) {
@@ -981,7 +982,7 @@ export default {
       if (this.$_.isEmpty(this.publishCanvasSites) || !nextFocusSiteId) {
         nextFocusId = this.$currentUser.isAdmin ? 'input-canvas-site-id' : 'select-canvas-site'
       }
-      this.$putFocusNextTick(nextFocusId)
+      putFocusNextTick(nextFocusId)
     },
     removeCollaborator(uid, index) {
       const nextFocusIndex = (index + 1 === this.$_.size(this.collaborators)) ? index - 1 : index + 1
@@ -989,7 +990,7 @@ export default {
       const collaborator = this.$_.find(this.collaborators, c => c.uid === uid)
       this.collaborators = this.$_.filter(this.collaborators, c => c.uid !== uid)
       this.alertScreenReader(`${collaborator.firstName} ${collaborator.lastName} removed from collaborators.`)
-      this.$putFocusNextTick(this.$_.isEmpty(this.collaborators) || !nextFocusUid ? 'input-collaborator-lookup-autocomplete' : `btn-collaborator-remove-${nextFocusUid}`)
+      putFocusNextTick(this.$_.isEmpty(this.collaborators) || !nextFocusUid ? 'input-collaborator-lookup-autocomplete' : `btn-collaborator-remove-${nextFocusUid}`)
     },
     render(data) {
       this.$loading()
@@ -1020,7 +1021,7 @@ export default {
           this.publishCanvasSiteOptions = data
         })
       }
-      this.$ready(this.courseDisplayTitle)
+      // this.$ready(this.courseDisplayTitle)  @TODO - must be replaced as part of Vue 3 upgrade
     },
     saveNote() {
       this.noteUpdating = true
@@ -1029,20 +1030,20 @@ export default {
         this.noteEditing = false
         this.noteUpdating = false
         this.alertScreenReader('Note updated.')
-        this.$putFocusNextTick('btn-edit-note')
+        putFocusNextTick('btn-edit-note')
       })
     },
     toggleCollaboratorsEditing() {
       this.collaboratorsEditing = true
-      this.$putFocusNextTick('input-collaborator-lookup-autocomplete')
+      putFocusNextTick('input-collaborator-lookup-autocomplete')
     },
     togglePublishTypeEditing() {
       this.publishTypeEditing = true
-      this.$putFocusNextTick('select-publish-type')
+      putFocusNextTick('select-publish-type')
     },
     toggleRecordingTypeEditing() {
       this.recordingTypeEditing = true
-      this.$putFocusNextTick('select-recording-type')
+      putFocusNextTick('select-recording-type')
     },
     updateCollaborators() {
       this.collaboratorsUpdating = true
@@ -1052,7 +1053,7 @@ export default {
         this.course.termId,
       ).then(data => {
         this.alertScreenReader('Collaborators updated.')
-        this.$putFocusNextTick('btn-collaborators-edit')
+        putFocusNextTick('btn-collaborators-edit')
         this.course.collaborators = data.collaborators
         this.collaboratorsEditing = false
         this.collaboratorsUpdating = false
@@ -1061,7 +1062,7 @@ export default {
     },
     updateCollaboratorsCancel() {
       this.alertScreenReader('Collaborator edit cancelled.')
-      this.$putFocusNextTick('btn-collaborators-edit')
+      putFocusNextTick('btn-collaborators-edit')
       this.collaboratorsEditing = false
       this.collaboratorsUpdating = false
       this.addCollaboratorError = null
@@ -1077,7 +1078,7 @@ export default {
       ).then(data => {
         const message = `Recording placement updated to ${data.publishTypeName}.`
         this.alertScreenReader(message)
-        this.$putFocusNextTick('btn-publish-type-edit')
+        putFocusNextTick('btn-publish-type-edit')
         this.course.canvasSiteIds = data.canvasSiteIds
         this.course.canvasSites = data.canvasSites
         this.course.publishType = data.publishType
@@ -1088,7 +1089,7 @@ export default {
     },
     updatePublishTypeCancel() {
       this.alertScreenReader('Recording placement edit cancelled.')
-      this.$putFocusNextTick('btn-publish-type-edit')
+      putFocusNextTick('btn-publish-type-edit')
       this.publishTypeEditing = false
       this.publishType = this.course.publishType
       this.publishCanvasSites = this.course.canvasSites
@@ -1102,7 +1103,7 @@ export default {
       ).then(data => {
         const message = `Recording type updated to ${this.displayLabels[this.recordingType]}.`
         this.alertScreenReader(message)
-        this.$putFocusNextTick('btn-recording-type-edit')
+        putFocusNextTick('btn-recording-type-edit')
         this.course.recordingType = data.recordingType
         this.course.recordingTypeName = data.recordingTypeName
         this.recordingTypeEditing = false
@@ -1111,7 +1112,7 @@ export default {
     },
     updateRecordingTypeCancel() {
       this.alertScreenReader('Recording type edit cancelled.')
-      this.$putFocusNextTick('btn-recording-type-edit')
+      putFocusNextTick('btn-recording-type-edit')
       this.recordingTypeEditing = false
       this.recordingType = this.course.recordingType
     },

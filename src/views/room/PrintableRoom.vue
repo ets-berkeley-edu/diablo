@@ -104,7 +104,7 @@ export default {
       this.$_.each(this.courses, course => {
         course.displayMeetings = this.getDisplayMeetings(course)
       })
-      this.$ready(`${this.room.location} printable`)
+      // this.$ready(`${this.room.location} printable`)  @TODO - must be replaced as part of Vue 3 upgrade
     })
   }
 }

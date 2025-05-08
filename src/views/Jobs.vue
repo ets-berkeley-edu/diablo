@@ -203,6 +203,7 @@ import JobHistory from '@/components/job/JobHistory'
 import PageTitle from '@/components/util/PageTitle'
 import Utils from '@/mixins/Utils'
 import {getJobHistory, getJobSchedule, setJobDisabled, startJob, updateJobSchedule} from '@/api/job'
+import {putFocusNextTick} from '@/lib/utils';
 
 export default {
   name: 'Jobs',
@@ -237,7 +238,7 @@ export default {
     getJobSchedule().then(data => {
       this.jobSchedule = data
       this.refresh().then(() => {
-        this.$ready('The Chancel')
+        // this.$ready('The Chancel')  @TODO - must be replaced as part of Vue 3 upgrade
       })
     })
   },
@@ -265,18 +266,18 @@ export default {
       startJob(job.key).then(() => {})
       const jobName = this.$_.find(this.jobSchedule.jobs, ['key', job.key]).name
       this.snackbarOpen(`${jobName} job started`)
-      this.$putFocusNextTick('btn-close-alert')
+      putFocusNextTick('btn-close-alert')
     },
     scheduleEditCancel(job) {
       this.editJob = undefined
       this.editJobDialog = false
       this.alertScreenReader('Cancelled')
-      this.$putFocusNextTick(`edit-job-schedule-${job.key}`)
+      putFocusNextTick(`edit-job-schedule-${job.key}`)
     },
     scheduleEditOpen(job) {
       this.editJob = this.$_.cloneDeep(job)
       this.editJobDialog = true
-      this.$putFocusNextTick('schedule-type-select')
+      putFocusNextTick('schedule-type-select')
     },
     scheduleEditSave() {
       updateJobSchedule(
@@ -289,7 +290,7 @@ export default {
         this.editJob = undefined
         this.editJobDialog = false
         this.alertScreenReader(`Job '${match.name}' was updated.`)
-        this.$putFocusNextTick(`edit-job-schedule-${match.key}`)
+        putFocusNextTick(`edit-job-schedule-${match.key}`)
       })
     },
     scheduleRefresh() {
@@ -300,7 +301,7 @@ export default {
       setJobDisabled(job.id, isDisabled).then(data => {
         job.disabled = data.disabled
         this.alertScreenReader(`Job '${job.name}' ${job.disabled ? 'disabled' : 'enabled'}`)
-        this.$putFocusNextTick(`job-${job.key}-enabled`)
+        putFocusNextTick(`job-${job.key}-enabled`)
       })
     }
   }

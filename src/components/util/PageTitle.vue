@@ -55,7 +55,7 @@ export default {
     is420: undefined
   }),
   created() {
-    this.is420 = this.$moment().format('H:mm') === '16:20'
+    // this.is420 = this.$moment().format('H:mm') === '16:20'
   },
   methods: {
     clazz() {

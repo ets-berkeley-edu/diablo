@@ -23,6 +23,12 @@ export default {
         const store = useContextStore()
         show ? store.snackbarOpen('') : store.snackbarClose()
       }
+    },
+    config() {
+      return useContextStore().config
+    },
+    currentUser() {
+      return useContextStore().currentUser
     }
   },
   methods: {

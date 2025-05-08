@@ -102,7 +102,7 @@ export default {
         course.courseCodes = this.getCourseCodes(course)
       })
       this.offerPrintable = !!this.$_.find(this.room.courses, c => this.$_.find(c.scheduled, s => s.room.id === this.room.id))
-      this.$ready(data.location)
+      // this.$ready(data.location)  @TODO - must be replaced as part of Vue 3 upgrade
       // The page is ready; Kaltura events will pop up in a sec.
       if (this.room.kalturaResourceId) {
         getKalturaEventList(this.room.kalturaResourceId).then(data => {

@@ -5,12 +5,14 @@ import App from './App.vue'
 import router from './router'
 import {createPinia} from 'pinia'
 import axios from 'axios'
-import _ from 'lodash'
-import {DateTime} from 'luxon'
+import {trim} from 'lodash'
+import axiosPlugin from '@/plugins/axios'
+import {appErrorHandler, initializeAxios} from '@/lib/axios-utils'
 
 import VCalendar from 'v-calendar'
 import 'v-calendar/style.css'
 import VWave from 'v-wave'
+import {useContextStore} from '@/stores/context'
 
 import 'vuetify/styles'
 import '@mdi/font/css/materialdesignicons.css'
@@ -18,34 +20,33 @@ import {createVuetify} from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 
-const pinia = createPinia()
+const apiBaseUrl: string = import.meta.env.VITE_APP_API_BASE_URL
+const isVueAppDebugMode: boolean = trim(import.meta.env.VITE_APP_DEBUG).toLowerCase() === 'true'
+
 const vuetify = createVuetify({
   components,
   directives,
   theme: {defaultTheme: 'light'},
 })
 
-
-axios.defaults.withCredentials = true
-axios.interceptors.response.use(
-  res => res.headers['content-type']?.includes('application/json') ? res.data : res,
-  error => {
-    return Promise.reject(error)
-  }
-)
-
-
 const app = createApp(App)
+app.config.errorHandler = appErrorHandler
 
-app.use(pinia)
-app.use(router)
-app.use(vuetify)
+app.use(createPinia())
+  .use(axiosPlugin, {baseUrl: apiBaseUrl})
+  .use(router)
+  .use(vuetify)
+  .use(VCalendar, {componentPrefix: 'c'})
+  .use(VWave, {})
 
-app.use(VCalendar, {componentPrefix: 'c'})
-app.use(VWave, {})
+initializeAxios(axios)
 
-app.config.globalProperties.$axios = axios
-app.config.globalProperties.$_ = _
-app.config.globalProperties.$DateTime = DateTime
-
-app.mount('#app')
+axios.get(`${apiBaseUrl}/api/config`).then(response => {
+  // const isVueAppInDebugMode = useContextStore().config.isVueAppDebugMode
+  useContextStore().setCurrentUser(response.data)
+  useContextStore().setConfig({...response.data, apiBaseUrl, isVueAppDebugMode})
+  axios.get(`${apiBaseUrl}/api/user/my_profile`).then(response => {
+    useContextStore().setCurrentUser(response.data)
+    app.use(router).mount('#app')
+  })
+})

@@ -231,6 +231,7 @@ import Days from '@/components/util/Days'
 import Instructor from '@/components/course/Instructor'
 import ToggleOptOut from '@/components/course/ToggleOptOut'
 import Utils from '@/mixins/Utils'
+import {putFocusNextTick} from '@/lib/utils';
 
 export default {
   name: 'CoursesDataTable',
@@ -321,7 +322,7 @@ export default {
       const sortDirection = this.$_.first(sortBy) === column.value && !sortDesc[0] ? 'descending' : 'ascending'
       sort(column.value)
       this.alertScreenReader(`Sorted by ${column.text}, ${sortDirection}`)
-      this.$putFocusNextTick(`courses-table-sort-by-${column.id}-btn`)
+      putFocusNextTick(`courses-table-sort-by-${column.id}-btn`)
     },
     refresh() {
       this.pageCurrent = 1

@@ -76,6 +76,7 @@
 <script>
 import Context from '@/mixins/Context'
 import {createBlackout} from '@/api/blackout'
+import {putFocusNextTick} from '@/lib/utils';
 
 export default {
   name: 'CreateBlackoutDialog',
@@ -125,7 +126,7 @@ export default {
     dialog(isOpen) {
       this.reset()
       if (isOpen) {
-        this.$putFocusNextTick('input-blackout-name')
+        putFocusNextTick('input-blackout-name')
       }
     }
   },
@@ -137,7 +138,7 @@ export default {
       this.dialog = false
       this.alertScreenReader('Cancelled.')
       this.onClose(false)
-      this.$putFocusNextTick('create-blackout-btn')
+      putFocusNextTick('create-blackout-btn')
     },
     create() {
       this.isSaving = true
@@ -149,7 +150,7 @@ export default {
         this.isSaving = false
         this.dialog = false
         this.onClose(true)
-        this.$putFocusNextTick('create-blackout-btn')
+        putFocusNextTick('create-blackout-btn')
       })
     },
     reset() {

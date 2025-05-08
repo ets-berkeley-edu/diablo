@@ -2,17 +2,20 @@
   <div class="banner">
     <transition><div v-if="showPrefix">This is</div></transition>
     <b>
-      <div class="banner-inner" :style="`color: ${$config.uxBannerColor}`">
+      <div class="banner-inner" :style="`color: ${config.uxBannerColor}`">
         Course Capture<br />
-        {{ $config.currentTermName }}
+        {{ config.currentTermName }}
       </div>
     </b>
   </div>
 </template>
 
 <script>
+import Context from '@/mixins/Context.vue';
+
 export default {
   name: 'CourseCaptureBanner',
+  mixins: [Context],
   data: () => ({
     showPrefix: true
   }),

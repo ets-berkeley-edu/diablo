@@ -10,7 +10,7 @@
         >
           <v-system-bar class="accent--text pa-8" color="secondary">
             <div class="header-bar text-center w-100">
-              <h1 id="page-title">Welcome to {{ $config.currentTermName }} Course Capture</h1>
+              <h1 id="page-title">Welcome to {{ config.currentTermName }} Course Capture</h1>
             </div>
           </v-system-bar>
           <v-container fluid>
@@ -33,7 +33,7 @@
                   </v-card-actions>
                 </v-card>
               </v-col>
-              <v-col v-if="$config.devAuthEnabled">
+              <v-col v-if="config.devAuthEnabled">
                 <div class="mb-8 ml-6 mr-6 mt-8">
                   <hr />
                 </div>
@@ -84,6 +84,7 @@ import Snackbar from '@/components/util/Snackbar'
 import Utils from '@/mixins/Utils'
 import {devAuthLogIn, getCasLoginURL} from '@/api/auth'
 import Context from '@/mixins/Context'
+import {putFocusNextTick} from '@/lib/utils';
 
 export default {
   name: 'Login',
@@ -94,7 +95,7 @@ export default {
     devAuthPassword: undefined
   }),
   created() {
-    this.$putFocusNextTick('page-title')
+    putFocusNextTick('page-title')
     const error = this.$_.get(this.$route, 'query.error')
     if (error) {
       this.reportError(error)
@@ -108,29 +109,33 @@ export default {
       let password = this.$_.trim(this.devAuthPassword)
       if (uid && password) {
         devAuthLogIn(uid, password).then(data => {
-                                           if (data.isAuthenticated) {
-                                             const redirect = this.$_.get(this.$router, 'currentRoute.query.redirect')
-                                             this.$router.push({path: redirect || '/home'}, this.$_.noop)
-                                             this.alertScreenReader('Welcome to Course Capture')
-                                           } else {
-                                             const message = this.$_.get(data, 'response.data.message') || this.$_.get(data, 'message') || 'Authentication failed'
-                                             this.reportError(message)
-                                           }
-                                         },
-                                         error => {
-                                           this.reportError(error)
-                                         }
+             if (data.isAuthenticated) {
+               const redirect = this.$_.get(this.$router, 'currentRoute.query.redirect')
+               this.$router.push({path: redirect || '/home'}, this.$_.noop)
+               this.alertScreenReader('Welcome to Course Capture')
+             } else {
+               const message = this.$_.get(data, 'response.data.message') || this.$_.get(data, 'message') || 'Authentication failed'
+               this.reportError(message)
+             }
+           },
+           error => {
+             this.reportError(error)
+           }
+
         )
       } else if (uid) {
         this.reportError('Password required')
-        this.$putFocusNextTick('dev-auth-password')
+        putFocusNextTick('dev-auth-password')
       } else {
         this.reportError('Both UID and password are required')
-        this.$putFocusNextTick('dev-auth-uid')
+        putFocusNextTick('dev-auth-uid')
       }
     },
     logIn() {
-      getCasLoginURL().then(data => window.location.href = data.casLoginUrl)
+      getCasLoginURL().then((data) => {
+        console.log('data', data)
+        // window.location.href = data.casLoginUrl
+      })
     }
   }
 }
