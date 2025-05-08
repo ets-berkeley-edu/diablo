@@ -2,23 +2,11 @@ import {createRouter, createWebHistory, NavigationGuardNext, RouteLocationNormal
 import _ from 'lodash'
 import {useContextStore} from '@/stores/context'
 import {requiresAdmin, requiresInstructor} from '@/auth'
-
-import Attic from '@/views/Attic.vue'
 import BaseView from '@/views/BaseView.vue'
-import Blackouts from '@/views/blackout/Blackouts.vue'
-import Course from '@/views/Course.vue'
-import EditEmailTemplate from '@/views/email/EditEmailTemplate.vue'
-import EmailTemplates from '@/views/email/EmailTemplates.vue'
 import ErrorView from '@/views/Error.vue'
 import Home from '@/views/Home.vue'
-import Jobs from '@/views/Jobs.vue'
 import Login from '@/views/Login.vue'
 import NotFound from '@/views/NotFound.vue'
-import Ouija from '@/views/Ouija.vue'
-import PrintableRoom from '@/views/room/PrintableRoom.vue'
-import Room from '@/views/room/Room.vue'
-import Rooms from '@/views/room/Rooms.vue'
-import User from '@/views/User.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -27,15 +15,15 @@ const router = createRouter({
       path: '/',
       redirect: '/home'
     },
-    {
-      path: '/room/printable/:id',
-      component: PrintableRoom,
-      beforeEnter: requiresAdmin,
-      meta: {
-        printable: true,
-        title: 'Print Room'
-      }
-    },
+    // {
+    //   path: '/room/printable/:id',
+    //   component: PrintableRoom,
+    //   beforeEnter: requiresAdmin,
+    //   meta: {
+    //     printable: true,
+    //     title: 'Print Room'
+    //   }
+    // },
     {
       path: '/login',
       component: Login,
@@ -69,88 +57,88 @@ const router = createRouter({
             title: 'Home'
           }
         },
-        {
-          path: '/course/:termId/:sectionId',
-          component: Course
-        }
+        // {
+        //   path: '/course/:termId/:sectionId',
+        //   component: Course
+        // }
       ]
     },
     {
       path: '/',
       component: BaseView,
       beforeEnter: requiresAdmin,
-      children: [
-        {
-          path: '/attic',
-          component: Attic,
-          meta: {
-            title: 'The Attic'
-          }
-        },
-        {
-          path: '/blackouts',
-          component: Blackouts,
-          meta: {
-            title: 'Blackouts'
-          }
-        },
-        {
-          path: '/email/templates',
-          component: EmailTemplates,
-          meta: {
-            title: 'Email Templates'
-          }
-        },
-        {
-          path: '/email/template/create/:type',
-          component: EditEmailTemplate,
-          meta: {
-            title: 'Create Email Template'
-          }
-        },
-        {
-          path: '/email/template/edit/:id',
-          component: EditEmailTemplate,
-          meta: {
-            title: 'Edit Email Template'
-          }
-        },
-        {
-          path: '/jobs',
-          component: Jobs,
-          meta: {
-            title: 'The Chancel'
-          }
-        },
-        {
-          path: '/ouija',
-          component: Ouija,
-          meta: {
-            title: 'The Ouija Board'
-          }
-        },
-        {
-          path: '/room/:id',
-          component: Room,
-          meta: {
-            title: 'Room'
-          }
-        },
-        {
-          path: '/rooms',
-          component: Rooms,
-          meta: {
-            title: 'Rooms'
-          }
-        },
-        {
-          path: '/user/:uid',
-          component: User,
-          meta: {
-            title: 'User'
-          }
-        }
-      ]
+      // children: [
+      //   {
+      //     path: '/attic',
+      //     component: Attic,
+      //     meta: {
+      //       title: 'The Attic'
+      //     }
+      //   },
+      //   {
+      //     path: '/blackouts',
+      //     component: Blackouts,
+      //     meta: {
+      //       title: 'Blackouts'
+      //     }
+      //   },
+      //   {
+      //     path: '/email/templates',
+      //     component: EmailTemplates,
+      //     meta: {
+      //       title: 'Email Templates'
+      //     }
+      //   },
+      //   {
+      //     path: '/email/template/create/:type',
+      //     component: EditEmailTemplate,
+      //     meta: {
+      //       title: 'Create Email Template'
+      //     }
+      //   },
+      //   {
+      //     path: '/email/template/edit/:id',
+      //     component: EditEmailTemplate,
+      //     meta: {
+      //       title: 'Edit Email Template'
+      //     }
+      //   },
+      //   {
+      //     path: '/jobs',
+      //     component: Jobs,
+      //     meta: {
+      //       title: 'The Chancel'
+      //     }
+      //   },
+      //   {
+      //     path: '/ouija',
+      //     component: Ouija,
+      //     meta: {
+      //       title: 'The Ouija Board'
+      //     }
+      //   },
+      //   {
+      //     path: '/room/:id',
+      //     component: Room,
+      //     meta: {
+      //       title: 'Room'
+      //     }
+      //   },
+      //   {
+      //     path: '/rooms',
+      //     component: Rooms,
+      //     meta: {
+      //       title: 'Rooms'
+      //     }
+      //   },
+      //   {
+      //     path: '/user/:uid',
+      //     component: User,
+      //     meta: {
+      //       title: 'User'
+      //     }
+      //   }
+      // ]
     },
     {
       path: '/',

@@ -21,7 +21,6 @@ const goToLogin = (
 
 export const requiresAdmin: NavigationGuard = (to, from, next) => {
   const {isAuthenticated, isAdmin} = useContextStore().currentUser
-
   if (!isAuthenticated) {
     return goToLogin(to, next)
   }
@@ -33,7 +32,6 @@ export const requiresAdmin: NavigationGuard = (to, from, next) => {
 
 export const requiresInstructor: NavigationGuard = (to, from, next) => {
   const {isTeaching, isAdmin} = useContextStore().currentUser
-
   return isTeaching || isAdmin
     ? next()
     : goToLogin(to, next)
