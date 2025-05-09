@@ -1,4 +1,5 @@
 import {nextTick} from 'vue'
+import {split} from 'lodash'
 import {useContextStore} from '@/stores/context'
 
 export function alertScreenReader(message: string) {
@@ -26,4 +27,8 @@ export function putFocusNextTick(id: string, {scroll=true, scrollBlock='center',
       }
     }, 500)
   })
+}
+
+export function stripAnchorRef(path: string) {
+  return split(path, '#', 1)[0]
 }

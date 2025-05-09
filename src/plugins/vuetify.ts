@@ -1,7 +1,57 @@
+import './main.scss'
+import {aliases, mdi} from 'vuetify/iconsets/mdi-svg'
 import colors from 'vuetify/lib/util/colors'
 import {createVuetify} from 'vuetify'
+import {VApp} from 'vuetify/components/VApp'
+import {VAppBar} from 'vuetify/components/VAppBar'
+import {VBanner} from 'vuetify/components/VBanner'
+import {VBtn} from 'vuetify/components/VBtn'
+import {VCard, VCardActions, VCardSubtitle, VCardText, VCardTitle} from 'vuetify/components/VCard'
+import {VCol, VContainer, VRow, VSpacer} from 'vuetify/components/VGrid'
+import {VFooter} from 'vuetify/components/VFooter'
+import {VIcon} from 'vuetify/components/VIcon'
+import {VLayout} from 'vuetify/components/VLayout'
+import {VList, VListItem, VListItemTitle} from 'vuetify/components/VList'
+import {VMain} from 'vuetify/components/VMain'
+import {VMenu} from 'vuetify/components/VMenu'
+import {VNavigationDrawer} from 'vuetify/components/VNavigationDrawer'
+import {VSnackbar, VSwitch} from 'vuetify/components'
+
 
 export default createVuetify({
+  components: {
+    VApp,
+    VAppBar,
+    VBanner,
+    VBtn,
+    VCard,
+    VCardActions,
+    VCardSubtitle,
+    VCardText,
+    VCardTitle,
+    VCol,
+    VContainer,
+    VFooter,
+    VIcon,
+    VLayout,
+    VList,
+    VListItem,
+    VListItemTitle,
+    VMain,
+    VMenu,
+    VNavigationDrawer,
+    VRow,
+    VSnackbar,
+    VSpacer,
+    VSwitch
+  },
+  icons: {
+    defaultSet: 'mdi',
+    aliases,
+    sets: {
+      mdi
+    }
+  },
   theme: {
     themes: {
       light: {
@@ -15,7 +65,7 @@ export default createVuetify({
           'header-background': '#2a5f83',
           'icon-nav-dark-mode': '#2a5f83',
           'icon-nav-default': '#fff',
-          'nav-background': '#378dc5',
+          'sidebar': '#378dc5',
           'table-border': '#979797'
         }
       },
@@ -30,7 +80,7 @@ export default createVuetify({
           'header-background': '#122b3c',
           'icon-nav-dark-mode': '#2a5f83',
           'icon-nav-default': '#378dc5',
-          'nav-background': '#173c55',
+          'sidebar': '#173c55',
           'table-border': '#378dc5'
         }
       }
