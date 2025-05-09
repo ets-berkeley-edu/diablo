@@ -9,6 +9,7 @@ import {VBtn} from 'vuetify/components/VBtn'
 import {VCard, VCardActions, VCardSubtitle, VCardText, VCardTitle} from 'vuetify/components/VCard'
 import {VCol, VContainer, VRow, VSpacer} from 'vuetify/components/VGrid'
 import {VFooter} from 'vuetify/components/VFooter'
+import {VForm} from 'vuetify/components/VForm'
 import {VIcon} from 'vuetify/components/VIcon'
 import {VLayout} from 'vuetify/components/VLayout'
 import {VList, VListItem, VListItemTitle} from 'vuetify/components/VList'
@@ -16,6 +17,7 @@ import {VMain} from 'vuetify/components/VMain'
 import {VMenu} from 'vuetify/components/VMenu'
 import {VNavigationDrawer} from 'vuetify/components/VNavigationDrawer'
 import {VSnackbar, VSwitch} from 'vuetify/components'
+import {VTextField} from 'vuetify/components/VTextField'
 
 
 export default createVuetify({
@@ -32,6 +34,7 @@ export default createVuetify({
     VCol,
     VContainer,
     VFooter,
+    VForm,
     VIcon,
     VLayout,
     VList,
@@ -43,7 +46,8 @@ export default createVuetify({
     VRow,
     VSnackbar,
     VSpacer,
-    VSwitch
+    VSwitch,
+    VTextField
   },
   icons: {
     defaultSet: 'mdi',
