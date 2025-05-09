@@ -1,34 +1,32 @@
 <template>
-  <v-app :id="$vuetify.theme.dark ? 'dark' : 'light'">
+  <v-layout>
     <!--          :clipped="$vuetify.breakpoint.lgAndUp"-->
     <v-navigation-drawer
-      app
-      class="sidebar-nav"
-      color="nav-background"
-      theme="dark"
+      color="sidebar"
       :expand-on-hover="true"
-      :mini-variant="true"
       permanent
-      :right="false"
+      rail
+      role="navigation"
+      theme="dark"
     >
-      <v-list nav>
-        <v-list-item
-          v-for="(item, index) in navItems"
-          :id="`sidebar-link-${item.title}`"
-          :key="`sidebar-link-${index}`"
-          :aria-current="route.path === item.path"
-          class="nav-list-item"
-          link
-          tag="a"
-          @click="router.push(item.path)"
-        >
-          <template #prepend>
-            <v-icon color="icon-nav-default">{{ item.icon }}</v-icon>
-          </template>
-          <v-list-item-title class="white--text">{{ item.title }}</v-list-item-title>
-        </v-list-item>
+      <v-list-item
+        v-for="(item, index) in navItems"
+        :id="`sidebar-link-${kebabCase(item.title)}`"
+        :key="`sidebar-link-${index}`"
+        :aria-current="route.path === item.path"
+        class="nav-list-item"
+        link
+        tag="a"
+        @click="router.push(item.path)"
+      >
+        <template #prepend>
+          <v-icon color="icon-nav-default" :icon="item.icon" />
+        </template>
+        <v-list-item-title>
+          <span class="font-size-16">{{ item.title }}</span>
+        </v-list-item-title>
+      </v-list-item>
       <!--  <v-divider v-if="item.title === 'Rooms'" :key="`sidebar-divider-${index}`" />-->
-      </v-list>
     </v-navigation-drawer>
     <!-- :clipped-left="$vuetify.breakpoint.lgAndUp" -->
     <v-app-bar
@@ -79,7 +77,7 @@
           >
             <v-list-item-title class="black--text">Feedback/Help</v-list-item-title>
           </v-list-item>
-          <v-list-item @click="toggleTheme">
+          <v-list-item id="menu-item-dark-mode" @click="toggleTheme">
             <v-list-item-title>{{ theme.global.current.value.dark ? 'Light' : 'Dark' }} mode</v-list-item-title>
           </v-list-item>
           <v-list-item id="menu-item-log-out" link @click="logOut">
@@ -94,11 +92,12 @@
       <router-view :key="stripAnchorRef(route.fullPath)"></router-view>
     </v-main>
     <Footer />
-  </v-app>
+  </v-layout>
 </template>
 
 <script setup>
-import {each} from 'lodash'
+import {each, kebabCase} from 'lodash'
+import {mdiAutoFix, mdiDomain, mdiEmailOpenMultipleOutline, mdiHandsPray, mdiHome, mdiVideoOffOutline, mdiVideoPlus} from '@mdi/js'
 import {onMounted, ref} from 'vue'
 import {storeToRefs} from 'pinia'
 import {useRoute, useRouter} from 'vue-router'
@@ -108,6 +107,7 @@ import Footer from '@/components/util/Footer'
 import Snackbar from '@/components/util/Snackbar'
 import Spinner from '@/components/util/Spinner'
 import {getCasLogoutUrl} from '@/api/auth'
+import {stripAnchorRef} from '@/lib/utils'
 import {useContextStore} from '@/stores/context'
 
 const contextStore = useContextStore()
@@ -130,21 +130,21 @@ const waveOptions = {
 
 onMounted(() => {
   prefersColorScheme()
-  navItems.value = currentUser.value.courses.length ? [{title: 'Home', icon: 'mdi-home', path: '/home'}] : []
+  navItems.value = currentUser.value.courses.length ? [{title: 'Home', icon: mdiHome, path: '/home'}] : []
   if (currentUser.value.isAdmin) {
     navItems.value = navItems.value.concat([
-      {title: 'Ouija Board', icon: 'mdi-auto-fix', path: '/ouija'},
-      {title: 'Rooms', icon: 'mdi-domain', path: '/rooms'},
-      {title: 'Blackouts', icon: 'mdi-video-off-outline', path: '/blackouts'},
-      {title: 'Email Templates', icon: 'mdi-email-open-multiple-outline', path: '/email/templates'},
-      {title: 'The Chancel', icon: 'mdi-hands-pray', path: '/jobs'}
+      {title: 'Ouija Board', icon: mdiAutoFix, path: '/ouija'},
+      {title: 'Rooms', icon: mdiDomain, path: '/rooms'},
+      {title: 'Blackouts', icon: mdiVideoOffOutline, path: '/blackouts'},
+      {title: 'Email Templates', icon: mdiEmailOpenMultipleOutline, path: '/email/templates'},
+      {title: 'The Chancel', icon: mdiHandsPray, path: '/jobs'}
     ])
   } else {
     each(currentUser.value.courses, course => {
       if (course.meetings.eligible.length) {
         navItems.value.push({
           title: this.getCourseCodes(course)[0],
-          icon: 'mdi-video-plus',
+          icon: mdiVideoPlus,
           path: `/course/${config.value.currentTermId}/${course.sectionId}`
         })
       }

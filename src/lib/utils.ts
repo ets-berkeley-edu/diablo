@@ -1,5 +1,5 @@
 import {nextTick} from 'vue'
-
+import {split} from 'lodash'
 
 export function putFocusNextTick(id: string, {scroll=true, scrollBlock='center', cssSelector=undefined}: {scroll?: boolean, scrollBlock?: 'start' | 'center' | 'end' | 'nearest', cssSelector?: string}={}) {
   nextTick(() => {
@@ -20,4 +20,8 @@ export function putFocusNextTick(id: string, {scroll=true, scrollBlock='center',
       }
     }, 500)
   })
+}
+
+export function stripAnchorRef(path: string) {
+  return split(path, '#', 1)[0]
 }

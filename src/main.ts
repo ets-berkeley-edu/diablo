@@ -1,33 +1,24 @@
 import '@mdi/font/css/materialdesignicons.min.css'
 import 'vuetify/dist/vuetify.min.css'
-import {createApp} from 'vue'
 import App from './App.vue'
-import router from './router'
-import {createPinia} from 'pinia'
-import axios from 'axios'
-import {trim} from 'lodash'
-import axiosPlugin from '@/plugins/axios'
-import {appErrorHandler, initializeAxios} from '@/lib/axios-utils'
-
 import VCalendar from 'v-calendar'
 import 'v-calendar/style.css'
 import VWave from 'v-wave'
+import axios from 'axios'
+import {createApp} from 'vue'
+import {createPinia} from 'pinia'
+import router from './router'
+import {trim} from 'lodash'
+import {appErrorHandler, initializeAxios} from '@/lib/axios-utils'
+import axiosPlugin from '@/plugins/axios'
+import vuetify from '@/plugins/vuetify'
 import {useContextStore} from '@/stores/context'
 
 import 'vuetify/styles'
 import '@mdi/font/css/materialdesignicons.css'
-import {createVuetify} from 'vuetify'
-import * as components from 'vuetify/components'
-import * as directives from 'vuetify/directives'
 
 const apiBaseUrl: string = import.meta.env.VITE_APP_API_BASE_URL
 const isVueAppDebugMode: boolean = trim(import.meta.env.VITE_APP_DEBUG).toLowerCase() === 'true'
-
-const vuetify = createVuetify({
-  components,
-  directives,
-  theme: {defaultTheme: 'light'},
-})
 
 const app = createApp(App)
 app.config.errorHandler = appErrorHandler

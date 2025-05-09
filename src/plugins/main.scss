@@ -1,0 +1,4 @@
+@use 'vuetify' with (
+  $color-pack: true,
+  $body-font-family: ("Open Sans", Roboto, Helvetica, Arial, sans-serif)
+);
