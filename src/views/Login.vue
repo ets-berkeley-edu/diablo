@@ -8,32 +8,28 @@
           elevation="24"
           max-width="400"
         >
-          <v-system-bar class="accent--text pa-8" color="secondary">
+          <v-banner class="accent--text px-8" bg-color="secondary">
             <div class="header-bar text-center w-100">
-              <h1 id="page-title">Welcome to {{ config.currentTermName }} Course Capture</h1>
+              <h1 id="page-title">Welcome to {{ contextStore.config.currentTermName }} Course Capture</h1>
             </div>
-          </v-system-bar>
+          </v-banner>
           <v-container fluid>
             <v-row dense>
               <v-col cols="12">
-                <v-card class="opaque-card" color="transparent" flat>
-                  <v-card-actions>
-                    <v-btn
-                      id="log-in"
-                      aria-label="Log in to Course Capture. (You will be sent to CalNet login page.)"
-                      block
-                      color="red"
-                      dark
-                      x-large
-                      @click="logIn"
-                    >
-                      Sign In
-                      <v-icon class="pl-2">mdi-arrow-right-circle-outline</v-icon>
-                    </v-btn>
-                  </v-card-actions>
-                </v-card>
+                <v-btn
+                  id="log-in"
+                  aria-label="Log in to Course Capture. (You will be sent to CalNet login page.)"
+                  block
+                  color="red"
+                  dark
+                  x-large
+                  @click="logIn"
+                >
+                  Sign In
+                  <v-icon class="pl-2">mdi-arrow-right-circle-outline</v-icon>
+                </v-btn>
               </v-col>
-              <v-col v-if="config.devAuthEnabled">
+              <v-col v-if="contextStore.config.devAuthEnabled">
                 <div class="mb-8 ml-6 mr-6 mt-8">
                   <hr />
                 </div>
@@ -42,7 +38,7 @@
                     <v-text-field
                       id="dev-auth-uid"
                       v-model="devAuthUid"
-                      background-color="white"
+                      bg-color="white"
                       outlined
                       placeholder="UID"
                       :rules="[v => !!v || 'Required']"
@@ -50,7 +46,7 @@
                     <v-text-field
                       id="dev-auth-password"
                       v-model="devAuthPassword"
-                      background-color="white"
+                      bg-color="white"
                       outlined
                       placeholder="Password"
                       :rules="[v => !!v || 'Required']"
@@ -79,66 +75,61 @@
   </v-app>
 </template>
 
-<script>
+<script setup>
+import {computed, onMounted, onUnmounted, ref} from 'vue'
+
 import Snackbar from '@/components/util/Snackbar'
-import Utils from '@/mixins/Utils'
 import {devAuthLogIn, getCasLoginURL} from '@/api/auth'
-import Context from '@/mixins/Context'
-import {putFocusNextTick} from '@/lib/utils';
+import {useContextStore} from '@/stores/context'
+import router from '@/router'
+import {alertScreenReader, putFocusNextTick} from '@/lib/utils';
 import {get, trim} from 'lodash'
 
-export default {
-  name: 'Login',
-  components: {Snackbar},
-  mixins: [Context, Utils],
-  data: () => ({
-    devAuthUid: undefined,
-    devAuthPassword: undefined
-  }),
-  created() {
-    putFocusNextTick('page-title')
-    const error = get(this.$route, 'query.error')
-    if (error) {
-      this.reportError(error)
-    } else {
-      this.alertScreenReader('Welcome to Course Capture. Please log in.')
-    }
-  },
-  methods: {
-    devAuth() {
-      let uid = trim(this.devAuthUid)
-      let password = trim(this.devAuthPassword)
-      if (uid && password) {
-        devAuthLogIn(uid, password).then(data => {
-                                           if (data.isAuthenticated) {
-                                             const redirect = this.$_.get(this.$router, 'currentRoute.query.redirect')
-                                             this.$router.push({path: redirect || '/home'}, this.$_.noop)
-                                             this.alertScreenReader('Welcome to Course Capture')
-                                           } else {
-                                             const message = this.$_.get(data, 'response.data.message') || this.$_.get(data, 'message') || 'Authentication failed'
-                                             this.reportError(message)
-                                           }
-                                         },
-                                         error => {
-                                           this.reportError(error)
-                                         }
+const contextStore = useContextStore()
 
-        )
-      } else if (uid) {
-        this.reportError('Password required')
-        putFocusNextTick('dev-auth-password')
+const devAuthUid = ref(undefined)
+const devAuthPassword = ref(undefined)
+
+onMounted(() => {
+  putFocusNextTick('page-title')
+  const error = get(router.currentRoute, 'query.error')
+  if (error) {
+    contextStore.snackbarReportError(error)
+  } else {
+    alertScreenReader('Welcome to Course Capture. Please log in.')
+  }
+})
+
+const devAuth = () => {
+  let uid = trim(devAuthUid.value)
+  let password = trim(devAuthPassword.value)
+  if (uid && password) {
+    devAuthLogIn(uid, password).then(data => {
+      if (data.isAuthenticated) {
+        const redirect = get(router, 'currentRoute.query.redirect')
+        router.push({path: redirect || '/home'}, this.$_.noop)
+        alertScreenReader('Welcome to Course Capture')
       } else {
-        this.reportError('Both UID and password are required')
-        putFocusNextTick('dev-auth-uid')
+        const message = get(data, 'response.data.message') || get(data, 'message') || 'Authentication failed'
+        contextStore.snackbarReportError(message)
       }
     },
-    logIn() {
-      getCasLoginURL().then((data) => {
-        console.log('data', data)
-        window.location.href = data.data.casLoginUrl
-      })
-    }
+    error => {
+      contextStore.snackbarReportError(error)
+    })
+  } else if (uid) {
+    contextStore.snackbarReportError('Password required')
+    putFocusNextTick('dev-auth-password')
+  } else {
+    contextStore.snackbarReportError('Both UID and password are required')
+    putFocusNextTick('dev-auth-uid')
   }
+}
+
+const logIn = () => {
+  getCasLoginURL().then((data) => {
+    window.location.href = data.data.casLoginUrl
+  })
 }
 </script>
 
@@ -147,11 +138,14 @@ export default {
     font-size: 18px;
   }
   .background-splash {
-    background: url('~@/assets/sather-gate.png') no-repeat center;
+    background: url('@/assets/sather-gate.png') no-repeat center;
     -webkit-background-size: cover;
     -moz-background-size: cover;
     -o-background-size: cover;
+    align-items: center;
     background-size: cover;
+    display: flex;
+    height: 100vh;
   }
   .header-bar {
     opacity: 1.0;
