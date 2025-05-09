@@ -1,17 +1,16 @@
 <template>
   <v-card
-    v-if="!loading"
     class="elevation-1"
     outlined
   >
     <v-card-title>
-      <PageTitle icon="mdi-sign-caution" text="Uh oh!" />
+      <PageTitle :icon="mdiSignCaution" text="Uh oh!" />
     </v-card-title>
     <v-card-text class="pl-8">
       <div
         id="page-not-found"
         aria-live="polite"
-        class="body-1 pb-5"
+        class="text-body-1 pb-5"
         role="alert"
       >
         Page not found.
@@ -23,17 +22,14 @@
   </v-card>
 </template>
 
-<script>
+<script setup>
+import {mdiSignCaution} from '@mdi/js'
+import {onMounted} from 'vue'
 import ContactUsPrompt from '@/components/util/ContactUsPrompt'
-import Context from '@/mixins/Context'
 import PageTitle from '@/components/util/PageTitle'
+import {useContextStore} from '@/stores/context'
 
-export default {
-  name: 'NotFound',
-  mixins: [Context],
-  components: {ContactUsPrompt, PageTitle},
-  mounted() {
-    // this.$ready('Page not found')  @TODO - must be replaced as part of Vue 3 upgrade
-  }
-}
+onMounted(() => {
+  useContextStore().loadingComplete('Page not found')
+})
 </script>
