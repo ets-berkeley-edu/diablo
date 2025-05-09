@@ -1,5 +1,11 @@
 import {nextTick} from 'vue'
+import {useContextStore} from '@/stores/context'
 
+export function alertScreenReader(message: string) {
+  const store = useContextStore()
+  store.alertScreenReader('')
+  nextTick(() => store.alertScreenReader(message))
+}
 
 export function putFocusNextTick(id: string, {scroll=true, scrollBlock='center', cssSelector=undefined}: {scroll?: boolean, scrollBlock?: 'start' | 'center' | 'end' | 'nearest', cssSelector?: string}={}) {
   nextTick(() => {
