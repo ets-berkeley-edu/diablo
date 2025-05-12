@@ -16,8 +16,11 @@ import {VList, VListItem, VListItemTitle} from 'vuetify/components/VList'
 import {VMain} from 'vuetify/components/VMain'
 import {VMenu} from 'vuetify/components/VMenu'
 import {VNavigationDrawer} from 'vuetify/components/VNavigationDrawer'
+import {VProgressCircular} from 'vuetify/components'
+import {VSelect} from 'vuetify/components'
 import {VSnackbar, VSwitch} from 'vuetify/components'
 import {VTextField} from 'vuetify/components/VTextField'
+import {VTooltip} from 'vuetify/components'
 
 
 export default createVuetify({
@@ -43,11 +46,14 @@ export default createVuetify({
     VMain,
     VMenu,
     VNavigationDrawer,
+    VProgressCircular,
     VRow,
+    VSelect,
     VSnackbar,
     VSpacer,
     VSwitch,
-    VTextField
+    VTextField,
+    VTooltip
   },
   icons: {
     defaultSet: 'mdi',
