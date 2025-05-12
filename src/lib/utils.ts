@@ -8,6 +8,18 @@ export function alertScreenReader(message: string) {
   nextTick(() => store.alertScreenReader(message))
 }
 
+export function getCourseCodes(course) {
+  return course.label.split('|').map((l: string) => l.trim())
+}
+
+export function getDisplayMeetings(course) {
+  if (course.meetings.eligible.length) {
+    return course.meetings.eligible
+  } else {
+    return course.meetings.ineligible
+  }
+}
+
 export function putFocusNextTick(id: string, {scroll=true, scrollBlock='center', cssSelector=undefined}: {scroll?: boolean, scrollBlock?: 'start' | 'center' | 'end' | 'nearest', cssSelector?: string}={}) {
   nextTick(() => {
     let counter = 0

@@ -1,14 +1,14 @@
 <template>
-  <v-card v-if="!loading" outlined class="elevation-1">
+  <v-card v-if="!contextStore.loading" outlined class="elevation-1">
     <v-card-title class="align-start">
       <div class="pt-2">
-        <PageTitle icon="mdi-auto-fix" text="The Ouija Board" />
+        <PageTitle :icon="mdiAutoFix" text="The Ouija Board" />
         <v-btn
           v-if="courses.length"
           class="ml-8"
-          :disabled="isDownloading || refreshing"
+          :disabled="isDownloading || isRefreshing"
           text
-          @click="downloadCSV"
+          @click="onClickDownload"
         >
           <v-progress-circular
             v-if="isDownloading"
@@ -26,7 +26,7 @@
         <v-text-field
           id="input-search"
           v-model="searchText"
-          append-icon="mdi-magnify"
+          :append-icon="mdiMagnify"
           aria-label="Search courses table"
           clearable
           :disabled="isDownloading"
@@ -37,27 +37,26 @@
         <div class="d-flex">
           <v-select
             id="ouija-filter-options"
-            v-model="selectedFilter"
+            :model="selectedFilter"
             aria-label="Filter courses table"
             color="secondary"
             :disabled="isDownloading"
-            :items="$_.keys($config.searchFilterOptions)"
-            @change="() => refresh(`Courses table refreshed. Showing ${$config.searchFilterOptions[selectedFilter]}`)"
+            :items="keys(contextStore.config.searchFilterOptions)"
+            @update:model-value="() => refresh(`Courses table refreshed. Showing ${contextStore.config.searchFilterOptions[selectedFilter]}`)"
           >
             <span :id="`filter-option-${data.item.value}`" slot="item" slot-scope="data">{{ data.item }}</span>
             <template #selection="{item}">
               <v-tooltip id="tooltip-ouija-filter" bottom>
-                <template #activator="{on, attrs}">
-                  <v-icon
-                    slot="prepend-item"
+                <template #activator="{props}">
+                  <v-btn
                     class="pb-1 pr-2"
-                    v-bind="attrs"
-                    v-on="on"
+                    icon
+                    v-bind="props"
                   >
-                    mdi-information-outline
-                  </v-icon>
+                    <v-icon :icon="mdiInformationOutline" />
+                  </v-btn>
                 </template>
-                <span class="font-weight-bold">{{ selectedFilter }}:</span> {{ $config.searchFilterOptions[selectedFilter] }}
+                <span class="font-weight-bold">{{ selectedFilter }}:</span> {{ contextStore.config.searchFilterOptions[selectedFilter] }}
               </v-tooltip>
               {{ item }}
             </template>
@@ -70,69 +69,67 @@
       :include-room-column="true"
       :message-for-courses="courses.length ? (courses.length === 1 ? '' : `${courses.length} courses`) : 'No courses'"
       :on-toggle-opt-out="onToggleOptOut"
-      :refreshing="refreshing"
+      :refreshing="isRefreshing"
       :search-text="searchText"
     />
   </v-card>
 </template>
 
-<script>
+<script setup>
+import {each, keys, map} from 'lodash'
+import {mdiAutoFix, mdiInformationOutline, mdiMagnify} from '@mdi/js'
+import {onMounted, ref} from 'vue'
+import {alertScreenReader, getCourseCodes} from '@/lib/utils'
 import CoursesDataTable from '@/components/course/CoursesDataTable'
-import Context from '@/mixins/Context'
 import PageTitle from '@/components/util/PageTitle'
-import Utils from '@/mixins/Utils'
 import {downloadCSV, getCourses} from '@/api/course'
+import {useContextStore} from '@/stores/context'
 
-export default {
-  name: 'Ouija',
-  mixins: [Context, Utils],
-  components: {CoursesDataTable, PageTitle},
-  data: () => ({
-    courses: undefined,
-    isDownloading: false,
-    refreshing: undefined,
-    searchText: '',
-    selectedFilter: 'Scheduled'
-  }),
-  created() {
-    this.$loading()
-    this.refresh().then(() => {
-      this.$ready('Ouija Board')
-    })
-  },
-  methods: {
-    downloadCSV() {
-      this.isDownloading = true
-      downloadCSV(this.selectedFilter, this.$config.currentTermId).then(() => {
-        this.snackbarOpen('The CSV file has been downloaded.')
-        this.isDownloading = false
-      })
-    },
-    onToggleOptOut(course) {
-      if (!course.hasOptedOut && this.selectedFilter === 'Do Not Email') {
-        let indexOf = this.courses.findIndex(c => c.sectionId === course.sectionId)
-        if (indexOf >= 0) {
-          this.courses.splice(indexOf, 1)
-        }
-        this.snackbarOpen(`${course.label} removed from list.`)
-      }
-    },
-    refresh(srAlert) {
-      this.refreshing = true
-      return getCourses(this.selectedFilter, this.$config.currentTermId).then(data => {
-        this.courses = data
-        this.$_.each(this.courses, course => {
-          // In support of search, we index nested course data
-          course.courseCodes = this.getCourseCodes(course)
-          course.instructorNames = this.$_.map(course.instructors, 'name')
-          course.isSelectable = !course.hasOptedOut
-        })
-        this.refreshing = false
-        if (srAlert) {
-          this.alertScreenReader(srAlert)
-        }
-      })
+const contextStore = useContextStore()
+const courses = ref([])
+const isDownloading = ref(false)
+const isRefreshing = ref(false)
+const searchText = ref('')
+const selectedFilter = ref('Scheduled')
+
+onMounted(() => {
+  refresh().then(() => {
+    contextStore.loadingComplete()
+  })
+})
+
+const onClickDownload = () => {
+  isDownloading.value = true
+  downloadCSV(selectedFilter.value, contextStore.config.currentTermId).then(() => {
+    contextStore.snackbarOpen('The CSV file has been downloaded.')
+    isDownloading.value = false
+  })
+}
+
+const onToggleOptOut = course => {
+  if (!course.hasOptedOut && selectedFilter.value === 'Do Not Email') {
+    let indexOf = courses.value.findIndex(c => c.sectionId === course.sectionId)
+    if (indexOf >= 0) {
+      courses.value.splice(indexOf, 1)
     }
+    contextStore.snackbarOpen(`${course.label} removed from list.`)
   }
+}
+
+const refresh = srAlert => {
+  isRefreshing.value = true
+  return getCourses(selectedFilter.value, contextStore.config.currentTermId).then(data => {
+    courses.value = data
+    each(courses.value, course => {
+      // In support of search, we index nested course data
+      course.courseCodes = getCourseCodes(course)
+      course.instructorNames = map(course.instructors, 'name')
+      course.isSelectable = !course.hasOptedOut
+    })
+    isRefreshing.value = false
+    if (srAlert) {
+      alertScreenReader(srAlert)
+    }
+  })
 }
 </script>
