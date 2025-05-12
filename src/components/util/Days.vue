@@ -8,20 +8,18 @@
   </span>
 </template>
 
-<script>
-export default {
-  name: 'Days',
-  props: {
-    namesOfDays: {
-      required: true,
-      type: Array
-    },
-    omitComma: {
-      type: Boolean
-    }
+<script setup>
+import {defineProps} from 'vue'
+
+defineProps({
+  namesOfDays: {
+    required: true,
+    type: Array
   },
-  methods: {
-    showComma: (list, index) => list.length > 1 && index < list.length - 1
+  omitComma: {
+    type: Boolean
   }
-}
+})
+
+const showComma = (list, index) => list.length > 1 && index < list.length - 1
 </script>
