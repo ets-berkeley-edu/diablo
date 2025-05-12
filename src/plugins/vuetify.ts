@@ -8,6 +8,7 @@ import {VBanner} from 'vuetify/components/VBanner'
 import {VBtn} from 'vuetify/components/VBtn'
 import {VCard, VCardActions, VCardSubtitle, VCardText, VCardTitle} from 'vuetify/components/VCard'
 import {VCol, VContainer, VRow, VSpacer} from 'vuetify/components/VGrid'
+import {VDataTable} from 'vuetify/components/VDataTable'
 import {VFooter} from 'vuetify/components/VFooter'
 import {VForm} from 'vuetify/components/VForm'
 import {VIcon} from 'vuetify/components/VIcon'
@@ -16,6 +17,7 @@ import {VList, VListItem, VListItemTitle} from 'vuetify/components/VList'
 import {VMain} from 'vuetify/components/VMain'
 import {VMenu} from 'vuetify/components/VMenu'
 import {VNavigationDrawer} from 'vuetify/components/VNavigationDrawer'
+import {VPagination} from 'vuetify/components/VPagination'
 import {VProgressCircular} from 'vuetify/components'
 import {VSelect} from 'vuetify/components'
 import {VSnackbar, VSwitch} from 'vuetify/components'
@@ -36,6 +38,7 @@ export default createVuetify({
     VCardTitle,
     VCol,
     VContainer,
+    VDataTable,
     VFooter,
     VForm,
     VIcon,
@@ -46,6 +49,7 @@ export default createVuetify({
     VMain,
     VMenu,
     VNavigationDrawer,
+    VPagination,
     VProgressCircular,
     VRow,
     VSelect,
