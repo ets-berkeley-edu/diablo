@@ -7,6 +7,7 @@ import ErrorView from '@/views/Error.vue'
 import Home from '@/views/Home.vue'
 import Login from '@/views/Login.vue'
 import NotFound from '@/views/NotFound.vue'
+import Ouija from '@/views/Ouija.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -67,7 +68,7 @@ const router = createRouter({
       path: '/',
       component: BaseView,
       beforeEnter: requiresAdmin,
-      // children: [
+      children: [
       //   {
       //     path: '/attic',
       //     component: Attic,
@@ -110,13 +111,13 @@ const router = createRouter({
       //       title: 'The Chancel'
       //     }
       //   },
-      //   {
-      //     path: '/ouija',
-      //     component: Ouija,
-      //     meta: {
-      //       title: 'The Ouija Board'
-      //     }
-      //   },
+        {
+          path: '/ouija',
+          component: Ouija,
+          meta: {
+            title: 'The Ouija Board'
+          }
+        },
       //   {
       //     path: '/room/:id',
       //     component: Room,
@@ -138,7 +139,7 @@ const router = createRouter({
       //       title: 'User'
       //     }
       //   }
-      // ]
+      ]
     },
     {
       path: '/',
