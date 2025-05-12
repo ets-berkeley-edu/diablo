@@ -1,26 +1,28 @@
 <template>
   <div class="pl-2 pt-4">
     <h1>
-      <span v-if="is420" :class="classForH1">
+      <div v-if="is420" class="d-flex align-center" :class="classForH1">
         <v-icon
           aria-label="Play entertaining video clip (opens a new tab)"
-          class="icon-padding"
+          class="mr-3"
           :color="$vuetify.theme.dark ? 'white' : 'primary'"
-          large
+          size="36"
           @click="smile"
         >
           mdi-weather-tornado
-        </v-icon> <span :class="clazz()"> {{ text }}</span>
-      </span>
-      <span v-if="!is420">
+        </v-icon>
+        <span :class="clazz()"> {{ text }}</span>
+      </div>
+      <div v-if="!is420" class="d-flex align-center">
         <v-icon
-          class="icon-padding"
+          class="mr-3"
           :color="$vuetify.theme.dark ? 'white' : 'primary'"
-          large
+          size="36"
         >
           {{ icon }}
-        </v-icon> <span id="page-title" :class="clazz()" tabindex="-1"> {{ text }}</span>
-      </span>
+        </v-icon>
+        <span id="page-title" :class="clazz()" tabindex="-1"> {{ text }}</span>
+      </div>
     </h1>
     <div v-if="subTitle" class="ml-5 pl-8 subtitle-1 text--secondary">
       {{ subTitle }}
@@ -67,9 +69,3 @@ export default {
   }
 }
 </script>
-
-<style scoped>
-  .icon-padding {
-    padding: 0 3px 4px 0;
-  }
-</style>
