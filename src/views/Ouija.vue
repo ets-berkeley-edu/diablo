@@ -1,68 +1,72 @@
 <template>
-  <v-card v-if="!contextStore.loading" outlined class="elevation-1">
+  <v-card
+    v-if="!contextStore.loading"
+    class="border-sm"
+  >
     <v-card-title class="align-start">
-      <div class="pt-2">
-        <PageTitle :icon="mdiAutoFix" text="The Ouija Board" />
-        <v-btn
-          v-if="courses.length"
-          class="ml-8"
-          :disabled="isDownloading || isRefreshing"
-          text
-          @click="onClickDownload"
-        >
-          <v-progress-circular
-            v-if="isDownloading"
-            class="mr-2"
-            color="primary"
-            indeterminate
-            size="18"
-            width="3"
-          ></v-progress-circular>
-          {{ isDownloading ? 'Downloading' : 'Download CSV' }}
-        </v-btn>
-      </div>
-      <v-spacer></v-spacer>
-      <div class="float-right w-50">
-        <v-text-field
-          id="input-search"
-          v-model="searchText"
-          :append-icon="mdiMagnify"
-          aria-label="Search courses table"
-          clearable
-          :disabled="isDownloading"
-          label="Search"
-          single-line
-          hide-details
-        ></v-text-field>
-        <div class="d-flex">
+      <v-row>
+        <v-col class="pt-2" cols="12" md="6">
+          <PageTitle :icon="mdiAutoFix" text="The Ouija Board" />
+          <v-btn
+            v-if="courses.length"
+            class="ml-8"
+            :disabled="isDownloading || isRefreshing"
+            variant="text"
+            @click="onClickDownload"
+          >
+            <v-progress-circular
+              v-if="isDownloading"
+              class="mr-2"
+              color="primary"
+              indeterminate
+              size="18"
+              width="3"
+            ></v-progress-circular>
+            {{ isDownloading ? 'Downloading' : 'Download CSV' }}
+          </v-btn>
+        </v-col>
+        <v-col class="pr-4" cols="12" md="6">
+          <v-text-field
+            id="input-search"
+            v-model="searchText"
+            :append-icon="mdiMagnify"
+            aria-label="Search courses table"
+            clearable
+            :disabled="isDownloading"
+            hide-details
+            label="Search"
+            single-line
+            variant="underlined"
+          ></v-text-field>
           <v-select
             id="ouija-filter-options"
-            :model="selectedFilter"
+            v-model="selectedFilter"
             aria-label="Filter courses table"
             color="secondary"
             :disabled="isDownloading"
             :items="keys(contextStore.config.searchFilterOptions)"
+            variant="underlined"
             @update:model-value="() => refresh(`Courses table refreshed. Showing ${contextStore.config.searchFilterOptions[selectedFilter]}`)"
           >
-            <span :id="`filter-option-${data.item.value}`" slot="item" slot-scope="data">{{ data.item }}</span>
+            <template #item="{props: itemProps, item}">
+              <v-list-item :id="`filter-option-${item.value}`" v-bind="itemProps"></v-list-item>
+            </template>
             <template #selection="{item}">
               <v-tooltip id="tooltip-ouija-filter" bottom>
-                <template #activator="{props}">
-                  <v-btn
+                <template #activator="{props: tooltipProps}">
+                  <v-icon
                     class="pb-1 pr-2"
-                    icon
-                    v-bind="props"
-                  >
-                    <v-icon :icon="mdiInformationOutline" />
-                  </v-btn>
+                    :icon="mdiInformationOutline"
+                    v-bind="tooltipProps"
+                  />
                 </template>
                 <span class="font-weight-bold">{{ selectedFilter }}:</span> {{ contextStore.config.searchFilterOptions[selectedFilter] }}
               </v-tooltip>
-              {{ item }}
+              {{ item.title }}
             </template>
           </v-select>
-        </div>
-      </div>
+        </v-col>
+      </v-row>
     </v-card-title>
     <CoursesDataTable
       :courses="courses"

@@ -8,23 +8,22 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'Instructor',
-  props: {
-    course: {
-      required: true,
-      type: Object
-    },
-    id: {
-      default: null,
-      required: false,
-      type: String
-    },
-    instructor: {
-      required: true,
-      type: Object
-    }
+<script setup>
+import {defineProps} from 'vue'
+
+defineProps({
+  course: {
+    required: true,
+    type: Object
+  },
+  id: {
+    default: null,
+    required: false,
+    type: String
+  },
+  instructor: {
+    required: true,
+    type: Object
   }
-}
+})
 </script>

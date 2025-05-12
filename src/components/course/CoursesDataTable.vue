@@ -9,10 +9,9 @@
       caption="Courses"
       :disable-sort="courses.length < 2"
       :headers="headers"
-      hide-default-footer
-      hide-default-header
       item-key="sectionId"
       :items="courses"
+      :items-per-page="contextStore.config.searchItemsPerPage"
       :loading="refreshing"
       :must-sort="true"
       :options="{
@@ -20,59 +19,56 @@
       }"
       :page.sync="pageCurrent"
       :search="searchText"
-      @page-count="pageCount = $event"
+      :sort-by="[sortBy]"
+      @update:sort-by="onUpdateSortBy"
     >
-      <template #header="{props: {headers: columns, options: {sortBy, sortDesc}}, on: {sort}}">
-        <thead>
-          <tr>
-            <th
-              v-for="(column, index) in columns"
-              :id="`courses-table-${column.id}-th`"
-              :key="index"
-              :aria-label="column.text"
-              :aria-sort="getAriaSortIndicator(column, sortBy, sortDesc)"
-              class="text-start text-no-wrap"
-              :class="{'sortable': column.sortable === false}"
-              scope="col"
-            >
-              <template v-if="column.sortable !== false && courses.length >= 2">
-                <v-btn
-                  :id="`courses-table-sort-by-${column.id}-btn`"
-                  :aria-label="getSortButtonAriaLabel(column, sortBy, sortDesc)"
-                  class="font-size-12 font-weight-bold height-unset min-width-unset pa-1 text-transform-unset v-table-sort-btn-override"
-                  :class="{'icon-visible': sortBy[0] === column.value}"
-                  color="white"
-                  density="compact"
-                  plain
-                  @click="() => onClickSort(column, sort, sortBy, sortDesc)"
-                >
-                  {{ column.text }}
-                  <v-icon :aria-hidden="true" small right>{{ getSortByIcon(column, sortBy, sortDesc) }}</v-icon>
-                </v-btn>
-              </template>
-              <template v-else>
-                <span class="font-size-12 font-weight-bold text-transform-unset v-btn">{{ column.text }}</span>
-              </template>
-            </th>
-          </tr>
-        </thead>
+      <template #headers="{columns, isSorted, toggleSort, getSortIcon}">
+        <tr>
+          <th
+            v-for="(column, index) in columns"
+            :id="`courses-table-${column.id}-th`"
+            :key="index"
+            :aria-label="column.title"
+            :aria-sort="getAriaSortIndicator(column, sortBy, sortDesc)"
+            class="text-start text-no-wrap"
+            :class="{'sortable': column.sortable === false}"
+            scope="col"
+          >
+            <template v-if="column.sortable && courses.length >= 2">
+              <v-btn
+                :id="`courses-table-sort-by-${column.id}-btn`"
+                :append-icon="getSortIcon(column)"
+                :aria-label="getSortButtonAriaLabel(column, sortBy, sortDesc)"
+                class="font-size-12 font-weight-bold height-unset min-width-unset pa-1 text-transform-unset v-table-sort-btn-override"
+                :class="{'icon-visible': isSorted(column)}"
+                color="body"
+                density="compact"
+                variant="plain"
+                @click="() => toggleSort(column)"
+              >
+                <span class="text-left text-wrap">{{ column.title }}</span>
+              </v-btn>
+            </template>
+            <template v-else>
+              <span class="font-size-12 font-weight-bold py-1 text-align-center text-medium-emphasis text-transform-unset v-btn">{{ column.title }}</span>
+            </template>
+          </th>
+        </tr>
       </template>
       <template #body="{items}">
-        <tbody v-if="refreshing">
-          <tr>
-            <td class="pa-12 text-center" :colspan="headers.length + 1">
-              <v-progress-circular
-                class="spinner"
-                :indeterminate="true"
-                rotate="5"
-                size="64"
-                width="4"
-                color="primary"
-              ></v-progress-circular>
-            </td>
-          </tr>
-        </tbody>
-        <tbody v-if="!refreshing && items.length">
+        <tr v-if="refreshing">
+          <td class="pa-12 text-center" :colspan="headers.length + 1">
+            <v-progress-circular
+              class="spinner"
+              :indeterminate="true"
+              rotate="5"
+              size="64"
+              width="4"
+              color="primary"
+            ></v-progress-circular>
+          </td>
+        </tr>
+        <template v-if="!refreshing && items.length">
           <!-- eslint-disable-next-line vue/no-v-for-template-key -->
           <template v-for="course in items" :key="course.sectionId">
             <tr>
@@ -204,7 +200,7 @@
               <td></td>
             </tr>
           </template>
-        </tbody>
+        </template>
         <tbody v-if="!refreshing && !items.length">
           <tr>
             <td id="message-when-zero-courses" class="pa-4 text-no-wrap title" :colspan="headers.length">
@@ -213,23 +209,24 @@
           </tr>
         </tbody>
       </template>
+      <template #bottom>
+        <div v-if="!refreshing && pageCount > 1" class="text-center pb-4 pt-2">
+          <v-pagination
+            id="ouija-pagination"
+            v-model="pageCurrent"
+            :length="pageCount"
+          ></v-pagination>
+        </div>
+      </template>
     </v-data-table>
-    <div v-if="!refreshing && pageCount > 1" class="text-center pb-4 pt-2">
-      <v-pagination
-        id="ouija-pagination"
-        v-model="pageCurrent"
-        :length="pageCount"
-        total-visible="10"
-      ></v-pagination>
-    </div>
   </div>
 </template>
 
 <script setup>
-import {alertScreenReader, putFocusNextTick} from '@/lib/utils'
-import {defineProps, onMounted, ref, watch} from 'vue'
-import {each, first, filter, get, map, size, tail} from 'lodash'
-import {mdiArrowDown, mdiArrowUp, mdiClose} from '@mdi/js'
+import {alertScreenReader} from '@/lib/utils'
+import {computed, defineProps, onMounted, ref, watch} from 'vue'
+import {each, filter, get, map, size, tail} from 'lodash'
+import {mdiClose} from '@mdi/js'
 import Days from '@/components/util/Days'
 import Instructor from '@/components/course/Instructor'
 import ToggleOptOut from '@/components/course/ToggleOptOut'
@@ -271,19 +268,24 @@ const props = defineProps({
 
 const contextStore = useContextStore()
 const headers = ref([
-  {id: 'course', text: 'Course', value: 'label'},
-  {id: 'section', text: 'Section', value: 'sectionId', class: 'w-10'},
-  {id: 'room', text: 'Room', value: 'room.location'},
-  {id: 'days', text: 'Days', sortable: false},
-  {id: 'time', text: 'Time', sortable: false},
-  {id: 'status', text: 'Status', class: 'w-10', sortable: false},
-  {id: 'instructors', text: 'Instructor(s)', value: 'instructorNames', sortable: false},
-  {id: 'publish', text: 'Publish', value: 'publishTypeName', class: 'w-10'},
-  {id: 'optOut', text: 'Opt out', value: 'hasOptedOut', sortable: false}
+  {id: 'course', title: 'Course', sortable: true, value: 'label'},
+  {id: 'section', title: 'Section', sortable: true, value: 'sectionId', class: 'w-10'},
+  {id: 'room', title: 'Room', sortable: true, value: 'room.location'},
+  {id: 'days', title: 'Days', sortable: false},
+  {id: 'time', title: 'Time', sortable: false},
+  {id: 'status', title: 'Status', class: 'w-10', sortable: false},
+  {id: 'instructors', title: 'Instructor(s)', value: 'instructorNames', sortable: false},
+  {id: 'publish', title: 'Publish', sortable: true, value: 'publishTypeName', class: 'w-10'},
+  {id: 'optOut', title: 'Opt out', value: 'hasOptedOut', sortable: false}
 ])
-const pageCount = ref(undefined)
 const pageCurrent = ref(1)
 const selectedRows = ref([])
+const sortBy = ref({})
+
+const pageCount = computed(() => {
+  return Math.ceil(props.courses.length / contextStore.config.searchItemsPerPage || 50)
+})
+
 
 watch(() => props.refreshing, async(value) => {
   if (!value) {
@@ -305,7 +307,7 @@ const getAriaSortIndicator = (column, sortBy, sortDesc) => {
 }
 
 const getSortButtonAriaLabel = (column, sortBy, sortDesc) => {
-  let label = `${column.text}: `
+  let label = `${column.title}: `
   if (sortBy[0] === column.value) {
     label += `sorted ${sortDesc[0] ? 'descending' : 'ascending'}.`
     label += ` Activate to sort ${sortDesc[0] ? 'ascending' : 'descending'}.`
@@ -315,24 +317,22 @@ const getSortButtonAriaLabel = (column, sortBy, sortDesc) => {
   return label
 }
 
-const getSortByIcon = (column, sortBy, sortDesc) => {
-  return sortBy[0] === column.value && sortDesc[0] ? mdiArrowDown : mdiArrowUp
-}
-
-const onClickSort = (column, sort, sortBy, sortDesc) => {
-  const sortDirection = first(sortBy) === column.value && !sortDesc[0] ? 'descending' : 'ascending'
-  sort(column.value)
-  alertScreenReader(`Sorted by ${column.text}, ${sortDirection}`)
-  putFocusNextTick(`courses-table-sort-by-${column.id}-btn`)
+const onUpdateSortBy = primarySortBy => {
+  const key = primarySortBy[0].key
+  const header = find(headers.value, {key: key})
+  sortBy.value = primarySortBy[0]
+  if (header) {
+    alertScreenReader(`Sorted by ${header.title}, ${sortBy.value.order}ending`)
+  }
 }
 
 const refresh = () => {
   pageCurrent.value = 1
   if (!props.includeRoomColumn) {
-    headers.value = filter(headers.value, h => h.text !== 'Room')
+    headers.value = filter(headers.value, h => h.title !== 'Room')
   }
   if (!props.includeOptOutColumnForUid) {
-    headers.value = filter(headers.value, h => h.text !== 'Opt out')
+    headers.value = filter(headers.value, h => h.title !== 'Opt out')
   }
   each(props.courses, course => {
     course.instructorNames = map(course.instructors, 'name')
