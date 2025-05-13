@@ -18,11 +18,12 @@ import {VMain} from 'vuetify/components/VMain'
 import {VMenu} from 'vuetify/components/VMenu'
 import {VNavigationDrawer} from 'vuetify/components/VNavigationDrawer'
 import {VPagination} from 'vuetify/components/VPagination'
-import {VProgressCircular} from 'vuetify/components'
-import {VSelect} from 'vuetify/components'
+import {VProgressCircular} from 'vuetify/components/VProgressCircular'
+import {VSelect} from 'vuetify/components/VSelect'
 import {VSnackbar, VSwitch} from 'vuetify/components'
+import {VTable} from 'vuetify/components/VTable'
 import {VTextField} from 'vuetify/components/VTextField'
-import {VTooltip} from 'vuetify/components'
+import {VTooltip} from 'vuetify/components/VTooltip'
 
 
 export default createVuetify({
@@ -56,6 +57,7 @@ export default createVuetify({
     VSnackbar,
     VSpacer,
     VSwitch,
+    VTable,
     VTextField,
     VTooltip
   },

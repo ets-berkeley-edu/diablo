@@ -107,13 +107,13 @@
                   <div v-if="course.nonstandardMeetingDates">
                     <span class="text-no-wrap">
                       {{ DateTime
-                        .fromISO(course.displayMeetings[0].startDate)
+                        .fromISO(get(course, 'displayMeetings.0.startDate'))
                         .toFormat('MMM d, yyyy') }} -
                     </span>
                     <span class="sr-only">to</span>
                     <span class="text-no-wrap">
                       {{ DateTime
-                        .fromISO(course.displayMeetings[0].endDate)
+                        .fromISO(get(course, 'displayMeetings.0.endDate'))
                         .toFormat('MMM d, yyyy') }} -
                     </span>
                   </div>

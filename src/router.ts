@@ -8,6 +8,7 @@ import Home from '@/views/Home.vue'
 import Login from '@/views/Login.vue'
 import NotFound from '@/views/NotFound.vue'
 import Ouija from '@/views/Ouija.vue'
+import Room from '@/views/room/Room.vue'
 import Rooms from '@/views/room/Rooms.vue'
 
 const router = createRouter({
@@ -119,13 +120,13 @@ const router = createRouter({
             title: 'The Ouija Board'
           }
         },
-      //   {
-      //     path: '/room/:id',
-      //     component: Room,
-      //     meta: {
-      //       title: 'Room'
-      //     }
-      //   },
+        {
+          path: '/room/:id',
+          component: Room,
+          meta: {
+            title: 'Room'
+          }
+        },
         {
           path: '/rooms',
           component: Rooms,

@@ -1,5 +1,5 @@
+import {filter, split} from 'lodash'
 import {nextTick} from 'vue'
-import {split} from 'lodash'
 import {useContextStore} from '@/stores/context'
 
 export function alertScreenReader(message: string) {
@@ -43,4 +43,14 @@ export function putFocusNextTick(id: string, {scroll=true, scrollBlock='center',
 
 export function stripAnchorRef(path: string) {
   return split(path, '#', 1)[0]
+}
+
+export function summarize(courses) {
+  const total = courses.length
+  let msg = `${total} course${total === 1 ? '' : 's'}.`
+  const scheduled = filter(courses, 'scheduled')
+  if (scheduled.length) {
+    msg += ` ${scheduled.length} ${scheduled.length === 1 ? 'has' : 'have'} recordings scheduled.`
+  }
+  return msg
 }

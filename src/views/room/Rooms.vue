@@ -1,5 +1,5 @@
 <template>
-  <v-card v-if="!contextStore.loading" variant="outlined" class="elevation-1">
+  <v-card v-if="!contextStore.loading" class="border-sm">
     <v-card-title class="align-start">
       <v-row>
         <v-col class="pt-2" cols="12" md="6">

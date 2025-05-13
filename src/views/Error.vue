@@ -10,7 +10,7 @@
     </template>
     <div>
       <div class="pb-2">
-        <h1 class="sr-only">Error</h1>
+        <h1 id="page-title" class="sr-only">Error</h1>
         <span
           v-if="!contextStore.loading"
           id="error-message"
