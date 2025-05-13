@@ -44,8 +44,7 @@ abbr {
             user-select: none; /* Non-prefixed version, currently
                                   supported by Chrome, Edge, Opera and Firefox */
 }
-.sr-only,
-table caption {
+.sr-only {
   position: absolute;
   left: -10000px;
   top: auto;

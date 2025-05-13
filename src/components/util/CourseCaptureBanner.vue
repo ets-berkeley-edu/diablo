@@ -2,29 +2,26 @@
   <div class="banner">
     <transition><div v-if="showPrefix">This is</div></transition>
     <b>
-      <div class="banner-inner" :style="`color: ${config.uxBannerColor}`">
+      <div class="banner-inner" :style="`color: ${contextStore.config.uxBannerColor}`">
         Course Capture<br />
-        {{ config.currentTermName }}
+        {{ contextStore.config.currentTermName }}
       </div>
     </b>
   </div>
 </template>
 
-<script>
-import Context from '@/mixins/Context.vue';
+<script setup>
+import {onMounted, ref} from 'vue'
+import {useContextStore} from '@/stores/context'
 
-export default {
-  name: 'CourseCaptureBanner',
-  mixins: [Context],
-  data: () => ({
-    showPrefix: true
-  }),
-  created() {
-    setTimeout(() => {
-      this.showPrefix = false
-    }, 5000)
-  }
-}
+const contextStore = useContextStore()
+const showPrefix = ref(true)
+
+onMounted(() => {
+  setTimeout(() => {
+    showPrefix.value = false
+  }, 5000)
+})
 </script>
 
 <style scoped>

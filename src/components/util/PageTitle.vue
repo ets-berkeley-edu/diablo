@@ -1,6 +1,6 @@
 <template>
   <div class="pl-2 pt-4">
-    <h1>
+    <h1 id="page-title">
       <div v-if="is420" class="d-flex align-center" :class="classForH1">
         <v-icon
           aria-label="Play entertaining video clip (opens a new tab)"
