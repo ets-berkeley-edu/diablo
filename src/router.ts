@@ -8,6 +8,7 @@ import Home from '@/views/Home.vue'
 import Login from '@/views/Login.vue'
 import NotFound from '@/views/NotFound.vue'
 import Ouija from '@/views/Ouija.vue'
+import Rooms from '@/views/room/Rooms.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -125,13 +126,13 @@ const router = createRouter({
       //       title: 'Room'
       //     }
       //   },
-      //   {
-      //     path: '/rooms',
-      //     component: Rooms,
-      //     meta: {
-      //       title: 'Rooms'
-      //     }
-      //   },
+        {
+          path: '/rooms',
+          component: Rooms,
+          meta: {
+            title: 'Rooms'
+          }
+        },
       //   {
       //     path: '/user/:uid',
       //     component: User,
