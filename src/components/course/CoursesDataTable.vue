@@ -29,7 +29,7 @@
             :id="`courses-table-${column.id}-th`"
             :key="index"
             :aria-label="column.title"
-            :aria-sort="getAriaSortIndicator(column, sortBy, sortDesc)"
+            :aria-sort="isSorted(column) ? `${sortBy.order}ending` : null"
             class="text-start text-no-wrap"
             :class="{'sortable': column.sortable === false}"
             scope="col"
@@ -38,7 +38,7 @@
               <v-btn
                 :id="`courses-table-sort-by-${column.id}-btn`"
                 :append-icon="getSortIcon(column)"
-                :aria-label="getSortButtonAriaLabel(column, sortBy, sortDesc)"
+                :aria-label="`Sort by ${column.title} ${isSorted(column) && sortBy.order === 'asc' ? 'descending' : 'ascending'}`"
                 class="font-size-12 font-weight-bold height-unset min-width-unset pa-1 text-transform-unset v-table-sort-btn-override"
                 :class="{'icon-visible': isSorted(column)}"
                 color="body"
@@ -297,25 +297,6 @@ watch(() => props.refreshing, async(value) => {
 onMounted(() => {
   refresh()
 })
-
-const getAriaSortIndicator = (column, sortBy, sortDesc) => {
-  if (column.value && sortBy[0] === column.value) {
-    return sortDesc[0] ? 'descending' : 'ascending'
-  } else {
-    return undefined
-  }
-}
-
-const getSortButtonAriaLabel = (column, sortBy, sortDesc) => {
-  let label = `${column.title}: `
-  if (sortBy[0] === column.value) {
-    label += `sorted ${sortDesc[0] ? 'descending' : 'ascending'}.`
-    label += ` Activate to sort ${sortDesc[0] ? 'ascending' : 'descending'}.`
-  } else {
-    label += 'not sorted. Activate to sort ascending.'
-  }
-  return label
-}
 
 const onUpdateSortBy = primarySortBy => {
   const key = primarySortBy[0].key
