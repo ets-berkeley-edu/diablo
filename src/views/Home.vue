@@ -125,8 +125,20 @@
                       :columnheader="`${getTableId(index)}-time-th`"
                     >
                       <div v-if="course.nonstandardMeetingDates" class="pt-2">
-                        <span class="text-no-wrap">{{ course.displayMeetings[0].startDate | moment('MMM D, YYYY') }} - </span>
-                        <span class="text-no-wrap">{{ course.displayMeetings[0].endDate | moment('MMM D, YYYY') }}</span>
+                        <span class="text-no-wrap">
+                          {{
+                            DateTime
+                              .fromISO(course.displayMeetings[0].startDate)
+                              .toFormat('MMM d, yyyy')
+                          }} -
+                        </span>
+                        <span class="text-no-wrap">
+                          {{
+                            DateTime
+                              .fromISO(course.displayMeetings[0].endDate)
+                              .toFormat('MMM d, yyyy')
+                          }}
+                        </span>
                       </div>
                       <span aria-hidden="true">{{ course.displayMeetings[0].startTimeFormatted }} - {{ course.displayMeetings[0].endTimeFormatted }}</span>
                       <span class="sr-only">{{ course.displayMeetings[0].startTimeFormatted }} to {{ course.displayMeetings[0].endTimeFormatted }}</span>
@@ -172,8 +184,20 @@
                       :columnheader="`${getTableId(index)}-time-th`"
                     >
                       <div v-if="course.nonstandardMeetingDates" class="pt-2">
-                        <span class="text-no-wrap">{{ course.displayMeetings[meetingIndex].startDate | moment('MMM D, YYYY') }} - </span>
-                        <span class="text-no-wrap">{{ course.displayMeetings[meetingIndex].endDate | moment('MMM D, YYYY') }}</span>
+                        <span class="text-no-wrap">
+                          {{
+                            DateTime
+                              .fromISO(course.displayMeetings[meetingIndex].startDate)
+                              .toFormat('MMM d, yyyy')
+                          }} -
+                        </span>
+                        <span class="text-no-wrap">
+                          {{
+                            DateTime
+                              .fromISO(course.displayMeetings[meetingIndex].endDate)
+                              .toFormat('MMM d, yyyy')
+                          }}
+                        </span>
                       </div>
                       <div :class="{'pb-2': course.nonstandardMeetingDates && meetingIndex === course.displayMeetings.length - 1}">
                         {{ course.displayMeetings[meetingIndex].startTimeFormatted }} - {{ course.displayMeetings[meetingIndex].endTimeFormatted }}

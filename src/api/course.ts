@@ -1,8 +1,8 @@
 import _ from 'lodash'
 import axios from 'axios'
 import fileDownload from 'js-file-download'
-// import moment from 'moment-timezone'
 import {getApiBaseUrl} from '@/api/api-utils'
+import {DateTime} from 'luxon'
 
 export function deleteCourseNote(termId: number, sectionId: number) {
   return axios.post(`${getApiBaseUrl()}/api/course/note/delete`, {
@@ -12,9 +12,7 @@ export function deleteCourseNote(termId: number, sectionId: number) {
 }
 
 export function downloadCSV(filter, termId: string) {
-  // TODO: replace moment with luxon
-  // const now = moment().format('YYYY-MM-DD_HH-mm-ss')
-  const now = 'TODO'
+  const now = DateTime.now().toFormat('yyyy-MM-dd_HH-mm-ss')
   const filename = `courses-${_.snakeCase(filter)}-${termId}_${now}.csv`
   return axios.post(`${getApiBaseUrl()}/api/courses/csv`, {
     filter,
