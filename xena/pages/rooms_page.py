@@ -33,7 +33,7 @@ from xena.test_utils import util
 
 class RoomsPage(DiabloPages):
 
-    SEARCH_INPUT = (By.XPATH, '//input')
+    SEARCH_INPUT = (By.ID, 'rooms-search-input')
     ROOM_LINK = (By.XPATH, '//a[contains(@id, "room-")]')
 
     @staticmethod

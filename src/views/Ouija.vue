@@ -52,7 +52,7 @@
               <v-list-item :id="`filter-option-${item.value}`" v-bind="itemProps"></v-list-item>
             </template>
             <template #selection="{item}">
-              <v-tooltip id="tooltip-ouija-filter" bottom>
+              <v-tooltip id="tooltip-ouija-filter" location="bottom">
                 <template #activator="{props: tooltipProps}">
                   <v-icon
                     class="pb-1 pr-2"
@@ -97,6 +97,7 @@ const searchText = ref('')
 const selectedFilter = ref('Scheduled')
 
 onMounted(() => {
+  contextStore.loadingStart()
   refresh().then(() => {
     contextStore.loadingComplete()
   })
