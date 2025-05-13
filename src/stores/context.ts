@@ -79,8 +79,6 @@ export const useContextStore = defineStore('context', {
     },
     setCurrentUser(user: any) {
       this.currentUser = user
-      console.log('this.currentuser', this.currentUser)
-    },
-
+    }
   }
 })

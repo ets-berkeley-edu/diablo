@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div v-if="courses.length && !searchText && !refreshing" id="courses-data-table-message" class="pb-1 pl-5">
+    <div v-if="courses.length && !searchText && !refreshing" id="courses-data-table-message" class="text-medium-emphasis pb-1 pl-4">
       {{ messageForCourses }}
     </div>
     <v-data-table
