@@ -1,60 +1,66 @@
 <template>
   <v-card v-if="!contextStore.loading" variant="outlined" class="elevation-1">
     <v-card-title class="align-start">
-      <PageTitle :icon="mdiDomain" :text="`${size(rooms)} Rooms`" />
-      <v-spacer></v-spacer>
-      <v-tooltip v-model="adviseAgainstRoom237" bottom color="pink">
-        <template #activator="{attrs}">
-          <v-text-field
-            v-model="search"
-            :append-icon="mdiMagnify"
-            aria-label="Search rooms table"
-            label="Search"
-            single-line
-            hide-details
-            v-bind="attrs"
-          ></v-text-field>
-        </template>
-        Nothing. There ain't nothing in Room 237. But you ain't got no business going in there anyway. So stay out!
-      </v-tooltip>
+      <v-row>
+        <v-col class="pt-2" cols="12" md="6">
+          <PageTitle :icon="mdiDomain" :text="`${size(rooms)} Rooms`" />
+        </v-col>
+        <v-col class="pr-4" cols="12" md="6">
+          <v-tooltip v-model="adviseAgainstRoom237" color="pink" location="bottom">
+            <template #activator="{attrs}">
+              <v-text-field
+                id="rooms-search-input"
+                v-model="search"
+                :append-icon="mdiMagnify"
+                aria-label="Search rooms table"
+                clearable
+                hide-details
+                label="Search"
+                single-line
+                variant="underlined"
+                v-bind="attrs"
+              ></v-text-field>
+            </template>
+            Nothing. There ain't nothing in Room 237. But you ain't got no business going in there anyway. So stay out!
+          </v-tooltip>
+        </v-col>
+      </v-row>
     </v-card-title>
     <v-data-table
       id="rooms-data-table"
       caption="Rooms"
       :headers="headers"
-      hide-default-footer
-      hide-default-header
       :items="rooms"
+      :items-per-page="itemsPerPage"
       no-results-text="No rooms"
-      :options="options"
-      :page.sync="options.page"
+      :page.sync="pageCurrent"
       :search="search"
-      @page-count="pageCount = $event"
+      :sort-by="[sortBy]"
+      @update:sort-by="onUpdateSortBy"
     >
-      <template #header="{props: {headers: columns, options: {sortBy, sortDesc}}, on: {sort}}">
+      <template #headers="{columns, isSorted, toggleSort, getSortIcon}">
         <tr>
           <th
             v-for="(column, index) in columns"
             :id="`rooms-table-${column.value}-th`"
             :key="index"
-            :aria-label="column.text"
-            :aria-sort="getAriaSortIndicator(column, sortBy, sortDesc)"
+            :aria-label="column.title"
+            :aria-sort="isSorted(column) ? `${sortBy.order}ending` : null"
             class="text-start"
-            :class="{'sortable': column.sortable === false}"
             scope="col"
           >
             <v-btn
               :id="`rooms-table-sort-by-${column.value}-btn`"
-              :aria-label="getSortButtonAriaLabel(column, sortBy, sortDesc)"
+              :append-icon="getSortIcon(column)"
+              :aria-label="`Sort by ${column.title} ${isSorted(column) && sortBy.order === 'asc' ? 'descending' : 'ascending'}`"
               class="font-size-12 font-weight-bold height-unset min-width-unset pa-1 text-transform-unset v-table-sort-btn-override"
-              :class="{'icon-visible': sortBy[0] === column.value}"
-              color="white"
+              :class="{'icon-visible': isSorted(column)}"
+              color="body"
               density="compact"
-              plain
-              @click="() => onClickSort(column, sort, sortBy, sortDesc)"
+              variant="plain"
+              @click="() => toggleSort(column)"
             >
-              {{ column.text }}
-              <v-icon :aria-hidden="true" small right>{{ getSortByIcon(column, sortBy, sortDesc) }}</v-icon>
+              {{ column.title }}
             </v-btn>
           </th>
         </tr>
@@ -77,22 +83,23 @@
           </td>
         </tr>
       </template>
+      <template #bottom>
+        <div v-if="pageCount > 1" class="text-center pb-4 pt-2">
+          <v-pagination
+            id="rooms-pagination"
+            v-model="pageCurrent"
+            :length="pageCount"
+          ></v-pagination>
+        </div>
+      </template>
     </v-data-table>
-    <div v-if="pageCount > 1" class="text-center pb-4 pt-2">
-      <v-pagination
-        id="rooms-pagination"
-        v-model="options.page"
-        :length="pageCount"
-        total-visible="10"
-      ></v-pagination>
-    </div>
   </v-card>
 </template>
 
 <script setup>
-import {alertScreenReader, putFocusNextTick} from '@/lib/utils'
+import {alertScreenReader} from '@/lib/utils'
 import {computed, onMounted, ref} from 'vue'
-import {first, size, startsWith} from 'lodash'
+import {get, size, startsWith} from 'lodash'
 import {mdiDomain, mdiMagnify} from '@mdi/js'
 import PageTitle from '@/components/util/PageTitle'
 import {getAllRooms} from '@/api/room'
@@ -100,53 +107,44 @@ import {useContextStore} from '@/stores/context'
 
 const contextStore = useContextStore()
 const headers = [
-  {text: 'Room', value: 'location', class: 'w-50'},
-  {text: 'Kaltura Resource', value: 'kalturaResourceId', class: 'w-20'},
-  {text: 'Capability', value: 'capabilityName', class: 'w-20'},
-  {text: 'Auditorium', value: 'isAuditorium', class: 'w-10'}
+  {title: 'Room', value: 'location', class: 'w-50', sortable: true},
+  {title: 'Kaltura Resource', value: 'kalturaResourceId', class: 'w-20', sortable: true},
+  {title: 'Capability', value: 'capabilityName', class: 'w-20', sortable: true},
+  {title: 'Auditorium', value: 'isAuditorium', class: 'w-10', sortable: true}
 ]
-const options = {
-  page: 1,
-  itemsPerPage: 50
-}
-const pageCount = ref(undefined)
+const itemsPerPage = 50
+const pageCurrent = ref(1)
 const rooms = ref([])
 const search = ref(undefined)
+const sortBy = ref({key: '', order: ''})
+
 const adviseAgainstRoom237 = computed(() => {
   return startsWith(search.value, '237 ') && size(search.value) < 6
 })
+const pageCount = computed(() => {
+  return Math.ceil(rooms.value.length / itemsPerPage)
+})
 
 onMounted(() => {
+  contextStore.loadingStart()
   getAllRooms().then(data => {
     rooms.value = data
     contextStore.loadingComplete('Rooms')
   })
 })
 
-const getAriaSortIndicator = (column, sortBy, sortDesc) => {
-  if (column.value && sortBy[0] === column.value) {
-    return sortDesc[0] ? 'descending' : 'ascending'
+const onUpdateSortBy = primarySortBy => {
+  const key = get(primarySortBy, '0.key')
+  pageCurrent.value = 1
+  if (key) {
+    const header = find(headers.value, {value: key})
+    sortBy.value = primarySortBy[0]
+    if (header) {
+      alertScreenReader(`Sorted by ${header.title}, ${sortBy.value.order}ending`)
+    }
   } else {
-    return undefined
+    sortBy.value = {key: '', order: ''}
+    alertScreenReader('Unsorted')
   }
-}
-const getSortButtonAriaLabel = (column, sortBy, sortDesc) => {
-  let label = `${column.text}: `
-  if (sortBy[0] === column.value) {
-    label += `sorted ${sortDesc[0] ? 'descending' : 'ascending'}.`
-    label += ` Activate to sort ${sortDesc[0] ? 'ascending' : 'descending'}.`
-  } else {
-    label += 'not sorted. Activate to sort ascending.'
-  }
-  return label
-}
-const getSortByIcon = (column, sortBy, sortDesc) => {
-  return sortBy[0] === column.value && sortDesc[0] ? 'mdi-arrow-down' : 'mdi-arrow-up'
-}
-const onClickSort = (column, sort, sortBy, sortDesc) => {
-  const sortDirection = first(sortBy) === column.value && !sortDesc[0] ? 'descending' : 'ascending'
-  sort(column.value)
-  alertScreenReader(`Sorted by ${column.text}, ${sortDirection}`)
-  putFocusNextTick(`rooms-table-sort-by-${column.value}-btn`)
 }
 </script>

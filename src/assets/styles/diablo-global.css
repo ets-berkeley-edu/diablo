@@ -53,9 +53,6 @@ table caption {
   height: 1px;
   overflow: hidden;
 }
-.sr-skip {
-  speak: none;
-}
 .text-align-center {
   text-align: center;
 }
@@ -65,13 +62,13 @@ table caption {
 .v-table-sort-btn-override {
   margin-left: -4px;
 }
-.v-table-sort-btn-override .v-btn__content .v-icon {
+.v-table-sort-btn-override .v-btn__append .v-icon {
   opacity: 0;
 }
-.v-table-sort-btn-override:active .v-btn__content .v-icon,
-.v-table-sort-btn-override:hover .v-btn__content .v-icon,
-.v-table-sort-btn-override:focus .v-btn__content .v-icon,
-.v-table-sort-btn-override.icon-visible .v-btn__content .v-icon {
+.v-table-sort-btn-override:active .v-btn__append .v-icon,
+.v-table-sort-btn-override:hover .v-btn__append .v-icon,
+.v-table-sort-btn-override:focus .v-btn__append .v-icon,
+.v-table-sort-btn-override.icon-visible .v-btn__append .v-icon {
   opacity: 1;
 }
 .w-10 {

@@ -9,14 +9,10 @@
       caption="Courses"
       :disable-sort="courses.length < 2"
       :headers="headers"
-      item-key="sectionId"
       :items="courses"
       :items-per-page="contextStore.config.searchItemsPerPage"
       :loading="refreshing"
-      :must-sort="true"
-      :options="{
-        itemsPerPage: contextStore.config.searchItemsPerPage
-      }"
+      must-sort
       :page.sync="pageCurrent"
       :search="searchText"
       :sort-by="[sortBy]"
@@ -26,7 +22,7 @@
         <tr>
           <th
             v-for="(column, index) in columns"
-            :id="`courses-table-${column.id}-th`"
+            :id="`courses-table-${column.key}-th`"
             :key="index"
             :aria-label="column.title"
             :aria-sort="isSorted(column) ? `${sortBy.order}ending` : null"
@@ -36,7 +32,7 @@
           >
             <template v-if="column.sortable && courses.length >= 2">
               <v-btn
-                :id="`courses-table-sort-by-${column.id}-btn`"
+                :id="`courses-table-sort-by-${column.key}-btn`"
                 :append-icon="getSortIcon(column)"
                 :aria-label="`Sort by ${column.title} ${isSorted(column) && sortBy.order === 'asc' ? 'descending' : 'ascending'}`"
                 class="font-size-12 font-weight-bold height-unset min-width-unset pa-1 text-transform-unset v-table-sort-btn-override"
@@ -297,15 +293,15 @@ const props = defineProps({
 
 const contextStore = useContextStore()
 const headers = ref([
-  {id: 'course', title: 'Course', sortable: true, value: 'label'},
-  {id: 'section', title: 'Section', sortable: true, value: 'sectionId', class: 'w-10'},
-  {id: 'room', title: 'Room', sortable: true, value: 'room.location'},
-  {id: 'days', title: 'Days', sortable: false},
-  {id: 'time', title: 'Time', sortable: false},
-  {id: 'status', title: 'Status', class: 'w-10', sortable: false},
-  {id: 'instructors', title: 'Instructor(s)', value: 'instructorNames', sortable: false},
-  {id: 'publish', title: 'Publish', sortable: true, value: 'publishTypeName', class: 'w-10'},
-  {id: 'optOut', title: 'Opt out', value: 'hasOptedOut', sortable: false}
+  {key: 'course', title: 'Course', sortable: true, value: 'label'},
+  {key: 'section', title: 'Section', sortable: true, value: 'sectionId', class: 'w-10'},
+  {key: 'room', title: 'Room', sortable: true, value: 'room.location'},
+  {key: 'days', title: 'Days', sortable: false},
+  {key: 'time', title: 'Time', sortable: false},
+  {key: 'status', title: 'Status', class: 'w-10', sortable: false},
+  {key: 'instructors', title: 'Instructor(s)', value: 'instructorNames', sortable: false},
+  {key: 'publish', title: 'Publish', sortable: true, value: 'publishTypeName', class: 'w-10'},
+  {key: 'optOut', title: 'Opt out', value: 'hasOptedOut', sortable: false}
 ])
 const pageCurrent = ref(1)
 const selectedRows = ref([])
@@ -331,6 +327,7 @@ const onUpdateSortBy = primarySortBy => {
   const key = primarySortBy[0].key
   const header = find(headers.value, {key: key})
   sortBy.value = primarySortBy[0]
+  pageCurrent.value = 1
   if (header) {
     alertScreenReader(`Sorted by ${header.title}, ${sortBy.value.order}ending`)
   }
