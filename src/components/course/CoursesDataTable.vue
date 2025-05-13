@@ -109,9 +109,17 @@
               <td :id="`meeting-times-${course.sectionId}-0`" :class="tdc(course)" columnheader="courses-table-time-th">
                 <div :class="{'line-through': course.deletedAt}">
                   <div v-if="course.nonstandardMeetingDates">
-                    <!-- <span class="text-no-wrap">{{ course.displayMeetings[0].startDate | moment('MMM D, YYYY') }} - </span> -->
+                    <span class="text-no-wrap">
+                      {{ DateTime
+                        .fromISO(course.displayMeetings[0].startDate)
+                        .toFormat('MMM d, yyyy') }} -
+                    </span>
                     <span class="sr-only">to</span>
-                    <!-- <span class="text-no-wrap">{{ course.displayMeetings[0].endDate | moment('MMM D, YYYY') }}</span> -->
+                    <span class="text-no-wrap">
+                      {{ DateTime
+                        .fromISO(course.displayMeetings[0].endDate)
+                        .toFormat('MMM d, yyyy') }} -
+                    </span>
                   </div>
                   <span aria-hidden="true" class="text-no-wrap">{{ get(course, 'displayMeetings.0.startTimeFormatted') }} - {{ get(course, 'displayMeetings.0.endTimeFormatted') }}</span>
                   <span class="sr-only">{{ get(course, 'displayMeetings.0.startTimeFormatted') }} to {{ get(course, 'displayMeetings.0.endTimeFormatted') }}</span>
@@ -180,8 +188,20 @@
               </td>
               <td class="text-no-wrap" :class="tdcLower(course)">
                 <div v-if="course.nonstandardMeetingDates">
-                  <!-- <span class="text-no-wrap">{{ meeting.startDate | moment('MMM D, YYYY') }} - </span> -->
-                  <!-- <span class="text-no-wrap">{{ meeting.endDate | moment('MMM D, YYYY') }}</span> -->
+                  <span class="text-no-wrap">
+                    {{
+                      DateTime
+                        .fromISO(meeting.startDate)
+                        .toFormat('MMM d, yyyy')
+                    }} -
+                  </span>
+                  <span class="text-no-wrap">
+                    {{
+                      DateTime
+                        .fromISO(meeting.endDate)
+                        .toFormat('MMM d, yyyy')
+                    }}
+                  </span>
                 </div>
                 <div :class="{'pb-2': course.nonstandardMeetingDates && index === course.displayMeetings.length - 1}">
                   <span aria-hidden="true">{{ meeting.startTimeFormatted }} - {{ meeting.endTimeFormatted }}</span>
@@ -193,8 +213,16 @@
             <tr v-if="course.scheduled" :key="`approvals-${course.sectionId}`">
               <td :colspan="headers.length + 1" class="pb-2">
                 <div v-if="course.scheduled" class="pb-3">
-                  <!-- Recordings scheduled on {{ course.scheduled[0].createdAt | moment('MMM D, YYYY') }}. -->
-                  They will be published to {{ course.scheduled[0].publishTypeName.replace('Publish to ', '') }}.
+                  Recordings scheduled on {{
+                    DateTime
+                      .fromISO(course.scheduled[0].createdAt)
+                      .toFormat('MMM d, yyyy')
+                  }}.
+                  They will be published to {{
+                    course.scheduled[0]
+                      .publishTypeName
+                      .replace('Publish to ', '')
+                  }}.
                 </div>
               </td>
               <td></td>
@@ -232,6 +260,7 @@ import Instructor from '@/components/course/Instructor'
 import ToggleOptOut from '@/components/course/ToggleOptOut'
 import {getDisplayMeetings} from '@/lib/utils'
 import {useContextStore} from '@/stores/context'
+import {DateTime} from 'luxon'
 
 const props = defineProps({
   courses: {
