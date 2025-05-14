@@ -3,6 +3,7 @@ import _ from 'lodash'
 import {useContextStore} from '@/stores/context'
 import {requiresAdmin, requiresInstructor} from '@/auth'
 import BaseView from '@/views/BaseView.vue'
+import Blackouts from '@/views/blackout/Blackouts.vue'
 import ErrorView from '@/views/Error.vue'
 import Home from '@/views/Home.vue'
 import Login from '@/views/Login.vue'
@@ -78,13 +79,13 @@ const router = createRouter({
       //       title: 'The Attic'
       //     }
       //   },
-      //   {
-      //     path: '/blackouts',
-      //     component: Blackouts,
-      //     meta: {
-      //       title: 'Blackouts'
-      //     }
-      //   },
+        {
+          path: '/blackouts',
+          component: Blackouts,
+          meta: {
+            title: 'Blackouts'
+          }
+        },
       //   {
       //     path: '/email/templates',
       //     component: EmailTemplates,

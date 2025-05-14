@@ -2,6 +2,7 @@ import './main.scss'
 import {aliases, mdi} from 'vuetify/iconsets/mdi-svg'
 import colors from 'vuetify/lib/util/colors'
 import {createVuetify} from 'vuetify'
+import {Calendar} from 'v-calendar'
 import {VApp} from 'vuetify/components/VApp'
 import {VAppBar} from 'vuetify/components/VAppBar'
 import {VBanner} from 'vuetify/components/VBanner'
@@ -9,6 +10,7 @@ import {VBtn} from 'vuetify/components/VBtn'
 import {VCard, VCardActions, VCardSubtitle, VCardText, VCardTitle} from 'vuetify/components/VCard'
 import {VCol, VContainer, VRow, VSpacer} from 'vuetify/components/VGrid'
 import {VDataTable} from 'vuetify/components/VDataTable'
+import {VDialog} from 'vuetify/components/VDialog'
 import {VFooter} from 'vuetify/components/VFooter'
 import {VForm} from 'vuetify/components/VForm'
 import {VIcon} from 'vuetify/components/VIcon'
@@ -28,6 +30,7 @@ import {VTooltip} from 'vuetify/components/VTooltip'
 
 export default createVuetify({
   components: {
+    Calendar,
     VApp,
     VAppBar,
     VBanner,
@@ -40,6 +43,7 @@ export default createVuetify({
     VCol,
     VContainer,
     VDataTable,
+    VDialog,
     VFooter,
     VForm,
     VIcon,
