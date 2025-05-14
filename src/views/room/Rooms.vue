@@ -17,7 +17,6 @@
                 hide-details
                 label="Search"
                 single-line
-                variant="underlined"
                 v-bind="attrs"
               ></v-text-field>
             </template>

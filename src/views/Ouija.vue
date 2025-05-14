@@ -36,7 +36,6 @@
             hide-details
             label="Search"
             single-line
-            variant="underlined"
           ></v-text-field>
           <v-select
             id="ouija-filter-options"
@@ -45,7 +44,6 @@
             color="secondary"
             :disabled="isDownloading"
             :items="keys(contextStore.config.searchFilterOptions)"
-            variant="underlined"
             @update:model-value="() => refresh(`Courses table refreshed. Showing ${contextStore.config.searchFilterOptions[selectedFilter]}`)"
           >
             <template #item="{props: itemProps, item}">

@@ -2,7 +2,7 @@ import './main.scss'
 import {aliases, mdi} from 'vuetify/iconsets/mdi-svg'
 import colors from 'vuetify/lib/util/colors'
 import {createVuetify} from 'vuetify'
-import {Calendar} from 'v-calendar'
+import {DatePicker} from 'v-calendar'
 import {VApp} from 'vuetify/components/VApp'
 import {VAppBar} from 'vuetify/components/VAppBar'
 import {VBanner} from 'vuetify/components/VBanner'
@@ -30,7 +30,7 @@ import {VTooltip} from 'vuetify/components/VTooltip'
 
 export default createVuetify({
   components: {
-    Calendar,
+    DatePicker,
     VApp,
     VAppBar,
     VBanner,
@@ -64,6 +64,16 @@ export default createVuetify({
     VTable,
     VTextField,
     VTooltip
+  },
+  defaults: {
+    VSelect: {
+      density: 'comfortable',
+      variant: 'underlined'
+    },
+    VTextField: {
+      density: 'comfortable',
+      variant: 'underlined'
+    }
   },
   icons: {
     defaultSet: 'mdi',

@@ -2,13 +2,11 @@
   <v-select
     :id="`select-room-capability-${room.id}`"
     v-model="capability"
-    density="comfortable"
     hide-details
     item-title="text"
     item-value="value"
     :items="capabilityOptions"
     no-data-text="Select..."
-    variant="underlined"
     @update:model-value="updateCapability"
   />
 </template>
