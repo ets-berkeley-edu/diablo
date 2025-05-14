@@ -1,7 +1,7 @@
 import axios from 'axios'
 import {getApiBaseUrl} from '@/api/api-utils'
 
-export function createBlackout(name, startDate, endDate) {
+export function createBlackout(name: string, startDate: string, endDate: string) {
   return axios.post(`${getApiBaseUrl()}/api/blackout/create`, {
     name,
     startDate,
@@ -9,7 +9,7 @@ export function createBlackout(name, startDate, endDate) {
   })
 }
 
-export function deleteBlackout(bookmarkId) {
+export function deleteBlackout(bookmarkId: number) {
   return axios.delete(`${getApiBaseUrl()}/api/blackout/${bookmarkId}`)
     .then(response => response.data)
 }

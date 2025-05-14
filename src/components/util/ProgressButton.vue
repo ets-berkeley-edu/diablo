@@ -55,7 +55,7 @@ defineProps({
     required: false
   },
   variant: {
-    default: 'tonal',
+    default: 'flat',
     type: String,
     required: false
   }

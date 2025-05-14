@@ -24,7 +24,8 @@
               v-for="(column, colIndex) in columns"
               :id="`blackouts-${column.value}-th`"
               :key="colIndex"
-              class="font-size-12 font-weight-bold text-medium-emphasis text-start text-no-wrap"
+              class="font-size-12 font-weight-bold text-medium-emphasis text-no-wrap"
+              :class="column.class"
               scope="col"
             >
               {{ column.text }}
@@ -52,7 +53,7 @@
                 :id="`delete-blackout-${blackout.id}`"
                 :aria-label="`Delete ${blackout.name} Blackout`"
                 :icon="mdiTrashCanOutline"
-                @click="onClickDelete(blackout.id)"
+                @click="onClickDelete(blackout)"
               >
               </v-btn>
             </td>
@@ -78,7 +79,7 @@ const headers = [
   {text: 'Name', value: 'name'},
   {text: 'Start Date', value: 'startDate'},
   {text: 'End Date', value: 'endDate'},
-  {text: 'Delete', class: 'pl-5 pr-0 mr-0', value: 'delete'}
+  {text: 'Delete', class: 'text-center', value: 'delete'}
 ]
 const isRefreshing = ref(false)
 
@@ -89,11 +90,12 @@ onMounted(() => {
   })
 })
 
-const onClickDelete = blackoutId => {
+const onClickDelete = blackout => {
+  const deletedName = blackout.name
   isRefreshing.value = true
-  deleteBlackout(blackoutId).then(() => {
+  deleteBlackout(blackout.id).then(() => {
     refresh().then(() => {
-      alertScreenReader('Blackout deleted.')
+      alertScreenReader(`Deleted blackout: ${deletedName}`)
       isRefreshing.value = false
     })
   })

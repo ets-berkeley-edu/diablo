@@ -135,10 +135,10 @@ const create = () => {
   if (!isDisabled.value) {
     isSaving.value = true
     const format = date => {
-      return DateTime.fromObject(date).toFormat('yyyy-MM-dd')
+      return DateTime.fromJSDate(date).toFormat('yyyy-MM-dd')
     }
     createBlackout(name.value, format(range.value.start), format(range.value.end)).then(() => {
-      alertScreenReader('Blackout created')
+      alertScreenReader(`Created blackout: ${name.value}`)
       isSaving.value = false
       dialog.value = false
       props.onClose(true)
