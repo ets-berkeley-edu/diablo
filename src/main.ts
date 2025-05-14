@@ -1,20 +1,16 @@
-import '@mdi/font/css/materialdesignicons.min.css'
-import 'vuetify/dist/vuetify.min.css'
 import App from './App.vue'
-import VCalendar from 'v-calendar'
-import 'v-calendar/style.css'
 import VWave from 'v-wave'
 import axios from 'axios'
 import {createApp} from 'vue'
 import {createPinia} from 'pinia'
 import router from './router'
+import {setupCalendar} from 'v-calendar'
 import {trim} from 'lodash'
 import {appErrorHandler, initializeAxios} from '@/lib/axios-utils'
 import axiosPlugin from '@/plugins/axios'
 import vuetify from '@/plugins/vuetify'
 import {useContextStore} from '@/stores/context'
 
-import 'vuetify/styles'
 import '@mdi/font/css/materialdesignicons.css'
 
 const apiBaseUrl: string = import.meta.env.VITE_APP_API_BASE_URL
@@ -26,7 +22,7 @@ app.config.errorHandler = appErrorHandler
 app.use(createPinia())
   .use(axiosPlugin, {baseUrl: apiBaseUrl})
   .use(vuetify)
-  .use(VCalendar, {componentPrefix: 'c'})
+  .use(setupCalendar, {})
   .use(VWave, {})
 
 initializeAxios(axios)
