@@ -44,6 +44,10 @@ abbr {
             user-select: none; /* Non-prefixed version, currently
                                   supported by Chrome, Edge, Opera and Firefox */
 }
+.scroll-margins {
+  scroll-margin-bottom: 80px;
+  scroll-margin-top: 80px;
+}
 .sr-only {
   position: absolute;
   left: -10000px;

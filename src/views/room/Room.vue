@@ -1,50 +1,53 @@
 <template>
   <div v-if="!contextStore.loading">
-    <v-card class="border-sm">
+    <v-card class="border-sm" width="calc(100vw - 95px)">
       <v-card-title class="pb-0">
         <PageTitle :icon="mdiHomeCityOutline" :text="room.location" />
       </v-card-title>
-      <v-card-actions>
-        <v-list class="w-100" dense>
-          <v-list-item v-if="room.kalturaResourceId">
-            <div class="subtitle-1">
+      <v-card-text>
+        <v-container class="d-block font-size-16 mx-0 mb-6" fluid>
+          <v-row v-if="room.kalturaResourceId">
+            <v-col class="subtitle-1">
               Kaltura resource ID: {{ room.kalturaResourceId }}
               <span v-if="kalturaEventList">
-                (<a id="skip-to-kaltura-event-list" href="#kaltura-events-header" @click="scrollToKalturaEvents">Scroll to Kaltura events</a>)
+                (<a id="skip-to-kaltura-event-list" href="#kaltura-events-header" @click.stop="scrollToKalturaEvents">Scroll to Kaltura events</a>)
               </span>
-            </div>
-          </v-list-item>
-          <v-list-item>
-            <div class="align-end d-flex w-100">
-              <div class="pb-4 pr-3">
-                <label for="select-room-capability" class="subtitle-1">Capability:</label>
-              </div>
-              <div>
+            </v-col>
+          </v-row>
+          <v-row>
+            <v-col cols="12" sm="7">
+              <div class="d-flex align-end">
+                <label :for="`select-room-capability-${room.id}`" class="capability-label subtitle-1 mr-4">Capability:</label>
                 <SelectRoomCapability
                   :on-update="onUpdateRoomCapability"
                   :options="contextStore.config.roomCapabilityOptions"
                   :room="room"
                 />
               </div>
-              <div class="ml-auto">
-                <v-switch v-model="isAuditorium" label="Auditorium"></v-switch>
-              </div>
-            </div>
-          </v-list-item>
-          <v-list-item v-if="offerPrintable">
-            <router-link
-              :id="`print-room-${room.id}-schedule`"
-              aria-label="Open printable version of this page, in a new window"
-              class="subtitle-1"
-              target="_blank"
-              :to="`/room/printable/${room.id}`"
-            >
-              <v-icon class="linked-icon" :icon="mdiPrinter" /> Print schedule<span class="sr-only"> (opens a new browser tab)</span>
-            </router-link>
-          </v-list-item>
-        </v-list>
-      </v-card-actions>
-      <v-card-text>
+            </v-col>
+            <v-col class="d-flex justify-end pr-4" cols="12" sm="5">
+              <v-switch
+                v-model="isAuditorium"
+                color="primary"
+                hide-details
+                label="Auditorium"
+              />
+            </v-col>
+          </v-row>
+          <v-row v-if="offerPrintable">
+            <v-col>
+              <router-link
+                :id="`print-room-${room.id}-schedule`"
+                aria-label="Open printable version of this page, in a new window"
+                class="subtitle-1"
+                target="_blank"
+                :to="`/room/printable/${room.id}`"
+              >
+                <v-icon class="linked-icon" :icon="mdiPrinter" /> Print schedule<span class="sr-only"> (opens a new browser tab)</span>
+              </router-link>
+            </v-col>
+          </v-row>
+        </v-container>
         <CoursesDataTable
           :courses="room.courses"
           :include-room-column="false"
@@ -53,14 +56,16 @@
         />
       </v-card-text>
     </v-card>
-    <div v-if="kalturaEventList" class="ma-3 pt-5">
-      <h2 id="kaltura-events-header" tabindex="-1">The Kaltura Events of {{ room.location }}</h2>
-      <div class="subtitle-2">
-        Kaltura events tagged with '{{ contextStore.config.createdByDiabloTag }}' and
-        a start-date between {{ contextStore.config.currentTermRecordingsBegin }} and  {{ contextStore.config.currentTermRecordingsEnd }}.
+    <v-card v-if="kalturaEventList" class="mt-8 bg-transparent" width="calc(100vw - 95px)">
+      <div class="pl-4">
+        <h2 id="kaltura-events-header" tabindex="-1">The Kaltura Events of {{ room.location }}</h2>
+        <div class="subtitle-2">
+          Kaltura events tagged with '{{ contextStore.config.createdByDiabloTag }}' and
+          a start-date between {{ contextStore.config.currentTermRecordingsBegin }} and  {{ contextStore.config.currentTermRecordingsEnd }}.
+        </div>
       </div>
       <KalturaEventList :events="kalturaEventList" :location="room.location" />
-    </div>
+    </v-card>
   </div>
 </template>
 
@@ -68,12 +73,13 @@
 import {each, find, get} from 'lodash'
 import {mdiHomeCityOutline, mdiPrinter} from '@mdi/js'
 import {onMounted, ref, watch} from 'vue'
+import {useGoTo} from 'vuetify'
 import {useRoute} from 'vue-router'
 import CoursesDataTable from '@/components/course/CoursesDataTable'
 import KalturaEventList from '@/components/kaltura/KalturaEventList'
 import PageTitle from '@/components/util/PageTitle'
 import SelectRoomCapability from '@/components/room/SelectRoomCapability'
-import {alertScreenReader, getCourseCodes, summarize} from '@/lib/utils'
+import {alertScreenReader, getCourseCodes, putFocusNextTick, summarize} from '@/lib/utils'
 import {getKalturaEventList, getRoom, setAuditorium} from '@/api/room'
 import {useContextStore} from '@/stores/context'
 
@@ -83,6 +89,7 @@ const kalturaEventList = ref([])
 const offerPrintable = ref(undefined)
 const room = ref(undefined)
 const route = useRoute()
+const goTo = useGoTo()
 
 contextStore.loadingStart()
 
@@ -117,4 +124,15 @@ const onUpdateRoomCapability = capability => {
   room.value.capability = capability
   alertScreenReader(capability ? `'${capability}' selected` : 'Room capability removed.')
 }
+
+const scrollToKalturaEvents = () => {
+  putFocusNextTick('kaltura-events-header', {scroll: false})
+  goTo('#kaltura-events-header', {duration: 300, offset: -70, easing: 'easeInOutCubic'})
+}
 </script>
+
+<style scoped>
+.capability-label {
+  padding-bottom: 1px;
+}
+</style>

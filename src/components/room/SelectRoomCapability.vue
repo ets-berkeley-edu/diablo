@@ -3,6 +3,7 @@
     :id="`select-room-capability-${room.id}`"
     v-model="capability"
     density="comfortable"
+    hide-details
     item-title="text"
     item-value="value"
     :items="capabilityOptions"

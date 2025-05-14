@@ -1,6 +1,7 @@
 import {filter, split} from 'lodash'
 import {nextTick} from 'vue'
 import {useContextStore} from '@/stores/context'
+import type ScrollLogicalPosition from 'typescript'
 
 export function alertScreenReader(message: string) {
   const store = useContextStore()
@@ -20,7 +21,7 @@ export function getDisplayMeetings(course) {
   }
 }
 
-export function putFocusNextTick(id: string, {scroll=true, scrollBlock='center', cssSelector=undefined}: {scroll?: boolean, scrollBlock?: 'start' | 'center' | 'end' | 'nearest', cssSelector?: string}={}) {
+export function putFocusNextTick(id: string, {scroll=true, scrollBlock='center', cssSelector=undefined}: {scroll?: boolean, scrollBlock?: ScrollLogicalPosition, cssSelector?: string}={}) {
   nextTick(() => {
     let counter = 0
     const putFocus = setInterval(() => {

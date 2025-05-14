@@ -14,7 +14,7 @@ module.exports = {
     'array-bracket-spacing': 2,
     'eqeqeq': 2,
     'key-spacing': 2,
-    'no-console': process.env.NODE_ENV === 'production' ? 'error' : 'off',
+    'no-console': 2,
     'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'off',
     'no-multi-spaces': 2,
     'no-trailing-spaces': 2,

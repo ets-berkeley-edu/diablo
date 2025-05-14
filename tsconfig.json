@@ -1,35 +1,34 @@
 {
   "compilerOptions": {
-    "target": "esnext",
-    "module": "esnext",
-    "strict": true,
-    "importHelpers": true,
-    "moduleResolution": "node",
-    "experimentalDecorators": true,
-    "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "noImplicitAny": false,
-    "sourceMap": true,
-    "removeComments": true,
     "baseUrl": ".",
-    "types": [
-      "webpack-env",
-      "vuetify"
-    ],
-    "paths": {
-      "@/*": [
-        "src/*"
-      ]
-    },
-    "typeRoots": [
-      "./node_modules/@types",
-      "./node_modules/vuetify/types"
-    ],
+    "esModuleInterop": true,
+    "experimentalDecorators": true,
+    "importHelpers": true,
     "lib": [
       "esnext",
       "dom",
       "dom.iterable",
       "scripthost"
+    ],
+    "module": "esnext",
+    "moduleResolution": "node",
+    "noImplicitAny": false,
+    "paths": {
+      "@/*": [
+        "src/*"
+      ]
+    },
+    "removeComments": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "strict": true,
+    "target": "esnext",
+    "typeRoots": [
+      "./node_modules/@types/**/*",
+      "./node_modules/typescript/**/*",
+      "./node_modules/vuetify/**/*"
     ]
   },
   "include": [
@@ -37,5 +36,6 @@
   ],
   "exclude": [
     "node_modules"
-  ]
+  ],
+  "references": [{ "path": "./tsconfig.node.json" }]
 }
