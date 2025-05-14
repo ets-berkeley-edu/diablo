@@ -8,7 +8,7 @@
     @update:model-value="onToggleDialog"
   >
     <template #activator="{props: activatorProps}">
-      <v-btn id="create-blackout-btn" v-bind="activatorProps">
+      <v-btn id="create-blackout-btn" v-bind="activatorProps" variant="tonal">
         Create New<span class="sr-only"> Blackout Date</span>
       </v-btn>
     </template>
