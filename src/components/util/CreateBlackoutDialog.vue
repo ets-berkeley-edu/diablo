@@ -29,43 +29,33 @@
             @keypress.enter="create"
           />
         </div>
-        <span id="create-blackout-desc">
+        <span id="create-blackout-desc" class="text-body-2">
           To select a date range, click once on the start date and once on end date.
         </span>
         <div class="mt-2 text-center w-100">
-          <Calendar
+          <DatePicker
             v-model="range"
             aria-describedby="create-blackout-desc"
             :attributes="attributes"
             :disabled-dates="disabledDates"
-            is-range
-            :min-date="today"
+            is-required
             :max-date="today.plus({years: 2}).toJSDate()"
-            title-position="left"
+            :min-date="today.toJSDate()"
+            :model-modifiers="{range: true, date: true}"
           />
         </div>
       </v-card-text>
       <v-card-actions class="pt-0">
         <v-spacer></v-spacer>
         <div class="pb-3 pr-2">
-          <v-btn
+          <ProgressButton
             id="save-blackout"
-            color="primary"
+            :action="create"
             :disabled="isDisabled"
-            @click="create"
+            :in-progress="isSaving"
+            :text="isSaving ? 'Saving' : 'Save'"
           >
-            <span v-if="isSaving">
-              <v-progress-circular
-                class="mr-1"
-                :indeterminate="true"
-                rotate="5"
-                size="18"
-                width="2"
-              />
-              Saving
-            </span>
-            <span v-if="!isSaving">Save</span>
-          </v-btn>
+          </ProgressButton>
           <v-btn
             id="cancel-edit-of-blackout"
             class="ml-2"
@@ -81,9 +71,10 @@
 </template>
 
 <script setup>
-import {computed, defineProps, onMounted, ref} from 'vue'
+import {computed, defineModel, defineProps, onMounted, ref} from 'vue'
 import {includes, map, trim} from 'lodash'
 import {DateTime} from 'luxon'
+import ProgressButton from '@/components/util/ProgressButton'
 import {alertScreenReader, putFocusNextTick} from '@/lib/utils'
 import {createBlackout} from '@/api/blackout'
 
@@ -101,7 +92,10 @@ const props = defineProps({
 const dialog = ref(false)
 const isSaving = ref(false)
 const name = ref()
-const range = ref()
+const range = defineModel('range', {
+  default: {start: undefined, end: undefined},
+  type: Date
+})
 const today = DateTime.now()
 
 const attributes = computed(() => {
@@ -141,7 +135,7 @@ const create = () => {
   if (!isDisabled.value) {
     isSaving.value = true
     const format = date => {
-      return DateTime.fromISO(date).toFormat('yyyy-MM-dd')
+      return DateTime.fromObject(date).toFormat('yyyy-MM-dd')
     }
     createBlackout(name.value, format(range.value.start), format(range.value.end)).then(() => {
       alertScreenReader('Blackout created')
