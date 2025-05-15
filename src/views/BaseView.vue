@@ -2,7 +2,7 @@
   <v-layout>
     <!--          :clipped="$vuetify.breakpoint.lgAndUp"-->
     <v-navigation-drawer
-      color="sidebar"
+      color="tertiary"
       :expand-on-hover="true"
       permanent
       rail
