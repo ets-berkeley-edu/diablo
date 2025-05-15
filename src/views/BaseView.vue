@@ -1,42 +1,51 @@
 <template>
-  <v-layout>
-    <!--          :clipped="$vuetify.breakpoint.lgAndUp"-->
+  <v-app>
     <v-navigation-drawer
-      color="sidebar"
-      :expand-on-hover="true"
+      v-model="drawer"
       permanent
       rail
+      expand-on-hover
+      color="primary"
       role="navigation"
-      theme="dark"
+      class="sidebar-nav"
     >
-      <v-list-item
-        v-for="(item, index) in navItems"
-        :id="`sidebar-link-${kebabCase(item.title)}`"
-        :key="`sidebar-link-${index}`"
-        :aria-current="route.path === item.path"
-        class="nav-list-item"
-        link
-        tag="a"
-        @click="router.push(item.path)"
-      >
-        <template #prepend>
-          <v-icon color="icon-nav-default" :icon="item.icon" />
+      <v-list>
+        <template v-for="(item, i) in navItems" :key="i">
+          <v-list-item
+            :id="`sidebar-link-${kebabCase(item.title)}`"
+            :active="route.path === item.path"
+            component="router-link"
+            :to="item.path"
+            :aria-current="route.path === item.path"
+            tag="a"
+          >
+            <template #prepend>
+              <v-icon :icon="item.icon" color="white" />
+            </template>
+            <v-list-item-title>
+              <span class="text-subtitle-1 text-white">{{ item.title }}</span>
+            </v-list-item-title>
+          </v-list-item>
+          <v-divider
+            v-if="item.title === 'Rooms'"
+            class="border-opacity-80 ml-1 mr-1"
+            color="white"
+            :thickness="1"
+          />
         </template>
-        <v-list-item-title>
-          <span class="font-size-16">{{ item.title }}</span>
-        </v-list-item-title>
-      </v-list-item>
-      <!--  <v-divider v-if="item.title === 'Rooms'" :key="`sidebar-divider-${index}`" />-->
+      </v-list>
     </v-navigation-drawer>
-    <!-- :clipped-left="$vuetify.breakpoint.lgAndUp" -->
+
     <v-app-bar
       v-if="!route.meta.printable"
-      v-wave="waveOptions"
-      app
       color="header-background"
-      theme="dark"
+      app
+      v-wave="waveOptions"
     >
-      <div class="display-1 not-selectable" :class="{'mood-ring': $vuetify.theme.dark}">
+      <div
+        class="display-1 not-selectable banner-overlay"
+        :class="{ 'mood-ring': theme.global.current.value.dark }"
+      >
         <CourseCaptureBanner />
         <a
           id="skip-to-content-link"
@@ -47,105 +56,144 @@
           Skip to main content
         </a>
       </div>
-      <v-spacer></v-spacer>
-      <v-menu offset-y rounded="lg">
-        <template #activator="{props}">
+
+      <v-spacer />
+
+      <v-menu offset-y>
+        <template #activator="{ props }">
           <v-btn
             id="btn-main-menu"
-            color="secondary"
-            theme="dark"
+            class="mr-5 bg-secondary text-on-secondary"
+            variant="elevated"
             v-bind="props"
           >
             {{ currentUser.firstName }}
           </v-btn>
         </template>
-        <v-list>
+        <v-list rounded class="pa-2 profile-menu">
           <v-list-item
             v-if="currentUser.isAdmin"
             id="menu-item-attic"
-            link
-            @click="router.push('/attic')"
+            class="text-black"
+            component="router-link"
+            to="/attic"
           >
             <v-list-item-title>The Attic</v-list-item-title>
           </v-list-item>
+
           <v-list-item
             id="menu-item-feedback-and-help"
-            aria-label="Send email to the Course Capture support team; this link opens a new tab."
-            :href="`mailto:${config.emailCourseCaptureSupport}`"
-            link
+            class="text-black"
+            href="mailto:{{ config.emailCourseCaptureSupport }}"
             target="_blank"
           >
-            <v-list-item-title class="black--text">Feedback/Help</v-list-item-title>
+            <v-list-item-title class="black--text">
+              Feedback/Help
+            </v-list-item-title>
           </v-list-item>
-          <v-list-item id="menu-item-dark-mode" @click="toggleTheme">
-            <v-list-item-title>{{ theme.global.current.value.dark ? 'Light' : 'Dark' }} mode</v-list-item-title>
+
+          <v-list-item id="menu-item-dark-mode" @click="toggleTheme" class="text-black">
+            <v-list-item-title>
+              {{ theme.global.current.value.dark ? 'Light' : 'Dark' }} mode
+            </v-list-item-title>
           </v-list-item>
-          <v-list-item id="menu-item-log-out" link @click="logOut">
+
+          <v-list-item id="menu-item-log-out" @click="logOut" class="text-black">
             <v-list-item-title>Log Out</v-list-item-title>
           </v-list-item>
         </v-list>
       </v-menu>
     </v-app-bar>
+
     <v-main id="content" class="ma-3">
       <Snackbar />
       <Spinner v-if="loading" />
-      <router-view :key="stripAnchorRef(route.fullPath)"></router-view>
+      <router-view :key="stripAnchorRef(route.fullPath)" />
     </v-main>
+
     <Footer />
-  </v-layout>
+  </v-app>
 </template>
 
 <script setup>
-import {each, kebabCase} from 'lodash'
-import {mdiAutoFix, mdiDomain, mdiEmailOpenMultipleOutline, mdiHandsPray, mdiHome, mdiVideoOffOutline, mdiVideoPlus} from '@mdi/js'
-import {onMounted, ref} from 'vue'
+import {ref, onMounted} from 'vue'
+import {useRouter, useRoute} from 'vue-router'
 import {storeToRefs} from 'pinia'
-import {useRoute, useRouter} from 'vue-router'
 import {useTheme} from 'vuetify'
+import {kebabCase} from 'lodash'
+import {
+  mdiAutoFix,
+  mdiDomain,
+  mdiEmailOpenMultipleOutline,
+  mdiHandsPray,
+  mdiHome,
+  mdiVideoOffOutline,
+  mdiVideoPlus,
+} from '@mdi/js'
+
 import CourseCaptureBanner from '@/components/util/CourseCaptureBanner'
 import Footer from '@/components/util/Footer'
 import Snackbar from '@/components/util/Snackbar'
 import Spinner from '@/components/util/Spinner'
 import {getCasLogoutUrl} from '@/api/auth'
-import {stripAnchorRef} from '@/lib/utils'
+import {stripAnchorRef, getCourseCodes} from '@/lib/utils'
 import {useContextStore} from '@/stores/context'
 
 const contextStore = useContextStore()
 const {config, currentUser, loading} = storeToRefs(contextStore)
+
+const drawer = ref(true)
 const navItems = ref([])
 const route = useRoute()
 const router = useRouter()
 const theme = useTheme()
+
 const waveOptions = {
   cancellationPeriod: 75,
-  color: ['#1abc9c', '#2980b9', '#2980b9', '#378dc5', '#378dc5', '#378dc5', '#d35400', '#f1c40f'][Math.floor(Math.random() * 8)],
+  color:
+    [
+      '#1abc9c',
+      '#2980b9',
+      '#2980b9',
+      '#378dc5',
+      '#378dc5',
+      '#378dc5',
+      '#d35400',
+      '#f1c40f',
+    ][Math.floor(Math.random() * 8)],
   dissolveDuration: 0.4,
   duration: 1.8,
   easing: 'ease-out',
   finalOpacity: 0.1,
   initialOpacity: 0.2,
   tagName: 'div',
-  trigger: 'auto'
+  trigger: 'auto',
 }
 
 onMounted(() => {
   prefersColorScheme()
-  navItems.value = currentUser.value.courses.length ? [{title: 'Home', icon: mdiHome, path: '/home'}] : []
+  navItems.value = currentUser.value.courses.length
+    ? [{ title: 'Home', icon: mdiHome, path: '/home' }]
+    : []
   if (currentUser.value.isAdmin) {
-    navItems.value = navItems.value.concat([
+    navItems.value.push(
       {title: 'Ouija Board', icon: mdiAutoFix, path: '/ouija'},
       {title: 'Rooms', icon: mdiDomain, path: '/rooms'},
       {title: 'Blackouts', icon: mdiVideoOffOutline, path: '/blackouts'},
-      {title: 'Email Templates', icon: mdiEmailOpenMultipleOutline, path: '/email/templates'},
+      {
+        title: 'Email Templates',
+        icon: mdiEmailOpenMultipleOutline,
+        path: '/email/templates',
+      },
       {title: 'The Chancel', icon: mdiHandsPray, path: '/jobs'}
-    ])
+    )
   } else {
-    each(currentUser.value.courses, course => {
+    currentUser.value.courses.forEach((course) => {
       if (course.meetings.eligible.length) {
         navItems.value.push({
-          title: this.getCourseCodes(course)[0],
+          title: getCourseCodes(course)[0],
           icon: mdiVideoPlus,
-          path: `/course/${config.value.currentTermId}/${course.sectionId}`
+          path: `/course/${config.value.currentTermId}/${course.sectionId}`,
         })
       }
     })
@@ -154,22 +202,22 @@ onMounted(() => {
 
 const logOut = () => {
   contextStore.alertScreenReader('Logging out')
-  getCasLogoutUrl().then(data => window.location.href = data.casLogoutUrl)
+  getCasLogoutUrl().then((data) => (window.location.href = data.casLogoutUrl))
 }
 
 const prefersColorScheme = () => {
   const mq = window.matchMedia('(prefers-color-scheme: dark)')
-  const setColorScheme = prefersDark => {
-    theme.global.name.value = prefersDark ? 'dark' : 'light'
+  const setColorScheme = (dark) => {
+    theme.global.name.value = dark ? 'dark' : 'light'
   }
   setColorScheme(mq.matches)
-  if (typeof mq.addEventListener === 'function') {
-    mq.addEventListener('change', e => setColorScheme(e.matches))
-  }
+  mq.addEventListener?.('change', (e) => setColorScheme(e.matches))
 }
 
 const toggleTheme = () => {
-  theme.global.name.value = theme.global.current.value.dark ? 'light' : 'dark'
+  theme.global.name.value = theme.global.current.value.dark
+    ? 'light'
+    : 'dark'
 }
 </script>
 
@@ -180,6 +228,27 @@ const toggleTheme = () => {
 </style>
 
 <style scoped>
+::v-deep .v-toolbar {
+  left: 0 !important;
+  width: 100% !important;
+}
+
+::v-deep .v-navigation-drawer {
+  top: 63px !important;
+}
+
+.profile-menu {
+  background-color: white !important;
+}
+
+.profile-button-background {
+  background-color: #68acd8;
+}
+
+.sidebar-with-banner .v-navigation-drawer__content {
+  padding-top: 64px; /* or however tall your banner is */
+}
+
 .mood-ring {
   -webkit-animation: colorchange 300s infinite alternate;
   animation: colorchange 300s infinite alternate;

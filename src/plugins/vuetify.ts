@@ -26,7 +26,7 @@ import {VSnackbar, VSwitch} from 'vuetify/components'
 import {VTable} from 'vuetify/components/VTable'
 import {VTextField} from 'vuetify/components/VTextField'
 import {VTooltip} from 'vuetify/components/VTooltip'
-
+import {VDivider} from 'vuetify/components/VDivider'
 
 export default createVuetify({
   components: {
@@ -44,6 +44,7 @@ export default createVuetify({
     VContainer,
     VDataTable,
     VDialog,
+    VDivider,
     VFooter,
     VForm,
     VIcon,
