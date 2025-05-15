@@ -2,29 +2,29 @@
   <v-snackbar
     v-model="snackbarShow"
     :color="snackbar.color"
-    :timeout="snackbar.timeout"
     content-class="align-center"
-    :top="true"
+    location="top"
+    :timeout="snackbar.timeout"
   >
-    <div class="d-flex align-center justify-space-between">
+    <div class="d-flex align-center justify-space-between py-1">
       <div
         id="alert-text"
         aria-live="polite"
-        class="ml-4 mr-4 title"
+        class="px-4"
         role="alert"
       >
-        {{ snackbar.text }}
+        <div class="pb-4 text-h6">{{ snackbar.text }}</div>
         <ContactUsPrompt
           v-if="includeContactUsPrompt"
-          href-mailto-class="white--text"
+          href-mailto-class="text-white"
         />
       </div>
       <div>
         <v-btn
           id="btn-close-alert"
-          aria-label="Close this dialog box."
-          text
-          @click="snackbarClose"
+          aria-label="Close alert"
+          variant="text"
+          @click="contextStore.snackbarClose"
         >
           Close
         </v-btn>
@@ -33,19 +33,26 @@
   </v-snackbar>
 </template>
 
-<script>
+<script setup>
+import {defineProps, watch} from 'vue'
+import {storeToRefs} from 'pinia'
 import ContactUsPrompt from '@/components/util/ContactUsPrompt'
-import Context from '@/mixins/Context'
+import {putFocusNextTick} from '@/lib/utils'
+import {useContextStore} from '@/stores/context'
 
-export default {
-  name: 'Snackbar',
-  mixins: [Context],
-  components: {ContactUsPrompt},
-  props: {
-    includeContactUsPrompt: {
-      required: false,
-      type: Boolean,
-    }
+defineProps({
+  includeContactUsPrompt: {
+    required: false,
+    type: Boolean,
   }
-}
+})
+
+const contextStore = useContextStore()
+const {snackbar, snackbarShow} = storeToRefs(contextStore)
+
+watch(snackbarShow, isShowing => {
+  if (isShowing) {
+    putFocusNextTick('btn-close-alert')
+  }
+})
 </script>
