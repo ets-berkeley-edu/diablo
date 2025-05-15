@@ -1,16 +1,3 @@
-a {
-  color: #f04a00 !important;
-  text-decoration: none !important;
-}
-a:hover {
-  color: #ff8900 !important;
-}
-a:active {
-  color: #b83900 !important;
-}
-abbr {
-  text-decoration: none !important;
-}
 .border-bottom-zero {
   border-bottom: 0 !important;
 }
@@ -91,4 +78,20 @@ abbr {
 }
 .w-100 {
   width: 100% !important;
+}
+a {
+  color: #f04a00 !important;
+  text-decoration: none !important;
+}
+a:hover {
+  color: #ff8900 !important;
+}
+a:active {
+  color: #b83900 !important;
+}
+abbr {
+  text-decoration: none !important;
+}
+table td, table th {
+  border-bottom-color: rgb(var(--v-theme-table-border)) !important;
 }
