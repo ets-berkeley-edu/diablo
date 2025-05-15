@@ -35,6 +35,9 @@ abbr {
 .min-width-unset {
   min-width: unset !important;
 }
+.modal-content {
+  padding: 12px 6px !important;
+}
 .not-selectable {
   -webkit-touch-callout: none; /* iOS Safari */
     -webkit-user-select: none; /* Safari */

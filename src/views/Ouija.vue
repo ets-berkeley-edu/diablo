@@ -30,6 +30,7 @@
             id="input-search"
             v-model="searchText"
             :append-icon="mdiMagnify"
+            :aria-describedby="undefined"
             aria-label="Search courses table"
             clearable
             :disabled="isDownloading"
@@ -44,6 +45,7 @@
             color="secondary"
             :disabled="isDownloading"
             :items="keys(contextStore.config.searchFilterOptions)"
+            :menu-props="{eager: true, id: 'ouija-filter-options-menu'}"
             @update:model-value="() => refresh(`Courses table refreshed. Showing ${contextStore.config.searchFilterOptions[selectedFilter]}`)"
           >
             <template #item="{props: itemProps, item}">

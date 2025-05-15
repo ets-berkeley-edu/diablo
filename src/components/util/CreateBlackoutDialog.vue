@@ -2,9 +2,11 @@
   <v-dialog
     v-model="dialog"
     aria-labelledby="blackout-modal-header"
+    max-width="600"
+    min-width="400"
     persistent
     role="dialog"
-    width="400"
+    width="50%"
     @update:model-value="onToggleDialog"
   >
     <template #activator="{props: activatorProps}">
@@ -12,7 +14,7 @@
         Create New<span class="sr-only"> Blackout Date</span>
       </v-btn>
     </template>
-    <v-card>
+    <v-card class="modal-content">
       <v-card-title class="pb-1">
         <h2 id="blackout-modal-header" class="title">Create New Blackout</h2>
       </v-card-title>
@@ -47,24 +49,22 @@
       </v-card-text>
       <v-card-actions class="pt-0">
         <v-spacer></v-spacer>
-        <div class="pb-3 pr-2">
-          <ProgressButton
-            id="save-blackout"
-            :action="create"
-            :disabled="isDisabled"
-            :in-progress="isSaving"
-            :text="isSaving ? 'Saving' : 'Save'"
-          >
-          </ProgressButton>
-          <v-btn
-            id="cancel-edit-of-blackout"
-            class="ml-2"
-            text
-            @click="cancel"
-          >
-            Cancel
-          </v-btn>
-        </div>
+        <ProgressButton
+          id="save-blackout"
+          :action="create"
+          :disabled="isDisabled || isSaving"
+          :in-progress="isSaving"
+          :text="isSaving ? 'Saving' : 'Save'"
+        >
+        </ProgressButton>
+        <v-btn
+          id="cancel-edit-of-blackout"
+          class="ml-2"
+          variant="text"
+          @click="cancel"
+        >
+          Cancel
+        </v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>

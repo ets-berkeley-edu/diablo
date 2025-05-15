@@ -1,6 +1,6 @@
 <template>
   <div v-if="!loading" class="pt-2">
-    <v-card class="border-sm mb-4" width="calc(100vw - 95px)">
+    <v-card class="border-sm mb-4">
       <v-card-title>
         <PageTitle
           :icon="mdiHandsPray"
@@ -84,7 +84,7 @@
                 class="text-no-wrap pl-0"
                 columnheader="job-schedule-schedule-th"
               >
-                <div v-if="job.isSchedulable" id="job-is-schedulable" class="d-flex align-center">
+                <div v-if="job.isSchedulable" class="d-flex align-center">
                   <v-btn
                     :id="`edit-job-schedule-${job.key}`"
                     :aria-label="`Edit job schedule ${job.key}`"
@@ -104,11 +104,9 @@
                     </span>
                   </div>
                 </div>
-                <div v-if="!job.isSchedulable" id="job-is-not-schedulable" class="d-flex justify-start">
+                <div v-if="!job.isSchedulable" class="d-flex justify-start">
                   <v-icon class="mx-4" color="red" :icon="mdiAlert" />
-                  <div id="course-not-eligible">
-                    This job is not schedulable.
-                  </div>
+                  This job is not schedulable.
                 </div>
               </td>
               <td :id="`job-schedule-${job.key}-disable`" columnheader="job-schedule-disable-th">
@@ -117,7 +115,7 @@
                     :key="job.disabled"
                     :disabled="!job.isSchedulable"
                     :job="job"
-                    :on-change="toggleDisabled"
+                    :on-change="toggleJobDisabled"
                   />
                 </div>
               </td>
@@ -130,12 +128,14 @@
     <v-dialog
       v-model="editJobDialog"
       aria-labelledby="job-schedule-modal-header"
-      max-width="400px"
+      max-width="600"
+      min-width="400"
       persistent
+      width="50%"
     >
-      <v-card>
+      <v-card class="modal-content">
         <v-card-title>
-          <span id="job-schedule-modal-header" class="headline"><span class="sr-only">Edit </span>{{ get(editJob, 'name') }} Schedule</span>
+          <h2 id="job-schedule-modal-header"><span class="sr-only">Edit </span>{{ get(editJob, 'name') }} Schedule</h2>
         </v-card-title>
         <v-card-text>
           <v-container v-if="editJob">
@@ -146,14 +146,16 @@
                   v-model="editJob.schedule.type"
                   :items="['day_at', 'minutes', 'seconds']"
                   label="Type"
+                  :menu-props="{eager: true, id: 'schedule-type-select-menu'}"
                   required
-                  @change="editJob.schedule.value = ''"
+                  @update:model-value="editJob.schedule.value = ''"
                 ></v-select>
               </v-col>
               <v-col cols="12" sm="6">
                 <v-text-field
                   id="schedule-value-input"
                   v-model="editJob.schedule.value"
+                  :label="editJob.schedule.type === 'day_at' ? 'Time' : 'Duration'"
                   required
                   :suffix="editJob.schedule.type === 'day_at' ? 'UTC' : ''"
                   :type="editJob.schedule.type === 'day_at' ? 'time' : 'number'"
@@ -164,22 +166,19 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
+          <ProgressButton
+            id="edit-schedule-save-btn"
+            :action="scheduleEditSave"
+            :disabled="disableScheduleSave"
+            :in-progress="isSavingJob"
+            :text="isSavingJob ? 'Saving' : 'Save'"
+          />
           <v-btn
             id="edit-schedule-cancel-btn"
-            color="blue darken-1"
-            text
+            variant="text"
             @click="scheduleEditCancel(editJob)"
           >
-            Close
-          </v-btn>
-          <v-btn
-            id="edit-schedule-save-btn"
-            color="blue darken-1"
-            :disabled="disableScheduleSave"
-            text
-            @click="scheduleEditSave"
-          >
-            Save
+            Cancel
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -194,6 +193,7 @@ import {onBeforeMount, onMounted, ref, watch} from 'vue'
 import DisableJobToggle from '@/components/job/DisableJobToggle'
 import JobHistory from '@/components/job/JobHistory'
 import PageTitle from '@/components/util/PageTitle'
+import ProgressButton from '@/components/util/ProgressButton'
 import {alertScreenReader, putFocusNextTick} from '@/lib/utils'
 import {getJobHistory, getJobSchedule, setJobDisabled, startJob, updateJobSchedule} from '@/api/job'
 import {useContextStore} from '@/stores/context'
@@ -209,6 +209,7 @@ const headers = [
   {title: 'Schedule', value: 'schedule'},
   {title: 'Enabled', value: 'enabled'}
 ]
+const isSavingJob = ref(false)
 const jobHistory = ref([])
 const jobSchedule = ref({
   jobs: []
@@ -236,6 +237,7 @@ onBeforeMount(() => {
 const isRunning = (jobKey) => {
   return !!find(jobHistory.value, h => h.jobKey === jobKey && !h.finishedAt)
 }
+
 const refresh = () => {
   refreshing.value = true
   return getJobHistory().then(data => {
@@ -244,6 +246,7 @@ const refresh = () => {
     scheduleRefresh()
   })
 }
+
 const runJob = (job) => {
   jobHistory.value.unshift({
     jobKey: job.key,
@@ -255,18 +258,22 @@ const runJob = (job) => {
   contextStore.snackbarOpen(`${jobName} job started`)
   putFocusNextTick('btn-close-alert')
 }
+
 const scheduleEditCancel = (job) => {
   editJob.value = undefined
   editJobDialog.value = false
   alertScreenReader('Cancelled')
   putFocusNextTick(`edit-job-schedule-${job.key}`)
 }
+
 const scheduleEditOpen = (job) => {
   editJob.value = cloneDeep(job)
   editJobDialog.value = true
   putFocusNextTick('schedule-type-select')
 }
+
 const scheduleEditSave = () => {
+  isSavingJob.value = true
   updateJobSchedule(
     editJob.value.id,
     editJob.value.schedule.type,
@@ -276,15 +283,18 @@ const scheduleEditSave = () => {
     match.schedule = editJob.value.schedule
     editJob.value = undefined
     editJobDialog.value = false
+    isSavingJob.value = false
     alertScreenReader(`Job '${match.name}' was updated.`)
     putFocusNextTick(`edit-job-schedule-${match.key}`)
   })
 }
+
 const scheduleRefresh = () => {
   clearTimeout(refresher.value)
   refresher.value = setTimeout(refresh, 5000)
 }
-const toggleDisabled = (job, isDisabled) => {
+
+const toggleJobDisabled = (job, isDisabled) => {
   setJobDisabled(job.id, isDisabled).then(data => {
     job.disabled = data.disabled
     alertScreenReader(`Job '${job.name}' ${job.disabled ? 'disabled' : 'enabled'}`)
