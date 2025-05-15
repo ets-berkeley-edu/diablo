@@ -1,6 +1,6 @@
 <template>
   <div v-if="!contextStore.loading">
-    <v-card class="border-sm" width="calc(100vw - 95px)">
+    <v-card class="border-sm">
       <v-card-title class="pb-0">
         <PageTitle :icon="mdiHomeCityOutline" :text="room.location" />
       </v-card-title>
@@ -28,6 +28,7 @@
             <v-col class="d-flex justify-end pr-4" cols="12" sm="5">
               <v-switch
                 v-model="isAuditorium"
+                :aria-describedby="undefined"
                 color="primary"
                 hide-details
                 label="Auditorium"
@@ -56,7 +57,7 @@
         />
       </v-card-text>
     </v-card>
-    <v-card v-if="kalturaEventList" class="mt-8 bg-transparent" width="calc(100vw - 95px)">
+    <v-card v-if="kalturaEventList" class="mt-8 bg-transparent">
       <div class="pl-4">
         <h2 id="kaltura-events-header" tabindex="-1">The Kaltura Events of {{ room.location }}</h2>
         <div class="subtitle-2">

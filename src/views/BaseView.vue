@@ -86,7 +86,7 @@
         </v-list>
       </v-menu>
     </v-app-bar>
-    <v-main id="content" class="ma-3">
+    <v-main id="content" class="ma-3" width="calc(100vw - 38px)">
       <Snackbar />
       <Spinner v-if="loading" />
       <router-view :key="stripAnchorRef(route.fullPath)"></router-view>

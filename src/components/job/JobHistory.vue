@@ -1,5 +1,5 @@
 <template>
-  <v-card class="border-sm" width="calc(100vw - 95px)">
+  <v-card class="border-sm">
     <v-card-title>
       <v-row>
         <v-col cols="12" sm="5">
@@ -17,6 +17,7 @@
             v-if="size(jobHistory)"
             v-model="search"
             :append-icon="mdiMagnify"
+            :aria-describedby="undefined"
             aria-label="Search Job History table"
             class="my-2"
             label="Search History"

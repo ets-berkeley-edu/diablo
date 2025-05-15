@@ -2,10 +2,12 @@
   <v-select
     :id="`select-room-capability-${room.id}`"
     v-model="capability"
+    :aria-describedby="undefined"
     hide-details
     item-title="text"
     item-value="value"
     :items="capabilityOptions"
+    :menu-props="{eager: true, id: `select-room-capability-menu-${room.id}`}"
     no-data-text="Select..."
     @update:model-value="updateCapability"
   />

@@ -2,6 +2,7 @@
   <v-switch
     :id="`job-${job.key}-enabled`"
     v-model="enabled"
+    :aria-describedby="undefined"
     :aria-label="`Job ${job.name} is ${enabled ? 'enabled' : 'disabled'}`"
     color="success"
     hide-details
