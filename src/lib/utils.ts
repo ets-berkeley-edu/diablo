@@ -1,4 +1,4 @@
-import {filter, split} from 'lodash'
+import {startsWith, filter, split} from 'lodash'
 import {nextTick} from 'vue'
 import {useContextStore} from '@/stores/context'
 import type ScrollLogicalPosition from 'typescript'
@@ -11,6 +11,16 @@ export function alertScreenReader(message: string) {
 
 export function getCourseCodes(course) {
   return course.label.split('|').map((l: string) => l.trim())
+}
+
+export function getTermName(termId) {
+      const id = termId.toString()
+      let termName: string = ''
+      if (id.length === 4) {
+        const seasons = {'0': 'Winter', '2': 'Spring', '5': 'Summer', '8': 'Fall'}
+        termName = `${seasons[id.slice(3, 4)]} ${startsWith(id, '1') ? '19' : '20'}${id.slice(1, 3)}`
+      }
+      return termName
 }
 
 export function getDisplayMeetings(course) {

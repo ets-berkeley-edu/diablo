@@ -1,0 +1,1120 @@
+<template>
+  <div v-if="!loading">
+    <v-container fluid class="px-sm-0">
+      <v-row class="pl-3">
+        <PageTitle
+          v-if="contextStore.config.currentTermId === this.course.termId"
+          :class-for-h1="course.deletedAt ? 'line-through' : ''"
+          icon="mdi-book-multiple-outline"
+          :text="courseDisplayTitle"
+        />
+        <PageTitle
+          v-if="contextStore.config.currentTermId !== this.course.termId"
+          :class-for-h1="course.deletedAt ? 'line-through' : ''"
+          icon="mdi-book-multiple-outline"
+          :text="`${courseDisplayTitle} (${getTermName(course.termId)})`"
+        />
+      </v-row>
+      <v-row class="ml-8 pl-7">
+        <span v-if="course.deletedAt" class="subtitle-1">
+          <span class="font-weight-bold red--text">UC Berkeley has canceled this section.</span>
+        </span>
+        <h2 v-if="!course.deletedAt" id="course-title" class="primary--text">{{ course.courseTitle }}</h2>
+      </v-row>
+      <v-row class="body-1 ml-8 pl-7">
+        Section ID: <span id="section-id">{{ course.sectionId }}</span>
+      </v-row>
+      <v-row>
+        <v-col cols="12" md="3" sm="4">
+          <CoursePageSidebar :course="course" />
+          <v-card v-if="contextStore.config.isAdmin" outlined class="elevation-1 mt-4">
+            <v-card-title>
+              Notes
+            </v-card-title>
+            <v-card-text v-if="!noteEditing" id="note-body">
+              {{ course.note || 'No notes.' }}
+            </v-card-text>
+            <v-card-actions v-if="!noteEditing" class="px-4 pb-4">
+              <v-btn
+                id="btn-edit-note"
+                aria-label="Edit note"
+                :disabled="noteUpdating"
+                @click="editNote"
+              >
+                Edit
+              </v-btn>
+              <v-btn
+                v-if="course.note"
+                id="btn-delete-note"
+                aria-label="Delete Note"
+                class="mx-3"
+                :disabled="noteUpdating"
+                @click="deleteNote"
+              >
+                Delete
+              </v-btn>
+            </v-card-actions>
+            <v-card-text v-if="noteEditing">
+              <v-textarea
+                id="note-body-edit"
+                v-model="noteBody"
+                outlined
+                hide-details="auto"
+                density="compact"
+                placeholder="Enter note text"
+              >
+              </v-textarea>
+            </v-card-text>
+            <v-card-actions v-if="noteEditing" class="px-4 pb-4">
+              <v-btn
+                id="btn-save-note"
+                aria-label="Save Note"
+                color="success"
+                :disabled="!noteBody || noteUpdating"
+                @click="saveNote"
+              >
+                Save
+              </v-btn>
+              <v-btn
+                id="btn-cancel-note"
+                aria-label="Cancel Note Edit"
+                class="mx-3"
+                :disabled="noteUpdating"
+                @click="cancelNote"
+              >
+                Cancel
+              </v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-col>
+        <v-col cols="12" md="9" sm="8">
+          <v-container v-if="isCurrentTerm && capability && hasValidMeetingTimes && !course.hasOptedOut && course.scheduled" class="elevation-2 pa-6 px-sm-2">
+            <v-row>
+              <v-col class="font-weight-bold mb-1">
+                <v-alert
+                  v-if="updatesQueued"
+                  density="compact"
+                  type="warning"
+                  icon="mdi-alert"
+                  outlined
+                >
+                  Recent updates to recording settings are currently queued for publication. They will be published in an hour or less.
+                </v-alert>
+                <span id="notice-scheduled" class="green--text">
+                  {{ $currentUser.isAdmin ? 'The' : 'Your' }} course is scheduled for Course Capture. The first recording is on {{ course.scheduled[0].meetingStartDate | moment('MMM D, YYYY') }}.
+                </span>
+              </v-col>
+            </v-row>
+            <v-row
+              align="center"
+              justify="start"
+            >
+              <v-col id="instructors-list" cols="12">
+                <h4>
+                  Instructor(s) listed will have editing and publishing access:
+                </h4>
+                <div v-for="instructor in course.instructors" :id="`instructor-${instructor.uid}`" :key="`instructor-${instructor.uid}`">
+                  {{ instructor.name }} ({{ instructor.uid }})
+                  <span v-if="instructor.hasOptedOut" :id="`instructor-${instructor.uid}-opt-out`">
+                    (opted out)
+                  </span>
+                </div>
+              </v-col>
+            </v-row>
+            <v-row
+              v-if="!collaboratorsEditing"
+              align="center"
+              justify="start"
+            >
+              <v-col id="collaborators-list" cols="12">
+                <h4>
+                  Collaborator(s) listed will have editing and publishing access:
+                </h4>
+                <div v-for="collaborator in collaborators" :id="`collaborator-${collaborator.uid}`" :key="`collaborator-${collaborator.uid}`">
+                  {{ collaboratorLabel(collaborator) }}
+                </div>
+                <div v-if="!collaborators || !collaborators.length" id="collaborators-none">
+                  None
+                </div>
+                <v-btn
+                  id="btn-collaborators-edit"
+                  aria-label="Edit Collaborators"
+                  class="mt-3"
+                  @click="toggleCollaboratorsEditing"
+                >
+                  Edit
+                </v-btn>
+              </v-col>
+            </v-row>
+            <v-card v-if="collaboratorsEditing" class="my-4 background-shaded">
+              <v-container>
+                <v-row
+                  align="center"
+                  aria-live="polite"
+                  justify="start"
+                >
+                  <v-col cols="12">
+                    <h4>
+                      Update collaborators
+                    </h4>
+                  </v-col>
+                </v-row>
+                <v-row
+                  align="end"
+                  justify="start"
+                >
+                  <v-col cols="9">
+                    <PersonLookup
+                      id="input-collaborator-lookup-autocomplete"
+                      ref="personLookup"
+                      :disabled="collaboratorsUpdating"
+                      label="Find collaborator by: "
+                      menu-label="collaborators"
+                      placeholder="UID or email"
+                      :on-select-result="addCollaboratorPending"
+                      :error-message="addCollaboratorError"
+                    />
+                  </v-col>
+                  <v-col cols="3">
+                    <v-btn
+                      id="btn-collaborator-add"
+                      aria-label="Add Collaborator"
+                      color="success"
+                      :disabled="!pendingCollaborator"
+                      @click="addCollaboratorConfirm"
+                    >
+                      Add
+                    </v-btn>
+                  </v-col>
+                </v-row>
+                <v-row
+                  v-if="collaboratorsEditing"
+                  align="center"
+                  justify="start"
+                >
+                  <v-col cols="12">
+                    <div
+                      v-for="(collaborator, index) in collaborators"
+                      :id="`collaborator-${collaborator.uid}`"
+                      :key="collaborator.uid"
+                      class="my-2"
+                    >
+                      {{ collaboratorLabel(collaborator) }}
+                      <v-btn
+                        :id="`btn-collaborator-remove-${collaborator.uid}`"
+                        :aria-label="`Remove ${collaborator.firstName || ''} ${collaborator.lastName || ''} as collaborator`"
+                        :disabled="collaboratorsUpdating"
+                        small
+                        @click="removeCollaborator(collaborator.uid, index)"
+                      >
+                        Remove
+                      </v-btn>
+                    </div>
+                    <div class="mt-4">
+                      <v-btn
+                        id="btn-collaborators-save"
+                        aria-label="Save Collaborators"
+                        color="success"
+                        :disabled="$_.isEqual($_.sortBy(collaborators, 'uid'), $_.sortBy(course.collaborators, 'uid')) || collaboratorsUpdating"
+                        @click="updateCollaboratorsClicked"
+                      >
+                        <v-progress-circular
+                          v-if="collaboratorsUpdating"
+                          class="mr-2"
+                          color="primary"
+                          indeterminate
+                          size="18"
+                          width="3"
+                        ></v-progress-circular>
+                        {{ collaboratorsUpdating ? 'Saving' : 'Save' }}
+                      </v-btn>
+                      <v-btn
+                        id="btn-collaborators-cancel"
+                        aria-label="Cancel Collaborator Edit"
+                        color="default"
+                        :disabled="collaboratorsUpdating"
+                        class="mx-2"
+                        @click="updateCollaboratorsCancel"
+                      >
+                        Cancel
+                      </v-btn>
+                    </div>
+                  </v-col>
+                </v-row>
+              </v-container>
+            </v-card>
+            <v-row
+              align="center"
+              justify="start"
+            >
+              <v-col cols="12">
+                <h4>
+                  <label id="select-recording-type-label" for="select-recording-type">Recording Type</label>
+                </h4>
+                <div v-if="!recordingTypeEditing">
+                  <div id="recording-type-name">
+                    {{ displayLabels[course.recordingType] }}
+                  </div>
+                  <v-btn
+                    v-if="!recordingTypeEditing && recordingTypeEditable"
+                    id="btn-recording-type-edit"
+                    aria-label="Edit Recording Type"
+                    class="mt-3"
+                    @click="toggleRecordingTypeEditing"
+                  >
+                    Edit
+                  </v-btn>
+                </div>
+                <div
+                  v-if="recordingTypeEditing && recordingTypeEditable"
+                  id="select-recording-type"
+                  :aria-activedescendant="`radio-recording-type-${recordingType}`"
+                  aria-labelledby="select-recording-type-label"
+                  class="mb-4"
+                  role="radiogroup"
+                  tabindex="0"
+                >
+                  <div
+                    v-for="(recordingTypeOption, index) in recordingTypeOptions"
+                    :key="recordingTypeOption"
+                    class="d-flex flex-nowrap py-1"
+                  >
+                    <input
+                      :id="`radio-recording-type-${recordingTypeOption}`"
+                      :checked="recordingTypeOption === recordingType ? 'checked' : false"
+                      class="ml-1 mr-3"
+                      :disabled="recordingTypeUpdating"
+                      type="radio"
+                      :value="recordingTypeOption"
+                      @change="() => onRecordingTypeChange(recordingTypeOption, index)"
+                    />
+                    <label class="font-size-16 text--secondary" :for="`radio-recording-type-${recordingTypeOption}`">
+                      {{ displayLabels[recordingTypeOption] }}
+                    </label>
+                  </div>
+                </div>
+                <div v-if="recordingTypeEditing && recordingTypeEditable">
+                  <v-btn
+                    id="btn-recording-type-save"
+                    aria-label="Save Recording Type"
+                    color="success"
+                    :disabled="recordingTypeUpdating"
+                    @click="updateRecordingTypeClicked"
+                  >
+                    <v-progress-circular
+                      v-if="recordingTypeUpdating"
+                      class="mr-2"
+                      color="primary"
+                      indeterminate
+                      size="18"
+                      width="3"
+                    ></v-progress-circular>
+                    {{ recordingTypeUpdating ? 'Saving' : 'Save' }}
+                  </v-btn>
+                  <v-btn
+                    id="btn-recording-type-cancel"
+                    aria-label="Cancel Recording Type Edit"
+                    class="mx-2"
+                    color="default"
+                    :disabled="recordingTypeUpdating"
+                    @click="updateRecordingTypeCancel"
+                  >
+                    Cancel
+                  </v-btn>
+                </div>
+              </v-col>
+            </v-row>
+            <v-row
+              align="center"
+              justify="start"
+            >
+              <v-col cols="12">
+                <h4>
+                  <label id="select-publish-type-label" for="select-publish-type">Recording Placement</label>
+                </h4>
+                <div v-if="!publishTypeEditing">
+                  <div id="publish-type-name">
+                    {{ displayLabels[course.publishType] }}
+                  </div>
+                  <div v-if="publishType && publishType.startsWith('kaltura_media_gallery') && course.canvasSiteIds" id="publish-linked-canvas-site">
+                    Linked bCourses site(s):
+                    <div v-for="site in course.canvasSites" :key="site.canvasSiteId">
+                      <CanvasCourseSite :site-id="site.canvasSiteId" :course-site="site" />
+                    </div>
+                  </div>
+                  <v-btn
+                    id="btn-publish-type-edit"
+                    aria-label="Edit Recording Placement"
+                    class="mt-3"
+                    @click="togglePublishTypeEditing"
+                  >
+                    Edit
+                  </v-btn>
+                </div>
+                <v-card v-if="publishTypeEditing" class="my-4 background-shaded">
+                  <v-container>
+                    <div
+                      id="select-publish-type"
+                      :aria-activedescendant="`radio-publish-type-${publishType}`"
+                      aria-labelledby="select-publish-type-label"
+                      class="mb-4"
+                      role="radiogroup"
+                      tabindex="0"
+                    >
+                      <div
+                        v-for="(publishTypeOption, index) in publishTypeOptions"
+                        :key="publishTypeOption"
+                        class="d-flex flex-nowrap py-1"
+                      >
+                        <input
+                          :id="`radio-publish-type-${publishTypeOption}`"
+                          :checked="publishTypeOption === publishType ? 'checked' : false"
+                          class="ml-1 mr-3"
+                          :disabled="publishTypeUpdating"
+                          type="radio"
+                          :value="publishTypeOption"
+                          @change="() => onPublishTypeChange(publishTypeOption, index)"
+                        />
+                        <label class="font-size-16 text--secondary" :for="`radio-publish-type-${publishTypeOption}`">{{ displayLabels[publishTypeOption] }}</label>
+                      </div>
+                    </div>
+                    <!-- v-container doesn't seem to work with aria-live; therefore the following is a div. -->
+                    <div v-if="publishType && publishType.startsWith('kaltura_media_gallery')" aria-live="polite">
+                      <v-row
+                        align="center"
+                        justify="start"
+                      >
+                        <v-col cols="12">
+                          <h4>
+                            Linked bCourses site(s):
+                          </h4>
+                        </v-col>
+                      </v-row>
+                      <v-row
+                        v-if="!$currentUser.isAdmin"
+                        align="end"
+                        justify="start"
+                      >
+                        <v-col cols="9">
+                          <v-select
+                            id="select-canvas-site"
+                            v-model="pendingCanvasSite"
+                            dense
+                            :disabled="publishTypeUpdating"
+                            :full-width="true"
+                            hide-details
+                            item-text="name"
+                            :item-disabled="item => isCanvasSiteIdStaged(item.canvasSiteId)"
+                            return-object
+                            :items="publishCanvasSiteOptions"
+                            label="Select course site"
+                            solo
+                          >
+                            <span :id="`menu-option-canvas-site-${data.item.canvasSiteId}`" slot="item" slot-scope="data">
+                              {{ data.item.name }} ({{ data.item.courseCode }})
+                            </span>
+                          </v-select>
+                        </v-col>
+                        <v-col cols="3">
+                          <v-btn
+                            id="btn-canvas-site-add"
+                            aria-label="Add bCourses Site"
+                            color="success"
+                            :disabled="!pendingCanvasSite"
+                            @click="addCanvasSiteConfirm"
+                          >
+                            Add
+                          </v-btn>
+                        </v-col>
+                      </v-row>
+                      <v-row
+                        v-if="!$currentUser.isAdmin"
+                        align="end"
+                        justify="start"
+                      >
+                        <v-col cols="12">
+                          To link a bCourses site from a past term, please <a :href="`mailto:${$config.emailCourseCaptureSupport}`" target="_blank">
+                            contact Course Capture support<span class="sr-only"> (this email link opens a new tab)</span></a>.
+                        </v-col>
+                      </v-row>
+                      <v-row
+                        v-if="$currentUser.isAdmin"
+                        align="end"
+                        justify="start"
+                      >
+                        <v-col cols="9">
+                          <v-text-field
+                            id="input-canvas-site-id"
+                            v-model="pendingCanvasSiteId"
+                            label="Enter Canvas site id"
+                            :disabled="publishTypeUpdating"
+                            hide-details="auto"
+                            outlined
+                            dense
+                          >
+                          </v-text-field>
+                        </v-col>
+                        <v-col cols="3">
+                          <v-btn
+                            id="btn-canvas-site-add"
+                            aria-label="Add Canvas Site"
+                            color="success"
+                            :disabled="!pendingCanvasSiteId || !/^\d+$/.test(pendingCanvasSiteId) || isCanvasSiteIdStaged(pendingCanvasSiteId)"
+                            @click="addCanvasSiteById"
+                          >
+                            Add
+                          </v-btn>
+                        </v-col>
+                      </v-row>
+                      <v-row
+                        align="center"
+                        justify="start"
+                      >
+                        <v-col cols="12">
+                          <div
+                            v-for="(site, index) in publishCanvasSites"
+                            :id="`canvas-site-${site.canvasSiteId}`"
+                            :key="site.canvasSiteId"
+                            class="my-2"
+                          >
+                            {{ site.name }} ({{ site.courseCode }})
+                            <v-btn
+                              :id="`btn-canvas-site-remove-${site.canvasSiteId}`"
+                              :aria-label="`Remove ${site.name} (${site.courseCode})`"
+                              :disabled="publishTypeUpdating"
+                              small
+                              @click="removeCanvasSite(site.canvasSiteId, index)"
+                            >
+                              Remove
+                            </v-btn>
+                          </div>
+                        </v-col>
+                      </v-row>
+                    </div>
+                    <v-row
+                      align="center"
+                      justify="start"
+                    >
+                      <v-col cols="12">
+                        <div>
+                          <v-btn
+                            id="btn-publish-type-save"
+                            aria-label="Save Recording Placement"
+                            color="success"
+                            :disabled="publishTypeUpdating || (publishType && publishType.startsWith('kaltura_media_gallery') && !publishCanvasSites.length)"
+                            @click="updatePublishTypeClicked"
+                          >
+                            <v-progress-circular
+                              v-if="publishTypeUpdating"
+                              class="mr-2"
+                              color="primary"
+                              indeterminate
+                              size="18"
+                              width="3"
+                            ></v-progress-circular>
+                            {{ publishTypeUpdating ? 'Saving' : 'Save' }}
+                          </v-btn>
+                          <v-btn
+                            id="btn-publish-type-cancel"
+                            aria-label="Cancel Recording Placement Edit"
+                            color="default"
+                            :disabled="publishTypeUpdating"
+                            class="mx-2"
+                            @click="updatePublishTypeCancel"
+                          >
+                            Cancel
+                          </v-btn>
+                        </div>
+                      </v-col>
+                    </v-row>
+                  </v-container>
+                </v-card>
+              </v-col>
+            </v-row>
+            <v-row v-if="!$currentUser.isAdmin && $_.get(course, 'publishType', '') === 'kaltura_my_media'">
+              <v-col cols="12">
+                Based on the selected Recording Placement, please review the following KB articles:
+                <ul>
+                  <li>
+                    <a href="https://berkeley.service-now.com/kb?id=kb_article_view&sysparm_article=KB0013882" target="_blank">
+                      How to Publish from My Media
+                      <span class="sr-only"> (link opens new browser tab)</span>
+                    </a>
+                  </li>
+                  <li>
+                    <a href="https://berkeley.service-now.com/kb?id=kb_article_view&sysparm_article=KB0013623" target="_blank">
+                      How to Embed in bCourses using the Rich Content Editor
+                      <span class="sr-only"> (link opens new browser tab)</span>
+                    </a>
+                  </li>
+                  <li>
+                    <a href="https://berkeley.service-now.com/kb?id=kb_article_view&sysparm_article=KB0014115" target="_blank">
+                      How to Download the Second Stream of the Recording
+                      <span class="sr-only"> (link opens new browser tab)</span>
+                    </a>
+                  </li>
+                  <li>
+                    <a href="https://rtl.berkeley.edu/services-programs/course-capture/instructors-getting-started/course-capture-faq" target="_blank">
+                      Course Capture FAQ
+                      <span class="sr-only"> (link opens new browser tab)</span>
+                    </a>
+                  </li>
+                </ul>
+              </v-col>
+            </v-row>
+            <v-row v-if="!$currentUser.isAdmin && $_.get(course, 'publishType', '').startsWith('kaltura_media_gallery')">
+              <v-col cols="12">
+                Based on the selected Recording Placement, please review the following KB articles:
+                <ul>
+                  <li>
+                    <a href="https://berkeley.service-now.com/kb?id=kb_article_view&sysparm_article=KB0014032" target="_blank">
+                      How to Remove a Recording from the Media Gallery
+                      <span class="sr-only"> (link opens new browser tab)</span>
+                    </a>
+                  </li>
+                  <li>
+                    <a href="https://berkeley.service-now.com/kb?id=kb_article_view&sysparm_article=KB0014115" target="_blank">
+                      How to Download the Second Stream of the Recording
+                      <span class="sr-only"> (link opens new browser tab)</span>
+                    </a>
+                  </li>
+                  <li>
+                    <a href="https://rtl.berkeley.edu/services-programs/course-capture/instructors-getting-started/course-capture-faq" target="_blank">
+                      Course Capture FAQ
+                      <span class="sr-only"> (link opens new browser tab)</span>
+                    </a>
+                  </li>
+                </ul>
+              </v-col>
+            </v-row>
+            <v-row v-if="$currentUser.isAdmin">
+              <v-col cols="12">
+                <ScheduledCourse :course="course"></ScheduledCourse>
+              </v-col>
+            </v-row>
+          </v-container>
+          <v-container v-if="isCurrentTerm && capability && hasValidMeetingTimes && !course.deletedAt && (course.hasOptedOut || !course.scheduled)" class="elevation-2 pa-6">
+            <v-row>
+              <v-col class="font-weight-bold mb-1">
+                <span v-if="course.hasOptedOut && !course.scheduled" id="notice-opt-out" class="red--text">
+                  {{ $currentUser.isAdmin ? 'The' : 'Your' }} course is not scheduled for Course Capture because one or more instructors have opted out. To schedule recordings, please have all instructors remove their opt-out status.
+                </span>
+                <span v-if="course.hasOptedOut && course.scheduled" id="notice-opt-out-pending" class="red--text">
+                  {{ $currentUser.isAdmin ? 'The' : 'Your' }} course is scheduled for Course Capture, but will be unscheduled shortly because one or more instructors have opted out. To keep recordings scheduled, please have all instructors remove their opt-out status.
+                </span>
+                <span v-if="!course.hasOptedOut" id="notice-eligible-not-scheduled" class="green--text">
+                  This course is eligible for scheduling, but has not yet been scheduled. Instructors will be notified when scheduling has taken place.
+                </span>
+              </v-col>
+            </v-row>
+            <v-row
+              align="center"
+              justify="start"
+            >
+              <v-col id="instructors-list" cols="12">
+                <h4>
+                  Instructor(s):
+                </h4>
+                <div v-for="instructor in course.instructors" :id="`instructor-${instructor.uid}`" :key="instructor.uid">
+                  {{ instructor.name }} ({{ instructor.uid }})
+                  <span v-if="instructor.hasOptedOut" :id="`instructor-${instructor.uid}-opt-out`">
+                    (opted out)
+                  </span>
+                </div>
+              </v-col>
+            </v-row>
+          </v-container>
+          <v-container v-if="isCurrentTerm && !capability">
+            <v-row>
+              <div class="d-flex justify-start">
+                <div class="pr-2">
+                  <v-icon color="red">mdi-alert</v-icon>
+                </div>
+                <div id="course-not-eligible">
+                  This course is not eligible for Course Capture because
+                  <span v-if="location">{{ location }} is not capture-enabled.</span>
+                  <span v-if="!location">it has no meeting location.</span>
+                </div>
+              </div>
+            </v-row>
+          </v-container>
+          <v-container v-if="isCurrentTerm && capability && !hasValidMeetingTimes">
+            <v-row>
+              <div class="d-flex justify-start">
+                <div class="pr-2">
+                  <v-icon color="red">mdi-alert</v-icon>
+                </div>
+                <div id="invalid-meeting-times">
+                  This course is in a capture-enabled room but the meeting times are missing or invalid.
+                </div>
+              </div>
+            </v-row>
+          </v-container>
+          <v-container v-if="!isCurrentTerm">
+            <v-row>
+              <div class="d-flex justify-start">
+                <div class="pr-2">
+                  <v-icon color="red">mdi-alert</v-icon>
+                </div>
+                <div id="course-not-current">
+                  This course is not currently eligible for Course Capture.
+                </div>
+              </div>
+            </v-row>
+          </v-container>
+        </v-col>
+      </v-row>
+      <v-row v-if="$currentUser.isAdmin">
+        <v-col cols="12">
+          <v-container id="update-history" class="elevation-2 pa-6 mx-0 max-width-unset">
+            <h2>Update history</h2>
+            <div v-if="!course.updateHistory.length" id="no-updates">No updates.</div>
+            <v-data-table
+              v-if="course.updateHistory.length"
+              id="update-history-table"
+              caption="Course Update History"
+              disable-pagination
+              :headers="updateHistoryHeaders"
+              hide-default-footer
+              hide-default-header
+              :items="course.updateHistory"
+              :items-per-page="100"
+              class="elevation-1"
+            >
+              <template #header="{props: {headers: columns, options: {sortBy, sortDesc}}, on: {sort}}">
+                <thead>
+                  <tr>
+                    <th
+                      v-for="(column, index) in columns"
+                      :id="`update-history-${column.id}-th`"
+                      :key="index"
+                      :aria-label="column.text"
+                      :aria-sort="getAriaSortIndicator(column, sortBy, sortDesc)"
+                      class="text-start text-no-wrap"
+                      :class="{'sortable': column.sortable === false}"
+                      scope="col"
+                    >
+                      <v-btn
+                        :id="`update-history-sort-by-${column.id}-btn`"
+                        :aria-label="getSortButtonAriaLabel(column, sortBy, sortDesc)"
+                        class="font-size-12 font-weight-bold height-unset min-width-unset pa-1 text-transform-unset v-table-sort-btn-override"
+                        :class="{'icon-visible': sortBy[0] === column.value}"
+                        color="white"
+                        density="compact"
+                        plain
+                        @click="() => onClickSort(column, sort, sortBy, sortDesc)"
+                      >
+                        {{ column.text }}
+                        <v-icon :aria-hidden="true" small right>{{ getSortByIcon(column, sortBy, sortDesc) }}</v-icon>
+                      </v-btn>
+                    </th>
+                  </tr>
+                </thead>
+              </template>
+              <template #body="{items}">
+                <tbody>
+                  <tr v-for="(item, index) in items" :key="index">
+                    <td :id="`update-fieldName-${item.id}`" columnheader="update-history-fieldName-th">
+                      <span aria-hidden="true">{{ item.fieldName || '&mdash;' }}</span>
+                      <span class="sr-only">{{ item.fieldName || 'blank' }}</span>
+                    </td>
+                    <td :id="`update-fieldValueOld-${item.id}`" columnheader="update-history-fieldValueOld-th">
+                      <span aria-hidden="true">{{ item.fieldValueOld || '&mdash;' }}</span>
+                      <span class="sr-only">{{ item.fieldValueOld || 'blank' }}</span>
+                    </td>
+                    <td :id="`update-fieldValueNew-${item.id}`" columnheader="update-history-fieldValueNew-th">
+                      <span aria-hidden="true">{{ item.fieldValueNew || '&mdash;' }}</span>
+                      <span class="sr-only">{{ item.fieldValueNew || 'blank' }}</span>
+                    </td>
+                    <td :id="`update-requestedByName-${item.id}`" columnheader="update-history-requestedByName-th">
+                      <span aria-hidden="true">{{ item.requestedByName ? `${item.requestedByName} (${item.requestedByUid})` : '&mdash;' }}</span>
+                      <span class="sr-only">{{ item.requestedByName ? `${item.requestedByName} (${item.requestedByUid})` : 'blank' }}</span>
+                    </td>
+                    <td :id="`update-requestedAt-${item.id}`" columnheader="update-history-requestedAt-th">
+                      <span aria-hidden="true">{{ new Date(item.requestedAt).toLocaleString() || '&mdash;' }}</span>
+                      <span class="sr-only">{{ new Date(item.requestedAt).toLocaleString() || 'blank' }}</span>
+                    </td>
+                    <td :id="`update-publishedAt-${item.id}`" columnheader="update-history-publishedAt-th">
+                      <span aria-hidden="true">{{ item.publishedAt ? new Date(item.publishedAt).toLocaleString() : '&mdash;' }}</span>
+                      <span class="sr-only">{{ item.publishedAt ? new Date(item.publishedAt).toLocaleString() : 'blank' }}</span>
+                    </td>
+                    <td :id="`update-status-${item.id}`" columnheader="update-history-status-th">
+                      <span aria-hidden="true">{{ item.status || '&mdash;' }}</span>
+                      <span class="sr-only">{{ item.status || 'blank' }}</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </template>
+            </v-data-table>
+          </v-container>
+        </v-col>
+      </v-row>
+    </v-container>
+  </div>
+</template>
+
+<script setup>
+import {ref, reactive, computed, onMounted} from 'vue'
+import {useRoute} from 'vue-router'
+import CanvasCourseSite from '@/components/course/CanvasCourseSite'
+import CoursePageSidebar from '@/components/course/CoursePageSidebar'
+import PageTitle from '@/components/util/PageTitle'
+import PersonLookup from '@/components/util/PersonLookup'
+import ScheduledCourse from '@/components/course/ScheduledCourse'
+import {
+  deleteCourseNote,
+  getCourse, getCourseSite,
+  updateCollaborators,
+  updateCourseNote,
+  updatePublishType,
+  updateRecordingType
+} from '@/api/course'
+import {getAuditoriums} from '@/api/room'
+import {getCanvasSitesTeaching} from '@/api/user'
+import {alertScreenReader, putFocusNextTick, getCourseCodes, getTermName} from '@/lib/utils'
+import {useContextStore} from '@/stores/context'
+import {find, get, filter, isEmpty} from 'lodash'
+
+// Composable contexts
+const {config, currentUser, loadingStart, loadingComplete} = useContextStore()
+
+// State
+const loading = ref(true)
+const addCollaboratorError = ref('')
+const agreedToTerms = ref(false)
+const auditoriums = ref([])
+const capability = ref(null)
+const collaborators = ref([])
+const collaboratorsEditing = ref(false)
+const collaboratorsUpdating = ref(false)
+const course = ref({meetings: {eligible: [], ineligible: []}, instructors: [], collaborators: [], canvasSites: [], updateHistory: []})
+const courseDisplayTitle = ref('')
+const displayLabels = reactive({
+  kaltura_media_gallery: 'Publish to the Media Gallery (all members of the bCourses site will have access)',
+  kaltura_my_media: 'Place in My Media (I will decide if and how I want to share)',
+  presenter_presentation_audio: 'Camera Without Operator',
+  presenter_presentation_audio_with_operator: `Camera With Operator ($${config.courseCapturePremiumCost} fee)`
+})
+const hasValidMeetingTimes = ref(false)
+const instructors = ref([])
+const instructorProxies = ref([])
+const location = ref('')
+const noteBody = ref('')
+const noteEditing = ref(false)
+const noteUpdating = ref(false)
+const pendingCollaborator = ref(null)
+const pendingCanvasSite = ref(null)
+const pendingCanvasSiteId = ref(null)
+const publishCanvasSites = ref([])
+const publishCanvasSiteOptions = ref([])
+const publishType = ref('')
+const publishTypeEditing = ref(false)
+const publishTypeOptions = ref([])
+const publishTypeUpdating = ref(false)
+const recordingType = ref('')
+const recordingTypeEditing = ref(false)
+const recordingTypeOptions = ref([])
+const recordingTypeUpdating = ref(false)
+const updateHistoryHeaders = ref([
+  {text: 'Field', value: 'fieldName'},
+  {text: 'Old Value', value: 'fieldValueOld'},
+  {text: 'New Value', value: 'fieldValueNew'},
+  {text: 'Requested by', value: 'requestedByName', width: '130px'},
+  {text: 'Requested at', value: 'requestedAt', width: '130px'},
+  {text: 'Published at', value: 'publishedAt', width: '130px'},
+  {text: 'Status', value: 'status'}
+])
+
+// Computed
+// const disableSubmit = computed(() => !agreedToTerms.value || !publishType.value || !recordingType.value)
+const isCurrentTerm = computed(() => course.value.termId === config.currentTermId)
+const recordingTypeEditable = computed(() =>
+  recordingTypeOptions.value.length > 1 &&
+  (currentUser.isAdmin || course.value.recordingType !== 'presenter_presentation_audio_with_operator')
+)
+const updatesQueued = computed(() => !!course.value.updateHistory.find(u => u.status === 'queued'))
+
+onMounted(() => {
+  loadingStart()
+  const {params} = useRoute()
+  getCourse(params.termId, params.sectionId)
+    .then(data => {
+      course.value = data
+      agreedToTerms.value = currentUser.isAdmin
+      instructors.value = data.instructors.filter(i => i.roleCode !== 'APRX')
+      instructorProxies.value = data.instructors.filter(i => i.roleCode === 'APRX')
+      const eligible = data.meetings.eligible
+      const meeting = eligible[0] || data.meetings.ineligible[0]
+      capability.value = meeting.room?.capability
+      location.value = meeting.room?.location
+      hasValidMeetingTimes.value = eligible.some(m => m.startDate && m.startTime && m.endDate && m.endTime)
+      courseDisplayTitle.value = getCourseCodes(data)[0]
+      collaborators.value = [...data.collaborators]
+      noteBody.value = data.note
+      publishType.value = data.publishType
+      recordingType.value = data.recordingType
+      publishCanvasSites.value = [...data.canvasSites]
+      recordingTypeOptions.value = meeting.room ? Object.keys(meeting.room.recordingTypeOptions || {}) : []
+      publishTypeOptions.value = Object.keys(config.publishTypeOptions).sort().reverse()
+      getAuditoriums().then(aud => {
+        auditoriums.value = aud
+        if (!currentUser.isAdmin) {
+          getCanvasSitesTeaching(currentUser.uid).then(sites => {
+            publishCanvasSiteOptions.value = sites
+            loadingComplete(courseDisplayTitle.value)
+          })
+        } else {
+          loadingComplete(courseDisplayTitle.value)
+        }
+      })
+    })
+})
+
+const editNote = () => {
+  noteEditing.value = true
+  putFocusNextTick('note-body-edit')
+}
+
+const getAriaSortIndicator = (column, sortBy, sortDesc) => {
+  if (column.value && sortBy[0] === column.value) {
+    return sortDesc[0] ? 'descending' : 'ascending'
+  } else {
+    return undefined
+  }
+}
+
+const getSortButtonAriaLabel = (column, sortBy, sortDesc) => {
+  let label = `${column.text}: `
+  if (sortBy[0] === column.value) {
+    label += `sorted ${sortDesc[0] ? 'descending' : 'ascending'}.`
+    label += ` Activate to sort ${sortDesc[0] ? 'ascending' : 'descending'}.`
+  } else {
+    label += 'not sorted. Activate to sort ascending.'
+  }
+  return label
+}
+
+const cancelNote = () => {
+  noteBody.value = course.value.note
+  noteEditing.value = false
+  noteUpdating.value = false
+  alertScreenReader('Note edit canceled.')
+  putFocusNextTick('btn-edit-note')
+}
+
+const saveNote = () => {
+  noteUpdating.value = true
+  updateCourseNote(course.value.termId, course.value.sectionId, noteBody.value)
+    .then(data => {
+      course.value.note = data.note
+      noteBody.value = data.note
+      noteEditing.value = false
+      noteUpdating.value = false
+      alertScreenReader('Note updated.')
+      putFocusNextTick('btn-edit-note')
+    })
+}
+
+const collaboratorLabel = (collaborator) => {
+  let label = `${collaborator.firstName} ${collaborator.lastName}`
+  if (collaborator.email) label += ` (${collaborator.email})`
+  return `${label} (${collaborator.uid})`
+}
+
+const deleteNote = () => {
+  noteUpdating.value = true
+  deleteCourseNote(course.value.termId, course.value.sectionId)
+    .then(() => {
+      course.value.note = null
+      noteBody.value = null
+      noteUpdating.value = false
+      alertScreenReader('Note deleted.')
+      putFocusNextTick('btn-edit-note')
+    })
+}
+
+const addCollaboratorConfirm = () => {
+  const exists = collaborators.value.some(c => c.uid === pendingCollaborator.value.uid)
+  if (exists) {
+    addCollaboratorError.value = `${pendingCollaborator.value.firstName} ${pendingCollaborator.value.lastName} is already a collaborator.`
+    alertScreenReader(addCollaboratorError.value)
+  } else {
+    addCollaboratorError.value = null
+    collaborators.value.push(pendingCollaborator.value)
+    alertScreenReader(`${pendingCollaborator.value.firstName} ${pendingCollaborator.value.lastName} added as a collaborator.`)
+  }
+  pendingCollaborator.value = null
+  putFocusNextTick('input-collaborator-lookup-autocomplete')
+}
+
+const addCanvasSiteById = () => {
+  if (this.pendingCanvasSiteId.value && !this.isCanvasSiteIdStaged(this.pendingCanvasSiteId)) {
+    getCourseSite(this.pendingCanvasSiteId.value).then(data => {
+      if (data) {
+        this.publishCanvasSites.value.push(data)
+        alertScreenReader(`${data.name} added.`)
+        putFocusNextTick('input-canvas-site-id')
+      }
+    })
+  }
+  this.pendingCanvasSiteId.value = null
+}
+
+const addCanvasSiteConfirm = () => {
+  if (this.pendingCanvasSite && !this.isCanvasSiteIdStaged(this.pendingCanvasSite.canvasSiteId)) {
+    this.publishCanvasSites.push(this.pendingCanvasSite)
+  }
+  alertScreenReader(`${this.pendingCanvasSite.name} added.`)
+  putFocusNextTick('select-canvas-site')
+  this.pendingCanvasSite = null
+}
+
+const addCollaboratorPending = (collaborator) => {
+  if (collaborator) {
+    this.pendingCollaborator.value = collaborator
+    this.addCollaboratorError.value = null
+    this.$nextTick(() => {
+      this.alertScreenReader(`${this.pendingCollaborator.value.firstName} ${this.pendingCollaborator.value.lastName} selected.`)
+    })
+  }
+}
+
+const removeCanvasSite = (canvasSiteId, index) => {
+  const nextFocusIndex = (index + 1 === this.$_.size(this.publishCanvasSites)) ? index - 1 : index + 1
+  const nextFocusSiteId = get(this.publishCanvasSites, `${nextFocusIndex}.canvasSiteId`)
+  const canvasSite = find(this.publishCanvasSites, c => c.canvasSiteId === canvasSiteId)
+  const canvasSiteName = canvasSite.name || ''
+  this.publishCanvasSites = filter(this.publishCanvasSites, c => c.canvasSiteId !== canvasSiteId)
+  this.alertScreenReader(`Removed bCourses site ${canvasSiteName}.`)
+  let nextFocusId = `btn-canvas-site-remove-${nextFocusSiteId}`
+  if (isEmpty(this.publishCanvasSites) || !nextFocusSiteId) {
+    nextFocusId = this.$currentUser.isAdmin ? 'input-canvas-site-id' : 'select-canvas-site'
+  }
+  putFocusNextTick(nextFocusId)
+}
+
+const removeCollaborator = (uid, index) => {
+  const collaborator = collaborators.value.find(c => c.uid === uid)
+  collaborators.value = collaborators.value.filter(c => c.uid !== uid)
+  alertScreenReader(`${collaborator.firstName} ${collaborator.lastName} removed.`)
+  const nextId = collaborators.value[index]?.uid || null
+  putFocusNextTick(nextId ? `btn-collaborator-remove-${nextId}` : 'input-collaborator-lookup-autocomplete')
+}
+
+const getSortByIcon = (column, sortBy, sortDesc) => {
+  return sortBy[0] === column.value && sortDesc[0] ? 'mdi-arrow-down' : 'mdi-arrow-up'
+}
+
+const isCanvasSiteIdStaged = (siteId) => {
+  return !!this.$_.find(this.publishCanvasSites, {'canvasSiteId': parseInt(siteId, 10)})
+}
+
+const onClickSort = (column, sort, sortBy, sortDesc) => {
+  const sortDirection = this.$_.first(sortBy) === column.value && !sortDesc[0] ? 'descending' : 'ascending'
+  sort(column.value)
+  this.alertScreenReader(`Sorted by ${column.text}, ${sortDirection}`)
+  this.$putFocusNextTick(`update-history-sort-by-${column.id}-btn`)
+}
+
+const onPublishTypeChange = (option, idx) => {
+  publishType.value = publishType.value === option ? publishTypeOptions.value[idx - 1] : option
+}
+
+const onRecordingTypeChange = (option, idx) => {
+  recordingType.value = recordingType.value === option ? recordingTypeOptions.value[idx - 1] : option
+}
+
+const toggleCollaboratorsEditing = () => {
+  collaboratorsEditing.value = true
+  putFocusNextTick('input-collaborator-lookup-autocomplete')
+}
+
+const togglePublishTypeEditing = () => {
+  publishTypeEditing.value = true
+  putFocusNextTick('select-publish-type')
+}
+
+const toggleRecordingTypeEditing = () => {
+  recordingTypeEditing.value = true
+  putFocusNextTick('select-recording-type')
+}
+
+const updateCollaboratorsClicked = () => {
+  collaboratorsUpdating.value = true
+  updateCollaborators(
+    collaborators.value.map(c => c.uid),
+    course.value.sectionId,
+    course.value.termId
+  ).then(data => {
+    alertScreenReader('Collaborators updated.')
+    putFocusNextTick('btn-collaborators-edit')
+    course.value.collaborators = data.collaborators
+    collaboratorsEditing.value = false
+    collaboratorsUpdating.value = false
+    addCollaboratorError.value = null
+  })
+}
+
+const updateCollaboratorsCancel = () => {
+  alertScreenReader('Collaborator edit cancelled.')
+  putFocusNextTick('btn-collaborators-edit')
+  collaboratorsEditing.value = false
+  collaboratorsUpdating.value = false
+  addCollaboratorError.value = null
+  collaborators.value = [...course.value.collaborators]
+}
+
+const updatePublishTypeClicked = () => {
+  publishTypeUpdating.value = true
+  updatePublishType(
+    publishCanvasSites.value.map(s => s.canvasSiteId),
+    publishType.value,
+    course.value.sectionId,
+    course.value.termId
+  ).then(data => {
+    const message = `Recording placement updated to ${data.publishTypeName}.`
+    alertScreenReader(message)
+    putFocusNextTick('btn-publish-type-edit')
+    course.value.canvasSiteIds = data.canvasSiteIds
+    course.value.canvasSites = data.canvasSites
+    course.value.publishType = data.publishType
+    course.value.publishTypeName = data.publishTypeName
+    publishTypeEditing.value = false
+    publishTypeUpdating.value = false
+  })
+}
+
+const updatePublishTypeCancel = () => {
+  alertScreenReader('Recording placement edit cancelled.')
+  putFocusNextTick('btn-publish-type-edit')
+  publishTypeEditing.value = false
+  publishType.value = course.value.publishType
+  publishCanvasSites.value = [...course.value.canvasSites]
+}
+
+const updateRecordingTypeClicked = () => {
+  recordingTypeUpdating.value = true
+  updateRecordingType(
+    recordingType.value,
+    course.value.sectionId,
+    course.value.termId
+  ).then(data => {
+    const message = `Recording type updated to ${displayLabels[recordingType.value]}.`
+    alertScreenReader(message)
+    putFocusNextTick('btn-recording-type-edit')
+    course.value.recordingType = data.recordingType
+    course.value.recordingTypeName = data.recordingTypeName
+    recordingTypeEditing.value = false
+    recordingTypeUpdating.value = false
+  })
+}
+
+const updateRecordingTypeCancel = () => {
+  alertScreenReader('Recording type edit cancelled.')
+  putFocusNextTick('btn-recording-type-edit')
+  recordingTypeEditing.value = false
+  recordingType.value = course.value.recordingType
+}
+
+</script>
+
