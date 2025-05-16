@@ -1,8 +1,8 @@
 <template>
-  <div class="banner">
+  <div class="banner ml-4">
     <transition><div v-if="showPrefix">This is</div></transition>
     <b>
-      <div class="banner-inner" :style="`color: ${contextStore.config.uxBannerColor}`">
+      <div class="banner-inner text-white">
         Course Capture<br />
         {{ contextStore.config.currentTermName }}
       </div>
@@ -25,6 +25,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
+
 .banner {
   font: normal 40px/50px Montserrat, sans-serif;
   color: #999;
