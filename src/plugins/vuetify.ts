@@ -6,6 +6,7 @@ import {DatePicker} from 'v-calendar'
 import {VApp} from 'vuetify/components/VApp'
 import {VAppBar} from 'vuetify/components/VAppBar'
 import {VBanner} from 'vuetify/components/VBanner'
+import {VBottomSheet} from 'vuetify/components/VBottomSheet'
 import {VBtn} from 'vuetify/components/VBtn'
 import {VCard, VCardActions, VCardSubtitle, VCardText, VCardTitle} from 'vuetify/components/VCard'
 import {VCol, VContainer, VRow, VSpacer} from 'vuetify/components/VGrid'
@@ -22,6 +23,7 @@ import {VNavigationDrawer} from 'vuetify/components/VNavigationDrawer'
 import {VPagination} from 'vuetify/components/VPagination'
 import {VProgressCircular} from 'vuetify/components/VProgressCircular'
 import {VSelect} from 'vuetify/components/VSelect'
+import {VSheet} from 'vuetify/components/VSheet'
 import {VSnackbar, VSwitch} from 'vuetify/components'
 import {VTable} from 'vuetify/components/VTable'
 import {VTextField} from 'vuetify/components/VTextField'
@@ -34,6 +36,7 @@ export default createVuetify({
     VApp,
     VAppBar,
     VBanner,
+    VBottomSheet,
     VBtn,
     VCard,
     VCardActions,
@@ -59,6 +62,7 @@ export default createVuetify({
     VProgressCircular,
     VRow,
     VSelect,
+    VSheet,
     VSnackbar,
     VSpacer,
     VSwitch,
@@ -67,9 +71,15 @@ export default createVuetify({
     VTooltip
   },
   defaults: {
+    VDataTable: {
+      hover: true
+    },
     VSelect: {
       density: 'comfortable',
       variant: 'underlined'
+    },
+    VTable: {
+      hover: true
     },
     VTextField: {
       density: 'comfortable',
@@ -96,8 +106,8 @@ export default createVuetify({
           'header-background': '#2a5f83',
           'icon-nav-dark-mode': '#2a5f83',
           'icon-nav-default': '#fff',
-          'sidebar': '#378dc5',
-          'table-border': '#979797'
+          'table-border': '#979797',
+          'tertiary': '#378dc5',
         }
       },
       dark: {
@@ -111,8 +121,8 @@ export default createVuetify({
           'header-background': '#122b3c',
           'icon-nav-dark-mode': '#2a5f83',
           'icon-nav-default': '#378dc5',
-          'sidebar': '#173c55',
-          'table-border': '#378dc5'
+          'table-border': '#378dc5',
+          'tertiary': '#173c55',
         }
       }
     }

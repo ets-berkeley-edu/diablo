@@ -1,5 +1,5 @@
 <template>
-  <v-card v-if="!loading" class="border-sm" width="calc(100vw - 95px)">
+  <v-card v-if="!loading" class="border-sm">
     <v-card-title>
       <PageTitle :icon="mdiVideoOffOutline" text="Blackouts" />
     </v-card-title>

@@ -2,10 +2,11 @@
   <v-app>
     <v-navigation-drawer
       v-model="drawer"
+      color="tertiary"
+      :expand-on-hover="true"
       permanent
       rail
       expand-on-hover
-      color="primary"
       role="navigation"
       class="sidebar-nav"
     >
@@ -104,8 +105,7 @@
         </v-list>
       </v-menu>
     </v-app-bar>
-
-    <v-main id="content" class="ma-3">
+    <v-main id="content" class="ma-3" width="calc(100vw - 38px)">
       <Snackbar />
       <Spinner v-if="loading" />
       <router-view :key="stripAnchorRef(route.fullPath)" />

@@ -24,7 +24,5 @@ export default {
 
 <style>
 @import 'v-calendar/style.css';
-@import './assets/styles/diablo-dark.css';
 @import './assets/styles/diablo-global.css';
-@import './assets/styles/diablo-light.css';
 </style>

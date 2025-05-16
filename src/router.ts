@@ -6,6 +6,7 @@ import BaseView from '@/views/BaseView.vue'
 import Blackouts from '@/views/blackout/Blackouts.vue'
 import ErrorView from '@/views/Error.vue'
 import Home from '@/views/Home.vue'
+import Jobs from '@/views/Jobs.vue'
 import Login from '@/views/Login.vue'
 import NotFound from '@/views/NotFound.vue'
 import Ouija from '@/views/Ouija.vue'
@@ -107,13 +108,13 @@ const router = createRouter({
       //       title: 'Edit Email Template'
       //     }
       //   },
-      //   {
-      //     path: '/jobs',
-      //     component: Jobs,
-      //     meta: {
-      //       title: 'The Chancel'
-      //     }
-      //   },
+        {
+          path: '/jobs',
+          component: Jobs,
+          meta: {
+            title: 'The Chancel'
+          }
+        },
         {
           path: '/ouija',
           component: Ouija,
