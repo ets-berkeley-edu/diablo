@@ -32,6 +32,7 @@
             :append-icon="mdiMagnify"
             :aria-describedby="undefined"
             aria-label="Search courses table"
+            class="pb-2"
             clearable
             :disabled="isDownloading"
             hide-details
@@ -42,6 +43,7 @@
             id="ouija-filter-options"
             v-model="selectedFilter"
             aria-label="Filter courses table"
+            class="pb-2"
             color="secondary"
             :disabled="isDownloading"
             :items="keys(contextStore.config.searchFilterOptions)"

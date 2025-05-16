@@ -17,13 +17,11 @@ export async function devAuthLogIn(uid: string, password: string) {
 }
 
 export function getCasLoginURL() {
-  return axios.get(
-    `${getApiBaseUrl()}/api/auth/cas_login_url`
-  )
+  return axios.get(`${getApiBaseUrl()}/api/auth/cas_login_url`)
+    .then(response => response.data)
 }
 
 export function getCasLogoutUrl() {
-  return axios.get(
-    `${getApiBaseUrl()}/api/auth/logout`
-  )
+  return axios.get(`${getApiBaseUrl()}/api/auth/logout`)
+    .then(response => response.data)
 }
