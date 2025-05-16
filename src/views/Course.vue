@@ -776,10 +776,9 @@ import {useContextStore} from '@/stores/context'
 import {find, get, filter, isEmpty} from 'lodash'
 
 // Composable contexts
-const {config, currentUser, loadingStart, loadingComplete} = useContextStore()
+const {config, currentUser, loading, loadingStart, loadingComplete} = useContextStore()
 
 // State
-const loading = ref(true)
 const addCollaboratorError = ref('')
 const agreedToTerms = ref(false)
 const auditoriums = ref([])
