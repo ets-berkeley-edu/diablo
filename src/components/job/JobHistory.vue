@@ -130,10 +130,10 @@ const props = defineProps({
 })
 
 const headers = [
-  {text: 'Key', value: 'jobKey'},
-  {text: 'Status', value: 'failed'},
-  {text: 'Started', value: 'startedAt'},
-  {text: 'Finished', value: 'finishedAt'}
+  {title: 'Key', value: 'jobKey'},
+  {title: 'Status', value: 'failed'},
+  {title: 'Started', value: 'startedAt'},
+  {title: 'Finished', value: 'finishedAt'}
 ]
 const itemsPerPage = 50
 const pageCurrent = ref(1)

@@ -1,4 +1,4 @@
-import {startsWith, filter, split} from 'lodash'
+import {each, filter, split, startsWith, trim} from 'lodash'
 import {nextTick} from 'vue'
 import {useContextStore} from '@/stores/context'
 import type ScrollLogicalPosition from 'typescript'
@@ -11,6 +11,12 @@ export function alertScreenReader(message: string) {
 
 export function getCourseCodes(course) {
   return course.label.split('|').map((l: string) => l.trim())
+}
+
+export function getSelectOptionsFromObject(obj: any, isDisabled: Function) {
+  const options: Array<any> = []
+  each(obj, (text, value) => options.push({text, value, disabled: isDisabled(value)}))
+  return options
 }
 
 export function getTermName(termId) {
@@ -54,6 +60,12 @@ export function putFocusNextTick(id: string, {scroll=true, scrollBlock='center',
 
 export function stripAnchorRef(path: string) {
   return split(path, '#', 1)[0]
+}
+
+export function stripHtmlAndTrim(html: string) {
+  let text = html && html.replace(/<([^>]+)>/ig,'')
+  text = text && text.replace(/&nbsp;/g, '')
+  return trim(text)
 }
 
 export function summarize(courses) {

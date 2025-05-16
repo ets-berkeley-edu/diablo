@@ -1,5 +1,5 @@
 <template>
-  <div v-if="!loading" class="pt-2">
+  <div v-if="!contextStore.loading" class="pt-2">
     <v-card class="border-sm mb-4">
       <v-card-title>
         <PageTitle

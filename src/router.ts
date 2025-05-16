@@ -4,6 +4,8 @@ import {useContextStore} from '@/stores/context'
 import {requiresAdmin, requiresInstructor} from '@/auth'
 import BaseView from '@/views/BaseView.vue'
 import Blackouts from '@/views/blackout/Blackouts.vue'
+import EditEmailTemplate from '@/views/email/EditEmailTemplate.vue'
+import EmailTemplates from '@/views/email/EmailTemplates.vue'
 import ErrorView from '@/views/Error.vue'
 import Home from '@/views/Home.vue'
 import Jobs from '@/views/Jobs.vue'
@@ -87,27 +89,27 @@ const router = createRouter({
             title: 'Blackouts'
           }
         },
-      //   {
-      //     path: '/email/templates',
-      //     component: EmailTemplates,
-      //     meta: {
-      //       title: 'Email Templates'
-      //     }
-      //   },
-      //   {
-      //     path: '/email/template/create/:type',
-      //     component: EditEmailTemplate,
-      //     meta: {
-      //       title: 'Create Email Template'
-      //     }
-      //   },
-      //   {
-      //     path: '/email/template/edit/:id',
-      //     component: EditEmailTemplate,
-      //     meta: {
-      //       title: 'Edit Email Template'
-      //     }
-      //   },
+        {
+          path: '/email/templates',
+          component: EmailTemplates,
+          meta: {
+            title: 'Email Templates'
+          }
+        },
+        {
+          path: '/email/template/create/:type',
+          component: EditEmailTemplate,
+          meta: {
+            title: 'Create Email Template'
+          }
+        },
+        {
+          path: '/email/template/edit/:id',
+          component: EditEmailTemplate,
+          meta: {
+            title: 'Edit Email Template'
+          }
+        },
         {
           path: '/jobs',
           component: Jobs,

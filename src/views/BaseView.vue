@@ -3,10 +3,9 @@
     <v-navigation-drawer
       v-model="drawer"
       color="tertiary"
-      :expand-on-hover="true"
+      expand-on-hover
       permanent
       rail
-      expand-on-hover
       role="navigation"
       class="sidebar-nav"
     >

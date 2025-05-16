@@ -1,5 +1,5 @@
 <template>
-  <v-card v-if="!loading" class="border-sm">
+  <v-card v-if="!contextStore.loading" class="border-sm">
     <v-card-title>
       <PageTitle :icon="mdiVideoOffOutline" text="Blackouts" />
     </v-card-title>
@@ -28,7 +28,7 @@
               :class="column.class"
               scope="col"
             >
-              {{ column.text }}
+              {{ column.title }}
             </th>
           </tr>
         </template>
@@ -76,10 +76,10 @@ import {useContextStore} from '@/stores/context'
 const blackouts = ref([])
 const contextStore = useContextStore()
 const headers = [
-  {text: 'Name', value: 'name'},
-  {text: 'Start Date', value: 'startDate'},
-  {text: 'End Date', value: 'endDate'},
-  {text: 'Delete', class: 'text-center', value: 'delete'}
+  {title: 'Name', value: 'name'},
+  {title: 'Start Date', value: 'startDate'},
+  {title: 'End Date', value: 'endDate'},
+  {title: 'Delete', class: 'text-center', value: 'delete'}
 ]
 const isRefreshing = ref(false)
 
