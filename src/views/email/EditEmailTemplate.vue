@@ -38,7 +38,12 @@
       </v-row>
       <v-row class="mt-4">
         <v-col>
-          <!-- <RichTextEditor :model-value="message" /> -->
+          <RichTextEditor
+            id-prefix="template-body"
+            :model-value="message"
+            placeholder="Message"
+            @update:modelValue="v => (message = v)"
+          />
         </v-col>
       </v-row>
       <v-row>
@@ -49,6 +54,7 @@
           <div class="d-flex">
             <v-btn
               id="save-email-template"
+              class="mr-2"
               color="primary"
               :disabled="disableSave"
               @click="createTemplate"
@@ -57,8 +63,7 @@
             </v-btn>
             <v-btn
               id="cancel-edit-of-email-template"
-              text
-              color="accent"
+              variant="text"
               @click="cancel"
             >
               Cancel
@@ -77,12 +82,13 @@ import {mdiEmailEditOutline} from '@mdi/js'
 import {useRoute, useRouter} from 'vue-router'
 import {alertScreenReader, stripHtmlAndTrim} from '@/lib/utils'
 import PageTitle from '@/components/util/PageTitle'
+import RichTextEditor from '@/components/util/RichTextEditor'
 import TemplateCodesDialog from '@/components/email/TemplateCodesDialog'
 import {createEmailTemplate, getEmailTemplate, updateEmailTemplate} from '@/api/email'
 import {useContextStore} from '@/stores/context'
 
 const contextStore = useContextStore()
-const message = ref()
+const message = ref('')
 const name = ref()
 const pageTitle = ref('')
 const route = useRoute()
@@ -135,13 +141,3 @@ const createTemplate = () => {
   }
 }
 </script>
-
-<style>
-.tiptap p.editor-empty:first-child::before {
-  color: #adb5bd;
-  content: attr(data-placeholder);
-  float: left;
-  height: 0;
-  pointer-events: none;
-}
-</style>

@@ -3,6 +3,7 @@ import {aliases, mdi} from 'vuetify/iconsets/mdi-svg'
 import colors from 'vuetify/lib/util/colors'
 import {createVuetify} from 'vuetify'
 import {DatePicker} from 'v-calendar'
+import {EditorContent} from '@tiptap/vue-3'
 import {VApp} from 'vuetify/components/VApp'
 import {VAppBar} from 'vuetify/components/VAppBar'
 import {VBanner} from 'vuetify/components/VBanner'
@@ -33,6 +34,7 @@ import {VDivider} from 'vuetify/components/VDivider'
 export default createVuetify({
   components: {
     DatePicker,
+    EditorContent,
     VApp,
     VAppBar,
     VBanner,
