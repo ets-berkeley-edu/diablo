@@ -3,7 +3,7 @@
     <v-container v-if="!contextStore.loading" fluid>
       <v-row class="align-start d-flex justify-space-between pb-2" no-gutters>
         <PageTitle :icon="mdiEmailEditOutline" :text="pageTitle" />
-        <h2 class="pt-4 title">
+        <h2 class="pt-6">
           <span class="font-weight-bold">Type:</span>&nbsp;&nbsp;
           <span id="template-type-name" class="font-italic">{{ typeName }}</span>
         </h2>
@@ -42,16 +42,16 @@
             id-prefix="template-body"
             :model-value="message"
             placeholder="Message"
-            @update:modelValue="v => (message = v)"
+            @update:model-value="v => (message = v)"
           />
         </v-col>
       </v-row>
       <v-row>
-        <v-col cols="9">
+        <v-col cols="6">
           <TemplateCodesDialog />
         </v-col>
-        <v-col cols="3">
-          <div class="d-flex">
+        <v-col cols="6">
+          <div class="d-flex justify-end">
             <v-btn
               id="save-email-template"
               class="mr-2"
@@ -132,8 +132,8 @@ const createTemplate = () => {
     alertScreenReader(`Email template '${templateType.value}' ${action}.`)
     router.push({path: '/email/templates'})
   }
-  if (disableSave) {
-    reportError('You must complete the required form fields.')
+  if (disableSave.value) {
+    contextStore.snackbarReportError('You must complete the required form fields.')
   } else if (templateId.value) {
     updateEmailTemplate(templateId.value, templateType.value, name.value, subjectLine.value, message.value).then(() => done('updated'))
   } else {

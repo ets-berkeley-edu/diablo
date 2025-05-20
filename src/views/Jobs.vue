@@ -16,6 +16,7 @@
           :headers="headers"
           hide-default-footer
           :items="jobSchedule.jobs"
+          :items-per-page="-1"
           no-data-text="No jobs"
         >
           <template #headers="{columns}">

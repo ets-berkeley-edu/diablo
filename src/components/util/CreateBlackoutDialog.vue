@@ -16,7 +16,7 @@
     </template>
     <v-card class="modal-content">
       <v-card-title class="pb-1">
-        <h2 id="blackout-modal-header" class="title">Create New Blackout</h2>
+        <h2 id="blackout-modal-header">Create New Blackout</h2>
       </v-card-title>
       <v-card-text>
         <div class="pb-2">

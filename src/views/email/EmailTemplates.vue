@@ -42,9 +42,11 @@
         </v-row>
         <v-data-table
           caption="Email templates"
+          disable-pagination
           :headers="headers"
           hide-default-footer
           :items="emailTemplates"
+          :items-per-page="-1"
           :loading="refreshing"
           no-results-text="No matching email templates"
         >

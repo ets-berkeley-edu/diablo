@@ -673,7 +673,6 @@
               v-if="course.updateHistory.length"
               id="update-history-table"
               caption="Course Update History"
-              disable-pagination
               :headers="updateHistoryHeaders"
               hide-default-footer
               hide-default-header

@@ -3,21 +3,23 @@
     <v-dialog
       v-model="dialog"
       aria-labelledby="template-codes-modal-header"
+      max-width="800"
+      min-width="500"
       persistent
       role="dialog"
-      width="500"
+      width="50%"
     >
       <template #activator="{props: activatorProps}">
         <v-btn
           id="btn-email-template-codes"
-          color="secondary"
+          color="primary"
           variant="text"
           v-bind="activatorProps"
         >
           Template Codes
         </v-btn>
       </template>
-      <v-card class="pt-2">
+      <v-card class="modal-content">
         <v-card-title>
           <h2 id="template-codes-modal-header" class="title">Template Codes</h2>
         </v-card-title>

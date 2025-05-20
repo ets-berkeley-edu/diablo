@@ -15,6 +15,7 @@
         :headers="headers"
         hide-default-footer
         :items="blackouts"
+        :items-per-page="-1"
         :loading="isRefreshing"
         no-results-text="No matching blackouts"
       >

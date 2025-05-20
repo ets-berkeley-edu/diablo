@@ -6,6 +6,7 @@
         :id="`${idPrefix}-editor-toolbar-btn-${button.key}`"
         :key="button.key"
         :active="button.isActive ? button.isActive() : editor.isActive(button.key)"
+        :aria-pressed="button.isActive ? button.isActive() : editor.isActive(button.key)"
         class="ma-1"
         :icon="button.icon"
         size="30"
@@ -13,6 +14,47 @@
         variant="text"
         @click="button.onClick"
       />
+      <v-dialog
+        v-model="linkDialog"
+        :aria-labelledby="`${idPrefix}-link-dialog-header`"
+        max-width="600"
+        min-width="400"
+        persistent
+        role="dialog"
+        width="50%"
+        @after-enter="() => putFocusNextTick(`${props.idPrefix}-link-url-input`)"
+        @after-leave="onCloseLinkDialog"
+      >
+        <v-card class="modal-content">
+          <v-card-title>
+            <h2 :id="`${idPrefix}-link-dialog-header`">Create a Link</h2>
+          </v-card-title>
+          <v-card-text class="py-1">
+            <v-text-field
+              :id="`${idPrefix}-link-url-input`"
+              v-model="linkUrl"
+              label="URL"
+            ></v-text-field>
+          </v-card-text>
+          <v-card-actions>
+            <v-btn
+              :id="`${idPrefix}-link-url-btn-apply`"
+              color="primary"
+              density="comfortable"
+              text="Apply"
+              variant="flat"
+              @click="createLink"
+            />
+            <v-btn
+              :id="`${idPrefix}-link-url-btn-cancel`"
+              density="comfortable"
+              text="Cancel"
+              variant="text"
+              @click="() => linkDialog = false"
+            />
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
     </div>
     <EditorContent
       :id="`${idPrefix}-editor-content`"
@@ -23,7 +65,7 @@
 </template>
 
 <script setup>
-import {defineEmits, defineProps, onBeforeUnmount} from 'vue'
+import {defineEmits, defineProps, onBeforeUnmount, ref} from 'vue'
 import Link from '@tiptap/extension-link'
 import {
   mdiCodeTags,
@@ -47,6 +89,7 @@ import Placeholder from '@tiptap/extension-placeholder'
 import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
 import {useEditor, EditorContent} from '@tiptap/vue-3'
+import {putFocusNextTick} from '@/lib/utils'
 
 const props = defineProps({
   idPrefix: {
@@ -85,6 +128,8 @@ const editor = useEditor({
     emit('update:modelValue', currentEditor.getHTML())
   }
 })
+const linkDialog = ref(false)
+const linkUrl = ref('')
 const toolbarButtons = [
   {
     key: 'undo',
@@ -112,11 +157,15 @@ const toolbarButtons = [
       if (editor.value.isActive('link')) {
         editor.value.chain().focus().unsetLink().run()
       } else {
-        // TODO: popover for entering the URL?
-        const url = editor.value.getAttributes('link').href
-        editor.value.chain().focus().extendMarkRange('link').setLink({href: url}).run()
+        linkDialog.value = true
       }
     }
+  },
+  {
+    key: 'bold',
+    label: 'Bold',
+    icon: mdiFormatBold,
+    onClick: () => editor.value.chain().focus().toggleBold().run()
   },
   {
     key: 'underline',
@@ -170,12 +219,6 @@ const toolbarButtons = [
     onClick: () => editor.value.chain().focus().toggleHeading({level: 3}).run()
   },
   {
-    key: 'bold',
-    label: 'Bold',
-    icon: mdiFormatBold,
-    onClick: () => editor.value.chain().focus().toggleBold().run()
-  },
-  {
     key: 'code',
     label: 'Code',
     icon: mdiCodeTags,
@@ -198,11 +241,21 @@ const toolbarButtons = [
 onBeforeUnmount(() => {
   editor.value.destroy()
 })
+
+const createLink = () => {
+  editor.value.chain().focus().extendMarkRange('link').setLink({href: linkUrl.value}).run()
+  linkDialog.value = false
+}
+
+const onCloseLinkDialog = () => {
+  linkUrl.value = ''
+  putFocusNextTick(`${props.idPrefix}-editor-toolbar-btn-link`)
+}
 </script>
 
 <style>
 .editor-content .tiptap {
-  min-height: 34px;
+  min-height: 2.125rem;
   padding: 5px;
 }
 .editor-content .tiptap ul,
