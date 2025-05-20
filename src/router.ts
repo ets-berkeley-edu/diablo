@@ -14,6 +14,7 @@ import NotFound from '@/views/NotFound.vue'
 import Ouija from '@/views/Ouija.vue'
 import Room from '@/views/room/Room.vue'
 import Rooms from '@/views/room/Rooms.vue'
+import Course from '@/views/Course.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -64,10 +65,10 @@ const router = createRouter({
             title: 'Home'
           }
         },
-        // {
-        //   path: '/course/:termId/:sectionId',
-        //   component: Course
-        // }
+        {
+          path: '/course/:termId/:sectionId',
+          component: Course
+        }
       ]
     },
     {
