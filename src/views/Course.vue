@@ -27,7 +27,7 @@
       <v-row>
         <v-col cols="12" md="3" sm="4">
           <CoursePageSidebar :course="course" />
-          <v-card v-if="contextStore.config.isAdmin" outlined class="elevation-1 mt-4">
+          <v-card v-if="currentUser.isAdmin" outlined class="elevation-1 mt-4">
             <v-card-title>
               Notes
             </v-card-title>
@@ -101,7 +101,7 @@
                   Recent updates to recording settings are currently queued for publication. They will be published in an hour or less.
                 </v-alert>
                 <span id="notice-scheduled" class="green--text">
-                  {{ $currentUser.isAdmin ? 'The' : 'Your' }} course is scheduled for Course Capture. The first recording is on {{ course.scheduled[0].meetingStartDate | moment('MMM D, YYYY') }}.
+                  {{ currentUser.isAdmin ? 'The' : 'Your' }} course is scheduled for Course Capture. The first recording is on {{ course.scheduled[0].meetingStartDate | moment('MMM D, YYYY') }}.
                 </span>
               </v-col>
             </v-row>
@@ -391,7 +391,7 @@
                         </v-col>
                       </v-row>
                       <v-row
-                        v-if="!$currentUser.isAdmin"
+                        v-if="!currentUser.isAdmin"
                         align="end"
                         justify="start"
                       >
@@ -428,7 +428,7 @@
                         </v-col>
                       </v-row>
                       <v-row
-                        v-if="!$currentUser.isAdmin"
+                        v-if="!currentUser.isAdmin"
                         align="end"
                         justify="start"
                       >
@@ -531,7 +531,7 @@
                 </v-card>
               </v-col>
             </v-row>
-            <v-row v-if="!$currentUser.isAdmin && $_.get(course, 'publishType', '') === 'kaltura_my_media'">
+            <v-row v-if="!currentUser.isAdmin && $_.get(course, 'publishType', '') === 'kaltura_my_media'">
               <v-col cols="12">
                 Based on the selected Recording Placement, please review the following KB articles:
                 <ul>
@@ -562,7 +562,7 @@
                 </ul>
               </v-col>
             </v-row>
-            <v-row v-if="!$currentUser.isAdmin && $_.get(course, 'publishType', '').startsWith('kaltura_media_gallery')">
+            <v-row v-if="!currentUser.isAdmin && $_.get(course, 'publishType', '').startsWith('kaltura_media_gallery')">
               <v-col cols="12">
                 Based on the selected Recording Placement, please review the following KB articles:
                 <ul>
@@ -587,7 +587,7 @@
                 </ul>
               </v-col>
             </v-row>
-            <v-row v-if="$currentUser.isAdmin">
+            <v-row v-if="currentUser.isAdmin">
               <v-col cols="12">
                 <ScheduledCourse :course="course"></ScheduledCourse>
               </v-col>
@@ -597,10 +597,10 @@
             <v-row>
               <v-col class="font-weight-bold mb-1">
                 <span v-if="course.hasOptedOut && !course.scheduled" id="notice-opt-out" class="red--text">
-                  {{ $currentUser.isAdmin ? 'The' : 'Your' }} course is not scheduled for Course Capture because one or more instructors have opted out. To schedule recordings, please have all instructors remove their opt-out status.
+                  {{ currentUser.isAdmin ? 'The' : 'Your' }} course is not scheduled for Course Capture because one or more instructors have opted out. To schedule recordings, please have all instructors remove their opt-out status.
                 </span>
                 <span v-if="course.hasOptedOut && course.scheduled" id="notice-opt-out-pending" class="red--text">
-                  {{ $currentUser.isAdmin ? 'The' : 'Your' }} course is scheduled for Course Capture, but will be unscheduled shortly because one or more instructors have opted out. To keep recordings scheduled, please have all instructors remove their opt-out status.
+                  {{ currentUser.isAdmin ? 'The' : 'Your' }} course is scheduled for Course Capture, but will be unscheduled shortly because one or more instructors have opted out. To keep recordings scheduled, please have all instructors remove their opt-out status.
                 </span>
                 <span v-if="!course.hasOptedOut" id="notice-eligible-not-scheduled" class="green--text">
                   This course is eligible for scheduling, but has not yet been scheduled. Instructors will be notified when scheduling has taken place.
@@ -664,7 +664,7 @@
           </v-container>
         </v-col>
       </v-row>
-      <v-row v-if="$currentUser.isAdmin">
+      <v-row v-if="currentUser.isAdmin">
         <v-col cols="12">
           <v-container id="update-history" class="elevation-2 pa-6 mx-0 max-width-unset">
             <h2>Update history</h2>
