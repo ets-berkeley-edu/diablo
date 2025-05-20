@@ -42,7 +42,6 @@
             <v-data-table
               :id="getTableId(index)"
               :caption="index === 0 ? 'Courses eligible for capture' : 'Courses not in a course capture classroom'"
-              disable-pagination
               disable-sort
               :headers="index === 0 ? eligibleHeaders : ineligibleHeaders"
               :hide-default-footer="true"
