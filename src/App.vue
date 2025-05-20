@@ -24,5 +24,7 @@ export default {
 
 <style>
 @import 'v-calendar/style.css';
+@import './assets/styles/tiptap/_variables.scss';
+@import './assets/styles/tiptap/_keyframe-animations.scss';
 @import './assets/styles/diablo-global.css';
 </style>
