@@ -1,4 +1,16 @@
-import {each, filter, split, startsWith, trim} from 'lodash'
+import {
+  cloneDeep,
+  concat,
+  each,
+  filter,
+  head,
+  initial,
+  join,
+  last,
+  split,
+  startsWith,
+  trim
+} from 'lodash'
 import {nextTick} from 'vue'
 import {useContextStore} from '@/stores/context'
 import type ScrollLogicalPosition from 'typescript'
@@ -35,6 +47,36 @@ export function getDisplayMeetings(course) {
   } else {
     return course.meetings.ineligible
   }
+}
+
+export function oxfordJoin(arr) {
+  switch(arr.length) {
+  case 1: return head(arr)
+  case 2: return `${head(arr)} and ${last(arr)}`
+  default: return join(concat(initial(arr), ` and ${last(arr)}`), ', ')
+  }
+}
+
+export function partitionCoursesByEligibility(courses, eligibleCourses, ineligibleCourses) {
+  each(courses, c => {
+    if (c.meetings.eligible.length) {
+      eligibleCourses.push(c)
+      if (c.meetings.ineligible.length) {
+        const courseCopyWithIneligibleMeetings = cloneDeep(c)
+        courseCopyWithIneligibleMeetings.meetings.eligible = []
+        courseCopyWithIneligibleMeetings.scheduled = null
+        ineligibleCourses.push(courseCopyWithIneligibleMeetings)
+      }
+    } else {
+      ineligibleCourses.push(c)
+    }
+  })
+}
+
+export function pluralize(noun: string, count: number, {substitutions={}, pluralSuffix='s', includeCount=true}: {substitutions?: any, pluralSuffix?: string, includeCount?: boolean}) {
+  const countOf = includeCount ? `${substitutions[count] || substitutions['other'] || count} ` : ''
+  const desc = count !== 1 ? `${noun}${pluralSuffix}` : noun
+  return `${countOf}${desc}`
 }
 
 export function putFocusNextTick(id: string, {scroll=true, scrollBlock='center', cssSelector=undefined}: {scroll?: boolean, scrollBlock?: ScrollLogicalPosition, cssSelector?: string}={}) {

@@ -85,6 +85,6 @@ a {
 abbr {
   text-decoration: none !important;
 }
-table td, table th {
-  border-bottom-color: rgb(var(--v-theme-table-border));
+table tr:not(:last-child) td, table tr th {
+  border-bottom-color: rgb(var(--v-theme-table-border)) !important;
 }

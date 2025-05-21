@@ -3,89 +3,87 @@
     <v-switch
       :id="`toggle-opt-out-${switchId}`"
       v-model="optOut"
+      :aria-describedby="undefined"
       :aria-label="ariaLabel"
-      dense
+      color="primary"
       :disabled="disabled"
+      flat
+      hide-details
       inset
       :label="label ? `Opt out ${label}` : ''"
       @blur="() => ariaText = ''"
-      @change="toggleOptOut"
+      @update:model-value="toggleOptOut"
     >
     </v-switch>
     <span class="sr-only" aria-live="assertive">{{ ariaText }}</span>
   </div>
 </template>
 
-<script>
-import Context from '@/mixins/Context'
+<script setup>
+import {defineProps, onMounted, ref} from 'vue'
 import {updateOptOut} from '@/api/course'
 
-export default {
-  name: 'ToggleOptOut',
-  mixins: [Context],
-  props: {
-    ariaLabel: {
-      required: false,
-      type: String,
-      default: undefined
-    },
-    beforeToggle: {
-      default: () => {},
-      required: false,
-      type: Function
-    },
-    disabled: {
-      required: false,
-      type: Boolean
-    },
-    initialValue: {
-      required: true,
-      type: Boolean
-    },
-    instructorUid: {
-      required: true,
-      type: String
-    },
-    label: {
-      required: false,
-      type: String,
-      default: ''
-    },
-    onToggle: {
-      default: () => {},
-      required: false,
-      type: Function
-    },
-    sectionId: {
-      required: true,
-      type: String
-    },
-    termId: {
-      required: true,
-      type: String
-    }
+const props = defineProps({
+  ariaLabel: {
+    required: false,
+    type: String,
+    default: undefined
   },
-  data: () => ({
-    ariaText: '',
-    optOut: undefined,
-    switchId: undefined
-  }),
-  created() {
-    this.optOut = this.initialValue
-    if (this.sectionId === 'all') {
-      this.switchId = this.termId === 'all' ? 'all-terms' : 'current-term'
-    } else {
-      this.switchId = this.sectionId
-    }
+  beforeToggle: {
+    default: () => {},
+    required: false,
+    type: Function
   },
-  methods: {
-    toggleOptOut() {
-      this.ariaText = this.optOut ? 'on' : 'off'
-      this.beforeToggle()
-      updateOptOut(this.instructorUid, this.termId, this.sectionId, this.optOut).then(data => {
-        this.onToggle(`Opted ${data.optedOut ? 'out' : 'in'} ${this.label}`)
-      })
-    }
+  disabled: {
+    required: false,
+    type: Boolean
+  },
+  initialValue: {
+    required: true,
+    type: Boolean
+  },
+  instructorUid: {
+    required: true,
+    type: String
+  },
+  label: {
+    required: false,
+    type: String,
+    default: ''
+  },
+  onToggle: {
+    default: () => {},
+    required: false,
+    type: Function
+  },
+  sectionId: {
+    required: true,
+    type: String
+  },
+  termId: {
+    required: true,
+    type: String
   }
+})
+
+const ariaText = ref('')
+const optOut = ref(undefined)
+const switchId = ref(undefined)
+
+onMounted(() => {
+  optOut.value = props.initialValue
+  if (props.sectionId === 'all') {
+    switchId.value = props.termId === 'all' ? 'all-terms' : 'current-term'
+  } else {
+    switchId.value = props.sectionId
+  }
+})
+
+const toggleOptOut = () => {
+  ariaText.value = optOut.value ? 'on' : 'off'
+  props.beforeToggle()
+  updateOptOut(props.instructorUid, props.termId, props.sectionId, optOut.value).then(data => {
+    props.onToggle(`Opted ${data.optedOut ? 'out' : 'in'} ${props.label}`)
+  })
 }
 </script>

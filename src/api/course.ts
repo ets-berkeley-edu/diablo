@@ -73,7 +73,7 @@ export function updateOptOut(instructorUid, termId: string, sectionId, optOut) {
     optOut,
     sectionId,
     termId
-  })
+  }).then(response => response.data)
 }
 
 export function updatePublishType(

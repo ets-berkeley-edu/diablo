@@ -8,8 +8,9 @@ import {setupCalendar} from 'v-calendar'
 import {trim} from 'lodash'
 import {appErrorHandler, initializeAxios} from '@/lib/axios-utils'
 import axiosPlugin from '@/plugins/axios'
-import vuetify from '@/plugins/vuetify'
+import {getCurrentUser} from '@/api/auth'
 import {useContextStore} from '@/stores/context'
+import vuetify from '@/plugins/vuetify'
 
 import '@mdi/font/css/materialdesignicons.css'
 
@@ -29,8 +30,8 @@ initializeAxios(axios)
 
 axios.get(`${apiBaseUrl}/api/config`).then(response => {
   useContextStore().setConfig({...response.data, apiBaseUrl, isVueAppDebugMode})
-  axios.get(`${apiBaseUrl}/api/user/my_profile`).then(response => {
-    useContextStore().setCurrentUser(response.data)
+  getCurrentUser().then(user => {
+    useContextStore().setCurrentUser(user)
     app.use(router).mount('#app')
   })
 })
