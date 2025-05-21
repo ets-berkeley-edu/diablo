@@ -325,7 +325,7 @@ class TestScheduling0:
         assert not self.course_page.is_present(self.course_page.HOW_TO_EMBED_LINK)
 
     def test_how_to_remove_a_recording_link(self):
-        title = 'IT - How do I remove media from a bCourses Media Gallery or from My Media?'
+        title = 'IT - How do I remove media from My Media or a bCourses Media Gallery?'
         assert self.course_page.external_link_valid(self.course_page.HOW_TO_REMOVE_LINK, title)
 
     def test_how_to_download_second_stream_link_again(self):
