@@ -35,17 +35,17 @@ from xena.test_utils import util
 
 class DiabloPages(Page):
 
-    HOME_LINK = (By.ID, 'sidebar-link-Home')
-    OUIJA_BOARD_LINK = (By.ID, 'sidebar-link-Ouija Board')
-    ROOMS_LINK = (By.ID, 'sidebar-link-Rooms')
-    COURSE_CHANGES_LINK = (By.ID, 'sidebar-link-Course Changes')
-    BLACKOUTS_LINK = (By.ID, 'sidebar-link-Blackouts')
-    EMAIL_TEMPLATES_LINK = (By.ID, 'sidebar-link-Email Templates')
-    JOBS_LINK = (By.ID, 'sidebar-link-The Chancel')
+    HOME_LINK = (By.ID, 'sidebar-link-home')
+    OUIJA_BOARD_LINK = (By.ID, 'sidebar-link-ouija-board')
+    ROOMS_LINK = (By.ID, 'sidebar-link-rooms')
+    COURSE_CHANGES_LINK = (By.ID, 'sidebar-link-course-changes')
+    BLACKOUTS_LINK = (By.ID, 'sidebar-link-blackouts')
+    EMAIL_TEMPLATES_LINK = (By.ID, 'sidebar-link-email-templates')
+    JOBS_LINK = (By.ID, 'sidebar-link-the-chancel')
 
     MENU_BUTTON = (By.ID, 'btn-main-menu')
     JOB_HISTORY_LINK = (By.ID, 'menu-item-job-history')
-    DARK_MODE = (By.XPATH, '//div[text()="Dark mode"]')
+    DARK_MODE = (By.ID, 'menu-item-dark-mode"]')
     LOG_OUT_LINK = (By.ID, 'menu-item-log-out')
 
     SPINNER = (By.XPATH, '//div[contains(@class, "spinner")]')
