@@ -1,6 +1,7 @@
 <template>
   <v-app>
     <v-navigation-drawer
+      v-if="currentUser.isAdmin"
       v-model="drawer"
       color="tertiary"
       expand-on-hover

@@ -25,3 +25,8 @@ export function getCasLogoutUrl() {
   return axios.get(`${getApiBaseUrl()}/api/auth/logout`)
     .then(response => response.data)
 }
+
+export function getCurrentUser() {
+  return axios.get(`${getApiBaseUrl()}/api/user/my_profile`)
+    .then(response => response.data)
+}
