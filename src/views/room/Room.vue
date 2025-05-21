@@ -10,7 +10,14 @@
             <v-col class="subtitle-1">
               Kaltura resource ID: {{ room.kalturaResourceId }}
               <span v-if="kalturaEventList">
-                (<a id="skip-to-kaltura-event-list" href="#kaltura-events-header" @click.stop="scrollToKalturaEvents">Scroll to Kaltura events</a>)
+                (<a
+                  id="skip-to-kaltura-event-list"
+                  class="text-anchor"
+                  href="#kaltura-events-header"
+                  @click.stop="scrollToKalturaEvents"
+                >
+                  Scroll to Kaltura events
+                </a>)
               </span>
             </v-col>
           </v-row>
@@ -40,7 +47,7 @@
               <router-link
                 :id="`print-room-${room.id}-schedule`"
                 aria-label="Open printable version of this page, in a new window"
-                class="subtitle-1"
+                class="subtitle-1 text-anchor"
                 target="_blank"
                 :to="`/room/printable/${room.id}`"
               >

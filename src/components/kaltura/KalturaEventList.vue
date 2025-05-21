@@ -22,9 +22,10 @@
     <template #item.summary="{item}">
       <a
         :id="`kaltura-media-space-${item.id}`"
+        aria-label="Open Kaltura MediaSpace in a new window"
+        class="text-anchor"
         :href="`${contextStore.config.kalturaMediaSpaceUrl}/recscheduling/index/edit-event/eventid/${item.id}`"
         target="_blank"
-        aria-label="Open Kaltura MediaSpace in a new window"
       >
         {{ item.summary }} <v-icon class="ml-1" :icon="mdiOpenInNew" size="14" />
       </a>
@@ -81,9 +82,10 @@
                   <td>
                     <a
                       :id="`kaltura-recurrence-${event.id}`"
+                      :aria-label="`Open Kaltura MediaSpace in a new window (event ${event.id})`"
+                      class="text-anchor"
                       :href="`${contextStore.config.kalturaMediaSpaceUrl}/recscheduling/index/edit-event/eventid/${event.id}`"
                       target="_blank"
-                      :aria-label="`Open Kaltura MediaSpace in a new window (event ${event.id})`"
                     >
                       {{ event.id }} <v-icon class="ml-1" :icon="mdiOpenInNew" size="14" />
                     </a>
@@ -111,9 +113,10 @@
                     <span v-if="key === 'id'">
                       <a
                         :id="`kaltura-event-${item[key]}`"
+                        :aria-label="`Open Kaltura MediaSpace in a new window (event ${item[key]})`"
+                        class="text-anchor"
                         :href="`${contextStore.config.kalturaMediaSpaceUrl}/recscheduling/index/edit-event/eventid/${item[key]}`"
                         target="_blank"
-                        :aria-label="`Open Kaltura MediaSpace in a new window (event ${item[key]})`"
                       >
                         {{ item[key] }} <v-icon class="pl-2" :icon="mdiOpenInNew" size="small" />
                       </a>

@@ -29,7 +29,9 @@ import ContactUsPrompt from '@/components/util/ContactUsPrompt'
 import PageTitle from '@/components/util/PageTitle'
 import {useContextStore} from '@/stores/context'
 
+const contextStore = useContextStore()
+
 onMounted(() => {
-  useContextStore().loadingComplete('Page not found')
+  contextStore.loadingComplete('Page not found')
 })
 </script>

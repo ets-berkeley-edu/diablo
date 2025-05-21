@@ -73,7 +73,7 @@
                   <router-link
                     v-if="index === 0"
                     :id="`link-course-${course.sectionId}`"
-                    class="subtitle-1"
+                    class="subtitle-1 text-anchor"
                     :to="`/course/${contextStore.config.currentTermId}/${course.sectionId}`"
                   >
                     <span :class="{'line-through': course.deletedAt}">{{ courseCode }}</span>
@@ -86,6 +86,7 @@
                 <div v-if="course.room && course.room.id" :class="{'line-through': course.deletedAt}">
                   <router-link
                     :id="`course-${course.sectionId}-room-${course.room.id}`"
+                    class="text-anchor"
                     :to="`/room/${course.room.id}`"
                   >
                     {{ course.room.location }}
@@ -172,6 +173,7 @@
                 <router-link
                   v-if="meeting.room"
                   :id="`course-${course.sectionId}-room-${meeting.room.id}`"
+                  class="text-anchor"
                   :to="`/room/${meeting.room.id}`"
                 >
                   {{ meeting.room.location }}

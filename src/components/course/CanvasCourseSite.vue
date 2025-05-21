@@ -3,6 +3,7 @@
     <a
       :id="`canvas-course-site-${siteId}`"
       aria-label="Open Canvas course site in a new window"
+      class="text-anchor"
       :href="`${config.canvasBaseUrl}/courses/${siteId}`"
       target="_blank"
     >

@@ -2,37 +2,33 @@
   <v-footer
     id="footer"
     app
-    dark
     color="secondary"
   >
     <v-container fluid class="pa-1">
-      <v-row no-gutters justify="space-between">
-        <v-col>
-          <ContactUsPrompt href-mailto-class="white--text" />
+      <v-row no-gutters>
+        <v-col cols="12" sm="6">
+          <ContactUsPrompt href-mailto-class="text-white" />
         </v-col>
-        <v-col>
-          <div class="float-right">
-            <span v-if="config.isVueAppDebugMode && screenReaderAlert">
-              {{ screenReaderAlert }}
-            </span>
-            <span v-if="!config.isVueAppDebugMode || !screenReaderAlert">
-              <v-icon small>mdi-copyright</v-icon> {{ new Date().getFullYear() }}
-              The Regents of the University of California
-            </span>
-          </div>
+        <v-col class="d-flex justify-end" cols="12" sm="6">
+          <span v-if="config.isVueAppDebugMode && screenReaderAlert">
+            {{ screenReaderAlert }}
+          </span>
+          <span v-if="!config.isVueAppDebugMode || !screenReaderAlert">
+            <v-icon :icon="mdiCopyright" size="small" />
+            <span class="sr-only">Copyright</span> {{ new Date().getFullYear() }}
+            The Regents of the University of California
+          </span>
         </v-col>
       </v-row>
     </v-container>
   </v-footer>
 </template>
 
-<script>
+<script setup>
+import {mdiCopyright} from '@mdi/js'
+import {storeToRefs} from 'pinia'
 import ContactUsPrompt from '@/components/util/ContactUsPrompt'
-import Context from '@/mixins/Context'
+import {useContextStore} from '@/stores/context'
 
-export default {
-  name: 'Footer',
-  mixins: [Context],
-  components: {ContactUsPrompt}
-}
+const {config, screenReaderAlert} = storeToRefs(useContextStore())
 </script>

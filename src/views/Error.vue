@@ -15,6 +15,7 @@
           v-if="!contextStore.loading"
           id="error-message"
           aria-live="polite"
+          class="text-body-1"
           role="alert"
         >
           {{ message || 'Uh oh, there was a problem.' }}

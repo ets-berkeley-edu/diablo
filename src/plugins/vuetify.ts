@@ -100,6 +100,7 @@ export default createVuetify({
       light: {
         colors: {
           accent: '#2a5f83',
+          anchor: '#f04a00',
           black: '#000',
           error: colors.red.accent3,
           primary: '#378dc5',
@@ -115,6 +116,7 @@ export default createVuetify({
       dark: {
         colors: {
           accent: '#0d202c',
+          anchor: '#f04a00',
           black: '#fff',
           error: colors.red.accent3,
           primary: '#58A0D0',
