@@ -44,7 +44,7 @@ class InstructorPage(CoursesPage):
     def enable_opt_out_all_terms(self):
         app.logger.info('Opting out of all terms')
         self.when_present(self.OPT_OUT_ALL_BUTTON, util.get_short_timeout())
-        if self.element(self.OPT_OUT_ALL_BUTTON).get_attribute('aria-checked') == 'false':
+        if self.element(self.OPT_OUT_ALL_BUTTON).get_dom_attribute('aria-checked') == 'false':
             self.click_element_js(self.OPT_OUT_ALL_BUTTON)
         else:
             app.logger.info('Already opted out of all terms')
@@ -52,7 +52,7 @@ class InstructorPage(CoursesPage):
     def disable_opt_out_all_terms(self):
         app.logger.info('Unchecking opt-out-all-terms')
         self.when_present(self.OPT_OUT_ALL_BUTTON, util.get_short_timeout())
-        if self.element(self.OPT_OUT_ALL_BUTTON).get_attribute('aria-checked') == 'true':
+        if self.element(self.OPT_OUT_ALL_BUTTON).get_dom_attribute('aria-checked') == 'true':
             self.click_element_js(self.OPT_OUT_ALL_BUTTON)
         else:
             app.logger.info('Already disabled')
@@ -60,7 +60,7 @@ class InstructorPage(CoursesPage):
     def enable_opt_out_current_term(self):
         app.logger.info('Opting out of current term')
         self.when_present(self.OPT_OUT_CURRENT_BUTTON, util.get_short_timeout())
-        if self.element(self.OPT_OUT_CURRENT_BUTTON).get_attribute('aria-checked') == 'false':
+        if self.element(self.OPT_OUT_CURRENT_BUTTON).get_dom_attribute('aria-checked') == 'false':
             self.click_element_js(self.OPT_OUT_CURRENT_BUTTON)
         else:
             app.logger.info('Already opted out of current term')
@@ -68,7 +68,7 @@ class InstructorPage(CoursesPage):
     def disable_opt_out_current_term(self):
         app.logger.info('Unchecking opt-out-current-term')
         self.when_present(self.OPT_OUT_CURRENT_BUTTON, util.get_short_timeout())
-        if self.element(self.OPT_OUT_CURRENT_BUTTON).get_attribute('aria-checked') == 'true':
+        if self.element(self.OPT_OUT_CURRENT_BUTTON).get_dom_attribute('aria-checked') == 'true':
             self.click_element_js(self.OPT_OUT_CURRENT_BUTTON)
         else:
             app.logger.info('Already disabled')
@@ -76,7 +76,7 @@ class InstructorPage(CoursesPage):
     def enable_opt_out_section(self, section):
         app.logger.info(f'Opting out of section ID {section.ccn}')
         self.when_present(self.opt_out_section_button_loc(section), util.get_short_timeout())
-        if self.element(self.opt_out_section_button_loc(section)).get_attribute('aria-checked') == 'false':
+        if self.element(self.opt_out_section_button_loc(section)).get_dom_attribute('aria-checked') == 'false':
             self.click_element_js(self.opt_out_section_button_loc(section))
         else:
             app.logger.info(f'Already opted out of section {section.ccn}')
@@ -84,7 +84,7 @@ class InstructorPage(CoursesPage):
     def disable_opt_out_section(self, section):
         app.logger.info(f'Unchecking opt-out-{section.ccn}')
         self.when_present(self.opt_out_section_button_loc(section), util.get_short_timeout())
-        if self.element(self.opt_out_section_button_loc(section)).get_attribute('aria-checked') == 'true':
+        if self.element(self.opt_out_section_button_loc(section)).get_dom_attribute('aria-checked') == 'true':
             self.click_element_js(self.opt_out_section_button_loc(section))
         else:
             app.logger.info('Already disabled')
