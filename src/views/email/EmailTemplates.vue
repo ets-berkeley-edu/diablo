@@ -72,7 +72,13 @@
             </tr>
             <tr v-for="template in items" :key="template.id">
               <td>
-                <router-link :id="`template-${template.id}`" :to="`/email/template/edit/${template.id}`">{{ template.name }}</router-link>
+                <router-link
+                  :id="`template-${template.id}`"
+                  class="text-anchor"
+                  :to="`/email/template/edit/${template.id}`"
+                >
+                  {{ template.name }}
+                </router-link>
               </td>
               <td :id="`template-${template.id}-subject-line`" class="w-50">
                 {{ template.subjectLine }}

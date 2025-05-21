@@ -78,6 +78,7 @@
                         <router-link
                           v-if="courseCodeIndex === 0"
                           :id="`link-course-${course.sectionId}`"
+                          class="text-anchor"
                           :to="`/course/${$config.currentTermId}/${course.sectionId}`"
                         >
                           {{ courseCode }}

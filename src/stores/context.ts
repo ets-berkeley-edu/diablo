@@ -52,7 +52,7 @@ export const useContextStore = defineStore('context', {
       document.title = `${pageTitle || 'UC Berkeley'} | Course Capture`
       this.loading = false
       if (pageTitle) {
-        this.screenReaderAlert = `${pageTitle} loading`
+        this.screenReaderAlert = `${pageTitle} loaded`
       }
       putFocusNextTick('page-title')
     },

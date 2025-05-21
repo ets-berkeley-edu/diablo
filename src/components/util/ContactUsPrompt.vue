@@ -20,7 +20,7 @@ export default {
   name: 'ContactUsPrompt',
   props: {
     hrefMailtoClass: {
-      default: undefined,
+      default: 'text-anchor',
       required: false,
       type: String
     }

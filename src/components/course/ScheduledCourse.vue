@@ -12,9 +12,10 @@
         <div v-if="currentUser.isAdmin" class="d-flex align-bottom">
           <a
             id="link-to-edit-kaltura-event"
+            aria-label="Open Kaltura MediaSpace in a new window"
+            class="text-anchor"
             :href="`${config.kalturaMediaSpaceUrl}/recscheduling/index/edit-event/eventid/${scheduled.kalturaScheduleId}`"
             target="_blank"
-            aria-label="Open Kaltura MediaSpace in a new window"
           >
             Kaltura series {{ scheduled.kalturaScheduleId }}
             <v-icon small class="pb-1">mdi-open-in-new</v-icon>

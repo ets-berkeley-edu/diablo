@@ -67,7 +67,13 @@
       <template #body="{items}">
         <tr v-for="(item, index) in items" :key="index">
           <td :id="`room-${item.id}-location`" columnheader="rooms-table-location-th">
-            <router-link :id="`room-${item.id}`" :to="`/room/${item.id}`">{{ item.location }}</router-link>
+            <router-link
+              :id="`room-${item.id}`"
+              class="text-anchor"
+              :to="`/room/${item.id}`"
+            >
+              {{ item.location }}
+            </router-link>
           </td>
           <td :id="`room-${item.id}-kalturaResourceId`" columnheader="rooms-table-kalturaResourceId-th">
             <span aria-hidden="true">{{ item.kalturaResourceId || '&mdash;' }}</span>

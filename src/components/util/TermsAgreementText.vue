@@ -4,9 +4,10 @@
       I have read the Audio and Video Recording Permission Agreement and I agree to the terms stated within.
       <a
         id="link-to-course-capture-policies"
+        aria-label="Open URL to Course Capture policies in a new window"
+        class="text-anchor"
         :href="$config.courseCapturePoliciesUrl"
         target="_blank"
-        aria-label="Open URL to Course Capture policies in a new window"
       >
         Audio and Video Recording Permission Agreement <v-icon>mdi-open-in-new</v-icon>
       </a>.

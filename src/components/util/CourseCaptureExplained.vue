@@ -5,9 +5,10 @@
     please read
     <a
       id="link-to-course-capture-overview"
+      aria-label="Open URL to Course Capture service overview in a new window"
+      class="text-anchor"
       :href="config.courseCaptureExplainedUrl"
       target="_blank"
-      aria-label="Open URL to Course Capture service overview in a new window"
     >
       Course Capture Services Explained <v-icon>mdi-open-in-new</v-icon>
     </a>.

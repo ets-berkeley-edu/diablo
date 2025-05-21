@@ -63,42 +63,43 @@
         <template #activator="{ props }">
           <v-btn
             id="btn-main-menu"
-            class="mr-5 bg-secondary text-on-secondary"
+            class="mr-5"
+            color="secondary"
             variant="elevated"
             v-bind="props"
           >
             {{ currentUser.firstName }}
           </v-btn>
         </template>
-        <v-list rounded class="pa-2 profile-menu">
+        <v-list rounded class="pa-2 profile-menu" color="on-surface">
           <v-list-item
             v-if="currentUser.isAdmin"
             id="menu-item-attic"
-            class="text-black"
+            class="text-on-surface"
+            color="on-surface"
             component="router-link"
             to="/attic"
           >
-            <v-list-item-title>The Attic</v-list-item-title>
+            <v-list-item-title class="text-on-surface">The Attic</v-list-item-title>
           </v-list-item>
 
           <v-list-item
             id="menu-item-feedback-and-help"
-            class="text-black"
             href="mailto:{{ config.emailCourseCaptureSupport }}"
             target="_blank"
           >
-            <v-list-item-title class="black--text">
+            <v-list-item-title>
               Feedback/Help
             </v-list-item-title>
           </v-list-item>
 
-          <v-list-item id="menu-item-dark-mode" @click="toggleTheme" class="text-black">
+          <v-list-item id="menu-item-dark-mode" @click="toggleTheme">
             <v-list-item-title>
               {{ theme.global.current.value.dark ? 'Light' : 'Dark' }} mode
             </v-list-item-title>
           </v-list-item>
 
-          <v-list-item id="menu-item-log-out" @click="logOut" class="text-black">
+          <v-list-item id="menu-item-log-out" @click="logOut">
             <v-list-item-title>Log Out</v-list-item-title>
           </v-list-item>
         </v-list>
@@ -172,7 +173,7 @@ const waveOptions = {
 onMounted(() => {
   prefersColorScheme()
   navItems.value = currentUser.value.courses.length
-    ? [{ title: 'Home', icon: mdiHome, path: '/home' }]
+    ? [{title: 'Home', icon: mdiHome, path: '/home'}]
     : []
   if (currentUser.value.isAdmin) {
     navItems.value.push(
@@ -231,23 +232,12 @@ const toggleTheme = () => {
   left: 0 !important;
   width: 100% !important;
 }
-
 ::v-deep .v-navigation-drawer {
   top: 63px !important;
 }
-
-.profile-menu {
-  background-color: white !important;
-}
-
-.profile-button-background {
-  background-color: #68acd8;
-}
-
 .sidebar-with-banner .v-navigation-drawer__content {
   padding-top: 64px; /* or however tall your banner is */
 }
-
 .mood-ring {
   -webkit-animation: colorchange 300s infinite alternate;
   animation: colorchange 300s infinite alternate;
