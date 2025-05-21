@@ -108,73 +108,61 @@ def _create_blackouts():
 def _create_email_templates():
     EmailTemplate.create(
         template_type='admin_operator_requested',
-        name='Admin alert: operator requested',
         subject_line='Admin alert: operator requested',
         message='Operator requested for class for class <code>course.name</code>',
     )
     EmailTemplate.create(
         template_type='changes_confirmed',
-        name='Changes confirmed',
         subject_line='Changes confirmed',
         message='Changes confirmed for class <code>course.name</code>',
     )
     EmailTemplate.create(
         template_type='instructors_added',
-        name='Instructor(s) added to class',
         subject_line='Instructor(s) added to class',
         message='Instructor(s) added to class <code>course.name</code>',
     )
     EmailTemplate.create(
         template_type='instructors_removed',
-        name='Instructor(s) removed from class',
         subject_line='Instructor(s) removed from class',
         message='Instructor(s) removed from class <code>course.name</code>',
     )
     EmailTemplate.create(
         template_type='multiple_meeting_pattern_change',
-        name='Multiple meeting pattern change',
         subject_line='Marvelous multiple meeting patterns',
         message='<code>course.name</code> had a complicated change, better go check it out in Diablo.',
     )
     EmailTemplate.create(
         template_type='new_class_scheduled',
-        name='New class scheduled',
         subject_line='New class scheduled: <code>course.name</code>',
         message='Intensely.',
     )
     EmailTemplate.create(
         template_type='no_longer_scheduled',
-        name='Class no longer scheduled',
         subject_line='Class no longer scheduled',
         message='Class no longer scheduled: <code>course.name</code>',
     )
     EmailTemplate.create(
         template_type='opted_out',
-        name='Opted out',
         subject_line='Opted out',
         message='Class opted out: <code>course.name</code>',
     )
     EmailTemplate.create(
         template_type='remind_scheduled',
-        name='Blessed are those who are scheduled',
         subject_line='Did you remember??',
         message='You are scheduled, <code>recipient.name</code>!\n<code>courseList</code>',
     )
     EmailTemplate.create(
         template_type='room_change_no_longer_eligible',
-        name='Room change: no longer eligible',
         subject_line='Room change alert',
         message='<code>course.name</code> has changed to a new, ineligible room: <code>course.room</code>',
     )
     EmailTemplate.create(
         template_type='schedule_change',
-        name='Schedule change',
         subject_line='Schedule change alert',
         message='<code>course.name</code> has changed to a new room and/or schedule: <code>course.room</code>',
     )
     EmailTemplate.create(
         template_type='semester_start',
-        name='Semester start',
         subject_line="It's a new semester, tally ho!",
         message="Well, then let's introduce ourselves. I'm <code>recipient.name</code> and these are my courses:\n<code>courseList</code>",
     )

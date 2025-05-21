@@ -62,7 +62,7 @@ class TestGetAllEmailTemplates:
         """Admin user has access."""
         email_templates = self._api_all_email_templates(client)
         assert len(email_templates) > 1
-        for key in ['id', 'templateType', 'name', 'subjectLine', 'message']:
+        for key in ['id', 'templateType', 'subjectLine', 'message']:
             assert key in email_templates[0]
 
 
@@ -89,11 +89,11 @@ class TestGetEmailTemplate:
 
     def test_get_email_template(self, client, admin_session):
         """Admin user has access to email_template data."""
-        email_template = next((t for t in EmailTemplate.all_templates() if t.name == 'Instructor(s) removed from class'), None)
+        email_template = next((t for t in EmailTemplate.all_templates() if t.template_type == 'instructors_removed'), None)
         assert email_template
         api_json = self._api_email_template(client, email_template.id)
         assert api_json['id'] == email_template.id
-        assert api_json['name'] == 'Instructor(s) removed from class'
+        assert api_json['templateType'] == 'instructors_removed'
 
 
 class TestUpdateEmailTemplate:
@@ -104,7 +104,6 @@ class TestUpdateEmailTemplate:
             client,
             email_template_id,
             template_type,
-            name,
             subject_line,
             message,
             expected_status_code=200,
@@ -114,7 +113,6 @@ class TestUpdateEmailTemplate:
             data=json.dumps({
                 'templateId': email_template_id,
                 'templateType': template_type,
-                'name': name,
                 'subjectLine': subject_line,
                 'message': message,
             }),
@@ -129,7 +127,6 @@ class TestUpdateEmailTemplate:
             client,
             email_template_id=1,
             template_type='changes_confirmed',
-            name='Captain who?',
             subject_line='Captain Howdy.',
             message="Who's Captain Howdy?",
             expected_status_code=401,
@@ -141,7 +138,6 @@ class TestUpdateEmailTemplate:
             client,
             email_template_id=1,
             template_type='changes_confirmed',
-            name='Captain who?',
             subject_line='Captain Howdy.',
             message="Who's Captain Howdy?",
             expected_status_code=401,
@@ -153,7 +149,6 @@ class TestUpdateEmailTemplate:
             client,
             email_template_id=999999999,
             template_type='changes_confirmed',
-            name='Father Dyer',
             subject_line='My idea of Heaven',
             message='My idea of Heaven is a solid white nightclub with me as a headliner for all eternity, and they love me!',
             expected_status_code=404,
@@ -163,17 +158,16 @@ class TestUpdateEmailTemplate:
         """Admin user has access."""
         email_template_id = 1
         email_template = EmailTemplate.get_template(email_template_id)
-        name = f'{email_template.name} (modified)'
+        subject_line = f'{email_template.subject_line} (modified)'
         email_template = self._api_update_email_template(
             client,
             email_template_id=email_template.id,
             template_type=email_template.template_type,
-            name=name,
-            subject_line=email_template.subject_line,
+            subject_line=subject_line,
             message=email_template.message,
         )
         assert len(email_template)
-        assert email_template['name'] == name
+        assert email_template['subjectLine'] == subject_line
 
 
 class TestCreateEmailTemplate:
@@ -183,7 +177,6 @@ class TestCreateEmailTemplate:
     def _api_create_email_template(
             client,
             template_type,
-            name,
             subject_line,
             message,
             expected_status_code=200,
@@ -192,7 +185,6 @@ class TestCreateEmailTemplate:
             '/api/email/template/create',
             data=json.dumps({
                 'templateType': template_type,
-                'name': name,
                 'subjectLine': subject_line,
                 'message': message,
             }),
@@ -201,12 +193,21 @@ class TestCreateEmailTemplate:
         assert response.status_code == expected_status_code
         return response.json
 
-    def api_update_capability(self, client):
+    @staticmethod
+    def _api_delete_email_template(
+            client,
+            template_id,
+            expected_status_code=200,
+    ):
+        response = client.delete(f'/api/email/template/delete/{template_id}')
+        assert response.status_code == expected_status_code
+        return response.json
+
+    def test_anonymous(self, client):
         """Denies anonymous access."""
         self._api_create_email_template(
             client,
             template_type='changes_confirmed',
-            name='Captain who?',
             subject_line='Captain Howdy.',
             message="Who's Captain Howdy?",
             expected_status_code=401,
@@ -217,18 +218,34 @@ class TestCreateEmailTemplate:
         self._api_create_email_template(
             client,
             template_type='changes_confirmed',
-            name='Captain who?',
             subject_line='Captain Howdy.',
             message="Who's Captain Howdy?",
             expected_status_code=401,
         )
 
-    def test_successful_create(self, client, admin_session):
+    def test_no_duplicate(self, client, admin_session):
+        """Multiple templates of same type cannot be created."""
+        existing_template = next((t for t in EmailTemplate.all_templates() if t.template_type == 'changes_confirmed'), None)
+        assert existing_template
+
+        self._api_create_email_template(
+            client,
+            template_type='changes_confirmed',
+            subject_line='Captain Howdy.',
+            message="Who's Captain Howdy?",
+            expected_status_code=400,
+        )
+
+    def test_no_duplicate_create(self, client, admin_session):
         """Admin user has success."""
+        existing_template = next((t for t in EmailTemplate.all_templates() if t.template_type == 'changes_confirmed'), None)
+        assert existing_template
+
+        self._api_delete_email_template(client, existing_template.id)
+
         email_template = self._api_create_email_template(
             client,
             template_type='changes_confirmed',
-            name='Captain who?',
             subject_line='Captain Howdy.',
             message="Who's Captain Howdy?",
         )

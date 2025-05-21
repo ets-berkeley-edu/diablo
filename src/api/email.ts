@@ -1,10 +1,9 @@
 import axios from 'axios'
 import {getApiBaseUrl} from '@/api/api-utils'
 
-export function createEmailTemplate(templateType, name, subjectLine, message) {
+export function createEmailTemplate(templateType, subjectLine, message) {
   return axios.post(`${getApiBaseUrl()}/api/email/template/create`, {
     templateType,
-    name,
     subjectLine,
     message
   })
@@ -43,11 +42,10 @@ export function sendTestEmail(templateId) {
     .then(response => response.data)
 }
 
-export function updateEmailTemplate(templateId, templateType, name, subjectLine, message) {
+export function updateEmailTemplate(templateId, templateType, subjectLine, message) {
   return axios.post(`${getApiBaseUrl()}/api/email/template/update`, {
     templateId,
     templateType,
-    name,
     subjectLine,
     message
   })

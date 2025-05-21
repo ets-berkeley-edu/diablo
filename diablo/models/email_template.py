@@ -51,19 +51,16 @@ class EmailTemplate(Base):
 
     id = db.Column(db.Integer, nullable=False, primary_key=True)  # noqa: A003
     template_type = db.Column(email_template_type, nullable=False)
-    name = db.Column(db.String(255), nullable=False, unique=True)
     subject_line = db.Column(db.String(255), nullable=False)
     message = db.Column(db.Text, nullable=False)
 
     def __init__(
             self,
             template_type,
-            name,
             subject_line,
             message,
     ):
         self.template_type = template_type
-        self.name = name
         self.subject_line = subject_line
         self.message = message
 
@@ -71,16 +68,14 @@ class EmailTemplate(Base):
         return f"""<EmailTemplate
                     id={self.id},
                     template_type={self.template_type},
-                    name={self.name},
                     subject_line={self.subject_line}
                     message={self.message}>
                 """
 
     @classmethod
-    def create(cls, template_type, name, subject_line, message):
+    def create(cls, template_type, subject_line, message):
         email_template = cls(
             template_type=template_type,
-            name=name,
             subject_line=subject_line,
             message=message,
         )
@@ -102,18 +97,14 @@ class EmailTemplate(Base):
         return cls.query.filter_by(template_type=template_type).first()
 
     @classmethod
-    def get_all_templates_names(cls):
-        return cls.query.with_entities(cls.id, cls.name).order_by(cls.name).all()
-
-    @classmethod
     def all_templates(cls):
-        return cls.query.order_by(cls.name).all()
+        display_names = cls.get_template_type_options()
+        return sorted(cls.query.all(), key=lambda t: display_names.get(t.template_type))
 
     @classmethod
-    def update(cls, template_id, template_type, name, subject_line, message):
+    def update(cls, template_id, template_type, subject_line, message):
         email_template = cls.query.filter_by(id=template_id).first()
         email_template.template_type = template_type
-        email_template.name = name
         email_template.subject_line = subject_line
         email_template.message = message
         db.session.add(email_template)
@@ -142,7 +133,6 @@ class EmailTemplate(Base):
             'id': self.id,
             'templateType': self.template_type,
             'typeName': self.get_template_type_options()[self.template_type],
-            'name': self.name,
             'subjectLine': self.subject_line,
             'message': self.message,
             'createdAt': to_isoformat(self.created_at),

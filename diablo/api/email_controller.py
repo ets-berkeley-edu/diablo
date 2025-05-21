@@ -71,16 +71,17 @@ def get_template_codes():
 def create_template():
     params = request.get_json()
     template_type = params.get('templateType')
-    name = params.get('name')
     subject_line = params.get('subjectLine')
     message = params.get('message')
 
-    if None in [template_type, name, subject_line, message]:
+    if None in [template_type, subject_line, message]:
         raise BadRequestError('Required parameters are missing.')
+
+    if EmailTemplate.get_template_by_type(template_type):
+        raise BadRequestError('Template type already exists.')
 
     email_template = EmailTemplate.create(
         template_type=template_type,
-        name=name,
         subject_line=subject_line,
         message=message,
     )
@@ -127,17 +128,15 @@ def update_template():
     email_template = EmailTemplate.get_template(template_id) if template_id else None
     if email_template:
         template_type = params.get('templateType')
-        name = params.get('name')
         subject_line = params.get('subjectLine')
         message = params.get('message')
 
-        if None in [template_type, name, subject_line, message]:
+        if None in [template_type, subject_line, message]:
             raise BadRequestError('Required parameters are missing.')
 
         email_template = EmailTemplate.update(
             template_id=template_id,
             template_type=template_type,
-            name=name,
             subject_line=subject_line,
             message=message,
         )
