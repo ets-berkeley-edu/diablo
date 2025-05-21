@@ -11,20 +11,6 @@
       <v-row class="pl-4">
         <v-col cols="12" sm="8">
           <v-text-field
-            id="input-template-name"
-            v-model="name"
-            aria-required="true"
-            label="Template Name"
-            maxlength="255"
-            :rules="[s => !!s || 'Required']"
-          >
-          </v-text-field>
-        </v-col>
-        <v-spacer></v-spacer>
-      </v-row>
-      <v-row class="pl-4">
-        <v-col cols="12" sm="8">
-          <v-text-field
             id="input-template-subject-line"
             v-model="subjectLine"
             aria-required="true"
@@ -89,7 +75,6 @@ import {useContextStore} from '@/stores/context'
 
 const contextStore = useContextStore()
 const message = ref('')
-const name = ref()
 const pageTitle = ref('')
 const route = useRoute()
 const router = useRouter()
@@ -99,7 +84,7 @@ const templateType = ref()
 const typeName = ref()
 
 const disableSave = computed(() => {
-  return !trim(subjectLine.value) || !trim(name.value) || !stripHtmlAndTrim(message.value)
+  return !trim(subjectLine.value) || !stripHtmlAndTrim(message.value)
 })
 
 onMounted(() => {
@@ -112,7 +97,6 @@ onMounted(() => {
     contextStore.loadingComplete(`${pageTitle.value} '${typeName.value}'`)
   } else {
     getEmailTemplate(templateId.value).then(data => {
-      name.value = data.name
       subjectLine.value = data.subjectLine
       message.value = data.message
       templateType.value = data.templateType
@@ -135,9 +119,9 @@ const createTemplate = () => {
   if (disableSave.value) {
     contextStore.snackbarReportError('You must complete the required form fields.')
   } else if (templateId.value) {
-    updateEmailTemplate(templateId.value, templateType.value, name.value, subjectLine.value, message.value).then(() => done('updated'))
+    updateEmailTemplate(templateId.value, templateType.value, subjectLine.value, message.value).then(() => done('updated'))
   } else {
-    createEmailTemplate(templateType.value, name.value, subjectLine.value, message.value).then(() => done('created'))
+    createEmailTemplate(templateType.value, subjectLine.value, message.value).then(() => done('created'))
   }
 }
 </script>

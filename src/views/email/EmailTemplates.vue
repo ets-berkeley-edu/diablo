@@ -71,20 +71,17 @@
               </td>
             </tr>
             <tr v-for="template in items" :key="template.id">
-              <td>
+              <td :id="`template-${template.id}-type-name`">
                 <router-link
                   :id="`template-${template.id}`"
                   class="text-anchor"
                   :to="`/email/template/edit/${template.id}`"
                 >
-                  {{ template.name }}
+                  {{ template.typeName }}
                 </router-link>
               </td>
               <td :id="`template-${template.id}-subject-line`" class="w-50">
                 {{ template.subjectLine }}
-              </td>
-              <td :id="`template-${template.id}-type-name`">
-                {{ template.typeName }}
               </td>
               <td :id="`template-${template.id}-createdAt`" class="text-no-wrap">
                 {{ DateTime.fromISO(template.createdAt, DateTime.DATE_MED) }}
@@ -130,9 +127,8 @@ import {useContextStore} from '@/stores/context'
 
 const contextStore = useContextStore()
 const headers = [
-  {title: 'Name', value: 'name'},
-  {title: 'Subject Line', value: 'subjectLine'},
   {title: 'Type', value: 'typeName'},
+  {title: 'Subject Line', value: 'subjectLine'},
   {title: 'Created', value: 'createdAt'},
   {title: 'Test', value: 'test', class: 'pl-5 pr-0 mr-0'},
   {title: 'Delete', value: 'delete', class: 'pl-5 pr-0 mr-0'}

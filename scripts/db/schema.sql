@@ -168,7 +168,6 @@ ALTER TABLE cross_listings ADD CONSTRAINT cross_listings_pkey PRIMARY KEY (secti
 CREATE TABLE email_templates (
     id INTEGER NOT NULL,
     template_type email_template_types NOT NULL,
-    name VARCHAR(255) NOT NULL,
     message TEXT NOT NULL,
     subject_line VARCHAR(255) NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL,
@@ -187,7 +186,7 @@ ALTER TABLE ONLY email_templates ALTER COLUMN id SET DEFAULT nextval('email_temp
 ALTER TABLE ONLY email_templates
     ADD CONSTRAINT email_templates_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY email_templates
-    ADD CONSTRAINT email_templates_name_unique_constraint UNIQUE (name);
+    ADD CONSTRAINT email_templates_type_unique_constraint UNIQUE (template_type);
 
 --
 

@@ -48,7 +48,7 @@ ALTER TABLE IF EXISTS ONLY public.blackouts DROP CONSTRAINT IF EXISTS blackouts_
 ALTER TABLE IF EXISTS ONLY public.canvas_course_sites DROP CONSTRAINT IF EXISTS canvas_course_sites_pkey;
 ALTER TABLE IF EXISTS ONLY public.course_preferences DROP CONSTRAINT IF EXISTS course_preferences_pkey;
 ALTER TABLE IF EXISTS ONLY public.cross_listings DROP CONSTRAINT IF EXISTS cross_listings_pkey;
-ALTER TABLE IF EXISTS ONLY public.email_templates DROP CONSTRAINT IF EXISTS email_templates_name_unique_constraint;
+ALTER TABLE IF EXISTS ONLY public.email_templates DROP CONSTRAINT IF EXISTS email_templates_type_unique_constraint;
 ALTER TABLE IF EXISTS ONLY public.email_templates DROP CONSTRAINT IF EXISTS email_templates_pkey;
 ALTER TABLE IF EXISTS ONLY public.instructors DROP CONSTRAINT IF EXISTS instructors_pkey;
 ALTER TABLE IF EXISTS ONLY public.jobs DROP CONSTRAINT IF EXISTS jobs_key_unique_constraint;
