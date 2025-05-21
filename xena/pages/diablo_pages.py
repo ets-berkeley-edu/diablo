@@ -35,13 +35,11 @@ from xena.test_utils import util
 
 class DiabloPages(Page):
 
-    HOME_LINK = (By.ID, 'sidebar-link-home')
-    OUIJA_BOARD_LINK = (By.ID, 'sidebar-link-ouija-board')
-    ROOMS_LINK = (By.ID, 'sidebar-link-rooms')
-    COURSE_CHANGES_LINK = (By.ID, 'sidebar-link-course-changes')
-    BLACKOUTS_LINK = (By.ID, 'sidebar-link-blackouts')
-    EMAIL_TEMPLATES_LINK = (By.ID, 'sidebar-link-email-templates')
-    JOBS_LINK = (By.ID, 'sidebar-link-the-chancel')
+    OUIJA_BOARD_LINK = (By.ID, 'sidebar-link-Ouija Board')
+    ROOMS_LINK = (By.ID, 'sidebar-link-Rooms')
+    BLACKOUTS_LINK = (By.ID, 'sidebar-link-Blackouts')
+    EMAIL_TEMPLATES_LINK = (By.ID, 'sidebar-link-Email Templates')
+    JOBS_LINK = (By.ID, 'sidebar-link-The Chancel')
 
     MENU_BUTTON = (By.ID, 'btn-main-menu')
     JOB_HISTORY_LINK = (By.ID, 'menu-item-job-history')
@@ -66,10 +64,6 @@ class DiabloPages(Page):
     def click_rooms_link(self):
         app.logger.info('Clicking Rooms link')
         self.wait_for_element_and_click(DiabloPages.ROOMS_LINK)
-
-    def click_course_changes_link(self):
-        app.logger.info('Clicking Course Changes link')
-        self.wait_for_element_and_click(DiabloPages.COURSE_CHANGES_LINK)
 
     def click_blackouts_link(self):
         app.logger.info('Clicking Blackouts link')

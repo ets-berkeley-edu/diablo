@@ -122,7 +122,7 @@ class CoursePage(DiabloPages):
         return [el.text for el in self.elements(CoursePage.CROSS_LISTING)]
 
     def visible_cross_listing_ccns(self):
-        return [el.get_attribute('id').split('-')[2] for el in self.elements(CoursePage.CROSS_LISTING)]
+        return [el.get_dom_attribute('id').split('-')[2] for el in self.elements(CoursePage.CROSS_LISTING)]
 
     # SIS DATA - meeting
 
@@ -132,20 +132,20 @@ class CoursePage(DiabloPages):
 
     def visible_meeting_days(self):
         els = self.elements(CoursePage.MEETING_DAYS)
-        vis = [el.get_attribute('innerText').replace('Days of the week:', '').replace('Dates:', '').strip() for el in els]
+        vis = [el.get_property('innerText').replace('Days of the week:', '').replace('Dates:', '').strip() for el in els]
         app.logger.info(f'Visible {vis}')
         return vis
 
     def visible_meeting_time(self):
         els = self.elements(CoursePage.MEETING_TIMES)
-        return [el.get_attribute('innerText').replace('Start and end times:', '').strip().split('\n')[0] for el in els]
+        return [el.get_property('innerText').replace('Start and end times:', '').strip().split('\n')[0] for el in els]
 
     def visible_rooms(self):
         els = self.elements(CoursePage.ROOMS)
-        return [el.get_attribute('innerText').replace('Location:', '').strip() for el in els]
+        return [el.get_property('innerText').replace('Location:', '').strip() for el in els]
 
     def visible_opt_out(self):
-        return self.element(CoursePage.OPTED_OUT).get_attribute('innerText').strip()
+        return self.element(CoursePage.OPTED_OUT).get_property('innerText').strip()
 
     def click_room_link(self, room):
         self.wait_for_element_and_click(self.room_link_locator(room))
@@ -177,7 +177,7 @@ class CoursePage(DiabloPages):
     INSTRUCTOR_ROW = By.XPATH, '//div[@id="instructors-list"]/div'
 
     def visible_instructor_uids(self):
-        uids = list(map(lambda el: el.get_attribute('id').split('-')[-1], self.elements(self.INSTRUCTOR_ROW)))
+        uids = list(map(lambda el: el.get_dom_attribute('id').split('-')[-1], self.elements(self.INSTRUCTOR_ROW)))
         uids.sort()
         return uids
 
@@ -199,7 +199,7 @@ class CoursePage(DiabloPages):
         return self.is_present(self.collaborator_row_loc(user))
 
     def visible_collaborator_uids(self):
-        uids = list(map(lambda el: el.get_attribute('id').split('-')[-1], self.elements(self.COLLAB_ROW)))
+        uids = list(map(lambda el: el.get_dom_attribute('id').split('-')[-1], self.elements(self.COLLAB_ROW)))
         uids.sort()
         return uids
 
@@ -331,7 +331,7 @@ class CoursePage(DiabloPages):
     def visible_course_site_ids(self):
         time.sleep(2)
         site_els = self.elements(self.PLACEMENT_SITE_LINK)
-        ids = [el.get_attribute('id').split('-')[-1] for el in site_els]
+        ids = [el.get_dom_attribute('id').split('-')[-1] for el in site_els]
         ids.sort()
         return ids
 

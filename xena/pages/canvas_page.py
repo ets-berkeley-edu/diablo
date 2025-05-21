@@ -52,8 +52,8 @@ class CanvasPage(Page):
     # CREATE GENERIC COURSE SITE
 
     ADD_NEW_COURSE_BUTTON = By.XPATH, '//button[@aria-label="Create new course"]'
-    COURSE_NAME_INPUT = By.XPATH, '(//form[@aria-label="Add a New Course"]//input)[1]'
-    REF_CODE_INPUT = By.XPATH, '(//form[@aria-label="Add a New Course"]//input)[2]'
+    COURSE_NAME_INPUT = By.XPATH, '(//span[@aria-label="Add a New Course"]//input)[1]'
+    REF_CODE_INPUT = By.XPATH, '(//span[@aria-label="Add a New Course"]//input)[2]'
     TERM_SELECT = By.ID, 'course_enrollment_term_id'
     CREATE_COURSE_BUTTON = By.XPATH, '//button[contains(.,"Add Course")]'
     SEARCH_COURSE_INPUT = By.XPATH, '//input[@placeholder="Search courses..."]'

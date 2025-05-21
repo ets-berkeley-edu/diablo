@@ -174,7 +174,7 @@ class TestUserPerms:
         util.set_instructor_role(self.section, self.instructor, 'PI')
         self.login_page.load_page()
         self.login_page.dev_auth(self.instructor.uid)
-        self.ouija_page.wait_for_element(OuijaBoardPage.HOME_LINK, util.get_short_timeout())
+        self.ouija_page.wait_for_element(OuijaBoardPage.MENU_BUTTON, util.get_short_timeout())
         self.course_page.load_page(self.section)
         assert self.course_page.is_present(CoursePage.NOT_ELIGIBLE_MSG)
 

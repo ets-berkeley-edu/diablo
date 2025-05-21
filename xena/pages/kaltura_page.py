@@ -65,10 +65,10 @@ class KalturaPage(Page):
     RECUR_WEEKLY_FRI_CBX = (By.ID, 'EventRecurrence-weekly_days-FR')
     RECUR_WEEKLY_SAT_CBX = (By.ID, 'EventRecurrence-weekly_days-SA')
     RECUR_WEEKLY_SUN_CBX = (By.ID, 'EventRecurrence-weekly_days-SU')
-    RECUR_DATE_START = (By.ID, 'EventRecurrence-start')
-    RECUR_DATE_END = (By.ID, 'EventRecurrence-endby_date')
-    RECUR_TIME_START = (By.ID, 'EventRecurrence-startTime')
-    RECUR_TIME_END = (By.ID, 'EventRecurrence-endTime')
+    RECUR_DATE_START = (By.ID, 'Recurrence-start')
+    RECUR_DATE_END = (By.ID, 'Recurrence-endby_date')
+    RECUR_TIME_START = (By.ID, 'Recurrence-startTime')
+    RECUR_TIME_END = (By.ID, 'Recurrence-endTime')
     RECUR_MODAL_CANCEL_BUTTON = (By.LINK_TEXT, 'Cancel')
 
     def log_in_via_calnet(self, calnet_page):
@@ -102,10 +102,10 @@ class KalturaPage(Page):
         self.wait_for_element(KalturaPage.SERIES_CATEGORY_ROW, util.get_medium_timeout())
 
     def is_private(self):
-        return self.element(self.SERIES_PUBLICATION_CHANNELS).get_attribute('class') == 'hidden'
+        return self.element(self.SERIES_PUBLICATION_CHANNELS).get_dom_attribute('class') == 'hidden'
 
     def is_published(self):
-        return self.element(self.SERIES_PUBLICATION_CHANNELS).get_attribute('class') != 'hidden'
+        return self.element(self.SERIES_PUBLICATION_CHANNELS).get_dom_attribute('class') != 'hidden'
 
     def publish_category_els(self):
         return self.elements(KalturaPage.SERIES_CATEGORY_ROW)
@@ -127,13 +127,13 @@ class KalturaPage(Page):
         self.when_not_present(KalturaPage.RECUR_MODAL_CANCEL_BUTTON, util.get_short_timeout())
 
     def visible_series_title(self):
-        return self.element(KalturaPage.SERIES_TITLE).get_attribute('value')
+        return self.element(KalturaPage.SERIES_TITLE).get_dom_attribute('value')
 
     def visible_series_desc(self):
         return self.element(KalturaPage.SERIES_DESC).text
 
     def visible_series_organizer(self):
-        return self.element(KalturaPage.SERIES_ORGANIZER).get_attribute('value')
+        return self.element(KalturaPage.SERIES_ORGANIZER).get_dom_attribute('value')
 
     def visible_recurrence_desc(self):
         return self.element(KalturaPage.RECUR_DESC).text
@@ -142,7 +142,7 @@ class KalturaPage(Page):
         return self.element(KalturaPage.RECUR_WEEKLY_RADIO).is_selected()
 
     def visible_weekly_frequency(self):
-        return self.element(KalturaPage.RECUR_WEEKLY_FREQUENCY).get_attribute('value')
+        return self.element(KalturaPage.RECUR_WEEKLY_FREQUENCY).get_dom_attribute('value')
 
     def is_mon_checked(self):
         return self.element(KalturaPage.RECUR_WEEKLY_MON_CBX).is_selected()
@@ -175,16 +175,16 @@ class KalturaPage(Page):
         assert not self.is_sun_checked()
 
     def visible_start_date(self):
-        return self.element(KalturaPage.RECUR_DATE_START).get_attribute('value')
+        return self.element(KalturaPage.RECUR_DATE_START).get_dom_attribute('value')
 
     def visible_end_date(self):
-        return self.element(KalturaPage.RECUR_DATE_END).get_attribute('value')
+        return self.element(KalturaPage.RECUR_DATE_END).get_dom_attribute('value')
 
     def visible_start_time(self):
-        return self.element(KalturaPage.RECUR_TIME_START).get_attribute('value')
+        return self.element(KalturaPage.RECUR_TIME_START).get_dom_attribute('value')
 
     def visible_end_time(self):
-        return self.element(KalturaPage.RECUR_TIME_END).get_attribute('value')
+        return self.element(KalturaPage.RECUR_TIME_END).get_dom_attribute('value')
 
     # DELETION
 
@@ -264,7 +264,7 @@ class KalturaPage(Page):
         self.wait_for_element(self.SERIES_PUBLICATION_CHANNELS, util.get_short_timeout())
         time.sleep(5)
 
-        app.logger.info(f"Pub channels el class is {self.element(self.SERIES_PUBLICATION_CHANNELS).get_attribute('class')}")
+        app.logger.info(f"Pub channels el class is {self.element(self.SERIES_PUBLICATION_CHANNELS).get_dom_attribute('class')}")
 
         if recording_schedule.recording_placement == RecordingPlacement.PLACE_IN_MY_MEDIA:
             assert self.is_private()
