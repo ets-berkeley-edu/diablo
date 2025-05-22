@@ -1,7 +1,7 @@
 <template>
   <v-app>
     <v-navigation-drawer
-      v-if="currentUser.isAdmin"
+      v-if="currentUser.courses.length || currentUser.isAdmin"
       v-model="drawer"
       color="tertiary"
       expand-on-hover
@@ -39,9 +39,9 @@
 
     <v-app-bar
       v-if="!route.meta.printable"
+      v-wave="waveOptions"
       color="header-background"
       app
-      v-wave="waveOptions"
     >
       <div
         class="display-1 not-selectable banner-overlay"

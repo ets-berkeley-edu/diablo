@@ -6,7 +6,6 @@
     <v-data-table
       id="courses-data-table"
       v-model="selectedRows"
-      caption="Courses"
       :disable-sort="courses.length < 2"
       :headers="headers"
       :items="courses"
@@ -53,7 +52,7 @@
       </template>
       <template #body="{items}">
         <tr v-if="refreshing">
-          <td class="pa-12 text-center" :colspan="headers.length + 1">
+          <td class="pa-12 text-center" :colspan="headers.length">
             <v-progress-circular
               class="spinner"
               :indeterminate="true"
@@ -68,17 +67,22 @@
           <!-- eslint-disable-next-line vue/no-v-for-template-key -->
           <template v-for="course in items" :key="course.sectionId">
             <tr>
-              <td :id="`course-name-${course.sectionId}`" :class="tdc(course)" columnheader="courses-table-course-th">
-                <div v-for="(courseCode, index) in course.courseCodes" :key="courseCode">
+              <td
+                :id="`course-name-${course.sectionId}`"
+                :aria-rowspan="size(course.displayMeetings)"
+                :class="tdc(course)"
+                columnheader="courses-table-course-th"
+              >
+                <div v-for="(courseCode, courseCodeIndex) in course.courseCodes" :key="courseCode">
                   <router-link
-                    v-if="index === 0"
+                    v-if="courseCodeIndex === 0"
                     :id="`link-course-${course.sectionId}`"
                     class="subtitle-1 text-anchor"
                     :to="`/course/${contextStore.config.currentTermId}/${course.sectionId}`"
                   >
                     <span :class="{'line-through': course.deletedAt}">{{ courseCode }}</span>
                   </router-link>
-                  <span v-if="index > 0" class="subtitle-1">{{ courseCode }}</span>
+                  <span v-if="courseCodeIndex > 0" class="subtitle-1">{{ courseCode }}</span>
                 </div>
               </td>
               <td :id="`section-id-${course.sectionId}`" :class="tdc(course)" columnheader="courses-table-section-th">{{ course.sectionId }}</td>
@@ -167,8 +171,8 @@
                 />
               </td>
             </tr>
-            <tr v-for="(meeting, index) in tail(course.displayMeetings)" :key="`${course.sectionId}-${index}`">
-              <td colspan="2" :class="tdcLower(course)"></td>
+            <tr v-for="(meeting, meetingIndex) in tail(course.displayMeetings)" :key="`${course.sectionId}-${meetingIndex}`">
+              <td :aria-hidden="true" colspan="2" :class="tdcLower(course)"></td>
               <td v-if="includeRoomColumn" :class="tdcLower(course)">
                 <router-link
                   v-if="meeting.room"
@@ -201,15 +205,15 @@
                     }}
                   </span>
                 </div>
-                <div :class="{'pb-2': course.nonstandardMeetingDates && index === course.displayMeetings.length - 1}">
+                <div :class="{'pb-2': course.nonstandardMeetingDates && meetingIndex === course.displayMeetings.length - 1}">
                   <span aria-hidden="true">{{ meeting.startTimeFormatted }} - {{ meeting.endTimeFormatted }}</span>
                   <span class="sr-only">{{ meeting.startTimeFormatted }} to {{ meeting.endTimeFormatted }}</span>
                 </div>
               </td>
-              <td colspan="4" :class="tdcLower(course)"></td>
+              <td :aria-hidden="true" colspan="3" :class="tdcLower(course)"></td>
             </tr>
             <tr v-if="course.scheduled" :key="`approvals-${course.sectionId}`">
-              <td :colspan="headers.length + 1" class="pb-2">
+              <td :colspan="headers.length" class="pb-2">
                 <div v-if="course.scheduled" class="pb-3">
                   Recordings scheduled on {{
                     DateTime
@@ -223,17 +227,14 @@
                   }}.
                 </div>
               </td>
-              <td></td>
             </tr>
           </template>
         </template>
-        <tbody v-if="!refreshing && !items.length">
-          <tr>
-            <td id="message-when-zero-courses" class="pa-4 text-no-wrap title" :colspan="headers.length">
-              <span v-if="!refreshing">No courses.</span>
-            </td>
-          </tr>
-        </tbody>
+        <tr v-if="!refreshing && !items.length">
+          <td id="message-when-zero-courses" class="pa-4 text-no-wrap title" :colspan="headers.length">
+            <span v-if="!refreshing">No courses.</span>
+          </td>
+        </tr>
       </template>
       <template #bottom>
         <div v-if="!refreshing && pageCount > 1" class="text-center pb-4 pt-2">
