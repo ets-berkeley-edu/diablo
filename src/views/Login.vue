@@ -135,7 +135,7 @@ const devAuth = () => {
 
 const logIn = () => {
   getCasLoginURL().then((data) => {
-    window.location.href = data.data.casLoginUrl
+    window.location.href = data.casLoginUrl
   })
 }
 </script>
