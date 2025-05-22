@@ -14,53 +14,28 @@
     </div>
 
     <div :class="{ 'col col-6': props.inline, 'pt-1': !props.inline }">
-      <v-autocomplete
-        :id="props.id"
-        ref="autocomplete"
-        v-model="selected"
-        v-model:search-input="search"
-        :allow-overflow="false"
-        :append-icon="null"
-        :aria-disabled="props.disabled"
-        :aria-label="toLabel(selected)"
-        auto-select-first
-        background-color="white"
-        class="person-lookup"
-        :class="props.inputClass"
-        dense
-        :disabled="props.disabled"
-        :error="!!props.errorMessage"
-        :error-messages="props.errorMessage ? [props.errorMessage] : []"
-        hide-details
-        :hide-no-data="isSearching || !search"
-        :items="suggestions"
-        light
-        :loading="isSearching ? 'tertiary' : false"
-        :menu-props="menuProps"
-        no-data-text="No results found."
-        no-filter
-        outlined
-        :placeholder="props.placeholder"
-        return-object
-        single-line
-        @blur="onBlur"
-        @focus="onFocus"
-        @update:list-index="onHighlight"
-      >
-        <template #selection="{ item }">
-          <span class="text-nowrap">{{ toLabel(item) }}</span>
-        </template>
-        <template #item="{ item, attrs, on }">
-          <v-list-item
-            v-bind="attrs"
-            :aria-selected="item === highlightedItem"
-            class="tertiary--text"
-            v-on="on"
-          >
-            <span v-html="suggest(item)" />
-          </v-list-item>
-        </template>
-      </v-autocomplete>
+      <AccessibleCombobox
+        id-prefix="search-options-find-instructor"
+        aria-description="Instructor name or S I D or email lookup. Expect auto suggest."
+        autocomplete="off"
+        :clazz="{'mt-1 text-black': true}"
+        :clearable="!isSearching"
+        color="primary"
+        density="compact"
+        :filter-results="executeSearch"
+        :get-value="() => get(selected, 'label')"
+        :set-value="s => selected = s.raw"
+        is-autocomplete
+        :is-busy="isSearching"
+        :items="formattedItems"
+        item-title="title"
+        label="Find Instructor by:"
+        list-label="Instructor List"
+        :maxlength="56"
+        min-width="12rem"
+        :on-clear="onClearSearch"
+        placeholder="Enter name, email, or SID ..."
+      />
     </div>
 
     <div :class="{ 'col col-2 pl-0': props.inline }">
@@ -94,6 +69,8 @@ import trim from 'lodash/trim'
 import join from 'lodash/join'
 import {searchUsers} from '@/api/user'
 import {useTheme} from 'vuetify'
+import AccessibleCombobox from '@/components/util/AccessibleCombobox'
+import {get} from 'lodash'
 
 // declare props
 const props = defineProps({
@@ -143,7 +120,6 @@ const autocomplete = ref(null)
 const highlightedItem = ref(null)
 const isSearching = ref(false)
 const menuObserver = ref(null)
-const menuProps = reactive({ contentClass: 'v-sheet--outlined autocomplete-menu' })
 const search = ref(null)
 const searchTokenMatcher= ref(null)
 const selected = ref(null)
@@ -156,9 +132,17 @@ const containerClass = computed(() =>
     : 'd-flex flex-column flex-grow-1'
 )
 
+const formattedItems = computed(() =>
+  suggestions.value.map(user => ({
+    title: `${user.firstName} ${user.lastName} (${user.email}) (${user.uid})`,
+    raw: user
+  }))
+)
+
 // perform actual API search
-function executeSearch(snippet) {
+const executeSearch = debounce(snippet => {
   if (snippet) {
+    isSearching.value = true
     searchUsers(snippet).then(results => {
       const tokens = split(trim(snippet), /\W/g)
       searchTokenMatcher.value = RegExp(join(tokens, '|'), 'gi')
@@ -171,18 +155,13 @@ function executeSearch(snippet) {
     selected.value = null
     suggestions.value = []
   }
+}, 500)
+
+const onClearSearch = () => {
+  suggestions.value = []
+  isSearching.value = false
 }
 
-// debounce it
-const debouncedSearch = debounce(executeSearch, 300)
-
-// watch the search input
-watch(search, snippet => {
-  isSearching.value = true
-  debouncedSearch(snippet)
-})
-
-// when user picks or clears selection
 watch(selected, suggestion => {
   const inputEl = document.getElementById(props.id)
   if (inputEl) inputEl.setAttribute('aria-expanded', 'false')
@@ -192,14 +171,13 @@ watch(selected, suggestion => {
   props.onSelectResult(suggestion)
 })
 
-// manage aria-expanded & aria-controls when suggestions appear/disappear
 watch(suggestions, (newVal, oldVal) => {
   const combo = autocomplete.value?.$el.querySelector('[role="combobox"]')
   const inputEl = document.getElementById(props.id)
   if (inputEl && newVal.length && !oldVal.length) {
     nextTick(() => {
       const listboxId = combo?.getAttribute('aria-owns')
-      const listbox   = listboxId && document.getElementById(listboxId)
+      const listbox = listboxId && document.getElementById(listboxId)
       inputEl.setAttribute('aria-expanded', 'true')
       listboxId && inputEl.setAttribute('aria-controls', listboxId)
       listbox && listbox.setAttribute('aria-label', props.menuLabel)
@@ -208,35 +186,6 @@ watch(suggestions, (newVal, oldVal) => {
     inputEl.setAttribute('aria-expanded', 'false')
   }
 })
-
-// blur: pick first suggestion if none chosen
-function onBlur() {
-  if (!isSearching.value && search.value && suggestions.value.length && !selected.value) {
-    selected.value = suggestions.value[0]
-    search.value = toLabel(selected.value)
-  }
-}
-
-// focus: reset aria-expanded
-function onFocus() {
-  if (!suggestions.value.length) {
-    document.getElementById(props.id)
-      ?.setAttribute('aria-expanded', 'false')
-  }
-}
-
-// track highlighted item
-function onHighlight(index) {
-  highlightedItem.value = suggestions.value[index]
-}
-
-// highlight matches in dropdown
-function suggest(user) {
-  return toLabel(user).replace(
-    searchTokenMatcher.value,
-    match => `<strong>${match}</strong>`
-  )
-}
 
 // build display label
 function toLabel(user) {

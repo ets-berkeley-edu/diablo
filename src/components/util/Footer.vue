@@ -31,4 +31,5 @@ import ContactUsPrompt from '@/components/util/ContactUsPrompt'
 import {useContextStore} from '@/stores/context'
 
 const {config, screenReaderAlert} = storeToRefs(useContextStore())
+
 </script>

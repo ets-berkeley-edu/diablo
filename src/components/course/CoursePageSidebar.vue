@@ -15,7 +15,7 @@
     >
       <v-col cols="auto">
         <h3 class="sr-only">Instructors</h3>
-        <v-icon aria-label="Mortarboard icon">mdi-school-outline</v-icon>
+        <v-icon aria-label="Mortarboard icon" :icon="mdiSchoolOutline"></v-icon>
       </v-col>
       <v-col>
         <OxfordJoin v-slot="{ item }" :items="instructors">
@@ -72,7 +72,7 @@
           cols="auto"
           :class="{ 'pb-0': displayMeetings.length > 1 }"
         >
-          <v-icon aria-label="Calendar icon">mdi-calendar</v-icon>
+          <v-icon aria-label="Calendar icon" :icon="mdiCalendar"></v-icon>
         </v-col>
         <v-col :class="{ 'pb-0': displayMeetings.length > 1 }">
           <Days :names-of-days="meeting.daysNames" />
@@ -119,7 +119,7 @@
           cols="auto"
           :class="{ 'pb-1 pt-1': displayMeetings.length > 1 }"
         >
-          <v-icon aria-label="Clock icon">mdi-clock-outline</v-icon>
+          <v-icon aria-label="Clock icon" :icon="mdiClockOutline"></v-icon>
         </v-col>
         <v-col :class="{ 'pb-1 pt-1': displayMeetings.length > 1 }">
           <span class="sr-only">Start and end times:</span>
@@ -144,7 +144,7 @@
           cols="auto"
           :class="{ 'pb-5 pt-1': displayMeetings.length > 1 }"
         >
-          <v-icon aria-label="Map icon">mdi-map-marker</v-icon>
+          <v-icon aria-label="Map icon" :icon="mdiMapMarker"></v-icon>
         </v-col>
         <v-col
           v-if="currentUser.isAdmin"
@@ -166,11 +166,11 @@
 
     <!-- Cross-Listings -->
     <v-row
-      v-if="course.crossListings.length"
+      v-if="course && course.crossListings.length"
       id="cross-listings"
     >
       <v-col cols="auto">
-        <v-icon aria-label="List icon">mdi-format-line-spacing</v-icon>
+        <v-icon aria-label="List icon" :icon="mdiFormatLineSpacing"></v-icon>
       </v-col>
       <v-col>
         <span>
@@ -178,8 +178,8 @@
         </span>
         <div
           v-for="cl in course.crossListings"
-          :key="cl.sectionId"
           :id="`cross-listing-${cl.sectionId}`"
+          :key="cl.sectionId"
         >
           {{ cl.label }}
         </div>
@@ -192,7 +192,7 @@
       id="opted-out"
     >
       <v-col cols="auto">
-        <v-icon aria-label="'Do not disturb' icon">mdi-minus-circle</v-icon>
+        <v-icon aria-label="'Do not disturb' icon" :icon="mdiMinusCircle"></v-icon>
       </v-col>
       <v-col>Opted out</v-col>
     </v-row>
@@ -207,6 +207,14 @@ import {useContextStore} from '@/stores/context'
 import Days from '@/components/util/Days'
 import OxfordJoin from '@/components/util/OxfordJoin'
 import Utils from '@/mixins/Utils'
+import {
+  mdiFormatLineSpacing,
+  mdiMinusCircle,
+  mdiMapMarker,
+  mdiClockOutline,
+  mdiCalendar,
+  mdiSchoolOutline
+} from '@mdi/js'
 
 // props
 const props = defineProps({

@@ -25,11 +25,12 @@ import {VPagination} from 'vuetify/components/VPagination'
 import {VProgressCircular} from 'vuetify/components/VProgressCircular'
 import {VSelect} from 'vuetify/components/VSelect'
 import {VSheet} from 'vuetify/components/VSheet'
-import {VSnackbar, VSwitch} from 'vuetify/components'
+import {VSnackbar, VSwitch, VAlert, VListItemSubtitle, VAutocomplete} from 'vuetify/components'
 import {VTable} from 'vuetify/components/VTable'
 import {VTextField} from 'vuetify/components/VTextField'
 import {VTooltip} from 'vuetify/components/VTooltip'
 import {VDivider} from 'vuetify/components/VDivider'
+import {VTextarea} from 'vuetify/components/VTextarea'
 
 export default createVuetify({
   components: {
@@ -37,6 +38,8 @@ export default createVuetify({
     EditorContent,
     VApp,
     VAppBar,
+    VAlert,
+    VAutocomplete,
     VBanner,
     VBottomSheet,
     VBtn,
@@ -56,6 +59,7 @@ export default createVuetify({
     VLayout,
     VList,
     VListItem,
+    VListItemSubtitle,
     VListItemTitle,
     VMain,
     VMenu,
@@ -70,6 +74,7 @@ export default createVuetify({
     VSwitch,
     VTable,
     VTextField,
+    VTextarea,
     VTooltip
   },
   defaults: {
