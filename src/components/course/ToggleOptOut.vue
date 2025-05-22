@@ -5,6 +5,7 @@
       v-model="optOut"
       :aria-describedby="undefined"
       :aria-label="ariaLabel"
+      class="toggle-opt-out"
       color="primary"
       :disabled="disabled"
       flat
@@ -87,3 +88,11 @@ const toggleOptOut = () => {
   })
 }
 </script>
+
+<style>
+.toggle-opt-out label {
+  font-size: 1.25rem;
+  font-weight: 600;
+  padding-inline: 12px !important;
+}
+</style>

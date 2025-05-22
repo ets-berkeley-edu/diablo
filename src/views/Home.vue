@@ -10,41 +10,43 @@
       />
     </v-card-title>
     <v-card-text>
-      <v-row class="px-6 py-2">
-        <ToggleOptOut
-          :term-id="`${config.currentTermId}`"
-          section-id="all"
-          :instructor-uid="currentUser.uid"
-          :initial-value="currentUser.hasOptedOutForTerm"
-          :disabled="currentUser.hasOptedOutForAllTerms"
-          label="for current semester"
-          :before-toggle="() => refreshingCourses = true"
-          :on-toggle="reloadCoursesTable"
-        />
-      </v-row>
-      <v-row class="px-6 py-2">
-        <ToggleOptOut
-          term-id="all"
-          section-id="all"
-          :instructor-uid="currentUser.uid"
-          :initial-value="currentUser.hasOptedOutForAllTerms"
-          label="for all semesters"
-          :before-toggle="() => refreshingCourses = true"
-          :on-toggle="reloadCoursesTable"
-        />
-      </v-row>
+      <v-container class="ml-8 mb-6">
+        <v-row class="px-6 py-2">
+          <ToggleOptOut
+            :term-id="`${config.currentTermId}`"
+            section-id="all"
+            :instructor-uid="currentUser.uid"
+            :initial-value="currentUser.hasOptedOutForTerm"
+            :disabled="currentUser.hasOptedOutForAllTerms"
+            label="for current semester"
+            :before-toggle="() => refreshingCourses = true"
+            :on-toggle="reloadCoursesTable"
+          />
+        </v-row>
+        <v-row class="px-6 py-2">
+          <ToggleOptOut
+            term-id="all"
+            section-id="all"
+            :instructor-uid="currentUser.uid"
+            :initial-value="currentUser.hasOptedOutForAllTerms"
+            label="for all semesters"
+            :before-toggle="() => refreshingCourses = true"
+            :on-toggle="reloadCoursesTable"
+          />
+        </v-row>
+      </v-container>
       <Spinner v-if="refreshingCourses" />
-      <template v-if="!refreshingCourses && (size(eligibleCourses) || size(ineligibleCourses))">
+      <template v-if="!refreshingCourses">
         <v-row v-for="(courses, index) in [eligibleCourses, ineligibleCourses]" :key="index" class="py-5">
-          <h2 class="px-4 w-100">
+          <h2 class="pa-4 text-medium-emphasis w-100">
             {{ index === 0 ? 'Courses eligible for capture' : 'Courses not in a course capture classroom' }}
           </h2>
-          <div class="overflow-x-auto">
+          <div class="overflow-x-auto px-md-4 w-100">
             <div v-if="isEmpty(courses)" class="px-4 pt-2">No courses.</div>
             <v-data-table
               v-if="size(courses)"
               :id="getTableId(index)"
-              class="instructor-courses mx-md-4 overflow-y-visible"
+              class="instructor-courses overflow-y-visible"
               disable-sort
               :headers="index === 0 ? eligibleHeaders : ineligibleHeaders"
               :hide-default-footer="true"
@@ -65,14 +67,15 @@
                 </tr>
               </template>
               <template #body="{items}">
+                <!-- eslint-disable-next-line vue/no-v-for-template-key -->
                 <template v-for="(course, courseIndex) in items" :key="course.sectionId">
                   <tr :id="`${getTableId(index)}-${course.sectionId}`">
                     <td
                       :id="`${getTableId(index)}-${course.sectionId}-label`"
+                      :aria-rowspan="size(course.displayMeetings)"
                       class="text-no-wrap"
                       :class="{'pt-3 pb-3': course.courseCodes.length > 1, 'border-bottom-zero': size(course.displayMeetings) > 1}"
                       :columnheader="`${getTableId(index)}-label-th`"
-                      :rowspan="size(course.displayMeetings)"
                     >
                       <div v-for="(courseCode, courseCodeIndex) in course.courseCodes" :key="courseCode">
                         <router-link
@@ -88,18 +91,18 @@
                     </td>
                     <td
                       :id="`${getTableId(index)}-${course.sectionId}-title`"
+                      :aria-rowspan="size(course.displayMeetings)"
                       :class="{'border-bottom-zero': size(course.displayMeetings) > 1}"
                       :columnheader="`${getTableId(index)}-title-th`"
-                      :rowspan="size(course.displayMeetings)"
                     >
                       <span aria-hidden="true">{{ course.courseTitle || '&mdash;' }}</span>
                       <span class="sr-only">{{ course.courseTitle || 'blank' }}</span>
                     </td>
                     <td
                       :id="`${getTableId(index)}-${course.sectionId}-instructors`"
+                      :aria-rowspan="size(course.displayMeetings)"
                       :class="{'border-bottom-zero': size(course.displayMeetings) > 1}"
                       :columnheader="`${getTableId(index)}-instructors-th`"
-                      :rowspan="size(course.displayMeetings)"
                     >
                       {{ oxfordJoin(map(course.instructors, 'name')) }}
                     </td>
@@ -146,13 +149,13 @@
                     <td
                       v-if="index === 0"
                       :id="`${getTableId(index)}-${course.sectionId}-hasOptedOut`"
+                      :aria-rowspan="size(course.displayMeetings)"
                       :class="{'border-0': size(course.displayMeetings) && courseIndex === (size(courses) - 1)}"
                       class="text-no-wrap"
                       :columnheader="`${getTableId(index)}-hasOptedOut-th`"
-                      :rowspan="size(course.displayMeetings)"
                     >
                       <ToggleOptOut
-                        :aria-label="`Opt out course ${course.courseTitle || get(course.courseCodes, '0', '')}.`"
+                        :aria-label="`Opt out course ${get(course.courseCodes, '0', course.title)}.`"
                         :disabled="course.hasBlanketOptedOut"
                         :initial-value="course.hasOptedOut"
                         :instructor-uid="currentUser.uid"
@@ -161,23 +164,24 @@
                       />
                     </td>
                   </tr>
-                  <tr v-for="meetingIndex in (size(course.displayMeetings) - 1)" :key="meetingIndex">
+                  <tr v-for="(meeting, meetingIndex) in tail(course.displayMeetings)" :id="`${getTableId(index)}-${course.sectionId}-${meetingIndex}`" :key="`${course.sectionId}-${meetingIndex}`">
+                    <td :aria-hidden="true" colspan="3"></td>
                     <td
-                      :id="`${getTableId(index)}-${course.sectionId}-room-${index}`"
+                      :id="`${getTableId(index)}-${course.sectionId}-room-${meetingIndex + 1}`"
                       class="pt-0 text-no-wrap"
                       :columnheader="`${getTableId(index)}-room-th`"
                     >
-                      {{ course.displayMeetings[meetingIndex].room.location }}
+                      {{ meeting.room.location }}
                     </td>
                     <td
-                      :id="`${getTableId(index)}-${course.sectionId}-days-${index}`"
+                      :id="`${getTableId(index)}-${course.sectionId}-days-${meetingIndex + 1}`"
                       class="text-no-wrap"
                       :columnheader="`${getTableId(index)}-days-th`"
                     >
-                      <Days :names-of-days="course.displayMeetings[meetingIndex].daysNames" />
+                      <Days :names-of-days="meeting.daysNames" />
                     </td>
                     <td
-                      :id="`${getTableId(index)}-${course.sectionId}-time-${index}`"
+                      :id="`${getTableId(index)}-${course.sectionId}-time-${meetingIndex + 1}`"
                       class="text-no-wrap"
                       :columnheader="`${getTableId(index)}-time-th`"
                     >
@@ -185,22 +189,23 @@
                         <span class="text-no-wrap">
                           {{
                             DateTime
-                              .fromISO(course.displayMeetings[meetingIndex].startDate)
+                              .fromISO(meeting.startDate)
                               .toFormat('MMM d, yyyy')
                           }} -
                         </span>
                         <span class="text-no-wrap">
                           {{
                             DateTime
-                              .fromISO(course.displayMeetings[meetingIndex].endDate)
+                              .fromISO(meeting.endDate)
                               .toFormat('MMM d, yyyy')
                           }}
                         </span>
                       </div>
                       <div :class="{'pb-2': course.nonstandardMeetingDates && meetingIndex === (size(course.displayMeetings) - 1)}">
-                        {{ course.displayMeetings[meetingIndex].startTimeFormatted }} - {{ course.displayMeetings[meetingIndex].endTimeFormatted }}
+                        {{ meeting.startTimeFormatted }} - {{ meeting.endTimeFormatted }}
                       </div>
                     </td>
+                    <td v-if="index === 0" :aria-hidden="true"></td>
                   </tr>
                 </template>
               </template>
@@ -208,16 +213,13 @@
           </div>
         </v-row>
       </template>
-      <v-row v-if="isEmpty(eligibleCourses) && isEmpty(ineligibleCourses)" class="ma-4 text-no-wrap title">
-        No courses.
-      </v-row>
     </v-card-text>
   </v-card>
 </template>
 
 <script setup>
 import {DateTime} from 'luxon'
-import {each, get, isEmpty, map, size} from 'lodash'
+import {each, get, isEmpty, map, size, tail} from 'lodash'
 import {mdiVideoPlus} from '@mdi/js'
 import {onMounted, ref} from 'vue'
 import {storeToRefs} from 'pinia'

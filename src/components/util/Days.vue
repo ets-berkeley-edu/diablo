@@ -1,25 +1,25 @@
 <template>
-  <span>
-    <span class="sr-only">Days of the week:</span>
-    <span v-for="(day, index) in namesOfDays" :key="index">
-      <span class="sr-only">{{ day }}</span>
-      <span :aria-hidden="true" :title="day">{{ day.slice(0, 2).toUpperCase() }}</span><span v-if="showComma(namesOfDays, index)" :class="{'pr-1': omitComma}"><span :class="{'sr-only': omitComma}">, </span></span>
-    </span>
-  </span>
+  <div>
+    <span class="sr-only">Meeting days: {{ oxfordJoin(namesOfDays) }}</span>
+    <div :aria-hidden="true">
+      <span v-for="(day, index) in namesOfDays" :key="index" :title="day">
+        <span>{{ day.slice(0, 2).toUpperCase() }}</span>
+        <span v-if="showComma(index)">, </span>
+      </span>
+    </div>
+  </div>
 </template>
 
 <script setup>
 import {defineProps} from 'vue'
+import {oxfordJoin} from '@/lib/utils'
 
-defineProps({
+const props = defineProps({
   namesOfDays: {
     required: true,
     type: Array
-  },
-  omitComma: {
-    type: Boolean
   }
 })
 
-const showComma = (list, index) => list.length > 1 && index < list.length - 1
+const showComma = index => props.namesOfDays.length > 1 && index < props.namesOfDays.length - 1
 </script>
