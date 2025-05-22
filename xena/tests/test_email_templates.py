@@ -60,12 +60,9 @@ class TestEmailTemplates:
         self.templates_page.click_menu_option(self.template.template_type.value['desc'])
         self.templates_page.click_cancel()
 
-    def test_create_template_name_input(self):
+    def test_create_template_subj_input(self):
         self.templates_page.click_template_select()
         self.templates_page.click_menu_option(self.template.template_type.value['desc'])
-        self.templates_page.enter_template_name('Semester start')
-
-    def test_create_template_subj_input(self):
         self.templates_page.enter_subject(self.template.subject)
         self.template.subject = f'Welcome to Course Capture {self.term.name}'
 

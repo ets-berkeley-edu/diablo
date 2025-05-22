@@ -35,12 +35,11 @@ from xena.test_utils import util
 
 class EmailTemplatesPage(DiabloPages):
     TEMPLATE_TYPE_SELECT = (By.XPATH, '//input[@id="select-email-template-type"]/..')
-    TEMPLATE_NAME_INPUT = (By.XPATH, '//input[@id="input-template-name"]')
     TEMPLATE_SUBJECT_INPUT = (By.XPATH, '//input[@id="input-template-subject-line"]')
-    CODE_BUTTON = (By.XPATH, '//button[contains(., "code")]')
+    CODE_BUTTON = (By.ID, 'template-body-editor-toolbar-btn-code')
     TEMPLATE_BODY_INPUT = (By.XPATH, '//div[@contenteditable="true"]')
     CODES_BUTTON = (By.ID, 'btn-email-template-codes')
-    CODES_DIV = (By.XPATH, '//div[contains(text(), "Template Codes")]/following-sibling::div[1]')
+    CODES_DIV = (By.XPATH, '//div[contains(h2, "Template Codes")]/following-sibling::div[1]')
     CODES_CLOSE_BUTTON = (By.ID, 'btn-close-template-codes-dialog')
     SAVE_BUTTON = (By.ID, 'save-email-template')
     CANCEL_BUTTON = (By.ID, 'cancel-edit-of-email-template')
@@ -107,10 +106,6 @@ class EmailTemplatesPage(DiabloPages):
         app.logger.info('Expanding template options')
         self.wait_for_page_and_click(EmailTemplatesPage.TEMPLATE_TYPE_SELECT)
 
-    def enter_template_name(self, name):
-        app.logger.info(f'Entering template name "{name}"')
-        self.wait_for_element_and_type(EmailTemplatesPage.TEMPLATE_NAME_INPUT, name)
-
     def enter_subject(self, subject):
         app.logger.info(f'Entering template subject "{subject}"')
         self.wait_for_element_and_type(EmailTemplatesPage.TEMPLATE_SUBJECT_INPUT, subject)
@@ -145,7 +140,7 @@ class EmailTemplatesPage(DiabloPages):
         self.wait_for_element_and_click(EmailTemplatesPage.CODES_CLOSE_BUTTON)
 
     def template_codes_text(self):
-        return self.element(self.CODES_DIV).get_attribute('innerText')
+        return self.element(self.CODES_DIV).get_property('innerText')
 
     def click_cancel(self):
         app.logger.info('Clicking cancel')
@@ -179,7 +174,6 @@ class EmailTemplatesPage(DiabloPages):
         self.load_page()
         self.click_template_select()
         self.click_menu_option(template.template_type.value['desc'])
-        self.enter_template_name(template.template_type.value['desc'])
         self.enter_subject(template.subject)
         self.enter_all_codes_in_body()
         self.click_save()
