@@ -35,11 +35,11 @@ from xena.test_utils import util
 
 class DiabloPages(Page):
 
-    OUIJA_BOARD_LINK = (By.ID, 'sidebar-link-Ouija Board')
-    ROOMS_LINK = (By.ID, 'sidebar-link-Rooms')
-    BLACKOUTS_LINK = (By.ID, 'sidebar-link-Blackouts')
-    EMAIL_TEMPLATES_LINK = (By.ID, 'sidebar-link-Email Templates')
-    JOBS_LINK = (By.ID, 'sidebar-link-The Chancel')
+    OUIJA_BOARD_LINK = (By.ID, 'sidebar-link-ouija-board')
+    ROOMS_LINK = (By.ID, 'sidebar-link-rooms')
+    BLACKOUTS_LINK = (By.ID, 'sidebar-link-blackouts')
+    EMAIL_TEMPLATES_LINK = (By.ID, 'sidebar-link-email-templates')
+    JOBS_LINK = (By.ID, 'sidebar-link-the-chancel')
 
     MENU_BUTTON = (By.ID, 'btn-main-menu')
     JOB_HISTORY_LINK = (By.ID, 'menu-item-job-history')
@@ -48,11 +48,11 @@ class DiabloPages(Page):
 
     SPINNER = (By.XPATH, '//div[contains(@class, "spinner")]')
     ALERT_MSG = (By.ID, 'alert-text')
-    VISIBLE_MENU_OPTION = (By.XPATH, '//div[contains(@class, "menuable__content__active")]//span[contains(@id, "-option-")]')
+    VISIBLE_MENU_OPTION = (By.XPATH, '//div[contains(@class, "v-menu")]//div[contains(@class, "v-list-item-title")]')
 
     @staticmethod
     def menu_option_locator(option_str):
-        return By.XPATH, f'//div[@role="option"][contains(., "{option_str}")]'
+        return By.XPATH, f'//div[contains(@class, "v-list-item")][contains(., "{option_str}")]'
 
     def wait_for_diablo_title(self, string):
         self.wait_for_title(f'{string} | Course Capture')
@@ -112,7 +112,7 @@ class DiabloPages(Page):
         self.wait_for_element_and_click(DiabloPages.menu_option_locator(option_text))
 
     def is_menu_option_disabled(self, option_text):
-        return self.element(DiabloPages.menu_option_locator(option_text)).get_attribute('aria-disabled') == 'true'
+        return 'v-list-item--disabled' in self.element(DiabloPages.menu_option_locator(option_text)).get_dom_attribute('class')
 
     def visible_menu_options(self):
         Wait(self.driver, app.config['TIMEOUT_SHORT']).until(
