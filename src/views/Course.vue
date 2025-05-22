@@ -1,17 +1,17 @@
 <template>
-  <div v-if="!loading">
+  <div v-if="!isLoading">
     <v-container fluid class="px-sm-0">
       <v-row class="pl-3">
         <PageTitle
-          v-if="contextStore.config.currentTermId === this.course.termId"
+          v-if="config.currentTermId === course.termId"
           :class-for-h1="course.deletedAt ? 'line-through' : ''"
-          icon="mdi-book-multiple-outline"
+          :icon="mdiBookMultipleOutline"
           :text="courseDisplayTitle"
         />
         <PageTitle
-          v-if="contextStore.config.currentTermId !== this.course.termId"
+          v-if="config.currentTermId !== course.termId"
           :class-for-h1="course.deletedAt ? 'line-through' : ''"
-          icon="mdi-book-multiple-outline"
+          :icon="mdiBookMultipleOutline"
           :text="`${courseDisplayTitle} (${getTermName(course.termId)})`"
         />
       </v-row>
@@ -95,13 +95,14 @@
                   v-if="updatesQueued"
                   density="compact"
                   type="warning"
-                  icon="mdi-alert"
+                  :icon="mdiAlert"
                   outlined
                 >
                   Recent updates to recording settings are currently queued for publication. They will be published in an hour or less.
                 </v-alert>
                 <span id="notice-scheduled" class="green--text">
-                  {{ currentUser.isAdmin ? 'The' : 'Your' }} course is scheduled for Course Capture. The first recording is on {{ course.scheduled[0].meetingStartDate | moment('MMM D, YYYY') }}.
+                  {{ currentUser.isAdmin ? 'The' : 'Your' }} course is scheduled for Course Capture. The first recording is on
+                  {{ DateTime.fromISO(course.scheduled[0].meetingStartDate).toFormat('MMM d, yyyy') }}.
                 </span>
               </v-col>
             </v-row>
@@ -171,20 +172,9 @@
                       label="Find collaborator by: "
                       menu-label="collaborators"
                       placeholder="UID or email"
-                      :on-select-result="addCollaboratorPending"
+                      :on-select-result="addCollaboratorConfirm"
                       :error-message="addCollaboratorError"
                     />
-                  </v-col>
-                  <v-col cols="3">
-                    <v-btn
-                      id="btn-collaborator-add"
-                      aria-label="Add Collaborator"
-                      color="success"
-                      :disabled="!pendingCollaborator"
-                      @click="addCollaboratorConfirm"
-                    >
-                      Add
-                    </v-btn>
                   </v-col>
                 </v-row>
                 <v-row
@@ -215,7 +205,7 @@
                         id="btn-collaborators-save"
                         aria-label="Save Collaborators"
                         color="success"
-                        :disabled="$_.isEqual($_.sortBy(collaborators, 'uid'), $_.sortBy(course.collaborators, 'uid')) || collaboratorsUpdating"
+                        :disabled="isEqual(sortBy(collaborators, 'uid'), sortBy(course.collaborators, 'uid')) || collaboratorsUpdating"
                         @click="updateCollaboratorsClicked"
                       >
                         <v-progress-circular
@@ -433,12 +423,12 @@
                         justify="start"
                       >
                         <v-col cols="12">
-                          To link a bCourses site from a past term, please <a :href="`mailto:${$config.emailCourseCaptureSupport}`" class="text-anchor" target="_blank">
+                          To link a bCourses site from a past term, please <a :href="`mailto:${config.emailCourseCaptureSupport}`" class="text-anchor" target="_blank">
                             contact Course Capture support<span class="sr-only"> (this email link opens a new tab)</span></a>.
                         </v-col>
                       </v-row>
                       <v-row
-                        v-if="$currentUser.isAdmin"
+                        v-if="currentUser.isAdmin"
                         align="end"
                         justify="start"
                       >
@@ -531,7 +521,7 @@
                 </v-card>
               </v-col>
             </v-row>
-            <v-row v-if="!currentUser.isAdmin && $_.get(course, 'publishType', '') === 'kaltura_my_media'">
+            <v-row v-if="!currentUser.isAdmin && get(course, 'publishType', '') === 'kaltura_my_media'">
               <v-col cols="12">
                 Based on the selected Recording Placement, please review the following KB articles:
                 <ul>
@@ -562,7 +552,7 @@
                 </ul>
               </v-col>
             </v-row>
-            <v-row v-if="!currentUser.isAdmin && $_.get(course, 'publishType', '').startsWith('kaltura_media_gallery')">
+            <v-row v-if="!currentUser.isAdmin && get(course, 'publishType', '').startsWith('kaltura_media_gallery')">
               <v-col cols="12">
                 Based on the selected Recording Placement, please review the following KB articles:
                 <ul>
@@ -628,7 +618,7 @@
             <v-row>
               <div class="d-flex justify-start">
                 <div class="pr-2">
-                  <v-icon color="red">mdi-alert</v-icon>
+                  <v-icon color="red" :icon="mdiAlert"></v-icon>
                 </div>
                 <div id="course-not-eligible">
                   This course is not eligible for Course Capture because
@@ -642,7 +632,7 @@
             <v-row>
               <div class="d-flex justify-start">
                 <div class="pr-2">
-                  <v-icon color="red">mdi-alert</v-icon>
+                  <v-icon color="red" :icon="mdiAlert"></v-icon>
                 </div>
                 <div id="invalid-meeting-times">
                   This course is in a capture-enabled room but the meeting times are missing or invalid.
@@ -654,7 +644,7 @@
             <v-row>
               <div class="d-flex justify-start">
                 <div class="pr-2">
-                  <v-icon color="red">mdi-alert</v-icon>
+                  <v-icon color="red" :icon="mdiAlert"></v-icon>
                 </div>
                 <div id="course-not-current">
                   This course is not currently eligible for Course Capture.
@@ -704,7 +694,7 @@
                         @click="() => onClickSort(column, sort, sortBy, sortDesc)"
                       >
                         {{ column.text }}
-                        <v-icon :aria-hidden="true" small right>{{ getSortByIcon(column, sortBy, sortDesc) }}</v-icon>
+                        <v-icon :aria-hidden="true" small right :icon="getSortByIcon(column, sortBy, sortDesc)"></v-icon>
                       </v-btn>
                     </th>
                   </tr>
@@ -753,7 +743,7 @@
 </template>
 
 <script setup>
-import {ref, reactive, computed, onMounted} from 'vue'
+import {ref, reactive, computed, onMounted, nextTick} from 'vue'
 import {useRoute} from 'vue-router'
 import CanvasCourseSite from '@/components/course/CanvasCourseSite'
 import CoursePageSidebar from '@/components/course/CoursePageSidebar'
@@ -772,10 +762,13 @@ import {getAuditoriums} from '@/api/room'
 import {getCanvasSitesTeaching} from '@/api/user'
 import {alertScreenReader, putFocusNextTick, getCourseCodes, getTermName} from '@/lib/utils'
 import {useContextStore} from '@/stores/context'
-import {find, get, filter, isEmpty} from 'lodash'
+import {find, get, filter, isEmpty, isEqual, sortBy, size, first} from 'lodash'
+import {DateTime} from 'luxon'
+import {mdiArrowDown, mdiArrowUp, mdiBookMultipleOutline, mdiAlert} from '@mdi/js'
+
 
 // Composable contexts
-const {config, currentUser, loading, loadingStart, loadingComplete} = useContextStore()
+const {config, currentUser, loadingStart, loadingComplete} = useContextStore()
 
 // State
 const addCollaboratorError = ref('')
@@ -785,7 +778,16 @@ const capability = ref(null)
 const collaborators = ref([])
 const collaboratorsEditing = ref(false)
 const collaboratorsUpdating = ref(false)
-const course = ref({meetings: {eligible: [], ineligible: []}, instructors: [], collaborators: [], canvasSites: [], updateHistory: []})
+const course = ref({
+  meetings: {
+    eligible: [],
+    ineligible: []
+  },
+  instructors: [],
+  collaborators: [],
+  canvasSites: [],
+  updateHistory: []
+})
 const courseDisplayTitle = ref('')
 const displayLabels = reactive({
   kaltura_media_gallery: 'Publish to the Media Gallery (all members of the bCourses site will have access)',
@@ -796,11 +798,11 @@ const displayLabels = reactive({
 const hasValidMeetingTimes = ref(false)
 const instructors = ref([])
 const instructorProxies = ref([])
+const isLoading = ref(true)
 const location = ref('')
 const noteBody = ref('')
 const noteEditing = ref(false)
 const noteUpdating = ref(false)
-const pendingCollaborator = ref(null)
 const pendingCanvasSite = ref(null)
 const pendingCanvasSiteId = ref(null)
 const publishCanvasSites = ref([])
@@ -833,6 +835,7 @@ const recordingTypeEditable = computed(() =>
 const updatesQueued = computed(() => !!course.value.updateHistory.find(u => u.status === 'queued'))
 
 onMounted(() => {
+  isLoading.value = true
   loadingStart()
   const {params} = useRoute()
   getCourse(params.termId, params.sectionId)
@@ -859,9 +862,11 @@ onMounted(() => {
         if (!currentUser.isAdmin) {
           getCanvasSitesTeaching(currentUser.uid).then(sites => {
             publishCanvasSiteOptions.value = sites
+            isLoading.value = false
             loadingComplete(courseDisplayTitle.value)
           })
         } else {
+          isLoading.value = false
           loadingComplete(courseDisplayTitle.value)
         }
       })
@@ -931,62 +936,53 @@ const deleteNote = () => {
     })
 }
 
-const addCollaboratorConfirm = () => {
-  const exists = collaborators.value.some(c => c.uid === pendingCollaborator.value.uid)
-  if (exists) {
-    addCollaboratorError.value = `${pendingCollaborator.value.firstName} ${pendingCollaborator.value.lastName} is already a collaborator.`
-    alertScreenReader(addCollaboratorError.value)
-  } else {
-    addCollaboratorError.value = null
-    collaborators.value.push(pendingCollaborator.value)
-    alertScreenReader(`${pendingCollaborator.value.firstName} ${pendingCollaborator.value.lastName} added as a collaborator.`)
+const addCollaboratorConfirm = (collaborator) => {
+  if (collaborator) {
+    const exists = collaborators.value.some(c => c.uid === collaborator.uid)
+    if (exists) {
+      addCollaboratorError.value = `${collaborator.firstName} ${collaborator.lastName} is already a collaborator.`
+      alertScreenReader(addCollaboratorError.value)
+    } else {
+      addCollaboratorError.value = null
+      collaborators.value.push(collaborator)
+      alertScreenReader(`${collaborator.firstName} ${collaborator.lastName} added as a collaborator.`)
+    }
+    putFocusNextTick('input-collaborator-lookup-autocomplete')
   }
-  pendingCollaborator.value = null
-  putFocusNextTick('input-collaborator-lookup-autocomplete')
 }
 
 const addCanvasSiteById = () => {
-  if (this.pendingCanvasSiteId.value && !this.isCanvasSiteIdStaged(this.pendingCanvasSiteId)) {
-    getCourseSite(this.pendingCanvasSiteId.value).then(data => {
+  if (pendingCanvasSiteId.value && !isCanvasSiteIdStaged(pendingCanvasSiteId)) {
+    getCourseSite(pendingCanvasSiteId.value).then(data => {
       if (data) {
-        this.publishCanvasSites.value.push(data)
+        publishCanvasSites.value.push(data)
         alertScreenReader(`${data.name} added.`)
         putFocusNextTick('input-canvas-site-id')
       }
     })
   }
-  this.pendingCanvasSiteId.value = null
+  pendingCanvasSiteId.value = null
 }
 
 const addCanvasSiteConfirm = () => {
-  if (this.pendingCanvasSite && !this.isCanvasSiteIdStaged(this.pendingCanvasSite.canvasSiteId)) {
-    this.publishCanvasSites.push(this.pendingCanvasSite)
+  if (pendingCanvasSite.value && !isCanvasSiteIdStaged(pendingCanvasSite.canvasSiteId)) {
+    publishCanvasSites.push(pendingCanvasSite)
   }
-  alertScreenReader(`${this.pendingCanvasSite.name} added.`)
+  alertScreenReader(`${pendingCanvasSite.name} added.`)
   putFocusNextTick('select-canvas-site')
-  this.pendingCanvasSite = null
-}
-
-const addCollaboratorPending = (collaborator) => {
-  if (collaborator) {
-    this.pendingCollaborator.value = collaborator
-    this.addCollaboratorError.value = null
-    this.$nextTick(() => {
-      this.alertScreenReader(`${this.pendingCollaborator.value.firstName} ${this.pendingCollaborator.value.lastName} selected.`)
-    })
-  }
+  pendingCanvasSite.value = null
 }
 
 const removeCanvasSite = (canvasSiteId, index) => {
-  const nextFocusIndex = (index + 1 === this.$_.size(this.publishCanvasSites)) ? index - 1 : index + 1
-  const nextFocusSiteId = get(this.publishCanvasSites, `${nextFocusIndex}.canvasSiteId`)
-  const canvasSite = find(this.publishCanvasSites, c => c.canvasSiteId === canvasSiteId)
+  const nextFocusIndex = (index + 1 === size(publishCanvasSites)) ? index - 1 : index + 1
+  const nextFocusSiteId = get(publishCanvasSites, `${nextFocusIndex}.canvasSiteId`)
+  const canvasSite = find(publishCanvasSites, c => c.canvasSiteId === canvasSiteId)
   const canvasSiteName = canvasSite.name || ''
-  this.publishCanvasSites = filter(this.publishCanvasSites, c => c.canvasSiteId !== canvasSiteId)
-  this.alertScreenReader(`Removed bCourses site ${canvasSiteName}.`)
+  publishCanvasSites.value = filter(publishCanvasSites, c => c.canvasSiteId !== canvasSiteId)
+  alertScreenReader(`Removed bCourses site ${canvasSiteName}.`)
   let nextFocusId = `btn-canvas-site-remove-${nextFocusSiteId}`
-  if (isEmpty(this.publishCanvasSites) || !nextFocusSiteId) {
-    nextFocusId = this.$currentUser.isAdmin ? 'input-canvas-site-id' : 'select-canvas-site'
+  if (isEmpty(publishCanvasSites) || !nextFocusSiteId) {
+    nextFocusId = currentUser.isAdmin ? 'input-canvas-site-id' : 'select-canvas-site'
   }
   putFocusNextTick(nextFocusId)
 }
@@ -1000,18 +996,18 @@ const removeCollaborator = (uid, index) => {
 }
 
 const getSortByIcon = (column, sortBy, sortDesc) => {
-  return sortBy[0] === column.value && sortDesc[0] ? 'mdi-arrow-down' : 'mdi-arrow-up'
+  return sortBy[0] === column.value && sortDesc[0] ? mdiArrowDown : mdiArrowUp
 }
 
 const isCanvasSiteIdStaged = (siteId) => {
-  return !!this.$_.find(this.publishCanvasSites, {'canvasSiteId': parseInt(siteId, 10)})
+  return !!find(publishCanvasSites, {'canvasSiteId': parseInt(siteId, 10)})
 }
 
 const onClickSort = (column, sort, sortBy, sortDesc) => {
-  const sortDirection = this.$_.first(sortBy) === column.value && !sortDesc[0] ? 'descending' : 'ascending'
+  const sortDirection = first(sortBy) === column.value && !sortDesc[0] ? 'descending' : 'ascending'
   sort(column.value)
-  this.alertScreenReader(`Sorted by ${column.text}, ${sortDirection}`)
-  this.$putFocusNextTick(`update-history-sort-by-${column.id}-btn`)
+  alertScreenReader(`Sorted by ${column.text}, ${sortDirection}`)
+  putFocusNextTick(`update-history-sort-by-${column.id}-btn`)
 }
 
 const onPublishTypeChange = (option, idx) => {

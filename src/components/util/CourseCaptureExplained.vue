@@ -7,19 +7,18 @@
       id="link-to-course-capture-overview"
       aria-label="Open URL to Course Capture service overview in a new window"
       class="text-anchor"
-      :href="config.courseCaptureExplainedUrl"
+      :href="context.config.courseCaptureExplainedUrl"
       target="_blank"
     >
-      Course Capture Services Explained <v-icon>mdi-open-in-new</v-icon>
+      Course Capture Services Explained
+      <v-icon small :icon="mdiOpenInNew" />
     </a>.
   </div>
 </template>
 
-<script>
-import Context from '@/mixins/Context.vue';
+<script setup>
+import {useContextStore} from '@/stores/context'
+import {mdiOpenInNew} from '@mdi/js'
 
-export default {
-  name: 'CourseCaptureExplained',
-  mixins: [Context],
-}
+const context = useContextStore()
 </script>

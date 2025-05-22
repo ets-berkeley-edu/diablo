@@ -18,7 +18,7 @@
             target="_blank"
           >
             Kaltura series {{ scheduled.kalturaScheduleId }}
-            <v-icon small class="pb-1">mdi-open-in-new</v-icon>
+            <v-icon small class="pb-1" :icon="mdiOpenInNew"></v-icon>
           </a>
         </div>
       </v-list-item-title>
@@ -53,6 +53,7 @@
 import {defineProps} from 'vue'
 import {DateTime} from 'luxon'
 import {useContextStore} from '@/stores/context'
+import {mdiOpenInNew} from '@mdi/js'
 
 // declare props
 defineProps({

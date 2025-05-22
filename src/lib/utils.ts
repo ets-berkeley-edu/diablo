@@ -119,3 +119,7 @@ export function summarize(courses) {
   }
   return msg
 }
+
+export function escapeForRegExp(s) {
+  return s && s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
