@@ -48,12 +48,10 @@ export const useContextStore = defineStore('context', {
       // const route = router.currentRoute.value
       this.screenReaderAlert = srAlert // || `Loading ${String(get(route, 'name', ''))}.`
     },
-    loadingComplete(pageTitle?: string) {
+    loadingComplete(pageTitle?: string, srAlert?: string) {
       document.title = `${pageTitle || 'UC Berkeley'} | Course Capture`
       this.loading = false
-      if (pageTitle) {
-        this.screenReaderAlert = `${pageTitle} loaded`
-      }
+      this.screenReaderAlert = `${pageTitle || 'Page'} loaded. ${srAlert}`
       putFocusNextTick('page-title')
     },
     alertScreenReader(message: string) {

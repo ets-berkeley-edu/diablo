@@ -44,36 +44,28 @@
             v-model="selectedFilter"
             aria-label="Filter courses table"
             class="pb-2"
-            color="secondary"
+            color="primary"
             :disabled="isDownloading"
-            :items="keys(contextStore.config.searchFilterOptions)"
-            :menu-props="{eager: true, id: 'ouija-filter-options-menu'}"
-            @update:model-value="() => refresh(`Courses table refreshed. Showing ${contextStore.config.searchFilterOptions[selectedFilter]}`)"
+            :item-props="true"
+            :items="filterOptions"
+            :menu-props="{attach: menuContainer, eager: true, id: 'ouija-filter-options-menu'}"
+            @update:menu="isOpen => putFocusNextTick(isOpen ? `filter-option-${kebabCase(item.value)}` : 'ouija-filter-options')"
+            @update:model-value="refresh"
           >
             <template #item="{props: itemProps, item}">
-              <v-list-item :id="`filter-option-${item.value}`" v-bind="itemProps"></v-list-item>
-            </template>
-            <template #selection="{item}">
-              <v-tooltip id="tooltip-ouija-filter" location="bottom">
-                <template #activator="{props: tooltipProps}">
-                  <v-icon
-                    class="pb-1 pr-2"
-                    :icon="mdiInformationOutline"
-                    v-bind="tooltipProps"
-                  />
-                </template>
-                <span class="font-weight-bold">{{ selectedFilter }}:</span> {{ contextStore.config.searchFilterOptions[selectedFilter] }}
-              </v-tooltip>
-              {{ item.title }}
+              <v-list-item :id="`filter-option-${kebabCase(item.value)}`" v-bind="itemProps" :subtitle="item.raw.subtitle">
+                <template #title="{title}">{{ title }}<span class="sr-only">: </span></template>
+              </v-list-item>
             </template>
           </v-select>
+          <div id="ouija-filter-options-menu-container" ref="menuContainer"></div>
         </v-col>
       </v-row>
     </v-card-title>
     <CoursesDataTable
       :courses="courses"
+      :description="coursesTableDescription"
       :include-room-column="true"
-      :message-for-courses="courses.length ? (courses.length === 1 ? '' : `${courses.length} courses`) : 'No courses'"
       :on-toggle-opt-out="onToggleOptOut"
       :refreshing="isRefreshing"
       :search-text="searchText"
@@ -82,10 +74,10 @@
 </template>
 
 <script setup>
-import {each, keys, map} from 'lodash'
-import {mdiAutoFix, mdiInformationOutline, mdiMagnify} from '@mdi/js'
-import {onMounted, ref} from 'vue'
-import {alertScreenReader, getCourseCodes} from '@/lib/utils'
+import {computed, onMounted, ref} from 'vue'
+import {each, kebabCase, map} from 'lodash'
+import {mdiAutoFix, mdiMagnify} from '@mdi/js'
+import {alertScreenReader, getCourseCodes, pluralize, putFocusNextTick} from '@/lib/utils'
 import CoursesDataTable from '@/components/course/CoursesDataTable'
 import PageTitle from '@/components/util/PageTitle'
 import {downloadCSV, getCourses} from '@/api/course'
@@ -93,17 +85,47 @@ import {useContextStore} from '@/stores/context'
 
 const contextStore = useContextStore()
 const courses = ref([])
+const filterOptions = map(contextStore.config.searchFilterOptions, (v, k) => {
+  return {title: k, subtitle: v}
+})
 const isDownloading = ref(false)
 const isRefreshing = ref(false)
+const menuContainer = ref()
 const searchText = ref('')
 const selectedFilter = ref('Scheduled')
+const coursesTableDescription = computed(() => {
+  const pluralized = pluralize('course', courses.value.length, {includeCount: false})
+  const description = `${courses.value.length ? courses.value.length.toLocaleString() : 'No'} ${selectedFilter.value || ''} ${pluralized}`
+  if (selectedFilter.value === 'No Instructors') {
+    return description.replace(`No Instructors ${pluralized}`, `${pluralized} with no instructor`)
+  } else if (selectedFilter.value === 'All') {
+    return description.replace(`All ${pluralized}`, pluralized)
+  }
+  else {
+    return description
+  }
+})
 
 onMounted(() => {
   contextStore.loadingStart()
-  refresh().then(() => {
-    contextStore.loadingComplete()
+  loadCourses().then(() => {
+    contextStore.loadingComplete('Ouija Board', `Showing ${coursesTableDescription.value}`)
   })
 })
+
+const loadCourses = () => {
+  isRefreshing.value = true
+  return getCourses(selectedFilter.value, contextStore.config.currentTermId).then(data => {
+    courses.value = data
+    each(courses.value, course => {
+      // In support of search, we index nested course data
+      course.courseCodes = getCourseCodes(course)
+      course.instructorNames = map(course.instructors, 'name')
+      course.isSelectable = !course.hasOptedOut
+    })
+    isRefreshing.value = false
+  })
+}
 
 const onClickDownload = () => {
   isDownloading.value = true
@@ -123,20 +145,10 @@ const onToggleOptOut = course => {
   }
 }
 
-const refresh = srAlert => {
-  isRefreshing.value = true
-  return getCourses(selectedFilter.value, contextStore.config.currentTermId).then(data => {
-    courses.value = data
-    each(courses.value, course => {
-      // In support of search, we index nested course data
-      course.courseCodes = getCourseCodes(course)
-      course.instructorNames = map(course.instructors, 'name')
-      course.isSelectable = !course.hasOptedOut
-    })
-    isRefreshing.value = false
-    if (srAlert) {
-      alertScreenReader(srAlert)
-    }
+const refresh = () => {
+  alertScreenReader('Refreshing courses table')
+  loadCourses().then(() => {
+    alertScreenReader(`Showing ${coursesTableDescription.value}`)
   })
 }
 </script>

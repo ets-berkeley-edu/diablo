@@ -1,8 +1,9 @@
 <template>
   <div>
-    <div v-if="courses.length && !searchText && !refreshing" id="courses-data-table-message" class="text-medium-emphasis pb-1 pl-4">
-      {{ messageForCourses }}
-    </div>
+    <v-row id="courses-data-table-message" class="text-medium-emphasis pb-1 px-4">
+      <v-spacer />
+      <v-col cols="12" md="6"><span v-if="!refreshing && !searchText">{{ description }}</span></v-col>
+    </v-row>
     <v-data-table
       id="courses-data-table"
       v-model="selectedRows"
@@ -39,6 +40,7 @@
                 :class="{'icon-visible': isSorted(column)}"
                 color="body"
                 density="compact"
+                :disabled="refreshing"
                 variant="plain"
                 @click="() => toggleSort(column)"
               >
@@ -46,7 +48,9 @@
               </v-btn>
             </template>
             <template v-else>
-              <span class="font-size-12 font-weight-bold py-1 text-align-center text-medium-emphasis text-transform-unset v-btn">{{ column.title }}</span>
+              <span class="font-size-12 font-weight-bold py-1 text-align-center text-medium-emphasis text-transform-unset v-btn" :class="{'opacity-30': refreshing}">
+                {{ column.title }}
+              </span>
             </template>
           </th>
         </tr>
@@ -265,6 +269,10 @@ const props = defineProps({
     required: true,
     type: Array
   },
+  description: {
+    default: undefined,
+    type: String
+  },
   includeOptOutColumnForUid: {
     required: false,
     type: String,
@@ -273,10 +281,6 @@ const props = defineProps({
   includeRoomColumn: {
     required: true,
     type: Boolean
-  },
-  messageForCourses: {
-    default: undefined,
-    type: String
   },
   onToggleOptOut: {
     required: false,
@@ -322,6 +326,12 @@ watch(() => props.refreshing, async(value) => {
 })
 
 onMounted(() => {
+  if (!props.includeRoomColumn) {
+    headers.value = filter(headers.value, h => h.title !== 'Room')
+  }
+  if (!props.includeOptOutColumnForUid) {
+    headers.value = filter(headers.value, h => h.title !== 'Opt out')
+  }
   refresh()
 })
 
@@ -337,12 +347,6 @@ const onUpdateSortBy = primarySortBy => {
 
 const refresh = () => {
   pageCurrent.value = 1
-  if (!props.includeRoomColumn) {
-    headers.value = filter(headers.value, h => h.title !== 'Room')
-  }
-  if (!props.includeOptOutColumnForUid) {
-    headers.value = filter(headers.value, h => h.title !== 'Opt out')
-  }
   each(props.courses, course => {
     course.instructorNames = map(course.instructors, 'name')
     course.isSelectable = !course.hasOptedOut
