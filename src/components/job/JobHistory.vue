@@ -3,7 +3,7 @@
     <v-card-title>
       <v-row>
         <v-col cols="12" sm="5">
-          <h2 class="my-2">
+          <h2 id="job-history-header" class="my-2">
             <v-icon
               class="pb-1"
               :color="$vuetify.theme.dark ? 'white' : 'primary'"
@@ -15,6 +15,7 @@
         <v-col cols="12" sm="7">
           <v-text-field
             v-if="size(jobHistory)"
+            id="search-job-history-input"
             v-model="search"
             :append-icon="mdiMagnify"
             :aria-describedby="undefined"
@@ -28,8 +29,7 @@
       </v-row>
     </v-card-title>
     <v-data-table
-      id="job-history"
-      caption="Job History"
+      id="job-history-table"
       :headers="headers"
       hide-default-footer
       :items="jobHistory"
@@ -89,7 +89,7 @@
     <div v-if="pageCount > 1" class="text-center pb-4 pt-2">
       <v-pagination
         id="rooms-pagination"
-        v-model="options.page"
+        v-model="pageCurrent"
         :length="pageCount"
         total-visible="10"
       ></v-pagination>

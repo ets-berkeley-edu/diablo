@@ -10,8 +10,7 @@
       </v-card-title>
       <v-card-text>
         <v-data-table
-          id="job-schedule"
-          caption="Scheduled Jobs"
+          id="job-schedule-table"
           disable-sort
           :headers="headers"
           hide-default-footer

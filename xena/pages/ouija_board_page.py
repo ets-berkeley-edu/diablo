@@ -47,12 +47,11 @@ class OuijaBoardPage(CoursesPage):
     SEARCH_INPUT = (By.ID, 'input-search')
     SEARCH_SELECT_BUTTON = (By.XPATH, '//div[@aria-haspopup="listbox"]')
     SEARCH_SELECT_SELECTION = (By.XPATH, '//input[@id="ouija-filter-options"]/preceding-sibling::div')
-    SEARCH_SELECT_OPTION = (By.XPATH, '//div[@role="listbox"]/div[@role="option"]//div[contains(@class, "title")]')
 
-    FILTER_ALL_OPTION = (By.XPATH, '//div[@role="option"][contains(., "All")]')
-    FILTER_OPTED_OUT = (By.XPATH, '//div[@role="option"][contains(., "Opted Out")]')
-    FILTER_SCHEDULED_OPTION = (By.XPATH, '//div[@role="option"][contains(., "Scheduled") and not(contains(., "Nonstandard"))]')
-    FILTER_NO_INSTRUCTORS_OPTION = (By.XPATH, '//div[@role="option"][contains(., "No Instructors")]')
+    FILTER_ALL_OPTION = (By.ID, 'filter-option-all')
+    FILTER_OPTED_OUT = (By.ID, 'filter-option-opted-out')
+    FILTER_SCHEDULED_OPTION = (By.ID, 'filter-option-scheduled')
+    FILTER_NO_INSTRUCTORS_OPTION = (By.ID, 'filter-option-no-instructors')
 
     NO_RESULTS_MSG = (By.ID, 'message-when-zero-courses')
 
@@ -108,7 +107,7 @@ class OuijaBoardPage(CoursesPage):
 
     @staticmethod
     def search_courses_option_xpath(status):
-        return f'//div[@role="listbox"]/div[@role="option"]//div[contains(@class, "title")][text()="{status}"]'
+        return f'//div[@id="ouija-filter-options-list"]/div[starts-with(@id, "filter-option-")]//div[contains(@class, "title")][text()="{status}"]'
 
     def search_for_string(self, string, status):
         app.logger.info(f'Searching courses for {string} with status {status}')

@@ -48,8 +48,9 @@
             :disabled="isDownloading"
             :item-props="true"
             :items="filterOptions"
+            :list-props="{ariaLabel: 'Courses table filter options', id: 'ouija-filter-options-list'}"
             :menu-props="{attach: menuContainer, eager: true, id: 'ouija-filter-options-menu'}"
-            @update:menu="isOpen => putFocusNextTick(isOpen ? `filter-option-${kebabCase(item.value)}` : 'ouija-filter-options')"
+            @update:menu="isOpen => putFocusNextTick(isOpen ? 'filter-option-scheduled' : 'ouija-filter-options')"
             @update:model-value="refresh"
           >
             <template #item="{props: itemProps, item}">

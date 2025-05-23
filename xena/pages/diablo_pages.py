@@ -136,7 +136,7 @@ class DiabloPages(Page):
         self.element(DiabloPages.course_opt_out_button_clickable_locator(section)).click()
 
     def is_course_opted_out(self, section):
-        if self.element(DiabloPages.course_opt_out_button_locator(section)).get_attribute('aria-checked') == 'true':
+        if self.element(DiabloPages.course_opt_out_button_locator(section)).has_attribute('checked'):
             return True
         else:
             return False

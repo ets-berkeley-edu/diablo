@@ -46,7 +46,7 @@ class JobsPage(DiabloPages):
     RUN_SEMESTER_START_JOB_BUTTON = (By.ID, 'run-job-semester_start')
     RUN_SIS_DATA_REFRESH_JOB_BUTTON = (By.ID, 'run-job-sis_data_refresh')
 
-    SEARCH_HISTORY_INPUT = (By.XPATH, '//label[text()="Search History"]/following-sibling::input')
+    SEARCH_HISTORY_INPUT = (By.ID, 'search-job-history-input')
 
     def hit_url(self):
         self.driver.get(f'{app.config["BASE_URL"]}/jobs')
@@ -137,7 +137,7 @@ class JobsPage(DiabloPages):
         self.run_emails_job()
 
     def wait_for_jobs_table(self):
-        locator = By.XPATH, '//h1[contains(., "The Chancel")]/../../following-sibling::div//table'
+        locator = By.XPATH, '//div[@id="job-schedule-table"]//table'
         Wait(self.driver, util.get_short_timeout()).until(ec.presence_of_element_located(locator))
 
     @staticmethod
@@ -186,21 +186,16 @@ class JobsPage(DiabloPages):
         self.wait_for_element_and_type(JobsPage.SEARCH_HISTORY_INPUT, async_job.value)
 
     @staticmethod
-    def job_row_one_locator():
-        return '//h2[contains(text(), "History")]/../../following-sibling::div//tbody/tr[1]'
-
-    @staticmethod
     def job_most_recent_locator(async_job):
-        xpath = f'{JobsPage.job_row_one_locator()}[contains(., "{async_job.value}")]'
-        return By.XPATH, xpath
+        return By.XPATH, f'//div[@id="job-history-table"]//tbody/tr[contains(., "{async_job.value}")][1]'
 
     def wait_for_most_recent_job_success(self, async_job):
         app.logger.info(f'Waiting for {async_job} to succeed')
         time.sleep(2)
         tries = 1
         retries = util.get_long_timeout()
-        success = By.XPATH, f'{JobsPage.job_most_recent_locator(async_job)[1]}//i[contains(@class, "light-green--text")]'
-        failure = By.XPATH, f'{JobsPage.job_most_recent_locator(async_job)[1]}//i[contains(@class, "red--text")]'
+        success = By.XPATH, f'{JobsPage.job_most_recent_locator(async_job)[1]}//i[contains(@title, "job finished")]'
+        failure = By.XPATH, f'{JobsPage.job_most_recent_locator(async_job)[1]}//i[contains(@title, "job failed")]'
         while tries <= retries:
             tries += 1
             try:
