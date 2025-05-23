@@ -41,7 +41,6 @@
       v-if="!route.meta.printable"
       v-wave="waveOptions"
       color="header-background"
-      app
     >
       <div
         class="display-1 not-selectable banner-overlay"
@@ -231,6 +230,7 @@ const toggleTheme = () => {
 <style scoped>
 ::v-deep .v-toolbar {
   left: 0 !important;
+  position: fixed !important;
   width: 100% !important;
 }
 ::v-deep .v-navigation-drawer {
