@@ -315,7 +315,7 @@ const selectedRows = ref([])
 const sortBy = ref({})
 
 const pageCount = computed(() => {
-  return Math.ceil(props.courses.length / contextStore.config.searchItemsPerPage || 50)
+  return Math.ceil(props.courses.length / (contextStore.config.searchItemsPerPage || 50))
 })
 
 
