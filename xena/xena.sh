@@ -73,6 +73,6 @@ echo
 echo "Xena will now slay the tests for ${test_suite}"
 
 test_suite="*${test_suite}*"
-USERNAME="${username}" PASSWORD="${password}" pytest tests/test_${test_suite}.py --browser ${browser} --headless ${headless}
+USERNAME="${username}" PASSWORD="${password}" pytest -vv tests/test_${test_suite}.py --browser ${browser} --headless ${headless}
 
 exit 0
