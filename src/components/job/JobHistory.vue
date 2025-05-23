@@ -39,7 +39,6 @@
       no-results-text="No matching jobs"
       :page.sync="pageCurrent"
       :search="search"
-      @page-count="pageCount = $event"
     >
       <template #headers="{columns}">
         <tr>
@@ -85,15 +84,17 @@
           </td>
         </tr>
       </template>
+      <template #bottom={pageCount}>
+        <div v-if="pageCount > 1" class="text-center pb-4 pt-2">
+          <v-pagination
+            id="rooms-pagination"
+            v-model="pageCurrent"
+            :length="pageCount"
+            total-visible="10"
+          ></v-pagination>
+        </div>
+      </template>
     </v-data-table>
-    <div v-if="pageCount > 1" class="text-center pb-4 pt-2">
-      <v-pagination
-        id="rooms-pagination"
-        v-model="pageCurrent"
-        :length="pageCount"
-        total-visible="10"
-      ></v-pagination>
-    </div>
     <v-bottom-sheet v-model="richardPryor">
       <v-sheet class="text-center" dark height="800px">
         <v-btn
@@ -139,10 +140,6 @@ const itemsPerPage = 50
 const pageCurrent = ref(1)
 const richardPryor = ref(false)
 const search = ref('')
-
-const pageCount = computed(() => {
-  return Math.ceil(props.jobHistory.length / itemsPerPage)
-})
 
 watch(search, input => {
   if (input && input.length && input.toLowerCase() === 'the bed is on my foot') {
