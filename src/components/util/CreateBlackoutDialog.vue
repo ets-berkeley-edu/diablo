@@ -71,7 +71,7 @@
 </template>
 
 <script setup>
-import {computed, defineModel, defineProps, onMounted, ref} from 'vue'
+import {computed, onMounted, ref} from 'vue'
 import {includes, map, trim} from 'lodash'
 import {DateTime} from 'luxon'
 import ProgressButton from '@/components/util/ProgressButton'

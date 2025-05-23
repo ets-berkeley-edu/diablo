@@ -136,7 +136,6 @@
 
 <script setup>
 import {DateTime} from 'luxon'
-import {defineProps} from 'vue'
 import {endsWith, get} from 'lodash'
 import {mdiChevronDown, mdiChevronUp, mdiOpenInNew} from '@mdi/js'
 import {useContextStore} from '@/stores/context'

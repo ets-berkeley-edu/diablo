@@ -114,7 +114,7 @@
 </template>
 
 <script setup>
-import {computed, defineProps, ref, watch} from 'vue'
+import {computed, ref, watch} from 'vue'
 import {DateTime} from 'luxon'
 import {mdiCheckBold, mdiExclamationThick, mdiHistory, mdiMagnify} from '@mdi/js'
 import {size} from 'lodash'

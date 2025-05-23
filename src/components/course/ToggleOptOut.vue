@@ -21,7 +21,7 @@
 </template>
 
 <script setup>
-import {defineProps, onMounted, ref} from 'vue'
+import {onMounted, ref} from 'vue'
 import {updateOptOut} from '@/api/course'
 
 const props = defineProps({

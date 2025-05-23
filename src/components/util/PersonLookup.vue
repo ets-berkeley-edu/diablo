@@ -54,7 +54,6 @@
 
 <script setup>
 import {
-  defineProps,
   ref,
   reactive,
   computed,

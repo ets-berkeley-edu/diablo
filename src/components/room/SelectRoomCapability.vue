@@ -14,7 +14,7 @@
 </template>
 
 <script setup>
-import {defineProps, onMounted, ref} from 'vue'
+import {onMounted, ref} from 'vue'
 import {each} from 'lodash'
 import {alertScreenReader} from '@/lib/utils'
 import {updateRoomCapability} from '@/api/room'

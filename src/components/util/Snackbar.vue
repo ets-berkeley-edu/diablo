@@ -34,7 +34,7 @@
 </template>
 
 <script setup>
-import {defineProps, watch} from 'vue'
+import {watch} from 'vue'
 import {storeToRefs} from 'pinia'
 import ContactUsPrompt from '@/components/util/ContactUsPrompt'
 import {putFocusNextTick} from '@/lib/utils'

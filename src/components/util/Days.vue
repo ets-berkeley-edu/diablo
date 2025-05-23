@@ -11,7 +11,6 @@
 </template>
 
 <script setup>
-import {defineProps} from 'vue'
 import {oxfordJoin} from '@/lib/utils'
 
 const props = defineProps({
