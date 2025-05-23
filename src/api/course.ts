@@ -64,7 +64,7 @@ export function updateCourseNote(
     sectionId,
     termId,
     body
-  })
+  }).then(response => response.data)
 }
 
 export function updateOptOut(instructorUid, termId: string, sectionId, optOut) {

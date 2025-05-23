@@ -17,9 +17,9 @@
       </v-row>
       <v-row class="ml-8 pl-7">
         <span v-if="course.deletedAt" class="subtitle-1">
-          <span class="font-weight-bold red--text">UC Berkeley has canceled this section.</span>
+          <span class="font-weight-bold text-red">UC Berkeley has canceled this section.</span>
         </span>
-        <h2 v-if="!course.deletedAt" id="course-title" class="primary--text">{{ course.courseTitle }}</h2>
+        <h2 v-if="!course.deletedAt" id="course-title" class="text-primary">{{ course.courseTitle }}</h2>
       </v-row>
       <v-row class="body-1 ml-8 pl-7">
         Section ID: <span id="section-id">{{ course.sectionId }}</span>
@@ -39,6 +39,7 @@
                 id="btn-edit-note"
                 aria-label="Edit note"
                 :disabled="noteUpdating"
+                variant="elevated"
                 @click="editNote"
               >
                 Edit
@@ -49,6 +50,7 @@
                 aria-label="Delete Note"
                 class="mx-3"
                 :disabled="noteUpdating"
+                variant="elevated"
                 @click="deleteNote"
               >
                 Delete
@@ -71,6 +73,7 @@
                 aria-label="Save Note"
                 color="success"
                 :disabled="!noteBody || noteUpdating"
+                variant="elevated"
                 @click="saveNote"
               >
                 Save
@@ -80,6 +83,7 @@
                 aria-label="Cancel Note Edit"
                 class="mx-3"
                 :disabled="noteUpdating"
+                variant="elevated"
                 @click="cancelNote"
               >
                 Cancel
@@ -100,7 +104,7 @@
                 >
                   Recent updates to recording settings are currently queued for publication. They will be published in an hour or less.
                 </v-alert>
-                <span id="notice-scheduled" class="green--text">
+                <span id="notice-scheduled" class="text-green">
                   {{ currentUser.isAdmin ? 'The' : 'Your' }} course is scheduled for Course Capture. The first recording is on
                   {{ DateTime.fromISO(course.scheduled[0].meetingStartDate).toFormat('MMM d, yyyy') }}.
                 </span>
@@ -278,7 +282,7 @@
                       :value="recordingTypeOption"
                       @change="() => onRecordingTypeChange(recordingTypeOption, index)"
                     />
-                    <label class="font-size-16 text--secondary" :for="`radio-recording-type-${recordingTypeOption}`">
+                    <label class="font-size-16 text-secondary" :for="`radio-recording-type-${recordingTypeOption}`">
                       {{ displayLabels[recordingTypeOption] }}
                     </label>
                   </div>
@@ -664,6 +668,7 @@
               id="update-history-table"
               caption="Course Update History"
               :headers="updateHistoryHeaders"
+              density="comfortable"
               hide-default-footer
               hide-default-header
               :items="course.updateHistory"
@@ -679,7 +684,7 @@
                       :key="index"
                       :aria-label="column.text"
                       :aria-sort="getAriaSortIndicator(column, sortBy, sortDesc)"
-                      class="text-start text-no-wrap"
+                      class="text-start text-no-wrap px-4 py-2"
                       :class="{'sortable': column.sortable === false}"
                       scope="col"
                     >
@@ -702,32 +707,32 @@
               </template>
               <template #body="{items}">
                 <tbody>
-                  <tr v-for="(item, index) in items" :key="index">
-                    <td :id="`update-fieldName-${item.id}`" columnheader="update-history-fieldName-th">
+                  <tr v-for="(item, index) in items" :key="index" class="border-b-sm">
+                    <td :id="`update-fieldName-${item.id}`" class="px-4 py-2" columnheader="update-history-fieldName-th">
                       <span aria-hidden="true">{{ item.fieldName || '&mdash;' }}</span>
                       <span class="sr-only">{{ item.fieldName || 'blank' }}</span>
                     </td>
-                    <td :id="`update-fieldValueOld-${item.id}`" columnheader="update-history-fieldValueOld-th">
+                    <td :id="`update-fieldValueOld-${item.id}`" class="px-4 py-2" columnheader="update-history-fieldValueOld-th">
                       <span aria-hidden="true">{{ item.fieldValueOld || '&mdash;' }}</span>
                       <span class="sr-only">{{ item.fieldValueOld || 'blank' }}</span>
                     </td>
-                    <td :id="`update-fieldValueNew-${item.id}`" columnheader="update-history-fieldValueNew-th">
+                    <td :id="`update-fieldValueNew-${item.id}`" class="px-4 py-2" columnheader="update-history-fieldValueNew-th">
                       <span aria-hidden="true">{{ item.fieldValueNew || '&mdash;' }}</span>
                       <span class="sr-only">{{ item.fieldValueNew || 'blank' }}</span>
                     </td>
-                    <td :id="`update-requestedByName-${item.id}`" columnheader="update-history-requestedByName-th">
+                    <td :id="`update-requestedByName-${item.id}`" class="px-4 py-2" columnheader="update-history-requestedByName-th">
                       <span aria-hidden="true">{{ item.requestedByName ? `${item.requestedByName} (${item.requestedByUid})` : '&mdash;' }}</span>
                       <span class="sr-only">{{ item.requestedByName ? `${item.requestedByName} (${item.requestedByUid})` : 'blank' }}</span>
                     </td>
-                    <td :id="`update-requestedAt-${item.id}`" columnheader="update-history-requestedAt-th">
+                    <td :id="`update-requestedAt-${item.id}`" class="px-4 py-2" columnheader="update-history-requestedAt-th">
                       <span aria-hidden="true">{{ new Date(item.requestedAt).toLocaleString() || '&mdash;' }}</span>
                       <span class="sr-only">{{ new Date(item.requestedAt).toLocaleString() || 'blank' }}</span>
                     </td>
-                    <td :id="`update-publishedAt-${item.id}`" columnheader="update-history-publishedAt-th">
+                    <td :id="`update-publishedAt-${item.id}`" class="px-4 py-2" columnheader="update-history-publishedAt-th">
                       <span aria-hidden="true">{{ item.publishedAt ? new Date(item.publishedAt).toLocaleString() : '&mdash;' }}</span>
                       <span class="sr-only">{{ item.publishedAt ? new Date(item.publishedAt).toLocaleString() : 'blank' }}</span>
                     </td>
-                    <td :id="`update-status-${item.id}`" columnheader="update-history-status-th">
+                    <td :id="`update-status-${item.id}`" class="px-4 py-2" columnheader="update-history-status-th">
                       <span aria-hidden="true">{{ item.status || '&mdash;' }}</span>
                       <span class="sr-only">{{ item.status || 'blank' }}</span>
                     </td>
@@ -822,7 +827,7 @@ const updateHistoryHeaders = ref([
   {text: 'Requested by', value: 'requestedByName', width: '130px'},
   {text: 'Requested at', value: 'requestedAt', width: '130px'},
   {text: 'Published at', value: 'publishedAt', width: '130px'},
-  {text: 'Status', value: 'status'}
+  {text: 'Status', value: 'status', width: '130px'}
 ])
 
 // Computed
@@ -1112,3 +1117,16 @@ const updateRecordingTypeCancel = () => {
 
 </script>
 
+<style scoped>
+#update-history-table {
+  border-collapse: collapse;
+  width: 100%;
+  table-layout: auto;
+}
+#update-history-table tbody td {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+}
+#update-history-table tbody tr:last-child td {
+  border-bottom: none;
+}
+</style>
