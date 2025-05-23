@@ -88,7 +88,7 @@
           </td>
         </tr>
       </template>
-      <template #bottom>
+      <template #bottom={pageCount}>
         <div v-if="pageCount > 1" class="text-center pb-4 pt-2">
           <v-pagination
             id="rooms-pagination"
@@ -125,9 +125,6 @@ const sortBy = ref({key: '', order: ''})
 
 const adviseAgainstRoom237 = computed(() => {
   return startsWith(search.value, '237 ') && size(search.value) < 6
-})
-const pageCount = computed(() => {
-  return Math.ceil(rooms.value.length / itemsPerPage)
 })
 
 onMounted(() => {

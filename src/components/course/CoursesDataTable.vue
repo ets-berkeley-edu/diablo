@@ -240,7 +240,7 @@
           </td>
         </tr>
       </template>
-      <template #bottom>
+      <template #bottom={pageCount}>
         <div v-if="!refreshing && pageCount > 1" class="text-center pb-4 pt-2">
           <v-pagination
             id="ouija-pagination"
@@ -313,11 +313,6 @@ const headers = ref([
 const pageCurrent = ref(1)
 const selectedRows = ref([])
 const sortBy = ref({})
-
-const pageCount = computed(() => {
-  return Math.ceil(props.courses.length / (contextStore.config.searchItemsPerPage || 50))
-})
-
 
 watch(() => props.refreshing, async(value) => {
   if (!value) {
