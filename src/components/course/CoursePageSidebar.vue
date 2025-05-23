@@ -203,10 +203,10 @@
 import {ref, onMounted} from 'vue'
 import {DateTime} from 'luxon'
 import {filter} from 'lodash'
+import {getDisplayMeetings} from '@/lib/utils'
 import {useContextStore} from '@/stores/context'
 import Days from '@/components/util/Days'
 import OxfordJoin from '@/components/util/OxfordJoin'
-import Utils from '@/mixins/Utils'
 import {
   mdiFormatLineSpacing,
   mdiMinusCircle,
@@ -232,9 +232,6 @@ const displayMeetings = ref([])
 const instructors = ref([])
 const instructorProxies = ref([])
 const today = ref(DateTime.local().startOf('day'))
-
-// utility
-const {getDisplayMeetings} = Utils.methods
 
 onMounted(() => {
   displayMeetings.value = getDisplayMeetings(props.course)

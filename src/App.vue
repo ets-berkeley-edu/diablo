@@ -13,13 +13,11 @@
   </div>
 </template>
 
-<script>
-import Context from '@/mixins/Context'
+<script setup>
+import {storeToRefs} from 'pinia'
+import {useContextStore} from '@/stores/context'
 
-export default {
-  name: 'App',
-  mixins: [Context]
-}
+const {screenReaderAlert} = storeToRefs(useContextStore())
 </script>
 
 <style>

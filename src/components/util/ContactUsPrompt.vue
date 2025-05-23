@@ -13,18 +13,17 @@
   </span>
 </template>
 
-<script>
-import Context from '@/mixins/Context.vue';
+<script setup>
+import {storeToRefs} from 'pinia'
+import {useContextStore} from '@/stores/context'
 
-export default {
-  name: 'ContactUsPrompt',
-  props: {
-    hrefMailtoClass: {
+const {config} = storeToRefs(useContextStore())
+
+const props = defineProps({
+  hrefMailtoClass: {
       default: 'text-anchor',
       required: false,
       type: String
-    }
-  },
-  mixins: [Context]
-}
+  }
+})
 </script>
