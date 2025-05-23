@@ -25,7 +25,7 @@
 </template>
 
 <script setup>
-import {defineProps, ref, onMounted} from 'vue'
+import {ref, onMounted} from 'vue'
 import {getKalturaCategory} from '@/api/kaltura'
 import {useContextStore} from '@/stores/context'
 

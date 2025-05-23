@@ -200,7 +200,7 @@
 </template>
 
 <script setup>
-import {defineProps, ref, onMounted} from 'vue'
+import {ref, onMounted} from 'vue'
 import {DateTime} from 'luxon'
 import {filter} from 'lodash'
 import {useContextStore} from '@/stores/context'

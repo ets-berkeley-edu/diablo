@@ -255,7 +255,7 @@
 
 <script setup>
 import {alertScreenReader} from '@/lib/utils'
-import {computed, defineProps, onMounted, ref, watch} from 'vue'
+import {computed, onMounted, ref, watch} from 'vue'
 import {each, filter, get, map, size, tail} from 'lodash'
 import {mdiClose} from '@mdi/js'
 import Days from '@/components/util/Days'

@@ -50,7 +50,6 @@
 </template>
 
 <script setup>
-import {defineProps} from 'vue'
 import {DateTime} from 'luxon'
 import {useContextStore} from '@/stores/context'
 import {mdiOpenInNew} from '@mdi/js'

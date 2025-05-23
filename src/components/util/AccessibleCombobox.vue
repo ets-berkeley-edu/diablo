@@ -88,7 +88,7 @@
 <script setup>
 import {filter, get, includes, isEmpty} from 'lodash'
 import {mdiCloseCircle} from '@mdi/js'
-import {defineModel, defineProps, nextTick, onMounted, onUpdated, ref} from 'vue'
+import {nextTick, onMounted, onUpdated, ref} from 'vue'
 import {alertScreenReader, escapeForRegExp, pluralize, putFocusNextTick} from '@/lib/utils'
 
 const props = defineProps({

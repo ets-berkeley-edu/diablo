@@ -65,7 +65,7 @@
 </template>
 
 <script setup>
-import {defineEmits, defineProps, onBeforeUnmount, ref} from 'vue'
+import {onBeforeUnmount, ref} from 'vue'
 import Link from '@tiptap/extension-link'
 import {
   mdiCodeTags,

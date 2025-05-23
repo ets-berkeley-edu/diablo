@@ -228,12 +228,12 @@ const toggleTheme = () => {
 </style>
 
 <style scoped>
-::v-deep .v-toolbar {
+:deep(.v-toolbar) {
   left: 0 !important;
   position: fixed !important;
   width: 100% !important;
 }
-::v-deep .v-navigation-drawer {
+:deep(.v-navigation-drawer) {
   top: 63px !important;
 }
 .sidebar-with-banner .v-navigation-drawer__content {
