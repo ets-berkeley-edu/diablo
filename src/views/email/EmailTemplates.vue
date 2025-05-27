@@ -48,6 +48,7 @@
         </v-row>
         <v-data-table
           caption="Email templates"
+          class="v-table-padding-override"
           disable-pagination
           :headers="headers"
           hide-default-footer

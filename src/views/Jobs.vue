@@ -11,6 +11,7 @@
       <v-card-text>
         <v-data-table
           id="job-schedule-table"
+          class="v-table-padding-override"
           disable-sort
           :headers="headers"
           hide-default-footer
@@ -308,7 +309,8 @@ const toggleJobDisabled = (job, isDisabled) => {
 
 <style scoped>
 .job-name {
-  background-color: rgba(var(--v-theme-tertiary), 0.7)
+  background-color: rgba(var(--v-theme-tertiary), 0.7);
+  color: white;
 }
 .progress-spinner-height {
   max-height: 64px;

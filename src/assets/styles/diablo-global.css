@@ -52,6 +52,12 @@
 .text-transform-unset {
   text-transform: unset !important;
 }
+.v-table-padding-override td {
+  padding: 10px 15px !important;
+}
+.v-table-padding-override td ul {
+  padding-inline-start: 25px !important;
+}
 .v-table-sort-btn-override {
   margin-left: -4px;
 }

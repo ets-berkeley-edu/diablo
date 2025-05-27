@@ -11,6 +11,7 @@
         <CreateBlackoutDialog :blackouts="blackouts" :on-close="onCloseDialog" />
       </div>
       <v-data-table
+        class="v-table-padding-override"
         disable-sort
         :headers="headers"
         hide-default-footer
@@ -49,7 +50,7 @@
             <td :id="`blackout-${blackout.id}-end-date`" class="text-no-wrap" columnheader="blackouts-endDate-th">
               {{ blackout.endDate }}
             </td>
-            <td :id="`blackout-${blackout.id}-delete`" columnheader="blackouts-delete-th">
+            <td :id="`blackout-${blackout.id}-delete`" class="text-center" columnheader="blackouts-delete-th">
               <v-btn
                 :id="`delete-blackout-${blackout.id}`"
                 :aria-label="`Delete ${blackout.name} Blackout`"
