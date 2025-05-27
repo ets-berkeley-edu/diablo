@@ -1,7 +1,7 @@
 <template>
   <v-card
     v-if="!contextStore.loading"
-    class="border-sm"
+    class="border-sm ouija-card"
   >
     <v-card-title class="align-start">
       <v-row>
@@ -153,3 +153,9 @@ const refresh = () => {
   })
 }
 </script>
+
+<style scoped>
+.ouija-card {
+  overflow: visible;
+}
+</style>
