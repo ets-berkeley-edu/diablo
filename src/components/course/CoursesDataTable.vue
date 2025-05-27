@@ -81,12 +81,12 @@
                   <router-link
                     v-if="courseCodeIndex === 0"
                     :id="`link-course-${course.sectionId}`"
-                    class="subtitle-1 text-anchor"
+                    class="text-anchor"
                     :to="`/course/${contextStore.config.currentTermId}/${course.sectionId}`"
                   >
                     <span :class="{'line-through': course.deletedAt}">{{ courseCode }}</span>
                   </router-link>
-                  <span v-if="courseCodeIndex > 0" class="subtitle-1">{{ courseCode }}</span>
+                  <span v-if="courseCodeIndex > 0">{{ courseCode }}</span>
                 </div>
               </td>
               <td :id="`section-id-${course.sectionId}`" :class="tdc(course)" columnheader="courses-table-section-th">{{ course.sectionId }}</td>
@@ -234,13 +234,13 @@
             </tr>
           </template>
         </template>
-        <tr v-if="!refreshing && !items.length">
-          <td id="message-when-zero-courses" class="pa-4 text-no-wrap title" :colspan="headers.length">
-            <span v-if="!refreshing">No courses.</span>
+        <tr v-if="!refreshing && !items.length" class="text-center">
+          <td id="message-when-zero-courses" :colspan="headers.length">
+            No courses.
           </td>
         </tr>
       </template>
-      <template #bottom={pageCount}>
+      <template #bottom="{pageCount}">
         <div v-if="!refreshing && pageCount > 1" class="text-center pb-4 pt-2">
           <v-pagination
             id="ouija-pagination"
@@ -255,7 +255,7 @@
 
 <script setup>
 import {alertScreenReader} from '@/lib/utils'
-import {computed, onMounted, ref, watch} from 'vue'
+import {onMounted, ref, watch} from 'vue'
 import {each, filter, get, map, size, tail} from 'lodash'
 import {mdiClose} from '@mdi/js'
 import Days from '@/components/util/Days'

@@ -25,19 +25,25 @@
           >
             <v-select
               id="select-email-template-type"
+              :item-props="true"
               :items="emailTemplateTypes"
-              item-title="text"
-              item-value="id"
               label="Create New Template"
-              :menu-props="{eager: true, id: 'select-email-template-type'}"
+              :list-props="{ariaLabel: 'Email template options', id: 'email-template-type-list'}"
+              :menu-props="{attach: menuContainer, eager: true, id: 'email-template-type-menu'}"
               :prepend-icon="mdiFileDocumentOutline"
               return-object
               @update:model-value="createNewTemplate"
             >
               <template #item="{props: itemProps, item}">
-                <v-list-item :id="`email-template-option-${item.value}`" v-bind="itemProps" />
+                <v-list-item
+                  :id="`email-template-option-${item.value}`"
+                  :aria-disabled="item.props.disabled"
+                  :disabled="item.props.disabled"
+                  v-bind="itemProps"
+                />
               </template>
             </v-select>
+            <div id="email-template-type-menu-container" ref="menuContainer"></div>
           </v-col>
         </v-row>
         <v-data-table
@@ -66,7 +72,7 @@
           </template>
           <template #body="{items}">
             <tr v-if="!items.length">
-              <td colspan="6" class="pt-4 subtitle-1">
+              <td colspan="6" class="pt-4 text-subtitle-1">
                 You have no email templates. To get started, select a type of template from the "Create New Template" menu above.
               </td>
             </tr>
@@ -84,7 +90,7 @@
                 {{ template.subjectLine }}
               </td>
               <td :id="`template-${template.id}-createdAt`" class="text-no-wrap">
-                {{ DateTime.fromISO(template.createdAt, DateTime.DATE_MED) }}
+                {{ DateTime.fromISO(template.createdAt).toLocaleString(DateTime.DATE_MED) }}
               </td>
               <td>
                 <v-btn
@@ -127,14 +133,15 @@ import {useContextStore} from '@/stores/context'
 
 const contextStore = useContextStore()
 const headers = [
-  {title: 'Type', value: 'typeName'},
+  {title: 'Type', value: 'typeName', class: 'email-templates-title-th'},
   {title: 'Subject Line', value: 'subjectLine'},
   {title: 'Created', value: 'createdAt'},
-  {title: 'Test', value: 'test', class: 'pl-5 pr-0 mr-0'},
-  {title: 'Delete', value: 'delete', class: 'pl-5 pr-0 mr-0'}
+  {title: 'Test', value: 'test', class: 'text-center'},
+  {title: 'Delete', value: 'delete', class: 'text-center'}
 ]
 const emailTemplates = ref()
 const emailTemplateTypes = ref()
+const menuContainer = ref()
 const refreshing = ref(false)
 const router = useRouter()
 
@@ -146,7 +153,9 @@ onMounted(() => {
 })
 
 const createNewTemplate = option => {
-  router.push(`/email/template/create/${option.value}`)
+  if (!option.disabled) {
+    router.push(`/email/template/create/${option.value}`)
+  }
 }
 
 const deleteEmailTemplate = templateId => {
@@ -178,3 +187,10 @@ const onClickSend = templateId => {
   })
 }
 </script>
+
+<style>
+.email-templates-title-th {
+  min-width: 12.5rem;
+  width: 30%;
+}
+</style>

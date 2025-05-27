@@ -24,7 +24,7 @@
         <span :class="clazz()" tabindex="-1"> {{ text }}</span>
       </div>
     </h1>
-    <div v-if="subTitle" class="ml-5 pl-8 subtitle-1 text--secondary">
+    <div v-if="subTitle" class="ml-5 pl-8 text-subtitle-1 text-secondary">
       {{ subTitle }}
     </div>
   </div>

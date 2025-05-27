@@ -1,16 +1,20 @@
 <template>
-  <v-select
-    :id="`select-room-capability-${room.id}`"
-    v-model="capability"
-    :aria-describedby="undefined"
-    hide-details
-    item-title="text"
-    item-value="value"
-    :items="capabilityOptions"
-    :menu-props="{eager: true, id: `select-room-capability-menu-${room.id}`}"
-    no-data-text="Select..."
-    @update:model-value="updateCapability"
-  />
+  <div>
+    <v-select
+      id="select-room-capability"
+      v-model="capability"
+      :aria-describedby="undefined"
+      hide-details
+      item-title="text"
+      item-value="value"
+      :items="capabilityOptions"
+      :list-props="{ariaLabel: 'Room capability options', id: 'room-capability-list'}"
+      :menu-props="{attach: menuContainer, eager: true, id: 'room-capability-menu'}"
+      no-data-text="Select..."
+      @update:model-value="updateCapability"
+    />
+    <div id="room-capability-menu-container" ref="menuContainer"></div>
+  </div>
 </template>
 
 <script setup>
@@ -39,6 +43,7 @@ const capabilityOptions = ref([{
   'text': 'None',
   'value': null,
 }])
+const menuContainer = ref()
 
 onMounted(() => {
   capability.value = props.room.capability

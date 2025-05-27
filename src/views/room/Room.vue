@@ -7,7 +7,7 @@
       <v-card-text>
         <v-container class="d-block font-size-16 mx-0 mb-6" fluid>
           <v-row v-if="room.kalturaResourceId">
-            <v-col class="subtitle-1">
+            <v-col class="text-subtitle-1">
               Kaltura resource ID: {{ room.kalturaResourceId }}
               <span v-if="kalturaEventList">
                 (<a
@@ -24,7 +24,7 @@
           <v-row>
             <v-col cols="12" sm="7">
               <div class="d-flex align-end">
-                <label :for="`select-room-capability-${room.id}`" class="capability-label subtitle-1 mr-4">Capability:</label>
+                <label :for="`select-room-capability-${room.id}`" class="capability-label text-subtitle-1 mr-4">Capability:</label>
                 <SelectRoomCapability
                   :on-update="onUpdateRoomCapability"
                   :options="contextStore.config.roomCapabilityOptions"
@@ -47,7 +47,7 @@
               <router-link
                 :id="`print-room-${room.id}-schedule`"
                 aria-label="Open printable version of this page, in a new window"
-                class="subtitle-1 text-anchor"
+                class="text-subtitle-1 text-anchor"
                 target="_blank"
                 :to="`/room/printable/${room.id}`"
               >
@@ -64,15 +64,17 @@
         />
       </v-card-text>
     </v-card>
-    <v-card v-if="kalturaEventList" class="mt-8 bg-transparent">
-      <div class="pl-4">
+    <v-card v-if="kalturaEventList" class="mt-8 border-sm">
+      <v-card-title>
         <h2 id="kaltura-events-header" tabindex="-1">The Kaltura Events of {{ room.location }}</h2>
-        <div class="subtitle-2">
+        <div class="text-subtitle-2">
           Kaltura events tagged with '{{ contextStore.config.createdByDiabloTag }}' and
           a start-date between {{ contextStore.config.currentTermRecordingsBegin }} and  {{ contextStore.config.currentTermRecordingsEnd }}.
         </div>
-      </div>
-      <KalturaEventList :events="kalturaEventList" :location="room.location" />
+      </v-card-title>
+      <v-card-text class="pt-5">
+        <KalturaEventList :events="kalturaEventList" :location="room.location" />
+      </v-card-text>
     </v-card>
   </div>
 </template>
@@ -139,8 +141,3 @@ const scrollToKalturaEvents = () => {
 }
 </script>
 
-<style scoped>
-.capability-label {
-  padding-bottom: 1px;
-}
-</style>

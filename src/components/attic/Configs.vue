@@ -15,7 +15,13 @@
           </td>
           <td>
             <span v-if="isUrl(config.value)">
-              <a :id="`link-to-${config.key}`" class="text-anchor" :href="config.value" target="_blank">{{ config.value }}
+              <a
+                :id="`link-to-${config.key}`"
+                class="text-anchor"
+                :href="config.value"
+                target="_blank"
+              >
+                {{ config.value }}
                 <v-icon class="pl-1" :icon="mdiOpenInNew" size="small" />
               </a>
             </span>
