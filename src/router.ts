@@ -2,6 +2,7 @@ import {createRouter, createWebHistory, NavigationGuardNext, RouteLocationNormal
 import _ from 'lodash'
 import {useContextStore} from '@/stores/context'
 import {requiresAdmin, requiresInstructor} from '@/auth'
+import Attic from '@/views/Attic.vue'
 import BaseView from '@/views/BaseView.vue'
 import Blackouts from '@/views/blackout/Blackouts.vue'
 import EditEmailTemplate from '@/views/email/EditEmailTemplate.vue'
@@ -76,13 +77,13 @@ const router = createRouter({
       component: BaseView,
       beforeEnter: requiresAdmin,
       children: [
-      //   {
-      //     path: '/attic',
-      //     component: Attic,
-      //     meta: {
-      //       title: 'The Attic'
-      //     }
-      //   },
+        {
+          path: '/attic',
+          component: Attic,
+          meta: {
+            title: 'The Attic'
+          }
+        },
         {
           path: '/blackouts',
           component: Blackouts,

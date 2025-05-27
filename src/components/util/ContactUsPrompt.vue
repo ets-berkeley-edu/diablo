@@ -19,11 +19,11 @@ import {useContextStore} from '@/stores/context'
 
 const {config} = storeToRefs(useContextStore())
 
-const props = defineProps({
+defineProps({
   hrefMailtoClass: {
-      default: 'text-anchor',
-      required: false,
-      type: String
+    default: 'text-anchor',
+    required: false,
+    type: String
   }
 })
 </script>

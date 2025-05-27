@@ -1,4 +1,5 @@
 import {
+  capitalize,
   cloneDeep,
   concat,
   each,
@@ -19,6 +20,10 @@ export function alertScreenReader(message: string) {
   const store = useContextStore()
   store.alertScreenReader('')
   nextTick(() => store.alertScreenReader(message))
+}
+
+export function decamelize(str: string, separator=' ') {
+  return capitalize(str.replace(/([a-z\d])([A-Z])/g, '$1' + separator + '$2').replace(/([A-Z]+)([A-Z][a-z\d]+)/g, '$1' + separator + '$2'))
 }
 
 export function getCourseCodes(course) {
