@@ -26,6 +26,7 @@
     "strict": true,
     "target": "esnext",
     "typeRoots": [
+      "./node_modules/.vue-global-types/**/*",
       "./node_modules/@types/**/*",
       "./node_modules/typescript/**/*",
       "./node_modules/vuetify/**/*"

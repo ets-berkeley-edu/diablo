@@ -146,10 +146,12 @@
                   v-model="editJob.schedule.type"
                   :items="['day_at', 'minutes', 'seconds']"
                   label="Type"
-                  :menu-props="{eager: true, id: 'schedule-type-select-menu'}"
+                  :list-props="{ariaLabel: 'Schedule type options', id: 'schedule-type-list'}"
+                  :menu-props="{attach: menuContainer, eager: true, id: 'schedule-type-menu'}"
                   required
                   @update:model-value="editJob.schedule.value = ''"
                 ></v-select>
+                <div id="schedule-type-menu-container" ref="menuContainer"></div>
               </v-col>
               <v-col cols="12" sm="6">
                 <v-text-field
@@ -214,6 +216,7 @@ const jobHistory = ref([])
 const jobSchedule = ref({
   jobs: []
 })
+const menuContainer = ref()
 const refresher = ref()
 const refreshing = ref(false)
 

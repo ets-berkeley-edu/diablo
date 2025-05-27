@@ -1,8 +1,6 @@
 <template>
   <v-data-table
     id="kaltura-event-list"
-    :caption="`The Kaltura Events of ${location}`"
-    class="elevation-1 mt-3"
     disable-sort
     :header-props="{class: 'font-size-12 font-weight-bold text-medium-emphasis'}"
     :headers="[
@@ -16,6 +14,7 @@
     hide-default-footer
     :items="events"
     :items-per-page="-1"
+    no-data-text="No Kaltura events."
     show-expand
     :single-expand="true"
   >

@@ -35,7 +35,7 @@
         </template>
         <template #body="{items}">
           <tr v-if="!items.length">
-            <td colspan="6" class="py-4 subtitle-1">
+            <td colspan="6" class="py-4 text-subtitle-1">
               No blackouts scheduled.
             </td>
           </tr>

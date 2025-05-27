@@ -32,7 +32,7 @@ export function getCourseCodes(course) {
 
 export function getSelectOptionsFromObject(obj: any, isDisabled: Function) {
   const options: Array<any> = []
-  each(obj, (text, value) => options.push({text, value, props: {disabled: isDisabled(value)}}))
+  each(obj, (text, value) => options.push({title: text, value, disabled: isDisabled(value)}))
   return options
 }
 
