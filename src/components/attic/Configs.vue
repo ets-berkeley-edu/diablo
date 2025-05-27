@@ -7,6 +7,7 @@
       :headers="headers"
       hide-default-footer
       :items="configs"
+      :items-per-page="-1"
     >
       <template #body="{items}">
         <tr v-for="config in items" :key="config.key">
