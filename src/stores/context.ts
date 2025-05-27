@@ -51,7 +51,7 @@ export const useContextStore = defineStore('context', {
     loadingComplete(pageTitle?: string, srAlert?: string) {
       document.title = `${pageTitle || 'UC Berkeley'} | Course Capture`
       this.loading = false
-      this.screenReaderAlert = `${pageTitle || 'Page'} loaded. ${srAlert}`
+      this.screenReaderAlert = `${pageTitle || 'Page'} loaded. ${srAlert || ''}`
       putFocusNextTick('page-title')
     },
     alertScreenReader(message: string) {

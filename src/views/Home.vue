@@ -1,6 +1,6 @@
 <template>
   <v-card
-    v-if="!loading"
+    v-if="!contextStore.loading"
     class="border-sm"
   >
     <v-card-title>
