@@ -18,7 +18,6 @@
             <span v-if="isUrl(config.value)">
               <a
                 :id="`link-to-${config.key}`"
-                class="text-anchor"
                 :href="config.value"
                 target="_blank"
               >

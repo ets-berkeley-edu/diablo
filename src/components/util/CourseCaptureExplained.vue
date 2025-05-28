@@ -6,7 +6,6 @@
     <a
       id="link-to-course-capture-overview"
       aria-label="Open URL to Course Capture service overview in a new window"
-      class="text-anchor"
       :href="context.config.courseCaptureExplainedUrl"
       target="_blank"
     >

@@ -69,7 +69,6 @@
           <td :id="`room-${item.id}-location`" columnheader="rooms-table-location-th">
             <router-link
               :id="`room-${item.id}`"
-              class="text-anchor"
               :to="`/room/${item.id}`"
             >
               {{ item.location }}
@@ -88,7 +87,7 @@
           </td>
         </tr>
       </template>
-      <template #bottom={pageCount}>
+      <template #bottom="{pageCount}">
         <div v-if="pageCount > 1" class="text-center pb-4 pt-2">
           <v-pagination
             id="rooms-pagination"

@@ -3,7 +3,6 @@
     <div>
       <router-link
         :id="id || `course-${course.sectionId}-instructor-${instructor.uid}`"
-        class="text-anchor"
         :to="`/user/${instructor.uid}`"
       >
         {{ instructor.name }}
