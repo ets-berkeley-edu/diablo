@@ -131,7 +131,7 @@ onMounted(() => {
   contextStore.loadingStart()
   getAllRooms().then(data => {
     rooms.value = data
-    contextStore.loadingComplete('Rooms')
+    contextStore.loadingComplete()
   })
 })
 

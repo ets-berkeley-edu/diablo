@@ -1,5 +1,7 @@
 import {defineStore} from 'pinia'
+import {get} from 'lodash'
 import {putFocusNextTick} from '@/lib/utils'
+import router from '@/router'
 
 export type DiabloConfig = {
   apiBaseUrl: string,
@@ -42,16 +44,15 @@ export const useContextStore = defineStore('context', {
   }),
 
   actions: {
-    loadingStart(srAlert?: string) {
+    loadingStart() {
+      const route = router.currentRoute.value
       this.loading = true
-      // TODO: uncomment once Context mixin is gone
-      // const route = router.currentRoute.value
-      this.screenReaderAlert = srAlert // || `Loading ${String(get(route, 'name', ''))}.`
+      this.screenReaderAlert = `Loading ${String(get(route, 'name', ''))}.`
     },
     loadingComplete(pageTitle?: string, srAlert?: string) {
-      document.title = `${pageTitle || 'UC Berkeley'} | Course Capture`
+      const route = router.currentRoute.value
       this.loading = false
-      this.screenReaderAlert = `${pageTitle || 'Page'} loaded. ${srAlert || ''}`
+      this.screenReaderAlert = `${pageTitle || String(get(route, 'name', '')) || 'Page'} loaded. ${srAlert || ''}`
       putFocusNextTick('page-title')
     },
     alertScreenReader(message: string) {

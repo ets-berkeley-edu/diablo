@@ -117,7 +117,7 @@
 
 <script setup>
 import {ref, onMounted} from 'vue'
-import {useRouter, useRoute} from 'vue-router'
+import {useRoute} from 'vue-router'
 import {storeToRefs} from 'pinia'
 import {useTheme} from 'vuetify'
 import {kebabCase} from 'lodash'
@@ -145,7 +145,6 @@ const {config, currentUser, loading} = storeToRefs(contextStore)
 const drawer = ref(true)
 const navItems = ref([])
 const route = useRoute()
-const router = useRouter()
 const theme = useTheme()
 
 const waveOptions = {
