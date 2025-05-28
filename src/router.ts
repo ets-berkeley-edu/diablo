@@ -1,5 +1,5 @@
 import {createRouter, createWebHistory, NavigationGuardNext, RouteLocationNormalized} from 'vue-router'
-import _ from 'lodash'
+import {get, toString, trim} from 'lodash'
 import {useContextStore} from '@/stores/context'
 import {requiresAdmin, requiresInstructor} from '@/auth'
 import Attic from '@/views/Attic.vue'
@@ -30,8 +30,8 @@ const router = createRouter({
     //   beforeEnter: requiresAdmin,
     //   meta: {
     //     printable: true,
-    //     title: 'Print Room'
-    //   }
+    //   },
+    //   name: 'Print Room'
     // },
     {
       path: '/login',
@@ -44,8 +44,8 @@ const router = createRouter({
       },
       meta: {
         splash: true,
-        title: 'Welcome'
-      }
+      },
+      name: 'Welcome'
     },
     {
       path: '/',
@@ -54,16 +54,13 @@ const router = createRouter({
       children: [
         {
           path: '/home',
-          name: 'home',
+          name: 'Home',
           component: Home,
           beforeEnter: (to, from, next) => {
             const {isAdmin, isTeaching} = useContextStore().currentUser
             isAdmin && !isTeaching
               ? next({path: '/ouija'})
               : next()
-          },
-          meta: {
-            title: 'Home'
           }
         },
         {
@@ -80,72 +77,52 @@ const router = createRouter({
         {
           path: '/attic',
           component: Attic,
-          meta: {
-            title: 'The Attic'
-          }
+          name: 'The Attic'
         },
         {
           path: '/blackouts',
           component: Blackouts,
-          meta: {
-            title: 'Blackouts'
-          }
+          name: 'Blackouts'
         },
         {
           path: '/email/templates',
           component: EmailTemplates,
-          meta: {
-            title: 'Email Templates'
-          }
+          name: 'Email Templates'
         },
         {
           path: '/email/template/create/:type',
           component: EditEmailTemplate,
-          meta: {
-            title: 'Create Email Template'
-          }
+          name: 'Create Email Template'
         },
         {
           path: '/email/template/edit/:id',
           component: EditEmailTemplate,
-          meta: {
-            title: 'Edit Email Template'
-          }
+          name: 'Edit Email Template'
         },
         {
           path: '/jobs',
           component: Jobs,
-          meta: {
-            title: 'The Chancel'
-          }
+          name: 'The Chancel'
         },
         {
           path: '/ouija',
           component: Ouija,
-          meta: {
-            title: 'The Ouija Board'
-          }
+          name: 'The Ouija Board'
         },
         {
           path: '/room/:id',
           component: Room,
-          meta: {
-            title: 'Room'
-          }
+          name: 'Room'
         },
         {
           path: '/rooms',
           component: Rooms,
-          meta: {
-            title: 'Rooms'
-          }
+          name: 'Rooms'
         },
       //   {
       //     path: '/user/:uid',
       //     component: User,
-      //     meta: {
-      //       title: 'User'
-      //     }
+      //     name: 'User'
       //   }
       ]
     },
@@ -156,16 +133,12 @@ const router = createRouter({
         {
           path: '/404',
           component: NotFound,
-          meta: {
-            title: 'Page not found'
-          }
+          name: 'Page not found'
         },
         {
           path: '/error',
           component: ErrorView,
-          meta: {
-            title: 'Error'
-          }
+          name: 'Error'
         },
         {
           path: '/:pathMatch(.*)*',
@@ -182,7 +155,7 @@ router.beforeEach(
     from: RouteLocationNormalized,
     next: NavigationGuardNext
   ) => {
-    const redirect = _.trim(
+    const redirect = trim(
       (to.query.redirect as string) || ''
     )
     const {isAuthenticated} = useContextStore().currentUser
@@ -193,11 +166,8 @@ router.beforeEach(
 )
 
 router.afterEach((to) => {
-  const title =
-    (to.meta.title as string) ||
-    _.capitalize(to.name as string) ||
-    'Welcome'
-  document.title = `${title} | Course Capture`
+  const pageTitle = get(to, 'name')
+  document.title = `${pageTitle ? toString(pageTitle) : 'Welcome'} | Course Capture`
 })
 
 export default router
