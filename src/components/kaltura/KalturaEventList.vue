@@ -22,7 +22,6 @@
       <a
         :id="`kaltura-media-space-${item.id}`"
         aria-label="Open Kaltura MediaSpace in a new window"
-        class="text-anchor"
         :href="`${contextStore.config.kalturaMediaSpaceUrl}/recscheduling/index/edit-event/eventid/${item.id}`"
         target="_blank"
       >
@@ -82,7 +81,6 @@
                     <a
                       :id="`kaltura-recurrence-${event.id}`"
                       :aria-label="`Open Kaltura MediaSpace in a new window (event ${event.id})`"
-                      class="text-anchor"
                       :href="`${contextStore.config.kalturaMediaSpaceUrl}/recscheduling/index/edit-event/eventid/${event.id}`"
                       target="_blank"
                     >
@@ -113,7 +111,6 @@
                       <a
                         :id="`kaltura-event-${item[key]}`"
                         :aria-label="`Open Kaltura MediaSpace in a new window (event ${item[key]})`"
-                        class="text-anchor"
                         :href="`${contextStore.config.kalturaMediaSpaceUrl}/recscheduling/index/edit-event/eventid/${item[key]}`"
                         target="_blank"
                       >

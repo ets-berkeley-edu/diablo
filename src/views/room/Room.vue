@@ -12,7 +12,6 @@
               <span v-if="kalturaEventList">
                 (<a
                   id="skip-to-kaltura-event-list"
-                  class="text-anchor"
                   href="#kaltura-events-header"
                   @click.stop="scrollToKalturaEvents"
                 >
@@ -47,7 +46,7 @@
               <router-link
                 :id="`print-room-${room.id}-schedule`"
                 aria-label="Open printable version of this page, in a new window"
-                class="text-subtitle-1 text-anchor"
+                class="text-subtitle-1"
                 target="_blank"
                 :to="`/room/printable/${room.id}`"
               >

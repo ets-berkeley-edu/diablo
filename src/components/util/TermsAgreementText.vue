@@ -5,7 +5,6 @@
       <a
         id="link-to-course-capture-policies"
         aria-label="Open URL to Course Capture policies in a new window"
-        class="text-anchor"
         :href="$config.courseCapturePoliciesUrl"
         target="_blank"
       >

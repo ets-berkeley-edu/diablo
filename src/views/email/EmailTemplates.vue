@@ -81,7 +81,6 @@
               <td :id="`template-${template.id}-type-name`">
                 <router-link
                   :id="`template-${template.id}`"
-                  class="text-anchor"
                   :to="`/email/template/edit/${template.id}`"
                 >
                   {{ template.typeName }}

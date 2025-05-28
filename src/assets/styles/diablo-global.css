@@ -86,6 +86,7 @@
   width: 100% !important;
 }
 a {
+  color: rgb(var(--v-theme-anchor));
   text-decoration: none !important;
 }
 abbr {

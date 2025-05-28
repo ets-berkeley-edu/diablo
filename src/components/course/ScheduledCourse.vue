@@ -13,7 +13,6 @@
           <a
             id="link-to-edit-kaltura-event"
             aria-label="Open Kaltura MediaSpace in a new window"
-            class="text-anchor"
             :href="`${config.kalturaMediaSpaceUrl}/recscheduling/index/edit-event/eventid/${scheduled.kalturaScheduleId}`"
             target="_blank"
           >
