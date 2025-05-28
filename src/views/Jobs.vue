@@ -8,7 +8,7 @@
           text="The Chancel"
         />
       </v-card-title>
-      <v-card-text>
+      <v-card-text class="px-0">
         <v-data-table
           id="job-schedule-table"
           class="v-table-padding-override"
@@ -44,6 +44,7 @@
                     :id="`run-job-${job.key}`"
                     :aria-label="`Run job ${job.name}`"
                     bg-color="transparent"
+                    class="my-1"
                     :disabled="isRunning(job.key)"
                     icon
                     size="large"
