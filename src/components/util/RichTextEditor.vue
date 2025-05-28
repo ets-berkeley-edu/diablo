@@ -58,7 +58,7 @@
     </div>
     <EditorContent
       :id="`${idPrefix}-editor-content`"
-      class="editor-content bg-surface pa-4"
+      class="editor-content bg-surface elevation-1 pa-4"
       :editor="editor"
     />
   </div>
