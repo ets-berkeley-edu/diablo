@@ -60,24 +60,22 @@
               <v-textarea
                 id="note-body-edit"
                 v-model="noteBody"
-                outlined
-                hide-details="auto"
                 density="compact"
+                hide-details="auto"
                 placeholder="Enter note text"
+                variant="outlined"
               >
               </v-textarea>
             </v-card-text>
             <v-card-actions v-if="noteEditing" class="px-4 pb-4">
-              <v-btn
+              <ProgressButton
                 id="btn-save-note"
+                :action="saveNote"
                 aria-label="Save Note"
-                color="success"
                 :disabled="!noteBody || noteUpdating"
-                variant="elevated"
-                @click="saveNote"
-              >
-                Save
-              </v-btn>
+                :in-progress="noteUpdating"
+                :text="noteUpdating ? 'Saving' : 'Save'"
+              />
               <v-btn
                 id="btn-cancel-note"
                 aria-label="Cancel Note Edit"
@@ -151,7 +149,7 @@
                 </v-btn>
               </v-col>
             </v-row>
-            <v-card v-if="collaboratorsEditing" class="my-4 background-shaded">
+            <v-card v-if="collaboratorsEditing" class="bg-surface-light my-4">
               <v-container>
                 <v-row
                   align="center"
@@ -170,14 +168,13 @@
                 >
                   <v-col cols="9">
                     <PersonLookup
-                      id="input-collaborator-lookup-autocomplete"
                       ref="personLookup"
                       :disabled="collaboratorsUpdating"
-                      label="Find collaborator by: "
-                      menu-label="collaborators"
-                      placeholder="UID or email"
-                      :on-select-result="addCollaboratorConfirm"
                       :error-message="addCollaboratorError"
+                      id-prefix="collaborator-lookup"
+                      label="Find collaborator"
+                      list-label="collaborators"
+                      :on-select-result="addCollaboratorConfirm"
                     />
                   </v-col>
                 </v-row>
@@ -205,23 +202,14 @@
                       </v-btn>
                     </div>
                     <div class="mt-4">
-                      <v-btn
+                      <ProgressButton
                         id="btn-collaborators-save"
+                        :action="updateCollaboratorsClicked"
                         aria-label="Save Collaborators"
-                        color="success"
                         :disabled="isEqual(sortBy(collaborators, 'uid'), sortBy(course.collaborators, 'uid')) || collaboratorsUpdating"
-                        @click="updateCollaboratorsClicked"
-                      >
-                        <v-progress-circular
-                          v-if="collaboratorsUpdating"
-                          class="mr-2"
-                          color="primary"
-                          indeterminate
-                          size="18"
-                          width="3"
-                        ></v-progress-circular>
-                        {{ collaboratorsUpdating ? 'Saving' : 'Save' }}
-                      </v-btn>
+                        :in-progress="collaboratorsUpdating"
+                        :text="collaboratorsUpdating ? 'Saving' : 'Save'"
+                      />
                       <v-btn
                         id="btn-collaborators-cancel"
                         aria-label="Cancel Collaborator Edit"
@@ -288,23 +276,14 @@
                   </div>
                 </div>
                 <div v-if="recordingTypeEditing && recordingTypeEditable">
-                  <v-btn
+                  <ProgressButton
                     id="btn-recording-type-save"
+                    :action="updateRecordingTypeClicked"
                     aria-label="Save Recording Type"
-                    color="success"
                     :disabled="recordingTypeUpdating"
-                    @click="updateRecordingTypeClicked"
-                  >
-                    <v-progress-circular
-                      v-if="recordingTypeUpdating"
-                      class="mr-2"
-                      color="primary"
-                      indeterminate
-                      size="18"
-                      width="3"
-                    ></v-progress-circular>
-                    {{ recordingTypeUpdating ? 'Saving' : 'Save' }}
-                  </v-btn>
+                    :in-progress="recordingTypeUpdating"
+                    :text="recordingTypeUpdating ? 'Saving' : 'Save'"
+                  />
                   <v-btn
                     id="btn-recording-type-cancel"
                     aria-label="Cancel Recording Type Edit"
@@ -345,7 +324,7 @@
                     Edit
                   </v-btn>
                 </div>
-                <v-card v-if="publishTypeEditing" class="my-4 background-shaded">
+                <v-card v-if="publishTypeEditing" class="my-4 bg-surface-light">
                   <v-container>
                     <div
                       id="select-publish-type"
@@ -491,23 +470,14 @@
                     >
                       <v-col cols="12">
                         <div>
-                          <v-btn
+                          <ProgressButton
                             id="btn-publish-type-save"
+                            :action="updatePublishTypeClicked"
                             aria-label="Save Recording Placement"
-                            color="success"
                             :disabled="publishTypeUpdating || (publishType && publishType.startsWith('kaltura_media_gallery') && !publishCanvasSites.length)"
-                            @click="updatePublishTypeClicked"
-                          >
-                            <v-progress-circular
-                              v-if="publishTypeUpdating"
-                              class="mr-2"
-                              color="primary"
-                              indeterminate
-                              size="18"
-                              width="3"
-                            ></v-progress-circular>
-                            {{ publishTypeUpdating ? 'Saving' : 'Save' }}
-                          </v-btn>
+                            :in-progress="publishTypeUpdating"
+                            :text="publishTypeUpdating ? 'Saving' : 'Save'"
+                          />
                           <v-btn
                             id="btn-publish-type-cancel"
                             aria-label="Cancel Recording Placement Edit"
@@ -699,7 +669,7 @@
                         @click="() => onClickSort(column, sort, sortBy, sortDesc)"
                       >
                         {{ column.text }}
-                        <v-icon :aria-hidden="true" small right :icon="getSortByIcon(column, sortBy, sortDesc)"></v-icon>
+                        <v-icon :icon="getSortByIcon(column, sortBy, sortDesc)" size="small"></v-icon>
                       </v-btn>
                     </th>
                   </tr>
@@ -748,12 +718,13 @@
 </template>
 
 <script setup>
-import {ref, reactive, computed, onMounted, nextTick} from 'vue'
+import {ref, reactive, computed, onMounted} from 'vue'
 import {useRoute} from 'vue-router'
 import CanvasCourseSite from '@/components/course/CanvasCourseSite'
 import CoursePageSidebar from '@/components/course/CoursePageSidebar'
 import PageTitle from '@/components/util/PageTitle'
 import PersonLookup from '@/components/util/PersonLookup'
+import ProgressButton from '@/components/util/ProgressButton'
 import ScheduledCourse from '@/components/course/ScheduledCourse'
 import {
   deleteCourseNote,
@@ -952,7 +923,7 @@ const addCollaboratorConfirm = (collaborator) => {
       collaborators.value.push(collaborator)
       alertScreenReader(`${collaborator.firstName} ${collaborator.lastName} added as a collaborator.`)
     }
-    putFocusNextTick('input-collaborator-lookup-autocomplete')
+    putFocusNextTick('collaborator-lookup-input')
   }
 }
 
@@ -997,7 +968,7 @@ const removeCollaborator = (uid, index) => {
   collaborators.value = collaborators.value.filter(c => c.uid !== uid)
   alertScreenReader(`${collaborator.firstName} ${collaborator.lastName} removed.`)
   const nextId = collaborators.value[index]?.uid || null
-  putFocusNextTick(nextId ? `btn-collaborator-remove-${nextId}` : 'input-collaborator-lookup-autocomplete')
+  putFocusNextTick(nextId ? `btn-collaborator-remove-${nextId}` : 'collaborator-lookup-input')
 }
 
 const getSortByIcon = (column, sortBy, sortDesc) => {
@@ -1025,7 +996,7 @@ const onRecordingTypeChange = (option, idx) => {
 
 const toggleCollaboratorsEditing = () => {
   collaboratorsEditing.value = true
-  putFocusNextTick('input-collaborator-lookup-autocomplete')
+  putFocusNextTick('collaborator-lookup-input')
 }
 
 const togglePublishTypeEditing = () => {

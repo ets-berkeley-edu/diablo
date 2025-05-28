@@ -1,6 +1,7 @@
 <template>
   <v-btn
     :id="id"
+    :aria-label="ariaLabel"
     :color="color"
     :disabled="disabled"
     :size="size"
@@ -24,6 +25,11 @@ defineProps({
   action: {
     type: Function,
     required: true
+  },
+  ariaLabel: {
+    default: undefined,
+    type: String,
+    required: false
   },
   color: {
     default: 'primary',

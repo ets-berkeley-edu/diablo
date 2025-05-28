@@ -1,5 +1,5 @@
 <template>
-  <div :class="containerClass">
+  <div class="d-flex flex-column flex-grow-1">
     <div :class="{'col col-4': props.inline}">
       <label
         :id="`${props.id}-label`"
@@ -12,39 +12,37 @@
         </span>
       </label>
     </div>
-
     <div :class="{ 'col col-6': props.inline, 'pt-1': !props.inline }">
       <AccessibleCombobox
-        id-prefix="search-options-find-instructor"
-        aria-description="Instructor name or S I D or email lookup. Expect auto suggest."
+        aria-description="Collaborator U I D or email lookup. Expect auto suggest."
         autocomplete="off"
         :clazz="{'mt-1 text-black': true}"
         :clearable="!isSearching"
         color="primary"
         density="compact"
+        :disabled="disabled"
         :filter-results="executeSearch"
         :get-value="() => get(selected, 'label')"
-        :set-value="s => selected = s.raw"
+        :id-prefix="idPrefix"
         is-autocomplete
         :is-busy="isSearching"
         :items="formattedItems"
         item-title="title"
-        label="Find Instructor by:"
-        list-label="Instructor List"
+        :label="label"
+        :list-label="listLabel"
         :maxlength="56"
         min-width="12rem"
         :on-clear="onClearSearch"
-        placeholder="Enter name, email, or SID ..."
+        :placeholder="placeholder"
+        :set-value="s => selected = s.raw"
       />
     </div>
 
-    <div :class="{ 'col col-2 pl-0': props.inline }">
+    <div aria-live="assertive" :class="{'col col-2 pl-0': props.inline }" role="alert">
       <div
         v-if="props.errorMessage"
         :id="`${props.id}-error`"
-        class="v-messages error--text px-3 mt-1"
-        :class="theme.global.current.value.dark ? 'text--lighten-2' : ''"
-        role="alert"
+        class="v-messages text-error px-3 mt-1"
       >
         {{ props.errorMessage }}
       </div>
@@ -53,83 +51,54 @@
 </template>
 
 <script setup>
-import {
-  ref,
-  reactive,
-  computed,
-  watch,
-  nextTick,
-  onMounted,
-  onBeforeUnmount,
-} from 'vue'
+import {ref, computed, watch} from 'vue'
 import debounce from 'lodash/debounce'
 import split from 'lodash/split'
 import trim from 'lodash/trim'
 import join from 'lodash/join'
 import {searchUsers} from '@/api/user'
-import {useTheme} from 'vuetify'
 import AccessibleCombobox from '@/components/util/AccessibleCombobox'
 import {get} from 'lodash'
 
-// declare props
 const props = defineProps({
-  disabled: Boolean,
+  disabled: {
+    required: true,
+    type: Boolean
+  },
   errorMessage: {
-    type: String,
-    default: null
+    default: '',
+    required: false,
+    type: String
   },
-  id: {
-    type: String,
-    default: 'input-person-lookup-autocomplete'
-  },
-  inline: {
-    type: Boolean,
-    default: null
-  },
-  inputClass: {
-    type: String,
-    default: null
+  idPrefix: {
+    default: 'person-lookup',
+    required: false,
+    type: String
   },
   label: {
-    type: String,
-    default: null
+    required: true,
+    type: String
   },
-  labelClass: {
-    type: String,
-    default: null
-  },
-  menuLabel: {
+  listLabel: {
     type: String,
     required: true
   },
   onSelectResult: {
-    type: Function,
-    default: () => {}
+    default: () => {},
+    type: Function
   },
   placeholder: {
-    type: String, default: 'Name or UID'
+    default: 'UID or email',
+    type: String,
+    required: false
   }
 })
 
-// theme for light/dark
-const theme = useTheme()
-
-// refs & reactive state
-const autocomplete = ref(null)
-const highlightedItem = ref(null)
 const isSearching = ref(false)
-const menuObserver = ref(null)
 const search = ref(null)
 const searchTokenMatcher= ref(null)
 const selected = ref(null)
 const suggestions = ref([])
-
-// container class
-const containerClass = computed(() =>
-  props.inline
-    ? 'row d-flex align-center row--dense'
-    : 'd-flex flex-column flex-grow-1'
-)
 
 const formattedItems = computed(() =>
   suggestions.value.map(user => ({
@@ -162,85 +131,9 @@ const onClearSearch = () => {
 }
 
 watch(selected, suggestion => {
-  const inputEl = document.getElementById(props.id)
-  if (inputEl) inputEl.setAttribute('aria-expanded', 'false')
   if (!suggestion) {
     search.value = null
   }
   props.onSelectResult(suggestion)
 })
-
-watch(suggestions, (newVal, oldVal) => {
-  const combo = autocomplete.value?.$el.querySelector('[role="combobox"]')
-  const inputEl = document.getElementById(props.id)
-  if (inputEl && newVal.length && !oldVal.length) {
-    nextTick(() => {
-      const listboxId = combo?.getAttribute('aria-owns')
-      const listbox = listboxId && document.getElementById(listboxId)
-      inputEl.setAttribute('aria-expanded', 'true')
-      listboxId && inputEl.setAttribute('aria-controls', listboxId)
-      listbox && listbox.setAttribute('aria-label', props.menuLabel)
-    })
-  } else if (inputEl && !newVal.length) {
-    inputEl.setAttribute('aria-expanded', 'false')
-  }
-})
-
-// build display label
-function toLabel(user) {
-  if (user && typeof user === 'object') {
-    let label = `${user.firstName || ''} ${user.lastName || ''}`.trim()
-    if (user.email) label += ` (${user.email})`
-    label += ` (${user.uid})`
-    return label
-  }
-  return ''
-}
-
-// setup MutationObserver on mount
-onMounted(() => {
-  const inputEl = document.getElementById(props.id)
-  if (inputEl) {
-    inputEl.setAttribute('aria-autocomplete', 'list')
-    menuObserver.value = new MutationObserver(mutations => {
-      const m = mutations.find(x => x.attributeName === 'aria-expanded')
-      const expanded = m?.target.getAttribute('aria-expanded')
-      if (!suggestions.value.length && expanded === 'true') {
-        inputEl.setAttribute('aria-expanded', 'false')
-      }
-    })
-    menuObserver.value.observe(inputEl, { attributes: true })
-  }
-})
-
-// clean up
-onBeforeUnmount(() => {
-  menuObserver.value?.disconnect()
-})
 </script>
-
-<style>
-.autocomplete-menu {
-  z-index: 210 !important;
-}
-.person-lookup {
-  overflow-x: clip;
-}
-.person-lookup .v-select__selections,
-.person-lookup .v-select__selections input {
-  color: rgba(0, 0, 0, 0.87) !important;
-}
-.person-lookup.v-input--is-focused {
-  appearance: auto !important;
-  caret-color: #000 !important;
-  color: -webkit-focus-ring-color !important;
-  outline: auto !important;
-  outline-color: -webkit-focus-ring-color !important;
-  outline-offset: 0px !important;
-  outline-style: auto !important;
-}
-.person-lookup.v-input--is-focused fieldset {
-  border-color: unset !important;
-  border-width: 1px !important;
-}
-</style>
