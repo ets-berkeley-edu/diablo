@@ -16,6 +16,7 @@ import Ouija from '@/views/Ouija.vue'
 import Room from '@/views/room/Room.vue'
 import Rooms from '@/views/room/Rooms.vue'
 import Course from '@/views/Course.vue'
+import User from '@/views/User.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -119,11 +120,11 @@ const router = createRouter({
           component: Rooms,
           name: 'Rooms'
         },
-      //   {
-      //     path: '/user/:uid',
-      //     component: User,
-      //     name: 'User'
-      //   }
+        {
+          path: '/user/:uid',
+          component: User,
+          name: 'User'
+        }
       ]
     },
     {
