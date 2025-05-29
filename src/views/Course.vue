@@ -631,87 +631,7 @@
       </v-row>
       <v-row v-if="currentUser.isAdmin">
         <v-col cols="12">
-          <v-container id="update-history" class="elevation-2 pa-6 mx-0 max-width-unset">
-            <h2>Update history</h2>
-            <div v-if="!course.updateHistory.length" id="no-updates">No updates.</div>
-            <v-data-table
-              v-if="course.updateHistory.length"
-              id="update-history-table"
-              caption="Course Update History"
-              :headers="updateHistoryHeaders"
-              density="comfortable"
-              hide-default-footer
-              hide-default-header
-              :items="course.updateHistory"
-              :items-per-page="100"
-              class="elevation-1"
-            >
-              <template #header="{props: {headers: columns, options: {sortBy, sortDesc}}, on: {sort}}">
-                <thead>
-                  <tr>
-                    <th
-                      v-for="(column, index) in columns"
-                      :id="`update-history-${column.id}-th`"
-                      :key="index"
-                      :aria-label="column.text"
-                      :aria-sort="getAriaSortIndicator(column, sortBy, sortDesc)"
-                      class="text-start text-no-wrap px-4 py-2"
-                      :class="{'sortable': column.sortable === false}"
-                      scope="col"
-                    >
-                      <v-btn
-                        :id="`update-history-sort-by-${column.id}-btn`"
-                        :aria-label="getSortButtonAriaLabel(column, sortBy, sortDesc)"
-                        class="font-size-12 font-weight-bold height-unset min-width-unset pa-1 text-transform-unset v-table-sort-btn-override"
-                        :class="{'icon-visible': sortBy[0] === column.value}"
-                        color="white"
-                        density="compact"
-                        plain
-                        @click="() => onClickSort(column, sort, sortBy, sortDesc)"
-                      >
-                        {{ column.text }}
-                        <v-icon :icon="getSortByIcon(column, sortBy, sortDesc)" size="small"></v-icon>
-                      </v-btn>
-                    </th>
-                  </tr>
-                </thead>
-              </template>
-              <template #body="{items}">
-                <tbody>
-                  <tr v-for="(item, index) in items" :key="index" class="border-b-sm">
-                    <td :id="`update-fieldName-${item.id}`" class="px-4 py-2" columnheader="update-history-fieldName-th">
-                      <span aria-hidden="true">{{ item.fieldName || '&mdash;' }}</span>
-                      <span class="sr-only">{{ item.fieldName || 'blank' }}</span>
-                    </td>
-                    <td :id="`update-fieldValueOld-${item.id}`" class="px-4 py-2" columnheader="update-history-fieldValueOld-th">
-                      <span aria-hidden="true">{{ item.fieldValueOld || '&mdash;' }}</span>
-                      <span class="sr-only">{{ item.fieldValueOld || 'blank' }}</span>
-                    </td>
-                    <td :id="`update-fieldValueNew-${item.id}`" class="px-4 py-2" columnheader="update-history-fieldValueNew-th">
-                      <span aria-hidden="true">{{ item.fieldValueNew || '&mdash;' }}</span>
-                      <span class="sr-only">{{ item.fieldValueNew || 'blank' }}</span>
-                    </td>
-                    <td :id="`update-requestedByName-${item.id}`" class="px-4 py-2" columnheader="update-history-requestedByName-th">
-                      <span aria-hidden="true">{{ item.requestedByName ? `${item.requestedByName} (${item.requestedByUid})` : '&mdash;' }}</span>
-                      <span class="sr-only">{{ item.requestedByName ? `${item.requestedByName} (${item.requestedByUid})` : 'blank' }}</span>
-                    </td>
-                    <td :id="`update-requestedAt-${item.id}`" class="px-4 py-2" columnheader="update-history-requestedAt-th">
-                      <span aria-hidden="true">{{ new Date(item.requestedAt).toLocaleString() || '&mdash;' }}</span>
-                      <span class="sr-only">{{ new Date(item.requestedAt).toLocaleString() || 'blank' }}</span>
-                    </td>
-                    <td :id="`update-publishedAt-${item.id}`" class="px-4 py-2" columnheader="update-history-publishedAt-th">
-                      <span aria-hidden="true">{{ item.publishedAt ? new Date(item.publishedAt).toLocaleString() : '&mdash;' }}</span>
-                      <span class="sr-only">{{ item.publishedAt ? new Date(item.publishedAt).toLocaleString() : 'blank' }}</span>
-                    </td>
-                    <td :id="`update-status-${item.id}`" class="px-4 py-2" columnheader="update-history-status-th">
-                      <span aria-hidden="true">{{ item.status || '&mdash;' }}</span>
-                      <span class="sr-only">{{ item.status || 'blank' }}</span>
-                    </td>
-                  </tr>
-                </tbody>
-              </template>
-            </v-data-table>
-          </v-container>
+          <CourseHistory :history="course.updateHistory" />
         </v-col>
       </v-row>
     </v-container>
@@ -719,10 +639,17 @@
 </template>
 
 <script setup>
+import {find, get, filter, isEmpty, isEqual, sortBy, size} from 'lodash'
+import {DateTime} from 'luxon'
+import {mdiBookMultipleOutline, mdiAlert} from '@mdi/js'
 import {ref, reactive, computed, onMounted} from 'vue'
 import {useRoute} from 'vue-router'
+import {alertScreenReader, putFocusNextTick, getCourseCodes, getTermName} from '@/lib/utils'
 import CanvasCourseSite from '@/components/course/CanvasCourseSite'
+import CourseHistory from '@/components/course/CourseHistory'
 import CoursePageSidebar from '@/components/course/CoursePageSidebar'
+import {getAuditoriums} from '@/api/room'
+import {getCanvasSitesTeaching} from '@/api/user'
 import PageTitle from '@/components/util/PageTitle'
 import PersonLookup from '@/components/util/PersonLookup'
 import ProgressButton from '@/components/util/ProgressButton'
@@ -735,19 +662,10 @@ import {
   updatePublishType,
   updateRecordingType
 } from '@/api/course'
-import {getAuditoriums} from '@/api/room'
-import {getCanvasSitesTeaching} from '@/api/user'
-import {alertScreenReader, putFocusNextTick, getCourseCodes, getTermName} from '@/lib/utils'
 import {useContextStore} from '@/stores/context'
-import {find, get, filter, isEmpty, isEqual, sortBy, size, first} from 'lodash'
-import {DateTime} from 'luxon'
-import {mdiArrowDown, mdiArrowUp, mdiBookMultipleOutline, mdiAlert} from '@mdi/js'
 
-
-// Composable contexts
 const {config, currentUser, loadingStart, loadingComplete} = useContextStore()
 
-// State
 const addCollaboratorError = ref('')
 const agreedToTerms = ref(false)
 const auditoriums = ref([])
@@ -792,15 +710,6 @@ const recordingType = ref('')
 const recordingTypeEditing = ref(false)
 const recordingTypeOptions = ref([])
 const recordingTypeUpdating = ref(false)
-const updateHistoryHeaders = ref([
-  {text: 'Field', value: 'fieldName'},
-  {text: 'Old Value', value: 'fieldValueOld'},
-  {text: 'New Value', value: 'fieldValueNew'},
-  {text: 'Requested by', value: 'requestedByName', width: '130px'},
-  {text: 'Requested at', value: 'requestedAt', width: '130px'},
-  {text: 'Published at', value: 'publishedAt', width: '130px'},
-  {text: 'Status', value: 'status', width: '130px'}
-])
 
 // Computed
 // const disableSubmit = computed(() => !agreedToTerms.value || !publishType.value || !recordingType.value)
@@ -850,69 +759,6 @@ onMounted(() => {
     })
 })
 
-const editNote = () => {
-  noteEditing.value = true
-  putFocusNextTick('note-body-edit')
-}
-
-const getAriaSortIndicator = (column, sortBy, sortDesc) => {
-  if (column.value && sortBy[0] === column.value) {
-    return sortDesc[0] ? 'descending' : 'ascending'
-  } else {
-    return undefined
-  }
-}
-
-const getSortButtonAriaLabel = (column, sortBy, sortDesc) => {
-  let label = `${column.text}: `
-  if (sortBy[0] === column.value) {
-    label += `sorted ${sortDesc[0] ? 'descending' : 'ascending'}.`
-    label += ` Activate to sort ${sortDesc[0] ? 'ascending' : 'descending'}.`
-  } else {
-    label += 'not sorted. Activate to sort ascending.'
-  }
-  return label
-}
-
-const cancelNote = () => {
-  noteBody.value = course.value.note
-  noteEditing.value = false
-  noteUpdating.value = false
-  alertScreenReader('Note edit canceled.')
-  putFocusNextTick('btn-edit-note')
-}
-
-const saveNote = () => {
-  noteUpdating.value = true
-  updateCourseNote(course.value.termId, course.value.sectionId, noteBody.value)
-    .then(data => {
-      course.value.note = data.note
-      noteBody.value = data.note
-      noteEditing.value = false
-      noteUpdating.value = false
-      alertScreenReader('Note updated.')
-      putFocusNextTick('btn-edit-note')
-    })
-}
-
-const collaboratorLabel = (collaborator) => {
-  let label = `${collaborator.firstName} ${collaborator.lastName}`
-  if (collaborator.email) label += ` (${collaborator.email})`
-  return `${label} (${collaborator.uid})`
-}
-
-const deleteNote = () => {
-  noteUpdating.value = true
-  deleteCourseNote(course.value.termId, course.value.sectionId)
-    .then(() => {
-      course.value.note = null
-      noteBody.value = null
-      noteUpdating.value = false
-      alertScreenReader('Note deleted.')
-      putFocusNextTick('btn-edit-note')
-    })
-}
-
 const addCollaboratorConfirm = (collaborator) => {
   if (collaborator) {
     const exists = collaborators.value.some(c => c.uid === collaborator.uid)
@@ -950,6 +796,49 @@ const addCanvasSiteConfirm = () => {
   pendingCanvasSite.value = null
 }
 
+const cancelNote = () => {
+  noteBody.value = course.value.note
+  noteEditing.value = false
+  noteUpdating.value = false
+  alertScreenReader('Note edit canceled.')
+  putFocusNextTick('btn-edit-note')
+}
+
+const collaboratorLabel = (collaborator) => {
+  let label = `${collaborator.firstName} ${collaborator.lastName}`
+  if (collaborator.email) label += ` (${collaborator.email})`
+  return `${label} (${collaborator.uid})`
+}
+
+const deleteNote = () => {
+  noteUpdating.value = true
+  deleteCourseNote(course.value.termId, course.value.sectionId)
+    .then(() => {
+      course.value.note = null
+      noteBody.value = null
+      noteUpdating.value = false
+      alertScreenReader('Note deleted.')
+      putFocusNextTick('btn-edit-note')
+    })
+}
+
+const editNote = () => {
+  noteEditing.value = true
+  putFocusNextTick('note-body-edit')
+}
+
+const isCanvasSiteIdStaged = (siteId) => {
+  return !!find(publishCanvasSites, {'canvasSiteId': parseInt(siteId, 10)})
+}
+
+const onPublishTypeChange = (option, idx) => {
+  publishType.value = publishType.value === option ? publishTypeOptions.value[idx - 1] : option
+}
+
+const onRecordingTypeChange = (option, idx) => {
+  recordingType.value = recordingType.value === option ? recordingTypeOptions.value[idx - 1] : option
+}
+
 const removeCanvasSite = (canvasSiteId, index) => {
   const nextFocusIndex = (index + 1 === size(publishCanvasSites)) ? index - 1 : index + 1
   const nextFocusSiteId = get(publishCanvasSites, `${nextFocusIndex}.canvasSiteId`)
@@ -972,27 +861,17 @@ const removeCollaborator = (uid, index) => {
   putFocusNextTick(nextId ? `btn-collaborator-remove-${nextId}` : 'collaborator-lookup-input')
 }
 
-const getSortByIcon = (column, sortBy, sortDesc) => {
-  return sortBy[0] === column.value && sortDesc[0] ? mdiArrowDown : mdiArrowUp
-}
-
-const isCanvasSiteIdStaged = (siteId) => {
-  return !!find(publishCanvasSites, {'canvasSiteId': parseInt(siteId, 10)})
-}
-
-const onClickSort = (column, sort, sortBy, sortDesc) => {
-  const sortDirection = first(sortBy) === column.value && !sortDesc[0] ? 'descending' : 'ascending'
-  sort(column.value)
-  alertScreenReader(`Sorted by ${column.text}, ${sortDirection}`)
-  putFocusNextTick(`update-history-sort-by-${column.id}-btn`)
-}
-
-const onPublishTypeChange = (option, idx) => {
-  publishType.value = publishType.value === option ? publishTypeOptions.value[idx - 1] : option
-}
-
-const onRecordingTypeChange = (option, idx) => {
-  recordingType.value = recordingType.value === option ? recordingTypeOptions.value[idx - 1] : option
+const saveNote = () => {
+  noteUpdating.value = true
+  updateCourseNote(course.value.termId, course.value.sectionId, noteBody.value)
+    .then(data => {
+      course.value.note = data.note
+      noteBody.value = data.note
+      noteEditing.value = false
+      noteUpdating.value = false
+      alertScreenReader('Note updated.')
+      putFocusNextTick('btn-edit-note')
+    })
 }
 
 const toggleCollaboratorsEditing = () => {
@@ -1086,19 +965,4 @@ const updateRecordingTypeCancel = () => {
   recordingTypeEditing.value = false
   recordingType.value = course.value.recordingType
 }
-
 </script>
-
-<style scoped>
-#update-history-table {
-  border-collapse: collapse;
-  width: 100%;
-  table-layout: auto;
-}
-#update-history-table tbody td {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
-}
-#update-history-table tbody tr:last-child td {
-  border-bottom: none;
-}
-</style>

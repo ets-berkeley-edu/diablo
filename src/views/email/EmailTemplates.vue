@@ -47,15 +47,13 @@
           </v-col>
         </v-row>
         <v-data-table
-          caption="Email templates"
-          class="v-table-padding-override"
+          :class="{'v-table-padding-override': emailTemplates.length}"
           disable-pagination
           :headers="headers"
           hide-default-footer
           :items="emailTemplates"
           :items-per-page="-1"
           :loading="refreshing"
-          no-results-text="No matching email templates"
         >
           <template #headers="{columns}">
             <tr>
@@ -73,7 +71,7 @@
           </template>
           <template #body="{items}">
             <tr v-if="!items.length">
-              <td colspan="6" class="pt-4 text-subtitle-1">
+              <td class="py-5 text-center text-subtitle-1" :colspan="headers.length">
                 You have no email templates. To get started, select a type of template from the "Create New Template" menu above.
               </td>
             </tr>
@@ -139,8 +137,8 @@ const headers = [
   {title: 'Test', value: 'test', class: 'text-center'},
   {title: 'Delete', value: 'delete', class: 'text-center'}
 ]
-const emailTemplates = ref()
-const emailTemplateTypes = ref()
+const emailTemplates = ref([])
+const emailTemplateTypes = ref([])
 const menuContainer = ref()
 const refreshing = ref(false)
 const router = useRouter()

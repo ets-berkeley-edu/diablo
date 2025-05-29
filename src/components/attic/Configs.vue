@@ -2,7 +2,6 @@
   <div>
     <h2>Diablo Configs</h2>
     <v-data-table
-      caption="Diablo Configs"
       disable-pagination
       :headers="headers"
       hide-default-footer

@@ -11,14 +11,13 @@
         <CreateBlackoutDialog :blackouts="blackouts" :on-close="onCloseDialog" />
       </div>
       <v-data-table
-        class="v-table-padding-override"
+        :class="{'v-table-padding-override': blackouts.length}"
         disable-sort
         :headers="headers"
         hide-default-footer
         :items="blackouts"
         :items-per-page="-1"
         :loading="isRefreshing"
-        no-results-text="No matching blackouts"
       >
         <template #headers="{columns}">
           <tr>
@@ -35,8 +34,8 @@
           </tr>
         </template>
         <template #body="{items}">
-          <tr v-if="!items.length">
-            <td colspan="6" class="py-4 text-subtitle-1">
+          <tr v-if="!isRefreshing && !items.length">
+            <td class="py-4 text-center text-subtitle-1" :colspan="headers.length">
               No blackouts scheduled.
             </td>
           </tr>

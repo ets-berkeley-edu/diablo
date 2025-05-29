@@ -27,11 +27,9 @@
     </v-card-title>
     <v-data-table
       id="rooms-data-table"
-      caption="Rooms"
       :headers="headers"
       :items="rooms"
       :items-per-page="itemsPerPage"
-      no-results-text="No rooms"
       :page.sync="pageCurrent"
       :search="search"
       :sort-by="[sortBy]"
@@ -65,6 +63,11 @@
         </tr>
       </template>
       <template #body="{items}">
+        <tr v-if="!items.length">
+          <td class="py-5 text-center text-subtitle-1" :colspan="headers.length">
+            No rooms.
+          </td>
+        </tr>
         <tr v-for="(item, index) in items" :key="index">
           <td :id="`room-${item.id}-location`" columnheader="rooms-table-location-th">
             <router-link
