@@ -49,10 +49,9 @@
               class="instructor-courses overflow-y-visible"
               disable-sort
               :headers="index === 0 ? eligibleHeaders : ineligibleHeaders"
-              :hide-default-footer="true"
+              hide-default-footer
               :items="courses"
-              :items-per-page="100"
-              :page.sync="pageCurrent"
+              :items-per-page="-1"
             >
               <template #headers="{columns}">
                 <tr>
@@ -209,15 +208,6 @@
                   </tr>
                 </template>
               </template>
-              <template #bottom="{pageCount}">
-                <div v-if="pageCount > 1" class="text-center pb-4 pt-2">
-                  <v-pagination
-                    :id="`${getTableId(index)}-pagination`"
-                    v-model="pageCurrent"
-                    :length="pageCount"
-                  ></v-pagination>
-                </div>
-              </template>
             </v-data-table>
           </div>
         </v-row>
@@ -256,8 +246,6 @@ const eligibleHeaders = [
   ...ineligibleHeaders,
   {title: 'Opt out', value: 'hasOptedOut'}
 ]
-const eligiblePageCurrent = ref(1)
-const ineligiblePageCurrent = ref(1)
 const refreshingCourses = ref(false)
 
 onMounted(() => {
@@ -286,8 +274,6 @@ const reloadCoursesTable = (srAlert = '') => {
   getCurrentUser().then(user => {
     contextStore.setCurrentUser(user)
     refreshCourses()
-    eligiblePageCurrent.value = 1
-    ineligiblePageCurrent.value = 1
     refreshingCourses.value = false
     alertScreenReader(`${srAlert}. Courses table refreshed.`)
   })
