@@ -92,13 +92,14 @@
         <v-col cols="12" md="9" sm="8">
           <v-container v-if="isCurrentTerm && capability && hasValidMeetingTimes && !course.hasOptedOut && course.scheduled" class="elevation-2 pa-6 px-sm-2">
             <v-row>
-              <v-col class="font-weight-bold mb-1">
+              <v-col class="font-weight-bold">
                 <v-alert
                   v-if="updatesQueued"
                   density="compact"
+                  class="mb-3 pa-4"
                   type="warning"
                   :icon="mdiAlert"
-                  outlined
+                  variant="outlined"
                 >
                   Recent updates to recording settings are currently queued for publication. They will be published in an hour or less.
                 </v-alert>

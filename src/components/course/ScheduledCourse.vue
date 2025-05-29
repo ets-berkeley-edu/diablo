@@ -23,26 +23,36 @@
       </v-list-item-title>
 
       <!-- “Scheduled on” & “Recording Type” side by side -->
-      <v-list-item two-line>
-        <v-list-item-title>Scheduled on</v-list-item-title>
-        <v-list-item-subtitle>{{ formatDate(scheduled.createdAt) }}</v-list-item-subtitle>
-
-        <v-list-item-title>Recording Type</v-list-item-title>
-        <v-list-item-subtitle>{{ scheduled.recordingTypeName }}</v-list-item-subtitle>
+      <v-list-item>
+        <v-row class="w-100 mb-1 mt-1">
+          <v-col cols="6">
+            <div class="text-subtitle-1">Scheduled on</div>
+            <div class="text-body-2">{{ formatDate(scheduled.createdAt) }}</div>
+          </v-col>
+          <v-col cols="6">
+            <div class="text-subtitle-1">Recording Type</div>
+            <div class="text-body-2">{{ scheduled.recordingTypeName }}</div>
+          </v-col>
+        </v-row>
       </v-list-item>
 
       <!-- “Publish Type” & “Collaborator UIDs” side by side -->
-      <v-list-item two-line>
-        <v-list-item-title>Publish Type</v-list-item-title>
-        <v-list-item-subtitle>{{ scheduled.publishTypeName }}</v-list-item-subtitle>
-
-        <v-list-item-title>Collaborator UIDs</v-list-item-title>
-        <v-list-item-subtitle id="scheduled-collaborator-uids">
-          {{ scheduled.collaboratorUids.length
-            ? scheduled.collaboratorUids.join(', ')
-            : 'None'
-          }}
-        </v-list-item-subtitle>
+      <v-list-item>
+        <v-row class="w-100">
+          <v-col cols="6">
+            <div class="text-subtitle-1">Publish Type</div>
+            <div class="text-body-2">{{ scheduled.publishTypeName }}</div>
+          </v-col>
+          <v-col cols="6">
+            <div class="text-subtitle-1">Collaborator UIDs</div>
+            <div class="text-body-2" id="scheduled-collaborator-uids">
+              {{ scheduled.collaboratorUids.length
+                ? scheduled.collaboratorUids.join(', ')
+                : 'None'
+              }}
+            </div>
+          </v-col>
+        </v-row>
       </v-list-item>
     </v-list>
   </div>

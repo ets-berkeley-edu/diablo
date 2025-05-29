@@ -6,7 +6,7 @@
         <v-card
           class="mx-auto opaque-card"
           elevation="24"
-          width="400"
+          width="450"
         >
           <v-banner class="text-accent px-8" bg-color="secondary">
             <div class="header-bar text-center w-100">

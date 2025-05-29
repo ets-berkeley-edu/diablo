@@ -4,6 +4,7 @@
     disable-sort
     :header-props="{class: 'font-size-12 font-weight-bold text-medium-emphasis'}"
     :headers="[
+      { title: '', value: 'data-table-expand', sortable: false, width: '24px' },
       {title: 'Id', value: 'id'},
       {title: 'Summary', value: 'summary', class: 'w-30'},
       {title: 'Start', value: 'startDate'},
@@ -15,8 +16,6 @@
     :items="events"
     :items-per-page="-1"
     no-data-text="No Kaltura events."
-    show-expand
-    :single-expand="true"
   >
     <template #item.summary="{item}">
       <a
