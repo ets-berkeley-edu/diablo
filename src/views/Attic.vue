@@ -18,7 +18,6 @@
     <div class="ma-3 pt-3">
       <h2>Admin Users</h2>
       <v-data-table
-        caption="Admin Users"
         :headers="[
           {title: 'Name', value: 'name'},
           {title: 'Email', value: 'email'},

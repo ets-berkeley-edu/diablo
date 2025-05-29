@@ -11,13 +11,12 @@
       <v-card-text class="px-0">
         <v-data-table
           id="job-schedule-table"
-          class="v-table-padding-override"
+          :class="{'v-table-padding-override': jobSchedule.jobs.length}"
           disable-sort
           :headers="headers"
           hide-default-footer
           :items="jobSchedule.jobs"
           :items-per-page="-1"
-          no-data-text="No jobs"
         >
           <template #headers="{columns}">
             <tr>
@@ -33,6 +32,11 @@
             </tr>
           </template>
           <template #body="{items}">
+            <tr v-if="!items.length">
+              <td id="job-schedule-no-data" class="py-5 text-center text-subtitle-1" :colspan="headers.length">
+                No jobs.
+              </td>
+            </tr>
             <tr v-for="job in items" :key="job.key">
               <td
                 :id="`job-schedule-${job.key}-status`"

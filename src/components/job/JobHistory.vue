@@ -31,12 +31,9 @@
     <v-data-table
       id="job-history-table"
       :headers="headers"
-      hide-default-footer
       :items="jobHistory"
       :items-per-page="itemsPerPage"
       :loading="refreshing"
-      no-data-text="Job history is empty"
-      no-results-text="No matching jobs"
       :page.sync="pageCurrent"
       :search="search"
     >
@@ -54,6 +51,12 @@
         </tr>
       </template>
       <template #body="{items}">
+        <tr v-if="!items.length" class="py-5 text-center text-subtitle-1">
+          <td id="job-history-no-data" :colspan="headers.length">
+            <span v-if="search.length">No matching jobs.</span>
+            <span v-if="!search.length && !refreshing">Job history is empty.</span>
+          </td>
+        </tr>
         <tr v-for="(item, index) in items" :key="index">
           <td :id="`job-history-${item.id}-jobKey`" columnheader="job-history-jobKey-th">
             {{ item.jobKey }}
@@ -84,7 +87,7 @@
           </td>
         </tr>
       </template>
-      <template #bottom={pageCount}>
+      <template #bottom="{pageCount}">
         <div v-if="pageCount > 1" class="text-center pb-4 pt-2">
           <v-pagination
             id="rooms-pagination"
@@ -114,12 +117,12 @@
 </template>
 
 <script setup>
-import {computed, ref, watch} from 'vue'
+import {ref, watch} from 'vue'
 import {DateTime} from 'luxon'
 import {mdiCheckBold, mdiExclamationThick, mdiHistory, mdiMagnify} from '@mdi/js'
 import {size} from 'lodash'
 
-const props = defineProps({
+defineProps({
   jobHistory: {
     required: true,
     type: Array

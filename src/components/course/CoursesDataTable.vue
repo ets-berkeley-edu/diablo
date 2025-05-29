@@ -67,6 +67,11 @@
             ></v-progress-circular>
           </td>
         </tr>
+        <tr v-if="!refreshing && !items.length" class="py-5 text-center text-subtitle-1">
+          <td id="message-when-zero-courses" :colspan="headers.length">
+            No courses.
+          </td>
+        </tr>
         <template v-if="!refreshing && items.length">
           <!-- eslint-disable-next-line vue/no-v-for-template-key -->
           <template v-for="course in items" :key="course.sectionId">
@@ -231,11 +236,6 @@
             </tr>
           </template>
         </template>
-        <tr v-if="!refreshing && !items.length" class="text-center">
-          <td id="message-when-zero-courses" :colspan="headers.length">
-            No courses.
-          </td>
-        </tr>
       </template>
       <template #bottom="{pageCount}">
         <div v-if="!refreshing && pageCount > 1" class="text-center pb-4 pt-2">
@@ -251,16 +251,16 @@
 </template>
 
 <script setup>
-import {alertScreenReader} from '@/lib/utils'
-import {onMounted, ref, watch} from 'vue'
+import {DateTime} from 'luxon'
 import {each, filter, get, map, size, tail} from 'lodash'
 import {mdiClose} from '@mdi/js'
+import {onMounted, ref, watch} from 'vue'
+import {alertScreenReader} from '@/lib/utils'
 import Days from '@/components/util/Days'
 import Instructor from '@/components/course/Instructor'
 import ToggleOptOut from '@/components/course/ToggleOptOut'
 import {getDisplayMeetings} from '@/lib/utils'
 import {useContextStore} from '@/stores/context'
-import {DateTime} from 'luxon'
 
 const props = defineProps({
   courses: {
