@@ -113,9 +113,9 @@
         </v-btn>
         <v-btn
           id="btn-cancel-note"
-          class="mx-3"
-          variant="elevated"
+          class="ml-2"
           :disabled="isUpdatingNote"
+          variant="text"
           @click="cancelNote"
         >
           Cancel

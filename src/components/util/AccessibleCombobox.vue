@@ -1,5 +1,5 @@
 <template>
-  <div :id="`${idPrefix}-container`">
+  <div :id="`${idPrefix}-container`" class="w-100">
     <component
       :is="isAutocomplete ? 'v-autocomplete' : 'v-combobox'"
       :id="`${idPrefix}-input`"
@@ -7,34 +7,31 @@
       v-model="model"
       :aria-describedby="undefined"
       :aria-description="ariaDescription"
-      :aria-required="required"
       :autocomplete="autocomplete"
       :base-color="color"
       bg-color="surface"
-      :class="clazz"
-      :clearable="clearable"
       :color="color"
-      :density="density"
+      density="comfortable"
       :disabled="disabled"
+      :error="isInvalid"
       hide-details
       hide-no-data
       :items="items"
       :list-props="{ariaLive: 'off'}"
       :loading="isBusy"
-      :maxlength="maxlength"
       :menu-icon="null"
-      :menu-props="mergedMenuProps"
+      :menu-props="menuProps"
       :min-width="minWidth"
       :no-filter="isAutocomplete"
-      persistent-clear
       :placeholder="placeholder || label"
       return-object
-      :type="inputType"
+      type="text"
       variant="outlined"
       @blur.stop.prevent="onBlur"
       @keydown.enter.stop.prevent="onKeyEnter"
       @update:focused="onFocusInput"
       @update:menu="onToggleMenu"
+      @update:model-value="onUpdateModel"
       @update:search="onUpdateSearch"
     >
       <template #loader="{isActive}">
@@ -45,23 +42,6 @@
           indeterminate
           size="x-small"
           width="2"
-        />
-      </template>
-      <template #clear>
-        <v-btn
-          v-if="!isBusy && !focusedListItemIndex"
-          :id="`${idPrefix}-clear-btn`"
-          :aria-label="`Clear ${label} Input`"
-          class="d-flex align-self-center v-icon"
-          :class="{'disabled-opacity': !model}"
-          density="compact"
-          :disabled="!model"
-          exact
-          :icon="mdiCloseCircle"
-          :ripple="false"
-          variant="text"
-          @keydown.enter.stop.prevent="onClearInput"
-          @click.stop.prevent="onClearInput"
         />
       </template>
       <template #item="{index, item}">
@@ -76,20 +56,18 @@
         </v-list-item>
       </template>
       <template v-if="isAutocomplete" #selection="{item}">
-        <span class="text-no-wrap truncate-with-ellipsis" v-html="highlightQuery(item.props.title)" />
-      </template>
-      <template #append>
-        <slot name="append" />
+        <span class="text-no-wrap truncate-with-ellipsis">
+          {{ item.props.title }}
+        </span>
       </template>
     </component>
   </div>
 </template>
 
 <script setup>
-import {filter, get, includes, isEmpty} from 'lodash'
-import {mdiCloseCircle} from '@mdi/js'
+import {filter, includes, size} from 'lodash'
 import {nextTick, onMounted, onUpdated, ref} from 'vue'
-import {alertScreenReader, escapeForRegExp, pluralize, putFocusNextTick} from '@/lib/utils'
+import {alertScreenReader, escapeForRegExp, pluralize} from '@/lib/utils'
 
 const props = defineProps({
   ariaDescription: {
@@ -102,22 +80,8 @@ const props = defineProps({
     required: false,
     type: String
   },
-  clazz: {
-    default: '',
-    required: false,
-    type: [String, Object]
-  },
-  clearable: {
-    required: true,
-    type: Boolean
-  },
   color: {
     default: 'on-surface',
-    required: false,
-    type: String
-  },
-  density: {
-    default: 'comfortable',
     required: false,
     type: String
   },
@@ -138,16 +102,15 @@ const props = defineProps({
     required: true,
     type: String
   },
-  inputType: {
-    default: 'text',
-    required: false,
-    type: String
-  },
   isAutocomplete: {
     required: false,
     type: Boolean
   },
   isBusy: {
+    required: false,
+    type: Boolean
+  },
+  isInvalid: {
     required: false,
     type: Boolean
   },
@@ -163,16 +126,6 @@ const props = defineProps({
     required: true,
     type: String
   },
-  maxlength: {
-    default: undefined,
-    required: false,
-    type: [String, Number]
-  },
-  menuProps: {
-    default: () => {},
-    required: false,
-    type: Object
-  },
   minWidth: {
     default: undefined,
     required: false,
@@ -183,33 +136,10 @@ const props = defineProps({
     required: false,
     type: Function
   },
-  onToggleMenu: {
-    default: () => {},
-    required: false,
-    type: Function
-  },
-  onSubmit: {
-    default: () => {},
-    required: false,
-    type: Function
-  },
-  onUpdateFocused: {
-    default: () => {},
-    required: false,
-    type: Function
-  },
-  openOnFocus: {
-    required: false,
-    type: Boolean
-  },
   placeholder: {
     default: undefined,
     required: false,
     type: String
-  },
-  required: {
-    required: false,
-    type: Boolean
   },
   setValue: {
     required: true,
@@ -223,8 +153,8 @@ const props = defineProps({
 })
 
 const container = ref()
-const focusedListItemIndex = ref(undefined)
-const mergedMenuProps = ref({})
+const focusedListItemIndex = ref()
+const menuProps = ref({})
 const model = defineModel({
   get() {
     return props.getValue()
@@ -232,10 +162,10 @@ const model = defineModel({
   set(v) {
     props.setValue(v)
   },
-  type: String
+  type: Object
 })
-const query = ref(undefined)
-const resultsSummaryInterval = ref(undefined)
+const query = ref('')
+const resultsSummaryInterval = ref()
 
 onMounted(() => {
   nextTick(() => {
@@ -259,11 +189,10 @@ onMounted(() => {
       input.setAttribute('aria-expanded', false)
       input.setAttribute('aria-label', props.label)
     }
-    mergedMenuProps.value = {
+    menuProps.value = {
       id: `${props.idPrefix}-menu`,
       closeOnContentClick: true,
-      eager: true,
-      ...props.menuProps
+      eager: true
     }
   })
 })
@@ -302,16 +231,6 @@ const onBlur = () => {
   const input = getInputElement()
   input.removeAttribute('aria-activedescendant')
   focusedListItemIndex.value = null
-  if (isEmpty(query.value) && isEmpty(props.getValue())) {
-    props.onClear()
-  }
-}
-
-const onClearInput = () => {
-  model.value = null
-  props.onClear()
-  alertScreenReader('Cleared.')
-  putFocusNextTick(`${props.idPrefix}-input`)
 }
 
 const onFocusInput = isFocused => {
@@ -319,13 +238,7 @@ const onFocusInput = isFocused => {
     const input = getInputElement()
     input.removeAttribute('aria-activedescendant')
     focusedListItemIndex.value = null
-    // Passing open-on-focus via menuProps (https://vuetifyjs.com/en/api/v-menu/#props-open-on-focus)
-    // doesn't seem to have an effect, thus this workaround.
-    if (props.openOnFocus && !container.value.menu) {
-      container.value.menu = true
-    }
   }
-  props.onUpdateFocused(isFocused)
 }
 
 const onFocusListItem = (event, index) => {
@@ -336,20 +249,17 @@ const onFocusListItem = (event, index) => {
 
 const onKeyEnter = () => {
   clearInterval(resultsSummaryInterval.value)
-  props.onSubmit()
 }
 
 const onSelectItem = item => {
   clearInterval(resultsSummaryInterval.value)
-  model.value = get(item.raw, 'value', item.raw)
-  if (props.isAutocomplete) {
-    container.value.search = ''
-  }
-  nextTick(props.whenItemSelected)
+  model.value = item.raw
+  query.value = ''
+  container.value.search = ''
+  nextTick(() => props.whenItemSelected(model.value))
 }
 
 const onToggleMenu = isOpen => {
-  props.onToggleMenu(isOpen)
   nextTick(() => {
     const input = getInputElement()
     if (isOpen) {
@@ -367,11 +277,19 @@ const onToggleMenu = isOpen => {
   })
 }
 
+const onUpdateModel = v => {
+  if (!size(v)) {
+    props.onClear()
+  }
+}
+
 const onUpdateSearch = q => {
   query.value = q
   props.filterResults(q)
   clearInterval(resultsSummaryInterval.value)
-  resultsSummaryInterval.value = setInterval(summarizeResults, 1000)
+  if (size(q)) {
+    resultsSummaryInterval.value = setInterval(summarizeResults, 1000)
+  }
 }
 
 const summarizeResults = () => {
@@ -386,26 +304,3 @@ const summarizeResults = () => {
   }
 }
 </script>
-
-<style scoped>
-:deep(.v-field__loader) {
-  display: flex;
-  align-items: center;
-  height: 100%;
-  justify-content: flex-end;
-  padding-right: 1px;
-  top: 0;
-}
-:deep(.v-field) {
-  color: inherit !important;
-}
-:deep(.v-field input:disabled) {
-  cursor: text;
-}
-:deep(.v-input--horizontal .v-input__append) {
-  margin-inline-start: 0;
-}
-:deep(.v-input--horizontal.autocomplete-with-add-button .v-input__append) {
-  margin-inline-start: 16px;
-}
-</style>

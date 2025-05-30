@@ -10,6 +10,7 @@ import {VBanner} from 'vuetify/components/VBanner'
 import {VBottomSheet} from 'vuetify/components/VBottomSheet'
 import {VBtn} from 'vuetify/components/VBtn'
 import {VCard, VCardActions, VCardSubtitle, VCardText, VCardTitle} from 'vuetify/components/VCard'
+import {VChip} from 'vuetify/components/VChip'
 import {VCol, VContainer, VRow, VSpacer} from 'vuetify/components/VGrid'
 import {VDataTable} from 'vuetify/components/VDataTable'
 import {VDialog} from 'vuetify/components/VDialog'
@@ -48,6 +49,7 @@ export default createVuetify({
     VCardSubtitle,
     VCardText,
     VCardTitle,
+    VChip,
     VCol,
     VContainer,
     VDataTable,
@@ -114,6 +116,7 @@ export default createVuetify({
           'header-background': '#2a5f83',
           'icon-nav-dark-mode': '#2a5f83',
           'icon-nav-default': '#fff',
+          'surface-light': '#f6f6f6',
           'table-border': '#979797',
           'tertiary': '#378dc5',
         }
@@ -123,13 +126,14 @@ export default createVuetify({
           accent: '#0d202c',
           anchor: '#ff5405',
           black: '#fff',
-          error: colors.red.accent3,
+          error: '#ff6262',
           primary: '#58A0D0',
           secondary: '#2a5f83',
           'body-background': '#0d202c',
           'header-background': '#122b3c',
           'icon-nav-dark-mode': '#2a5f83',
           'icon-nav-default': '#378dc5',
+          'surface-light': '#303030',
           'table-border': '#378dc5',
           'tertiary': '#173c55',
         }

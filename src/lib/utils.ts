@@ -78,9 +78,9 @@ export function partitionCoursesByEligibility(courses, eligibleCourses, ineligib
   })
 }
 
-export function pluralize(noun: string, count: number, {substitutions={}, pluralSuffix='s', includeCount=true}: {substitutions?: any, pluralSuffix?: string, includeCount?: boolean}) {
-  const countOf = includeCount ? `${substitutions[count] || substitutions['other'] || count} ` : ''
-  const desc = count !== 1 ? `${noun}${pluralSuffix}` : noun
+export function pluralize(noun: string, count: number, includeCount=true) {
+  const countOf = includeCount ? `${count} ` : ''
+  const desc = count !== 1 ? `${noun}s` : noun
   return `${countOf}${desc}`
 }
 

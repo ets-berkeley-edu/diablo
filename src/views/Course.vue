@@ -1,6 +1,6 @@
 <template>
   <div v-if="!isLoading">
-    <v-container fluid class="px-sm-0">
+    <v-container fluid class="px-0 px-md-2">
       <v-row class="pl-3">
         <PageTitle
           v-if="config.currentTermId === course.termId"
@@ -25,7 +25,7 @@
         Section ID: <span id="section-id">{{ course.sectionId }}</span>
       </v-row>
       <v-row>
-        <v-col cols="12" md="3" sm="4">
+        <v-col cols="12" md="4" xl="3">
           <CoursePageSidebar :course="course" />
           <v-card v-if="currentUser.isAdmin" outlined class="elevation-1 mt-4">
             <v-card-title>
@@ -48,7 +48,7 @@
                 v-if="course.note"
                 id="btn-delete-note"
                 aria-label="Delete Note"
-                class="mx-3"
+                class="ml-2"
                 :disabled="noteUpdating"
                 variant="elevated"
                 @click="deleteNote"
@@ -79,9 +79,9 @@
               <v-btn
                 id="btn-cancel-note"
                 aria-label="Cancel Note Edit"
-                class="mx-3"
+                class="ml-2"
                 :disabled="noteUpdating"
-                variant="elevated"
+                variant="text"
                 @click="cancelNote"
               >
                 Cancel
@@ -89,8 +89,8 @@
             </v-card-actions>
           </v-card>
         </v-col>
-        <v-col cols="12" md="9" sm="8">
-          <v-container v-if="isCurrentTerm && capability && hasValidMeetingTimes && !course.hasOptedOut && course.scheduled" class="elevation-2 pa-6 px-sm-2">
+        <v-col cols="12" md="8" xl="9">
+          <v-container v-if="isCurrentTerm && capability && hasValidMeetingTimes && !course.hasOptedOut && course.scheduled" class="elevation-2 px-2 px-sm-4">
             <v-row>
               <v-col class="font-weight-bold">
                 <v-alert
@@ -150,7 +150,7 @@
                 </v-btn>
               </v-col>
             </v-row>
-            <v-card v-if="collaboratorsEditing" class="bg-surface-light my-4">
+            <v-card v-if="collaboratorsEditing" class="bg-surface-light my-4" flat>
               <v-container>
                 <v-row
                   align="center"
@@ -167,16 +167,32 @@
                   align="end"
                   justify="start"
                 >
-                  <v-col cols="9">
+                  <v-col>
                     <PersonLookup
                       ref="personLookup"
+                      class="collaborator-lookup"
+                      :clear-errors="() => addCollaboratorError = null"
                       :disabled="collaboratorsUpdating"
                       :error-message="addCollaboratorError"
                       id-prefix="collaborator-lookup"
                       label="Find collaborator"
                       list-label="collaborators"
-                      :on-select-result="addCollaboratorConfirm"
-                    />
+                      :on-select-result="onSelectCollaborator"
+                    >
+                      <template #append>
+                        <v-btn
+                          id="btn-collaborator-add"
+                          aria-label="Add Collaborator"
+                          class="ml-2"
+                          color="success"
+                          :disabled="!pendingCollaborator"
+                          variant="flat"
+                          @click="addCollaboratorConfirm"
+                        >
+                          Add
+                        </v-btn>
+                      </template>
+                    </PersonLookup>
                   </v-col>
                 </v-row>
                 <v-row
@@ -184,24 +200,30 @@
                   align="center"
                   justify="start"
                 >
-                  <v-col cols="12">
-                    <div
+                  <v-col class="d-flex flex-column" cols="12">
+                    <v-chip
                       v-for="(collaborator, index) in collaborators"
                       :id="`collaborator-${collaborator.uid}`"
                       :key="collaborator.uid"
-                      class="my-2"
+                      class="collaborator my-2 pl-4 pr-2 py-2 text-wrap"
+                      size="large"
                     >
                       {{ collaboratorLabel(collaborator) }}
-                      <v-btn
-                        :id="`btn-collaborator-remove-${collaborator.uid}`"
-                        :aria-label="`Remove ${collaborator.firstName || ''} ${collaborator.lastName || ''} as collaborator`"
-                        :disabled="collaboratorsUpdating"
-                        small
-                        @click="removeCollaborator(collaborator.uid, index)"
-                      >
-                        Remove
-                      </v-btn>
-                    </div>
+                      <template #append>
+                        <v-btn
+                          :id="`btn-collaborator-remove-${collaborator.uid}`"
+                          :aria-label="`Remove ${collaborator.firstName || ''} ${collaborator.lastName || ''} as collaborator`"
+                          class="ml-4"
+                          :disabled="collaboratorsUpdating"
+                          rounded
+                          size="small"
+                          variant="flat"
+                          @click="removeCollaborator(collaborator.uid, index)"
+                        >
+                          Remove
+                        </v-btn>
+                      </template>
+                    </v-chip>
                     <div class="mt-4">
                       <ProgressButton
                         id="btn-collaborators-save"
@@ -214,9 +236,9 @@
                       <v-btn
                         id="btn-collaborators-cancel"
                         aria-label="Cancel Collaborator Edit"
-                        color="default"
+                        class="ml-2"
                         :disabled="collaboratorsUpdating"
-                        class="mx-2"
+                        variant="text"
                         @click="updateCollaboratorsCancel"
                       >
                         Cancel
@@ -288,9 +310,9 @@
                   <v-btn
                     id="btn-recording-type-cancel"
                     aria-label="Cancel Recording Type Edit"
-                    class="mx-2"
-                    color="default"
+                    class="ml-2"
                     :disabled="recordingTypeUpdating"
+                    variant="text"
                     @click="updateRecordingTypeCancel"
                   >
                     Cancel
@@ -325,7 +347,7 @@
                     Edit
                   </v-btn>
                 </div>
-                <v-card v-if="publishTypeEditing" class="my-4 bg-surface-light">
+                <v-card v-if="publishTypeEditing" class="bg-surface-light my-4" flat>
                   <v-container>
                     <div
                       id="select-publish-type"
@@ -482,9 +504,9 @@
                           <v-btn
                             id="btn-publish-type-cancel"
                             aria-label="Cancel Recording Placement Edit"
-                            color="default"
+                            class="ml-2"
                             :disabled="publishTypeUpdating"
-                            class="mx-2"
+                            variant="text"
                             @click="updatePublishTypeCancel"
                           >
                             Cancel
@@ -558,7 +580,7 @@
               </v-col>
             </v-row>
           </v-container>
-          <v-container v-if="isCurrentTerm && capability && hasValidMeetingTimes && !course.deletedAt && (course.hasOptedOut || !course.scheduled)" class="elevation-2 pa-6">
+          <v-container v-if="isCurrentTerm && capability && hasValidMeetingTimes && !course.deletedAt && (course.hasOptedOut || !course.scheduled)" class="elevation-2 elevation-2 px-2 px-sm-4">
             <v-row>
               <v-col class="font-weight-bold mb-1">
                 <span v-if="course.hasOptedOut && !course.scheduled" id="notice-opt-out" class="red--text">
@@ -666,10 +688,10 @@ import {useContextStore} from '@/stores/context'
 
 const {config, currentUser, loadingStart, loadingComplete} = useContextStore()
 
-const addCollaboratorError = ref('')
+const addCollaboratorError = ref()
 const agreedToTerms = ref(false)
 const auditoriums = ref([])
-const capability = ref(null)
+const capability = ref()
 const collaborators = ref([])
 const collaboratorsEditing = ref(false)
 const collaboratorsUpdating = ref(false)
@@ -698,8 +720,10 @@ const location = ref('')
 const noteBody = ref('')
 const noteEditing = ref(false)
 const noteUpdating = ref(false)
-const pendingCanvasSite = ref(null)
-const pendingCanvasSiteId = ref(null)
+const pendingCanvasSite = ref()
+const pendingCanvasSiteId = ref()
+const pendingCollaborator = ref()
+const personLookup = ref()
 const publishCanvasSites = ref([])
 const publishCanvasSiteOptions = ref([])
 const publishType = ref('')
@@ -759,15 +783,17 @@ onMounted(() => {
     })
 })
 
-const addCollaboratorConfirm = (collaborator) => {
-  if (collaborator) {
+const addCollaboratorConfirm = () => {
+  if (pendingCollaborator.value) {
+    const collaborator = pendingCollaborator.value.raw
     const exists = collaborators.value.some(c => c.uid === collaborator.uid)
     if (exists) {
       addCollaboratorError.value = `${collaborator.firstName} ${collaborator.lastName} is already a collaborator.`
-      alertScreenReader(addCollaboratorError.value)
     } else {
+      pendingCollaborator.value = null
       addCollaboratorError.value = null
       collaborators.value.push(collaborator)
+      personLookup.value.selected = null
       alertScreenReader(`${collaborator.firstName} ${collaborator.lastName} added as a collaborator.`)
     }
     putFocusNextTick('collaborator-lookup-input')
@@ -837,6 +863,11 @@ const onPublishTypeChange = (option, idx) => {
 
 const onRecordingTypeChange = (option, idx) => {
   recordingType.value = recordingType.value === option ? recordingTypeOptions.value[idx - 1] : option
+}
+
+const onSelectCollaborator = collaborator => {
+  pendingCollaborator.value = collaborator
+  addCollaboratorError.value = null
 }
 
 const removeCanvasSite = (canvasSiteId, index) => {
@@ -966,3 +997,14 @@ const updateRecordingTypeCancel = () => {
   recordingType.value = course.value.recordingType
 }
 </script>
+
+<style scoped>
+.collaborator {
+  height: fit-content !important;
+  min-height: var(--v-chip-height) !important;
+  width: fit-content;
+}
+.collaborator-lookup {
+  max-width: 45rem;
+}
+</style>

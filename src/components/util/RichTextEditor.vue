@@ -47,6 +47,7 @@
             />
             <v-btn
               :id="`${idPrefix}-link-url-btn-cancel`"
+              class="ml-2"
               density="comfortable"
               text="Cancel"
               variant="text"

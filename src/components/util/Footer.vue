@@ -4,7 +4,7 @@
     app
     color="secondary"
   >
-    <v-container fluid class="pa-1">
+    <v-container fluid class="pa-0 pa-md-1">
       <v-row no-gutters>
         <v-col cols="12" sm="6">
           <ContactUsPrompt href-mailto-class="text-white" />
