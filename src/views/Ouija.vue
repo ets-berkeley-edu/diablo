@@ -95,7 +95,7 @@ const menuContainer = ref()
 const searchText = ref('')
 const selectedFilter = ref('Scheduled')
 const coursesTableDescription = computed(() => {
-  const pluralized = pluralize('course', courses.value.length, {includeCount: false})
+  const pluralized = pluralize('course', courses.value.length, false)
   const description = `${courses.value.length ? courses.value.length.toLocaleString() : 'No'} ${selectedFilter.value || ''} ${pluralized}`
   if (selectedFilter.value === 'No Instructors') {
     return description.replace(`No Instructors ${pluralized}`, `${pluralized} with no instructor`)

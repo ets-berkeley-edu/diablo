@@ -41,7 +41,7 @@ const props = defineProps({
 
 const {config, currentUser} = useContextStore()
 
-const kalturaCategory = ref(null)
+const kalturaCategory = ref({})
 
 onMounted(() => {
   if (currentUser.isAdmin) {

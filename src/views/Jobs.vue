@@ -183,6 +183,7 @@
           />
           <v-btn
             id="edit-schedule-cancel-btn"
+            class="ml-2"
             variant="text"
             @click="scheduleEditCancel(editJob)"
           >

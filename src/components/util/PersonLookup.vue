@@ -1,48 +1,45 @@
 <template>
   <div class="d-flex flex-column flex-grow-1">
-    <div :class="{'col col-4': props.inline}">
-      <label
-        :id="`${props.id}-label`"
-        :for="props.id"
-        :class="props.labelClass"
-      >
-        <span v-if="props.label">{{ props.label }}</span>
-        <span v-if="props.placeholder" class="sr-only">
-          {{ props.placeholder }}
-        </span>
-      </label>
-    </div>
-    <div :class="{ 'col col-6': props.inline, 'pt-1': !props.inline }">
+    <label
+      :id="`${props.idPrefix}-label`"
+      :for="`${props.idPrefix}-input`"
+      :class="props.labelClass"
+      class="mb-1"
+    >
+      <span v-if="props.label">{{ props.label }}</span>
+      <span v-if="props.placeholder" class="sr-only">
+        {{ props.placeholder }}
+      </span>
+    </label>
+    <div class="d-flex align-center">
       <AccessibleCombobox
         aria-description="Collaborator U I D or email lookup. Expect auto suggest."
         autocomplete="off"
-        :clazz="{'mt-1 text-black': true}"
-        :clearable="!isSearching"
         color="primary"
         density="compact"
         :disabled="disabled"
         :filter-results="executeSearch"
-        :get-value="() => get(selected, 'label')"
+        :get-value="() => selected"
         :id-prefix="idPrefix"
         is-autocomplete
         :is-busy="isSearching"
+        :is-invalid="!!props.errorMessage"
         :items="formattedItems"
-        item-title="title"
         :label="label"
         :list-label="listLabel"
-        :maxlength="56"
-        min-width="12rem"
-        :on-clear="onClearSearch"
+        min-width="16rem"
+        :on-clear="clearErrors"
         :placeholder="placeholder"
-        :set-value="s => selected = s.raw"
+        :set-value="v => selected = v"
+        :when-item-selected="onSelectResult"
       />
+      <slot name="append" />
     </div>
-
-    <div aria-live="assertive" :class="{'col col-2 pl-0': props.inline }" role="alert">
+    <div aria-live="assertive" role="alert">
       <div
         v-if="props.errorMessage"
-        :id="`${props.id}-error`"
-        class="v-messages text-error px-3 mt-1"
+        :id="`${props.idPrefix}-error`"
+        class="text-error px-3 mt-1"
       >
         {{ props.errorMessage }}
       </div>
@@ -51,16 +48,16 @@
 </template>
 
 <script setup>
-import {ref, computed, watch} from 'vue'
-import debounce from 'lodash/debounce'
-import split from 'lodash/split'
-import trim from 'lodash/trim'
-import join from 'lodash/join'
+import {ref, computed} from 'vue'
+import {debounce, get, join, split, trim} from 'lodash'
 import {searchUsers} from '@/api/user'
 import AccessibleCombobox from '@/components/util/AccessibleCombobox'
-import {get} from 'lodash'
 
 const props = defineProps({
+  clearErrors: {
+    required: true,
+    type: Function
+  },
   disabled: {
     required: true,
     type: Boolean
@@ -95,19 +92,28 @@ const props = defineProps({
 })
 
 const isSearching = ref(false)
-const search = ref(null)
-const searchTokenMatcher= ref(null)
-const selected = ref(null)
+const searchTokenMatcher= ref()
+const selected = ref()
 const suggestions = ref([])
 
+defineExpose({selected})
+
 const formattedItems = computed(() =>
-  suggestions.value.map(user => ({
-    title: `${user.firstName} ${user.lastName} (${user.email}) (${user.uid})`,
-    raw: user
-  }))
+  suggestions.value.map(user => {
+    let title = trim(`${get(user, 'firstName', '')} ${get(user, 'lastName', '')}`)
+    if (user.email) {
+      title += ` (${user.email})`
+    }
+    if (user.uid) {
+      title += ` (${user.uid})`
+    }
+    return {
+      title: title,
+      raw: user
+    }
+  })
 )
 
-// perform actual API search
 const executeSearch = debounce(snippet => {
   if (snippet) {
     isSearching.value = true
@@ -118,22 +124,7 @@ const executeSearch = debounce(snippet => {
       isSearching.value = false
     })
   } else {
-    isSearching.value = false
-    searchTokenMatcher.value = null
-    selected.value = null
     suggestions.value = []
   }
 }, 500)
-
-const onClearSearch = () => {
-  suggestions.value = []
-  isSearching.value = false
-}
-
-watch(selected, suggestion => {
-  if (!suggestion) {
-    search.value = null
-  }
-  props.onSelectResult(suggestion)
-})
 </script>

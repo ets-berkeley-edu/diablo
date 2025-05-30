@@ -6,7 +6,7 @@
     <v-card-title>
       <PageTitle
         :icon="mdiVideoPlus"
-        :text="`Your ${config.currentTermName} ${pluralize('Course', size(currentUser.courses), {includeCount: false})}`"
+        :text="`Your ${config.currentTermName} ${pluralize('Course', size(currentUser.courses), false)}`"
       />
     </v-card-title>
     <v-card-text>
