@@ -17,6 +17,7 @@ import Ouija from '@/views/Ouija.vue'
 import Room from '@/views/room/Room.vue'
 import Rooms from '@/views/room/Rooms.vue'
 import User from '@/views/User.vue'
+import PrintableRoom from '@/views/room/PrintableRoom.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -25,15 +26,15 @@ const router = createRouter({
       path: '/',
       redirect: '/home'
     },
-    // {
-    //   path: '/room/printable/:id',
-    //   component: PrintableRoom,
-    //   beforeEnter: requiresAdmin,
-    //   meta: {
-    //     printable: true,
-    //   },
-    //   name: 'Print Room'
-    // },
+    {
+      path: '/room/printable/:id',
+      component: PrintableRoom,
+      beforeEnter: requiresAdmin,
+      meta: {
+        printable: true,
+      },
+      name: 'Print Room'
+    },
     {
       path: '/login',
       component: Login,
