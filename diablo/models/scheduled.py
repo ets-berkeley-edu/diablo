@@ -234,6 +234,7 @@ class Scheduled(db.Model):
             return {
                 'id': self.id,
                 'publishTypeName': NAMES_PER_PUBLISH_TYPE[self.publish_type],
+                'recordingTypeName': NAMES_PER_RECORDING_TYPE[self.recording_type],
                 'createdAt': to_isoformat(self.created_at),
             }
 
