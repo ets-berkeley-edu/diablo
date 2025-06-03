@@ -458,6 +458,8 @@ class TestDownloadCoursesCsv:
             sign_up_url = row[9]
             instructors = row[-3]
             instructor_uids = row[-2]
+            publish_type = row[7]
+            recording_type = row[8]
             if index == 0:
                 assert section_id == 'Section Id'
                 assert meeting_type == 'Meeting Type'
@@ -467,6 +469,10 @@ class TestDownloadCoursesCsv:
             else:
                 course = SisSection.get_course(section_id=section_id, term_id=term_id)
                 assert int(section_id) == course['sectionId']
+                if len(publish_type):
+                    assert publish_type == course['publishTypeName']
+                if len(recording_type):
+                    assert recording_type == course['recordingTypeName']
                 for snippet in [app.config['DIABLO_BASE_URL'], section_id, str(term_id)]:
                     assert snippet in sign_up_url
 
