@@ -1,6 +1,6 @@
 <template>
   <div v-if="!loading">
-    <v-card variant="outlined" class="elevation-1">
+    <v-card class="border-sm">
       <v-card-title>
         <PageTitle :icon="mdiSchoolOutline" :text="`${user.name} (${user.uid})`" />
       </v-card-title>
@@ -62,7 +62,7 @@
       </div>
     </v-card>
 
-    <v-card v-if="currentUser.isAdmin" variant="outlined" class="elevation-1 mt-4">
+    <v-card v-if="currentUser.isAdmin" class="border-sm mt-4">
       <v-card-title>Notes</v-card-title>
 
       <v-card-text v-if="!isEditingNote" id="note-body">
@@ -94,10 +94,9 @@
         <v-textarea
           id="note-body-edit"
           v-model="noteBody"
-          variant="outlined"
-          hide-details="auto"
           density="compact"
           placeholder="Enter note text"
+          variant="outlined"
         />
       </v-card-text>
 

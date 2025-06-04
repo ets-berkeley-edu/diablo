@@ -27,7 +27,6 @@
         :items="formattedItems"
         :label="label"
         :list-label="listLabel"
-        min-width="16rem"
         :on-clear="clearErrors"
         :placeholder="placeholder"
         :set-value="v => selected = v"

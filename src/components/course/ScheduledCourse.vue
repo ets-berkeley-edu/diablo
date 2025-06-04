@@ -1,69 +1,61 @@
 <template>
-  <div>
-    <h4 class="title">Recordings scheduled</h4>
-
-    <!-- one v-list per scheduled entry -->
-    <v-list
-      v-for="scheduled in course.scheduled"
-      :key="scheduled.kalturaScheduleId"
-    >
-      <!-- Edit link for admins -->
-      <v-list-item-title class="pl-4 pt-3">
-        <div v-if="currentUser.isAdmin" class="d-flex align-bottom">
+  <v-row aria-labelledby="" role="region">
+    <v-col class="pa-4 my-2">
+      <h3>Recordings scheduled</h3>
+      <v-card
+        v-for="scheduled in course.scheduled"
+        :key="scheduled.kalturaScheduleId"
+        class="my-2"
+      >
+        <v-card-title>
           <a
             id="link-to-edit-kaltura-event"
-            aria-label="Open Kaltura MediaSpace in a new window"
+            class="text-subtitle-1"
             :href="`${config.kalturaMediaSpaceUrl}/recscheduling/index/edit-event/eventid/${scheduled.kalturaScheduleId}`"
             target="_blank"
           >
             Kaltura series {{ scheduled.kalturaScheduleId }}
-            <v-icon small class="pb-1" :icon="mdiOpenInNew"></v-icon>
+            <span class="sr-only">(opens in new window)</span>
+            <v-icon class="pb-1" :icon="mdiOpenInNew" size="small"></v-icon>
           </a>
-        </div>
-      </v-list-item-title>
-
-      <!-- “Scheduled on” & “Recording Type” side by side -->
-      <v-list-item>
-        <v-row class="w-100 mb-1 mt-1">
-          <v-col cols="6">
-            <div class="text-subtitle-1">Scheduled on</div>
-            <div class="text-body-2">{{ formatDate(scheduled.createdAt) }}</div>
-          </v-col>
-          <v-col cols="6">
-            <div class="text-subtitle-1">Recording Type</div>
-            <div class="text-body-2">{{ scheduled.recordingTypeName }}</div>
-          </v-col>
-        </v-row>
-      </v-list-item>
-
-      <!-- “Publish Type” & “Collaborator UIDs” side by side -->
-      <v-list-item>
-        <v-row class="w-100">
-          <v-col cols="6">
-            <div class="text-subtitle-1">Publish Type</div>
-            <div class="text-body-2">{{ scheduled.publishTypeName }}</div>
-          </v-col>
-          <v-col cols="6">
-            <div class="text-subtitle-1">Collaborator UIDs</div>
-            <div class="text-body-2" id="scheduled-collaborator-uids">
-              {{ scheduled.collaboratorUids.length
-                ? scheduled.collaboratorUids.join(', ')
-                : 'None'
-              }}
-            </div>
-          </v-col>
-        </v-row>
-      </v-list-item>
-    </v-list>
-  </div>
+        </v-card-title>
+        <v-card-text>
+          <v-row>
+            <v-col cols="6">
+              <div class="text-subtitle-1">Scheduled on</div>
+              <Date class="text-body-2 text-medium-emphasis" :date="scheduled.createdAt" tag="div" />
+            </v-col>
+            <v-col cols="6">
+              <div class="text-subtitle-1">Recording Type</div>
+              <div class="text-body-2 text-medium-emphasis">{{ scheduled.recordingTypeName }}</div>
+            </v-col>
+          </v-row>
+          <v-row>
+            <v-col cols="6">
+              <div class="text-subtitle-1">Publish Type</div>
+              <div class="text-body-2 text-medium-emphasis">{{ scheduled.publishTypeName }}</div>
+            </v-col>
+            <v-col cols="6">
+              <div class="text-subtitle-1">Collaborator UIDs</div>
+              <div id="scheduled-collaborator-uids" class="text-body-2 text-medium-emphasis">
+                {{ scheduled.collaboratorUids.length
+                  ? scheduled.collaboratorUids.join(', ')
+                  : 'None'
+                }}
+              </div>
+            </v-col>
+          </v-row>
+        </v-card-text>
+      </v-card>
+    </v-col>
+  </v-row>
 </template>
 
 <script setup>
-import {DateTime} from 'luxon'
-import {useContextStore} from '@/stores/context'
 import {mdiOpenInNew} from '@mdi/js'
+import Date from '@/components/util/Date'
+import {useContextStore} from '@/stores/context'
 
-// declare props
 defineProps({
   course: {
     type: Object,
@@ -71,9 +63,5 @@ defineProps({
   }
 })
 
-const {config, currentUser} = useContextStore()
-
-function formatDate(iso) {
-  return DateTime.fromISO(iso).toFormat('MMM dd, yyyy')
-}
+const {config} = useContextStore()
 </script>

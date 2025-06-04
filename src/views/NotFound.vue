@@ -1,8 +1,5 @@
 <template>
-  <v-card
-    class="elevation-1"
-    outlined
-  >
+  <v-card class="border-sm">
     <v-card-title>
       <PageTitle :icon="mdiSignCaution" text="Uh oh!" />
     </v-card-title>

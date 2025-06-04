@@ -62,7 +62,7 @@
                     class="text-start text-no-wrap"
                     scope="col"
                   >
-                    <span class="font-size-12 font-weight-bold">{{ column.title }}</span>
+                    <span class="font-size-13 font-weight-bold">{{ column.title }}</span>
                   </th>
                 </tr>
               </template>

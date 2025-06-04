@@ -43,7 +43,7 @@
             v-for="(column, colIndex) in columns"
             :id="`job-history-${column.value}-th`"
             :key="colIndex"
-            class="font-size-12 font-weight-bold text-medium-emphasis text-no-wrap"
+            class="font-size-13 font-weight-bold text-medium-emphasis text-no-wrap"
             scope="col"
           >
             {{ column.title }}

@@ -61,7 +61,7 @@
                 v-for="(column, colIndex) in columns"
                 :id="`email-templates-${column.value}-th`"
                 :key="colIndex"
-                class="font-size-12 font-weight-bold text-medium-emphasis text-no-wrap"
+                class="font-size-13 font-weight-bold text-medium-emphasis text-no-wrap"
                 :class="column.class"
                 scope="col"
               >

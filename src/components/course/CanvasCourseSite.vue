@@ -2,7 +2,6 @@
   <span>
     <a
       :id="`canvas-course-site-${siteId}`"
-      aria-label="Open Canvas course site in a new window"
       :href="`${config.canvasBaseUrl}/courses/${siteId}`"
       target="_blank"
     >
@@ -12,11 +11,14 @@
       <span v-else>
         bCourses site {{ siteId }}
       </span>
+      <span class="sr-only">
+        (opens in new window)
+      </span>
     </a>
     <span
-      v-if="kalturaCategory"
+      v-if="kalturaCategory.id"
       :id="`kaltura-category-canvas-${siteId}`"
-      class="font-weight-light"
+      class="text-medium-emphasis"
     >
       (Kaltura category {{ kalturaCategory.id }})
     </span>

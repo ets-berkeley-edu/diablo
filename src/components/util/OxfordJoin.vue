@@ -15,10 +15,6 @@
 </template>
 
 <script setup>
-defineOptions({
-  name: 'OxfordJoin'
-})
-
 defineProps({
   items: {
     type: Array,

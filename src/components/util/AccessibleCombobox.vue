@@ -11,7 +11,7 @@
       :base-color="color"
       bg-color="surface"
       :color="color"
-      density="comfortable"
+      density="compact"
       :disabled="disabled"
       :error="isInvalid"
       hide-details
@@ -21,7 +21,6 @@
       :loading="isBusy"
       :menu-icon="null"
       :menu-props="menuProps"
-      :min-width="minWidth"
       :no-filter="isAutocomplete"
       :placeholder="placeholder || label"
       return-object
@@ -56,7 +55,7 @@
         </v-list-item>
       </template>
       <template v-if="isAutocomplete" #selection="{item}">
-        <span class="text-no-wrap truncate-with-ellipsis">
+        <span class="overflow-hidden text-no-wrap truncate-with-ellipsis">
           {{ item.props.title }}
         </span>
       </template>
@@ -125,11 +124,6 @@ const props = defineProps({
   listLabel: {
     required: true,
     type: String
-  },
-  minWidth: {
-    default: undefined,
-    required: false,
-    type: [String, Number]
   },
   onClear: {
     default: () => {},
@@ -304,3 +298,9 @@ const summarizeResults = () => {
   }
 }
 </script>
+
+<style>
+.v-autocomplete .v-field .v-field__input {
+  flex-wrap: nowrap !important;
+}
+</style>
