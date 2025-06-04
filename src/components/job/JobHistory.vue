@@ -24,17 +24,17 @@
             label="Search History"
             single-line
             hide-details
-          ></v-text-field>
+          />
         </v-col>
       </v-row>
     </v-card-title>
     <v-data-table
       id="job-history-table"
+      v-model:page="pageCurrent"
       :headers="headers"
       :items="jobHistory"
       :items-per-page="itemsPerPage"
       :loading="refreshing"
-      :page.sync="pageCurrent"
       :search="search"
     >
       <template #headers="{columns}">
@@ -77,7 +77,7 @@
               size="24"
               width="4"
               color="orange"
-            ></v-progress-circular>
+            />
           </td>
           <td :id="`job-history-${item.id}-startedAt`" columnheader="job-history-startedAt-th">
             <span class="sr-only">Started </span>{{ formatDate(item.startedAt) }}
@@ -94,7 +94,7 @@
             v-model="pageCurrent"
             :length="pageCount"
             total-visible="10"
-          ></v-pagination>
+          />
         </div>
       </template>
     </v-data-table>

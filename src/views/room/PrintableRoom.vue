@@ -6,7 +6,7 @@
       <v-container class="pa-10">
         <v-row>
           <v-col cols="2" md="1" class="pr-2 pt-2">
-            <img alt="Oski the Bear" src="@/assets/cal-printable.png" />
+            <img alt="Oski the Bear" src="@/assets/cal-printable.png">
           </v-col>
           <v-col cols="16" md="11">
             <h1 class="pa-0 subtitle-1">Course Capture</h1>
@@ -46,8 +46,8 @@
                   <td>
                     <div
                       v-for="instructor in course.instructors"
-                      :key="instructor.uid"
                       :id="`course-${course.sectionId}-instructor-${instructor.uid}`"
+                      :key="instructor.uid"
                       class="text-no-wrap"
                     >
                       {{ instructor.name }} ({{ instructor.uid }})
@@ -60,8 +60,8 @@
                   >
                     <div
                       v-for="(meeting, index) in course.displayMeetings"
-                      :key="index"
                       :id="`meeting-days-${index}`"
+                      :key="index"
                     >
                       {{ meeting.daysFormatted
                         ? meeting.daysFormatted.join(', ')
@@ -75,8 +75,8 @@
                   >
                     <div
                       v-for="(meeting, index) in course.displayMeetings"
-                      :key="index"
                       :id="`meeting-times-${index}`"
+                      :key="index"
                     >
                       <div>
                         <span class="text-no-wrap">
@@ -116,7 +116,7 @@
 
     <v-footer padless>
       <v-col class="text-center" cols="12">
-        <v-icon small color="grey" :icon="mdiCopyright"></v-icon>
+        <v-icon small color="grey" :icon="mdiCopyright" />
         {{ DateTime.now().year }} The Regents of the University of California
       </v-col>
     </v-footer>
@@ -124,15 +124,15 @@
 </template>
 
 <script setup>
-import {ref, onMounted} from 'vue'
+import {onMounted, ref} from 'vue'
 import {useRoute} from 'vue-router'
 import {storeToRefs} from 'pinia'
 import {DateTime} from 'luxon'
-import {get, each, filter} from 'lodash'
+import {each, filter, get} from 'lodash'
+import {mdiCopyright} from '@mdi/js'
 import {useContextStore} from '@/stores/context'
 import {getDisplayMeetings} from '@/lib/utils'
 import {getRoom} from '@/api/room'
-import {mdiCopyright} from '@mdi/js'
 import Spinner from '@/components/util/Spinner'
 
 // Pinia store for global loading/ready

@@ -34,7 +34,7 @@
             type="radio"
             :value="publishTypeOption"
             @change="() => onPublishTypeChange(publishTypeOption, index)"
-          />
+          >
           <label class="font-size-16 text-medium-emphasis" :for="`radio-publish-type-${publishTypeOption}`">{{ labels[publishTypeOption] }}</label>
         </div>
       </div>
@@ -97,7 +97,7 @@
                 </v-btn>
               </template>
             </v-select>
-            <div id="canvas-site-menu-container" ref="menuContainer"></div>
+            <div id="canvas-site-menu-container" ref="menuContainer" />
           </div>
           <div v-if="currentUser.isAdmin" class="pa-2">
             <v-text-field
@@ -178,7 +178,7 @@
 </template>
 
 <script setup>
-import {find, get, filter, isEmpty, size} from 'lodash'
+import {filter, find, get, isEmpty, size} from 'lodash'
 import {onMounted, ref} from 'vue'
 import {alertScreenReader, putFocusNextTick} from '@/lib/utils'
 import CanvasCourseSite from '@/components/course/CanvasCourseSite'

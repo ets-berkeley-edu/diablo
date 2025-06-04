@@ -14,8 +14,7 @@
       :label="label ? `Opt out ${label}` : ''"
       @blur="() => ariaText = ''"
       @update:model-value="toggleOptOut"
-    >
-    </v-switch>
+    />
     <span class="sr-only" aria-live="assertive">{{ ariaText }}</span>
   </div>
 </template>

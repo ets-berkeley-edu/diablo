@@ -1,8 +1,8 @@
 import _ from 'lodash'
 import axios from 'axios'
 import fileDownload from 'js-file-download'
-import {getApiBaseUrl} from '@/api/api-utils'
 import {DateTime} from 'luxon'
+import {getApiBaseUrl} from '@/api/api-utils'
 
 export function deleteCourseNote(termId: number, sectionId: number) {
   return axios.post(`${getApiBaseUrl()}/api/course/note/delete`, {

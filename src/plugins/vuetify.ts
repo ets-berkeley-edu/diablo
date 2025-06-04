@@ -1,6 +1,6 @@
 import './main.scss'
 import {aliases, mdi} from 'vuetify/iconsets/mdi-svg'
-import colors from 'vuetify/lib/util/colors'
+import {red} from 'vuetify/lib/util/colors'
 import {createVuetify} from 'vuetify'
 import {DatePicker} from 'v-calendar'
 import {EditorContent} from '@tiptap/vue-3'
@@ -26,7 +26,7 @@ import {VPagination} from 'vuetify/components/VPagination'
 import {VProgressCircular} from 'vuetify/components/VProgressCircular'
 import {VSelect} from 'vuetify/components/VSelect'
 import {VSheet} from 'vuetify/components/VSheet'
-import {VSnackbar, VSwitch, VAlert, VListItemSubtitle, VAutocomplete} from 'vuetify/components'
+import {VAlert, VAutocomplete, VListItemSubtitle, VSnackbar, VSwitch} from 'vuetify/components'
 import {VTable} from 'vuetify/components/VTable'
 import {VTextField} from 'vuetify/components/VTextField'
 import {VTooltip} from 'vuetify/components/VTooltip'
@@ -109,7 +109,7 @@ export default createVuetify({
           accent: '#2a5f83',
           anchor: '#ca4f16',
           black: '#000',
-          error: colors.red.accent3,
+          error: red.accent3,
           primary: '#378dc5',
           secondary: '#68acd8',
           success: '#3a833c',

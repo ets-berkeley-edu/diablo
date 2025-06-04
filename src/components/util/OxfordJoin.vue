@@ -1,7 +1,7 @@
 <template>
   <span>
     <span v-for="(item, index) in items" :key="index">
-      <slot :item="item"></slot>
+      <slot :item="item" />
       <span
         v-if="items.length > 1 && index === items.length - 2"
       >

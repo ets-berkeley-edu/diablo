@@ -7,13 +7,13 @@
     <v-data-table
       id="courses-data-table"
       v-model="selectedRows"
+      v-model:page="pageCurrent"
       :disable-sort="courses.length < 2"
       :headers="headers"
       :items="courses"
       :items-per-page="contextStore.config.searchItemsPerPage"
       :loading="refreshing"
       must-sort
-      :page.sync="pageCurrent"
       :search="searchText"
       :sort-by="[sortBy]"
       @update:sort-by="onUpdateSortBy"
@@ -64,7 +64,7 @@
               size="64"
               width="4"
               color="primary"
-            ></v-progress-circular>
+            />
           </td>
         </tr>
         <tr v-if="!refreshing && !items.length" class="py-5 text-center text-subtitle-1">
@@ -179,7 +179,7 @@
               </td>
             </tr>
             <tr v-for="(meeting, meetingIndex) in tail(course.displayMeetings)" :key="`${course.sectionId}-${meetingIndex}`">
-              <td :aria-hidden="true" colspan="2" :class="tdcLower(course)"></td>
+              <td :aria-hidden="true" colspan="2" :class="tdcLower(course)" />
               <td v-if="includeRoomColumn" :class="tdcLower(course)">
                 <router-link
                   v-if="meeting.room"
@@ -216,7 +216,7 @@
                   <span class="sr-only">{{ meeting.startTimeFormatted }} to {{ meeting.endTimeFormatted }}</span>
                 </div>
               </td>
-              <td :aria-hidden="true" colspan="3" :class="tdcLower(course)"></td>
+              <td :aria-hidden="true" colspan="3" :class="tdcLower(course)" />
             </tr>
             <tr v-if="course.scheduled" :key="`approvals-${course.sectionId}`">
               <td :colspan="headers.length" class="pb-2">
@@ -243,7 +243,7 @@
             id="ouija-pagination"
             v-model="pageCurrent"
             :length="pageCount"
-          ></v-pagination>
+          />
         </div>
       </template>
     </v-data-table>
@@ -255,11 +255,10 @@ import {DateTime} from 'luxon'
 import {each, filter, get, map, size, tail} from 'lodash'
 import {mdiClose} from '@mdi/js'
 import {onMounted, ref, watch} from 'vue'
-import {alertScreenReader} from '@/lib/utils'
+import {alertScreenReader,getDisplayMeetings} from '@/lib/utils'
 import Days from '@/components/util/Days'
 import Instructor from '@/components/course/Instructor'
 import ToggleOptOut from '@/components/course/ToggleOptOut'
-import {getDisplayMeetings} from '@/lib/utils'
 import {useContextStore} from '@/stores/context'
 
 const props = defineProps({

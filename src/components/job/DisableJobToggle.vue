@@ -7,8 +7,7 @@
     color="success"
     hide-details
     @update:model-value="onChange(job, !enabled)"
-  >
-  </v-switch>
+  />
 </template>
 
 <script setup>

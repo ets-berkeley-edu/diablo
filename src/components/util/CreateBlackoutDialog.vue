@@ -48,15 +48,14 @@
         </div>
       </v-card-text>
       <v-card-actions class="pt-0">
-        <v-spacer></v-spacer>
+        <v-spacer />
         <ProgressButton
           id="save-blackout"
           :action="create"
           :disabled="isDisabled || isSaving"
           :in-progress="isSaving"
           :text="isSaving ? 'Saving' : 'Save'"
-        >
-        </ProgressButton>
+        />
         <v-btn
           id="cancel-edit-of-blackout"
           class="ml-2"

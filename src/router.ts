@@ -1,4 +1,4 @@
-import {createRouter, createWebHistory, NavigationGuardNext, RouteLocationNormalized} from 'vue-router'
+import {NavigationGuardNext, RouteLocationNormalized, createRouter, createWebHistory} from 'vue-router'
 import {get, toString, trim} from 'lodash'
 import {useContextStore} from '@/stores/context'
 import {requiresAdmin, requiresInstructor} from '@/auth'
@@ -40,9 +40,11 @@ const router = createRouter({
       component: Login,
       beforeEnter: (to, from, next) => {
         const store = useContextStore()
-        store.currentUser.isAuthenticated
-          ? next('/')
-          : next()
+        if (store.currentUser.isAuthenticated) {
+          next('/')
+        } else {
+          next()
+        }
       },
       meta: {
         splash: true,
@@ -60,9 +62,11 @@ const router = createRouter({
           component: Home,
           beforeEnter: (to, from, next) => {
             const {isAdmin, isTeaching} = useContextStore().currentUser
-            isAdmin && !isTeaching
-              ? next({path: '/ouija'})
-              : next()
+            if (isAdmin && !isTeaching) {
+              next({path: '/ouija'})
+            } else {
+              next()
+            }
           }
         },
         {
@@ -161,9 +165,11 @@ router.beforeEach(
       (to.query.redirect as string) || ''
     )
     const {isAuthenticated} = useContextStore().currentUser
-    isAuthenticated && redirect
-      ? next(redirect)
-      : next()
+    if (isAuthenticated && redirect) {
+      next(redirect)
+    } else {
+      next()
+    }
   }
 )
 

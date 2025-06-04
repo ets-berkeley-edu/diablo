@@ -47,7 +47,7 @@
 </template>
 
 <script setup>
-import {ref, computed} from 'vue'
+import {computed, ref} from 'vue'
 import {debounce, get, join, split, trim} from 'lodash'
 import {searchUsers} from '@/api/user'
 import AccessibleCombobox from '@/components/util/AccessibleCombobox'

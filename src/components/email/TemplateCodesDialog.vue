@@ -36,9 +36,9 @@
             </div>
           </div>
         </v-card-text>
-        <v-divider></v-divider>
+        <v-divider />
         <v-card-actions>
-          <v-spacer></v-spacer>
+          <v-spacer />
           <v-btn
             id="btn-close-template-codes-dialog"
             color="primary"

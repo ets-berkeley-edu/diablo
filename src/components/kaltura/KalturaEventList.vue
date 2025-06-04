@@ -58,7 +58,7 @@
         slim
         variant="text"
         @click="toggleExpand(internalItem)"
-      ></v-btn>
+      />
     </template>
     <template #expanded-row="{columns, item}">
       <tr>

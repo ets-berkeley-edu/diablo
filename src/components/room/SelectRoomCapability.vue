@@ -13,7 +13,7 @@
       no-data-text="Select..."
       @update:model-value="updateCapability"
     />
-    <div id="room-capability-menu-container" ref="menuContainer"></div>
+    <div id="room-capability-menu-container" ref="menuContainer" />
   </div>
 </template>
 
