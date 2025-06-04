@@ -275,13 +275,19 @@ def update_opt_out():  # noqa C901
             def _has_opt_out_difference(section_id, id_set_1, id_set_2):
                 return (section_id in id_set_1 or None in id_set_1) and not (section_id in id_set_2 or None in id_set_2)
 
-            for scheduled_section_id in Scheduled.get_scheduled_per_instructor_uid(instructor_uid, app.config['CURRENT_TERM_ID']):
+            eligible_section_ids = set(s['sectionId'] for s in SisSection.get_courses(
+                instructor_uids=[instructor_uid],
+                term_id=app.config['CURRENT_TERM_ID'],
+            ))
+            scheduled_section_ids = set(Scheduled.get_scheduled_per_instructor_uid(instructor_uid, app.config['CURRENT_TERM_ID']))
+
+            for instructor_section_id in eligible_section_ids.union(scheduled_section_ids):
                 if opt_out:
-                    is_section_changed = _has_opt_out_difference(scheduled_section_id, opt_outs_after_update, opt_outs_before_update)
+                    is_section_changed = _has_opt_out_difference(instructor_section_id, opt_outs_after_update, opt_outs_before_update)
                 else:
-                    is_section_changed = _has_opt_out_difference(scheduled_section_id, opt_outs_before_update, opt_outs_after_update)
+                    is_section_changed = _has_opt_out_difference(instructor_section_id, opt_outs_before_update, opt_outs_after_update)
                 if is_section_changed:
-                    _schedule_opt_out_update(scheduled_section_id, app.config['CURRENT_TERM_ID'])
+                    _schedule_opt_out_update(instructor_section_id, app.config['CURRENT_TERM_ID'])
 
         return tolerant_jsonify({'optedOut': opt_out})
     else:
