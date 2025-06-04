@@ -8,7 +8,7 @@ export function deleteCourseNote(termId: number, sectionId: number) {
   return axios.post(`${getApiBaseUrl()}/api/course/note/delete`, {
     sectionId,
     termId
-  })
+  }).then(response => response.data)
 }
 
 export function downloadCSV(filter, termId: string) {
@@ -52,7 +52,7 @@ export function updateCollaborators(
       collaboratorUids,
       sectionId,
       termId
-    })
+    }).then(response => response.data)
 }
 
 export function updateCourseNote(
@@ -88,7 +88,7 @@ export function updatePublishType(
       publishType,
       sectionId,
       termId
-    })
+    }).then(response => response.data)
 }
 
 export function updateRecordingType(
@@ -101,5 +101,5 @@ export function updateRecordingType(
       recordingType,
       sectionId,
       termId
-    })
+    }).then(response => response.data)
 }

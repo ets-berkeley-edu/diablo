@@ -1,11 +1,14 @@
 .border-bottom-zero {
   border-bottom: 0 !important;
 }
-.font-size-12 {
+.font-size-13 {
   font-size: 12px !important;
 }
+.font-size-14 {
+  font-size: 14px !important;
+}
 .font-size-16 {
-  font-size: 16px;
+  font-size: 16px !important;
 }
 .height-unset {
   height: unset !important;
@@ -52,6 +55,11 @@
 .text-transform-unset {
   text-transform: unset !important;
 }
+.truncate-with-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .v-table-padding-override td {
   padding: 10px 15px !important;
 }
@@ -91,6 +99,12 @@ a {
 }
 abbr {
   text-decoration: none !important;
+}
+ol, ul {
+  padding-left: 24px;
+}
+ol li, ul li {
+  margin: 4px 0;
 }
 table tr:not(:last-child) td, table tr th {
   border-bottom-color: rgb(var(--v-theme-table-border)) !important;

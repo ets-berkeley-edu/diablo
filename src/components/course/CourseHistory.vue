@@ -31,7 +31,7 @@
                   :id="`update-history-sort-by-${column.value}-btn`"
                   :append-icon="getSortIcon(column)"
                   :aria-label="`Sort by ${column.title} ${isSorted(column) && sortBy.order === 'asc' ? 'descending' : 'ascending'}`"
-                  class="font-size-12 font-weight-bold height-unset min-width-unset pa-1 text-transform-unset v-table-sort-btn-override"
+                  class="font-size-13 font-weight-bold height-unset min-width-unset pa-1 text-transform-unset v-table-sort-btn-override"
                   :class="{'icon-visible': sortBy[0] === column.value}"
                   color="body"
                   density="compact"
@@ -42,7 +42,7 @@
                 </v-btn>
               </template>
               <template v-if="history.length < 2">
-                <span class="font-size-12 font-weight-bold py-1 text-align-center text-medium-emphasis text-transform-unset v-btn" :class="{'opacity-30': refreshing}">
+                <span class="font-size-13 font-weight-bold py-1 text-align-center text-medium-emphasis text-transform-unset v-btn">
                   {{ column.title }}
                 </span>
               </template>

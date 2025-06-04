@@ -35,7 +35,7 @@
                 :id="`courses-table-sort-by-${column.key}-btn`"
                 :append-icon="getSortIcon(column)"
                 :aria-label="`Sort by ${column.title} ${isSorted(column) && sortBy.order === 'asc' ? 'descending' : 'ascending'}`"
-                class="font-size-12 font-weight-bold height-unset min-width-unset pa-1 text-transform-unset v-table-sort-btn-override"
+                class="font-size-13 font-weight-bold height-unset min-width-unset pa-1 text-transform-unset v-table-sort-btn-override"
                 :class="{'icon-visible': isSorted(column)}"
                 color="body"
                 density="compact"
@@ -47,7 +47,7 @@
               </v-btn>
             </template>
             <template v-else>
-              <span class="font-size-12 font-weight-bold py-1 text-align-center text-medium-emphasis text-transform-unset v-btn" :class="{'opacity-30': refreshing}">
+              <span class="font-size-13 font-weight-bold py-1 text-align-center text-medium-emphasis text-transform-unset v-btn" :class="{'opacity-30': refreshing}">
                 {{ column.title }}
               </span>
             </template>

@@ -107,11 +107,12 @@ export default createVuetify({
       light: {
         colors: {
           accent: '#2a5f83',
-          anchor: '#f04a00',
+          anchor: '#ca4f16',
           black: '#000',
           error: colors.red.accent3,
           primary: '#378dc5',
           secondary: '#68acd8',
+          success: '#3a833c',
           'body-background': '#fff',
           'header-background': '#2a5f83',
           'icon-nav-dark-mode': '#2a5f83',

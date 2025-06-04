@@ -1,41 +1,38 @@
 <template>
-  <div
+  <v-container
     aria-labelledby="course-summary-header"
-    class="elevation-2 pa-6"
+    class="elevation-2 rounded pa-6 px-md-4 px-lg-6 mx-1"
     role="region"
   >
     <h2 id="course-summary-header" class="sr-only">
-      Course summary: {{ course.label }}
+      Course summary
     </h2>
-
     <v-row
       v-if="instructors.length"
       id="instructors"
-      :class="{ 'line-through': course.deletedAt }"
+      :class="{'line-through': course.deletedAt}"
+      class="pb-2"
     >
       <v-col cols="auto">
         <h3 class="sr-only">Instructors</h3>
-        <v-icon aria-label="Mortarboard icon" :icon="mdiSchoolOutline"></v-icon>
+        <v-icon :icon="mdiSchoolOutline"></v-icon>
       </v-col>
       <v-col>
         <OxfordJoin v-slot="{ item }" :items="instructors">
           <router-link
             v-if="currentUser.isAdmin"
             :id="`instructor-sidebar-link-${item.uid}`"
-            aria-label="Link to instructor page"
             :to="`/user/${item.uid}`"
           >
             {{ item.name }}
           </router-link>
-          <span
-            v-else
-            :id="`instructor-sidebar-${item.uid}`"
-          >{{ item.name }}</span>
+          <span v-else :id="`instructor-sidebar-${item.uid}`">
+            {{ item.name }}
+          </span>
         </OxfordJoin>
-
         <div
           v-if="instructorProxies.length"
-          class="text--secondary subtitle-2"
+          class="text-secondary text-subtitle-2"
         >
           (
           <OxfordJoin v-slot="{ item }" :items="instructorProxies">
@@ -48,133 +45,92 @@
         </div>
       </v-col>
     </v-row>
-
-    <!-- Meetings -->
-    <div
-      v-for="(meeting, index) in displayMeetings"
-      :key="index"
-    >
+    <div v-for="(meeting, index) in displayMeetings" :key="index">
+      <v-divider v-if="index > 0" class="my-5 mx-12" />
       <h3 class="sr-only">
-        Meeting
+        Meetings
         {{ displayMeetings.length > 1
-          ? `#${index + 1} of ${displayMeetings.length}`
+          ? `(${index + 1} of ${displayMeetings.length})`
           : ''
         }}
       </h3>
-
-      <!-- Days & Dates -->
       <v-row
         v-if="meeting.daysNames"
         :id="`meeting-days-${index}`"
-        :class="{ 'line-through': course.deletedAt }"
+        :class="{'line-through': course.deletedAt}"
       >
-        <v-col
-          cols="auto"
-          :class="{ 'pb-0': displayMeetings.length > 1 }"
-        >
-          <v-icon aria-label="Calendar icon" :icon="mdiCalendar"></v-icon>
+        <v-col class="pb-0" cols="auto">
+          <v-icon :icon="mdiCalendar"></v-icon>
         </v-col>
-        <v-col :class="{ 'pb-0': displayMeetings.length > 1 }">
+        <v-col class="pb-0">
           <Days :names-of-days="meeting.daysNames" />
           <div>
-            <span class="sr-only">Dates:</span>
-            {{ DateTime.fromISO(meeting.startDate).toFormat('MMM d, yyyy') }}
-            to
-            {{ DateTime.fromISO(meeting.endDate).toFormat('MMM d, yyyy') }}
-
+            <Date :date="meeting.startDate" /> to <Date :date="meeting.endDate" />
             <div
               v-if="course.scheduled && !course.hasOptedOut && meeting.recordingEndDate && meeting.endDate !== meeting.recordingEndDate"
-              class="font-weight-light"
+              class="font-size-14 text-medium-emphasis"
             >
               <div v-if="course.termId === config.currentTermId">
                 (Final recording
-                <span v-if="DateTime.fromISO(meeting.recordingEndDate) < today">was on</span>
-                <span
-                  v-else-if="
-                    DateTime.fromISO(meeting.recordingEndDate) > today
-                  "
-                >scheduled for</span>
-                <span
-                  v-else
-                >is today, </span>
-                {{ DateTime.fromISO(meeting.recordingEndDate).toFormat('MMM d, yyyy') }}.)
+                <span v-if="DateTime.fromISO(meeting.recordingEndDate) < today">was on </span>
+                <span v-else-if="DateTime.fromISO(meeting.recordingEndDate) > today">scheduled for </span>
+                <span v-else>is today, </span>
+                <span class="text-no-wrap">
+                  <Date :date="meeting.recordingEndDate" />)
+                </span>
               </div>
               <div v-else-if="course.termId < config.currentTermId">
-                (Final recording was on
-                {{ DateTime.fromISO(meeting.recordingEndDate).toFormat('MMM d, yyyy') }}
-                .)
+                <span>(Final recording was on </span>
+                <span class="text-no-wrap">
+                  <Date :date="meeting.recordingEndDate" />)
+                </span>
               </div>
             </div>
           </div>
         </v-col>
       </v-row>
-
-      <!-- Times -->
       <v-row
         v-if="meeting.startTimeFormatted"
         :id="`meeting-times-${index}`"
-        :class="{ 'line-through': course.deletedAt }"
+        :class="{'line-through': course.deletedAt}"
       >
-        <v-col
-          cols="auto"
-          :class="{ 'pb-1 pt-1': displayMeetings.length > 1 }"
-        >
-          <v-icon aria-label="Clock icon" :icon="mdiClockOutline"></v-icon>
+        <v-col cols="auto" class="py-1">
+          <v-icon :icon="mdiClockOutline"></v-icon>
         </v-col>
-        <v-col :class="{ 'pb-1 pt-1': displayMeetings.length > 1 }">
-          <span class="sr-only">Start and end times:</span>
+        <v-col class="py-1">
           <span aria-hidden="true">
-            {{ meeting.startTimeFormatted }} -
-            {{ meeting.endTimeFormatted }}
+            {{ meeting.startTimeFormatted }} - {{ meeting.endTimeFormatted }}
           </span>
           <span class="sr-only">
-            {{ meeting.startTimeFormatted }} to
-            {{ meeting.endTimeFormatted }}
+            {{ meeting.startTimeFormatted }} to {{ meeting.endTimeFormatted }}
           </span>
         </v-col>
       </v-row>
-
-      <!-- Room -->
       <v-row
         v-if="meeting.room"
         :id="`rooms-${index}`"
-        :class="{ 'line-through': course.deletedAt }"
+        :class="{'line-through': course.deletedAt}"
       >
-        <v-col
-          cols="auto"
-          :class="{ 'pb-5 pt-1': displayMeetings.length > 1 }"
-        >
-          <v-icon aria-label="Map icon" :icon="mdiMapMarker"></v-icon>
+        <v-col class="py-1" cols="auto">
+          <v-icon :icon="mdiMapMarker"></v-icon>
         </v-col>
-        <v-col
-          v-if="currentUser.isAdmin"
-          :class="{ 'pb-5 pt-1': displayMeetings.length > 1 }"
-        >
-          <router-link
-            :to="`/room/${meeting.room.id}`"
-            aria-label="Link to room page"
-          >
+        <v-col v-if="currentUser.isAdmin" class="py-1">
+          <router-link :to="`/room/${meeting.room.id}`">
             {{ meeting.room.location }}
           </router-link>
         </v-col>
-        <v-col v-else>
-          <span class="sr-only">Location:</span>
+        <v-col v-else class="py-1">
           {{ meeting.room.location }}
         </v-col>
       </v-row>
     </div>
-
-    <!-- Cross-Listings -->
-    <v-row
-      v-if="course && course.crossListings.length"
-      id="cross-listings"
-    >
-      <v-col cols="auto">
-        <v-icon aria-label="List icon" :icon="mdiFormatLineSpacing"></v-icon>
+    <v-row v-if="course && course.crossListings.length" id="cross-listings" class="mt-3">
+      <v-col class="py-1" cols="auto">
+        <v-icon :icon="mdiFormatLineSpacing"></v-icon>
       </v-col>
-      <v-col>
+      <v-col class="py-1">
         <span>
-          Cross-listing<span v-if="course.crossListings.length !== 1">s</span>
+          {{ pluralize('Cross-listing', course.crossListings.length, false) }}
         </span>
         <div
           v-for="cl in course.crossListings"
@@ -185,26 +141,22 @@
         </div>
       </v-col>
     </v-row>
-
-    <!-- Opt-Out Flag -->
-    <v-row
-      v-if="currentUser.isAdmin && course.hasOptedOut"
-      id="opted-out"
-    >
-      <v-col cols="auto">
-        <v-icon aria-label="'Do not disturb' icon" :icon="mdiMinusCircle"></v-icon>
+    <v-row v-if="currentUser.isAdmin && course.hasOptedOut" id="opted-out" class="mt-3">
+      <v-col class="py-1" cols="auto">
+        <v-icon :icon="mdiMinusCircle"></v-icon>
       </v-col>
-      <v-col>Opted out</v-col>
+      <v-col class="py-1">Opted out</v-col>
     </v-row>
-  </div>
+  </v-container>
 </template>
 
 <script setup>
 import {ref, onMounted} from 'vue'
 import {DateTime} from 'luxon'
 import {filter} from 'lodash'
-import {getDisplayMeetings} from '@/lib/utils'
+import {getDisplayMeetings, pluralize} from '@/lib/utils'
 import {useContextStore} from '@/stores/context'
+import Date from '@/components/util/Date'
 import Days from '@/components/util/Days'
 import OxfordJoin from '@/components/util/OxfordJoin'
 import {
@@ -216,7 +168,6 @@ import {
   mdiSchoolOutline
 } from '@mdi/js'
 
-// props
 const props = defineProps({
   course: {
     type: Object,
@@ -224,10 +175,7 @@ const props = defineProps({
   }
 })
 
-// Pinia store for config & user
 const {config, currentUser} = useContextStore()
-
-// reactive state
 const displayMeetings = ref([])
 const instructors = ref([])
 const instructorProxies = ref([])

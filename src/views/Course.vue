@@ -1,708 +1,252 @@
 <template>
   <div v-if="!isLoading">
-    <v-container fluid class="px-0 px-md-2">
-      <v-row class="pl-3">
-        <PageTitle
-          v-if="config.currentTermId === course.termId"
-          :class-for-h1="course.deletedAt ? 'line-through' : ''"
-          :icon="mdiBookMultipleOutline"
-          :text="courseDisplayTitle"
-        />
-        <PageTitle
-          v-if="config.currentTermId !== course.termId"
-          :class-for-h1="course.deletedAt ? 'line-through' : ''"
-          :icon="mdiBookMultipleOutline"
-          :text="`${courseDisplayTitle} (${getTermName(course.termId)})`"
-        />
-      </v-row>
-      <v-row class="ml-8 pl-7">
-        <span v-if="course.deletedAt" class="subtitle-1">
-          <span class="font-weight-bold text-red">UC Berkeley has canceled this section.</span>
-        </span>
-        <h2 v-if="!course.deletedAt" id="course-title" class="text-primary">{{ course.courseTitle }}</h2>
-      </v-row>
-      <v-row class="body-1 ml-8 pl-7">
+    <PageTitle
+      class="pl-4"
+      :class-for-h1="course.deletedAt ? 'line-through' : ''"
+      :icon="mdiBookMultipleOutline"
+      :text="config.currentTermId === course.termId ? courseDisplayTitle : `${courseDisplayTitle} (${getTermName(course.termId)})`"
+    />
+    <div class="pl-16 pb-4">
+      <span v-if="course.deletedAt" class="text-subtitle-1">
+        <span class="font-weight-bold text-error">UC Berkeley has canceled this section.</span>
+      </span>
+      <h2 v-if="!course.deletedAt" id="course-title" class="text-primary">{{ course.courseTitle }}</h2>
+      <div class="text-body-1">
         Section ID: <span id="section-id">{{ course.sectionId }}</span>
-      </v-row>
-      <v-row>
-        <v-col cols="12" md="4" xl="3">
-          <CoursePageSidebar :course="course" />
-          <v-card v-if="currentUser.isAdmin" outlined class="elevation-1 mt-4">
-            <v-card-title>
-              Notes
-            </v-card-title>
-            <v-card-text v-if="!noteEditing" id="note-body">
-              {{ course.note || 'No notes.' }}
-            </v-card-text>
-            <v-card-actions v-if="!noteEditing" class="px-4 pb-4">
-              <v-btn
-                id="btn-edit-note"
-                aria-label="Edit note"
-                :disabled="noteUpdating"
-                variant="elevated"
-                @click="editNote"
-              >
-                Edit
-              </v-btn>
-              <v-btn
-                v-if="course.note"
-                id="btn-delete-note"
-                aria-label="Delete Note"
-                class="ml-2"
-                :disabled="noteUpdating"
-                variant="elevated"
-                @click="deleteNote"
-              >
-                Delete
-              </v-btn>
-            </v-card-actions>
-            <v-card-text v-if="noteEditing">
-              <v-textarea
-                id="note-body-edit"
-                v-model="noteBody"
-                density="compact"
-                hide-details="auto"
-                placeholder="Enter note text"
-                variant="outlined"
-              >
-              </v-textarea>
-            </v-card-text>
-            <v-card-actions v-if="noteEditing" class="px-4 pb-4">
-              <ProgressButton
-                id="btn-save-note"
-                :action="saveNote"
-                aria-label="Save Note"
-                :disabled="!noteBody || noteUpdating"
-                :in-progress="noteUpdating"
-                :text="noteUpdating ? 'Saving' : 'Save'"
-              />
-              <v-btn
-                id="btn-cancel-note"
-                aria-label="Cancel Note Edit"
-                class="ml-2"
-                :disabled="noteUpdating"
-                variant="text"
-                @click="cancelNote"
-              >
-                Cancel
-              </v-btn>
-            </v-card-actions>
-          </v-card>
+      </div>
+    </div>
+    <div v-if="isCurrentTerm && !!capability && hasValidMeetingTimes" class="pa-4">
+      <div v-if="!course.hasOptedOut && course.scheduled">
+        <v-alert
+          v-if="updatesQueued"
+          id="notice-queued"
+          class="font-weight-bold"
+          :icon="mdiAlert"
+          role="none"
+          type="warning"
+          variant="outlined"
+        >
+          Recent updates to recording settings are currently queued for publication. They will be published in an hour or less.
+        </v-alert>
+        <div id="notice-scheduled" class="font-weight-bold text-success pa-6">
+          {{ currentUser.isAdmin ? 'The' : 'Your' }} course is scheduled for Course Capture. The first recording is on
+          <span class="text-no-wrap">
+            <Date :date="course.scheduled[0].meetingStartDate" />.
+          </span>
+        </div>
+      </div>
+      <div v-if="!course.deletedAt && (course.hasOptedOut || !course.scheduled)">
+        <v-col class="font-weight-bold mb-1">
+          <span v-if="course.hasOptedOut && !course.scheduled" id="notice-opt-out" class="text-error">
+            {{ currentUser.isAdmin ? 'The' : 'Your' }} course is not scheduled for Course Capture because one or more instructors have opted out. To schedule recordings, please have all instructors remove their opt-out status.
+          </span>
+          <span v-if="course.hasOptedOut && course.scheduled" id="notice-opt-out-pending" class="text-error">
+            {{ currentUser.isAdmin ? 'The' : 'Your' }} course is scheduled for Course Capture, but will be unscheduled shortly because one or more instructors have opted out. To keep recordings scheduled, please have all instructors remove their opt-out status.
+          </span>
+          <span v-if="!course.hasOptedOut" id="notice-eligible-not-scheduled" class="text-success">
+            This course is eligible for scheduling, but has not yet been scheduled. Instructors will be notified when scheduling has taken place.
+          </span>
         </v-col>
-        <v-col cols="12" md="8" xl="9">
-          <v-container v-if="isCurrentTerm && capability && hasValidMeetingTimes && !course.hasOptedOut && course.scheduled" class="elevation-2 px-2 px-sm-4">
-            <v-row>
-              <v-col class="font-weight-bold">
-                <v-alert
-                  v-if="updatesQueued"
-                  density="compact"
-                  class="mb-3 pa-4"
-                  type="warning"
-                  :icon="mdiAlert"
-                  variant="outlined"
-                >
-                  Recent updates to recording settings are currently queued for publication. They will be published in an hour or less.
-                </v-alert>
-                <span id="notice-scheduled" class="text-green">
-                  {{ currentUser.isAdmin ? 'The' : 'Your' }} course is scheduled for Course Capture. The first recording is on
-                  {{ DateTime.fromISO(course.scheduled[0].meetingStartDate).toFormat('MMM d, yyyy') }}.
-                </span>
-              </v-col>
-            </v-row>
-            <v-row
-              align="center"
-              justify="start"
-            >
-              <v-col id="instructors-list" cols="12">
-                <h4>
+      </div>
+    </div>
+    <v-row>
+      <v-col
+        cols="12"
+        md="8"
+        order="2"
+        xl="9"
+      >
+        <v-container v-if="isCurrentTerm && !!capability && hasValidMeetingTimes" class="pt-6">
+          <v-row
+            align="center"
+            aria-labelledby="instructors-header"
+            justify="start"
+            role="region"
+          >
+            <v-col id="instructors-list" class="px-4 mb-2" cols="12">
+              <h3 id="instructors-header">
+                <span v-if="!course.hasOptedOut && course.scheduled">
                   Instructor(s) listed will have editing and publishing access:
-                </h4>
-                <div v-for="instructor in course.instructors" :id="`instructor-${instructor.uid}`" :key="`instructor-${instructor.uid}`">
-                  {{ instructor.name }} ({{ instructor.uid }})
-                  <span v-if="instructor.hasOptedOut" :id="`instructor-${instructor.uid}-opt-out`">
-                    (opted out)
-                  </span>
-                </div>
-              </v-col>
-            </v-row>
-            <v-row
-              v-if="!collaboratorsEditing"
-              align="center"
-              justify="start"
-            >
-              <v-col id="collaborators-list" cols="12">
-                <h4>
-                  Collaborator(s) listed will have editing and publishing access:
-                </h4>
-                <div v-for="collaborator in collaborators" :id="`collaborator-${collaborator.uid}`" :key="`collaborator-${collaborator.uid}`">
-                  {{ collaboratorLabel(collaborator) }}
-                </div>
-                <div v-if="!collaborators || !collaborators.length" id="collaborators-none">
-                  None
-                </div>
-                <v-btn
-                  id="btn-collaborators-edit"
-                  aria-label="Edit Collaborators"
-                  class="mt-3"
-                  @click="toggleCollaboratorsEditing"
-                >
-                  Edit
-                </v-btn>
-              </v-col>
-            </v-row>
-            <v-card v-if="collaboratorsEditing" class="bg-surface-light my-4" flat>
-              <v-container>
-                <v-row
-                  align="center"
-                  aria-live="polite"
-                  justify="start"
-                >
-                  <v-col cols="12">
-                    <h4>
-                      Update collaborators
-                    </h4>
-                  </v-col>
-                </v-row>
-                <v-row
-                  align="end"
-                  justify="start"
-                >
-                  <v-col>
-                    <PersonLookup
-                      ref="personLookup"
-                      class="collaborator-lookup"
-                      :clear-errors="() => addCollaboratorError = null"
-                      :disabled="collaboratorsUpdating"
-                      :error-message="addCollaboratorError"
-                      id-prefix="collaborator-lookup"
-                      label="Find collaborator"
-                      list-label="collaborators"
-                      :on-select-result="onSelectCollaborator"
-                    >
-                      <template #append>
-                        <v-btn
-                          id="btn-collaborator-add"
-                          aria-label="Add Collaborator"
-                          class="ml-2"
-                          color="success"
-                          :disabled="!pendingCollaborator"
-                          variant="flat"
-                          @click="addCollaboratorConfirm"
-                        >
-                          Add
-                        </v-btn>
-                      </template>
-                    </PersonLookup>
-                  </v-col>
-                </v-row>
-                <v-row
-                  v-if="collaboratorsEditing"
-                  align="center"
-                  justify="start"
-                >
-                  <v-col class="d-flex flex-column" cols="12">
-                    <v-chip
-                      v-for="(collaborator, index) in collaborators"
-                      :id="`collaborator-${collaborator.uid}`"
-                      :key="collaborator.uid"
-                      class="collaborator my-2 pl-4 pr-2 py-2 text-wrap"
-                      size="large"
-                    >
-                      {{ collaboratorLabel(collaborator) }}
-                      <template #append>
-                        <v-btn
-                          :id="`btn-collaborator-remove-${collaborator.uid}`"
-                          :aria-label="`Remove ${collaborator.firstName || ''} ${collaborator.lastName || ''} as collaborator`"
-                          class="ml-4"
-                          :disabled="collaboratorsUpdating"
-                          rounded
-                          size="small"
-                          variant="flat"
-                          @click="removeCollaborator(collaborator.uid, index)"
-                        >
-                          Remove
-                        </v-btn>
-                      </template>
-                    </v-chip>
-                    <div class="mt-4">
-                      <ProgressButton
-                        id="btn-collaborators-save"
-                        :action="updateCollaboratorsClicked"
-                        aria-label="Save Collaborators"
-                        :disabled="isEqual(sortBy(collaborators, 'uid'), sortBy(course.collaborators, 'uid')) || collaboratorsUpdating"
-                        :in-progress="collaboratorsUpdating"
-                        :text="collaboratorsUpdating ? 'Saving' : 'Save'"
-                      />
-                      <v-btn
-                        id="btn-collaborators-cancel"
-                        aria-label="Cancel Collaborator Edit"
-                        class="ml-2"
-                        :disabled="collaboratorsUpdating"
-                        variant="text"
-                        @click="updateCollaboratorsCancel"
-                      >
-                        Cancel
-                      </v-btn>
-                    </div>
-                  </v-col>
-                </v-row>
-              </v-container>
-            </v-card>
-            <v-row
-              align="center"
-              justify="start"
-            >
-              <v-col cols="12">
-                <h4>
-                  <label id="select-recording-type-label" for="select-recording-type">Recording Type</label>
-                </h4>
-                <div v-if="!recordingTypeEditing">
-                  <div id="recording-type-name">
-                    {{ displayLabels[course.recordingType] }}
-                  </div>
-                  <v-btn
-                    v-if="!recordingTypeEditing && recordingTypeEditable"
-                    id="btn-recording-type-edit"
-                    aria-label="Edit Recording Type"
-                    class="mt-3"
-                    @click="toggleRecordingTypeEditing"
-                  >
-                    Edit
-                  </v-btn>
-                </div>
-                <div
-                  v-if="recordingTypeEditing && recordingTypeEditable"
-                  id="select-recording-type"
-                  :aria-activedescendant="`radio-recording-type-${recordingType}`"
-                  aria-labelledby="select-recording-type-label"
-                  class="mb-4"
-                  role="radiogroup"
-                  tabindex="0"
-                >
-                  <div
-                    v-for="(recordingTypeOption, index) in recordingTypeOptions"
-                    :key="recordingTypeOption"
-                    class="d-flex flex-nowrap py-1"
-                  >
-                    <input
-                      :id="`radio-recording-type-${recordingTypeOption}`"
-                      :checked="recordingTypeOption === recordingType ? 'checked' : false"
-                      class="ml-1 mr-3"
-                      :disabled="recordingTypeUpdating"
-                      type="radio"
-                      :value="recordingTypeOption"
-                      @change="() => onRecordingTypeChange(recordingTypeOption, index)"
-                    />
-                    <label class="font-size-16 text-secondary" :for="`radio-recording-type-${recordingTypeOption}`">
-                      {{ displayLabels[recordingTypeOption] }}
-                    </label>
-                  </div>
-                </div>
-                <div v-if="recordingTypeEditing && recordingTypeEditable">
-                  <ProgressButton
-                    id="btn-recording-type-save"
-                    :action="updateRecordingTypeClicked"
-                    aria-label="Save Recording Type"
-                    :disabled="recordingTypeUpdating"
-                    :in-progress="recordingTypeUpdating"
-                    :text="recordingTypeUpdating ? 'Saving' : 'Save'"
-                  />
-                  <v-btn
-                    id="btn-recording-type-cancel"
-                    aria-label="Cancel Recording Type Edit"
-                    class="ml-2"
-                    :disabled="recordingTypeUpdating"
-                    variant="text"
-                    @click="updateRecordingTypeCancel"
-                  >
-                    Cancel
-                  </v-btn>
-                </div>
-              </v-col>
-            </v-row>
-            <v-row
-              align="center"
-              justify="start"
-            >
-              <v-col cols="12">
-                <h4>
-                  <label id="select-publish-type-label" for="select-publish-type">Recording Placement</label>
-                </h4>
-                <div v-if="!publishTypeEditing">
-                  <div id="publish-type-name">
-                    {{ displayLabels[course.publishType] }}
-                  </div>
-                  <div v-if="publishType && publishType.startsWith('kaltura_media_gallery') && course.canvasSiteIds" id="publish-linked-canvas-site">
-                    Linked bCourses site(s):
-                    <div v-for="site in course.canvasSites" :key="site.canvasSiteId">
-                      <CanvasCourseSite :site-id="site.canvasSiteId" :course-site="site" />
-                    </div>
-                  </div>
-                  <v-btn
-                    id="btn-publish-type-edit"
-                    aria-label="Edit Recording Placement"
-                    class="mt-3"
-                    @click="togglePublishTypeEditing"
-                  >
-                    Edit
-                  </v-btn>
-                </div>
-                <v-card v-if="publishTypeEditing" class="bg-surface-light my-4" flat>
-                  <v-container>
-                    <div
-                      id="select-publish-type"
-                      :aria-activedescendant="`radio-publish-type-${publishType}`"
-                      aria-labelledby="select-publish-type-label"
-                      class="mb-4"
-                      role="radiogroup"
-                      tabindex="0"
-                    >
-                      <div
-                        v-for="(publishTypeOption, index) in publishTypeOptions"
-                        :key="publishTypeOption"
-                        class="d-flex flex-nowrap py-1"
-                      >
-                        <input
-                          :id="`radio-publish-type-${publishTypeOption}`"
-                          :checked="publishTypeOption === publishType ? 'checked' : false"
-                          class="ml-1 mr-3"
-                          :disabled="publishTypeUpdating"
-                          type="radio"
-                          :value="publishTypeOption"
-                          @change="() => onPublishTypeChange(publishTypeOption, index)"
-                        />
-                        <label class="font-size-16 text--secondary" :for="`radio-publish-type-${publishTypeOption}`">{{ displayLabels[publishTypeOption] }}</label>
-                      </div>
-                    </div>
-                    <!-- v-container doesn't seem to work with aria-live; therefore the following is a div. -->
-                    <div v-if="publishType && publishType.startsWith('kaltura_media_gallery')" aria-live="polite">
-                      <v-row
-                        align="center"
-                        justify="start"
-                      >
-                        <v-col cols="12">
-                          <h4>
-                            Linked bCourses site(s):
-                          </h4>
-                        </v-col>
-                      </v-row>
-                      <v-row
-                        v-if="!currentUser.isAdmin"
-                        align="end"
-                        justify="start"
-                      >
-                        <v-col cols="9">
-                          <v-select
-                            id="select-canvas-site"
-                            v-model="pendingCanvasSite"
-                            dense
-                            :disabled="publishTypeUpdating"
-                            :full-width="true"
-                            hide-details
-                            item-text="name"
-                            :item-disabled="item => isCanvasSiteIdStaged(item.canvasSiteId)"
-                            return-object
-                            :items="publishCanvasSiteOptions"
-                            label="Select course site"
-                            solo
-                          >
-                            <span :id="`menu-option-canvas-site-${data.item.canvasSiteId}`" slot="item" slot-scope="data">
-                              {{ data.item.name }} ({{ data.item.courseCode }})
-                            </span>
-                          </v-select>
-                        </v-col>
-                        <v-col cols="3">
-                          <v-btn
-                            id="btn-canvas-site-add"
-                            aria-label="Add bCourses Site"
-                            color="success"
-                            :disabled="!pendingCanvasSite"
-                            @click="addCanvasSiteConfirm"
-                          >
-                            Add
-                          </v-btn>
-                        </v-col>
-                      </v-row>
-                      <v-row
-                        v-if="!currentUser.isAdmin"
-                        align="end"
-                        justify="start"
-                      >
-                        <v-col cols="12">
-                          To link a bCourses site from a past term, please <a :href="`mailto:${config.emailCourseCaptureSupport}`" target="_blank">
-                            contact Course Capture support<span class="sr-only"> (this email link opens a new tab)</span></a>.
-                        </v-col>
-                      </v-row>
-                      <v-row
-                        v-if="currentUser.isAdmin"
-                        align="end"
-                        justify="start"
-                      >
-                        <v-col cols="9">
-                          <v-text-field
-                            id="input-canvas-site-id"
-                            v-model="pendingCanvasSiteId"
-                            label="Enter Canvas site id"
-                            :disabled="publishTypeUpdating"
-                            hide-details="auto"
-                            outlined
-                            dense
-                          >
-                          </v-text-field>
-                        </v-col>
-                        <v-col cols="3">
-                          <v-btn
-                            id="btn-canvas-site-add"
-                            aria-label="Add Canvas Site"
-                            color="success"
-                            :disabled="!pendingCanvasSiteId || !/^\d+$/.test(pendingCanvasSiteId) || isCanvasSiteIdStaged(pendingCanvasSiteId)"
-                            @click="addCanvasSiteById"
-                          >
-                            Add
-                          </v-btn>
-                        </v-col>
-                      </v-row>
-                      <v-row
-                        align="center"
-                        justify="start"
-                      >
-                        <v-col cols="12">
-                          <div
-                            v-for="(site, index) in publishCanvasSites"
-                            :id="`canvas-site-${site.canvasSiteId}`"
-                            :key="site.canvasSiteId"
-                            class="my-2"
-                          >
-                            {{ site.name }} ({{ site.courseCode }})
-                            <v-btn
-                              :id="`btn-canvas-site-remove-${site.canvasSiteId}`"
-                              :aria-label="`Remove ${site.name} (${site.courseCode})`"
-                              :disabled="publishTypeUpdating"
-                              small
-                              @click="removeCanvasSite(site.canvasSiteId, index)"
-                            >
-                              Remove
-                            </v-btn>
-                          </div>
-                        </v-col>
-                      </v-row>
-                    </div>
-                    <v-row
-                      align="center"
-                      justify="start"
-                    >
-                      <v-col cols="12">
-                        <div>
-                          <ProgressButton
-                            id="btn-publish-type-save"
-                            :action="updatePublishTypeClicked"
-                            aria-label="Save Recording Placement"
-                            :disabled="publishTypeUpdating || (publishType && publishType.startsWith('kaltura_media_gallery') && !publishCanvasSites.length)"
-                            :in-progress="publishTypeUpdating"
-                            :text="publishTypeUpdating ? 'Saving' : 'Save'"
-                          />
-                          <v-btn
-                            id="btn-publish-type-cancel"
-                            aria-label="Cancel Recording Placement Edit"
-                            class="ml-2"
-                            :disabled="publishTypeUpdating"
-                            variant="text"
-                            @click="updatePublishTypeCancel"
-                          >
-                            Cancel
-                          </v-btn>
-                        </div>
-                      </v-col>
-                    </v-row>
-                  </v-container>
-                </v-card>
-              </v-col>
-            </v-row>
-            <v-row v-if="!currentUser.isAdmin && get(course, 'publishType', '') === 'kaltura_my_media'">
-              <v-col cols="12">
-                Based on the selected Recording Placement, please review the following KB articles:
-                <ul>
-                  <li>
-                    <a href="https://berkeley.service-now.com/kb?id=kb_article_view&sysparm_article=KB0013882" target="_blank">
-                      How to Publish from My Media
-                      <span class="sr-only"> (link opens new browser tab)</span>
-                    </a>
-                  </li>
-                  <li>
-                    <a href="https://berkeley.service-now.com/kb?id=kb_article_view&sysparm_article=KB0013623" target="_blank">
-                      How to Embed in bCourses using the Rich Content Editor
-                      <span class="sr-only"> (link opens new browser tab)</span>
-                    </a>
-                  </li>
-                  <li>
-                    <a href="https://berkeley.service-now.com/kb?id=kb_article_view&sysparm_article=KB0014115" target="_blank">
-                      How to Download the Second Stream of the Recording
-                      <span class="sr-only"> (link opens new browser tab)</span>
-                    </a>
-                  </li>
-                  <li>
-                    <a href="https://rtl.berkeley.edu/services-programs/course-capture/instructors-getting-started/course-capture-faq" target="_blank">
-                      Course Capture FAQ
-                      <span class="sr-only"> (link opens new browser tab)</span>
-                    </a>
-                  </li>
-                </ul>
-              </v-col>
-            </v-row>
-            <v-row v-if="!currentUser.isAdmin && get(course, 'publishType', '').startsWith('kaltura_media_gallery')">
-              <v-col cols="12">
-                Based on the selected Recording Placement, please review the following KB articles:
-                <ul>
-                  <li>
-                    <a href="https://berkeley.service-now.com/kb?id=kb_article_view&sysparm_article=KB0014032" target="_blank">
-                      How to Remove a Recording from the Media Gallery
-                      <span class="sr-only"> (link opens new browser tab)</span>
-                    </a>
-                  </li>
-                  <li>
-                    <a href="https://berkeley.service-now.com/kb?id=kb_article_view&sysparm_article=KB0014115" target="_blank">
-                      How to Download the Second Stream of the Recording
-                      <span class="sr-only"> (link opens new browser tab)</span>
-                    </a>
-                  </li>
-                  <li>
-                    <a href="https://rtl.berkeley.edu/services-programs/course-capture/instructors-getting-started/course-capture-faq" target="_blank">
-                      Course Capture FAQ
-                      <span class="sr-only"> (link opens new browser tab)</span>
-                    </a>
-                  </li>
-                </ul>
-              </v-col>
-            </v-row>
-            <v-row v-if="currentUser.isAdmin">
-              <v-col cols="12">
-                <ScheduledCourse :course="course"></ScheduledCourse>
-              </v-col>
-            </v-row>
-          </v-container>
-          <v-container v-if="isCurrentTerm && capability && hasValidMeetingTimes && !course.deletedAt && (course.hasOptedOut || !course.scheduled)" class="elevation-2 elevation-2 px-2 px-sm-4">
-            <v-row>
-              <v-col class="font-weight-bold mb-1">
-                <span v-if="course.hasOptedOut && !course.scheduled" id="notice-opt-out" class="red--text">
-                  {{ currentUser.isAdmin ? 'The' : 'Your' }} course is not scheduled for Course Capture because one or more instructors have opted out. To schedule recordings, please have all instructors remove their opt-out status.
                 </span>
-                <span v-if="course.hasOptedOut && course.scheduled" id="notice-opt-out-pending" class="red--text">
-                  {{ currentUser.isAdmin ? 'The' : 'Your' }} course is scheduled for Course Capture, but will be unscheduled shortly because one or more instructors have opted out. To keep recordings scheduled, please have all instructors remove their opt-out status.
-                </span>
-                <span v-if="!course.hasOptedOut" id="notice-eligible-not-scheduled" class="green--text">
-                  This course is eligible for scheduling, but has not yet been scheduled. Instructors will be notified when scheduling has taken place.
-                </span>
-              </v-col>
-            </v-row>
-            <v-row
-              align="center"
-              justify="start"
-            >
-              <v-col id="instructors-list" cols="12">
-                <h4>
+                <span v-if="!course.deletedAt && (course.hasOptedOut || !course.scheduled)">
                   Instructor(s):
-                </h4>
-                <div v-for="instructor in course.instructors" :id="`instructor-${instructor.uid}`" :key="instructor.uid">
-                  {{ instructor.name }} ({{ instructor.uid }})
-                  <span v-if="instructor.hasOptedOut" :id="`instructor-${instructor.uid}-opt-out`">
-                    (opted out)
-                  </span>
-                </div>
-              </v-col>
-            </v-row>
-          </v-container>
-          <v-container v-if="isCurrentTerm && !capability">
-            <v-row>
-              <div class="d-flex justify-start">
-                <div class="pr-2">
-                  <v-icon color="red" :icon="mdiAlert"></v-icon>
-                </div>
-                <div id="course-not-eligible">
-                  This course is not eligible for Course Capture because
-                  <span v-if="location">{{ location }} is not capture-enabled.</span>
-                  <span v-if="!location">it has no meeting location.</span>
-                </div>
+                </span>
+              </h3>
+              <div v-if="isEmpty(course.instructors)" class="pl-4 pt-2 text-medium-emphasis">
+                No instructors
               </div>
-            </v-row>
-          </v-container>
-          <v-container v-if="isCurrentTerm && capability && !hasValidMeetingTimes">
-            <v-row>
-              <div class="d-flex justify-start">
-                <div class="pr-2">
-                  <v-icon color="red" :icon="mdiAlert"></v-icon>
-                </div>
-                <div id="invalid-meeting-times">
-                  This course is in a capture-enabled room but the meeting times are missing or invalid.
-                </div>
+              <div
+                v-for="instructor in course.instructors"
+                :id="`instructor-${instructor.uid}`"
+                :key="`instructor-${instructor.uid}`"
+                class="pl-4 pt-2"
+              >
+                {{ instructor.name }} ({{ instructor.uid }})
+                <span v-if="instructor.hasOptedOut" :id="`instructor-${instructor.uid}-opt-out`">
+                  (opted out)
+                </span>
               </div>
-            </v-row>
-          </v-container>
-          <v-container v-if="!isCurrentTerm">
-            <v-row>
-              <div class="d-flex justify-start">
-                <div class="pr-2">
-                  <v-icon color="red" :icon="mdiAlert"></v-icon>
-                </div>
-                <div id="course-not-current">
-                  This course is not currently eligible for Course Capture.
-                </div>
+            </v-col>
+          </v-row>
+          <Collaborators
+            v-if="!course.hasOptedOut && course.scheduled"
+            :course="course"
+            :set-model="collaborators => course.collaborators = collaborators"
+          />
+          <RecordingType
+            v-if="!course.hasOptedOut && course.scheduled"
+            :course="course"
+            :labels="displayLabels"
+            :set-model="setRecordingType"
+          />
+          <RecordingPlacement
+            v-if="!course.hasOptedOut && course.scheduled"
+            :course="course"
+            :labels="displayLabels"
+            :set-model="setRecordingPlacement"
+          />
+          <v-row v-if="!currentUser.isAdmin && get(course, 'publishType', '') === 'kaltura_my_media'">
+            <v-col class="pa-4 my-2">
+              Based on the selected Recording Placement, please review the following KB articles:
+              <ul>
+                <li>
+                  <a href="https://berkeley.service-now.com/kb?id=kb_article_view&sysparm_article=KB0013882" target="_blank">
+                    How to Publish from My Media
+                    <span class="sr-only"> (link opens new browser tab)</span>
+                  </a>
+                </li>
+                <li>
+                  <a href="https://berkeley.service-now.com/kb?id=kb_article_view&sysparm_article=KB0013623" target="_blank">
+                    How to Embed in bCourses using the Rich Content Editor
+                    <span class="sr-only"> (link opens new browser tab)</span>
+                  </a>
+                </li>
+                <li>
+                  <a href="https://berkeley.service-now.com/kb?id=kb_article_view&sysparm_article=KB0014115" target="_blank">
+                    How to Download the Second Stream of the Recording
+                    <span class="sr-only"> (link opens new browser tab)</span>
+                  </a>
+                </li>
+                <li>
+                  <a href="https://rtl.berkeley.edu/services-programs/course-capture/instructors-getting-started/course-capture-faq" target="_blank">
+                    Course Capture FAQ
+                    <span class="sr-only"> (link opens new browser tab)</span>
+                  </a>
+                </li>
+              </ul>
+            </v-col>
+          </v-row>
+          <v-row v-if="!currentUser.isAdmin && get(course, 'publishType', '').startsWith('kaltura_media_gallery')">
+            <v-col class="pa-4 my-2">
+              Based on the selected Recording Placement, please review the following KB articles:
+              <ul>
+                <li>
+                  <a href="https://berkeley.service-now.com/kb?id=kb_article_view&sysparm_article=KB0014032" target="_blank">
+                    How to Remove a Recording from the Media Gallery
+                    <span class="sr-only"> (link opens new browser tab)</span>
+                  </a>
+                </li>
+                <li>
+                  <a href="https://berkeley.service-now.com/kb?id=kb_article_view&sysparm_article=KB0014115" target="_blank">
+                    How to Download the Second Stream of the Recording
+                    <span class="sr-only"> (link opens new browser tab)</span>
+                  </a>
+                </li>
+                <li>
+                  <a href="https://rtl.berkeley.edu/services-programs/course-capture/instructors-getting-started/course-capture-faq" target="_blank">
+                    Course Capture FAQ
+                    <span class="sr-only"> (link opens new browser tab)</span>
+                  </a>
+                </li>
+              </ul>
+            </v-col>
+          </v-row>
+          <ScheduledCourse v-if="currentUser.isAdmin" :course="course" />
+        </v-container>
+        <v-container v-if="isCurrentTerm && !capability" class="pt-6">
+          <v-row>
+            <v-col class="d-flex justify-start pl-7">
+              <v-icon class="mr-2" color="error" :icon="mdiAlert"></v-icon>
+              <div id="course-not-eligible">
+                This course is not eligible for Course Capture because
+                <span v-if="location">{{ location }} is not capture-enabled.</span>
+                <span v-if="!location">it has no meeting location.</span>
               </div>
-            </v-row>
-          </v-container>
-        </v-col>
-      </v-row>
-      <v-row v-if="currentUser.isAdmin">
-        <v-col cols="12">
-          <CourseHistory :history="course.updateHistory" />
-        </v-col>
-      </v-row>
-    </v-container>
+            </v-col>
+          </v-row>
+        </v-container>
+        <v-container v-if="isCurrentTerm && !!capability && !hasValidMeetingTimes" class="pt-6">
+          <v-row>
+            <v-col class="d-flex justify-start">
+              <v-icon class="mr-2" color="error" :icon="mdiAlert"></v-icon>
+              <div id="invalid-meeting-times">
+                This course is in a capture-enabled room but the meeting times are missing or invalid.
+              </div>
+            </v-col>
+          </v-row>
+        </v-container>
+        <v-container v-if="!isCurrentTerm" class="pt-6">
+          <v-row>
+            <v-col class="d-flex justify-start">
+              <v-icon class="mr-2" color="error" :icon="mdiAlert"></v-icon>
+              <div id="course-not-current">
+                This course is not currently eligible for Course Capture.
+              </div>
+            </v-col>
+          </v-row>
+        </v-container>
+      </v-col>
+      <v-col
+        cols="12"
+        md="4"
+        order="1"
+        xl="3"
+      >
+        <CoursePageSidebar :course="course" />
+        <CourseNotes :course="course" :set-model="note => course.note = note" />
+      </v-col>
+    </v-row>
+    <v-row v-if="currentUser.isAdmin">
+      <v-col cols="12">
+        <CourseHistory :history="course.updateHistory" />
+      </v-col>
+    </v-row>
   </div>
 </template>
 
 <script setup>
-import {find, get, filter, isEmpty, isEqual, sortBy, size} from 'lodash'
-import {DateTime} from 'luxon'
+import {get, isEmpty} from 'lodash'
 import {mdiBookMultipleOutline, mdiAlert} from '@mdi/js'
 import {ref, reactive, computed, onMounted} from 'vue'
 import {useRoute} from 'vue-router'
-import {alertScreenReader, putFocusNextTick, getCourseCodes, getTermName} from '@/lib/utils'
-import CanvasCourseSite from '@/components/course/CanvasCourseSite'
+import {getCourseCodes, getTermName} from '@/lib/utils'
+import Collaborators from '@/components/course/Collaborators'
 import CourseHistory from '@/components/course/CourseHistory'
+import CourseNotes from '@/components/course/CourseNotes'
 import CoursePageSidebar from '@/components/course/CoursePageSidebar'
+import Date from '@/components/util/Date'
 import {getAuditoriums} from '@/api/room'
-import {getCanvasSitesTeaching} from '@/api/user'
 import PageTitle from '@/components/util/PageTitle'
-import PersonLookup from '@/components/util/PersonLookup'
-import ProgressButton from '@/components/util/ProgressButton'
+import RecordingPlacement from '@/components/course/RecordingPlacement'
+import RecordingType from '@/components/course/RecordingType'
 import ScheduledCourse from '@/components/course/ScheduledCourse'
-import {
-  deleteCourseNote,
-  getCourse, getCourseSite,
-  updateCollaborators,
-  updateCourseNote,
-  updatePublishType,
-  updateRecordingType
-} from '@/api/course'
+import {getCourse} from '@/api/course'
 import {useContextStore} from '@/stores/context'
 
 const {config, currentUser, loadingStart, loadingComplete} = useContextStore()
 
-const addCollaboratorError = ref()
 const agreedToTerms = ref(false)
 const auditoriums = ref([])
 const capability = ref()
-const collaborators = ref([])
-const collaboratorsEditing = ref(false)
-const collaboratorsUpdating = ref(false)
 const course = ref({
+  canvasSites: [],
+  collaborators: [],
+  instructors: [],
   meetings: {
     eligible: [],
     ineligible: []
   },
-  instructors: [],
-  collaborators: [],
-  canvasSites: [],
+  note: undefined,
   updateHistory: []
 })
 const courseDisplayTitle = ref('')
@@ -717,31 +261,10 @@ const instructors = ref([])
 const instructorProxies = ref([])
 const isLoading = ref(true)
 const location = ref('')
-const noteBody = ref('')
-const noteEditing = ref(false)
-const noteUpdating = ref(false)
-const pendingCanvasSite = ref()
-const pendingCanvasSiteId = ref()
-const pendingCollaborator = ref()
-const personLookup = ref()
-const publishCanvasSites = ref([])
-const publishCanvasSiteOptions = ref([])
-const publishType = ref('')
-const publishTypeEditing = ref(false)
-const publishTypeOptions = ref([])
-const publishTypeUpdating = ref(false)
-const recordingType = ref('')
-const recordingTypeEditing = ref(false)
-const recordingTypeOptions = ref([])
-const recordingTypeUpdating = ref(false)
 
 // Computed
 // const disableSubmit = computed(() => !agreedToTerms.value || !publishType.value || !recordingType.value)
 const isCurrentTerm = computed(() => course.value.termId === config.currentTermId)
-const recordingTypeEditable = computed(() =>
-  recordingTypeOptions.value.length > 1 &&
-  (currentUser.isAdmin || course.value.recordingType !== 'presenter_presentation_audio_with_operator')
-)
 const updatesQueued = computed(() => !!course.value.updateHistory.find(u => u.status === 'queued'))
 
 onMounted(() => {
@@ -760,251 +283,23 @@ onMounted(() => {
       location.value = meeting.room?.location
       hasValidMeetingTimes.value = eligible.some(m => m.startDate && m.startTime && m.endDate && m.endTime)
       courseDisplayTitle.value = getCourseCodes(data)[0]
-      collaborators.value = [...data.collaborators]
-      noteBody.value = data.note
-      publishType.value = data.publishType
-      recordingType.value = data.recordingType
-      publishCanvasSites.value = [...data.canvasSites]
-      recordingTypeOptions.value = meeting.room ? Object.keys(meeting.room.recordingTypeOptions || {}) : []
-      publishTypeOptions.value = Object.keys(config.publishTypeOptions).sort().reverse()
       getAuditoriums().then(aud => {
         auditoriums.value = aud
-        if (!currentUser.isAdmin) {
-          getCanvasSitesTeaching(currentUser.uid).then(sites => {
-            publishCanvasSiteOptions.value = sites
-            isLoading.value = false
-            loadingComplete(courseDisplayTitle.value)
-          })
-        } else {
-          isLoading.value = false
-          loadingComplete(courseDisplayTitle.value)
-        }
+        isLoading.value = false
+        loadingComplete(courseDisplayTitle.value)
       })
     })
 })
 
-const addCollaboratorConfirm = () => {
-  if (pendingCollaborator.value) {
-    const collaborator = pendingCollaborator.value.raw
-    const exists = collaborators.value.some(c => c.uid === collaborator.uid)
-    if (exists) {
-      addCollaboratorError.value = `${collaborator.firstName} ${collaborator.lastName} is already a collaborator.`
-    } else {
-      pendingCollaborator.value = null
-      addCollaboratorError.value = null
-      collaborators.value.push(collaborator)
-      personLookup.value.selected = null
-      alertScreenReader(`${collaborator.firstName} ${collaborator.lastName} added as a collaborator.`)
-    }
-    putFocusNextTick('collaborator-lookup-input')
-  }
+const setRecordingPlacement = updatedCourse => {
+  course.value.canvasSiteIds = updatedCourse.canvasSiteIds
+  course.value.canvasSites = updatedCourse.canvasSites
+  course.value.publishType = updatedCourse.publishType
+  course.value.publishTypeName = updatedCourse.publishTypeName
 }
 
-const addCanvasSiteById = () => {
-  if (pendingCanvasSiteId.value && !isCanvasSiteIdStaged(pendingCanvasSiteId)) {
-    getCourseSite(pendingCanvasSiteId.value).then(data => {
-      if (data) {
-        publishCanvasSites.value.push(data)
-        alertScreenReader(`${data.name} added.`)
-        putFocusNextTick('input-canvas-site-id')
-      }
-    })
-  }
-  pendingCanvasSiteId.value = null
-}
-
-const addCanvasSiteConfirm = () => {
-  if (pendingCanvasSite.value && !isCanvasSiteIdStaged(pendingCanvasSite.canvasSiteId)) {
-    publishCanvasSites.push(pendingCanvasSite)
-  }
-  alertScreenReader(`${pendingCanvasSite.name} added.`)
-  putFocusNextTick('select-canvas-site')
-  pendingCanvasSite.value = null
-}
-
-const cancelNote = () => {
-  noteBody.value = course.value.note
-  noteEditing.value = false
-  noteUpdating.value = false
-  alertScreenReader('Note edit canceled.')
-  putFocusNextTick('btn-edit-note')
-}
-
-const collaboratorLabel = (collaborator) => {
-  let label = `${collaborator.firstName} ${collaborator.lastName}`
-  if (collaborator.email) label += ` (${collaborator.email})`
-  return `${label} (${collaborator.uid})`
-}
-
-const deleteNote = () => {
-  noteUpdating.value = true
-  deleteCourseNote(course.value.termId, course.value.sectionId)
-    .then(() => {
-      course.value.note = null
-      noteBody.value = null
-      noteUpdating.value = false
-      alertScreenReader('Note deleted.')
-      putFocusNextTick('btn-edit-note')
-    })
-}
-
-const editNote = () => {
-  noteEditing.value = true
-  putFocusNextTick('note-body-edit')
-}
-
-const isCanvasSiteIdStaged = (siteId) => {
-  return !!find(publishCanvasSites, {'canvasSiteId': parseInt(siteId, 10)})
-}
-
-const onPublishTypeChange = (option, idx) => {
-  publishType.value = publishType.value === option ? publishTypeOptions.value[idx - 1] : option
-}
-
-const onRecordingTypeChange = (option, idx) => {
-  recordingType.value = recordingType.value === option ? recordingTypeOptions.value[idx - 1] : option
-}
-
-const onSelectCollaborator = collaborator => {
-  pendingCollaborator.value = collaborator
-  addCollaboratorError.value = null
-}
-
-const removeCanvasSite = (canvasSiteId, index) => {
-  const nextFocusIndex = (index + 1 === size(publishCanvasSites)) ? index - 1 : index + 1
-  const nextFocusSiteId = get(publishCanvasSites, `${nextFocusIndex}.canvasSiteId`)
-  const canvasSite = find(publishCanvasSites, c => c.canvasSiteId === canvasSiteId)
-  const canvasSiteName = canvasSite.name || ''
-  publishCanvasSites.value = filter(publishCanvasSites, c => c.canvasSiteId !== canvasSiteId)
-  alertScreenReader(`Removed bCourses site ${canvasSiteName}.`)
-  let nextFocusId = `btn-canvas-site-remove-${nextFocusSiteId}`
-  if (isEmpty(publishCanvasSites) || !nextFocusSiteId) {
-    nextFocusId = currentUser.isAdmin ? 'input-canvas-site-id' : 'select-canvas-site'
-  }
-  putFocusNextTick(nextFocusId)
-}
-
-const removeCollaborator = (uid, index) => {
-  const collaborator = collaborators.value.find(c => c.uid === uid)
-  collaborators.value = collaborators.value.filter(c => c.uid !== uid)
-  alertScreenReader(`${collaborator.firstName} ${collaborator.lastName} removed.`)
-  const nextId = collaborators.value[index]?.uid || null
-  putFocusNextTick(nextId ? `btn-collaborator-remove-${nextId}` : 'collaborator-lookup-input')
-}
-
-const saveNote = () => {
-  noteUpdating.value = true
-  updateCourseNote(course.value.termId, course.value.sectionId, noteBody.value)
-    .then(data => {
-      course.value.note = data.note
-      noteBody.value = data.note
-      noteEditing.value = false
-      noteUpdating.value = false
-      alertScreenReader('Note updated.')
-      putFocusNextTick('btn-edit-note')
-    })
-}
-
-const toggleCollaboratorsEditing = () => {
-  collaboratorsEditing.value = true
-  putFocusNextTick('collaborator-lookup-input')
-}
-
-const togglePublishTypeEditing = () => {
-  publishTypeEditing.value = true
-  putFocusNextTick('select-publish-type')
-}
-
-const toggleRecordingTypeEditing = () => {
-  recordingTypeEditing.value = true
-  putFocusNextTick('select-recording-type')
-}
-
-const updateCollaboratorsClicked = () => {
-  collaboratorsUpdating.value = true
-  updateCollaborators(
-    collaborators.value.map(c => c.uid),
-    course.value.sectionId,
-    course.value.termId
-  ).then(data => {
-    alertScreenReader('Collaborators updated.')
-    putFocusNextTick('btn-collaborators-edit')
-    course.value.collaborators = data.collaborators
-    collaboratorsEditing.value = false
-    collaboratorsUpdating.value = false
-    addCollaboratorError.value = null
-  })
-}
-
-const updateCollaboratorsCancel = () => {
-  alertScreenReader('Collaborator edit cancelled.')
-  putFocusNextTick('btn-collaborators-edit')
-  collaboratorsEditing.value = false
-  collaboratorsUpdating.value = false
-  addCollaboratorError.value = null
-  collaborators.value = [...course.value.collaborators]
-}
-
-const updatePublishTypeClicked = () => {
-  publishTypeUpdating.value = true
-  updatePublishType(
-    publishCanvasSites.value.map(s => s.canvasSiteId),
-    publishType.value,
-    course.value.sectionId,
-    course.value.termId
-  ).then(data => {
-    const message = `Recording placement updated to ${data.publishTypeName}.`
-    alertScreenReader(message)
-    putFocusNextTick('btn-publish-type-edit')
-    course.value.canvasSiteIds = data.canvasSiteIds
-    course.value.canvasSites = data.canvasSites
-    course.value.publishType = data.publishType
-    course.value.publishTypeName = data.publishTypeName
-    publishTypeEditing.value = false
-    publishTypeUpdating.value = false
-  })
-}
-
-const updatePublishTypeCancel = () => {
-  alertScreenReader('Recording placement edit cancelled.')
-  putFocusNextTick('btn-publish-type-edit')
-  publishTypeEditing.value = false
-  publishType.value = course.value.publishType
-  publishCanvasSites.value = [...course.value.canvasSites]
-}
-
-const updateRecordingTypeClicked = () => {
-  recordingTypeUpdating.value = true
-  updateRecordingType(
-    recordingType.value,
-    course.value.sectionId,
-    course.value.termId
-  ).then(data => {
-    const message = `Recording type updated to ${displayLabels[recordingType.value]}.`
-    alertScreenReader(message)
-    putFocusNextTick('btn-recording-type-edit')
-    course.value.recordingType = data.recordingType
-    course.value.recordingTypeName = data.recordingTypeName
-    recordingTypeEditing.value = false
-    recordingTypeUpdating.value = false
-  })
-}
-
-const updateRecordingTypeCancel = () => {
-  alertScreenReader('Recording type edit cancelled.')
-  putFocusNextTick('btn-recording-type-edit')
-  recordingTypeEditing.value = false
-  recordingType.value = course.value.recordingType
+const setRecordingType = updatedCourse => {
+  course.value.recordingType = updatedCourse.recordingType
+  course.value.recordingTypeName = updatedCourse.recordingTypeName
 }
 </script>
-
-<style scoped>
-.collaborator {
-  height: fit-content !important;
-  min-height: var(--v-chip-height) !important;
-  width: fit-content;
-}
-.collaborator-lookup {
-  max-width: 45rem;
-}
-</style>

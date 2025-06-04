@@ -2,7 +2,7 @@
   <v-data-table
     id="kaltura-event-list"
     disable-sort
-    :header-props="{class: 'font-size-12 font-weight-bold text-medium-emphasis'}"
+    :header-props="{class: 'font-size-13 font-weight-bold text-medium-emphasis'}"
     :headers="[
       { title: '', value: 'data-table-expand', sortable: false, width: '24px' },
       {title: 'Id', value: 'id'},
@@ -68,10 +68,10 @@
             <v-table class="w-100">
               <thead>
                 <tr>
-                  <th class="font-size-12 font-weight-bold text-medium-emphasis">Id</th>
-                  <th class="font-size-12 font-weight-bold text-medium-emphasis">Start</th>
-                  <th class="font-size-12 font-weight-bold text-medium-emphasis">End</th>
-                  <th class="font-size-12 font-weight-bold text-medium-emphasis">Status</th>
+                  <th class="font-size-13 font-weight-bold text-medium-emphasis">Id</th>
+                  <th class="font-size-13 font-weight-bold text-medium-emphasis">Start</th>
+                  <th class="font-size-13 font-weight-bold text-medium-emphasis">End</th>
+                  <th class="font-size-13 font-weight-bold text-medium-emphasis">Status</th>
                 </tr>
               </thead>
               <tbody>
