@@ -164,7 +164,7 @@
                     </td>
                   </tr>
                   <tr v-for="(meeting, meetingIndex) in tail(course.displayMeetings)" :id="`${getTableId(index)}-${course.sectionId}-${meetingIndex}`" :key="`${course.sectionId}-${meetingIndex}`">
-                    <td :aria-hidden="true" colspan="3"></td>
+                    <td :aria-hidden="true" colspan="3" />
                     <td
                       :id="`${getTableId(index)}-${course.sectionId}-room-${meetingIndex + 1}`"
                       class="pt-0 text-no-wrap"
@@ -204,7 +204,7 @@
                         {{ meeting.startTimeFormatted }} - {{ meeting.endTimeFormatted }}
                       </div>
                     </td>
-                    <td v-if="index === 0" :aria-hidden="true"></td>
+                    <td v-if="index === 0" :aria-hidden="true" />
                   </tr>
                 </template>
               </template>

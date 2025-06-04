@@ -38,8 +38,7 @@
         hide-details
         placeholder="Enter note text"
         variant="outlined"
-      >
-      </v-textarea>
+      />
     </v-card-text>
     <v-card-actions v-if="isEditing" class="px-4 pb-4">
       <ProgressButton

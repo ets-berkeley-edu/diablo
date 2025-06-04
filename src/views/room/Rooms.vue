@@ -18,7 +18,7 @@
                 label="Search"
                 single-line
                 v-bind="attrs"
-              ></v-text-field>
+              />
             </template>
             Nothing. There ain't nothing in Room 237. But you ain't got no business going in there anyway. So stay out!
           </v-tooltip>
@@ -27,10 +27,10 @@
     </v-card-title>
     <v-data-table
       id="rooms-data-table"
+      v-model:page="pageCurrent"
       :headers="headers"
       :items="rooms"
       :items-per-page="itemsPerPage"
-      :page.sync="pageCurrent"
       :search="search"
       :sort-by="[sortBy]"
       @update:sort-by="onUpdateSortBy"
@@ -96,7 +96,7 @@
             id="rooms-pagination"
             v-model="pageCurrent"
             :length="pageCount"
-          ></v-pagination>
+          />
         </div>
       </template>
     </v-data-table>
@@ -104,10 +104,10 @@
 </template>
 
 <script setup>
-import {alertScreenReader} from '@/lib/utils'
 import {computed, onMounted, ref} from 'vue'
 import {get, size, startsWith} from 'lodash'
 import {mdiDomain, mdiMagnify} from '@mdi/js'
+import {alertScreenReader} from '@/lib/utils'
 import PageTitle from '@/components/util/PageTitle'
 import {getAllRooms} from '@/api/room'
 import {useContextStore} from '@/stores/context'

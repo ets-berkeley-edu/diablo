@@ -1,8 +1,8 @@
 // src/auth.ts
 import type {
   NavigationGuard,
-  RouteLocationNormalized,
   NavigationGuardNext,
+  RouteLocationNormalized,
 } from 'vue-router'
 import {useContextStore} from '@/stores/context'
 

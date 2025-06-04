@@ -166,7 +166,7 @@
         <v-container v-if="isCurrentTerm && !capability" class="pt-6">
           <v-row>
             <v-col class="d-flex justify-start pl-7">
-              <v-icon class="mr-2" color="error" :icon="mdiAlert"></v-icon>
+              <v-icon class="mr-2" color="error" :icon="mdiAlert" />
               <div id="course-not-eligible">
                 This course is not eligible for Course Capture because
                 <span v-if="location">{{ location }} is not capture-enabled.</span>
@@ -178,7 +178,7 @@
         <v-container v-if="isCurrentTerm && !!capability && !hasValidMeetingTimes" class="pt-6">
           <v-row>
             <v-col class="d-flex justify-start">
-              <v-icon class="mr-2" color="error" :icon="mdiAlert"></v-icon>
+              <v-icon class="mr-2" color="error" :icon="mdiAlert" />
               <div id="invalid-meeting-times">
                 This course is in a capture-enabled room but the meeting times are missing or invalid.
               </div>
@@ -188,7 +188,7 @@
         <v-container v-if="!isCurrentTerm" class="pt-6">
           <v-row>
             <v-col class="d-flex justify-start">
-              <v-icon class="mr-2" color="error" :icon="mdiAlert"></v-icon>
+              <v-icon class="mr-2" color="error" :icon="mdiAlert" />
               <div id="course-not-current">
                 This course is not currently eligible for Course Capture.
               </div>
@@ -216,8 +216,8 @@
 
 <script setup>
 import {get, isEmpty} from 'lodash'
-import {mdiBookMultipleOutline, mdiAlert} from '@mdi/js'
-import {ref, reactive, computed, onMounted} from 'vue'
+import {mdiAlert, mdiBookMultipleOutline} from '@mdi/js'
+import {computed, onMounted, reactive, ref} from 'vue'
 import {useRoute} from 'vue-router'
 import {getCourseCodes, getTermName} from '@/lib/utils'
 import Collaborators from '@/components/course/Collaborators'

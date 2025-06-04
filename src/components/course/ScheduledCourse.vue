@@ -16,7 +16,7 @@
           >
             Kaltura series {{ scheduled.kalturaScheduleId }}
             <span class="sr-only">(opens in new window)</span>
-            <v-icon class="pb-1" :icon="mdiOpenInNew" size="small"></v-icon>
+            <v-icon class="pb-1" :icon="mdiOpenInNew" size="small" />
           </a>
         </v-card-title>
         <v-card-text>

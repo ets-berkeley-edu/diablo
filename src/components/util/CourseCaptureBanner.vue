@@ -3,7 +3,7 @@
     <transition><div v-if="showPrefix">This is</div></transition>
     <b>
       <div class="banner-inner text-white">
-        Course Capture<br />
+        Course Capture<br>
         {{ contextStore.config.currentTermName }}
       </div>
     </b>

@@ -116,7 +116,7 @@
 </template>
 
 <script setup>
-import {ref, onMounted} from 'vue'
+import {onMounted, ref} from 'vue'
 import {useRoute} from 'vue-router'
 import {storeToRefs} from 'pinia'
 import {useTheme} from 'vuetify'
@@ -136,7 +136,7 @@ import Footer from '@/components/util/Footer'
 import Snackbar from '@/components/util/Snackbar'
 import Spinner from '@/components/util/Spinner'
 import {getCasLogoutUrl} from '@/api/auth'
-import {stripAnchorRef, getCourseCodes} from '@/lib/utils'
+import {getCourseCodes, stripAnchorRef} from '@/lib/utils'
 import {useContextStore} from '@/stores/context'
 
 const contextStore = useContextStore()

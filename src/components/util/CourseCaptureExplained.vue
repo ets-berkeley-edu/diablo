@@ -16,8 +16,8 @@
 </template>
 
 <script setup>
-import {useContextStore} from '@/stores/context'
 import {mdiOpenInNew} from '@mdi/js'
+import {useContextStore} from '@/stores/context'
 
 const context = useContextStore()
 </script>

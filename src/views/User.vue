@@ -125,18 +125,18 @@
 </template>
 
 <script setup>
-import {ref, onMounted} from 'vue'
+import {onMounted, ref} from 'vue'
 import {useRoute} from 'vue-router'
+import {storeToRefs} from 'pinia'
+import {filter} from 'lodash'
+import {mdiSchoolOutline} from '@mdi/js'
 import {alertScreenReader, getCourseCodes, partitionCoursesByEligibility} from '@/lib/utils'
-import {getUser, deleteUserNote, updateUserNote} from '@/api/user'
+import {deleteUserNote, getUser, updateUserNote} from '@/api/user'
 import {useContextStore} from '@/stores/context'
 import CoursesDataTable from '@/components/course/CoursesDataTable.vue'
 import PageTitle from '@/components/util/PageTitle.vue'
 import Spinner from '@/components/util/Spinner.vue'
 import ToggleOptOut from '@/components/course/ToggleOptOut.vue'
-import {storeToRefs} from 'pinia'
-import {filter} from 'lodash'
-import {mdiSchoolOutline} from '@mdi/js'
 
 const contextStore = useContextStore()
 const {config, currentUser, loading} = storeToRefs(contextStore)
@@ -153,7 +153,7 @@ const noteBody = ref('')
 const refreshingCourses = ref(false)
 
 function summarize(courses) {
-  let message = `${courses.length} course${courses.length === 1 ? '' : 's'}.`
+  const message = `${courses.length} course${courses.length === 1 ? '' : 's'}.`
   const scheduled = filter(courses, 'scheduled')
   if (scheduled && scheduled.length) {
     return `${message} ${scheduled.length} ${scheduled.length === 1 ? 'has' : 'have'} recordings scheduled.`

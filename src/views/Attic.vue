@@ -13,7 +13,7 @@
         hide-default-footer
         :items="coursesReport"
         :items-per-page="-1"
-      ></v-data-table>
+      />
     </div>
     <div class="ma-3 pt-3">
       <h2>Admin Users</h2>
@@ -26,7 +26,7 @@
         hide-default-footer
         :items="adminUsers"
         :items-per-page="-1"
-      ></v-data-table>
+      />
     </div>
     <Configs class="ma-3" />
   </v-card>

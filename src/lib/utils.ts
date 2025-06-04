@@ -13,8 +13,8 @@ import {
   trim
 } from 'lodash'
 import {nextTick} from 'vue'
-import {useContextStore} from '@/stores/context'
 import type ScrollLogicalPosition from 'typescript'
+import {useContextStore} from '@/stores/context'
 
 export function alertScreenReader(message: string) {
   const store = useContextStore()

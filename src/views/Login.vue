@@ -28,7 +28,7 @@
               </v-btn>
             </v-row>
             <v-row v-if="contextStore.config.devAuthEnabled">
-              <hr class="mx-6 my-8 w-100" role="presentation" />
+              <hr class="mx-6 my-8 w-100" role="presentation">
             </v-row>
             <v-row>
               <v-card class="opaque-card pa-4 w-100" color="transparent" flat>
@@ -44,7 +44,7 @@
                     placeholder="UID"
                     :rules="[v => !!v || 'Required']"
                     variant="outlined"
-                  ></v-text-field>
+                  />
                   <label class="sr-only" for="dev-auth-password">Password</label>
                   <v-text-field
                     id="dev-auth-password"
@@ -57,7 +57,7 @@
                     :rules="[v => !!v || 'Required']"
                     type="password"
                     variant="outlined"
-                  ></v-text-field>
+                  />
                   <v-btn
                     id="btn-dev-auth-login"
                     block
@@ -67,7 +67,7 @@
                     @click="devAuth"
                   >
                     Dev
-                    <v-icon class="mx-1" :icon="mdiEmoticonDevilOutline" size="large"></v-icon>
+                    <v-icon class="mx-1" :icon="mdiEmoticonDevilOutline" size="large" />
                     Auth
                   </v-btn>
                 </v-form>
@@ -106,8 +106,8 @@ onMounted(() => {
 })
 
 const devAuth = () => {
-  let uid = trim(devAuthUid.value)
-  let password = trim(devAuthPassword.value)
+  const uid = trim(devAuthUid.value)
+  const password = trim(devAuthPassword.value)
   if (uid && password) {
     devAuthLogIn(uid, password).then(
       data => {

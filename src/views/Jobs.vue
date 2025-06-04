@@ -83,7 +83,7 @@
                 class="pb-2 pt-2"
                 columnheader="job-schedule-description-th"
               >
-                <span v-html="job.description"></span>
+                <span v-html="job.description" />
               </td>
               <td
                 :id="`job-schedule-${job.key}-schedule`"
@@ -99,8 +99,7 @@
                     :icon="mdiPlaylistEdit"
                     variant="text"
                     @click.stop="scheduleEditOpen(job)"
-                  >
-                  </v-btn>
+                  />
                   <div>
                     <span v-if="job.schedule.type === 'day_at'" :for="`edit-job-schedule-${job.key}`">
                       Daily at {{ job.schedule.value }} (UTC)
@@ -156,8 +155,8 @@
                   :menu-props="{attach: menuContainer, eager: true, id: 'schedule-type-menu'}"
                   required
                   @update:model-value="editJob.schedule.value = ''"
-                ></v-select>
-                <div id="schedule-type-menu-container" ref="menuContainer"></div>
+                />
+                <div id="schedule-type-menu-container" ref="menuContainer" />
               </v-col>
               <v-col cols="12" sm="6">
                 <v-text-field
@@ -167,13 +166,13 @@
                   required
                   :suffix="editJob.schedule.type === 'day_at' ? 'UTC' : ''"
                   :type="editJob.schedule.type === 'day_at' ? 'time' : 'number'"
-                ></v-text-field>
+                />
               </v-col>
             </v-row>
           </v-container>
         </v-card-text>
         <v-card-actions>
-          <v-spacer></v-spacer>
+          <v-spacer />
           <ProgressButton
             id="edit-schedule-save-btn"
             :action="scheduleEditSave"

@@ -17,10 +17,9 @@
             label="Subject"
             maxlength="255"
             :rules="[s => !!s || 'Required']"
-          >
-          </v-text-field>
+          />
         </v-col>
-        <v-spacer></v-spacer>
+        <v-spacer />
       </v-row>
       <v-row class="mt-4">
         <v-col>

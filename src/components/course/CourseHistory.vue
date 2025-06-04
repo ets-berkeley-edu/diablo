@@ -6,11 +6,11 @@
     <v-card-text class="px-0">
       <v-data-table
         id="update-history-table"
+        v-model:page="pageCurrent"
         :headers="headers"
         density="comfortable"
         :items="history"
         :items-per-page="100"
-        :page.sync="pageCurrent"
         :sort-by="[sortBy]"
         @update:sort-by="onUpdateSortBy"
       >
@@ -92,7 +92,7 @@
               id="update-history-pagination"
               v-model="pageCurrent"
               :length="pageCount"
-            ></v-pagination>
+            />
           </div>
         </template>
       </v-data-table>

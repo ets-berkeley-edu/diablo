@@ -15,7 +15,7 @@
     >
       <v-col cols="auto">
         <h3 class="sr-only">Instructors</h3>
-        <v-icon :icon="mdiSchoolOutline"></v-icon>
+        <v-icon :icon="mdiSchoolOutline" />
       </v-col>
       <v-col>
         <OxfordJoin v-slot="{ item }" :items="instructors">
@@ -60,7 +60,7 @@
         :class="{'line-through': course.deletedAt}"
       >
         <v-col class="pb-0" cols="auto">
-          <v-icon :icon="mdiCalendar"></v-icon>
+          <v-icon :icon="mdiCalendar" />
         </v-col>
         <v-col class="pb-0">
           <Days :names-of-days="meeting.daysNames" />
@@ -95,7 +95,7 @@
         :class="{'line-through': course.deletedAt}"
       >
         <v-col cols="auto" class="py-1">
-          <v-icon :icon="mdiClockOutline"></v-icon>
+          <v-icon :icon="mdiClockOutline" />
         </v-col>
         <v-col class="py-1">
           <span aria-hidden="true">
@@ -112,7 +112,7 @@
         :class="{'line-through': course.deletedAt}"
       >
         <v-col class="py-1" cols="auto">
-          <v-icon :icon="mdiMapMarker"></v-icon>
+          <v-icon :icon="mdiMapMarker" />
         </v-col>
         <v-col v-if="currentUser.isAdmin" class="py-1">
           <router-link :to="`/room/${meeting.room.id}`">
@@ -126,7 +126,7 @@
     </div>
     <v-row v-if="course && course.crossListings.length" id="cross-listings" class="mt-3">
       <v-col class="py-1" cols="auto">
-        <v-icon :icon="mdiFormatLineSpacing"></v-icon>
+        <v-icon :icon="mdiFormatLineSpacing" />
       </v-col>
       <v-col class="py-1">
         <span>
@@ -143,7 +143,7 @@
     </v-row>
     <v-row v-if="currentUser.isAdmin && course.hasOptedOut" id="opted-out" class="mt-3">
       <v-col class="py-1" cols="auto">
-        <v-icon :icon="mdiMinusCircle"></v-icon>
+        <v-icon :icon="mdiMinusCircle" />
       </v-col>
       <v-col class="py-1">Opted out</v-col>
     </v-row>
@@ -151,22 +151,22 @@
 </template>
 
 <script setup>
-import {ref, onMounted} from 'vue'
+import {onMounted, ref} from 'vue'
 import {DateTime} from 'luxon'
 import {filter} from 'lodash'
+import {
+  mdiCalendar,
+  mdiClockOutline,
+  mdiFormatLineSpacing,
+  mdiMapMarker,
+  mdiMinusCircle,
+  mdiSchoolOutline
+} from '@mdi/js'
 import {getDisplayMeetings, pluralize} from '@/lib/utils'
 import {useContextStore} from '@/stores/context'
 import Date from '@/components/util/Date'
 import Days from '@/components/util/Days'
 import OxfordJoin from '@/components/util/OxfordJoin'
-import {
-  mdiFormatLineSpacing,
-  mdiMinusCircle,
-  mdiMapMarker,
-  mdiClockOutline,
-  mdiCalendar,
-  mdiSchoolOutline
-} from '@mdi/js'
 
 const props = defineProps({
   course: {

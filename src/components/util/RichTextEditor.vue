@@ -34,7 +34,7 @@
               :id="`${idPrefix}-link-url-input`"
               v-model="linkUrl"
               label="URL"
-            ></v-text-field>
+            />
           </v-card-text>
           <v-card-actions>
             <v-btn
@@ -89,7 +89,7 @@ import {
 import Placeholder from '@tiptap/extension-placeholder'
 import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
-import {useEditor, EditorContent} from '@tiptap/vue-3'
+import {EditorContent, useEditor} from '@tiptap/vue-3'
 import {putFocusNextTick} from '@/lib/utils'
 
 const props = defineProps({

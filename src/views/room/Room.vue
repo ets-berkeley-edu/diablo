@@ -103,7 +103,7 @@ const goTo = useGoTo()
 contextStore.loadingStart()
 
 onMounted(() => {
-  let roomId = get(route, 'params.id')
+  const roomId = get(route, 'params.id')
   getRoom(roomId).then(data => {
     room.value = data
     isAuditorium.value = data.isAuditorium

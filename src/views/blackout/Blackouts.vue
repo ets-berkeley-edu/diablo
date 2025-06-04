@@ -55,8 +55,7 @@
                 :aria-label="`Delete ${blackout.name} Blackout`"
                 :icon="mdiTrashCanOutline"
                 @click="onClickDelete(blackout)"
-              >
-              </v-btn>
+              />
             </td>
           </tr>
         </template>

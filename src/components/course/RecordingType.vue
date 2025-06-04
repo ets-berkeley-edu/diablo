@@ -45,7 +45,7 @@
             type="radio"
             :value="recordingTypeOption"
             @change="() => onRecordingTypeChange(recordingTypeOption, index)"
-          />
+          >
           <label class="font-size-16 text-medium-emphasis" :for="`radio-recording-type-${recordingTypeOption}`">
             {{ labels[recordingTypeOption] }}
           </label>

@@ -6,7 +6,7 @@
     size="64"
     width="8"
     color="light-blue"
-  ></v-progress-circular>
+  />
 </template>
 
 <script>

@@ -16,7 +16,7 @@
           The Queued Emails job is what actually sends email.
         </div>
         <v-row>
-          <v-spacer></v-spacer>
+          <v-spacer />
           <v-col
             cols="12"
             lg="6"
@@ -43,7 +43,7 @@
                 />
               </template>
             </v-select>
-            <div id="email-template-type-menu-container" ref="menuContainer"></div>
+            <div id="email-template-type-menu-container" ref="menuContainer" />
           </v-col>
         </v-row>
         <v-data-table

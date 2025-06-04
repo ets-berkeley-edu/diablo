@@ -21,7 +21,7 @@
               indeterminate
               size="18"
               width="3"
-            ></v-progress-circular>
+            />
             {{ isDownloading ? 'Downloading' : 'Download CSV' }}
           </v-btn>
         </v-col>
@@ -38,7 +38,7 @@
             hide-details
             label="Search"
             single-line
-          ></v-text-field>
+          />
           <v-select
             id="ouija-filter-options"
             v-model="selectedFilter"
@@ -59,7 +59,7 @@
               </v-list-item>
             </template>
           </v-select>
-          <div id="ouija-filter-options-menu-container" ref="menuContainer"></div>
+          <div id="ouija-filter-options-menu-container" ref="menuContainer" />
         </v-col>
       </v-row>
     </v-card-title>
@@ -138,7 +138,7 @@ const onClickDownload = () => {
 
 const onToggleOptOut = course => {
   if (!course.hasOptedOut && selectedFilter.value === 'Do Not Email') {
-    let indexOf = courses.value.findIndex(c => c.sectionId === course.sectionId)
+    const indexOf = courses.value.findIndex(c => c.sectionId === course.sectionId)
     if (indexOf >= 0) {
       courses.value.splice(indexOf, 1)
     }
