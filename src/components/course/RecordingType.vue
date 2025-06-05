@@ -7,7 +7,8 @@
   >
     <v-col cols="12" class="pa-4 my-2" :class="{'bg-surface-light rounded': isEditing}">
       <h3 id="recording-type-header">
-        <label id="select-recording-type-label" for="select-recording-type">Recording Type</label>
+        <label v-if="isEditing && recordingTypeEditable" for="select-recording-type">Recording Type</label>
+        <span v-if="!(isEditing && recordingTypeEditable)">Recording Type</span>
       </h3>
       <div v-if="!isEditing">
         <div id="recording-type-name" class="pl-4 pt-2">
@@ -27,7 +28,6 @@
         v-if="isEditing && recordingTypeEditable"
         id="select-recording-type"
         :aria-activedescendant="`radio-recording-type-${recordingType}`"
-        aria-labelledby="select-recording-type-label"
         class="py-4"
         role="radiogroup"
         tabindex="0"

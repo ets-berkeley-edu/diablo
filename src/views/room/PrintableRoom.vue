@@ -116,7 +116,8 @@
 
     <v-footer padless>
       <v-col class="text-center" cols="12">
-        <v-icon small color="grey" :icon="mdiCopyright" />
+        <v-icon size="small" :icon="mdiCopyright" />
+        <span class="sr-only">copyright</span>
         {{ DateTime.now().year }} The Regents of the University of California
       </v-col>
     </v-footer>

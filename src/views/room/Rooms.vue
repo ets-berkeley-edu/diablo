@@ -6,21 +6,22 @@
           <PageTitle :icon="mdiDomain" :text="`${size(rooms)} Rooms`" />
         </v-col>
         <v-col class="pr-4" cols="12" md="6">
-          <v-tooltip v-model="adviseAgainstRoom237" color="pink" location="bottom">
-            <template #activator="{attrs}">
+          <v-tooltip v-model="adviseAgainstRoom237" class="tooltip" location="bottom">
+            <template #activator="{props: tooltipProps}">
               <v-text-field
                 id="rooms-search-input"
                 v-model="search"
                 :append-icon="mdiMagnify"
+                :aria-describedby="undefined"
                 aria-label="Search rooms table"
                 clearable
                 hide-details
                 label="Search"
                 single-line
-                v-bind="attrs"
+                v-bind="tooltipProps"
               />
             </template>
-            Nothing. There ain't nothing in Room 237. But you ain't got no business going in there anyway. So stay out!
+            <span class="font-size-16">Nothing. There ain't nothing in Room 237. But you ain't got no business going in there anyway. So stay out!</span>
           </v-tooltip>
         </v-col>
       </v-row>
@@ -52,7 +53,6 @@
               :aria-label="`Sort by ${column.title} ${isSorted(column) && sortBy.order === 'asc' ? 'descending' : 'ascending'}`"
               class="font-size-13 font-weight-bold height-unset min-width-unset pa-1 text-transform-unset v-table-sort-btn-override"
               :class="{'icon-visible': isSorted(column)}"
-              color="body"
               density="compact"
               variant="plain"
               @click="() => toggleSort(column)"
@@ -152,3 +152,9 @@ const onUpdateSortBy = primarySortBy => {
   }
 }
 </script>
+
+<style>
+.v-tooltip > .v-overlay__content {
+  background-color: rgb(var(--v-theme-accent)) !important;
+}
+</style>

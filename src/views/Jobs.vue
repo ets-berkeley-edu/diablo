@@ -56,14 +56,14 @@
                   >
                     <v-icon
                       v-if="!isRunning(job.key)"
-                      color="light-green"
+                      color="success"
                       :icon="mdiPlay"
                       size="36"
                     />
                     <v-progress-circular
                       v-if="isRunning(job.key)"
                       :aria-label="`${job.name} job is running`"
-                      color="light-green"
+                      color="success"
                       indeterminate
                       size="56"
                       width="8"
@@ -73,7 +73,7 @@
               </td>
               <td
                 :id="`job-schedule-${job.key}-name`"
-                class="job-name text-no-wrap"
+                class="bg-tertiary text-no-wrap"
                 columnheader="job-schedule-name-th"
               >
                 <span class="font-weight-bold font-size-16">{{ job.name }}</span>
@@ -110,7 +110,7 @@
                   </div>
                 </div>
                 <div v-if="!job.isSchedulable" class="d-flex justify-start">
-                  <v-icon class="mx-4" color="red" :icon="mdiAlert" />
+                  <v-icon class="mx-4" color="error" :icon="mdiAlert" />
                   This job is not schedulable.
                 </div>
               </td>
@@ -313,10 +313,6 @@ const toggleJobDisabled = (job, isDisabled) => {
 </script>
 
 <style scoped>
-.job-name {
-  background-color: rgba(var(--v-theme-tertiary), 0.7);
-  color: white;
-}
 .progress-spinner-height {
   max-height: 64px;
   max-width: 64px;

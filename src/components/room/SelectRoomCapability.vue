@@ -1,5 +1,6 @@
 <template>
-  <div>
+  <div class="d-flex align-end">
+    <label for="select-room-capability" class="capability-label text-subtitle-1 mr-4">Capability:</label>
     <v-select
       id="select-room-capability"
       v-model="capability"

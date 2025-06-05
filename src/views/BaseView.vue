@@ -10,7 +10,7 @@
       role="navigation"
       class="sidebar-nav"
     >
-      <v-list>
+      <v-list role="none" tabindex="-1">
         <template v-for="(item, i) in navItems" :key="i">
           <v-list-item
             :id="`sidebar-link-${kebabCase(item.title)}`"
@@ -18,10 +18,11 @@
             component="router-link"
             :to="item.path"
             :aria-current="route.path === item.path"
+            tabindex="0"
             tag="a"
           >
             <template #prepend>
-              <v-icon :icon="item.icon" color="white" />
+              <v-icon color="icon-nav" :icon="item.icon" />
             </template>
             <v-list-item-title>
               <span class="text-subtitle-1 text-white">{{ item.title }}</span>
@@ -30,36 +31,27 @@
           <v-divider
             v-if="item.title === 'Rooms'"
             class="border-opacity-80 ml-1 mr-1"
-            color="white"
+            color="icon-nav"
             :thickness="1"
           />
         </template>
       </v-list>
     </v-navigation-drawer>
-
     <v-app-bar
       v-if="!route.meta.printable"
-      v-wave="waveOptions"
-      color="header-background"
+      v-wave="assign(waveOptions, theme.global.current.value.dark ? waveOptionsDark : waveOptionsLight)"
+      color="banner"
     >
-      <div
-        class="display-1 not-selectable banner-overlay"
-        :class="{ 'mood-ring': theme.global.current.value.dark }"
+      <CourseCaptureBanner />
+      <a
+        id="skip-to-content-link"
+        href="#content"
+        class="sr-only sr-only-focusable"
       >
-        <CourseCaptureBanner />
-        <a
-          id="skip-to-content-link"
-          href="#content"
-          class="sr-only sr-only-focusable"
-          tabindex="0"
-        >
-          Skip to main content
-        </a>
-      </div>
-
+        Skip to main content
+      </a>
       <v-spacer />
-
-      <v-menu offset-y>
+      <v-menu eager>
         <template #activator="{ props }">
           <v-btn
             id="btn-main-menu"
@@ -75,14 +67,11 @@
           <v-list-item
             v-if="currentUser.isAdmin"
             id="menu-item-attic"
-            class="text-on-surface"
-            color="on-surface"
             component="router-link"
             to="/attic"
           >
-            <v-list-item-title class="text-on-surface">The Attic</v-list-item-title>
+            <v-list-item-title>The Attic</v-list-item-title>
           </v-list-item>
-
           <v-list-item
             id="menu-item-feedback-and-help"
             href="mailto:{{ config.emailCourseCaptureSupport }}"
@@ -92,13 +81,11 @@
               Feedback/Help
             </v-list-item-title>
           </v-list-item>
-
-          <v-list-item id="menu-item-dark-mode" @click="toggleTheme">
+          <v-list-item id="menu-item-dark-mode" role="button" @click="toggleTheme">
             <v-list-item-title>
               {{ theme.global.current.value.dark ? 'Light' : 'Dark' }} mode
             </v-list-item-title>
           </v-list-item>
-
           <v-list-item id="menu-item-log-out" @click="logOut">
             <v-list-item-title>Log Out</v-list-item-title>
           </v-list-item>
@@ -110,17 +97,16 @@
       <Spinner v-if="loading" />
       <router-view :key="stripAnchorRef(route.fullPath)" />
     </v-main>
-
     <Footer />
   </v-app>
 </template>
 
 <script setup>
+import {assign, kebabCase} from 'lodash'
 import {onMounted, ref} from 'vue'
 import {useRoute} from 'vue-router'
 import {storeToRefs} from 'pinia'
 import {useTheme} from 'vuetify'
-import {kebabCase} from 'lodash'
 import {
   mdiAutoFix,
   mdiDomain,
@@ -141,32 +127,35 @@ import {useContextStore} from '@/stores/context'
 
 const contextStore = useContextStore()
 const {config, currentUser, loading} = storeToRefs(contextStore)
-
 const drawer = ref(true)
 const navItems = ref([])
 const route = useRoute()
 const theme = useTheme()
-
-const waveOptions = {
+const waveOptions = ref({
   cancellationPeriod: 75,
-  color:
-    [
-      '#1abc9c',
-      '#2980b9',
-      '#2980b9',
-      '#378dc5',
-      '#378dc5',
-      '#378dc5',
-      '#d35400',
-      '#f1c40f',
-    ][Math.floor(Math.random() * 8)],
   dissolveDuration: 0.4,
-  duration: 1.8,
   easing: 'ease-out',
-  finalOpacity: 0.1,
-  initialOpacity: 0.2,
   tagName: 'div',
   trigger: 'auto',
+})
+const waveOptionsDark = {
+  color: 'no-repeat url(../src/assets/bats.png) left center / 50%',
+  duration: 4,
+  initialOpacity: 1
+}
+const waveOptionsLight = {
+  color: [
+    '#1abc9c',
+    '#2980b9',
+    '#2980b9',
+    '#378dc5',
+    '#378dc5',
+    '#378dc5',
+    '#d35400',
+    '#f1c40f'
+  ][Math.floor(Math.random() * 8)],
+  duration: 1.8,
+  initialOpacity: 0.2
 }
 
 onMounted(() => {
@@ -198,6 +187,7 @@ onMounted(() => {
     })
   }
 })
+
 
 const logOut = () => {
   contextStore.alertScreenReader('Logging out')
@@ -237,82 +227,5 @@ const toggleTheme = () => {
 }
 .sidebar-with-banner .v-navigation-drawer__content {
   padding-top: 64px; /* or however tall your banner is */
-}
-.mood-ring {
-  -webkit-animation: colorchange 300s infinite alternate;
-  animation: colorchange 300s infinite alternate;
-}
-.nav-list-item {
-  color: var(--v-icon-nav-default) !important;
-}
-@-webkit-keyframes colorchange {
-  0% {
-    color: white;
-  }
-  10% {
-    color: #378dc5;
-  }
-  20% {
-    color: #1abc9c;
-  }
-  30% {
-    color: #d35400;
-  }
-  40% {
-    color: #378dc5;
-  }
-  50% {
-    color: white;
-  }
-  60% {
-    color: #378dc5;
-  }
-  70% {
-    color: #2980b9;
-  }
-  80% {
-    color: #f1c40f;
-  }
-  90% {
-    color: #2980b9;
-  }
-  100% {
-    color: pink;
-  }
-}
-@keyframes colorchange {
-  0% {
-    color: white;
-  }
-  10% {
-    color: #378dc5;
-  }
-  20% {
-    color: #1abc9c;
-  }
-  30% {
-    color: #d35400;
-  }
-  40% {
-    color: #378dc5;
-  }
-  50% {
-    color: white;
-  }
-  60% {
-    color: #378dc5;
-  }
-  70% {
-    color: #2980b9;
-  }
-  80% {
-    color: #f1c40f;
-  }
-  90% {
-    color: #2980b9;
-  }
-  100% {
-    color: pink;
-  }
 }
 </style>
