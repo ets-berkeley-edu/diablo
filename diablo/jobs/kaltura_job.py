@@ -81,6 +81,8 @@ def _schedule_new_courses(term_id, newly_scheduled_instructors):
     for course in unscheduled_courses:
         if course['hasOptedOut']:
             continue
+        if not len(course['instructors']):
+            continue
         schedule_recordings(course, remove_blackout_conflicts=True)
         for instructor in list(filter(lambda i: i['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES, course['instructors'])):
             newly_scheduled_instructors.add(instructor['uid'])
@@ -270,6 +272,12 @@ def _handle_instructor_updates(
     updated_collaborator_uids, updated_instructor_uids,
 ):
     instructors = [i for i in course['instructors'] if i['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES and not i['deletedAt']]
+
+    # Courses with no remaining instructors should be simply unscheduled.
+    if not len(instructors):
+        _handle_meeting_removed(kaltura, course, scheduled, schedule_updates)
+        return
+
     instructor_uids = [i['uid'] for i in instructors]
     if updated_collaborator_uids is None:
         collaborator_uids = scheduled['collaboratorUids']

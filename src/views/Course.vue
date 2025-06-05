@@ -43,8 +43,14 @@
           <span v-if="course.hasOptedOut && course.scheduled" id="notice-opt-out-pending" class="text-error">
             {{ currentUser.isAdmin ? 'The' : 'Your' }} course is scheduled for Course Capture, but will be unscheduled shortly because one or more instructors have opted out. To keep recordings scheduled, please have all instructors remove their opt-out status.
           </span>
-          <span v-if="!course.hasOptedOut" id="notice-eligible-not-scheduled" class="text-success">
+          <span v-if="!course.instructors.length && course.scheduled" id="notice-opt-out-pending" class="text-error">
+            {{ currentUser.isAdmin ? 'The' : 'Your' }} course is scheduled for Course Capture, but will be unscheduled shortly because it has no active instructors.
+          </span>
+          <span v-if="!course.hasOptedOut && course.instructors.length" id="notice-eligible-not-scheduled" class="text-success">
             This course is eligible for scheduling, but has not yet been scheduled. Instructors will be notified when scheduling has taken place.
+          </span>
+          <span v-if="!course.hasOptedOut && !course.instructors.length" id="notice-eligible-not-scheduled" class="text-success">
+            This course is eligible for scheduling, but has not been scheduled because it has no instructors.
           </span>
         </v-col>
       </div>
