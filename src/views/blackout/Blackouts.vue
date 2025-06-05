@@ -40,20 +40,21 @@
             </td>
           </tr>
           <tr v-for="blackout in items" :key="blackout.id">
-            <td :id="`blackout-${blackout.id}-name`" class="w-50" columnheader="blackouts-name-th">
+            <td :id="`blackout-${blackout.id}-name`" class="font-size-16 w-50" columnheader="blackouts-name-th">
               {{ blackout.name }}
             </td>
-            <td :id="`blackout-${blackout.id}-start-date`" class="text-no-wrap" columnheader="blackouts-startDate-th">
+            <td :id="`blackout-${blackout.id}-start-date`" class="font-size-16 text-no-wrap" columnheader="blackouts-startDate-th">
               {{ blackout.startDate }}
             </td>
-            <td :id="`blackout-${blackout.id}-end-date`" class="text-no-wrap" columnheader="blackouts-endDate-th">
+            <td :id="`blackout-${blackout.id}-end-date`" class="font-size-16 text-no-wrap" columnheader="blackouts-endDate-th">
               {{ blackout.endDate }}
             </td>
-            <td :id="`blackout-${blackout.id}-delete`" class="text-center" columnheader="blackouts-delete-th">
+            <td :id="`blackout-${blackout.id}-delete`" class="font-size-16 text-center" columnheader="blackouts-delete-th">
               <v-btn
                 :id="`delete-blackout-${blackout.id}`"
                 :aria-label="`Delete ${blackout.name} Blackout`"
                 :icon="mdiTrashCanOutline"
+                variant="text"
                 @click="onClickDelete(blackout)"
               />
             </td>

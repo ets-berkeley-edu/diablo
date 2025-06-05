@@ -5,7 +5,7 @@
     rotate="5"
     size="64"
     width="8"
-    color="light-blue"
+    color="primary"
   />
 </template>
 

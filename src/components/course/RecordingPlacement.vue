@@ -7,7 +7,8 @@
   >
     <v-col cols="12" class="pa-4 my-2" :class="{'bg-surface-light rounded': isEditing}">
       <h3 id="publish-type-header">
-        <label id="select-publish-type-label" for="select-publish-type">Recording Placement</label>
+        <label v-if="isEditing" for="select-publish-type">Recording Placement</label>
+        <span v-if="!isEditing">Recording Placement</span>
       </h3>
       <div v-if="!isEditing" id="publish-type-name" class="pl-4 pt-2">
         {{ labels[course.publishType] }}
@@ -16,7 +17,6 @@
         v-if="isEditing"
         id="select-publish-type"
         :aria-activedescendant="`radio-publish-type-${publishType}`"
-        aria-labelledby="select-publish-type-label"
         class="py-4"
         role="radiogroup"
         tabindex="0"

@@ -3,7 +3,6 @@
     Problem? Question? Email us at
     <a
       id="diablo-support-mailto"
-      aria-label="Open new window to send email"
       :class="hrefMailtoClass"
       :href="`mailto:${config.emailCourseCaptureSupport}`"
       target="_blank"

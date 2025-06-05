@@ -7,7 +7,7 @@
     <v-container fluid class="pa-0 pa-md-1">
       <v-row no-gutters>
         <v-col cols="12" sm="6">
-          <ContactUsPrompt href-mailto-class="text-white" />
+          <ContactUsPrompt href-mailto-class="on-secondary" />
         </v-col>
         <v-col class="d-flex justify-end" cols="12" sm="6">
           <span v-if="config.isVueAppDebugMode && screenReaderAlert">

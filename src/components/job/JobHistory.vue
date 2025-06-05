@@ -64,7 +64,7 @@
           <td :id="`job-history-${item.id}-failed`" columnheader="job-history-failed-th">
             <v-icon
               v-if="item.finishedAt"
-              :color="item.failed ? 'red' : 'light-green'"
+              :color="item.failed ? 'error' : 'success'"
               :icon="item.failed ? mdiExclamationThick : mdiCheckBold"
               :title="`${item.jobKey} job ${item.failed ? 'failed' : 'finished'}`"
             />
@@ -76,7 +76,7 @@
               rotate="5"
               size="24"
               width="4"
-              color="orange"
+              color="warning"
             />
           </td>
           <td :id="`job-history-${item.id}-startedAt`" columnheader="job-history-startedAt-th">

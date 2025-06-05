@@ -37,7 +37,6 @@
                 :aria-label="`Sort by ${column.title} ${isSorted(column) && sortBy.order === 'asc' ? 'descending' : 'ascending'}`"
                 class="font-size-13 font-weight-bold height-unset min-width-unset pa-1 text-transform-unset v-table-sort-btn-override"
                 :class="{'icon-visible': isSorted(column)}"
-                color="body"
                 density="compact"
                 :disabled="refreshing"
                 variant="plain"
@@ -134,13 +133,9 @@
                 </div>
               </td>
               <td :id="`course-${course.sectionId}-status`" :class="tdc(course)" columnheader="courses-table-status-th">
-                <div v-if="course.deletedAt">
-                  <v-icon
-                    color="red"
-                    class="font-weight-bold pb-1 pl-0"
-                    :icon="mdiClose"
-                  />
-                  <span class="font-weight-bold red--text">Canceled</span>
+                <div v-if="course.deletedAt" class="canceled-indicator d-flex">
+                  <v-icon color="error" :icon="mdiClose" />
+                  <span class="font-weight-bold text-error">Canceled</span>
                 </div>
                 <div v-if="!course.deletedAt && course.scheduled">
                   Scheduled
@@ -361,3 +356,9 @@ const tdcLower = course => {
   }
 }
 </script>
+
+<style scoped>
+.canceled-indicator {
+  margin-left: -18px;
+}
+</style>

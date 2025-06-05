@@ -1,5 +1,5 @@
 <template>
-  <v-app>
+  <v-app theme="light">
     <Snackbar include-contact-us-prompt />
     <v-main>
       <v-container class="background-splash" fill-height fluid>
@@ -8,7 +8,7 @@
           elevation="24"
           width="450"
         >
-          <v-banner class="text-accent px-8" bg-color="secondary">
+          <v-banner class="px-8" bg-color="secondary">
             <div class="header-bar text-center w-100">
               <h1 id="page-title" class="text-no-wrap">Welcome to {{ contextStore.config.currentTermName }} Course Capture</h1>
             </div>
@@ -19,7 +19,7 @@
                 id="log-in"
                 aria-label="Log in to Course Capture. (You will be sent to CalNet login page.)"
                 block
-                color="red"
+                color="accent"
                 size="x-large"
                 @click="logIn"
               >
@@ -61,7 +61,7 @@
                   <v-btn
                     id="btn-dev-auth-login"
                     block
-                    color="red"
+                    color="accent"
                     :disabled="!devAuthUid || !devAuthPassword"
                     size="large"
                     @click="devAuth"

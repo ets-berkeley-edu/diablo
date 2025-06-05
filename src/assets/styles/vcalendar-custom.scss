@@ -12,6 +12,9 @@
     --vc-accent-800: #2c5282;
     --vc-accent-900: #2a4365;
   }
+  .vc-day-content.vc-disabled {
+    color: #627893;
+}
   .vc-highlight-content-light {
     color: var(--vc-highlight-light-content-color) !important;
   }

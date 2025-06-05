@@ -33,7 +33,6 @@
                   :aria-label="`Sort by ${column.title} ${isSorted(column) && sortBy.order === 'asc' ? 'descending' : 'ascending'}`"
                   class="font-size-13 font-weight-bold height-unset min-width-unset pa-1 text-transform-unset v-table-sort-btn-override"
                   :class="{'icon-visible': sortBy[0] === column.value}"
-                  color="body"
                   density="compact"
                   variant="plain"
                   @click="() => toggleSort(column)"

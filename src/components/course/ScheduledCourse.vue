@@ -1,7 +1,10 @@
 <template>
-  <v-row aria-labelledby="" role="region">
+  <v-row aria-labelledby="recordings-scheduled-header" role="region">
     <v-col class="pa-4 my-2">
-      <h3>Recordings scheduled</h3>
+      <h3 id="recordings-scheduled-header">Recordings scheduled</h3>
+      <div v-if="isEmpty(course.scheduled)" id="recordings-scheduled-none" class="pl-4 pt-2 text-medium-emphasis">
+        No scheduled recordings
+      </div>
       <v-card
         v-for="scheduled in course.scheduled"
         :key="scheduled.kalturaScheduleId"
@@ -52,6 +55,7 @@
 </template>
 
 <script setup>
+import {isEmpty} from 'lodash'
 import {mdiOpenInNew} from '@mdi/js'
 import Date from '@/components/util/Date'
 import {useContextStore} from '@/stores/context'

@@ -1,10 +1,10 @@
 <template>
-  <div class="banner ml-4">
-    <transition><div v-if="showPrefix">This is</div></transition>
+  <div class="banner not-selectable ml-4" :class="{'mood-ring': theme.global.current.value.dark}">
+    <transition><div v-if="showPrefix" class="d-none d-sm-block text-medium-emphasis">This is</div></transition>
     <b>
-      <div class="banner-inner text-white">
-        Course Capture<br>
-        {{ contextStore.config.currentTermName }}
+      <div class="banner-inner">
+        <div class="w-100">Course Capture</div>
+        <div class="w-100">{{ contextStore.config.currentTermName }}</div>
       </div>
     </b>
   </div>
@@ -12,10 +12,12 @@
 
 <script setup>
 import {onMounted, ref} from 'vue'
+import {useTheme} from 'vuetify'
 import {useContextStore} from '@/stores/context'
 
 const contextStore = useContextStore()
 const showPrefix = ref(true)
+const theme = useTheme()
 
 onMounted(() => {
   setTimeout(() => {
@@ -25,10 +27,8 @@ onMounted(() => {
 </script>
 
 <style scoped>
-
 .banner {
   font: normal 40px/50px Montserrat, sans-serif;
-  color: #999;
 }
 .banner div {
   height: 50px;
@@ -48,7 +48,6 @@ onMounted(() => {
   white-space: nowrap;
   top: 0;
   left: 0;
-
   /*animation*/
   -webkit-animation:move 2s;
      -moz-animation:move 2s;
@@ -68,6 +67,10 @@ onMounted(() => {
        -o-animation-delay: 1s;
           animation-delay: 1s;
 }
+.mood-ring {
+  -webkit-animation: moods 300s infinite alternate;
+  animation: moods 300s infinite alternate;
+}
 .v-enter-active,
 .v-leave-active {
   transition: opacity 1.0s ease;
@@ -75,6 +78,41 @@ onMounted(() => {
 .v-enter-from,
 .v-leave-to {
   opacity: 0;
+}
+@keyframes moods {
+  0% {
+    color: white;
+  }
+  10% {
+    color: #378dc5;
+  }
+  20% {
+    color: #1abc9c;
+  }
+  30% {
+    color: #d35400;
+  }
+  40% {
+    color: #378dc5;
+  }
+  50% {
+    color: white;
+  }
+  60% {
+    color: #378dc5;
+  }
+  70% {
+    color: #2980b9;
+  }
+  80% {
+    color: #f1c40f;
+  }
+  90% {
+    color: #2980b9;
+  }
+  100% {
+    color: pink;
+  }
 }
 @keyframes move {
   0%  { top: 0px; }

@@ -22,14 +22,11 @@
           </v-row>
           <v-row>
             <v-col cols="12" sm="7">
-              <div class="d-flex align-end">
-                <label :for="`select-room-capability-${room.id}`" class="capability-label text-subtitle-1 mr-4">Capability:</label>
-                <SelectRoomCapability
-                  :on-update="onUpdateRoomCapability"
-                  :options="contextStore.config.roomCapabilityOptions"
-                  :room="room"
-                />
-              </div>
+              <SelectRoomCapability
+                :on-update="onUpdateRoomCapability"
+                :options="contextStore.config.roomCapabilityOptions"
+                :room="room"
+              />
             </v-col>
             <v-col class="d-flex justify-end pr-4" cols="12" sm="5">
               <v-switch
@@ -50,7 +47,7 @@
                 target="_blank"
                 :to="`/room/printable/${room.id}`"
               >
-                <v-icon class="linked-icon" :icon="mdiPrinter" /> Print schedule<span class="sr-only"> (opens a new browser tab)</span>
+                <v-icon color="anchor" :icon="mdiPrinter" /> Print schedule<span class="sr-only"> (opens a new browser tab)</span>
               </router-link>
             </v-col>
           </v-row>

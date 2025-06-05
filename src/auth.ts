@@ -1,4 +1,3 @@
-// src/auth.ts
 import type {
   NavigationGuard,
   NavigationGuardNext,
