@@ -41,6 +41,14 @@ from sqlalchemy import text
 AUTHORIZED_INSTRUCTOR_ROLE_CODES = ['ICNT', 'PI', 'TNIC']
 ALL_INSTRUCTOR_ROLE_CODES = ['APRX'] + AUTHORIZED_INSTRUCTOR_ROLE_CODES
 
+INSTRUCTOR_NAME_SUB_QUERY = """
+    CASE
+      WHEN i.last_name IS NULL OR i.last_name = '' THEN s.instructor_name
+      ELSE i.first_name || ' ' || i.last_name
+    END
+    AS instructor_name,
+"""
+
 
 class SisSection(db.Model):
     __tablename__ = 'sis_sections'
@@ -170,7 +178,7 @@ class SisSection(db.Model):
                 s.*,
                 i.dept_code AS instructor_dept_code,
                 i.email AS instructor_email,
-                i.first_name || ' ' || i.last_name AS instructor_name,
+                {INSTRUCTOR_NAME_SUB_QUERY}
                 i.uid AS instructor_uid,
                 r.id AS room_id,
                 r.location AS room_location
@@ -249,7 +257,7 @@ class SisSection(db.Model):
                 s.*,
                 i.dept_code AS instructor_dept_code,
                 i.email AS instructor_email,
-                i.first_name || ' ' || i.last_name AS instructor_name,
+                {INSTRUCTOR_NAME_SUB_QUERY}
                 i.uid AS instructor_uid,
                 {'sch.kaltura_schedule_id,' if exclude_scheduled else ''}
                 r.id AS room_id,
@@ -282,7 +290,7 @@ class SisSection(db.Model):
                 s.*,
                 i.dept_code AS instructor_dept_code,
                 i.email AS instructor_email,
-                i.first_name || ' ' || i.last_name AS instructor_name,
+                {INSTRUCTOR_NAME_SUB_QUERY}
                 i.uid AS instructor_uid,
                 r.id AS room_id,
                 r.location AS room_location
@@ -352,12 +360,12 @@ class SisSection(db.Model):
 
     @classmethod
     def get_courses_per_location(cls, term_id, location):
-        sql = """
+        sql = f"""
             SELECT
                 s.*,
                 i.dept_code AS instructor_dept_code,
                 i.email AS instructor_email,
-                i.first_name || ' ' || i.last_name AS instructor_name,
+                {INSTRUCTOR_NAME_SUB_QUERY}
                 i.uid AS instructor_uid,
                 r.id AS room_id,
                 r.location AS room_location
@@ -727,12 +735,12 @@ def _get_cross_listed_courses(section_ids, term_id):
     cross_listings_by_section_id = CrossListing.get_cross_listings_for_section_ids(section_ids=section_ids, term_id=term_id)
     all_cross_listing_ids = list(set(section_id for k, v in cross_listings_by_section_id.items() for section_id in v))
 
-    sql = """
+    sql = f"""
         SELECT
             s.*,
             i.dept_code AS instructor_dept_code,
             i.email AS instructor_email,
-            i.first_name || ' ' || i.last_name AS instructor_name,
+            {INSTRUCTOR_NAME_SUB_QUERY}
             i.uid AS instructor_uid
         FROM sis_sections s
         LEFT JOIN instructors i ON i.uid = s.instructor_uid
