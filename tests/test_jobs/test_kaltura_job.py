@@ -50,6 +50,7 @@ class TestKalturaJob:
         """New courses are scheduled for recording by default."""
         with test_scheduling_workflow(app):
             section_id = 50012
+            no_instructor_section_id = 50017
             term_id = app.config['CURRENT_TERM_ID']
             course = SisSection.get_course(section_id=section_id, term_id=term_id)
             instructors = course['instructors']
@@ -70,6 +71,9 @@ class TestKalturaJob:
             std_commit(allow_test_environment=True)
             assert Scheduled.get_scheduled(section_id=section_id, term_id=term_id)
             std_commit(allow_test_environment=True)
+
+            # Verify no-instructor course is not scheduled.
+            assert Scheduled.get_scheduled(section_id=no_instructor_section_id, term_id=term_id) is None
 
             # Verify emails sent
             EmailsJob(simply_yield).run()
@@ -316,6 +320,49 @@ class TestKalturaJob:
             assert course['updateHistory'][0]['fieldName'] == 'instructor_uids'
             assert course['updateHistory'][0]['fieldValueOld'] == ['10006', '10007', '10010']
             assert course['updateHistory'][0]['fieldValueNew'] == ['10006', '10007']
+            assert course['updateHistory'][0]['requestedByName'] is None
+            assert course['updateHistory'][0]['requestedByUid'] is None
+            assert course['updateHistory'][0]['status'] == 'succeeded'
+
+    def test_last_instructor_removed(self, client, fake_auth):
+        """Emails instructor when removed from scheduled course, unschedules if no instructor remaining."""
+        with test_scheduling_workflow(app):
+            term_id = app.config['CURRENT_TERM_ID']
+            section_id = 50017
+            room_id = Room.find_room('Barker 101').id
+            # Schedule an instructor in Kaltura but not SIS.
+            instructor_uid = '10010'
+            meeting = get_eligible_meeting(section_id=section_id, term_id=term_id)
+            Scheduled.create(
+                course_display_name=f'term_id:{term_id} section_id:{section_id}',
+                instructor_uids=[instructor_uid],
+                collaborator_uids=[],
+                kaltura_schedule_id=random.randint(1, 10),
+                meeting_days=meeting['days'],
+                meeting_end_date=get_recording_end_date(meeting),
+                meeting_end_time=meeting['endTime'],
+                meeting_start_date=get_recording_start_date(meeting, return_today_if_past_start=True),
+                meeting_start_time=meeting['startTime'],
+                publish_type_='kaltura_media_gallery',
+                recording_type_='presenter_presentation_audio',
+                room_id=room_id,
+                section_id=section_id,
+                term_id=term_id,
+            )
+
+            ScheduleUpdatesJob(simply_yield).run()
+            KalturaJob(simply_yield).run()
+
+            # Scheduled course removed.
+            assert Scheduled.get_scheduled(section_id=section_id, term_id=term_id) is None
+
+            fake_auth.login(admin_uid)
+            course = api_get_course(client, term_id, section_id)
+            assert course['scheduled'] is None
+            assert len(course['updateHistory']) == 1
+            assert course['updateHistory'][0]['fieldName'] == 'instructor_uids'
+            assert course['updateHistory'][0]['fieldValueOld'] == ['10010']
+            assert course['updateHistory'][0]['fieldValueNew'] == []
             assert course['updateHistory'][0]['requestedByName'] is None
             assert course['updateHistory'][0]['requestedByUid'] is None
             assert course['updateHistory'][0]['status'] == 'succeeded'

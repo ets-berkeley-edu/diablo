@@ -43,6 +43,7 @@ class TestSemesterStartJob:
             term_id = app.config['CURRENT_TERM_ID']
             instructor_uid = '10008'
             section_ids = ['50007', '50010']
+            no_instructor_section_id = '50017'
 
             # Verify that nothing is scheduled
             assert Scheduled.get_all_scheduled(term_id=term_id) == []
@@ -53,6 +54,9 @@ class TestSemesterStartJob:
             for section_id in section_ids:
                 scheduled = Scheduled.get_scheduled(section_id=section_id, term_id=term_id)
                 assert instructor_uid in scheduled.instructor_uids
+
+            # Verify no-instructor course was not scheduled.
+            assert Scheduled.get_scheduled(section_id=no_instructor_section_id, term_id=term_id) is None
 
             # Verify one email sent to each instructor, even in the case of multiple eligible courses.
             emails_queued_for_instructor = [e for e in QueuedEmail.get_all(term_id=term_id) if e.recipient['uid'] == instructor_uid]

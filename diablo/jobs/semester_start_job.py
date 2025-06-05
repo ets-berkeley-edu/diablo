@@ -40,10 +40,11 @@ class SemesterStartJob(BaseJob):
 
         # Schedule recordings
         for course in courses:
-            if not course['scheduled'] and not course['hasOptedOut']:
+            authorized_instructors = list(filter(lambda i: i['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES, course['instructors']))
+            if not course['scheduled'] and not course['hasOptedOut'] and len(authorized_instructors):
                 scheduled = schedule_recordings(course)
                 course['scheduled'] = [s.to_api_json() for s in scheduled]
-            for instructor in list(filter(lambda i: i['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES, course['instructors'])):
+            for instructor in authorized_instructors:
                 if instructor['uid'] not in courses_by_instructor_uid:
                     courses_by_instructor_uid[instructor['uid']] = {'instructor': instructor, 'courses': []}
                 courses_by_instructor_uid[instructor['uid']]['courses'].append(course)
