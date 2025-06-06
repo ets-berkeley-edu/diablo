@@ -96,6 +96,7 @@ const devAuthUid = ref(undefined)
 const devAuthPassword = ref(undefined)
 
 onMounted(() => {
+  contextStore.loadingComplete()
   putFocusNextTick('log-in')
   const error = get(router.currentRoute, 'query.error')
   if (error) {
