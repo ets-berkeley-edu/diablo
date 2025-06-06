@@ -13,8 +13,6 @@ export type DiabloConfig = {
   currentTermRecordingsEnd: any,
   searchFilterOptions: any,
   emailTemplateTypes: any,
-  courseCaptureExplainedUrl: string,
-  uxBannerColor: any
 }
 
 export interface Collaborator {
