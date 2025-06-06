@@ -48,8 +48,9 @@ const adminUsers = ref([])
 const contextStore = useContextStore()
 const coursesReport = ref([])
 
+contextStore.loadingStart()
+
 onMounted(() => {
-  contextStore.loadingStart()
   getCoursesReport(contextStore.config.currentTermId).then(report => {
     each(report, (value, key) => {
       coursesReport.value.push({key: decamelize(key.toString()), value})

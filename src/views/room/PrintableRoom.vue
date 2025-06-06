@@ -147,8 +147,9 @@ const route = useRoute()
 const room = ref({})
 const courses = ref([])
 
+contextStore.loadingStart()
+
 onMounted(() => {
-  contextStore.loadingStart()
   const id = get(route, 'params.id')
 
   getRoom(id).then(roomData => {
@@ -157,7 +158,7 @@ onMounted(() => {
     each(courses.value, course => {
       course.displayMeetings = getDisplayMeetings(course)
     })
-    contextStore.loadingComplete(`${roomData.location} printable`)
+    contextStore.loadingComplete(`${roomData.location} Printable`)
   })
 })
 </script>

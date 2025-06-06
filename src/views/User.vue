@@ -161,9 +161,12 @@ function summarize(courses) {
   }
 }
 
+contextStore.loadingStart()
+
 onMounted(() => {
-  contextStore.loadingStart()
-  refreshUser()
+  refreshUser().then(() => {
+    contextStore.loadingComplete(`${user.value.name} Profile`)
+  })
 })
 
 const cancelNote = () => {
@@ -189,13 +192,12 @@ const editNote = () => {
 }
 
 const refreshUser = () => {
-  getUser(uid).then(data => {
+  return getUser(uid).then(data => {
     user.value = data
     data.courses.forEach(course => {
       course.courseCodes = getCourseCodes(course)
     })
     noteBody.value = data.note
-
     eligibleCourses.value = []
     ineligibleCourses.value = []
     partitionCoursesByEligibility(
@@ -203,8 +205,6 @@ const refreshUser = () => {
       eligibleCourses.value,
       ineligibleCourses.value
     )
-
-    contextStore.loadingComplete()
     refreshingCourses.value = false
   })
 }

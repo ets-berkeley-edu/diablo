@@ -143,8 +143,9 @@ const menuContainer = ref()
 const refreshing = ref(false)
 const router = useRouter()
 
+contextStore.loadingStart()
+
 onMounted(() => {
-  contextStore.loadingStart()
   loadAllEmailTemplates().then(() => {
     contextStore.loadingComplete()
   })
