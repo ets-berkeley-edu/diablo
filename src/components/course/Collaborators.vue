@@ -110,7 +110,7 @@
                 id="btn-collaborators-save"
                 :action="save"
                 aria-label="Save Collaborators"
-                :disabled="isEqual(sortBy(collaborators, 'uid'), sortBy(course.collaborators, 'uid')) || isSaving"
+                :disabled="!hasChanges || isSaving"
                 :in-progress="isSaving"
                 :text="isSaving ? 'Saving' : 'Save'"
               />
@@ -133,8 +133,8 @@
 </template>
 
 <script setup>
-import {isEmpty, isEqual, sortBy} from 'lodash'
-import {ref} from 'vue'
+import {computed, ref} from 'vue'
+import {differenceBy, isEmpty, size} from 'lodash'
 import {alertScreenReader, putFocusNextTick} from '@/lib/utils'
 import PersonLookup from '@/components/util/PersonLookup'
 import ProgressButton from '@/components/util/ProgressButton'
@@ -152,12 +152,15 @@ const props = defineProps({
 })
 
 const addCollaboratorError = ref()
-const collaborators = ref(props.course.collaborators)
+const collaborators = ref([])
 const isEditing = ref(false)
 const isSaving = ref(false)
 const pendingCollaborator = ref()
 const personLookup = ref()
 
+const hasChanges = computed(() => {
+  return size(collaborators.value) !== size(props.course.collaborators) || !!size(differenceBy(collaborators.value, props.course.collaborators, 'uid'))
+})
 const addCollaborator = () => {
   if (pendingCollaborator.value) {
     const collaborator = pendingCollaborator.value.raw
@@ -180,8 +183,8 @@ const cancel = () => {
   putFocusNextTick('btn-collaborators-edit')
   isEditing.value = false
   isSaving.value = false
+  pendingCollaborator.value = null
   addCollaboratorError.value = null
-  collaborators.value = [...props.course.collaborators]
 }
 
 const collaboratorLabel = (collaborator) => {
@@ -220,6 +223,7 @@ const save = () => {
 }
 
 const toggleIsEditing = () => {
+  collaborators.value = [...props.course.collaborators]
   isEditing.value = true
   putFocusNextTick('collaborator-lookup-input')
 }

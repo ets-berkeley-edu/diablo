@@ -1,28 +1,10 @@
 import {defineStore} from 'pinia'
 import {get} from 'lodash'
-import {putFocusNextTick} from '@/lib/utils'
+import type {DiabloConfig, DiabloUser} from '@/lib/types'
+import {ANONYMOUS_USER, putFocusNextTick} from '@/lib/utils'
 import router from '@/router'
 
-export type DiabloConfig = {
-  apiBaseUrl: string,
-  devAuthEnabled: boolean,
-  currentTermName: string,
-  currentTermId: number,
-  canvasBaseUrl: string,
-  kalturaMediaSpaceUrl: string,
-  searchItemsPerPage: number,
-  isVueAppDebugMode: boolean,
-  emailCourseCaptureSupport: string,
-  currentTermRecordingsBegin: any,
-  currentTermRecordingsEnd: any,
-  searchFilterOptions: any,
-  emailTemplateTypes: any,
-  courseCaptureExplainedUrl: string,
-  uxBannerColor: any
-}
-
 export const useContextStore = defineStore('context', {
-
   state: () => ({
     loading: false,
     screenReaderAlert: undefined as string | undefined,
@@ -32,14 +14,7 @@ export const useContextStore = defineStore('context', {
       timeout: 8000 as number,
     },
     snackbarShow: false as boolean,
-    currentUser: {
-      uid: undefined as string | undefined,
-      departments: [] as any[],
-      isAdmin: false,
-      isAuthenticated: false,
-      isTeaching: false,
-      courses: [] as any[]
-    },
+    currentUser: ANONYMOUS_USER as DiabloUser,
     config: {} as DiabloConfig,
   }),
 

@@ -1,7 +1,7 @@
 import type {AxiosError, AxiosResponse, AxiosStatic} from 'axios'
 import {find, get, includes} from 'lodash'
 import router from '@/router'
-import type {BoaUser} from '@/lib/types'
+import type {DiabloUser} from '@/lib/types.ts'
 import {useContextStore} from '@/stores/context'
 
 const SKIP_REDIRECT_ON_ERROR = ['/api/user/create_or_update', '/api/peer_advising/create_peer_advisor']
@@ -9,7 +9,7 @@ const SKIP_REDIRECT_ON_ERROR = ['/api/user/create_or_update', '/api/peer_advisin
 const axiosErrorHandler = (error: object, axios: AxiosStatic): void => {
   const errorStatus = get(error, 'response.status')
   const contextStore = useContextStore()
-  const currentUser: BoaUser = contextStore.currentUser
+  const currentUser: DiabloUser = contextStore.currentUser
   if (!axios.isCancel(error)) {
     contextStore.loadingComplete()
   }

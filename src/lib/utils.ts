@@ -10,11 +10,28 @@ import {
   last,
   split,
   startsWith,
-  trim
+  trim,
 } from 'lodash'
 import {nextTick} from 'vue'
 import type ScrollLogicalPosition from 'typescript'
+import type {DiabloUser} from '@/lib/types'
 import {useContextStore} from '@/stores/context'
+
+export const ANONYMOUS_USER: DiabloUser = {
+  courses: [],
+  emailAddress: null,
+  hasOptedOutForAllTerms: false,
+  hasOptedOutForTerm: false,
+  id: null,
+  isActive: false,
+  isAdmin: false,
+  isAnonymous: true,
+  isAuthenticated: false,
+  isExpired: true,
+  isTeaching: false,
+  name: 'UID None',
+  uid: null
+}
 
 export function alertScreenReader(message: string) {
   const store = useContextStore()
@@ -22,8 +39,12 @@ export function alertScreenReader(message: string) {
   nextTick(() => store.alertScreenReader(message))
 }
 
-export function decamelize(str: string, separator=' ') {
-  return capitalize(str.replace(/([a-z\d])([A-Z])/g, '$1' + separator + '$2').replace(/([A-Z]+)([A-Z][a-z\d]+)/g, '$1' + separator + '$2'))
+export function decamelize(str: string, separator = ' ') {
+  return capitalize(
+    str
+      .replace(/([a-z\d])([A-Z])/g, '$1' + separator + '$2')
+      .replace(/([A-Z]+)([A-Z][a-z\d]+)/g, '$1' + separator + '$2')
+  )
 }
 
 export function getCourseCodes(course) {
@@ -32,18 +53,26 @@ export function getCourseCodes(course) {
 
 export function getSelectOptionsFromObject(obj: any, isDisabled: Function) {
   const options: Array<any> = []
-  each(obj, (text, value) => options.push({title: text, value, disabled: isDisabled(value)}))
+  each(obj, (text, value) =>
+    options.push({title: text, value, disabled: isDisabled(value)})
+  )
   return options
 }
 
 export function getTermName(termId) {
-      const id = termId.toString()
-      let termName: string = ''
-      if (id.length === 4) {
-        const seasons = {'0': 'Winter', '2': 'Spring', '5': 'Summer', '8': 'Fall'}
-        termName = `${seasons[id.slice(3, 4)]} ${startsWith(id, '1') ? '19' : '20'}${id.slice(1, 3)}`
-      }
-      return termName
+  const id = termId.toString()
+  let termName: string = ''
+  if (id.length === 4) {
+    const seasons = {
+      '0': 'Winter',
+      '2': 'Spring',
+      '5': 'Summer',
+      '8': 'Fall',
+    }
+    termName = `${seasons[id.slice(3, 4)]} ${startsWith(id, '1') ? '19' : '20'
+      }${id.slice(1, 3)}`
+  }
+  return termName
 }
 
 export function getDisplayMeetings(course) {
@@ -55,15 +84,22 @@ export function getDisplayMeetings(course) {
 }
 
 export function oxfordJoin(arr) {
-  switch(arr.length) {
-  case 1: return head(arr)
-  case 2: return `${head(arr)} and ${last(arr)}`
-  default: return join(concat(initial(arr), ` and ${last(arr)}`), ', ')
+  switch (arr.length) {
+    case 1:
+      return head(arr)
+    case 2:
+      return `${head(arr)} and ${last(arr)}`
+    default:
+      return join(concat(initial(arr), ` and ${last(arr)}`), ', ')
   }
 }
 
-export function partitionCoursesByEligibility(courses, eligibleCourses, ineligibleCourses) {
-  each(courses, c => {
+export function partitionCoursesByEligibility(
+  courses,
+  eligibleCourses,
+  ineligibleCourses
+) {
+  each(courses, (c) => {
     if (c.meetings.eligible.length) {
       eligibleCourses.push(c)
       if (c.meetings.ineligible.length) {
@@ -78,13 +114,24 @@ export function partitionCoursesByEligibility(courses, eligibleCourses, ineligib
   })
 }
 
-export function pluralize(noun: string, count: number, includeCount=true) {
+export function pluralize(noun: string, count: number, includeCount = true) {
   const countOf = includeCount ? `${count} ` : ''
   const desc = count !== 1 ? `${noun}s` : noun
   return `${countOf}${desc}`
 }
 
-export function putFocusNextTick(id: string, {scroll=true, scrollBlock='center', cssSelector=undefined}: {scroll?: boolean, scrollBlock?: ScrollLogicalPosition, cssSelector?: string}={}) {
+export function putFocusNextTick(
+  id: string,
+  {
+    scroll = true,
+    scrollBlock = 'center',
+    cssSelector = undefined,
+  }: {
+    scroll?: boolean
+    scrollBlock?: ScrollLogicalPosition
+    cssSelector?: string
+  } = {}
+) {
   nextTick(() => {
     let counter = 0
     const putFocus = setInterval(() => {
@@ -110,7 +157,7 @@ export function stripAnchorRef(path: string) {
 }
 
 export function stripHtmlAndTrim(html: string) {
-  let text = html && html.replace(/<([^>]+)>/ig,'')
+  let text = html && html.replace(/<([^>]+)>/gi, '')
   text = text && text.replace(/&nbsp;/g, '')
   return trim(text)
 }
@@ -120,7 +167,8 @@ export function summarize(courses) {
   let msg = `${total} course${total === 1 ? '' : 's'}.`
   const scheduled = filter(courses, 'scheduled')
   if (scheduled.length) {
-    msg += ` ${scheduled.length} ${scheduled.length === 1 ? 'has' : 'have'} recordings scheduled.`
+    msg += ` ${scheduled.length} ${scheduled.length === 1 ? 'has' : 'have'
+      } recordings scheduled.`
   }
   return msg
 }
