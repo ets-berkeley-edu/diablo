@@ -118,25 +118,25 @@
                 <li>
                   <a href="https://berkeley.service-now.com/kb?id=kb_article_view&sysparm_article=KB0013882" target="_blank">
                     How to Publish from My Media
-                    <span class="sr-only"> (link opens new browser tab)</span>
+                    <span class="sr-only"> (opens in new tab)</span>
                   </a>
                 </li>
                 <li>
                   <a href="https://berkeley.service-now.com/kb?id=kb_article_view&sysparm_article=KB0013623" target="_blank">
                     How to Embed in bCourses using the Rich Content Editor
-                    <span class="sr-only"> (link opens new browser tab)</span>
+                    <span class="sr-only"> (opens in new tab)</span>
                   </a>
                 </li>
                 <li>
                   <a href="https://berkeley.service-now.com/kb?id=kb_article_view&sysparm_article=KB0014115" target="_blank">
                     How to Download the Second Stream of the Recording
-                    <span class="sr-only"> (link opens new browser tab)</span>
+                    <span class="sr-only"> (opens in new tab)</span>
                   </a>
                 </li>
                 <li>
                   <a href="https://rtl.berkeley.edu/services-programs/course-capture/instructors-getting-started/course-capture-faq" target="_blank">
                     Course Capture FAQ
-                    <span class="sr-only"> (link opens new browser tab)</span>
+                    <span class="sr-only"> (opens in new tab)</span>
                   </a>
                 </li>
               </ul>
@@ -149,19 +149,19 @@
                 <li>
                   <a href="https://berkeley.service-now.com/kb?id=kb_article_view&sysparm_article=KB0014032" target="_blank">
                     How to Remove a Recording from the Media Gallery
-                    <span class="sr-only"> (link opens new browser tab)</span>
+                    <span class="sr-only"> (opens in new tab)</span>
                   </a>
                 </li>
                 <li>
                   <a href="https://berkeley.service-now.com/kb?id=kb_article_view&sysparm_article=KB0014115" target="_blank">
                     How to Download the Second Stream of the Recording
-                    <span class="sr-only"> (link opens new browser tab)</span>
+                    <span class="sr-only"> (opens in new tab)</span>
                   </a>
                 </li>
                 <li>
                   <a href="https://rtl.berkeley.edu/services-programs/course-capture/instructors-getting-started/course-capture-faq" target="_blank">
                     Course Capture FAQ
-                    <span class="sr-only"> (link opens new browser tab)</span>
+                    <span class="sr-only"> (opens in new tab)</span>
                   </a>
                 </li>
               </ul>

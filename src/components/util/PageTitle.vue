@@ -1,26 +1,25 @@
 <template>
   <div class="py-2 pt-4">
     <h1 id="page-title" tabindex="-1">
-      <div v-if="is420" class="d-flex align-center" :class="classForH1">
+      <div class="d-flex align-center" :class="classForH1">
         <v-icon
-          aria-label="Play entertaining video clip (opens a new tab)"
+          v-if="is420"
+          aria-label="Play entertaining video clip (opens in new tab)"
           class="mr-3"
-          :color="$vuetify.theme.dark ? 'white' : 'primary'"
+          :color="theme.global.current.dark ? 'white' : 'primary'"
+          :href="contextStore.config.easterEgg420"
+          :icon="mdiWeatherTornado"
           size="36"
-          @click="smile"
-        >
-          mdi-weather-tornado
-        </v-icon>
-        <span :class="clazz()"> {{ text }}</span>
-      </div>
-      <div v-if="!is420" class="d-flex align-center">
+          tag="a"
+          target="_blank"
+        />
         <v-icon
+          v-if="!is420"
           class="mr-3"
-          :color="$vuetify.theme.dark ? 'white' : 'primary'"
+          :color="theme.global.current.dark ? 'white' : 'primary'"
+          :icon="icon"
           size="36"
-        >
-          {{ icon }}
-        </v-icon>
+        />
         <span :class="clazz()" tabindex="-1"> {{ text }}</span>
       </div>
     </h1>
@@ -30,44 +29,43 @@
   </div>
 </template>
 
-<script>
+<script setup>
 import {DateTime} from 'luxon'
+import {mdiWeatherTornado} from '@mdi/js'
+import {onMounted, ref} from 'vue'
+import {useTheme} from 'vuetify'
+import {useContextStore} from '@/stores/context'
 
-export default {
-  name: 'PageTitle',
-  props: {
-    classForH1: {
-      default: undefined,
-      required: false,
-      type: String
-    },
-    icon: {
-      required: true,
-      type: String
-    },
-    subTitle: {
-      default: undefined,
-      required: false,
-      type: String
-    },
-    text: {
-      required: true,
-      type: String
-    }
+const props = defineProps({
+  classForH1: {
+    default: undefined,
+    required: false,
+    type: String
   },
-  data: () => ({
-    is420: undefined
-  }),
-  created() {
-    this.is420 = DateTime.now().toFormat('H:mm') === '16:20'
+  icon: {
+    required: true,
+    type: String
   },
-  methods: {
-    clazz() {
-      return this.text.length > 40 ? `${this.classForH1} text-h4` : this.classForH1
-    },
-    smile() {
-      window.open(this.$config.easterEgg420, '_blank')
-    }
+  subTitle: {
+    default: undefined,
+    required: false,
+    type: String
+  },
+  text: {
+    required: true,
+    type: String
   }
+})
+
+const contextStore = useContextStore()
+const is420 = ref(false)
+const theme = useTheme()
+
+onMounted(() => {
+  is420.value = DateTime.now().toFormat('H:mm') === '16:20'
+})
+
+const clazz = () => {
+  return props.text.length > 40 ? `${props.classForH1} text-h4` : props.classForH1
 }
 </script>

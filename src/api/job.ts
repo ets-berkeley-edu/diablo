@@ -11,11 +11,6 @@ export function getJobSchedule() {
     .then(response => response.data)
 }
 
-export function getLastSuccessfulRun(jobKey: string) {
-  return axios.get(`${getApiBaseUrl()}/api/job/${jobKey}/last_successful_run`)
-    .then(response => response.data)
-}
-
 export function setJobDisabled(jobId: number, disable: boolean) {
   return axios.post(`${getApiBaseUrl()}/api/job/disable`, {
     jobId,

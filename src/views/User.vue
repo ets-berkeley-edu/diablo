@@ -8,7 +8,6 @@
       <v-card-subtitle class="body-1 mb-4 ml-14 text-subtitle-1">
         <a :href="`mailto:${user.email}`" target="_blank">
           {{ user.email }}
-          <span class="sr-only">(opens in new tab)</span>
         </a>
       </v-card-subtitle>
 

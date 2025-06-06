@@ -3,6 +3,7 @@ import axios from 'axios'
 import fileDownload from 'js-file-download'
 import {DateTime} from 'luxon'
 import {getApiBaseUrl} from '@/api/api-utils'
+import type {OptOut} from '@/lib/types'
 
 export function deleteCourseNote(termId: number, sectionId: number) {
   return axios.post(`${getApiBaseUrl()}/api/course/note/delete`, {
@@ -11,7 +12,7 @@ export function deleteCourseNote(termId: number, sectionId: number) {
   }).then(response => response.data)
 }
 
-export function downloadCSV(filter, termId: string) {
+export function downloadCSV(filter: string, termId: string) {
   const now = DateTime.now().toFormat('yyyy-MM-dd_HH-mm-ss')
   const filename = `courses-${_.snakeCase(filter)}-${termId}_${now}.csv`
   return axios.post(`${getApiBaseUrl()}/api/courses/csv`, {
@@ -30,7 +31,7 @@ export function getCourseSite(siteId: number) {
     .then(response => response.data)
 }
 
-export function getCourses(filter, termId: string) {
+export function getCourses(filter: string, termId: string) {
   return axios.post(`${getApiBaseUrl()}/api/courses`, {
     filter,
     termId
@@ -67,7 +68,12 @@ export function updateCourseNote(
   }).then(response => response.data)
 }
 
-export function updateOptOut(instructorUid, termId: string, sectionId, optOut) {
+export function updateOptOut(
+    instructorUid: string,
+    termId: string,
+    sectionId: number,
+    optOut: OptOut
+  ) {
   return axios.post(`${getApiBaseUrl()}/api/course/opt_out/update`, {
     instructorUid,
     optOut,

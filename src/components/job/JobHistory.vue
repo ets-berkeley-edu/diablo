@@ -8,7 +8,7 @@
               class="pb-1"
               :color="$vuetify.theme.dark ? 'white' : 'primary'"
               :icon="mdiHistory"
-              large
+              size="large"
             /> History
           </h2>
         </v-col>

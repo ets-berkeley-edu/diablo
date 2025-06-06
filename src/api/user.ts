@@ -1,7 +1,7 @@
 import axios from 'axios'
 import {getApiBaseUrl} from '@/api/api-utils'
 
-export function deleteUserNote(uid) {
+export function deleteUserNote(uid: string) {
   return axios.post(`${getApiBaseUrl()}/api/user/${uid}/note/delete`)
     .then(response => response.data)
 }
@@ -11,12 +11,7 @@ export function getAdminUsers() {
     .then(response => response.data)
 }
 
-export function getCalnetUser(uid) {
-  return axios.get(`${getApiBaseUrl()}/api/user/${uid}/calnet`)
-    .then(response => response.data)
-}
-
-export function getUser(uid) {
+export function getUser(uid: string) {
   return axios.get(`${getApiBaseUrl()}/api/user/${uid}`)
     .then(response => response.data)
 }
@@ -26,12 +21,12 @@ export function searchUsers(snippet: string) {
     .then(response => response.data)
 }
 
-export function getCanvasSitesTeaching(uid) {
+export function getCanvasSitesTeaching(uid: string) {
   return axios.get(`${getApiBaseUrl()}/api/user/${uid}/teaching_sites`)
     .then(response => response.data)
 }
 
-export function updateUserNote(uid, body: string) {
+export function updateUserNote(uid: string, body: string) {
   return axios.post(`${getApiBaseUrl()}/api/user/${uid}/note/update`, {body})
     .then(response => response.data)
 }

@@ -81,6 +81,7 @@ export interface BaseCourse {
   sectionNum: string,
   termId: number
 }
+
 export interface ScheduledCourse {
   collaboratorUids: string[],
   collaborators: Collaborator[],
@@ -105,6 +106,7 @@ export interface ScheduledCourse {
   sectionId: number,
   termId: number
 }
+
 export interface Course extends BaseCourse {
   allowedUnits: number,
   canvasSiteIds: number[] | null,
@@ -128,7 +130,7 @@ export interface Course extends BaseCourse {
   publishTypeName: string,
   recordingType: string,
   recordingTypeName: string,
-  scheduled: ScheduledCourse[],
+  scheduled: ScheduledCourse[] | null,
 }
 
 export interface DiabloUser {

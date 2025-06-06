@@ -20,11 +20,11 @@
     <template #item.summary="{item}">
       <a
         :id="`kaltura-media-space-${item.id}`"
-        aria-label="Open Kaltura MediaSpace in a new window"
         :href="`${contextStore.config.kalturaMediaSpaceUrl}/recscheduling/index/edit-event/eventid/${item.id}`"
         target="_blank"
       >
-        {{ item.summary }} <v-icon class="ml-1" :icon="mdiOpenInNew" size="14" />
+        {{ item.summary }} <span class="sr-only">(opens in new tab)</span>
+        <v-icon class="ml-1" :icon="mdiOpenInNew" size="14" />
       </a>
     </template>
     <template #item.startDate="{item}">
@@ -79,11 +79,11 @@
                   <td>
                     <a
                       :id="`kaltura-recurrence-${event.id}`"
-                      :aria-label="`Open Kaltura MediaSpace in a new window (event ${event.id})`"
                       :href="`${contextStore.config.kalturaMediaSpaceUrl}/recscheduling/index/edit-event/eventid/${event.id}`"
                       target="_blank"
                     >
-                      {{ event.id }} <v-icon class="ml-1" :icon="mdiOpenInNew" size="14" />
+                      <span class="sr-only">Kaltura event </span>{{ event.id }} <span class="sr-only">(opens in new tab)</span>
+                      <v-icon class="ml-1" :icon="mdiOpenInNew" size="14" />
                     </a>
                   </td>
                   <td>{{ formatDateTime(event.startDate) }}</td>
@@ -109,11 +109,11 @@
                     <span v-if="key === 'id'">
                       <a
                         :id="`kaltura-event-${item[key]}`"
-                        :aria-label="`Open Kaltura MediaSpace in a new window (event ${item[key]})`"
                         :href="`${contextStore.config.kalturaMediaSpaceUrl}/recscheduling/index/edit-event/eventid/${item[key]}`"
                         target="_blank"
                       >
-                        {{ item[key] }} <v-icon class="pl-2" :icon="mdiOpenInNew" size="small" />
+                        <span class="sr-only">Kaltura event </span>{{ item[key] }} <span class="sr-only">(opens in new tab)</span>
+                        <v-icon class="pl-2" :icon="mdiOpenInNew" size="small" />
                       </a>
                     </span>
                     <span v-if="key !== 'id'">{{ item[key] }}</span>

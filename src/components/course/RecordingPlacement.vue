@@ -149,7 +149,7 @@
             </v-chip>
           </div>
           <div v-if="!currentUser.isAdmin" class="py-2 text-body-2">
-            To link a bCourses site from a past term, please <a :href="`mailto:${config.emailCourseCaptureSupport}`" target="_blank">contact Course Capture support. <span class="sr-only">(opens in new window)</span></a>
+            To link a bCourses site from a past term, please <a :href="`mailto:${config.emailCourseCaptureSupport}`" target="_blank">contact Course Capture support.</a>
           </div>
           <div class="pt-4">
             <ProgressButton
