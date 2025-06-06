@@ -38,7 +38,7 @@ class CoursePage(DiabloPages):
 
     SCHEDULING_TO_COME_MSG = By.ID, 'notice-eligible-not-scheduled'
     SCHEDULED_MSG = By.ID, 'notice-scheduled'
-    UPDATES_QUEUED_MSG = By.XPATH, '//div[contains(text(), "Recent updates to recording settings are currently queued")]'
+    UPDATES_QUEUED_MSG = By.ID, 'notice-queued'
     OPT_OUT_QUEUED_MSG = By.ID, 'notice-opt-out-pending'
     OPT_OUT_DONE_MSG = By.ID, 'notice-opt-out'
     NOT_ELIGIBLE_MSG = By.ID, 'course-not-eligible'
@@ -186,10 +186,10 @@ class CoursePage(DiabloPages):
     COLLAB_ROW = By.XPATH, '//div[starts-with(@id, "collaborator-")]'
     COLLAB_EDIT_BUTTON = By.ID, 'btn-collaborators-edit'
     COLLAB_NONE_MSG = By.ID, 'collaborators-none'
-    COLLAB_INPUT = By.ID, 'input-collaborator-lookup-autocomplete'
+    COLLAB_INPUT = By.ID, 'collaborator-lookup-input'
     COLLAB_ADD_BUTTON = By.ID, 'btn-collaborator-add'
     COLLAB_SAVE_BUTTON = By.ID, 'btn-collaborators-save'
-    COLLAB_CXL_BUTTON = By.ID, 'btn-recording-type-cancel'
+    COLLAB_CXL_BUTTON = By.ID, 'btn-collaborators-cancel'
 
     @staticmethod
     def collaborator_row_loc(user):
@@ -227,7 +227,7 @@ class CoursePage(DiabloPages):
 
     @staticmethod
     def add_collaborator_lookup_result(user):
-        return By.XPATH, f'//div[contains(@id, "list-item")][contains(., "({user.uid})")]'
+        return By.XPATH, f'//div[contains(@id, "collaborator-lookup-option")][contains(., "({user.uid})")]'
 
     def click_look_up_result(self, user):
         self.wait_for_page_and_click(self.add_collaborator_lookup_result(user))
@@ -391,11 +391,11 @@ class CoursePage(DiabloPages):
 
     # KB LINKS
 
-    HOW_TO_PUBLISH_LINK = By.XPATH, '//a[contains(text(), "How to Publish from My Media")]'
-    HOW_TO_REMOVE_LINK = By.XPATH, '//a[contains(text(), "How to Remove a Recording from the Media Gallery")]'
-    HOW_TO_EMBED_LINK = By.XPATH, '//a[contains(text(), "How to Embed in bCourses using the Rich Content Editor")]'
-    HOW_TO_DOWNLOAD_LINK = By.XPATH, '//a[contains(text(), "How to Download the Second Stream of the Recording")]'
-    COURSE_CAPTURE_FAQ_LINK = By.XPATH, '//a[contains(text(), "Course Capture FAQ")]'
+    HOW_TO_PUBLISH_LINK = By.ID, 'link-publish-my-media'
+    HOW_TO_REMOVE_LINK = By.ID, '/link-remove-recording'
+    HOW_TO_EMBED_LINK = By.ID, 'link-embed-rich-content'
+    HOW_TO_DOWNLOAD_LINK = By.ID, 'link-download-second-stream'
+    COURSE_CAPTURE_FAQ_LINK = By.ID, 'link-faq'
 
     # KALTURA SERIES INFO
 

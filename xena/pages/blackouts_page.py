@@ -36,9 +36,9 @@ from xena.test_utils import util
 class BlackoutsPage(DiabloPages):
     CREATE_NEW_BUTTON = (By.ID, 'create-blackout-btn')
     NAME_INPUT = (By.ID, 'input-blackout-name')
-    CALENDAR_MONTH = (By.XPATH, '//div[@class="vc-title"]')
-    CALENDAR_BACK_BUTTON = (By.XPATH, '//div[@class="vc-arrow is-left"]')
-    CALENDAR_FORWARD_BUTTON = (By.XPATH, '//div[@class="vc-arrow is-right"]')
+    CALENDAR_MONTH = (By.XPATH, '//button[@class="vc-title"]')
+    CALENDAR_BACK_BUTTON = (By.XPATH, '//button[@class="vc-arrow vc-prev vc-focus"]')
+    CALENDAR_FORWARD_BUTTON = (By.XPATH, '//button[@class="vc-arrow vc-next vc-focus"]')
     DELETE_BUTTON = (By.XPATH, '//button[contains(@id, "delete-blackout")]')
     SAVE_BUTTON = (By.ID, 'save-blackout')
     CANCEL_BUTTON = (By.ID, 'cancel-edit-of-blackout')
