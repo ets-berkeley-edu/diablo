@@ -128,25 +128,25 @@
               Based on the selected Recording Placement, please review the following KB articles:
               <ul>
                 <li>
-                  <a href="https://berkeley.service-now.com/kb?id=kb_article_view&sysparm_article=KB0013882" target="_blank">
+                  <a id="link-publish-my-media" href="https://berkeley.service-now.com/kb?id=kb_article_view&sysparm_article=KB0013882" target="_blank">
                     How to Publish from My Media
                     <span class="sr-only"> (opens in new tab)</span>
                   </a>
                 </li>
                 <li>
-                  <a href="https://berkeley.service-now.com/kb?id=kb_article_view&sysparm_article=KB0013623" target="_blank">
+                  <a id="link-embed-rich-content" href="https://berkeley.service-now.com/kb?id=kb_article_view&sysparm_article=KB0013623" target="_blank">
                     How to Embed in bCourses using the Rich Content Editor
                     <span class="sr-only"> (opens in new tab)</span>
                   </a>
                 </li>
                 <li>
-                  <a href="https://berkeley.service-now.com/kb?id=kb_article_view&sysparm_article=KB0014115" target="_blank">
+                  <a id="link-download-second-stream" href="https://berkeley.service-now.com/kb?id=kb_article_view&sysparm_article=KB0014115" target="_blank">
                     How to Download the Second Stream of the Recording
                     <span class="sr-only"> (opens in new tab)</span>
                   </a>
                 </li>
                 <li>
-                  <a href="https://rtl.berkeley.edu/services-programs/course-capture/instructors-getting-started/course-capture-faq" target="_blank">
+                  <a id="link-faq" href="https://rtl.berkeley.edu/services-programs/course-capture/instructors-getting-started/course-capture-faq" target="_blank">
                     Course Capture FAQ
                     <span class="sr-only"> (opens in new tab)</span>
                   </a>
@@ -159,19 +159,19 @@
               Based on the selected Recording Placement, please review the following KB articles:
               <ul>
                 <li>
-                  <a href="https://berkeley.service-now.com/kb?id=kb_article_view&sysparm_article=KB0014032" target="_blank">
+                  <a id="link-remove-recording" href="https://berkeley.service-now.com/kb?id=kb_article_view&sysparm_article=KB0014032" target="_blank">
                     How to Remove a Recording from the Media Gallery
                     <span class="sr-only"> (opens in new tab)</span>
                   </a>
                 </li>
                 <li>
-                  <a href="https://berkeley.service-now.com/kb?id=kb_article_view&sysparm_article=KB0014115" target="_blank">
+                  <a id="link-download-second-stream" href="https://berkeley.service-now.com/kb?id=kb_article_view&sysparm_article=KB0014115" target="_blank">
                     How to Download the Second Stream of the Recording
                     <span class="sr-only"> (opens in new tab)</span>
                   </a>
                 </li>
                 <li>
-                  <a href="https://rtl.berkeley.edu/services-programs/course-capture/instructors-getting-started/course-capture-faq" target="_blank">
+                  <a id="link-faq" href="https://rtl.berkeley.edu/services-programs/course-capture/instructors-getting-started/course-capture-faq" target="_blank">
                     Course Capture FAQ
                     <span class="sr-only"> (opens in new tab)</span>
                   </a>
@@ -274,7 +274,7 @@ const displayLabels = reactive({
   kaltura_media_gallery: 'Publish to the Media Gallery (all members of the bCourses site will have access)',
   kaltura_my_media: 'Place in My Media (I will decide if and how I want to share)',
   presenter_presentation_audio: 'Camera Without Operator',
-  presenter_presentation_audio_with_operator: `Camera With Operator ($${config.courseCapturePremiumCost} fee)`
+  presenter_presentation_audio_with_operator: `Camera With Operator ($${config.value.courseCapturePremiumCost} fee)`
 })
 const hasValidMeetingTimes = ref(false)
 const instructors = ref([])
@@ -283,7 +283,7 @@ const location = ref('')
 
 // Computed
 // const disableSubmit = computed(() => !agreedToTerms.value || !publishType.value || !recordingType.value)
-const isCurrentTerm = computed(() => course.value.termId === config.currentTermId)
+const isCurrentTerm = computed(() => course.value.termId === config.value.currentTermId)
 const updatesQueued = computed(() => !!course.value.updateHistory.find(u => u.status === 'queued'))
 
 contextStore.loadingStart('Course')
