@@ -45,8 +45,6 @@ const configs = ref([])
 const contextStore = useContextStore()
 const excludeConfigs = [
   'apiBaseUrl',
-  'courseCaptureExplainedUrl',
-  'courseCapturePoliciesUrl',
   'currentTermName',
   'devAuthEnabled',
   'emailTemplateTypes',

@@ -56,9 +56,6 @@ CANVAS_LTI_SECRET = 'a_secret'
 
 CAS_SERVER = 'https://auth-test.berkeley.edu/cas/'
 
-COURSE_CAPTURE_EXPLAINED_URL = 'https://rtl.berkeley.edu/services-programs/course-capture'
-COURSE_CAPTURE_POLICIES_URL = 'https://rtl.berkeley.edu/services-programs/course-capture/policies'
-
 COURSE_CAPTURE_PREMIUM_COST = -1
 
 # YYYY-MM-DD is expected date format. For example, '2020-01-21'
@@ -148,8 +145,6 @@ SQLALCHEMY_TRACK_MODIFICATIONS = False
 THREADS_PER_PAGE = 2
 
 TIMEZONE = 'America/Los_Angeles'
-
-UX_BANNER_COLOR = '#fff'
 
 # This base-URL config should only be non-None in the "local" env where the Vue front-end runs on port 8080.
 VUE_LOCALHOST_BASE_URL = None
