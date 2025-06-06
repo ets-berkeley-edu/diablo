@@ -13,8 +13,7 @@ import {
   trim,
 } from 'lodash'
 import {nextTick} from 'vue'
-import type ScrollLogicalPosition from 'typescript'
-import type {DiabloUser} from '@/lib/types'
+import type {Course, DiabloUser} from '@/lib/types'
 import {useContextStore} from '@/stores/context'
 
 export const ANONYMOUS_USER: DiabloUser = {
@@ -47,7 +46,7 @@ export function decamelize(str: string, separator = ' ') {
   )
 }
 
-export function getCourseCodes(course) {
+export function getCourseCodes(course: Course) {
   return course.label.split('|').map((l: string) => l.trim())
 }
 
@@ -59,7 +58,7 @@ export function getSelectOptionsFromObject(obj: any, isDisabled: Function) {
   return options
 }
 
-export function getTermName(termId) {
+export function getTermName(termId: number) {
   const id = termId.toString()
   let termName: string = ''
   if (id.length === 4) {
@@ -75,7 +74,7 @@ export function getTermName(termId) {
   return termName
 }
 
-export function getDisplayMeetings(course) {
+export function getDisplayMeetings(course: Course) {
   if (course.meetings.eligible.length) {
     return course.meetings.eligible
   } else {
@@ -83,7 +82,7 @@ export function getDisplayMeetings(course) {
   }
 }
 
-export function oxfordJoin(arr) {
+export function oxfordJoin(arr: string[]) {
   switch (arr.length) {
     case 1:
       return head(arr)
@@ -95,9 +94,9 @@ export function oxfordJoin(arr) {
 }
 
 export function partitionCoursesByEligibility(
-  courses,
-  eligibleCourses,
-  ineligibleCourses
+  courses: Course[],
+  eligibleCourses: Course[],
+  ineligibleCourses: Course[]
 ) {
   each(courses, (c) => {
     if (c.meetings.eligible.length) {
@@ -162,7 +161,7 @@ export function stripHtmlAndTrim(html: string) {
   return trim(text)
 }
 
-export function summarize(courses) {
+export function summarize(courses: Course[]) {
   const total = courses.length
   let msg = `${total} course${total === 1 ? '' : 's'}.`
   const scheduled = filter(courses, 'scheduled')
@@ -173,6 +172,6 @@ export function summarize(courses) {
   return msg
 }
 
-export function escapeForRegExp(s) {
+export function escapeForRegExp(s: string) {
   return s && s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }

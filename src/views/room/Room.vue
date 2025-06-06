@@ -42,12 +42,11 @@
             <v-col>
               <router-link
                 :id="`print-room-${room.id}-schedule`"
-                aria-label="Open printable version of this page, in a new window"
                 class="text-subtitle-1"
                 target="_blank"
                 :to="`/room/printable/${room.id}`"
               >
-                <v-icon color="anchor" :icon="mdiPrinter" /> Print schedule<span class="sr-only"> (opens a new browser tab)</span>
+                <v-icon color="anchor" :icon="mdiPrinter" /> Print schedule <span class="sr-only">(opens in new tab)</span>
               </router-link>
             </v-col>
           </v-row>

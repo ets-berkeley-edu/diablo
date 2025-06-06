@@ -9,10 +9,7 @@
   />
 </template>
 
-<script>
-export default {
-  name: 'Spinner'
-}
+<script setup>
 </script>
 
 <style scoped>

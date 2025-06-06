@@ -5,15 +5,9 @@
       :href="`${config.canvasBaseUrl}/courses/${siteId}`"
       target="_blank"
     >
-      <span v-if="courseSite">
-        {{ courseSite.name }} ({{ courseSite.courseCode }})
-      </span>
-      <span v-else>
-        bCourses site {{ siteId }}
-      </span>
-      <span class="sr-only">
-        (opens in new window)
-      </span>
+      <span v-if="courseSite">{{ courseSite.name }} ({{ courseSite.courseCode }})</span>
+      <span v-else>bCourses site {{ siteId }}</span>
+      <span class="sr-only">(opens in new tab)</span>
     </a>
     <span
       v-if="kalturaCategory.id"

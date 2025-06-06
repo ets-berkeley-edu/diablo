@@ -14,16 +14,16 @@
             {{ config.key }}
           </td>
           <td>
-            <span v-if="isUrl(config.value)">
-              <a
-                :id="`link-to-${config.key}`"
-                :href="config.value"
-                target="_blank"
-              >
-                {{ config.value }}
-                <v-icon class="pl-1" :icon="mdiOpenInNew" size="small" />
-              </a>
-            </span>
+            <a
+              v-if="isUrl(config.value)"
+              :id="`link-to-${config.key}`"
+              :href="config.value"
+              target="_blank"
+            >
+              {{ config.value }}
+              <span class="sr-only">(opens in new tab)</span>
+              <v-icon class="pl-1" :icon="mdiOpenInNew" size="small" />
+            </a>
             <span v-if="!isUrl(config.value)">{{ config.value }}</span>
           </td>
         </tr>

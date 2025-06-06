@@ -1,7 +1,7 @@
 import axios from 'axios'
 import {getApiBaseUrl} from '@/api/api-utils'
 
-export function getKalturaCategory(courseSiteId) {
+export function getKalturaCategory(courseSiteId: number) {
   return axios.get(`${getApiBaseUrl()}/api/kaltura/category/canvas/${courseSiteId}`)
     .then(response => response.data)
 }

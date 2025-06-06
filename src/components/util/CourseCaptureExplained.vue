@@ -5,12 +5,11 @@
     please read
     <a
       id="link-to-course-capture-overview"
-      aria-label="Open URL to Course Capture service overview in a new window"
       :href="context.config.courseCaptureExplainedUrl"
       target="_blank"
     >
-      Course Capture Services Explained
-      <v-icon small :icon="mdiOpenInNew" />
+      Course Capture Services Explained <span class="sr-only">(opens in new tab)</span>
+      <v-icon :icon="mdiOpenInNew" size="small" />
     </a>.
   </div>
 </template>

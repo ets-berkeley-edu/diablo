@@ -1,7 +1,8 @@
 import type {AxiosError, AxiosResponse, AxiosStatic} from 'axios'
 import {find, get, includes} from 'lodash'
-import router from '@/router'
+import type {ComponentPublicInstance} from 'vue'
 import type {DiabloUser} from '@/lib/types.ts'
+import router from '@/router'
 import {useContextStore} from '@/stores/context'
 
 const SKIP_REDIRECT_ON_ERROR = ['/api/user/create_or_update', '/api/peer_advising/create_peer_advisor']
@@ -39,12 +40,11 @@ const axiosErrorHandler = (error: object, axios: AxiosStatic): void => {
   }
 }
 
-export function appErrorHandler(error: object, vm: object, info: string) {
+export function appErrorHandler(error: unknown, instance: ComponentPublicInstance | null, info: string) {
   const message = get(error, 'message') || info
   const stacktrace = get(error, 'stack', null)
   // eslint-disable-next-line no-console
   console.log(`\n${message}\n${stacktrace}\n`)
-  // useContextStore().setApplicationState(500, message, stacktrace)
 }
 
 export function initializeAxios(axios: AxiosStatic) {

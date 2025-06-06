@@ -1,7 +1,7 @@
 import axios from 'axios'
 import {getApiBaseUrl} from '@/api/api-utils'
 
-export function createEmailTemplate(templateType, subjectLine, message) {
+export function createEmailTemplate(templateType: string, subjectLine: string, message: string) {
   return axios.post(`${getApiBaseUrl()}/api/email/template/create`, {
     templateType,
     subjectLine,
@@ -9,7 +9,7 @@ export function createEmailTemplate(templateType, subjectLine, message) {
   })
 }
 
-export function deleteTemplate(templateId) {
+export function deleteTemplate(templateId: number) {
   return axios.delete(`${getApiBaseUrl()}/api/email/template/delete/${templateId}`)
     .then(response => response.data)
 }
@@ -29,20 +29,17 @@ export function getEmailTemplateCodes() {
     .then(response => response.data)
 }
 
-export function queueEmail(emailTemplateType, sectionId, termId) {
-  return axios.post(`${getApiBaseUrl()}/api/emails/queue`, {
-    emailTemplateType,
-    sectionId,
-    termId
-  })
-}
-
-export function sendTestEmail(templateId) {
+export function sendTestEmail(templateId: number) {
   return axios.get(`${getApiBaseUrl()}/api/email/template/test/${templateId}`)
     .then(response => response.data)
 }
 
-export function updateEmailTemplate(templateId, templateType, subjectLine, message) {
+export function updateEmailTemplate(
+    templateId: number,
+    templateType: string,
+    subjectLine: string,
+    message: string
+  ) {
   return axios.post(`${getApiBaseUrl()}/api/email/template/update`, {
     templateId,
     templateType,

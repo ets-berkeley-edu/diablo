@@ -11,24 +11,24 @@ export function getAuditoriums() {
     .then(response => response.data)
 }
 
-export function getKalturaEventList(kalturaResourceId) {
+export function getKalturaEventList(kalturaResourceId: number) {
   return axios.get(`${getApiBaseUrl()}/api/room/${kalturaResourceId}/kaltura_events`)
     .then(response => response.data)
 }
 
-export function getRoom(id) {
+export function getRoom(id: number) {
   return axios.get(`${getApiBaseUrl()}/api/room/${id}`)
     .then(response => response.data)
 }
 
-export function setAuditorium(roomId, isAuditorium) {
+export function setAuditorium(roomId: number, isAuditorium: boolean) {
   return axios.post(`${getApiBaseUrl()}/api/room/auditorium`, {
     roomId,
     isAuditorium
   })
 }
 
-export function updateRoomCapability(roomId, capability) {
+export function updateRoomCapability(roomId: number, capability: string) {
   return axios.post(`${getApiBaseUrl()}/api/room/update_capability`, {
     roomId,
     capability
