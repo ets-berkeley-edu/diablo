@@ -54,6 +54,18 @@
           </span>
         </v-col>
       </div>
+      <div v-if="currentUser.isAdmin">
+        <v-col>
+          <ToggleOptOut
+            :term-id="`${course.termId}`"
+            :section-id="`${course.sectionId}`"
+            instructor-uid="admin"
+            label="as admin"
+            :initial-value="course.hasOptedOut"
+            :on-toggle="onToggle"
+          />
+        </v-col>
+      </div>
     </div>
     <v-row>
       <v-col
@@ -236,6 +248,7 @@ import PageTitle from '@/components/util/PageTitle'
 import RecordingPlacement from '@/components/course/RecordingPlacement'
 import RecordingType from '@/components/course/RecordingType'
 import ScheduledCourse from '@/components/course/ScheduledCourse'
+import ToggleOptOut from '@/components/course/ToggleOptOut.vue'
 import {getCourse} from '@/api/course'
 import {useContextStore} from '@/stores/context'
 
@@ -273,11 +286,10 @@ const location = ref('')
 const isCurrentTerm = computed(() => course.value.termId === config.currentTermId)
 const updatesQueued = computed(() => !!course.value.updateHistory.find(u => u.status === 'queued'))
 
-onMounted(() => {
+const refreshCourse = (termId, sectionId) => {
   isLoading.value = true
   loadingStart()
-  const {params} = useRoute()
-  getCourse(params.termId, params.sectionId)
+  getCourse(termId, sectionId)
     .then(data => {
       course.value = data
       agreedToTerms.value = currentUser.isAdmin
@@ -295,7 +307,11 @@ onMounted(() => {
         loadingComplete(courseDisplayTitle.value)
       })
     })
-})
+}
+
+const onToggle = () => {
+  refreshCourse(course.value.termId, course.value.sectionId)
+}
 
 const setRecordingPlacement = updatedCourse => {
   course.value.canvasSiteIds = updatedCourse.canvasSiteIds
@@ -308,4 +324,9 @@ const setRecordingType = updatedCourse => {
   course.value.recordingType = updatedCourse.recordingType
   course.value.recordingTypeName = updatedCourse.recordingTypeName
 }
+
+onMounted(() => {
+  const {params} = useRoute()
+  refreshCourse(params.termId, params.sectionId)
+})
 </script>

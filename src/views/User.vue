@@ -12,7 +12,7 @@
         </a>
       </v-card-subtitle>
 
-      <v-row class="mx-4">
+      <v-row v-if="user.uid" class="mx-4">
         <ToggleOptOut
           :term-id="config.currentTermId.toString()"
           section-id="all"
@@ -25,7 +25,7 @@
         />
       </v-row>
 
-      <v-row class="mx-4 mt-0 mb-2">
+      <v-row v-if="user.uid" class="mx-4 mt-0 mb-2">
         <ToggleOptOut
           term-id="all"
           section-id="all"
