@@ -108,6 +108,7 @@ onMounted(() => {
     })
     offerPrintable.value = !!find(room.value.courses, c => find(c.scheduled, s => s.room.id === room.value.id))
     contextStore.loadingComplete(data.location)
+
     // The page is ready; Kaltura events will pop up in a sec.
     if (room.value.kalturaResourceId) {
       getKalturaEventList(room.value.kalturaResourceId).then(data => {

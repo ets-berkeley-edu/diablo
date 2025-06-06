@@ -84,8 +84,9 @@ const headers = [
 ]
 const isRefreshing = ref(false)
 
+contextStore.loadingStart()
+
 onMounted(() => {
-  contextStore.loadingStart()
   refresh().then(() => {
     contextStore.loadingComplete()
   })

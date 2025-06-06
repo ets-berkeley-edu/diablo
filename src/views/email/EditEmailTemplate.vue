@@ -86,21 +86,22 @@ const disableSave = computed(() => {
   return !trim(subjectLine.value) || !stripHtmlAndTrim(message.value)
 })
 
+contextStore.loadingStart()
+
 onMounted(() => {
-  contextStore.loadingStart()
   templateType.value = get(route, 'params.type')
   typeName.value = get(contextStore.config.emailTemplateTypes, templateType.value)
   templateId.value = get(route, 'params.id')
   pageTitle.value = `${templateId.value ? 'Edit' : 'Create'} Email Template`
   if (typeName.value) {
-    contextStore.loadingComplete(`${pageTitle.value} '${typeName.value}'`)
+    contextStore.loadingComplete(`${pageTitle.value}`, `Type: ${typeName.value}`)
   } else {
     getEmailTemplate(templateId.value).then(data => {
       subjectLine.value = data.subjectLine
       message.value = data.message
       templateType.value = data.templateType
       typeName.value = get(contextStore.config.emailTemplateTypes, data.templateType)
-      contextStore.loadingComplete(`${pageTitle.value} '${typeName.value}'`)
+      contextStore.loadingComplete(`${pageTitle.value}`, `Type: ${typeName.value}`)
     })
   }
 })

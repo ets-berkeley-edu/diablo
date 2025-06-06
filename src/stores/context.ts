@@ -1,5 +1,5 @@
 import {defineStore} from 'pinia'
-import {get} from 'lodash'
+import {get, toString} from 'lodash'
 import type {DiabloConfig, DiabloUser} from '@/lib/types'
 import {ANONYMOUS_USER, putFocusNextTick} from '@/lib/utils'
 import router from '@/router'
@@ -19,15 +19,18 @@ export const useContextStore = defineStore('context', {
   }),
 
   actions: {
-    loadingStart() {
+    loadingStart(title?: string) {
       const route = router.currentRoute.value
+      const pageTitle: string = title || toString(get(route, 'name'))
       this.loading = true
-      this.screenReaderAlert = `Loading ${String(get(route, 'name', ''))}.`
+      this.screenReaderAlert = `Loading ${pageTitle} page.`
     },
-    loadingComplete(pageTitle?: string, srAlert?: string) {
+    loadingComplete(title?: string, srAlert?: string) {
       const route = router.currentRoute.value
+      const pageTitle: string = title || toString(get(route, 'name'))
+      document.title = `${pageTitle ? pageTitle : 'Welcome'} | Course Capture`
       this.loading = false
-      this.screenReaderAlert = `${pageTitle || String(get(route, 'name', '')) || 'Page'} loaded. ${srAlert || ''}`
+      this.screenReaderAlert = `${pageTitle || String(get(route, 'name', ''))} page loaded. ${srAlert || ''}`
       putFocusNextTick('page-title')
     },
     alertScreenReader(message: string) {

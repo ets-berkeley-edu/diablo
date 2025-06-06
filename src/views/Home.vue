@@ -248,8 +248,9 @@ const eligibleHeaders = [
 ]
 const refreshingCourses = ref(false)
 
+contextStore.loadingStart()
+
 onMounted(() => {
-  contextStore.loadingStart()
   refreshCourses()
   contextStore.loadingComplete()
 })

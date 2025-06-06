@@ -1,5 +1,5 @@
 import {NavigationGuardNext, RouteLocationNormalized, createRouter, createWebHistory} from 'vue-router'
-import {get, toString, trim} from 'lodash'
+import {trim} from 'lodash'
 import {useContextStore} from '@/stores/context'
 import {requiresAdmin, requiresInstructor} from '@/auth'
 import Attic from '@/views/Attic.vue'
@@ -71,7 +71,7 @@ const router = createRouter({
         },
         {
           path: '/course/:termId/:sectionId',
-          component: Course
+          component: Course,
         }
       ]
     },
@@ -172,10 +172,5 @@ router.beforeEach(
     }
   }
 )
-
-router.afterEach((to) => {
-  const pageTitle = get(to, 'name')
-  document.title = `${pageTitle ? toString(pageTitle) : 'Welcome'} | Course Capture`
-})
 
 export default router

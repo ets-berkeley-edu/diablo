@@ -197,7 +197,7 @@
 <script setup>
 import {cloneDeep, find, get} from 'lodash'
 import {mdiAlert, mdiHandsPray, mdiPlay, mdiPlaylistEdit} from '@mdi/js'
-import {onBeforeMount, onMounted, ref, watch} from 'vue'
+import {onBeforeUnmount, onMounted, ref, watch} from 'vue'
 import DisableJobToggle from '@/components/job/DisableJobToggle'
 import JobHistory from '@/components/job/JobHistory'
 import PageTitle from '@/components/util/PageTitle'
@@ -230,8 +230,10 @@ watch(editJob, job => {
   // deep: true,
   disableScheduleSave.value = !get(job, 'schedule.value') || parseInt(job.schedule.value) < 0
 })
+
+contextStore.loadingStart()
+
 onMounted(() => {
-  contextStore.loadingStart()
   getJobSchedule().then(data => {
     jobSchedule.value = data
     refresh().then(() => {
@@ -239,7 +241,8 @@ onMounted(() => {
     })
   })
 })
-onBeforeMount(() => {
+
+onBeforeUnmount(() => {
   clearTimeout(refresher.value)
 })
 

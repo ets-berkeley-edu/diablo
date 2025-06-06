@@ -129,8 +129,9 @@ const adviseAgainstRoom237 = computed(() => {
   return startsWith(search.value, '237 ') && size(search.value) < 6
 })
 
+contextStore.loadingStart()
+
 onMounted(() => {
-  contextStore.loadingStart()
   getAllRooms().then(data => {
     rooms.value = data
     contextStore.loadingComplete()

@@ -1,5 +1,5 @@
 <template>
-  <div v-if="!isLoading">
+  <div v-if="!loading">
     <PageTitle
       class="pl-4"
       :class-for-h1="course.deletedAt ? 'line-through' : ''"
@@ -233,9 +233,10 @@
 </template>
 
 <script setup>
+import {computed, onMounted, reactive, ref} from 'vue'
 import {get, isEmpty} from 'lodash'
 import {mdiAlert, mdiBookMultipleOutline} from '@mdi/js'
-import {computed, onMounted, reactive, ref} from 'vue'
+import {storeToRefs} from 'pinia'
 import {useRoute} from 'vue-router'
 import {getCourseCodes, getTermName} from '@/lib/utils'
 import Collaborators from '@/components/course/Collaborators'
@@ -252,8 +253,8 @@ import ToggleOptOut from '@/components/course/ToggleOptOut.vue'
 import {getCourse} from '@/api/course'
 import {useContextStore} from '@/stores/context'
 
-const {config, currentUser, loadingStart, loadingComplete} = useContextStore()
-
+const contextStore = useContextStore()
+const {config, currentUser, loading} = storeToRefs(contextStore)
 const agreedToTerms = ref(false)
 const auditoriums = ref([])
 const capability = ref()
@@ -278,7 +279,6 @@ const displayLabels = reactive({
 const hasValidMeetingTimes = ref(false)
 const instructors = ref([])
 const instructorProxies = ref([])
-const isLoading = ref(true)
 const location = ref('')
 
 // Computed
@@ -286,9 +286,14 @@ const location = ref('')
 const isCurrentTerm = computed(() => course.value.termId === config.currentTermId)
 const updatesQueued = computed(() => !!course.value.updateHistory.find(u => u.status === 'queued'))
 
+contextStore.loadingStart('Course')
+
+onMounted(() => {
+  const {params} = useRoute()
+  refreshCourse(params.termId, params.sectionId)
+})
+
 const refreshCourse = (termId, sectionId) => {
-  isLoading.value = true
-  loadingStart()
   getCourse(termId, sectionId)
     .then(data => {
       course.value = data
@@ -303,8 +308,7 @@ const refreshCourse = (termId, sectionId) => {
       courseDisplayTitle.value = getCourseCodes(data)[0]
       getAuditoriums().then(aud => {
         auditoriums.value = aud
-        isLoading.value = false
-        loadingComplete(courseDisplayTitle.value)
+        contextStore.loadingComplete(courseDisplayTitle.value)
       })
     })
 }
@@ -324,9 +328,4 @@ const setRecordingType = updatedCourse => {
   course.value.recordingType = updatedCourse.recordingType
   course.value.recordingTypeName = updatedCourse.recordingTypeName
 }
-
-onMounted(() => {
-  const {params} = useRoute()
-  refreshCourse(params.termId, params.sectionId)
-})
 </script>

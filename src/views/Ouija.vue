@@ -107,8 +107,9 @@ const coursesTableDescription = computed(() => {
   }
 })
 
+contextStore.loadingStart()
+
 onMounted(() => {
-  contextStore.loadingStart()
   loadCourses().then(() => {
     contextStore.loadingComplete('Ouija Board', `Showing ${coursesTableDescription.value}`)
   })
