@@ -671,6 +671,10 @@ def _to_api_json(  # noqa C901
         else:
             course['instructors'] = [i for i in decorated_course_instructors if i['roleCode'] != 'APRX']
 
+        admin_opt_out = next((o for o in opt_outs if o.instructor_uid == 'admin'), None)
+        if admin_opt_out:
+            course['optOuts'].append(admin_opt_out.to_api_json())
+
         if blanket_opt_outs:
             course['hasBlanketOptedOut'] = True
             course['optOuts'] += [o.to_api_json() for o in blanket_opt_outs]

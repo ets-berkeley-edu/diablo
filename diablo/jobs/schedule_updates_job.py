@@ -29,6 +29,7 @@ from diablo.jobs.util import build_merged_collaborators_list, is_valid_meeting_s
 from diablo.lib.berkeley import are_scheduled_dates_obsolete, are_scheduled_times_obsolete, get_recording_end_date, get_recording_start_date
 from diablo.lib.util import safe_strftime
 from diablo.models.course_preference import CoursePreference
+from diablo.models.opt_out import OptOut
 from diablo.models.schedule_update import ScheduleUpdate
 from diablo.models.sis_section import AUTHORIZED_INSTRUCTOR_ROLE_CODES, SisSection
 from flask import current_app as app
@@ -232,6 +233,23 @@ def _queue_instructor_updates(course):
             field_value_old=scheduled_instructor_uids,
             field_value_new=[i['uid'] for i in instructors],
         )
+
+        # In the special case of an admin-opted-out no-instructor course acquiring instructor(s), the admin opt-out
+        # should be converted to instructor opt-out(s).
+        if len(instructors) and not len(scheduled_instructor_uids) and next((o for o in course['optOuts'] if o['instructorUid'] == 'admin'), None):
+            OptOut.update_opt_out(
+                term_id=course['termId'],
+                section_id=course['sectionId'],
+                instructor_uid='admin',
+                opt_out=False,
+            )
+            for i in instructors:
+                OptOut.update_opt_out(
+                    term_id=course['termId'],
+                    section_id=course['sectionId'],
+                    instructor_uid=i['uid'],
+                    opt_out=True,
+                )
 
     scheduled_collaborator_uids = course['scheduled'][0].get('collaboratorUids') or []
     new_collaborator_uids = build_merged_collaborators_list(course, scheduled_collaborator_uids)
