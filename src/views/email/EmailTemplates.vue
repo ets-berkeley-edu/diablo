@@ -94,6 +94,7 @@
                 <v-btn
                   :id="`send-test-email-${template.id}`"
                   :aria-label="`Send test email using template ${template.typeName}`"
+                  variant="plain"
                   icon
                   @click="onClickSend(template.id)"
                 >
@@ -104,6 +105,7 @@
                 <v-btn
                   :id="`delete-email-template-${template.id}`"
                   :aria-label="`Delete ${template.typeName} email template`"
+                  variant="plain"
                   icon
                   @click="deleteEmailTemplate(template.id)"
                 >
