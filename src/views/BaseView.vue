@@ -74,7 +74,7 @@
           </v-list-item>
           <v-list-item
             id="menu-item-feedback-and-help"
-            href="mailto:{{ config.emailCourseCaptureSupport }}"
+            :href="`mailto:${config.emailCourseCaptureSupport}`"
             target="_blank"
           >
             <v-list-item-title>
