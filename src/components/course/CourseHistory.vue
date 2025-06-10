@@ -49,8 +49,8 @@
           </tr>
         </template>
         <template #body="{items}">
-          <tr v-if="!items.length" class="py-5 text-center text-subtitle-1">
-            <td id="course-history-no-data" :colspan="headers.length">
+          <tr v-if="!items.length" id="course-history-no-data" class="py-5 text-center text-subtitle-1">
+            <td :colspan="headers.length">
               No updates.
             </td>
           </tr>

@@ -413,7 +413,7 @@ class CoursePage(DiabloPages):
 
     def update_history_table_rows(self):
         rows = []
-        xpath = '//div[@id="update-history-table"]//tbody/tr'
+        xpath = '//div[@id="update-history-table"]//tbody/tr[not(@id="course-history-no-data")]'
         row_els = self.elements((By.XPATH, xpath))
         for r in row_els:
             node = str(row_els.index(r) + 1)

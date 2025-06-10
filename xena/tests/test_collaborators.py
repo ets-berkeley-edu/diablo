@@ -62,7 +62,6 @@ class TestCollaborators0:
         self.jobs_page.disable_all_jobs()
 
         self.jobs_page.click_blackouts_link()
-        self.blackouts_page.delete_all_blackouts()
         self.blackouts_page.create_all_blackouts()
 
         self.kaltura_page.log_in_via_calnet(self.calnet_page)
@@ -93,7 +92,7 @@ class TestCollaborators0:
 
     def test_history_new_course_scheduled(self):
         self.course_page.load_page(self.section)
-        assert not self.course_page.update_history_table_rows()
+        assert not len(self.course_page.update_history_table_rows())
 
     def test_course_page_sis_data(self):
         self.jobs_page.load_page()
