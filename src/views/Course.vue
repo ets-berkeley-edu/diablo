@@ -37,19 +37,22 @@
       </div>
       <div v-if="!course.deletedAt && (course.hasOptedOut || !course.scheduled)">
         <v-col class="font-weight-bold mb-1">
-          <span v-if="course.hasOptedOut && !course.scheduled" id="notice-opt-out" class="text-error">
+          <span v-if="course.hasOptedOut && !course.scheduled && course.instructors.length" id="notice-opt-out" class="text-error">
             {{ currentUser.isAdmin ? 'The' : 'Your' }} course is not scheduled for Course Capture because one or more instructors have opted out. To schedule recordings, please have all instructors remove their opt-out status.
           </span>
-          <span v-if="course.hasOptedOut && course.scheduled" id="notice-opt-out-pending" class="text-error">
+          <span v-if="course.hasOptedOut && !course.scheduled && !course.instructors.length" id="notice-opt-out" class="text-error">
+            {{ currentUser.isAdmin ? 'The' : 'Your' }} course is not scheduled for Course Capture due to an admin override. Please contact coursecapture@berkeley.edu.
+          </span>
+          <span v-if="course.scheduled && course.hasOptedOut && course.instructors.length" id="notice-opt-out-pending-instructors" class="text-error">
             {{ currentUser.isAdmin ? 'The' : 'Your' }} course is scheduled for Course Capture, but will be unscheduled shortly because one or more instructors have opted out. To keep recordings scheduled, please have all instructors remove their opt-out status.
           </span>
-          <span v-if="!course.instructors.length && course.scheduled" id="notice-opt-out-pending" class="text-error">
-            {{ currentUser.isAdmin ? 'The' : 'Your' }} course is scheduled for Course Capture, but will be unscheduled shortly because it has no active instructors.
+          <span v-if="course.scheduled && course.hasOptedOut && !course.instructors.length" id="notice-opt-out-pending-no-instructors" class="text-error">
+            {{ currentUser.isAdmin ? 'The' : 'Your' }} course is scheduled for Course Capture, but will be unscheduled shortly due to an admin override. Please contact coursecapture@berkeley.edu if you have any questions.
           </span>
-          <span v-if="!course.hasOptedOut && course.instructors.length" id="notice-eligible-not-scheduled" class="text-success">
+          <span v-if="!course.scheduled && !course.hasOptedOut && course.instructors.length" id="notice-eligible-not-scheduled" class="text-success">
             This course is eligible for scheduling, but has not yet been scheduled. Instructors will be notified when scheduling has taken place.
           </span>
-          <span v-if="!course.hasOptedOut && !course.instructors.length" id="notice-eligible-not-scheduled" class="text-success">
+          <span v-if="!course.scheduled && !course.hasOptedOut && !course.instructors.length" id="notice-eligible-not-scheduled" class="text-success">
             This course is eligible for scheduling, but has not been scheduled because it has no instructors.
           </span>
         </v-col>
