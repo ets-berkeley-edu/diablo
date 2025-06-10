@@ -8,7 +8,7 @@
       Course summary
     </h2>
     <v-row
-      v-if="instructors.length"
+      v-if="course.instructors.length"
       id="instructors"
       :class="{'line-through': course.deletedAt}"
       class="pb-2"
@@ -18,7 +18,7 @@
         <v-icon :icon="mdiSchoolOutline" />
       </v-col>
       <v-col>
-        <OxfordJoin v-slot="{ item }" :items="instructors">
+        <OxfordJoin v-slot="{ item }" :items="course.instructors">
           <router-link
             v-if="currentUser.isAdmin"
             :id="`instructor-sidebar-link-${item.uid}`"
@@ -30,19 +30,6 @@
             {{ item.name }}
           </span>
         </OxfordJoin>
-        <div
-          v-if="instructorProxies.length"
-          class="text-secondary text-subtitle-2"
-        >
-          (
-          <OxfordJoin v-slot="{ item }" :items="instructorProxies">
-            <span :id="`instructor-proxy-${item.uid}`">{{ item.name }}</span>
-          </OxfordJoin>
-          {{ instructorProxies.length === 1
-            ? 'is an Admin Proxy'
-            : 'are Admin Proxies'
-          }}.)
-        </div>
       </v-col>
     </v-row>
     <div v-for="(meeting, index) in displayMeetings" :key="index">
@@ -153,7 +140,6 @@
 <script setup>
 import {onMounted, ref} from 'vue'
 import {DateTime} from 'luxon'
-import {filter} from 'lodash'
 import {
   mdiCalendar,
   mdiClockOutline,
@@ -177,13 +163,9 @@ const props = defineProps({
 
 const {config, currentUser} = useContextStore()
 const displayMeetings = ref([])
-const instructors = ref([])
-const instructorProxies = ref([])
 const today = ref(DateTime.local().startOf('day'))
 
 onMounted(() => {
   displayMeetings.value = getDisplayMeetings(props.course)
-  instructors.value = filter(props.course.instructors, i => i.roleCode !== 'APRX')
-  instructorProxies.value = filter(props.course.instructors, i => i.roleCode === 'APRX')
 })
 </script>
