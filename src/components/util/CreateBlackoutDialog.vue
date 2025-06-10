@@ -38,8 +38,9 @@
           <DatePicker
             v-model="range"
             aria-describedby="create-blackout-desc"
-            :attributes="attributes"
+            :attributes="calendarAttributes"
             :disabled-dates="disabledDates"
+            :initial-page="{month: today.month, year: today.year}"
             is-required
             :max-date="today.plus({years: 2}).toJSDate()"
             :min-date="today.toJSDate()"
@@ -93,11 +94,11 @@ const isSaving = ref(false)
 const name = ref()
 const range = defineModel('range', {
   default: {start: undefined, end: undefined},
-  type: Date
+  type: Object
 })
 const today = DateTime.now()
 
-const attributes = computed(() => {
+const calendarAttributes = computed(() => {
   return map(props.blackouts, b => ({
     key: b.name,
     highlight: 'red',

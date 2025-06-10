@@ -196,6 +196,7 @@
 
 <script setup>
 import {cloneDeep, find, get} from 'lodash'
+import {DateTime} from 'luxon'
 import {mdiAlert, mdiHandsPray, mdiPlay, mdiPlaylistEdit} from '@mdi/js'
 import {onBeforeUnmount, onMounted, ref, watch} from 'vue'
 import DisableJobToggle from '@/components/job/DisableJobToggle'
@@ -263,7 +264,7 @@ const runJob = (job) => {
   jobHistory.value.unshift({
     jobKey: job.key,
     failed: false,
-    startedAt: new Date()
+    startedAt: DateTime.now()
   })
   startJob(job.key).then(() => {})
   const jobName = find(jobSchedule.value.jobs, ['key', job.key]).name

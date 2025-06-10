@@ -47,6 +47,11 @@ class BlackoutsPage(DiabloPages):
     def blackout_delete_loc(blackout_date):
         return By.XPATH, f'//tr[contains(., "{blackout_date.strftime("%Y-%m-%d")}")]//button'
 
+    def blackout_exists(self, start_date_str, end_date_str):
+        return self.is_present(
+            (By.XPATH, f'//td[contains(@id, "start-date")][text()="{start_date_str}"]')) and self.is_present(
+            (By.XPATH, f'//td[contains(@id, "end-date")][text()="{end_date_str}"]'))
+
     def navigate_to_datepicker_month(self, month):
         while month != self.element(BlackoutsPage.CALENDAR_MONTH).text:
             self.wait_for_element_and_click(BlackoutsPage.CALENDAR_FORWARD_BUTTON)
@@ -69,10 +74,8 @@ class BlackoutsPage(DiabloPages):
             time.sleep(1)
             start_date_str = blackout_date_pair[0].strftime('%Y-%m-%d')
             end_date_str = blackout_date_pair[1].strftime('%Y-%m-%d')
-            if self.is_present(
-                    (By.XPATH, f'//td[contains(@id, "start-date")][text()=" {start_date_str} "]')) and self.is_present(
-                    (By.XPATH, f'//td[contains(@id, "end-date")][text()=" {end_date_str} "]')):
-                app.logger.info('Skipping blackout date since it already exists')
+            if self.blackout_exists(start_date_str, end_date_str):
+                app.logger.info(f'Skipping blackout date starting "{start_date_str}" ending "{end_date_str}" since it already exists')
             else:
                 if blackout_date_pair[0] < today:
                     blackout_date_pair[0] = today
@@ -80,7 +83,7 @@ class BlackoutsPage(DiabloPages):
                     f'Creating blackout called "{start_date_str}" starting "{start_date_str}" ending "{end_date_str}"')
                 self.reload_page()
                 self.wait_for_element_and_click(BlackoutsPage.CREATE_NEW_BUTTON)
-                self.wait_for_element_and_type(BlackoutsPage.NAME_INPUT, start_date_str)
+                self.wait_for_element_and_type(BlackoutsPage.NAME_INPUT, start_date_str, 2)
                 self.select_blackout_date(blackout_date_pair)
                 self.wait_for_element_and_click(BlackoutsPage.SAVE_BUTTON)
                 Wait(self.driver, util.get_short_timeout()).until(

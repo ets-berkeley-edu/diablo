@@ -80,7 +80,7 @@
             />
           </td>
           <td :id="`job-history-${item.id}-startedAt`" columnheader="job-history-startedAt-th">
-            <span class="sr-only">Started </span>{{ formatDate(item.startedAt) }}
+            <span v-if="item.startedAt"><span class="sr-only">Started </span>{{ formatDate(item.startedAt) }}</span>
           </td>
           <td :id="`job-history-${item.id}-finishedAt`" columnheader="job-history-finishedAt-th">
             <span v-if="item.finishedAt"><span class="sr-only">Finished </span>{{ formatDate(item.finishedAt) }}</span>
@@ -117,9 +117,9 @@
 </template>
 
 <script setup>
-import {ref, watch} from 'vue'
 import {DateTime} from 'luxon'
 import {mdiCheckBold, mdiExclamationThick, mdiHistory, mdiMagnify} from '@mdi/js'
+import {ref, watch} from 'vue'
 import {size} from 'lodash'
 
 defineProps({
@@ -133,6 +133,13 @@ defineProps({
   }
 })
 
+const dateTimeFormat = {
+  ...DateTime.TIME_WITH_SECONDS,
+  day: 'numeric',
+  month: 'long',
+  second: 'numeric',
+  weekday: 'long',
+}
 const headers = [
   {title: 'Key', value: 'jobKey'},
   {title: 'Status', value: 'failed'},
@@ -151,6 +158,6 @@ watch(search, input => {
 })
 
 const formatDate = date => {
-  return DateTime.fromISO(date).toLocaleString({...DateTime.DATETIME_MED_WITH_WEEKDAY, weekday: 'long'})
+  return DateTime.fromISO(date).toLocaleString(dateTimeFormat)
 }
 </script>
