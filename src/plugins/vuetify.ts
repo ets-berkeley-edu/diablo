@@ -108,16 +108,15 @@ export default createVuetify({
         colors: {
           accent: '#f44336',
           anchor: '#ca4f16',
-          banner: '#2a5f83',
+          banner: '#224f6e',
           error: red.accent4,
           primary: '#307aab',
-          secondary: '#68acd8',
+          secondary: '#347cad',
           success: '#3a833c',
           'icon-nav': '#fff',
-          'on-secondary': '#173c55',
           'surface-light': '#f6f6f6',
           'table-border': '#979797',
-          'tertiary': '#347cad',
+          'tertiary': '#27658e',
         }
       },
       dark: {
