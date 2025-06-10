@@ -264,7 +264,7 @@ const runJob = (job) => {
   jobHistory.value.unshift({
     jobKey: job.key,
     failed: false,
-    startedAt: DateTime.now()
+    startedAt: DateTime.now().toISO()
   })
   startJob(job.key).then(() => {})
   const jobName = find(jobSchedule.value.jobs, ['key', job.key]).name
