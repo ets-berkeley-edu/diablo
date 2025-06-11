@@ -104,5 +104,5 @@ ol li, ul li {
   margin: 4px 0;
 }
 table tr:not(:last-child) td, table tr th {
-  border-bottom-color: rgb(var(--v-theme-table-border)) !important;
+  border-bottom: thin solid rgb(var(--v-theme-table-border)) !important;
 }
