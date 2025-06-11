@@ -7,17 +7,17 @@
       <v-card-text>
         <v-container class="d-block font-size-16 mx-0 mb-6" fluid>
           <v-row v-if="room.kalturaResourceId">
-            <v-col class="text-subtitle-1">
-              Kaltura resource ID: {{ room.kalturaResourceId }}
-              <span v-if="kalturaEventList">
-                (<a
-                  id="skip-to-kaltura-event-list"
-                  href="#kaltura-events-header"
-                  @click.stop="scrollToKalturaEvents"
-                >
-                  Scroll to Kaltura events
-                </a>)
-              </span>
+            <v-col class="text-subtitle-1 d-flex flex-wrap">
+              <span class="mr-8 text-no-wrap">Kaltura resource ID: {{ room.kalturaResourceId }}</span>
+              <a
+                v-if="kalturaEventList"
+                id="skip-to-kaltura-event-list"
+                class="text-no-wrap"
+                href="#kaltura-events-header"
+                @click.stop="scrollToKalturaEvents"
+              >
+                Scroll to Kaltura events
+              </a>
             </v-col>
           </v-row>
           <v-row>
@@ -46,7 +46,7 @@
                 target="_blank"
                 :to="`/room/printable/${room.id}`"
               >
-                <v-icon color="anchor" :icon="mdiPrinter" /> Print schedule <span class="sr-only">(opens in new tab)</span>
+                <v-icon class="mr-2" color="anchor" :icon="mdiPrinter" />Print schedule<span class="sr-only"> (opens in new tab)</span>
               </router-link>
             </v-col>
           </v-row>
@@ -68,7 +68,11 @@
         </div>
       </v-card-title>
       <v-card-text class="pt-5">
-        <KalturaEventList :events="kalturaEventList" :location="room.location" />
+        <KalturaEventList
+          :events="kalturaEventList"
+          :is-loading="isLoadingEventList"
+          :location="room.location"
+        />
       </v-card-text>
     </v-card>
   </div>
@@ -90,6 +94,7 @@ import {useContextStore} from '@/stores/context'
 
 const contextStore = useContextStore()
 const isAuditorium = ref(undefined)
+const isLoadingEventList = ref(true)
 const kalturaEventList = ref([])
 const offerPrintable = ref(undefined)
 const room = ref(undefined)
@@ -113,6 +118,7 @@ onMounted(() => {
     if (room.value.kalturaResourceId) {
       getKalturaEventList(room.value.kalturaResourceId).then(data => {
         kalturaEventList.value = data
+        isLoadingEventList.value = false
       })
     }
   })

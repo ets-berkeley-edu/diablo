@@ -81,7 +81,7 @@
                   :id="`template-${template.id}`"
                   :to="`/email/template/edit/${template.id}`"
                 >
-                  {{ template.typeName }}
+                  {{ template.typeName }}<span class="sr-only"> - Edit Template</span>
                 </router-link>
               </td>
               <td :id="`template-${template.id}-subject-line`" class="w-50">

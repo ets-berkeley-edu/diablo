@@ -12,16 +12,14 @@
         class="my-2"
       >
         <v-card-title>
-          <a
-            id="link-to-edit-kaltura-event"
+          <ExternalLink
             class="text-subtitle-1"
+            :icon-size="16"
             :href="`${config.kalturaMediaSpaceUrl}/recscheduling/index/edit-event/eventid/${scheduled.kalturaScheduleId}`"
-            target="_blank"
+            link-id="link-to-edit-kaltura-event"
           >
             Kaltura series {{ scheduled.kalturaScheduleId }}
-            <span class="sr-only">(opens in new tab)</span>
-            <v-icon class="pb-1" :icon="mdiOpenInNew" size="small" />
-          </a>
+          </ExternalLink>
         </v-card-title>
         <v-card-text>
           <v-row>
@@ -57,8 +55,8 @@
 
 <script setup>
 import {isEmpty} from 'lodash'
-import {mdiOpenInNew} from '@mdi/js'
 import Date from '@/components/util/Date'
+import ExternalLink from '@/components/util/ExternalLink'
 import {useContextStore} from '@/stores/context'
 
 defineProps({

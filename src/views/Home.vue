@@ -74,7 +74,7 @@
                       :id="`${getTableId(index)}-${course.sectionId}-label`"
                       :aria-rowspan="size(course.displayMeetings)"
                       class="text-no-wrap"
-                      :class="{'pt-3 pb-3': course.courseCodes.length > 1, 'border-bottom-zero': size(course.displayMeetings) > 1}"
+                      :class="{'pt-3 pb-3': course.courseCodes.length > 1, 'border-b-0': size(course.displayMeetings) > 1}"
                       :columnheader="`${getTableId(index)}-label-th`"
                     >
                       <div v-for="(courseCode, courseCodeIndex) in course.courseCodes" :key="courseCode">
@@ -91,7 +91,7 @@
                     <td
                       :id="`${getTableId(index)}-${course.sectionId}-title`"
                       :aria-rowspan="size(course.displayMeetings)"
-                      :class="{'border-bottom-zero': size(course.displayMeetings) > 1}"
+                      :class="{'border-b-0': size(course.displayMeetings) > 1}"
                       :columnheader="`${getTableId(index)}-title-th`"
                     >
                       <span aria-hidden="true">{{ course.courseTitle || '&mdash;' }}</span>
@@ -100,21 +100,21 @@
                     <td
                       :id="`${getTableId(index)}-${course.sectionId}-instructors`"
                       :aria-rowspan="size(course.displayMeetings)"
-                      :class="{'border-bottom-zero': size(course.displayMeetings) > 1}"
+                      :class="{'border-b-0': size(course.displayMeetings) > 1}"
                       :columnheader="`${getTableId(index)}-instructors-th`"
                     >
                       {{ oxfordJoin(map(course.instructors, 'name')) }}
                     </td>
                     <td
                       :id="`${getTableId(index)}-${course.sectionId}-room-0`"
-                      :class="{'border-bottom-zero': size(course.displayMeetings) > 1}"
+                      :class="{'border-b-0': size(course.displayMeetings) > 1}"
                       :columnheader="`${getTableId(index)}-room-th`"
                     >
                       {{ course.displayMeetings[0].room.location }}
                     </td>
                     <td
                       :id="`${getTableId(index)}-${course.sectionId}-days-0`"
-                      :class="{'border-bottom-zero': size(course.displayMeetings) > 1}"
+                      :class="{'border-b-0': size(course.displayMeetings) > 1}"
                       class="text-no-wrap"
                       :columnheader="`${getTableId(index)}-days-th`"
                     >
@@ -123,7 +123,7 @@
                     </td>
                     <td
                       :id="`${getTableId(index)}-${course.sectionId}-time-0`"
-                      :class="{'border-bottom-zero': size(course.displayMeetings) > 1}"
+                      :class="{'border-b-0': size(course.displayMeetings) > 1}"
                       :columnheader="`${getTableId(index)}-time-th`"
                     >
                       <div v-if="course.nonstandardMeetingDates" class="pt-2">
