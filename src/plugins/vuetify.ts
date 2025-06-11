@@ -115,7 +115,7 @@ export default createVuetify({
           success: '#3a833c',
           'icon-nav': '#fff',
           'surface-light': '#f6f6f6',
-          'table-border': '#979797',
+          'table-border': '#c9c9c9',
           'tertiary': '#27658e',
         }
       },
