@@ -90,7 +90,7 @@
               <td :id="`template-${template.id}-createdAt`" class="text-no-wrap">
                 {{ DateTime.fromISO(template.createdAt).toLocaleString(DateTime.DATE_MED) }}
               </td>
-              <td>
+              <td class="text-center">
                 <v-btn
                   :id="`send-test-email-${template.id}`"
                   :aria-label="`Send test email using template ${template.typeName}`"
@@ -101,7 +101,7 @@
                   <v-icon :icon="mdiEmailOutline" />
                 </v-btn>
               </td>
-              <td>
+              <td class="text-center">
                 <v-btn
                   :id="`delete-email-template-${template.id}`"
                   :aria-label="`Delete ${template.typeName} email template`"

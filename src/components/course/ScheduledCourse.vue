@@ -8,6 +8,7 @@
       <v-card
         v-for="scheduled in course.scheduled"
         :key="scheduled.kalturaScheduleId"
+        variant="text"
         class="my-2"
       >
         <v-card-title>

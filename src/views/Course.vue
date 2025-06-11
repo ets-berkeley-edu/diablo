@@ -77,145 +77,147 @@
         order="2"
         xl="9"
       >
-        <v-container v-if="isCurrentTerm && !!capability && hasValidMeetingTimes" class="pt-6">
-          <v-row
-            align="center"
-            aria-labelledby="instructors-header"
-            justify="start"
-            role="region"
-          >
-            <v-col id="instructors-list" class="px-4 mb-2" cols="12">
-              <h3 id="instructors-header">
-                <span v-if="!course.hasOptedOut && course.scheduled">
-                  Instructor(s) listed will have editing and publishing access:
-                </span>
-                <span v-if="!course.deletedAt && (course.hasOptedOut || !course.scheduled)">
-                  Instructor(s):
-                </span>
-              </h3>
-              <div v-if="isEmpty(course.instructors)" class="pl-4 pt-2 text-medium-emphasis">
-                No instructors
-              </div>
-              <div
-                v-for="instructor in course.instructors"
-                :id="`instructor-${instructor.uid}`"
-                :key="`instructor-${instructor.uid}`"
-                class="pl-4 pt-2"
-              >
-                {{ instructor.name }} ({{ instructor.uid }})
-                <span v-if="instructor.hasOptedOut" :id="`instructor-${instructor.uid}-opt-out`">
-                  (opted out)
-                </span>
-              </div>
-            </v-col>
-          </v-row>
-          <Collaborators
-            v-if="!course.hasOptedOut && course.scheduled"
-            :course="course"
-            :set-model="collaborators => course.collaborators = collaborators"
-          />
-          <RecordingType
-            v-if="!course.hasOptedOut && course.scheduled"
-            :course="course"
-            :labels="displayLabels"
-            :set-model="setRecordingType"
-          />
-          <RecordingPlacement
-            v-if="!course.hasOptedOut && course.scheduled"
-            :course="course"
-            :labels="displayLabels"
-            :set-model="setRecordingPlacement"
-          />
-          <v-row v-if="!currentUser.isAdmin && get(course, 'publishType', '') === 'kaltura_my_media'">
-            <v-col class="pa-4 my-2">
-              Based on the selected Recording Placement, please review the following KB articles:
-              <ul>
-                <li>
-                  <a id="link-publish-my-media" href="https://berkeley.service-now.com/kb?id=kb_article_view&sysparm_article=KB0013882" target="_blank">
-                    How to Publish from My Media
-                    <span class="sr-only"> (opens in new tab)</span>
-                  </a>
-                </li>
-                <li>
-                  <a id="link-embed-rich-content" href="https://berkeley.service-now.com/kb?id=kb_article_view&sysparm_article=KB0013623" target="_blank">
-                    How to Embed in bCourses using the Rich Content Editor
-                    <span class="sr-only"> (opens in new tab)</span>
-                  </a>
-                </li>
-                <li>
-                  <a id="link-download-second-stream" href="https://berkeley.service-now.com/kb?id=kb_article_view&sysparm_article=KB0014115" target="_blank">
-                    How to Download the Second Stream of the Recording
-                    <span class="sr-only"> (opens in new tab)</span>
-                  </a>
-                </li>
-                <li>
-                  <a id="link-faq" href="https://rtl.berkeley.edu/services-programs/course-capture/instructors-getting-started/course-capture-faq" target="_blank">
-                    Course Capture FAQ
-                    <span class="sr-only"> (opens in new tab)</span>
-                  </a>
-                </li>
-              </ul>
-            </v-col>
-          </v-row>
-          <v-row v-if="!currentUser.isAdmin && get(course, 'publishType', '').startsWith('kaltura_media_gallery')">
-            <v-col class="pa-4 my-2">
-              Based on the selected Recording Placement, please review the following KB articles:
-              <ul>
-                <li>
-                  <a id="link-remove-recording" href="https://berkeley.service-now.com/kb?id=kb_article_view&sysparm_article=KB0014032" target="_blank">
-                    How to Remove a Recording from the Media Gallery
-                    <span class="sr-only"> (opens in new tab)</span>
-                  </a>
-                </li>
-                <li>
-                  <a id="link-download-second-stream" href="https://berkeley.service-now.com/kb?id=kb_article_view&sysparm_article=KB0014115" target="_blank">
-                    How to Download the Second Stream of the Recording
-                    <span class="sr-only"> (opens in new tab)</span>
-                  </a>
-                </li>
-                <li>
-                  <a id="link-faq" href="https://rtl.berkeley.edu/services-programs/course-capture/instructors-getting-started/course-capture-faq" target="_blank">
-                    Course Capture FAQ
-                    <span class="sr-only"> (opens in new tab)</span>
-                  </a>
-                </li>
-              </ul>
-            </v-col>
-          </v-row>
-          <ScheduledCourse v-if="currentUser.isAdmin" :course="course" />
-        </v-container>
-        <v-container v-if="isCurrentTerm && !capability" class="pt-6">
-          <v-row>
-            <v-col class="d-flex justify-start pl-7">
-              <v-icon class="mr-2" color="error" :icon="mdiAlert" />
-              <div id="course-not-eligible">
-                This course is not eligible for Course Capture because
-                <span v-if="location">{{ location }} is not capture-enabled.</span>
-                <span v-if="!location">it has no meeting location.</span>
-              </div>
-            </v-col>
-          </v-row>
-        </v-container>
-        <v-container v-if="isCurrentTerm && !!capability && !hasValidMeetingTimes" class="pt-6">
-          <v-row>
-            <v-col class="d-flex justify-start">
-              <v-icon class="mr-2" color="error" :icon="mdiAlert" />
-              <div id="invalid-meeting-times">
-                This course is in a capture-enabled room but the meeting times are missing or invalid.
-              </div>
-            </v-col>
-          </v-row>
-        </v-container>
-        <v-container v-if="!isCurrentTerm" class="pt-6">
-          <v-row>
-            <v-col class="d-flex justify-start">
-              <v-icon class="mr-2" color="error" :icon="mdiAlert" />
-              <div id="course-not-current">
-                This course is not currently eligible for Course Capture.
-              </div>
-            </v-col>
-          </v-row>
-        </v-container>
+        <v-card>
+          <v-container v-if="isCurrentTerm && !!capability && hasValidMeetingTimes" class="pt-6">
+            <v-row
+              align="center"
+              aria-labelledby="instructors-header"
+              justify="start"
+              role="region"
+            >
+              <v-col id="instructors-list" class="px-4 mb-2" cols="12">
+                <h3 id="instructors-header">
+                  <span v-if="!course.hasOptedOut && course.scheduled">
+                    Instructor(s) listed will have editing and publishing access:
+                  </span>
+                  <span v-if="!course.deletedAt && (course.hasOptedOut || !course.scheduled)">
+                    Instructor(s):
+                  </span>
+                </h3>
+                <div v-if="isEmpty(course.instructors)" class="pl-4 pt-2 text-medium-emphasis">
+                  No instructors
+                </div>
+                <div
+                  v-for="instructor in course.instructors"
+                  :id="`instructor-${instructor.uid}`"
+                  :key="`instructor-${instructor.uid}`"
+                  class="pl-4 pt-2"
+                >
+                  {{ instructor.name }} ({{ instructor.uid }})
+                  <span v-if="instructor.hasOptedOut" :id="`instructor-${instructor.uid}-opt-out`">
+                    (opted out)
+                  </span>
+                </div>
+              </v-col>
+            </v-row>
+            <Collaborators
+              v-if="!course.hasOptedOut && course.scheduled"
+              :course="course"
+              :set-model="collaborators => course.collaborators = collaborators"
+            />
+            <RecordingType
+              v-if="!course.hasOptedOut && course.scheduled"
+              :course="course"
+              :labels="displayLabels"
+              :set-model="setRecordingType"
+            />
+            <RecordingPlacement
+              v-if="!course.hasOptedOut && course.scheduled"
+              :course="course"
+              :labels="displayLabels"
+              :set-model="setRecordingPlacement"
+            />
+            <v-row v-if="!currentUser.isAdmin && get(course, 'publishType', '') === 'kaltura_my_media'">
+              <v-col class="pa-4 my-2">
+                Based on the selected Recording Placement, please review the following KB articles:
+                <ul>
+                  <li>
+                    <a id="link-publish-my-media" href="https://berkeley.service-now.com/kb?id=kb_article_view&sysparm_article=KB0013882" target="_blank">
+                      How to Publish from My Media
+                      <span class="sr-only"> (opens in new tab)</span>
+                    </a>
+                  </li>
+                  <li>
+                    <a id="link-embed-rich-content" href="https://berkeley.service-now.com/kb?id=kb_article_view&sysparm_article=KB0013623" target="_blank">
+                      How to Embed in bCourses using the Rich Content Editor
+                      <span class="sr-only"> (opens in new tab)</span>
+                    </a>
+                  </li>
+                  <li>
+                    <a id="link-download-second-stream" href="https://berkeley.service-now.com/kb?id=kb_article_view&sysparm_article=KB0014115" target="_blank">
+                      How to Download the Second Stream of the Recording
+                      <span class="sr-only"> (opens in new tab)</span>
+                    </a>
+                  </li>
+                  <li>
+                    <a id="link-faq" href="https://rtl.berkeley.edu/services-programs/course-capture/instructors-getting-started/course-capture-faq" target="_blank">
+                      Course Capture FAQ
+                      <span class="sr-only"> (opens in new tab)</span>
+                    </a>
+                  </li>
+                </ul>
+              </v-col>
+            </v-row>
+            <v-row v-if="!currentUser.isAdmin && get(course, 'publishType', '').startsWith('kaltura_media_gallery')">
+              <v-col class="pa-4 my-2">
+                Based on the selected Recording Placement, please review the following KB articles:
+                <ul>
+                  <li>
+                    <a id="link-remove-recording" href="https://berkeley.service-now.com/kb?id=kb_article_view&sysparm_article=KB0014032" target="_blank">
+                      How to Remove a Recording from the Media Gallery
+                      <span class="sr-only"> (opens in new tab)</span>
+                    </a>
+                  </li>
+                  <li>
+                    <a id="link-download-second-stream" href="https://berkeley.service-now.com/kb?id=kb_article_view&sysparm_article=KB0014115" target="_blank">
+                      How to Download the Second Stream of the Recording
+                      <span class="sr-only"> (opens in new tab)</span>
+                    </a>
+                  </li>
+                  <li>
+                    <a id="link-faq" href="https://rtl.berkeley.edu/services-programs/course-capture/instructors-getting-started/course-capture-faq" target="_blank">
+                      Course Capture FAQ
+                      <span class="sr-only"> (opens in new tab)</span>
+                    </a>
+                  </li>
+                </ul>
+              </v-col>
+            </v-row>
+            <ScheduledCourse v-if="currentUser.isAdmin" :course="course" />
+          </v-container>
+          <v-container v-if="isCurrentTerm && !capability" class="pt-6">
+            <v-row>
+              <v-col class="d-flex justify-start pl-7">
+                <v-icon class="mr-2" color="error" :icon="mdiAlert" />
+                <div id="course-not-eligible">
+                  This course is not eligible for Course Capture because
+                  <span v-if="location">{{ location }} is not capture-enabled.</span>
+                  <span v-if="!location">it has no meeting location.</span>
+                </div>
+              </v-col>
+            </v-row>
+          </v-container>
+          <v-container v-if="isCurrentTerm && !!capability && !hasValidMeetingTimes" class="pt-6">
+            <v-row>
+              <v-col class="d-flex justify-start">
+                <v-icon class="mr-2" color="error" :icon="mdiAlert" />
+                <div id="invalid-meeting-times">
+                  This course is in a capture-enabled room but the meeting times are missing or invalid.
+                </div>
+              </v-col>
+            </v-row>
+          </v-container>
+          <v-container v-if="!isCurrentTerm" class="pt-6">
+            <v-row>
+              <v-col class="d-flex justify-start">
+                <v-icon class="mr-2" color="error" :icon="mdiAlert" />
+                <div id="course-not-current">
+                  This course is not currently eligible for Course Capture.
+                </div>
+              </v-col>
+            </v-row>
+          </v-container>
+        </v-card>
       </v-col>
       <v-col
         cols="12"
