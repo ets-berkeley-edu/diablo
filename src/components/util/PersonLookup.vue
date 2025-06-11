@@ -84,7 +84,7 @@ const props = defineProps({
     type: Function
   },
   placeholder: {
-    default: 'UID or email',
+    default: 'UID, name, or email',
     type: String,
     required: false
   }

@@ -1,7 +1,7 @@
 <template>
-  <v-container
+  <v-card
     aria-labelledby="course-summary-header"
-    class="elevation-2 rounded pa-6 px-md-4 px-lg-6 mx-1"
+    class="pa-6 px-md-4 px-lg-6 mx-1"
     role="region"
   >
     <h2 id="course-summary-header" class="sr-only">
@@ -134,7 +134,7 @@
       </v-col>
       <v-col class="py-1">Opted out</v-col>
     </v-row>
-  </v-container>
+  </v-card>
 </template>
 
 <script setup>
