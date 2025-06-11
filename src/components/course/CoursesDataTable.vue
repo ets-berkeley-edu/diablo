@@ -1,6 +1,7 @@
 <template>
   <div>
     <v-row id="courses-data-table-message" class="text-medium-emphasis pb-1 px-4">
+      <span class="ml-4">{{ messageForCourses }}</span>
       <v-spacer />
       <v-col cols="12" md="6"><span v-if="!refreshing && !searchText">{{ description }}</span></v-col>
     </v-row>
@@ -262,6 +263,10 @@ const props = defineProps({
     type: Array
   },
   description: {
+    default: undefined,
+    type: String
+  },
+  messageForCourses: {
     default: undefined,
     type: String
   },
