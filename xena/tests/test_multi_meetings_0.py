@@ -190,20 +190,11 @@ class TestWeirdTypeB:
         self.course_page.load_page(self.section)
         self.course_page.verify_section_sis_data(self.section)
         self.course_page.verify_meeting_sis_data(self.meeting_physical, idx=0)
-        self.course_page.verify_recording_placement(self.recording_schedule)
+        self.course_page.verify_no_scheduled_recordings()
 
     def test_series_title_and_desc_instr_removed(self):
-        self.course_page.click_kaltura_series_link(self.recording_schedule)
-        self.kaltura_page.verify_title_and_desc(self.section, self.meeting_physical)
-
-    def test_series_collab_instr_removed(self):
-        self.kaltura_page.verify_collaborators(self.section)
-
-    def test_series_schedule_instr_removed(self):
-        self.kaltura_page.verify_schedule(self.section, self.meeting_physical)
-
-    def test_series_publish_status_instr_removed(self):
-        self.kaltura_page.verify_publish_status(self.recording_schedule)
+        self.kaltura_page.load_event_edit_page(self.recording_schedule.series_id)
+        self.kaltura_page.wait_for_title('Access Denied - UC Berkeley - Test')
 
     def test_no_instructor_removed_email(self):
         assert util.get_sent_email_count(EmailTemplateType.INSTR_REMOVED, self.section) == 0
@@ -224,6 +215,7 @@ class TestWeirdTypeB:
     def test_run_kaltura_job_instr_added(self):
         self.jobs_page.load_page()
         self.jobs_page.run_schedule_update_job_sequence()
+        assert util.get_kaltura_id(self.recording_schedule)
 
     def test_course_page_instr_added(self):
         self.course_page.load_page(self.section)

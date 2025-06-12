@@ -45,11 +45,12 @@ class RoomPage(DiabloPages):
 
     @staticmethod
     def series_row_xpath(recording_sched):
-        return f'//div[@id="kaltura-event-list"]//tr[contains(., "{recording_sched.series_id}")]'
+        return f'//div[@id="kaltura-event-list"]//tbody/tr[contains(., "{recording_sched.series_id}")]'
 
     def wait_for_series_row(self, recording_sched):
         xpath = RoomPage.series_row_xpath(recording_sched)
-        Wait(self.driver, util.get_short_timeout()).until(ec.presence_of_element_located((By.XPATH, xpath)))
+        app.logger.info(f'Waiting for series row {recording_sched.series_id}')
+        Wait(self.driver, util.get_medium_timeout()).until(ec.presence_of_element_located((By.XPATH, xpath)))
 
     def series_row_kaltura_link_text(self, recording_sched):
         return self.element((By.XPATH, f'{RoomPage.series_row_xpath(recording_sched)}//a')).text.strip()
@@ -95,7 +96,7 @@ class RoomPage(DiabloPages):
         for el in els:
             i = els.index(el)
             cell = self.element((By.XPATH, f'{xpath}[{i + 1}]/td[3]'))
-            date = datetime.strptime(f'{cell.text}, {current_year}', '%I:%M%p, %a, %b %d, %Y').date()
+            date = datetime.strptime(f'{cell.text}, {current_year}', '%I:%M %p, %a, %b %d, %Y').date()
             values.append(date)
         return values
 
