@@ -71,9 +71,8 @@ class CoursePage(DiabloPages):
 
     SECTION_ID = (By.ID, 'section-id')
     COURSE_TITLE = (By.ID, 'course-title')
-    INSTRUCTORS = (By.ID, 'instructors')
-    INSTRUCTOR = (By.XPATH, '//div[@id="instructors"]//*[contains(@id, "instructor-") and not(contains(@id, "proxy"))]')
-    PROXY = (By.XPATH, '//div[@id="instructors"]//span[contains(@id, "instructor-proxy-")]')
+    INSTRUCTOR = (By.XPATH, '//div[@id="instructors-list"]//*[contains(@id, "instructor-")]')
+    PROXY = (By.XPATH, '//div[@id="collaborators-list"]//*[contains(@id, "collaborator-")]')
     CROSS_LISTING = (By.XPATH, '//div[contains(@id, "cross-listing-")]')
 
     def is_canceled(self):
@@ -93,7 +92,7 @@ class CoursePage(DiabloPages):
         return [el.text for el in els]
 
     def verify_instructors(self, section):
-        expected_instructors = [f'{i.first_name} {i.last_name}'.strip() for i in section.instructors]
+        expected_instructors = [f'{i.first_name} {i.last_name} ({i.uid})'.strip() for i in section.instructors]
         visible_instructors = self.visible_instructors()
         if visible_instructors != expected_instructors:
             app.logger.info(f"Expected '{expected_instructors}', got '{visible_instructors}'")
@@ -132,17 +131,17 @@ class CoursePage(DiabloPages):
 
     def visible_meeting_days(self):
         els = self.elements(CoursePage.MEETING_DAYS)
-        vis = [el.get_property('innerText').replace('Days of the week:', '').replace('Dates:', '').strip() for el in els]
+        vis = [el.get_property('innerText').strip().replace('\n', '') for el in els]
         app.logger.info(f'Visible {vis}')
         return vis
 
     def visible_meeting_time(self):
         els = self.elements(CoursePage.MEETING_TIMES)
-        return [el.get_property('innerText').replace('Start and end times:', '').strip().split('\n')[0] for el in els]
+        return [el.get_property('innerText').strip().replace('\n', '') for el in els]
 
     def visible_rooms(self):
         els = self.elements(CoursePage.ROOMS)
-        return [el.get_property('innerText').replace('Location:', '').strip() for el in els]
+        return [el.get_property('innerText').strip() for el in els]
 
     def visible_opt_out(self):
         return self.element(CoursePage.OPTED_OUT).get_property('innerText').strip()
@@ -157,8 +156,10 @@ class CoursePage(DiabloPages):
             app.logger.info(f"Expected room '{expected_room}', got '{visible_room}'")
 
         start_date = meeting.meeting_schedule.start_date.strftime('%b %-d, %Y')
+        accessible_start_date = meeting.meeting_schedule.start_date.strftime('%B %-d, %Y')
         end_date = meeting.meeting_schedule.end_date.strftime('%b %-d, %Y')
-        expected_dates = f'{start_date} to {end_date}'
+        accessible_end_date = meeting.meeting_schedule.end_date.strftime('%B %-d, %Y')
+        expected_dates = f'{start_date}{accessible_start_date} to {end_date}{accessible_end_date}'
         visible_dates = self.visible_meeting_days()[idx]
         if expected_dates not in visible_dates:
             app.logger.info(f"Expected '{expected_dates}' to be in '{visible_dates}'")
@@ -168,9 +169,9 @@ class CoursePage(DiabloPages):
         if expected_times not in visible_times:
             app.logger.info(f"Expected '{expected_times}' to be in '{visible_times}'")
 
-        self.assert_equivalence(visible_room, expected_room)
         assert expected_dates in visible_dates
-        self.assert_equivalence(visible_times, expected_times)
+        assert expected_times in visible_times
+        self.assert_equivalence(visible_room, expected_room)
 
     # CAPTURE SETTINGS - instructors
 
@@ -399,6 +400,8 @@ class CoursePage(DiabloPages):
 
     # KALTURA SERIES INFO
 
+    NO_SCHEDULED_RECORDINGS_TEXT = By.ID, 'recordings-scheduled-none'
+
     @staticmethod
     def kaltura_series_link(recording_schedule):
         return By.PARTIAL_LINK_TEXT, f'Kaltura series {recording_schedule.series_id}'
@@ -408,6 +411,10 @@ class CoursePage(DiabloPages):
         self.wait_for_page_and_click(CoursePage.kaltura_series_link(recording_schedule))
         time.sleep(2)
         self.switch_to_last_window(self.window_handles())
+
+    def verify_no_scheduled_recordings(self):
+        assert self.is_present(self.SCHEDULING_TO_COME_MSG)
+        assert self.is_present(self.NO_SCHEDULED_RECORDINGS_TEXT)
 
     # COURSE UPDATE HISTORY
 
