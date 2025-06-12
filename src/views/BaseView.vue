@@ -1,48 +1,10 @@
 <template>
   <v-app>
-    <v-navigation-drawer
-      v-if="currentUser.courses.length || currentUser.isAdmin"
-      v-model="drawer"
-      color="tertiary"
-      expand-on-hover
-      permanent
-      rail
-      role="navigation"
-      class="sidebar-nav"
-    >
-      <v-list role="none" tabindex="-1">
-        <template v-for="(item, i) in navItems" :key="i">
-          <v-list-item
-            :id="`sidebar-link-${kebabCase(item.title)}`"
-            :active="route.path === item.path"
-            component="router-link"
-            :to="item.path"
-            :aria-current="route.path === item.path"
-            tabindex="0"
-            tag="a"
-          >
-            <template #prepend>
-              <v-icon color="icon-nav" :icon="item.icon" />
-            </template>
-            <v-list-item-title>
-              <span class="text-subtitle-1 text-white">{{ item.title }}</span>
-            </v-list-item-title>
-          </v-list-item>
-          <v-divider
-            v-if="item.title === 'Rooms'"
-            class="border-opacity-80 ml-1 mr-1"
-            color="icon-nav"
-            :thickness="1"
-          />
-        </template>
-      </v-list>
-    </v-navigation-drawer>
     <v-app-bar
       v-if="!route.meta.printable"
       v-wave="assign(waveOptions, theme.global.current.value.dark ? waveOptionsDark : waveOptionsLight)"
       color="banner"
     >
-      <CourseCaptureBanner />
       <a
         id="skip-to-content-link"
         href="#content"
@@ -50,6 +12,7 @@
       >
         Skip to main content
       </a>
+      <CourseCaptureBanner />
       <v-spacer />
       <v-menu eager>
         <template #activator="{ props }">
@@ -92,6 +55,44 @@
         </v-list>
       </v-menu>
     </v-app-bar>
+    <v-navigation-drawer
+      v-if="currentUser.courses.length || currentUser.isAdmin"
+      v-model="drawer"
+      color="tertiary"
+      expand-on-hover
+      permanent
+      rail
+      role="navigation"
+      class="sidebar-nav"
+    >
+      <v-list role="none" tabindex="-1">
+        <template v-for="(item, i) in navItems" :key="i">
+          <v-list-item
+            :id="`sidebar-link-${kebabCase(item.title)}`"
+            :active="route.path === item.path"
+            component="router-link"
+            :to="item.path"
+            :aria-current="route.path === item.path ? 'page' : false"
+            tabindex="0"
+            tag="a"
+          >
+            <template #prepend>
+              <v-icon color="icon-nav" :icon="item.icon" />
+            </template>
+            <v-list-item-title>
+              <span class="text-subtitle-1 text-white">{{ item.title }}</span>
+            </v-list-item-title>
+          </v-list-item>
+          <v-divider
+            v-if="item.title === 'Rooms'"
+            class="border-opacity-80 ml-1 mr-1"
+            color="icon-nav"
+            :thickness="1"
+          />
+        </template>
+      </v-list>
+    </v-navigation-drawer>
+
     <v-main id="content" class="ma-3" width="calc(100vw - 38px)">
       <Snackbar />
       <Spinner v-if="loading" />
@@ -209,12 +210,6 @@ const toggleTheme = () => {
     : 'dark'
 }
 </script>
-
-<style>
-.sidebar-nav .v-list-item[aria-current="true"]:not(:focus)::before {
-  opacity: 0.1;
-}
-</style>
 
 <style scoped>
 :deep(.v-toolbar) {

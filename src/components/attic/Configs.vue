@@ -14,16 +14,13 @@
             {{ config.key }}
           </td>
           <td>
-            <a
+            <ExternalLink
               v-if="isUrl(config.value)"
-              :id="`link-to-${config.key}`"
               :href="config.value"
-              target="_blank"
+              :link-id="`link-to-${config.key}`"
             >
               {{ config.value }}
-              <span class="sr-only">(opens in new tab)</span>
-              <v-icon class="pl-1" :icon="mdiOpenInNew" size="small" />
-            </a>
+            </ExternalLink>
             <span v-if="!isUrl(config.value)">{{ config.value }}</span>
           </td>
         </tr>
@@ -35,8 +32,8 @@
 <script setup>
 import axios from 'axios'
 import {each, includes, sortBy, startsWith} from 'lodash'
-import {mdiOpenInNew} from '@mdi/js'
 import {onMounted, ref} from 'vue'
+import ExternalLink from '@/components/util/ExternalLink'
 import {getApiBaseUrl} from '@/api/api-utils'
 import {useContextStore} from '@/stores/context'
 

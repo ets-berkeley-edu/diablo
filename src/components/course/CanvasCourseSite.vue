@@ -1,14 +1,13 @@
 <template>
   <span>
-    <a
-      :id="`canvas-course-site-${siteId}`"
+    <ExternalLink
       :href="`${config.canvasBaseUrl}/courses/${siteId}`"
-      target="_blank"
+      :icon-size="16"
+      :link-id="`canvas-course-site-${siteId}`"
     >
       <span v-if="courseSite">{{ courseSite.name }} ({{ courseSite.courseCode }})</span>
       <span v-else>bCourses site {{ siteId }}</span>
-      <span class="sr-only">(opens in new tab)</span>
-    </a>
+    </ExternalLink>
     <span
       v-if="kalturaCategory.id"
       :id="`kaltura-category-canvas-${siteId}`"
@@ -21,6 +20,7 @@
 
 <script setup>
 import {onMounted, ref} from 'vue'
+import ExternalLink from '@/components/util/ExternalLink'
 import {getKalturaCategory} from '@/api/kaltura'
 import {useContextStore} from '@/stores/context'
 

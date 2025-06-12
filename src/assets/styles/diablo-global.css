@@ -1,6 +1,4 @@
-.border-bottom-zero {
-  border-bottom: 0 !important;
-}
+
 .font-size-13 {
   font-size: 12px !important;
 }
@@ -103,6 +101,6 @@ ol, ul {
 ol li, ul li {
   margin: 4px 0;
 }
-table tr:not(:last-child) td, table tr th {
+table tr:not(:last-child) td:not(.border-b-0), table tr th {
   border-bottom: thin solid rgb(var(--v-theme-table-border)) !important;
 }

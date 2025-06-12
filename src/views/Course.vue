@@ -147,28 +147,40 @@
                 Based on the selected Recording Placement, please review the following KB articles:
                 <ul>
                   <li>
-                    <a id="link-publish-my-media" href="https://berkeley.service-now.com/kb?id=kb_article_view&sysparm_article=KB0013882" target="_blank">
+                    <ExternalLink
+                      href="https://berkeley.service-now.com/kb?id=kb_article_view&sysparm_article=KB0013882"
+                      :icon-size="16"
+                      link-id="link-publish-my-media"
+                    >
                       How to Publish from My Media
-                      <span class="sr-only"> (opens in new tab)</span>
-                    </a>
+                    </ExternalLink>
                   </li>
                   <li>
-                    <a id="link-embed-rich-content" href="https://berkeley.service-now.com/kb?id=kb_article_view&sysparm_article=KB0013623" target="_blank">
+                    <ExternalLink
+                      href="https://berkeley.service-now.com/kb?id=kb_article_view&sysparm_article=KB0013623"
+                      :icon-size="16"
+                      link-id="link-embed-rich-content"
+                    >
                       How to Embed in bCourses using the Rich Content Editor
-                      <span class="sr-only"> (opens in new tab)</span>
-                    </a>
+                    </ExternalLink>
                   </li>
                   <li>
-                    <a id="link-download-second-stream" href="https://berkeley.service-now.com/kb?id=kb_article_view&sysparm_article=KB0014115" target="_blank">
+                    <ExternalLink
+                      href="https://berkeley.service-now.com/kb?id=kb_article_view&sysparm_article=KB0014115"
+                      :icon-size="16"
+                      link-id="link-download-second-stream"
+                    >
                       How to Download the Second Stream of the Recording
-                      <span class="sr-only"> (opens in new tab)</span>
-                    </a>
+                    </ExternalLink>
                   </li>
                   <li>
-                    <a id="link-faq" href="https://rtl.berkeley.edu/services-programs/course-capture/instructors-getting-started/course-capture-faq" target="_blank">
+                    <ExternalLink
+                      href="https://rtl.berkeley.edu/services-programs/course-capture/instructors-getting-started/course-capture-faq"
+                      :icon-size="16"
+                      link-id="link-faq"
+                    >
                       Course Capture FAQ
-                      <span class="sr-only"> (opens in new tab)</span>
-                    </a>
+                    </ExternalLink>
                   </li>
                 </ul>
               </v-col>
@@ -178,22 +190,31 @@
                 Based on the selected Recording Placement, please review the following KB articles:
                 <ul>
                   <li>
-                    <a id="link-remove-recording" href="https://berkeley.service-now.com/kb?id=kb_article_view&sysparm_article=KB0014032" target="_blank">
+                    <ExternalLink
+                      href="https://berkeley.service-now.com/kb?id=kb_article_view&sysparm_article=KB0014032"
+                      :icon-size="16"
+                      link-id="link-remove-recording"
+                    >
                       How to Remove a Recording from the Media Gallery
-                      <span class="sr-only"> (opens in new tab)</span>
-                    </a>
+                    </ExternalLink>
                   </li>
                   <li>
-                    <a id="link-download-second-stream" href="https://berkeley.service-now.com/kb?id=kb_article_view&sysparm_article=KB0014115" target="_blank">
+                    <ExternalLink
+                      href="https://berkeley.service-now.com/kb?id=kb_article_view&sysparm_article=KB0014115"
+                      :icon-size="16"
+                      link-id="link-download-second-stream"
+                    >
                       How to Download the Second Stream of the Recording
-                      <span class="sr-only"> (opens in new tab)</span>
-                    </a>
+                    </ExternalLink>
                   </li>
                   <li>
-                    <a id="link-faq" href="https://rtl.berkeley.edu/services-programs/course-capture/instructors-getting-started/course-capture-faq" target="_blank">
+                    <ExternalLink
+                      href="https://rtl.berkeley.edu/services-programs/course-capture/instructors-getting-started/course-capture-faq"
+                      :icon-size="16"
+                      link-id="link-faq"
+                    >
                       Course Capture FAQ
-                      <span class="sr-only"> (opens in new tab)</span>
-                    </a>
+                    </ExternalLink>
                   </li>
                 </ul>
               </v-col>
@@ -264,6 +285,7 @@ import CourseHistory from '@/components/course/CourseHistory'
 import CourseNotes from '@/components/course/CourseNotes'
 import CoursePageSidebar from '@/components/course/CoursePageSidebar'
 import Date from '@/components/util/Date'
+import ExternalLink from '@/components/util/ExternalLink'
 import {getAuditoriums} from '@/api/room'
 import PageTitle from '@/components/util/PageTitle'
 import RecordingPlacement from '@/components/course/RecordingPlacement'

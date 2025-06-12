@@ -15,26 +15,22 @@
     hide-default-footer
     :items="events"
     :items-per-page="-1"
+    :loading="isLoading"
     no-data-text="No Kaltura events."
   >
     <template #item.summary="{item}">
-      <a
-        :id="`kaltura-media-space-${item.id}`"
-        :href="`${contextStore.config.kalturaMediaSpaceUrl}/recscheduling/index/edit-event/eventid/${item.id}`"
-        target="_blank"
-      >
-        {{ item.summary }} <span class="sr-only">(opens in new tab)</span>
-        <v-icon class="ml-1" :icon="mdiOpenInNew" size="14" />
-      </a>
+      <ExternalLink :href="`${contextStore.config.kalturaMediaSpaceUrl}/recscheduling/index/edit-event/eventid/${item.id}`" :link-id="`kaltura-media-space-${item.id}`">
+        {{ item.summary }}<span class="sr-only"> Kaltura Events</span>
+      </ExternalLink>
     </template>
     <template #item.startDate="{item}">
       <span v-if="item.startDate" class="text-no-wrap">
-        {{ formatDate(item.startDate, DateTime.DATE_MED_WITH_WEEKDAY) }}
+        <Date :date="item.startDate" :format="DateTime.DATE_MED_WITH_WEEKDAY" />
       </span>
     </template>
     <template #item.endDate="{item}">
       <span v-if="get(item, 'recurrence.until')" class="text-no-wrap">
-        {{ formatDate(item.recurrence.until, DateTime.DATE_MED_WITH_WEEKDAY) }}
+        <Date :date="item.recurrence.until" :format="DateTime.DATE_MED_WITH_WEEKDAY" />
       </span>
       <span v-if="!get(item, 'recurrence.until')">
         &mdash;
@@ -77,14 +73,9 @@
               <tbody>
                 <tr v-for="event in item.recurrences" :key="event.id">
                   <td>
-                    <a
-                      :id="`kaltura-recurrence-${event.id}`"
-                      :href="`${contextStore.config.kalturaMediaSpaceUrl}/recscheduling/index/edit-event/eventid/${event.id}`"
-                      target="_blank"
-                    >
-                      <span class="sr-only">Kaltura event </span>{{ event.id }} <span class="sr-only">(opens in new tab)</span>
-                      <v-icon class="ml-1" :icon="mdiOpenInNew" size="14" />
-                    </a>
+                    <ExternalLink :href="`${contextStore.config.kalturaMediaSpaceUrl}/recscheduling/index/edit-event/eventid/${event.id}`" :link-id="`kaltura-recurrence-${event.id}`">
+                      <span class="sr-only">Kaltura event </span>{{ event.id }}
+                    </ExternalLink>
                   </td>
                   <td>{{ formatDateTime(event.startDate) }}</td>
                   <td>{{ formatDateTime(event.endDate) }}</td>
@@ -104,17 +95,12 @@
               <tr v-for="key in ['id', 'summary', 'description', 'endDate', 'startDate', 'durationFormatted', 'status', 'classificationType']" :key="key">
                 <td class="w-30">{{ key }}</td>
                 <td v-if="item[key]">
-                  <span v-if="endsWith(key, 'Date')">{{ formatDate(item[key], DateTime.DATE_MED) }}</span>
+                  <Date v-if="endsWith(key, 'Date')" :date="item[key]" />
                   <div v-if="!endsWith(key, 'Date')">
                     <span v-if="key === 'id'">
-                      <a
-                        :id="`kaltura-event-${item[key]}`"
-                        :href="`${contextStore.config.kalturaMediaSpaceUrl}/recscheduling/index/edit-event/eventid/${item[key]}`"
-                        target="_blank"
-                      >
-                        <span class="sr-only">Kaltura event </span>{{ item[key] }} <span class="sr-only">(opens in new tab)</span>
-                        <v-icon class="pl-2" :icon="mdiOpenInNew" size="small" />
-                      </a>
+                      <ExternalLink :href="`${contextStore.config.kalturaMediaSpaceUrl}/recscheduling/index/edit-event/eventid/${item[key]}`" :link-id="`kaltura-event-${item[key]}`">
+                        <span class="sr-only">Kaltura event </span>{{ item[key] }}
+                      </ExternalLink>
                     </span>
                     <span v-if="key !== 'id'">{{ item[key] }}</span>
                   </div>
@@ -132,13 +118,19 @@
 <script setup>
 import {DateTime} from 'luxon'
 import {endsWith, get} from 'lodash'
-import {mdiChevronDown, mdiChevronUp, mdiOpenInNew} from '@mdi/js'
+import {mdiChevronDown, mdiChevronUp} from '@mdi/js'
+import Date from '@/components/util/Date'
+import ExternalLink from '@/components/util/ExternalLink'
 import {useContextStore} from '@/stores/context'
 
 defineProps({
   events: {
     required: true,
     type: Array
+  },
+  isLoading: {
+    required: true,
+    type: Boolean
   },
   location: {
     required: true,
@@ -147,10 +139,6 @@ defineProps({
 })
 
 const contextStore = useContextStore()
-
-const formatDate = (date, format) => {
-  return DateTime.fromISO(date).toLocaleString(format)
-}
 
 const formatDateTime = date => {
   return DateTime.fromISO(date).toFormat('h:mm a, EEE, MMM d')

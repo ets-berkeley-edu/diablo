@@ -116,18 +116,11 @@
               </td>
               <td :id="`meeting-times-${course.sectionId}-0`" :class="tdc(course)" columnheader="courses-table-time-th">
                 <div :class="{'line-through': course.deletedAt}">
-                  <div v-if="course.nonstandardMeetingDates">
-                    <span class="text-no-wrap">
-                      {{ DateTime
-                        .fromISO(get(course, 'displayMeetings.0.startDate'))
-                        .toFormat('MMM d, yyyy') }} -
-                    </span>
-                    <span class="sr-only">to</span>
-                    <span class="text-no-wrap">
-                      {{ DateTime
-                        .fromISO(get(course, 'displayMeetings.0.endDate'))
-                        .toFormat('MMM d, yyyy') }} -
-                    </span>
+                  <div v-if="course.nonstandardMeetingDates && get(course, 'displayMeetings.0.startDate') && get(course, 'displayMeetings.0.endDate')">
+                    <Date class="text-no-wrap" :date="course.displayMeetings[0].startDate" />
+                    <span :aria-hidden="true"> - </span>
+                    <span class="sr-only"> to </span>
+                    <Date class="text-no-wrap" :date="course.displayMeetings[0].endDate" />
                   </div>
                   <span aria-hidden="true" class="text-no-wrap">{{ get(course, 'displayMeetings.0.startTimeFormatted') }} - {{ get(course, 'displayMeetings.0.endTimeFormatted') }}</span>
                   <span class="sr-only">{{ get(course, 'displayMeetings.0.startTimeFormatted') }} to {{ get(course, 'displayMeetings.0.endTimeFormatted') }}</span>
@@ -192,20 +185,10 @@
               </td>
               <td class="text-no-wrap" :class="tdcLower(course)">
                 <div v-if="course.nonstandardMeetingDates">
-                  <span class="text-no-wrap">
-                    {{
-                      DateTime
-                        .fromISO(meeting.startDate)
-                        .toFormat('MMM d, yyyy')
-                    }} -
-                  </span>
-                  <span class="text-no-wrap">
-                    {{
-                      DateTime
-                        .fromISO(meeting.endDate)
-                        .toFormat('MMM d, yyyy')
-                    }}
-                  </span>
+                  <Date class="text-no-wrap" :date="meeting.startDate" />
+                  <span :aria-hidden="true"> - </span>
+                  <span class="sr-only"> to </span>
+                  <Date class="text-no-wrap" :date="meeting.endDate" />
                 </div>
                 <div :class="{'pb-2': course.nonstandardMeetingDates && meetingIndex === course.displayMeetings.length - 1}">
                   <span aria-hidden="true">{{ meeting.startTimeFormatted }} - {{ meeting.endTimeFormatted }}</span>
@@ -214,14 +197,11 @@
               </td>
               <td :aria-hidden="true" colspan="3" :class="tdcLower(course)" />
             </tr>
-            <tr v-if="course.scheduled" :key="`approvals-${course.sectionId}`">
+            <tr v-if="size(course.scheduled)" :key="`approvals-${course.sectionId}`">
               <td :colspan="headers.length" class="pb-2">
-                <div v-if="course.scheduled" class="pb-3">
-                  Recordings scheduled on {{
-                    DateTime
-                      .fromISO(course.scheduled[0].createdAt)
-                      .toFormat('MMM d, yyyy')
-                  }}.
+                <div class="pb-3">
+                  <span>Recordings scheduled on </span>
+                  <Date class="text-no-wrap" :date="course.scheduled[0].createdAt" />.
                   They will be published to {{
                     course.scheduled[0]
                       .publishTypeName
@@ -247,11 +227,11 @@
 </template>
 
 <script setup>
-import {DateTime} from 'luxon'
 import {each, filter, get, map, size, tail} from 'lodash'
 import {mdiClose} from '@mdi/js'
 import {onMounted, ref, watch} from 'vue'
 import {alertScreenReader,getDisplayMeetings} from '@/lib/utils'
+import Date from '@/components/util/Date'
 import Days from '@/components/util/Days'
 import Instructor from '@/components/course/Instructor'
 import ToggleOptOut from '@/components/course/ToggleOptOut'
@@ -350,14 +330,14 @@ const refresh = () => {
 
 const tdc = course => {
   return {
-    'border-bottom-zero': getDisplayMeetings(course).length > 1 || course.scheduled,
+    'border-b-0': getDisplayMeetings(course).length > 1 || course.scheduled,
     'pt-3 pb-3': size(course.courseCodes) > 1
   }
 }
 
 const tdcLower = course => {
   return {
-    'border-bottom-zero': course.scheduled
+    'border-b-0': course.scheduled
   }
 }
 </script>
