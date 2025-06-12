@@ -6,7 +6,7 @@
     <v-card-title>
       <PageTitle
         :icon="mdiVideoPlus"
-        :text="`Your ${config.currentTermName} ${pluralize('Course', size(currentUser.courses), false)}`"
+        :text="pageTitle"
       />
     </v-card-title>
     <v-card-text>
@@ -246,13 +246,15 @@ const eligibleHeaders = [
   ...ineligibleHeaders,
   {title: 'Opt out', value: 'hasOptedOut'}
 ]
+const pageTitle = ref('')
 const refreshingCourses = ref(false)
 
 contextStore.loadingStart()
 
 onMounted(() => {
   refreshCourses()
-  contextStore.loadingComplete()
+  pageTitle.value = `Your ${config.value.currentTermName} ${pluralize('Course', size(currentUser.value.courses), false)}`
+  contextStore.loadingComplete(pageTitle.value)
 })
 
 const getTableId = index => {
