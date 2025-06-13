@@ -51,7 +51,7 @@ class WebDriverManager(object):
             options = Foptions()
             options.profile = p
             options.headless = _headless
-            return webdriver.Firefox(options=options)
+            driver = webdriver.Firefox(options=options)
         else:
             options = Coptions()
             options.binary_location = util.get_xena_browser_chrome_binary_path()
@@ -65,7 +65,8 @@ class WebDriverManager(object):
             options.add_experimental_option('prefs', prefs)
             driver = webdriver.Chrome(options=options)
             WebDriverManager.allow_canvas_iframe_in_chrome(driver)
-            return driver
+        driver.set_window_size(1600, 900) if _headless else driver.maximize_window()
+        return driver
 
     @classmethod
     def allow_canvas_iframe_in_chrome(cls, driver):
