@@ -260,30 +260,13 @@ class TestWeirdTypeC:
         self.course_page.load_page(self.section)
         self.course_page.verify_section_sis_data(self.section)
         self.course_page.verify_meeting_sis_data(self.meeting_0, idx=0)
-        self.course_page.verify_recording_placement(self.recording_sched_0)
+        self.course_page.verify_no_scheduled_recordings()
 
     def test_meeting_1_course_page_instr_removed(self):
         self.course_page.verify_section_sis_data(self.section)
         self.course_page.verify_meeting_sis_data(self.meeting_1, idx=1)
-        self.course_page.verify_recording_placement(self.recording_sched_1)
-
-    def test_meeting_0_kaltura_series_instr_removed(self):
-        self.course_page.click_kaltura_series_link(self.recording_sched_0)
-        self.kaltura_page.verify_title_and_desc(self.section, self.meeting_0)
-        self.kaltura_page.verify_collaborators(self.section)
-        self.kaltura_page.verify_schedule(self.section, self.meeting_0)
-        self.kaltura_page.verify_publish_status(self.recording_sched_0)
-
-    def test_meeting_1_kaltura_series_instr_removed(self):
-        self.kaltura_page.close_window_and_switch()
-        self.course_page.click_kaltura_series_link(self.recording_sched_1)
-        self.kaltura_page.verify_title_and_desc(self.section, self.meeting_1)
-        self.kaltura_page.verify_collaborators(self.section)
-        self.kaltura_page.verify_schedule(self.section, self.meeting_1)
-        self.kaltura_page.verify_publish_status(self.recording_sched_1)
 
     def test_ouija_filter_instr_removed(self):
-        self.kaltura_page.close_window_and_switch()
         self.ouija_page.load_page()
         self.ouija_page.search_for_course_code(self.section)
         self.ouija_page.filter_for_no_instructors()
@@ -302,6 +285,8 @@ class TestWeirdTypeC:
     def test_run_kaltura_job_instr_added(self):
         self.jobs_page.load_page()
         self.jobs_page.run_schedule_update_job_sequence()
+        assert util.get_kaltura_id(self.recording_sched_0)
+        assert util.get_kaltura_id(self.recording_sched_1)
 
     def test_meeting_0_course_page_instr_added(self):
         self.course_page.load_page(self.section)
