@@ -50,14 +50,6 @@
           <div v-for="site in course.canvasSites" :key="site.canvasSiteId" class="mb-2 pl-4">
             <CanvasCourseSite :site-id="site.canvasSiteId" :course-site="site" />
           </div>
-          <v-btn
-            id="btn-publish-type-edit"
-            aria-label="Edit Recording Placement"
-            class="mt-3"
-            @click="toggleIsEditing"
-          >
-            Edit
-          </v-btn>
         </div>
         <div v-if="isEditing">
           <div v-if="!currentUser.isAdmin" class="pa-2">
@@ -151,27 +143,36 @@
           <div v-if="!currentUser.isAdmin" class="py-2 text-body-2">
             To link a bCourses site from a past term, please <a :href="`mailto:${config.emailCourseCaptureSupport}`" target="_blank">contact Course Capture support.</a>
           </div>
-          <div class="pt-4">
-            <ProgressButton
-              id="btn-publish-type-save"
-              :action="updatePublishTypeClicked"
-              aria-label="Save Recording Placement"
-              :disabled="isSaving || (publishType && publishType.startsWith('kaltura_media_gallery') && !publishCanvasSites.length)"
-              :in-progress="isSaving"
-              :text="isSaving ? 'Saving' : 'Save'"
-            />
-            <v-btn
-              id="btn-publish-type-cancel"
-              aria-label="Cancel Recording Placement Edit"
-              class="ml-2"
-              :disabled="isSaving"
-              variant="text"
-              @click="updatePublishTypeCancel"
-            >
-              Cancel
-            </v-btn>
-          </div>
         </div>
+      </div>
+      <v-btn
+        v-if="!isEditing"
+        id="btn-publish-type-edit"
+        aria-label="Edit Recording Placement"
+        class="mt-3"
+        @click="toggleIsEditing"
+      >
+        Edit
+      </v-btn>
+      <div v-if="isEditing" class="pt-4">
+        <ProgressButton
+          id="btn-publish-type-save"
+          :action="updatePublishTypeClicked"
+          aria-label="Save Recording Placement"
+          :disabled="isSaving || (publishType && publishType.startsWith('kaltura_media_gallery') && !publishCanvasSites.length)"
+          :in-progress="isSaving"
+          :text="isSaving ? 'Saving' : 'Save'"
+        />
+        <v-btn
+          id="btn-publish-type-cancel"
+          aria-label="Cancel Recording Placement Edit"
+          class="ml-2"
+          :disabled="isSaving"
+          variant="text"
+          @click="updatePublishTypeCancel"
+        >
+          Cancel
+        </v-btn>
       </div>
     </v-col>
   </v-row>

@@ -319,7 +319,7 @@ class CoursePage(DiabloPages):
 
     @staticmethod
     def placement_site_option_loc(site):
-        return By.XPATH, f'//span[@id="menu-option-canvas-site-{site.site_id}"]/..'
+        return By.XPATH, f'//div[@id="menu-option-canvas-site-{site.site_id}"]/..'
 
     @staticmethod
     def placement_site_remove_button_loc(site):

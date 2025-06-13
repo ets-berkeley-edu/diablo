@@ -11,7 +11,7 @@
     <span
       v-if="kalturaCategory.id"
       :id="`kaltura-category-canvas-${siteId}`"
-      class="text-medium-emphasis"
+      class="text-medium-emphasis text-body-2"
     >
       (Kaltura category {{ kalturaCategory.id }})
     </span>

@@ -223,6 +223,10 @@ class TestWeirdTypeD:
         self.ouija_page.click_jobs_link()
         self.jobs_page.run_settings_update_job_sequence()
 
+    def test_series_recording_placement(self):
+        self.course_page.load_page(self.section)
+        self.course_page.verify_recording_placement(self.recording_schedule_0)
+
     def test_meeting_0_series(self):
         self.kaltura_page.load_event_edit_page(self.recording_schedule_0.series_id)
         self.kaltura_page.verify_title_and_desc(self.section, self.meeting_0)

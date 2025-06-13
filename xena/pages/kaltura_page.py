@@ -257,6 +257,7 @@ class KalturaPage(Page):
         end = schedule.get_berkeley_end_time()
         visible_end = datetime.strptime(self.visible_end_time(), '%I:%M %p')
         self.assert_equivalence(visible_end, end)
+        self.close_recurrence_modal()
 
     def verify_publish_status(self, recording_schedule):
         self.wait_for_delete_button()
