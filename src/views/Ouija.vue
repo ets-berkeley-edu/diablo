@@ -43,18 +43,25 @@
             id="ouija-filter-options"
             v-model="selectedFilter"
             aria-label="Filter courses table"
+            autocomplete="off"
             class="pb-2"
             color="primary"
             :disabled="isDownloading"
-            :item-props="true"
+            item-props
             :items="filterOptions"
-            :list-props="{ariaLabel: 'Courses table filter options', id: 'ouija-filter-options-list'}"
+            :list-props="{ariaLabel: 'Filter courses table', ariaLive: 'off', id: 'ouija-filter-options-list'}"
             :menu-props="{attach: menuContainer, eager: true, id: 'ouija-filter-options-menu'}"
-            @update:menu="isOpen => putFocusNextTick(isOpen ? 'filter-option-scheduled' : 'ouija-filter-options')"
+            :title="undefined"
+            @update:menu="onToggleFilterOptionsMenu"
             @update:model-value="refresh"
           >
             <template #item="{props: itemProps, item}">
-              <v-list-item :id="`filter-option-${kebabCase(item.value)}`" v-bind="itemProps" :subtitle="item.raw.subtitle">
+              <v-list-item
+                :id="`filter-option-${kebabCase(item.value)}`"
+                v-bind="itemProps"
+                role="option"
+                :subtitle="item.raw.subtitle"
+              >
                 <template #title="{title}">{{ title }}<span class="sr-only">: </span></template>
               </v-list-item>
             </template>
@@ -137,6 +144,11 @@ const onClickDownload = () => {
   })
 }
 
+const onToggleFilterOptionsMenu = isOpen => {
+  if (isOpen) {
+    putFocusNextTick('filter-option-scheduled')
+  }
+}
 const onToggleOptOut = course => {
   if (!course.hasOptedOut && selectedFilter.value === 'Do Not Email') {
     const indexOf = courses.value.findIndex(c => c.sectionId === course.sectionId)

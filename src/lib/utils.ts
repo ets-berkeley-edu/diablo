@@ -50,14 +50,6 @@ export function getCourseCodes(course: Course) {
   return course.label.split('|').map((l: string) => l.trim())
 }
 
-export function getSelectOptionsFromObject(obj: any, isDisabled: Function) {
-  const options: Array<any> = []
-  each(obj, (text, value) =>
-    options.push({title: text, value, disabled: isDisabled(value)})
-  )
-  return options
-}
-
 export function getTermName(termId: number) {
   const id = termId.toString()
   let termName: string = ''

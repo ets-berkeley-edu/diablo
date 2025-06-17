@@ -149,11 +149,18 @@
                 <v-select
                   id="schedule-type-select"
                   v-model="editJob.schedule.type"
-                  :items="['day_at', 'minutes', 'seconds']"
+                  :aria-describedby="undefined"
+                  aria-label="Schedule Type"
+                  autocomplete="off"
+                  hide-details
+                  item-props
+                  :items="scheduleTypeOptions"
                   label="Type"
-                  :list-props="{ariaLabel: 'Schedule type options', id: 'schedule-type-list'}"
+                  :list-props="{ariaLabel: 'Schedule type', ariaLive: 'off', id: 'schedule-type-list'}"
                   :menu-props="{attach: menuContainer, eager: true, id: 'schedule-type-menu'}"
-                  required
+                  :title="undefined"
+                  :value="get(find(scheduleTypeOptions, {value: editJob.schedule.type}), 'title')"
+                  @update:menu="onToggleScheduleTypeMenu"
                   @update:model-value="editJob.schedule.value = ''"
                 />
                 <div id="schedule-type-menu-container" ref="menuContainer" />
@@ -176,12 +183,14 @@
           <ProgressButton
             id="edit-schedule-save-btn"
             :action="scheduleEditSave"
+            :aria-label="`${isSavingJob ? 'Saving' : 'Save'} ${get(editJob, 'name')} job schedule`"
             :disabled="disableScheduleSave"
             :in-progress="isSavingJob"
             :text="isSavingJob ? 'Saving' : 'Save'"
           />
           <v-btn
             id="edit-schedule-cancel-btn"
+            :aria-label="`Cancel edit ${get(editJob, 'name')} job schedule`"
             class="ml-2"
             variant="text"
             @click="scheduleEditCancel(editJob)"
@@ -226,6 +235,11 @@ const jobSchedule = ref({
 const menuContainer = ref()
 const refresher = ref()
 const refreshing = ref(false)
+const scheduleTypeOptions = [
+  {id: 'schedule-type-day_at', role: 'option', title: 'Day at', value: 'day_at'},
+  {id: 'schedule-type-minutes', role: 'option', title: 'Minutes', value: 'minutes'},
+  {id: 'schedule-type-seconds', role: 'option', title: 'Seconds', value: 'seconds'},
+]
 
 watch(editJob, job => {
   // deep: true,
@@ -249,6 +263,12 @@ onBeforeUnmount(() => {
 
 const isRunning = (jobKey) => {
   return !!find(jobHistory.value, h => h.jobKey === jobKey && !h.finishedAt)
+}
+
+const onToggleScheduleTypeMenu = isOpen => {
+  if (isOpen) {
+    putFocusNextTick('schedule-type-day_at')
+  }
 }
 
 const refresh = () => {

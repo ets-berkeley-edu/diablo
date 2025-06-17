@@ -88,7 +88,7 @@ import CoursesDataTable from '@/components/course/CoursesDataTable'
 import KalturaEventList from '@/components/kaltura/KalturaEventList'
 import PageTitle from '@/components/util/PageTitle'
 import SelectRoomCapability from '@/components/room/SelectRoomCapability'
-import {alertScreenReader, getCourseCodes, putFocusNextTick, summarize} from '@/lib/utils'
+import {getCourseCodes, putFocusNextTick, summarize} from '@/lib/utils'
 import {getKalturaEventList, getRoom, setAuditorium} from '@/api/room'
 import {useContextStore} from '@/stores/context'
 
@@ -134,7 +134,6 @@ watch(isAuditorium, value => {
 
 const onUpdateRoomCapability = capability => {
   room.value.capability = capability
-  alertScreenReader(capability ? `'${capability}' selected` : 'Room capability removed.')
 }
 
 const scrollToKalturaEvents = () => {
