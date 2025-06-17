@@ -220,7 +220,7 @@ class TestScheduling0:
         self.jobs_page.log_out()
         self.course_page.hit_url(self.term.id, self.section.ccn)
         self.login_page.dev_auth(self.instructor.uid)
-        self.course_page.wait_for_diablo_title(f'{self.section.code}, {self.section.number}')
+        self.course_page.wait_for_diablo_title('Welcome')
 
     # VERIFY STATIC COURSE SIS DATA
 
