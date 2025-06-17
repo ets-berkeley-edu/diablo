@@ -38,7 +38,7 @@ class EmailsJob(BaseJob):
         for queued_email in QueuedEmail.get_all(term_id):
             course = SisSection.get_course(term_id, queued_email.section_id, include_deleted=True)
             if not course:
-                app.logger.warn(f'Email will remain queued until course data is present: {queued_email}')
+                app.logger.warning(f'Email will remain queued until course data is present: {queued_email}')
                 continue
             if course['hasOptedOut'] and queued_email.template_type != 'opted_out':
                 QueuedEmail.delete(queued_email)

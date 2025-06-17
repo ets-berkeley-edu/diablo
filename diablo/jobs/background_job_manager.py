@@ -22,7 +22,7 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from datetime import datetime
+from datetime import datetime, timezone
 import os
 import threading
 import time
@@ -56,7 +56,7 @@ class BackgroundJobManager:
             return
         else:
             self.monitor.notify(is_running=True)
-            self.started_at = datetime.now()
+            self.started_at = datetime.now(timezone.utc)
 
         class JobRunnerThread(threading.Thread):
 
@@ -105,7 +105,7 @@ class BackgroundJobManager:
             self.continuous_thread = JobRunnerThread(daemon=True)
             self.continuous_thread.start()
         else:
-            app.logger.warn('No jobs. Nothing scheduled.')
+            app.logger.warning('No jobs. Nothing scheduled.')
 
     def restart(self):
         from flask import current_app as app

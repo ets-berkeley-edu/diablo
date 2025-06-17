@@ -76,7 +76,7 @@ def register_routes(app):
     def handle_exception(e):
         subject = str(e)
         if isinstance(e, HTTPException):
-            app.logger.warn(f'HTTPException: {subject} (Ops will not be notified)')
+            app.logger.warning(f'HTTPException: {subject} (Ops will not be notified)')
         else:
             # Notify Diablo Ops teams
             send_system_error_email(

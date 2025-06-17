@@ -22,7 +22,7 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from datetime import datetime
+from datetime import datetime, timezone
 
 from diablo import db, std_commit
 from diablo.lib.util import to_isoformat
@@ -36,13 +36,13 @@ class JobHistory(db.Model):
     id = db.Column(db.Integer, nullable=False, primary_key=True)  # noqa: A003
     job_key = db.Column(db.String(80), nullable=False)
     failed = db.Column(db.Boolean, nullable=False, default=False)
-    started_at = db.Column(db.DateTime, nullable=False, default=datetime.now)
+    started_at = db.Column(db.DateTime, nullable=False, default=datetime.now(timezone.utc))
     finished_at = db.Column(db.DateTime)
 
     def __init__(self, job_key):
         self.job_key = job_key
         self.failed = False
-        self.started_at = datetime.now()
+        self.started_at = datetime.now(timezone.utc)
 
     def __repr__(self):
         return f"""<Room
@@ -68,7 +68,7 @@ class JobHistory(db.Model):
     def job_finished(cls, id_, failed=False):
         row = cls.query.filter_by(id=id_).first()
         row.failed = failed
-        row.finished_at = datetime.now()
+        row.finished_at = datetime.now(timezone.utc)
         db.session.add(row)
         std_commit()
         return row
