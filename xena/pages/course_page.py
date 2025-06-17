@@ -39,7 +39,8 @@ class CoursePage(DiabloPages):
     SCHEDULING_TO_COME_MSG = By.ID, 'notice-eligible-not-scheduled'
     SCHEDULED_MSG = By.ID, 'notice-scheduled'
     UPDATES_QUEUED_MSG = By.ID, 'notice-queued'
-    OPT_OUT_QUEUED_MSG = By.ID, 'notice-opt-out-pending'
+    OPT_OUT_QUEUED_MSG = By.ID, 'notice-opt-out-pending-instructors'
+    OPT_OUT_QUEUED_NO_INSTRUCTORS_MSG = By.ID, 'notice-opt-out-pending-no-instructors'
     OPT_OUT_DONE_MSG = By.ID, 'notice-opt-out'
     NOT_ELIGIBLE_MSG = By.ID, 'course-not-eligible'
 
