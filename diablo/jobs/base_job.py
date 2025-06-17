@@ -58,16 +58,16 @@ class BaseJob:
                 job_runner_id = fetch_job_runner_id()
 
                 if job.disabled and not force_run:
-                    app.logger.warn(f'Job {self.key()} is disabled. It will not run.')
+                    app.logger.warning(f'Job {self.key()} is disabled. It will not run.')
 
                 elif current_instance_id and current_instance_id != job_runner_id:
-                    app.logger.warn(f'Skipping job because current instance {current_instance_id} is not job runner {job_runner_id}')
+                    app.logger.warning(f'Skipping job because current instance {current_instance_id} is not job runner {job_runner_id}')
 
                 elif JobHistory.is_job_running(job_key=self.key()):
-                    app.logger.warn(f'Skipping job {self.key()} because an older instance is still running')
+                    app.logger.warning(f'Skipping job {self.key()} because an older instance is still running')
 
                 elif JobHistory.is_job_running(job_key='sis_data_refresh'):
-                    app.logger.warn(f'Skipping job {self.key()} because SIS data refresh is in progress')
+                    app.logger.warning(f'Skipping job {self.key()} because SIS data refresh is in progress')
 
                 else:
                     app.logger.info(f'Job {self.key()} is starting.')

@@ -435,7 +435,7 @@ def schedule_recordings(course, remove_blackout_conflicts=False, updates=None):
                 )
 
         else:
-            app.logger.warn(f"""
+            app.logger.warning(f"""
                 SKIP schedule recordings because room has no 'kaltura_resource_id'.
                 Course: {course['label']}
                 Room: {room.location}

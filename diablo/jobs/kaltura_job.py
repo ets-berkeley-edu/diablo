@@ -163,6 +163,7 @@ def _update_already_scheduled_events(term_id, newly_scheduled_instructors):  # n
                 newly_scheduled_instructors,
             )
 
+        scheduled_model = None
         for scheduled in course['scheduled'] or []:
             kaltura_schedule = kaltura.get_event(event_id=scheduled['kalturaScheduleId'])
             scheduled_model = Scheduled.get_by_id(scheduled['id'])
@@ -197,9 +198,11 @@ def _update_already_scheduled_events(term_id, newly_scheduled_instructors):  # n
                         schedule_updates,
                     )
             else:
-                app.logger.warn(f"The previously scheduled {course['label']} schedule id {scheduled['kalturaScheduleId']} was not found in Kaltura.")
+                app.logger.warning(
+                    f"The previously scheduled {course['label']} schedule id {scheduled['kalturaScheduleId']} was not found in Kaltura.",
+                )
 
-        if updated_publish_type:
+        if updated_publish_type and scheduled_model:
             publish_to_course_sites = _handle_publish_type_update(updated_publish_type, scheduled_model)
 
         if updated_publish_type or updated_canvas_site_ids:
