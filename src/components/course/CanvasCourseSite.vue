@@ -9,7 +9,7 @@
       <span v-else>bCourses site {{ siteId }}</span>
     </ExternalLink>
     <span
-      v-if="kalturaCategory.id"
+      v-if="kalturaCategory && kalturaCategory.id"
       :id="`kaltura-category-canvas-${siteId}`"
       class="text-medium-emphasis text-body-2"
     >

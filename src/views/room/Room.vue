@@ -46,7 +46,8 @@
                 target="_blank"
                 :to="`/room/printable/${room.id}`"
               >
-                <v-icon class="mr-2" color="anchor" :icon="mdiPrinter" />Print schedule<span class="sr-only"> (opens in new tab)</span>
+                <v-icon class="mr-2" color="anchor" :icon="mdiPrinter" />
+                Print schedule<span class="sr-only">&nbsp;(opens in new tab)</span>
               </router-link>
             </v-col>
           </v-row>

@@ -5,7 +5,7 @@
     target="_blank"
   >
     <slot />
-    <span class="sr-only"> (opens in new tab)</span>
+    <span class="sr-only">&nbsp;(opens in new tab)</span>
     <v-icon class="external-link-icon" :icon="mdiOpenInNew" :size="iconSize" />
   </a>
 </template>
