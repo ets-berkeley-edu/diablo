@@ -20,7 +20,7 @@
   >
     <template #item.summary="{item}">
       <ExternalLink :href="`${contextStore.config.kalturaMediaSpaceUrl}/recscheduling/index/edit-event/eventid/${item.id}`" :link-id="`kaltura-media-space-${item.id}`">
-        {{ item.summary }}<span class="sr-only"> Kaltura Events</span>
+        {{ item.summary }}<span class="sr-only">&nbsp;Kaltura Events</span>
       </ExternalLink>
     </template>
     <template #item.startDate="{item}">
@@ -74,7 +74,7 @@
                 <tr v-for="event in item.recurrences" :key="event.id">
                   <td>
                     <ExternalLink :href="`${contextStore.config.kalturaMediaSpaceUrl}/recscheduling/index/edit-event/eventid/${event.id}`" :link-id="`kaltura-recurrence-${event.id}`">
-                      <span class="sr-only">Kaltura event </span>{{ event.id }}
+                      <span class="sr-only">Kaltura event&nbsp;</span>{{ event.id }}
                     </ExternalLink>
                   </td>
                   <td>{{ formatDateTime(event.startDate) }}</td>
@@ -99,7 +99,7 @@
                   <div v-if="!endsWith(key, 'Date')">
                     <span v-if="key === 'id'">
                       <ExternalLink :href="`${contextStore.config.kalturaMediaSpaceUrl}/recscheduling/index/edit-event/eventid/${item[key]}`" :link-id="`kaltura-event-${item[key]}`">
-                        <span class="sr-only">Kaltura event </span>{{ item[key] }}
+                        <span class="sr-only">Kaltura event&nbsp;</span>{{ item[key] }}
                       </ExternalLink>
                     </span>
                     <span v-if="key !== 'id'">{{ item[key] }}</span>
