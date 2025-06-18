@@ -1,7 +1,7 @@
 <template>
   <v-row
     align="center"
-    aria-labelledby="collaborators-header"
+    aria-label="Collaborators"
     justify="start"
     role="region"
   >
@@ -12,7 +12,7 @@
       cols="12"
     >
       <h3 id="collaborators-header">
-        Collaborator(s) listed will have editing and publishing access:
+        <span :aria-hidden="true">Collaborator(s)</span><span class="sr-only">Collaborators</span> listed will have editing and publishing access:
       </h3>
       <div
         v-for="collaborator in course.collaborators"

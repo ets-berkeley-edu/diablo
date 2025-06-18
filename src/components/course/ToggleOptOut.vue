@@ -12,15 +12,14 @@
       hide-details
       inset
       :label="label ? `Opt out ${label}` : ''"
-      @blur="() => ariaText = ''"
       @update:model-value="toggleOptOut"
     />
-    <span class="sr-only" aria-live="assertive">{{ ariaText }}</span>
   </div>
 </template>
 
 <script setup>
 import {onMounted, ref} from 'vue'
+import {putFocusNextTick} from '@/lib/utils'
 import {updateOptOut} from '@/api/course'
 
 const props = defineProps({
@@ -49,7 +48,7 @@ const props = defineProps({
   label: {
     required: false,
     type: String,
-    default: ''
+    default: undefined
   },
   onToggle: {
     default: () => {},
@@ -66,7 +65,6 @@ const props = defineProps({
   }
 })
 
-const ariaText = ref('')
 const optOut = ref(undefined)
 const switchId = ref(undefined)
 
@@ -80,10 +78,10 @@ onMounted(() => {
 })
 
 const toggleOptOut = () => {
-  ariaText.value = optOut.value ? 'on' : 'off'
   props.beforeToggle()
   updateOptOut(props.instructorUid, props.termId, props.sectionId, optOut.value).then(data => {
     props.onToggle(`Opted ${data.optedOut ? 'out' : 'in'} ${props.label}`)
+    putFocusNextTick(`toggle-opt-out-${switchId.value}`)
   })
 }
 </script>

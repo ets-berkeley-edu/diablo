@@ -68,7 +68,7 @@
               </template>
               <template #body="{items}">
                 <!-- eslint-disable-next-line vue/no-v-for-template-key -->
-                <template v-for="(course, courseIndex) in items" :key="course.sectionId">
+                <template v-for="course in items" :key="course.sectionId">
                   <tr :id="`${getTableId(index)}-${course.sectionId}`">
                     <td
                       :id="`${getTableId(index)}-${course.sectionId}-label`"
@@ -149,7 +149,7 @@
                       v-if="index === 0"
                       :id="`${getTableId(index)}-${course.sectionId}-hasOptedOut`"
                       :aria-rowspan="size(course.displayMeetings)"
-                      :class="{'border-0': size(course.displayMeetings) && courseIndex === (size(courses) - 1)}"
+                      :class="{'border-b-0': size(course.displayMeetings) > 1}"
                       class="text-no-wrap"
                     >
                       <ToggleOptOut
