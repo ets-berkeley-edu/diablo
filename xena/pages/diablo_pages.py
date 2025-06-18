@@ -180,6 +180,7 @@ class DiabloPages(Page):
         self.wait_for_element_and_click(self.DELETE_NOTE_BUTTON)
 
     def enter_note_body(self, string):
+        self.wait_for_element(self.NOTE_TEXT_AREA, util.get_short_timeout())
         self.remove_and_enter_chars(self.NOTE_TEXT_AREA, string)
 
     def edit_note(self, string):
@@ -188,8 +189,9 @@ class DiabloPages(Page):
         self.click_save_note()
 
     def note_text(self):
-        time.sleep(util.get_click_sleep())
+        self.wait_for_element(self.NOTE_BODY, util.get_short_timeout())
         return self.element(self.NOTE_BODY).text.strip()
 
     def delete_note(self):
         self.click_delete_note()
+        time.sleep(1)

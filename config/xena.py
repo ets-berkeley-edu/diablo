@@ -32,6 +32,7 @@ ADMIN_UID = '1049291'
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
 BASE_URL = 'https://manage-dev.coursecapture.berkeley.edu'
+BASE_URL_API = 'https://manage-dev.coursecapture.berkeley.edu'
 
 CANVAS_ADD_USER_TOOL = '12345'
 CANVAS_ADMIN_ID = '123456'

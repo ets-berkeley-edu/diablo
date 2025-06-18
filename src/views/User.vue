@@ -4,13 +4,11 @@
       <v-card-title>
         <PageTitle :icon="mdiSchoolOutline" :text="`${user.name} (${user.uid})`" />
       </v-card-title>
-
       <v-card-subtitle class="body-1 mb-4 ml-14 text-subtitle-1">
         <a :href="`mailto:${user.email}`" target="_blank">
           {{ user.email }}
         </a>
       </v-card-subtitle>
-
       <v-row v-if="user.uid" class="mx-4">
         <ToggleOptOut
           :term-id="config.currentTermId.toString()"
@@ -19,11 +17,10 @@
           :initial-value="!!user.hasOptedOutForTerm"
           :disabled="!!user.hasOptedOutForAllTerms"
           label="for current semester"
-          :before-toggle="() => (refreshingCourses = true)"
+          :before-toggle="() => (isRefreshingCourses = true)"
           :on-toggle="refreshUser"
         />
       </v-row>
-
       <v-row v-if="user.uid" class="mx-4 mt-0 mb-2">
         <ToggleOptOut
           term-id="all"
@@ -31,25 +28,21 @@
           :instructor-uid="user.uid"
           :initial-value="!!user.hasOptedOutForAllTerms"
           label="for all semesters"
-          :before-toggle="() => (refreshingCourses = true)"
+          :before-toggle="() => (isRefreshingCourses = true)"
           :on-toggle="refreshUser"
         />
       </v-row>
-
-      <Spinner v-if="refreshingCourses" />
-
-      <div v-if="!refreshingCourses && eligibleCourses.length" id="user-courses-eligible">
+      <div v-if="eligibleCourses.length" id="user-courses-eligible">
         <CoursesDataTable
           class="pt-5"
           :courses="eligibleCourses"
           :include-room-column="true"
           :include-opt-out-column-for-uid="user.uid"
           :message-for-courses="summarize(eligibleCourses)"
-          :refreshing="false"
+          :refreshing="isRefreshingCourses"
         />
       </div>
-
-      <div v-if="!refreshingCourses && ineligibleCourses.length" id="user-courses-ineligible">
+      <div v-if="!isRefreshingCourses && ineligibleCourses.length" id="user-courses-ineligible">
         <h2 class="px-4">Courses not in a course capture classroom</h2>
         <CoursesDataTable
           class="pt-5"
@@ -60,19 +53,26 @@
         />
       </div>
     </v-card>
-
     <v-card v-if="currentUser.isAdmin" class="border-sm mt-4">
       <v-card-title>Notes</v-card-title>
-
       <v-card-text v-if="!isEditingNote" id="note-body">
         {{ user.note || 'No notes.' }}
       </v-card-text>
-
+      <v-card-text v-if="isEditingNote">
+        <v-textarea
+          id="note-body-edit"
+          v-model="noteBody"
+          aria-describedby="undefined"
+          density="compact"
+          hide-details
+          placeholder="Enter note text"
+          variant="outlined"
+        />
+      </v-card-text>
       <v-card-actions v-if="!isEditingNote" class="px-4 pb-4">
         <v-btn
           id="btn-edit-note"
-          variant="elevated"
-          :disabled="isUpdatingNote"
+          :disabled="isSavingNote"
           @click="editNote"
         >
           Edit
@@ -81,38 +81,24 @@
           v-if="user.note"
           id="btn-delete-note"
           class="mx-3"
-          variant="elevated"
-          :disabled="isUpdatingNote"
+          :disabled="isSavingNote"
           @click="deleteNote"
         >
           Delete
         </v-btn>
       </v-card-actions>
-
-      <v-card-text v-if="isEditingNote">
-        <v-textarea
-          id="note-body-edit"
-          v-model="noteBody"
-          density="compact"
-          placeholder="Enter note text"
-          variant="outlined"
-        />
-      </v-card-text>
-
       <v-card-actions v-if="isEditingNote" class="px-4 pb-4">
-        <v-btn
+        <ProgressButton
           id="btn-save-note"
-          color="success"
-          :disabled="!noteBody || isUpdatingNote"
-          variant="elevated"
-          @click="saveNote"
-        >
-          Save
-        </v-btn>
+          :action="saveNote"
+          :disabled="!noteBody || isSavingNote"
+          :in-progress="isSavingNote"
+          :text="isSavingNote ? 'Saving' : 'Save'"
+        />
         <v-btn
           id="btn-cancel-note"
           class="ml-2"
-          :disabled="isUpdatingNote"
+          :disabled="isSavingNote"
           variant="text"
           @click="cancelNote"
         >
@@ -129,12 +115,12 @@ import {useRoute} from 'vue-router'
 import {storeToRefs} from 'pinia'
 import {filter} from 'lodash'
 import {mdiSchoolOutline} from '@mdi/js'
-import {alertScreenReader, getCourseCodes, partitionCoursesByEligibility} from '@/lib/utils'
+import {alertScreenReader, getCourseCodes, partitionCoursesByEligibility, putFocusNextTick} from '@/lib/utils'
 import {deleteUserNote, getUser, updateUserNote} from '@/api/user'
 import {useContextStore} from '@/stores/context'
 import CoursesDataTable from '@/components/course/CoursesDataTable.vue'
 import PageTitle from '@/components/util/PageTitle.vue'
-import Spinner from '@/components/util/Spinner.vue'
+import ProgressButton from '@/components/util/ProgressButton'
 import ToggleOptOut from '@/components/course/ToggleOptOut.vue'
 
 const contextStore = useContextStore()
@@ -143,23 +129,13 @@ const {config, currentUser, loading} = storeToRefs(contextStore)
 const route = useRoute()
 const uid = route.params.uid
 
-const user = ref({})
 const eligibleCourses = ref([])
 const ineligibleCourses = ref([])
 const isEditingNote = ref(false)
-const isUpdatingNote = ref(false)
+const isSavingNote = ref(false)
+const isRefreshingCourses = ref(false)
 const noteBody = ref('')
-const refreshingCourses = ref(false)
-
-function summarize(courses) {
-  const message = `${courses.length} course${courses.length === 1 ? '' : 's'}.`
-  const scheduled = filter(courses, 'scheduled')
-  if (scheduled && scheduled.length) {
-    return `${message} ${scheduled.length} ${scheduled.length === 1 ? 'has' : 'have'} recordings scheduled.`
-  } else {
-    return message
-  }
-}
+const user = ref({})
 
 contextStore.loadingStart()
 
@@ -172,23 +148,23 @@ onMounted(() => {
 const cancelNote = () => {
   noteBody.value = user.value.note
   isEditingNote.value = false
-  isUpdatingNote.value = false
+  isSavingNote.value = false
   alertScreenReader('Note edit canceled.')
 }
 
 const deleteNote = () => {
-  isUpdatingNote.value = true
+  isSavingNote.value = true
   deleteUserNote(uid).then(() => {
     user.value.note = noteBody.value = null
     isEditingNote.value = false
-    isUpdatingNote.value = false
+    isSavingNote.value = false
     alertScreenReader('Note deleted.')
   })
 }
 
 const editNote = () => {
   isEditingNote.value = true
-  alertScreenReader('Editing note.')
+  putFocusNextTick('note-body-edit')
 }
 
 const refreshUser = () => {
@@ -205,17 +181,27 @@ const refreshUser = () => {
       eligibleCourses.value,
       ineligibleCourses.value
     )
-    refreshingCourses.value = false
+    isRefreshingCourses.value = false
   })
 }
 
 const saveNote = () => {
-  isUpdatingNote.value = true
+  isSavingNote.value = true
   updateUserNote(uid, noteBody.value).then(data => {
     user.value.note = noteBody.value = data.note
     isEditingNote.value = false
-    isUpdatingNote.value = false
+    isSavingNote.value = false
     alertScreenReader('Note updated.')
   })
+}
+
+const summarize = courses => {
+  const message = `${courses.length} course${courses.length === 1 ? '' : 's'}.`
+  const scheduled = filter(courses, 'scheduled')
+  if (scheduled && scheduled.length) {
+    return `${message} ${scheduled.length} ${scheduled.length === 1 ? 'has' : 'have'} recordings scheduled.`
+  } else {
+    return message
+  }
 }
 </script>

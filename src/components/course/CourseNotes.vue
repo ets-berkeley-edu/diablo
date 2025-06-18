@@ -4,8 +4,8 @@
       <h3>Notes</h3>
     </v-card-title>
     <v-card-text v-if="!isEditing" id="note-body" class="font-size-16">
-      <span v-if="course.notes">{{ course.note }}</span>
-      <span v-if="!course.notes" class="text-medium-emphasis">No notes</span>
+      <span v-if="course.note">{{ course.note }}</span>
+      <span v-if="!course.note" class="text-medium-emphasis">No notes.</span>
     </v-card-text>
     <v-card-actions v-if="!isEditing" class="px-4 pb-4">
       <v-btn
