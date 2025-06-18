@@ -80,7 +80,7 @@ class CoursePage(DiabloPages):
         return self.is_present((By.XPATH, '//span[text()="UC Berkeley has canceled this section."]'))
 
     def visible_ccn(self):
-        return self.element(CoursePage.SECTION_ID).text
+        return self.wait_for_element(self, self.SECTION_ID).text
 
     def visible_course_title(self):
         return self.element(CoursePage.COURSE_TITLE).text
@@ -338,7 +338,8 @@ class CoursePage(DiabloPages):
         return ids
 
     def visible_recording_placement(self):
-        return self.element(self.PLACEMENT_TEXT).text.strip()
+        # wait up to your short timeout for the element to exist in the DOM
+        return self.wait_for_element(self, self.PLACEMENT_TEXT).text.strip()
 
     def click_edit_recording_placement(self):
         app.logger.info('Clicking the edit recording placement button')
