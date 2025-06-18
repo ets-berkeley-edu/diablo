@@ -25,13 +25,21 @@
           >
             <v-select
               id="select-email-template-type"
-              :item-props="true"
+              ref="templateTypesSelect"
+              :aria-describedby="undefined"
+              aria-label="Create New Template"
+              autocomplete="off"
+              hide-details
+              item-props
               :items="emailTemplateTypes"
               label="Create New Template"
-              :list-props="{ariaLabel: 'Email template options', id: 'email-template-type-list'}"
+              :list-props="{ariaLabel: 'Email template options', ariaLive: 'off', id: 'email-template-type-list'}"
               :menu-props="{attach: menuContainer, eager: true, id: 'email-template-type-menu'}"
               :prepend-icon="mdiFileDocumentOutline"
               return-object
+              :title="undefined"
+              :value="undefined"
+              @update:menu="onToggleTemplateTypesMenu"
               @update:model-value="createNewTemplate"
             >
               <template #item="{props: itemProps, item}">
@@ -40,6 +48,7 @@
                   :aria-disabled="item.props.disabled"
                   :disabled="item.props.disabled"
                   v-bind="itemProps"
+                  @keydown.tab.stop.prevent="closeTemplateTypesMenu"
                 />
               </template>
             </v-select>
@@ -122,11 +131,11 @@
 
 <script setup>
 import {DateTime} from 'luxon'
-import {includes, map} from 'lodash'
+import {get, includes, map} from 'lodash'
 import {mdiEmailOpenMultipleOutline, mdiEmailOutline, mdiFileDocumentOutline, mdiTrashCanOutline} from '@mdi/js'
-import {onMounted, ref} from 'vue'
+import {onMounted, ref, useTemplateRef} from 'vue'
 import {useRouter} from 'vue-router'
-import {alertScreenReader, getSelectOptionsFromObject, putFocusNextTick} from '@/lib/utils'
+import {alertScreenReader, putFocusNextTick} from '@/lib/utils'
 import PageTitle from '@/components/util/PageTitle'
 import {deleteTemplate, getAllEmailTemplates, sendTestEmail} from '@/api/email'
 import {useContextStore} from '@/stores/context'
@@ -144,6 +153,7 @@ const emailTemplateTypes = ref([])
 const menuContainer = ref()
 const refreshing = ref(false)
 const router = useRouter()
+const templateTypesSelect = useTemplateRef('templateTypesSelect')
 
 contextStore.loadingStart()
 
@@ -152,6 +162,10 @@ onMounted(() => {
     contextStore.loadingComplete()
   })
 })
+
+const closeTemplateTypesMenu = () => {
+  templateTypesSelect.value.menu = false
+}
 
 const createNewTemplate = option => {
   if (!option.disabled) {
@@ -177,7 +191,16 @@ const loadAllEmailTemplates = () => {
     const isDisabled = type => {
       return includes(disableTheseTypes, type)
     }
-    emailTemplateTypes.value = getSelectOptionsFromObject(contextStore.config.emailTemplateTypes, isDisabled)
+    emailTemplateTypes.value = map(contextStore.config.emailTemplateTypes, (title, value) => {
+      return {
+        disabled: isDisabled(value),
+        id: `email-template-type-option-${value}`,
+        role: 'option',
+        tabindex: 0,
+        title: title,
+        value: value
+      }
+    })
   })
 }
 
@@ -186,6 +209,12 @@ const onClickSend = templateId => {
     contextStore.snackbarOpen('Test email sent. Check your inbox.')
     putFocusNextTick('btn-close-alert')
   })
+}
+
+const onToggleTemplateTypesMenu = isOpen => {
+  if (isOpen) {
+    putFocusNextTick(get(emailTemplateTypes, '0.id', 'email-template-type-list'))
+  }
 }
 </script>
 

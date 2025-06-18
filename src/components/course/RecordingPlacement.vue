@@ -43,8 +43,8 @@
         id="publish-linked-canvas-site"
         class="pt-4"
       >
-        <h5 class="mb-2 ml-4">
-          Linked bCourses site(s):
+        <h5 id="linked-course-sites-header" class="mb-2 ml-4">
+          Linked bCourses <span :aria-hidden="true">site(s):</span><span class="sr-only">sites</span>
         </h5>
         <div v-if="!isEditing">
           <div v-for="site in course.canvasSites" :key="site.canvasSiteId" class="mb-2 pl-4">
@@ -56,19 +56,21 @@
             <v-select
               id="select-canvas-site"
               v-model="pendingCanvasSite"
-              :aria-describedby="undefined"
+              aria-describedby="linked-course-sites-header"
+              aria-label="Select course site"
+              autocomplete="off"
               density="compact"
               :disabled="isSaving"
-              :full-width="true"
               hide-details
-              :item-title="item => `${item.name} (${item.courseCode})`"
-              :item-disabled="item => isCanvasSiteIdStaged(item.canvasSiteId)"
-              :list-props="{ariaLabel: 'My bCourses sites', id: 'canvas-site-list'}"
-              :menu-props="{attach: menuContainer, eager: true, id: 'canvas-site-menu'}"
-              return-object
+              item-props
               :items="publishCanvasSiteOptions"
               label="Select course site"
+              :list-props="{ariaLabel: 'My bCourses sites', ariaLive: 'off', id: 'canvas-site-list'}"
+              :menu-props="{attach: menuContainer, eager: true, id: 'canvas-site-menu'}"
+              :title="undefined"
+              :value="get(pendingCanvasSite, 'title')"
               variant="solo"
+              @update:menu="onToggleCanvasSitesMenu"
             >
               <template #item="{props: itemProps, item}">
                 <v-list-item
@@ -179,7 +181,7 @@
 </template>
 
 <script setup>
-import {filter, find, get, isEmpty, size} from 'lodash'
+import {filter, find, get, isEmpty, map, size} from 'lodash'
 import {onMounted, ref} from 'vue'
 import {alertScreenReader, putFocusNextTick} from '@/lib/utils'
 import CanvasCourseSite from '@/components/course/CanvasCourseSite'
@@ -218,7 +220,15 @@ const publishTypeOptions = Object.keys(config.publishTypeOptions).sort().reverse
 onMounted(() => {
   if (!currentUser.isAdmin) {
     getCanvasSitesTeaching(currentUser.uid).then(sites => {
-      publishCanvasSiteOptions.value = sites
+      publishCanvasSiteOptions.value = map(sites, site => {
+        return {
+          id: `canvas-site-option-${site.canvasSiteId}`,
+          disabled: isCanvasSiteIdStaged(site.canvasSiteId),
+          role: 'option',
+          title: `${site.name} (${site.courseCode})`,
+          value: site
+        }
+      })
     })
   }
 })
@@ -241,7 +251,7 @@ const addCanvasSiteById = () => {
 const addCanvasSiteConfirm = () => {
   if (pendingCanvasSite.value && !isCanvasSiteIdStaged(pendingCanvasSite.value.canvasSiteId)) {
     publishCanvasSites.value.push(pendingCanvasSite.value)
-    alertScreenReader(`${pendingCanvasSite.value.name} added.`)
+    alertScreenReader(`Added course site ${pendingCanvasSite.value.name}.`)
   }
   putFocusNextTick('select-canvas-site')
   pendingCanvasSite.value = null
@@ -255,6 +265,12 @@ const onPublishTypeChange = (option, idx) => {
   publishType.value = publishType.value === option ? publishTypeOptions.value[idx - 1] : option
 }
 
+const onToggleCanvasSitesMenu = isOpen => {
+  if (isOpen) {
+    putFocusNextTick(get(publishCanvasSiteOptions.value, '0.id', 'canvas-site-list'))
+  }
+}
+
 const removeCanvasSite = (canvasSiteId, index) => {
   const nextFocusIndex = (index + 1 === size(publishCanvasSites.value)) ? index - 1 : index + 1
   const nextFocusSiteId = get(publishCanvasSites.value, `${nextFocusIndex}.canvasSiteId`)
@@ -262,7 +278,7 @@ const removeCanvasSite = (canvasSiteId, index) => {
   const canvasSiteName = canvasSite.name || ''
   let nextFocusId = `btn-canvas-site-remove-${nextFocusSiteId}`
   publishCanvasSites.value = filter(publishCanvasSites.value, c => c.canvasSiteId !== canvasSiteId )
-  alertScreenReader(`Removed bCourses site ${canvasSiteName}.`)
+  alertScreenReader(`Removed course site ${canvasSiteName}.`)
   if (isEmpty(publishCanvasSites.value) || !nextFocusSiteId) {
     nextFocusId = currentUser.isAdmin ? 'input-canvas-site-id' : 'select-canvas-site'
   }

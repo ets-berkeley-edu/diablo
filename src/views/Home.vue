@@ -151,7 +151,6 @@
                       :aria-rowspan="size(course.displayMeetings)"
                       :class="{'border-0': size(course.displayMeetings) && courseIndex === (size(courses) - 1)}"
                       class="text-no-wrap"
-                      :columnheader="`${getTableId(index)}-hasOptedOut-th`"
                     >
                       <ToggleOptOut
                         :aria-label="`Opt out course ${get(course.courseCodes, '0', course.title)}.`"
