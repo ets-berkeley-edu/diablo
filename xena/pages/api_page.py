@@ -30,4 +30,4 @@ from xena.pages.diablo_pages import DiabloPages
 class ApiPage(DiabloPages):
 
     def hit_cache_clear(self):
-        self.driver.get(f'{app.config["BASE_URL"]}/api/cache/clear')
+        self.driver.get(f'{app.config["BASE_URL_API"]}/api/cache/clear')
