@@ -89,7 +89,7 @@ const toggleOptOut = () => {
 <style>
 .toggle-opt-out label {
   font-size: 1.25rem;
-  font-weight: 600;
+  font-weight: 500;
   padding-inline: 12px !important;
 }
 </style>
