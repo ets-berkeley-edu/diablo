@@ -16,61 +16,62 @@
       </div>
     </div>
     <div v-if="isCurrentTerm && !!capability && hasValidMeetingTimes" class="pa-4">
-      <div v-if="!course.hasOptedOut && course.scheduled">
-        <v-alert
-          v-if="updatesQueued"
-          id="notice-queued"
-          class="font-weight-bold"
-          :icon="mdiAlert"
-          role="none"
-          type="warning"
-          variant="outlined"
-        >
-          Recent updates to recording settings are currently queued for publication. They will be published in an hour or less.
-        </v-alert>
-        <div id="notice-scheduled" class="font-weight-bold text-success pa-6">
-          {{ currentUser.isAdmin ? 'The' : 'Your' }} course is scheduled for Course Capture. The first recording is on
-          <span class="text-no-wrap">
-            <Date :date="course.scheduled[0].meetingStartDate" />.
-          </span>
+      <div aria-live="polite">
+        <div v-if="!course.hasOptedOut && course.scheduled">
+          <v-alert
+            v-if="updatesQueued"
+            id="notice-queued"
+            class="font-weight-bold"
+            :icon="mdiAlert"
+            type="warning"
+            variant="outlined"
+          >
+            Recent updates to recording settings are currently queued for publication. They will be published in an hour or less.
+          </v-alert>
+          <div id="notice-scheduled" class="font-weight-bold text-success pa-6">
+            {{ currentUser.isAdmin ? 'The' : 'Your' }} course is scheduled for Course Capture. The first recording is on
+            <span class="text-no-wrap">
+              <Date :date="course.scheduled[0].meetingStartDate" />.
+            </span>
+          </div>
         </div>
-      </div>
-      <div v-if="!course.deletedAt && (course.hasOptedOut || !course.scheduled)">
-        <v-col class="font-weight-bold mb-1">
-          <span v-if="course.hasOptedOut && !course.scheduled && course.instructors.length" id="notice-opt-out" class="text-error">
-            {{ currentUser.isAdmin ? 'The' : 'Your' }} course is not scheduled for Course Capture because one or more instructors have opted out. To schedule recordings, please have all instructors remove their opt-out status.
-          </span>
-          <span v-if="course.hasOptedOut && !course.scheduled && !course.instructors.length" id="notice-opt-out" class="text-error">
-            {{ currentUser.isAdmin ? 'The' : 'Your' }} course is not scheduled for Course Capture due to an admin override. Please contact
-            <a
-              id="course-page-diablo-support-mailto"
-              :href="`mailto:${config.emailCourseCaptureSupport}`"
-              target="_blank"
-            >
-              {{ config.emailCourseCaptureSupport }}
-            </a>.
-          </span>
-          <span v-if="course.scheduled && course.hasOptedOut && course.instructors.length" id="notice-opt-out-pending-instructors" class="text-error">
-            {{ currentUser.isAdmin ? 'The' : 'Your' }} course is scheduled for Course Capture, but will be unscheduled shortly because one or more instructors have opted out. To keep recordings scheduled, please have all instructors remove their opt-out status.
-          </span>
-          <span v-if="course.scheduled && course.hasOptedOut && !course.instructors.length" id="notice-opt-out-pending-no-instructors" class="text-error">
-            {{ currentUser.isAdmin ? 'The' : 'Your' }} course is scheduled for Course Capture, but will be unscheduled shortly due to an admin override. Please contact
-            <a
-              id="course-page-diablo-support-mailto"
-              :href="`mailto:${config.emailCourseCaptureSupport}`"
-              target="_blank"
-            >
-              {{ config.emailCourseCaptureSupport }}
-            </a>
-            if you have any questions.
-          </span>
-          <span v-if="!course.scheduled && !course.hasOptedOut && course.instructors.length" id="notice-eligible-not-scheduled" class="text-success">
-            This course is eligible for scheduling, but has not yet been scheduled. Instructors will be notified when scheduling has taken place.
-          </span>
-          <span v-if="!course.scheduled && !course.hasOptedOut && !course.instructors.length" id="notice-eligible-not-scheduled" class="text-success">
-            This course is eligible for scheduling, but has not been scheduled because it has no instructors.
-          </span>
-        </v-col>
+        <div v-if="!course.deletedAt && (course.hasOptedOut || !course.scheduled)">
+          <v-col class="font-weight-bold mb-1">
+            <span v-if="course.hasOptedOut && !course.scheduled && course.instructors.length" id="notice-opt-out" class="text-error">
+              {{ currentUser.isAdmin ? 'The' : 'Your' }} course is not scheduled for Course Capture because one or more instructors have opted out. To schedule recordings, please have all instructors remove their opt-out status.
+            </span>
+            <span v-if="course.hasOptedOut && !course.scheduled && !course.instructors.length" id="notice-opt-out" class="text-error">
+              {{ currentUser.isAdmin ? 'The' : 'Your' }} course is not scheduled for Course Capture due to an admin override. Please contact
+              <a
+                id="course-page-diablo-support-mailto"
+                :href="`mailto:${config.emailCourseCaptureSupport}`"
+                target="_blank"
+              >
+                {{ config.emailCourseCaptureSupport }}
+              </a>.
+            </span>
+            <span v-if="course.scheduled && course.hasOptedOut && course.instructors.length" id="notice-opt-out-pending-instructors" class="text-error">
+              {{ currentUser.isAdmin ? 'The' : 'Your' }} course is scheduled for Course Capture, but will be unscheduled shortly because one or more instructors have opted out. To keep recordings scheduled, please have all instructors remove their opt-out status.
+            </span>
+            <span v-if="course.scheduled && course.hasOptedOut && !course.instructors.length" id="notice-opt-out-pending-no-instructors" class="text-error">
+              {{ currentUser.isAdmin ? 'The' : 'Your' }} course is scheduled for Course Capture, but will be unscheduled shortly due to an admin override. Please contact
+              <a
+                id="course-page-diablo-support-mailto"
+                :href="`mailto:${config.emailCourseCaptureSupport}`"
+                target="_blank"
+              >
+                {{ config.emailCourseCaptureSupport }}
+              </a>
+              if you have any questions.
+            </span>
+            <span v-if="!course.scheduled && !course.hasOptedOut && course.instructors.length" id="notice-eligible-not-scheduled" class="text-success">
+              This course is eligible for scheduling, but has not yet been scheduled. Instructors will be notified when scheduling has taken place.
+            </span>
+            <span v-if="!course.scheduled && !course.hasOptedOut && !course.instructors.length" id="notice-eligible-not-scheduled" class="text-success">
+              This course is eligible for scheduling, but has not been scheduled because it has no instructors.
+            </span>
+          </v-col>
+        </div>
       </div>
       <div v-if="currentUser.isAdmin">
         <v-col>
@@ -96,17 +97,17 @@
           <v-container v-if="isCurrentTerm && !!capability && hasValidMeetingTimes" class="pt-6">
             <v-row
               align="center"
-              aria-labelledby="instructors-header"
+              aria-label="Instructors"
               justify="start"
               role="region"
             >
               <v-col id="instructors-list" class="px-4 mb-2" cols="12">
                 <h3 id="instructors-header">
                   <span v-if="!course.hasOptedOut && course.scheduled">
-                    Instructor(s) listed will have editing and publishing access:
+                    <span :aria-hidden="true">Instructor(s)</span><span class="sr-only">Instructors</span> listed will have editing and publishing access:
                   </span>
                   <span v-if="!course.deletedAt && (course.hasOptedOut || !course.scheduled)">
-                    Instructor(s):
+                    <span :aria-hidden="true">Instructor(s):</span><span class="sr-only">Instructors</span>
                   </span>
                 </h3>
                 <div v-if="isEmpty(course.instructors)" class="pl-4 pt-2 text-medium-emphasis">
@@ -332,11 +333,13 @@ contextStore.loadingStart('Course')
 
 onMounted(() => {
   const {params} = useRoute()
-  refreshCourse(params.termId, params.sectionId)
+  refreshCourse(params.termId, params.sectionId).then(() => {
+    contextStore.loadingComplete(courseDisplayTitle.value)
+  })
 })
 
 const refreshCourse = (termId, sectionId) => {
-  getCourse(termId, sectionId)
+  return getCourse(termId, sectionId)
     .then(data => {
       course.value = data
       agreedToTerms.value = currentUser.isAdmin
@@ -350,7 +353,6 @@ const refreshCourse = (termId, sectionId) => {
       courseDisplayTitle.value = getCourseCodes(data)[0]
       getAuditoriums().then(aud => {
         auditoriums.value = aud
-        contextStore.loadingComplete(courseDisplayTitle.value)
       })
     })
 }

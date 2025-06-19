@@ -110,13 +110,14 @@ export default createVuetify({
           anchor: '#ca4f16',
           banner: '#224f6e',
           error: red.accent4,
+          'icon-nav': '#fff',
           primary: '#307aab',
           secondary: '#347cad',
           success: '#3a833c',
-          'icon-nav': '#fff',
           'surface-light': '#f6f6f6',
           'table-border': '#c9c9c9',
-          'tertiary': '#27658e',
+          tertiary: '#27658e',
+           warning: '#b36200'
         }
       },
       dark: {
@@ -125,12 +126,12 @@ export default createVuetify({
           anchor: '#ff702e',
           banner: '#122b3c',
           error: '#ff6262',
+          'icon-nav': '#378dc5',
           primary: '#307aab',
           secondary: '#2a5f83',
-          'icon-nav': '#378dc5',
           'surface-light': '#303030',
           'table-border': '#378dc5',
-          'tertiary': '#173c55',
+          tertiary: '#173c55',
         }
       }
     }
