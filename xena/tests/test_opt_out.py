@@ -360,10 +360,10 @@ class TestOptOut4:
         assert not util.get_kaltura_id(recording_schedule_0_1)
         assert not util.get_kaltura_id(recording_schedule_1)
 
-    def test_no_opt_out_emails(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_OPTED_OUT, section_0, instructor_0) == 0
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_OPTED_OUT, section_0, instructor_1) == 0
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_OPTED_OUT, section_1, instructor_0) == 0
+    def test_opt_out_emails_all_sections(self):
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_OPTED_OUT, section_0, instructor_0) == 1
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_OPTED_OUT, section_0, instructor_1) == 1
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_OPTED_OUT, section_1, instructor_0) == 1
 
     def test_opt_in_one_section(self):
         self.jobs_page.log_out()
@@ -384,10 +384,10 @@ class TestOptOut4:
         assert not util.get_kaltura_id(recording_schedule_0_1)
         assert util.get_kaltura_id(recording_schedule_1)
 
-    def test_no_opt_out_emails_sent(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_OPTED_OUT, section_0, instructor_0) == 1
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_OPTED_OUT, section_0, instructor_1) == 1
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_OPTED_OUT, section_1, instructor_0) == 0
+    def test_opt_out_emails_one_section(self):
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_OPTED_OUT, section_0, instructor_0) == 2
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_OPTED_OUT, section_0, instructor_1) == 2
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_OPTED_OUT, section_1, instructor_0) == 1
 
 
 @pytest.mark.usefixtures('page_objects')
@@ -453,9 +453,11 @@ class TestOptOut6:
     SCENARIO.
 
     - A section has no instructor
-    - Recordings are scheduled
+    - Recordings are not scheduled
     - An instructor who has opted out of all terms is added to the section
-    - Recordings are unscheduled
+    - Recordings are still not scheduled
+    - Instructor removes opt-out
+    - Recordings are scheduled
     """
 
     def test_set_up(self):
@@ -471,10 +473,12 @@ class TestOptOut6:
         self.jobs_page.run_schedule_updates_job()
         self.jobs_page.run_kaltura_job()
 
-    def test_section_scheduled(self):
-        assert util.get_kaltura_id(recording_schedule_1)
+    def test_section_not_scheduled(self):
+        self.kaltura_page.load_event_edit_page(recording_schedule_1.series_id)
+        self.kaltura_page.wait_for_title('Access Denied - UC Berkeley - Test')
 
     def test_opt_out_all_terms(self):
+        self.jobs_page.load_page()
         self.jobs_page.log_out()
         self.login_page.load_page()
         self.login_page.dev_auth(instructor_0.uid)
@@ -489,12 +493,28 @@ class TestOptOut6:
         self.ouija_page.click_jobs_link()
         self.jobs_page.run_schedule_update_job_sequence()
 
-    def test_section_unscheduled(self):
+    def test_section_still_not_scheduled(self):
         self.kaltura_page.load_event_edit_page(recording_schedule_1.series_id)
         self.kaltura_page.wait_for_title('Access Denied - UC Berkeley - Test')
 
     def test_no_opt_out_emails_sent(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_OPTED_OUT, section_1, instructor_0) == 1
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_OPTED_OUT, section_1, instructor_0) == 0
+
+    def test_opt_in_all_terms(self):
+        self.jobs_page.load_page()
+        self.jobs_page.log_out()
+        self.login_page.load_page()
+        self.login_page.dev_auth(instructor_0.uid)
+        self.instructor_page.disable_opt_out_all_terms()
+
+    def test_run_update_third_time(self):
+        self.instructor_page.log_out()
+        self.login_page.dev_auth()
+        self.ouija_page.click_jobs_link()
+        self.jobs_page.run_kaltura_job()
+
+    def test_sections_finally_scheduled(self):
+        assert util.get_kaltura_id(recording_schedule_1)
 
 
 @pytest.mark.usefixtures('page_objects')
@@ -505,16 +525,25 @@ class TestOptOut7:
     - A section has an instructor opted out of all terms
     - Recordings are not scheduled
     - The instructor is removed
-    - Recordings are scheduled
+    - Recordings remain unscheduled
     """
 
     def test_set_up(self):
         util.reset_sent_email_test_data(section_1)
-
         self.kaltura_page.reset_test_data(section_1)
         util.reset_section_test_data(section_1, delete_opt_outs=False)
 
+    def test_opt_out_all_terms(self):
+        self.jobs_page.load_page()
+        self.jobs_page.log_out()
+        self.login_page.load_page()
+        self.login_page.dev_auth(instructor_0.uid)
+        self.instructor_page.enable_opt_out_all_terms()
+
     def test_run_update(self):
+        self.jobs_page.log_out()
+        self.login_page.load_page()
+        self.login_page.dev_auth()
         self.jobs_page.load_page()
         self.jobs_page.run_kaltura_job()
 
@@ -527,11 +556,9 @@ class TestOptOut7:
     def test_run_update_encore(self):
         self.jobs_page.run_schedule_update_job_sequence()
 
-    def test_section_scheduled(self):
-        assert util.get_kaltura_id(recording_schedule_1)
-
-    def test_no_opt_out_emails_sent(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_OPTED_OUT, section_1, instructor_0) == 0
+    def test_section_still_not_scheduled(self):
+        self.kaltura_page.load_event_edit_page(recording_schedule_1.series_id)
+        self.kaltura_page.wait_for_title('Access Denied - UC Berkeley - Test')
 
 
 @pytest.mark.usefixtures('page_objects')
@@ -540,7 +567,7 @@ class TestOptOut8:
     SCENARIO.
 
     - An instructor opts out of a single section
-    - Recordings are not unscheduled
+    - Recordings are not scheduled
     - The instructor is replaced with an instructor with no opt-outs
     - Recordings are scheduled
     """
@@ -548,26 +575,18 @@ class TestOptOut8:
     def test_set_up(self):
         self.kaltura_page.reset_test_data(section_1)
         util.reset_section_test_data(section_1)
-
-    def test_schedule_update(self):
-        self.jobs_page.load_page()
-        self.jobs_page.run_schedule_update_job_sequence()
-
-    def test_section_scheduled(self):
-        assert util.get_kaltura_id(recording_schedule_1)
+        util.reset_sent_email_test_data(section_1)
 
     def test_opt_out_one_section(self):
-        self.jobs_page.log_out()
         self.login_page.load_page()
         self.login_page.dev_auth(instructor_0.uid)
         self.instructor_page.enable_opt_out_section(section_1)
 
-    def test_run_update(self):
+    def test_schedule_update(self):
         self.instructor_page.log_out()
         self.login_page.dev_auth()
-        self.ouija_page.click_jobs_link()
-        self.jobs_page.run_kaltura_job()
-        self.jobs_page.run_emails_job()
+        self.jobs_page.load_page()
+        self.jobs_page.run_schedule_update_job_sequence()
 
     def test_section_not_scheduled(self):
         assert not util.get_kaltura_id(recording_schedule_1)
@@ -580,3 +599,48 @@ class TestOptOut8:
 
     def test_section_rescheduled(self):
         assert util.get_kaltura_id(recording_schedule_1)
+
+
+@pytest.mark.usefixtures('page_objects')
+class TestOptOut9:
+    """
+    SCENARIO.
+
+    - An administrator opts out of a single section
+    - Recordings are not scheduled
+    - The administrator removes the opt-out
+    - Recordings are scheduled
+    """
+
+    def test_set_up(self):
+        self.kaltura_page.reset_test_data(section_0)
+        util.reset_section_test_data(section_0)
+
+    def test_schedule_update(self):
+        self.jobs_page.load_page()
+        self.jobs_page.run_schedule_update_job_sequence()
+
+    def test_opt_out_one_section(self):
+        self.course_page.load_page(section_0)
+        self.course_page.admin_opt_out_section(section_0)
+
+    def test_run_update(self):
+        self.ouija_page.click_jobs_link()
+        self.jobs_page.run_kaltura_job()
+        self.jobs_page.run_emails_job()
+
+    def test_section_not_scheduled(self):
+        assert not util.get_kaltura_id(recording_schedule_0_0)
+        assert not util.get_kaltura_id(recording_schedule_0_1)
+
+    def test_remove_opt_out(self):
+        self.course_page.load_page(section_0)
+        self.course_page.admin_opt_in_section(section_0)
+
+    def test_run_update_encore(self):
+        self.jobs_page.load_page()
+        self.jobs_page.run_schedule_update_job_sequence()
+
+    def test_section_scheduled(self):
+        assert util.get_kaltura_id(recording_schedule_0_0)
+        assert util.get_kaltura_id(recording_schedule_0_1)

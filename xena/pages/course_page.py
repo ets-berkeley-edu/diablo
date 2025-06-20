@@ -57,6 +57,10 @@ class CoursePage(DiabloPages):
         return By.XPATH, f'//span[contains(text(), "Sorry, you are unauthorized to view the course {section.code}, {section.number}")]'
 
     @staticmethod
+    def admin_opt_out_button_locator(section):
+        return By.ID, f'toggle-opt-out-{section.ccn}'
+
+    @staticmethod
     def expected_final_record_date_str(meeting, term):
         return meeting.meeting_schedule.expected_recording_dates(term)[-1].strftime('%b %-d, %Y')
 
@@ -67,6 +71,26 @@ class CoursePage(DiabloPages):
         app.logger.info(f'Loading course page for term {section.term.id} section ID {section.ccn}')
         self.hit_url(section.term.id, section.ccn)
         self.wait_for_diablo_title(f'{section.code}, {section.number}')
+
+    # Admin opt-out
+
+    def admin_opt_out_section(self, section):
+        app.logger.info(f'Opting out of term {section.term.id} section ID {section.ccn}')
+        opt_out_button = self.admin_opt_out_button_locator(section)
+        self.when_present(opt_out_button, util.get_short_timeout())
+        if not self.element(opt_out_button).get_dom_attribute('checked'):
+            self.click_element_js(opt_out_button)
+        else:
+            app.logger.info('Already opted out')
+
+    def admin_opt_in_section(self, section):
+        app.logger.info(f'Removing opt-out from term {section.term.id} section ID {section.ccn}')
+        opt_out_button = self.admin_opt_out_button_locator(section)
+        self.when_present(opt_out_button, util.get_short_timeout())
+        if self.element(opt_out_button).get_dom_attribute('checked'):
+            self.click_element_js(opt_out_button)
+        else:
+            app.logger.info('Opt-out already removed')
 
     # SIS DATA - section
 
