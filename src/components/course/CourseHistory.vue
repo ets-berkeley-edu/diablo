@@ -1,7 +1,14 @@
 <template>
-  <v-card id="update-history" class="border-sm">
+  <v-card
+    id="update-history"
+    aria-labelledby="update-history-header"
+    class="border-sm"
+    role="region"
+  >
     <v-card-title>
-      <h2>Update history</h2>
+      <h2 id="update-history-header">
+        <span class="sr-only">Course </span>Update history
+      </h2>
     </v-card-title>
     <v-card-text class="px-0">
       <v-data-table
@@ -29,8 +36,8 @@
               <template v-if="history.length >= 2">
                 <v-btn
                   :id="`update-history-sort-by-${column.value}-btn`"
-                  :append-icon="getSortIcon(column)"
-                  :aria-label="`Sort by ${column.title} ${isSorted(column) && sortBy.order === 'asc' ? 'descending' : 'ascending'}`"
+                  :append-icon="isSorted(column) ? getSortIcon(column) : undefined"
+                  :aria-label="sortButtonAriaLabel(column, isSorted)"
                   class="font-size-13 font-weight-bold height-unset min-width-unset pa-1 text-transform-unset v-table-sort-btn-override"
                   :class="{'icon-visible': sortBy[0] === column.value}"
                   density="compact"
@@ -134,8 +141,15 @@ const onUpdateSortBy = primarySortBy => {
     }
   } else {
     sortBy.value = {key: '', order: ''}
-    alertScreenReader('Unsorted')
+    alertScreenReader('Default sort order restored')
   }
 }
 
+const sortButtonAriaLabel = (column, isSorted) => {
+  if (isSorted(column) && 'desc' === sortBy.value.order) {
+    return 'Restore default sort order'
+  } else {
+    return `Sort by ${column.title} ${isSorted(column) && sortBy.value.order === 'asc' ? 'descending' : 'ascending'}`
+  }
+}
 </script>

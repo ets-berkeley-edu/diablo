@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div aria-describedby="courses-data-table-message" aria-label="Courses table" role="region">
     <v-row id="courses-data-table-message" class="text-medium-emphasis pb-1 px-4">
       <span class="ml-4">{{ messageForCourses }}</span>
       <v-spacer />
@@ -227,7 +227,7 @@
 </template>
 
 <script setup>
-import {each, filter, get, map, size, tail} from 'lodash'
+import {each, filter, find, get, map, size, tail} from 'lodash'
 import {mdiClose} from '@mdi/js'
 import {onMounted, ref, watch} from 'vue'
 import {alertScreenReader,getDisplayMeetings} from '@/lib/utils'

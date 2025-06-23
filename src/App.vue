@@ -1,23 +1,27 @@
 <template>
   <div>
-    <span
-      v-if="screenReaderAlert"
+    <div
       id="screen-reader-alert"
       class="sr-only"
-      aria-live="polite"
-      role="alert"
+      :aria-live="ariaLive"
+      :role="ariaLive === 'assertive' ? 'alert' : undefined"
     >
-      {{ screenReaderAlert }}
-    </span>
+      <span v-if="get(screenReaderAlert, 'message', '').length">
+        {{ screenReaderAlert.message }}
+      </span>
+    </div>
     <router-view />
   </div>
 </template>
 
 <script setup>
+import {computed} from 'vue'
+import {get} from 'lodash'
 import {storeToRefs} from 'pinia'
 import {useContextStore} from '@/stores/context'
 
 const {screenReaderAlert} = storeToRefs(useContextStore())
+const ariaLive = computed(() => get(screenReaderAlert, 'politeness', 'polite'))
 </script>
 
 <style>

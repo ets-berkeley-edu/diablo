@@ -37,8 +37,14 @@
       </v-container>
       <Spinner v-if="refreshingCourses" />
       <template v-if="!refreshingCourses">
-        <v-row v-for="(courses, index) in [eligibleCourses, ineligibleCourses]" :key="index" class="py-5">
-          <h2 class="pa-4 text-medium-emphasis w-100">
+        <v-row
+          v-for="(courses, index) in [eligibleCourses, ineligibleCourses]"
+          :key="index"
+          :aria-labelledby="`${getTableId(index)}-header`"
+          class="py-5"
+          role="region"
+        >
+          <h2 :id="`${getTableId(index)}-header`" class="pa-4 text-medium-emphasis w-100">
             {{ index === 0 ? 'Courses eligible for capture' : 'Courses not in a course capture classroom' }}
           </h2>
           <div class="overflow-x-auto px-md-4 w-100">

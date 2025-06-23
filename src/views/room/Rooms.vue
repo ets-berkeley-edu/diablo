@@ -49,8 +49,8 @@
           >
             <v-btn
               :id="`rooms-table-sort-by-${column.value}-btn`"
-              :append-icon="getSortIcon(column)"
-              :aria-label="`Sort by ${column.title} ${isSorted(column) && sortBy.order === 'asc' ? 'descending' : 'ascending'}`"
+              :append-icon="isSorted(column) ? getSortIcon(column) : undefined"
+              :aria-label="sortButtonAriaLabel(column, isSorted)"
               class="font-size-13 font-weight-bold height-unset min-width-unset pa-1 text-transform-unset v-table-sort-btn-override"
               :class="{'icon-visible': isSorted(column)}"
               density="compact"
@@ -105,7 +105,7 @@
 
 <script setup>
 import {computed, onMounted, ref} from 'vue'
-import {get, size, startsWith} from 'lodash'
+import {find, get, size, startsWith} from 'lodash'
 import {mdiDomain, mdiMagnify} from '@mdi/js'
 import {alertScreenReader} from '@/lib/utils'
 import PageTitle from '@/components/util/PageTitle'
@@ -142,14 +142,22 @@ const onUpdateSortBy = primarySortBy => {
   const key = get(primarySortBy, '0.key')
   pageCurrent.value = 1
   if (key) {
-    const header = find(headers.value, {value: key})
+    const header = find(headers, {value: key})
     sortBy.value = primarySortBy[0]
     if (header) {
       alertScreenReader(`Sorted by ${header.title}, ${sortBy.value.order}ending`)
     }
   } else {
     sortBy.value = {key: '', order: ''}
-    alertScreenReader('Unsorted')
+    alertScreenReader('Default sort order restored')
+  }
+}
+
+const sortButtonAriaLabel = (column, isSorted) => {
+  if (isSorted(column) && 'desc' === sortBy.value.order) {
+    return 'Restore default sort order'
+  } else {
+    return `Sort by ${column.title} ${isSorted(column) && sortBy.value.order === 'asc' ? 'descending' : 'ascending'}`
   }
 }
 </script>
