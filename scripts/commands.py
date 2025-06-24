@@ -24,7 +24,6 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 import os
 import sys
-import time
 
 abspath = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(abspath)
@@ -33,34 +32,6 @@ import click  # noqa
 from diablo.factory import create_app  # noqa
 
 application = create_app(standalone=True)
-
-
-@application.cli.command('delete_scheduled_events_from_kaltura')
-@click.argument('rehearsal', default=False)
-def delete_kaltura_events(rehearsal):
-    """Delete Kaltura events created by Diablo."""
-    with application.app_context():
-        from diablo.externals.kaltura import CREATED_BY_DIABLO_TAG, Kaltura
-
-        def _print(message):
-            print(f"""
-                {'[REHEARSAL MODE]: ' if rehearsal else ''}{message}
-            """)
-        _print('Time for some Kaltura housekeeping...')
-
-        kaltura = Kaltura()
-        kaltura_events = kaltura.get_events_by_tag(tags_like=CREATED_BY_DIABLO_TAG)
-        if kaltura_events:
-            _print(f'In two seconds we will delete {len(kaltura_events)} event(s) in Kaltura. Use control-C to abort.')
-            time.sleep(2)
-
-            for event in kaltura_events:
-                if not rehearsal:
-                    kaltura.delete(event_id=event['id'])
-                _print(f'Deleted --> {event["description"] or event["summary"]}')
-        else:
-            _print(f'No events found with tag {CREATED_BY_DIABLO_TAG}')
-        _print('Have a nice day!')
 
 
 @application.cli.command('update_lti')

@@ -390,6 +390,7 @@ def schedule_recordings(course, remove_blackout_conflicts=False, updates=None):
                     publish_type=publish_type,
                     recording_type=recording_type,
                     room=room,
+                    tag=f'{CREATED_BY_DIABLO_TAG}_{term_id}_{section_id}',
                     term_id=term_id,
                 )
 

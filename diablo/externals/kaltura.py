@@ -142,10 +142,6 @@ class Kaltura:
         )
         return self._get_events(kaltura_event_filter=event_filter)
 
-    @skip_when_pytest()
-    def get_events_by_tag(self, tags_like=CREATED_BY_DIABLO_TAG):
-        return self._get_events(kaltura_event_filter=KalturaScheduleEventFilter(tagsLike=tags_like))
-
     @skip_when_pytest(mock_object='kaltura/schedule_event.json', is_fixture_json_file=True)
     def get_event(self, event_id):
         events = self._get_events(kaltura_event_filter=KalturaScheduleEventFilter(idEqual=event_id))
@@ -221,6 +217,7 @@ class Kaltura:
             publish_type,
             recording_type,
             room,
+            tag,
             term_id,
     ):
         category_ids = []
@@ -244,6 +241,7 @@ class Kaltura:
             recording_type=recording_type,
             room=room,
             term_id=term_id,
+            tag=tag,
         )
 
         # Link the schedule to the room (ie, capture agent)
@@ -295,6 +293,7 @@ class Kaltura:
             description,
             entry_id,
             name,
+            tag,
             uids_entitled_to_edit,
             uids_entitled_to_publish,
     ):
@@ -309,7 +308,7 @@ class Kaltura:
                 name=name,
                 partnerId=app.config['KALTURA_PARTNER_ID'],
                 status=KalturaEntryStatus.NO_CONTENT,
-                tags=CREATED_BY_DIABLO_TAG,
+                tags=tag,
                 type=KalturaEntryType.MEDIA_CLIP,
                 userId='RecordScheduleGroup',
             ),
@@ -379,6 +378,7 @@ class Kaltura:
             publish_type,
             recording_type,
             room,
+            tag,
             term_id,
     ):
 
@@ -394,6 +394,7 @@ class Kaltura:
             description=description,
             instructors=instructors,
             name=f'{summary} in {room.location}',
+            tag=tag,
         )
 
         for category_id in category_ids or []:
@@ -411,7 +412,7 @@ class Kaltura:
             recurrenceType=KalturaScheduleEventRecurrenceType.RECURRING,
             status=KalturaScheduleEventStatus.ACTIVE,
             summary=summary,
-            tags=CREATED_BY_DIABLO_TAG,
+            tags=tag,
             templateEntryId=base_entry.id,
         )
 
@@ -482,6 +483,7 @@ class Kaltura:
             description,
             name,
             instructors,
+            tag,
     ):
         instructor_uids = [instructor['uid'] for instructor in instructors]
         uids = ','.join(_to_normalized_set(instructor_uids)) if instructor_uids else None
@@ -494,7 +496,7 @@ class Kaltura:
             name=name,
             partnerId=app.config['KALTURA_PARTNER_ID'],
             status=KalturaEntryStatus.NO_CONTENT,
-            tags=CREATED_BY_DIABLO_TAG,
+            tags=tag,
             type=KalturaEntryType.MEDIA_CLIP,
             userId='RecordScheduleGroup',
         )
