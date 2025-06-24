@@ -26,7 +26,7 @@ from diablo.api.errors import BadRequestError, ResourceNotFoundError
 from diablo.api.util import admin_required
 from diablo.externals.canvas import get_teaching_courses
 from diablo.externals.loch import get_loch_basic_attributes_by_uid_or_email
-from diablo.lib.http import tolerant_jsonify
+from diablo.lib.http_util import tolerant_jsonify
 from diablo.lib.util import basic_attributes_to_api_json
 from diablo.merged.calnet import get_calnet_user_for_uid, get_calnet_users_for_uids
 from diablo.models.admin_user import AdminUser

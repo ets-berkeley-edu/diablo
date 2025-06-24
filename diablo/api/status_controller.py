@@ -30,7 +30,7 @@ from diablo.externals.b_connected import BConnected
 from diablo.externals.canvas import ping_canvas
 from diablo.externals.kaltura import Kaltura
 from diablo.externals.rds import log_db_error
-from diablo.lib.http import tolerant_jsonify
+from diablo.lib.http_util import tolerant_jsonify
 from diablo.merged.emailer import send_system_error_email
 from flask import current_app as app
 import psycopg2

@@ -28,7 +28,7 @@ from diablo.api.errors import BadRequestError, ResourceNotFoundError
 from diablo.api.util import admin_required
 from diablo.factory import background_job_manager
 from diablo.jobs.background_job_manager import BackgroundJobManager
-from diablo.lib.http import tolerant_jsonify
+from diablo.lib.http_util import tolerant_jsonify
 from diablo.lib.util import to_isoformat
 from diablo.models.job import Job
 from diablo.models.job_history import JobHistory

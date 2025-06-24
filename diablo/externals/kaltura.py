@@ -151,7 +151,7 @@ class Kaltura:
         events = self._get_events(kaltura_event_filter=KalturaScheduleEventFilter(idEqual=event_id))
         return events[0] if events else None
 
-    @skip_when_pytest()
+    @skip_when_pytest(mock_object='kaltura/schedule_events.json', is_fixture_json_file=True)
     def get_events_in_date_range(self, end_date, start_date, kaltura_schedule_id=None, recurrence_type=None):
         end_date_timestamp = int(end_date.timestamp())
         start_date_timestamp = int(start_date.timestamp())
