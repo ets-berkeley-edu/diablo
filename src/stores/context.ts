@@ -1,13 +1,16 @@
 import {defineStore} from 'pinia'
 import {get, toString} from 'lodash'
-import type {DiabloConfig, DiabloUser} from '@/lib/types'
+import type {DiabloConfig, DiabloUser, ScreenReaderAlert} from '@/lib/types'
 import {ANONYMOUS_USER, putFocusNextTick} from '@/lib/utils'
 import router from '@/router'
 
 export const useContextStore = defineStore('context', {
   state: () => ({
     loading: false,
-    screenReaderAlert: undefined as string | undefined,
+    screenReaderAlert: {
+      message: '',
+      politeness: 'polite'
+    } as ScreenReaderAlert,
     snackbar: {
       color: 'primary' as string | undefined,
       text: undefined as string | undefined,
@@ -23,23 +26,35 @@ export const useContextStore = defineStore('context', {
       const route = router.currentRoute.value
       const pageTitle: string = title || toString(get(route, 'name'))
       this.loading = true
-      this.screenReaderAlert = `Loading ${pageTitle} page.`
+      this.screenReaderAlert = {
+        message: `Loading ${pageTitle} page.`,
+        politeness: 'polite'
+      }
     },
     loadingComplete(title?: string, srAlert?: string) {
       const route = router.currentRoute.value
       const pageTitle: string = title || toString(get(route, 'name'))
       document.title = `${pageTitle ? pageTitle : 'Welcome'} | Course Capture`
       this.loading = false
-      this.screenReaderAlert = `${pageTitle || String(get(route, 'name', ''))} page loaded. ${srAlert || ''}`
+      this.screenReaderAlert = {
+        message: `${pageTitle || String(get(route, 'name', ''))} page loaded. ${srAlert || ''}`,
+        politeness: 'polite'
+      }
       putFocusNextTick('page-title')
     },
-    alertScreenReader(message: string) {
-      this.screenReaderAlert = message
+    alertScreenReader(message: string, politeness?: string) {
+      this.screenReaderAlert = {
+        message: message,
+        politeness: politeness || 'polite'
+      }
     },
     snackbarClose() {
       this.snackbarShow = false
       this.snackbar.text = undefined
-      this.screenReaderAlert = 'Message closed'
+      this.screenReaderAlert = {
+        message: 'Message closed',
+        politeness: 'polite'
+      }
     },
     snackbarOpen(text: string) {
       this.snackbar.text = text

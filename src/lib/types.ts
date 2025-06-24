@@ -151,3 +151,8 @@ export interface DiabloUser {
   name: string,
   uid: string | null
 }
+
+export type ScreenReaderAlert = {
+  message: string,
+  politeness: string
+}

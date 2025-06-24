@@ -10,10 +10,10 @@
           <ContactUsPrompt href-mailto-class="on-secondary" />
         </v-col>
         <v-col class="d-flex justify-end" cols="12" sm="6">
-          <span v-if="config.isVueAppDebugMode && screenReaderAlert">
-            {{ screenReaderAlert }}
+          <span v-if="config.isVueAppDebugMode && get(screenReaderAlert, 'message', '').length">
+            {{ screenReaderAlert.message }}
           </span>
-          <span v-if="!config.isVueAppDebugMode || !screenReaderAlert">
+          <span v-if="!config.isVueAppDebugMode || !get(screenReaderAlert, 'message', '').length">
             <v-icon :icon="mdiCopyright" size="small" />
             <span class="sr-only">Copyright</span> {{ new Date().getFullYear() }}
             The Regents of the University of California
@@ -25,6 +25,7 @@
 </template>
 
 <script setup>
+import {get} from 'lodash'
 import {mdiCopyright} from '@mdi/js'
 import {storeToRefs} from 'pinia'
 import ContactUsPrompt from '@/components/util/ContactUsPrompt'
