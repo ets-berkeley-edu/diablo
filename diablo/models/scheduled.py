@@ -56,6 +56,8 @@ class Scheduled(db.Model):
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.now)
     deleted_at = db.Column(db.DateTime, nullable=True)
 
+    room = db.relationship('Room', back_populates='scheduled')
+
     def __init__(
             self,
             course_display_name,

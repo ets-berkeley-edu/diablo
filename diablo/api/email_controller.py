@@ -25,7 +25,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 from diablo.api.errors import BadRequestError, ResourceNotFoundError
 from diablo.api.util import admin_required
 from diablo.externals.b_connected import BConnected
-from diablo.lib.http import tolerant_jsonify
+from diablo.lib.http_util import tolerant_jsonify
 from diablo.lib.interpolator import get_template_substitutions, interpolate_content
 from diablo.models.course_preference import get_all_publish_types, get_all_recording_types, NAMES_PER_PUBLISH_TYPE, \
     NAMES_PER_RECORDING_TYPE

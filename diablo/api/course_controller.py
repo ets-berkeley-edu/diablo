@@ -29,7 +29,7 @@ from diablo.api.errors import BadRequestError, ForbiddenRequestError, InternalSe
 from diablo.api.util import admin_required, csv_download_response, get_search_filter_options
 from diablo.externals.canvas import get_course_site
 from diablo.externals.kaltura import Kaltura
-from diablo.lib.http import tolerant_jsonify
+from diablo.lib.http_util import tolerant_jsonify
 from diablo.lib.interpolator import get_sign_up_url
 from diablo.models.course_preference import CoursePreference, get_all_publish_types, get_all_recording_types
 from diablo.models.note import Note

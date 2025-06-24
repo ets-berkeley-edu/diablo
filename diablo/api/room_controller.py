@@ -27,7 +27,7 @@ from datetime import datetime, timedelta
 from diablo.api.errors import BadRequestError, ResourceNotFoundError
 from diablo.api.util import admin_required
 from diablo.externals.kaltura import CREATED_BY_DIABLO_TAG, Kaltura
-from diablo.lib.http import tolerant_jsonify
+from diablo.lib.http_util import tolerant_jsonify
 from diablo.lib.util import localize_datetime
 from diablo.models.room import Room
 from diablo.models.sis_section import SisSection

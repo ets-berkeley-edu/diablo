@@ -23,7 +23,7 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-from diablo.lib.http import tolerant_jsonify
+from diablo.lib.http_util import tolerant_jsonify
 
 
 class JsonableError(Exception):

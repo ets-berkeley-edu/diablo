@@ -24,7 +24,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 from diablo.api.util import admin_required
 from diablo.externals.kaltura import Kaltura
-from diablo.lib.http import tolerant_jsonify
+from diablo.lib.http_util import tolerant_jsonify
 from flask import current_app as app
 
 

@@ -50,6 +50,8 @@ class Room(db.Model):
     location = db.Column(db.String(255), nullable=False, unique=True)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.now)
 
+    scheduled = db.relationship('Scheduled', back_populates='room', lazy=True)
+
     def __init__(
             self,
             capability,

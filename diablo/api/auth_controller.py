@@ -26,7 +26,7 @@ from urllib.parse import urlencode, urljoin, urlparse
 
 import cas
 from diablo.api.errors import ResourceNotFoundError
-from diablo.lib.http import add_param_to_url, tolerant_jsonify
+from diablo.lib.http_util import add_param_to_url, tolerant_jsonify
 from diablo.models.user import User
 from flask import abort, current_app as app, flash, redirect, request, url_for
 from flask_login import current_user, login_required, login_user, logout_user
