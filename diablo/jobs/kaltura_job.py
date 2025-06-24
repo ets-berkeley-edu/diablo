@@ -24,7 +24,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 import traceback
 
-from diablo.externals.kaltura import Kaltura
+from diablo.externals.kaltura import CREATED_BY_DIABLO_TAG, Kaltura
 from diablo.jobs.base_job import BaseJob
 from diablo.jobs.util import get_eligible_unscheduled_courses, notify_newly_scheduled_instructors, remove_blackout_events, schedule_recordings
 from diablo.lib.berkeley import get_recording_end_date, get_recording_start_date, term_name_for_sis_id
@@ -299,6 +299,7 @@ def _handle_instructor_updates(
             description=description,
             entry_id=kaltura_schedule['templateEntryId'],
             name=kaltura_schedule.get('name'),
+            tag=f"{CREATED_BY_DIABLO_TAG}_{course['termId']}_{course['sectionId']}",
             uids_entitled_to_edit=uids_entitled_to_edit,
             uids_entitled_to_publish=uids_entitled_to_edit,
         )
