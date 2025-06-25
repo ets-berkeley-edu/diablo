@@ -71,7 +71,8 @@ class Room(db.Model):
                     location={self.location},
                     is_auditorium={self.is_auditorium},
                     kaltura_resource_id={self.kaltura_resource_id},
-                    created_at={self.created_at}>
+                    created_at={self.created_at},
+                    scheduled={self.scheduled}>
                 """
 
     @classmethod
