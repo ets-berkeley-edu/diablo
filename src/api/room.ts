@@ -1,5 +1,23 @@
 import axios from 'axios'
+import fileDownload from 'js-file-download'
+import {DateTime} from 'luxon'
 import {getApiBaseUrl} from '@/api/api-utils'
+
+const _format_date = d => {
+  return DateTime.fromJSDate(d).toFormat('yyyyMMdd')
+}
+
+const _sanitize_filename = (filename: string) => {
+  return filename.replace(/[/\\?%*:|"<>.,;=]/g, '').replaceAll(' ', '_')
+}
+export function downloadKalturaEvents(roomId: number, location: string, startDate: Date, endDate: Date) {
+  const filename = `${_sanitize_filename(location)}_${_format_date(startDate)}-${_format_date(endDate)}.ics`
+  return axios.post(`${getApiBaseUrl()}/api/room/download_events`, {
+    roomId,
+    startDate,
+    endDate
+  }).then(response => fileDownload(response.data, filename))
+}
 
 export function getAllRooms() {
   return axios.get(`${getApiBaseUrl()}/api/rooms/all`)

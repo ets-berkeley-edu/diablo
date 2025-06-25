@@ -69,6 +69,7 @@
         </div>
       </v-card-title>
       <v-card-text class="pt-5">
+        <ExportKalturaEvents class="mb-4" :room="room" />
         <KalturaEventList
           :events="kalturaEventList"
           :is-loading="isLoadingEventList"
@@ -86,6 +87,7 @@ import {onMounted, ref, watch} from 'vue'
 import {useGoTo} from 'vuetify'
 import {useRoute} from 'vue-router'
 import CoursesDataTable from '@/components/course/CoursesDataTable'
+import ExportKalturaEvents from '@/components/kaltura/ExportKalturaEvents'
 import KalturaEventList from '@/components/kaltura/KalturaEventList'
 import PageTitle from '@/components/util/PageTitle'
 import SelectRoomCapability from '@/components/room/SelectRoomCapability'
