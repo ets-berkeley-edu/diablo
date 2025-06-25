@@ -22,12 +22,10 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from contextlib import contextmanager
 from datetime import datetime, timezone
 from tempfile import TemporaryFile
 
 from diablo.externals.kaltura import Kaltura
-from diablo.models.room import Room
 from flask import current_app as app
 
 ICS_FILE_HEADER = [
@@ -44,31 +42,24 @@ ICS_FILE_FOOTER = b'END:VCALENDAR'
 ICS_SUMMARY_PREFIX = 'qqq'
 
 
-@contextmanager
-def generate_ics_file(room_id, period_end_date, period_start_date):
-    room = Room.get_room(room_id)
-    if not room:
-        app.logger.warning(f'Invalid room ID {room_id}; will not generate .ics file.')
-        yield None
-        return False
+def generate_ics_file(room, period_end_date, period_start_date):
     if not len(room.scheduled):
         app.logger.warning(f'{room.location} has nothing scheduled between {period_start_date} and {period_end_date}; will not generate .ics file.')
-        yield None
-        return False
+        return None
 
     app.logger.info(f'Generating .ics file for {room.location}, {period_start_date} to {period_end_date}')
-    with TemporaryFile() as ics_file:
-        ics_file.writelines(ICS_FILE_HEADER)
-        for scheduled_course in room.scheduled:
-            events = Kaltura().get_events_in_date_range(
-                end_date=period_end_date,
-                start_date=period_start_date,
-                kaltura_schedule_id=scheduled_course.kaltura_schedule_id,
-            )
-            _write_course_meetings(scheduled_course, room.location, events, ics_file)
-        ics_file.write(ICS_FILE_FOOTER)
-        ics_file.seek(0)
-        yield ics_file
+    ics_file = TemporaryFile()
+    ics_file.writelines(ICS_FILE_HEADER)
+    for scheduled_course in room.scheduled:
+        events = Kaltura().get_events_in_date_range(
+            end_date=period_end_date,
+            start_date=period_start_date,
+            kaltura_schedule_id=scheduled_course.kaltura_schedule_id,
+        )
+        _write_course_meetings(scheduled_course, room.location, events, ics_file)
+    ics_file.write(ICS_FILE_FOOTER)
+    ics_file.seek(0)
+    return ics_file
 
 
 def _write_course_meetings(scheduled_course, location, events, ics_file):

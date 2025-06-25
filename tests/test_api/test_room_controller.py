@@ -26,6 +26,7 @@ import json
 
 from diablo.models.room import Room
 import pytest
+from tests.test_api.api_test_utils import mock_scheduled
 from tests.util import override_config
 
 
@@ -37,6 +38,45 @@ def admin_session(fake_auth):
 @pytest.fixture()
 def instructor_session(fake_auth):
     fake_auth.login('10001')
+
+
+class TestDownloadEvents:
+
+    @staticmethod
+    def _api_download_events(client, room_id=None, expected_status_code=200):
+        if not room_id:
+            rooms = Room.all_rooms()
+            room_id = rooms[0].id
+        response = client.post(
+            '/api/room/download_events',
+            data=json.dumps({
+                'roomId': room_id,
+                'startDate': '2025-05-01',
+                'endDate': '2025-05-15',
+            }),
+            content_type='application/json',
+        )
+        assert response.status_code == expected_status_code
+        return response.data
+
+    def test_anonymous(self, client):
+        """Denies anonymous access."""
+        self._api_download_events(client, expected_status_code=401)
+
+    def test_unauthorized(self, client, instructor_session):
+        """Denies access if user is not an admin."""
+        self._api_download_events(client, expected_status_code=401)
+
+    def test_authorized_no_events(self, client, admin_session):
+        """Admin user gets 404 when there is no data."""
+        self._api_download_events(client, expected_status_code=404)
+
+    def test_authorized(self, client, admin_session):
+        """Admin user can download events."""
+        room = Room.find_room("O'Brien 212")
+        mock_scheduled(section_id=50000, term_id=2218, override_room_id=room.id)
+        ics_file = self._api_download_events(client, room_id=room.id)
+        assert len(ics_file)
 
 
 class TestGetAllRooms:

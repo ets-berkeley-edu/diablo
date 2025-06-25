@@ -28,11 +28,37 @@ from diablo.api.errors import BadRequestError, ResourceNotFoundError
 from diablo.api.util import admin_required
 from diablo.externals.kaltura import CREATED_BY_DIABLO_TAG, Kaltura
 from diablo.lib.http_util import tolerant_jsonify
+from diablo.lib.i_cal import generate_ics_file
 from diablo.lib.util import localize_datetime
 from diablo.models.room import Room
 from diablo.models.sis_section import SisSection
-from flask import current_app as app, request
+from flask import current_app as app, request, send_file
 from flask_login import login_required
+from werkzeug.utils import secure_filename
+
+
+@app.route('/api/room/download_events', methods=['POST'])
+@admin_required
+def download_events():
+    params = request.get_json()
+    room_id = params.get('roomId')
+    room = Room.get_room(room_id)
+    if not room:
+        raise ResourceNotFoundError('No such room')
+    end_date = datetime.fromisoformat(params.get('endDate'))
+    start_date = datetime.fromisoformat(params.get('startDate'))
+    filename = f"{room.location}_{start_date.strftime('%Y%m%d')}-{end_date.strftime('%Y%m%d')}.ics"
+    safe_filename = secure_filename(filename)
+    ics_file = generate_ics_file(room, end_date, start_date)
+    if ics_file:
+        return send_file(
+            ics_file,
+            mimetype='text',
+            as_attachment=False,
+            download_name=safe_filename,
+        )
+    else:
+        raise ResourceNotFoundError(f'{room.location} has no events between the specified dates.')
 
 
 @app.route('/api/rooms/all')
