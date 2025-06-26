@@ -24,9 +24,15 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 from datetime import datetime, timezone
 from tempfile import TemporaryFile
+from textwrap import TextWrapper
 
 from diablo.externals.kaltura import Kaltura
 from flask import current_app as app
+from KalturaClient.Plugins.Schedule import KalturaScheduleEventRecurrenceType
+
+
+"""Converts Kaltura schedule events to an iCalendar file in conformance with RFC 5545."""
+
 
 ICS_FILE_HEADER = [
     b'BEGIN:VCALENDAR\n',
@@ -44,42 +50,52 @@ ICS_SUMMARY_PREFIX = 'qqq'
 
 def generate_ics_file(room, period_end_date, period_start_date):
     if not len(room.scheduled):
-        app.logger.warning(f'{room.location} has nothing scheduled between {period_start_date} and {period_end_date}; will not generate .ics file.')
+        app.logger.info(f'{room.location} has nothing scheduled between {period_start_date} and {period_end_date}; will not generate .ics file.')
         return None
 
     app.logger.info(f'Generating .ics file for {room.location}, {period_start_date} to {period_end_date}')
-    ics_file = TemporaryFile()
-    ics_file.writelines(ICS_FILE_HEADER)
+    wrapper = TextWrapper(expand_tabs=False, drop_whitespace=False, subsequent_indent=' ')
+    events = []
     for scheduled_course in room.scheduled:
-        events = Kaltura().get_events_in_date_range(
+        course_events = Kaltura().get_events_in_date_range(
             end_date=period_end_date,
             start_date=period_start_date,
             kaltura_schedule_id=scheduled_course.kaltura_schedule_id,
+            recurrence_type=KalturaScheduleEventRecurrenceType.RECURRENCE,
         )
-        _write_course_meetings(scheduled_course, room.location, events, ics_file)
+        if len(course_events):
+            events.extend(_format_events(room.location, scheduled_course.section_id, course_events, wrapper))
+    if not len(events):
+        app.logger.info(
+            f'No Kaltura events found for {room.location} between {period_start_date} and {period_end_date}; will not generate .ics file.',
+        )
+        return None
+
+    ics_file = TemporaryFile()
+    ics_file.writelines(ICS_FILE_HEADER)
+    app.logger.debug(f'Writing {len(events)} events for {room.location} to .ics file')
+    ics_file.writelines(events)
     ics_file.write(ICS_FILE_FOOTER)
     ics_file.seek(0)
     return ics_file
 
 
-def _write_course_meetings(scheduled_course, location, events, ics_file):
-    section_id = scheduled_course.section_id
-    if not len(events):
-        app.logger.info(f'Found no events for section {section_id}.')
-        return False
-    app.logger.debug(f'Writing {len(events)} events for section {section_id} to .ics_file')
-    for event in events:
+def _format_events(location, section_id, events, wrapper):
+    host = app.config.get('EB_ENVIRONMENT', 'diablo-local')
+    now = datetime.now(timezone.utc)
+    ics_events = []
+    for index, event in enumerate(events):
         event_start_date = _to_utc(event.get('startDate'))
         event_end_date = _to_utc(event.get('endDate'))
         event_created_date = _to_utc(event.get('createdAt'))
         event_updated_date = _to_utc(event.get('updatedAt'))
-        now = datetime.now(timezone.utc)
-        unique_id = f"{_format_date(now)}@{app.config.get('EB_ENVIRONMENT', 'diablo-local')}"
-        ics_file.writelines([
+        description = f"DESCRIPTION:{event.get('description')}"
+        unique_id = f'{now.timestamp()}{index}@{host}'
+        ics_events.extend([
             b'BEGIN:VEVENT\n',
             b'CLASS:PUBLIC\n',
             bytes(f'CREATED:{_format_date(event_created_date)}\n', encoding='utf-8'),
-            bytes(f"DESCRIPTION:{event.get('description')}\n", encoding='utf-8'),
+            bytes(f'{_wrap_text(description, wrapper)}\n', encoding='utf-8'),
             bytes(f'DTSTART:{_format_date(event_start_date)}\n', encoding='utf-8'),
             bytes(f'DTEND:{_format_date(event_end_date)}\n', encoding='utf-8'),
             bytes(f'DTSTAMP:{_format_date(now)}\n', encoding='utf-8'),
@@ -92,10 +108,15 @@ def _write_course_meetings(scheduled_course, location, events, ics_file):
             bytes(f'UID:{unique_id}\n', encoding='utf-8'),
             b'END:VEVENT\n',
         ])
+    return ics_events
 
 
 def _format_date(d):
     return d.strftime('%Y%m%dT%H%M%SZ')
+
+
+def _wrap_text(line, wrapper):
+    return '\n'.join(wrapper.wrap(line))
 
 
 def _to_utc(date_str):

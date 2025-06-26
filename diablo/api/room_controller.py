@@ -58,7 +58,7 @@ def download_events():
             download_name=safe_filename,
         )
     else:
-        raise ResourceNotFoundError(f'{room.location} has no events between the specified dates.')
+        return tolerant_jsonify({'message': f'No Kaltura events found for {room.location} between the specified dates.'})
 
 
 @app.route('/api/rooms/all')

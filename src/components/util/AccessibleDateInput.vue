@@ -54,7 +54,7 @@
       v-if="model"
       :id="`${idPrefix}-clear-btn`"
       :aria-label="`Clear ${ariaLabel}`"
-      class="clear-button clear-icon mb-1"
+      class="clear-button clear-icon"
       :disabled="disabled"
       @click.stop.prevent="onClickClear($event, dateInputEvents)"
     >
@@ -328,10 +328,11 @@ const onUpdateFocus = (hasFocus, inputEvents) => {
   border: none;
   border-radius: 100%;
   cursor: pointer;
-  padding: 2px 4px 2px 2px;
+  margin: 1px 3px 1px 1px;
+  padding: 1px;
   position: absolute;
   right: 5px;
-  top: 6px;
+  top: 7px;
   &:disabled {
     cursor: not-allowed;
     opacity: var(--v-disabled-opacity);
