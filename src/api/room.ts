@@ -1,5 +1,6 @@
 import axios from 'axios'
 import fileDownload from 'js-file-download'
+import {get} from 'lodash'
 import {DateTime} from 'luxon'
 import {getApiBaseUrl} from '@/api/api-utils'
 
@@ -16,7 +17,13 @@ export function downloadKalturaEvents(roomId: number, location: string, startDat
     roomId,
     startDate,
     endDate
-  }).then(response => fileDownload(response.data, filename))
+  }).then(response => {
+    if (get(response.data, 'message')) {
+      return Promise.reject(response.data.message)
+    } else {
+      return fileDownload(response.data, filename)
+    }
+  })
 }
 
 export function getAllRooms() {

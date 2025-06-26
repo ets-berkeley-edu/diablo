@@ -57,7 +57,7 @@ class TestDownloadEvents:
             content_type='application/json',
         )
         assert response.status_code == expected_status_code
-        return response.data
+        return response
 
     def test_anonymous(self, client):
         """Denies anonymous access."""
@@ -68,15 +68,16 @@ class TestDownloadEvents:
         self._api_download_events(client, expected_status_code=401)
 
     def test_authorized_no_events(self, client, admin_session):
-        """Admin user gets 404 when there is no data."""
-        self._api_download_events(client, expected_status_code=404)
+        """Admin user gets a message instead of a file when there is no data."""
+        response = self._api_download_events(client)
+        assert response.json['message']
 
     def test_authorized(self, client, admin_session):
         """Admin user can download events."""
         room = Room.find_room("O'Brien 212")
         mock_scheduled(section_id=50000, term_id=2218, override_room_id=room.id)
         ics_file = self._api_download_events(client, room_id=room.id)
-        assert len(ics_file)
+        assert len(ics_file.data)
 
 
 class TestGetAllRooms:
