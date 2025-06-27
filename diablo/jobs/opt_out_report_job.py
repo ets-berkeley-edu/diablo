@@ -51,7 +51,7 @@ class OptOutReportJob(BaseJob):
         output_path = 'opt_out_report.csv'
         eb_env = get_eb_environment()
         if eb_env:
-            output_path = f'{eb_env}/{output_path}'
+            output_path = f"{eb_env.replace('diablo-', '')}/{output_path}"
 
         with open(tmpfile.name, mode='rb') as f:
             s3.upload_binary_data(app.config['AWS_S3_OPT_OUT_REPORT_BUCKET'], output_path, f, 'text/csv')
