@@ -65,7 +65,8 @@ class CoursePage(DiabloPages):
         return meeting.meeting_schedule.expected_recording_dates(term)[-1].strftime('%b %-d, %Y')
 
     def hit_url(self, term_id, ccn):
-        self.driver.get(f'{app.config["BASE_URL"]}/course/{term_id}/{ccn}')
+        url = f'{app.config["BASE_URL"]}/course/{term_id}/{ccn}'
+        self.driver.get(url)
 
     def load_page(self, section):
         app.logger.info(f'Loading course page for term {section.term.id} section ID {section.ccn}')
@@ -104,7 +105,7 @@ class CoursePage(DiabloPages):
         return self.is_present((By.XPATH, '//span[text()="UC Berkeley has canceled this section."]'))
 
     def visible_ccn(self):
-        return self.wait_for_element(self, self.SECTION_ID).text
+        return self.wait_for_element(self.SECTION_ID, util.get_short_timeout()).text
 
     def visible_course_title(self):
         return self.element(CoursePage.COURSE_TITLE).text
@@ -172,7 +173,7 @@ class CoursePage(DiabloPages):
         return self.element(CoursePage.OPTED_OUT).get_property('innerText').strip()
 
     def click_room_link(self, room):
-        self.wait_for_element_and_click(self.room_link_locator(room))
+        self.wait_for_element_and_click(self.room_link_locator(room), util.get_short_timeout())
 
     def verify_meeting_sis_data(self, meeting, idx):
         expected_room = meeting.room.name
@@ -363,7 +364,7 @@ class CoursePage(DiabloPages):
 
     def visible_recording_placement(self):
         # wait up to your short timeout for the element to exist in the DOM
-        return self.wait_for_element(self, self.PLACEMENT_TEXT).text.strip()
+        return self.wait_for_element(self.PLACEMENT_TEXT, util.get_short_timeout()).text.strip()
 
     def click_edit_recording_placement(self):
         app.logger.info('Clicking the edit recording placement button')
