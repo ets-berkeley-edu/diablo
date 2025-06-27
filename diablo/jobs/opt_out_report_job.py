@@ -28,6 +28,7 @@ import tempfile
 from diablo.externals import s3
 from diablo.jobs.base_job import BaseJob
 from diablo.jobs.util import get_eligible_courses
+from diablo.lib.util import get_eb_environment
 from flask import current_app as app
 
 
@@ -47,8 +48,13 @@ class OptOutReportJob(BaseJob):
                     'opted_out': 'y' if course['hasOptedOut'] else 'n',
                 })
 
+        output_path = 'opt_out_report.csv'
+        eb_env = get_eb_environment()
+        if eb_env:
+            output_path = f'{eb_env}/{output_path}'
+
         with open(tmpfile.name, mode='rb') as f:
-            s3.upload_binary_data(app.config['AWS_S3_OPT_OUT_REPORT_BUCKET'], 'opt_out_report.csv', f, 'text/csv')
+            s3.upload_binary_data(app.config['AWS_S3_OPT_OUT_REPORT_BUCKET'], output_path, f, 'text/csv')
 
     @classmethod
     def description(cls):
