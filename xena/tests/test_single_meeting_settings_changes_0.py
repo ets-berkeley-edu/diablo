@@ -218,9 +218,9 @@ class TestScheduling0:
     def test_home_page(self):
         self.kaltura_page.close_window_and_switch()
         self.jobs_page.log_out()
-        self.course_page.hit_url(self.term.id, self.section.ccn)
         self.login_page.dev_auth(self.instructor.uid)
-        self.course_page.wait_for_diablo_title('Welcome')
+        self.courses_page.click_course_page_link(self.section)
+        self.course_page.wait_for_diablo_title(f'{self.section.code}, {self.section.number}')
 
     # VERIFY STATIC COURSE SIS DATA
 
