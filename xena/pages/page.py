@@ -109,7 +109,7 @@ class Page(object):
             for entry in self.driver.get_log('browser'):
                 if app.config['BASE_URL'] in entry:
                     app.logger.warning(f'Console error: {entry}')
-        Wait(self.driver, timeout).until(
+        return Wait(self.driver, timeout).until(
             method=ec.presence_of_element_located(locator),
             message=f'Failed wait for presence_of_element_located: {str(locator)}',
         )
