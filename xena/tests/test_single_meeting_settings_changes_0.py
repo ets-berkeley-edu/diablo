@@ -437,8 +437,8 @@ class TestScheduling0:
 
     def test_revert_how_to_publish_from_my_media_link(self):
         self.course_page.log_out()
-        self.course_page.hit_url(self.term.id, self.section.ccn)
         self.login_page.dev_auth(self.instructor.uid)
+        self.courses_page.click_course_page_link(self.section)
         self.course_page.wait_for_diablo_title(f'{self.section.code}, {self.section.number}')
         title = 'IT - How do I publish media from My Media to a Media Gallery in bCourses?'
         assert self.course_page.external_link_valid(self.course_page.HOW_TO_PUBLISH_LINK, title)

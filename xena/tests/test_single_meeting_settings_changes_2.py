@@ -319,8 +319,8 @@ class TestScheduling2:
     def test_instructor_logs_in(self):
         self.ouija_page.load_page()
         self.ouija_page.log_out()
-        self.course_page.hit_url(self.term.id, self.section.ccn)
         self.login_page.dev_auth(self.instructor_1.uid)
+        self.courses_page.click_course_page_link(self.section)
         self.course_page.wait_for_diablo_title(f'{self.section.code}, {self.section.number}')
 
     def test_update_publish_type(self):

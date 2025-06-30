@@ -105,7 +105,7 @@ class CoursePage(DiabloPages):
         return self.is_present((By.XPATH, '//span[text()="UC Berkeley has canceled this section."]'))
 
     def visible_ccn(self):
-        return self.wait_for_element(self.SECTION_ID, util.get_short_timeout()).text
+        return self.wait_for_element(self.SECTION_ID, util.get_long_timeout()).text
 
     def visible_course_title(self):
         return self.element(CoursePage.COURSE_TITLE).text
@@ -345,7 +345,7 @@ class CoursePage(DiabloPages):
 
     @staticmethod
     def placement_site_option_loc(site):
-        return By.XPATH, f'//div[@id="menu-option-canvas-site-{site.site_id}"]/..'
+        return By.ID, f'canvas-site-option-{site.site_id}'
 
     @staticmethod
     def placement_site_remove_button_loc(site):
@@ -364,7 +364,7 @@ class CoursePage(DiabloPages):
 
     def visible_recording_placement(self):
         # wait up to your short timeout for the element to exist in the DOM
-        return self.wait_for_element(self.PLACEMENT_TEXT, util.get_short_timeout()).text.strip()
+        return self.wait_for_element(self.PLACEMENT_TEXT, util.get_long_timeout()).text.strip()
 
     def click_edit_recording_placement(self):
         app.logger.info('Clicking the edit recording placement button')
@@ -420,7 +420,7 @@ class CoursePage(DiabloPages):
     # KB LINKS
 
     HOW_TO_PUBLISH_LINK = By.ID, 'link-publish-my-media'
-    HOW_TO_REMOVE_LINK = By.ID, '/link-remove-recording'
+    HOW_TO_REMOVE_LINK = By.ID, 'link-remove-recording'
     HOW_TO_EMBED_LINK = By.ID, 'link-embed-rich-content'
     HOW_TO_DOWNLOAD_LINK = By.ID, 'link-download-second-stream'
     COURSE_CAPTURE_FAQ_LINK = By.ID, 'link-faq'
