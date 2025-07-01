@@ -25,6 +25,8 @@ ENHANCEMENTS, OR MODIFICATIONS.
 
 from datetime import timedelta
 
+import dateutil.parser
+from flask import current_app as app
 import pytest
 from xena.models.email_template_type import EmailTemplateType
 from xena.models.recording_placement import RecordingPlacement
@@ -162,6 +164,25 @@ class TestWeirdTypeB:
     def test_room_series_recordings(self):
         self.room_page.verify_series_recordings(self.recording_schedule)
 
+    # ROOM SCHEDULE EVENTS EXPORT
+
+    def test_export_schedule_no_events(self):
+        earliest_recording_date = dateutil.parser.parse(app.config['CURRENT_TERM_RECORDINGS_BEGIN']).date()
+        events_start_date = earliest_recording_date - timedelta(days=2)
+        events_end_date = earliest_recording_date - timedelta(days=1)
+        self.room_page.export_schedule_events_to_ical(events_start_date, events_end_date)
+        self.room_page.verify_ical_export_error(self.original_room.name)
+
+    def test_export_schedule_events(self):
+        self.room_page.reload_page()
+        self.room_page.wait_for_series_row(self.recording_schedule)
+        events_start_date = self.room_page.series_row_start_date(self.recording_schedule)
+        events_end_date = events_start_date + timedelta(days=5)
+        self.room_page.export_schedule_events_to_ical(events_start_date, events_end_date)
+        self.room_page.verify_ical_export_download(self.recording_schedule)
+        self.i_calendar_page.load_validator_page()
+        self.i_calendar_page.validate_file()
+
     # VERIFY SERIES IN KALTURA
 
     def test_kaltura_series_title(self):
@@ -194,7 +215,7 @@ class TestWeirdTypeB:
 
     def test_series_title_and_desc_instr_removed(self):
         self.kaltura_page.load_event_edit_page(self.recording_schedule.series_id)
-        self.kaltura_page.wait_for_title('Access Denied - UC Berkeley - Test')
+        self.kaltura_page.wait_for_title('Access Denied - UC Berkeley - Test', util.get_short_timeout())
 
     def test_no_instructor_removed_email(self):
         assert util.get_sent_email_count(EmailTemplateType.INSTR_REMOVED, self.section) == 0
@@ -322,9 +343,25 @@ class TestWeirdTypeB:
         assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_NEW_COURSE_SCHED, section=None,
                                          instructor=self.new_instructor) == 1
 
+    # NEW ROOM SCHEDULE EVENTS EXPORT
+
+    def test_new_room_export_schedule_events(self):
+        assert util.get_kaltura_id(self.recording_schedule)
+        self.course_page.click_rooms_link()
+        self.rooms_page.find_room(self.new_room)
+        self.rooms_page.click_room_link(self.new_room)
+        self.room_page.wait_for_series_row(self.recording_schedule)
+        events_start_date = self.room_page.series_row_start_date(self.recording_schedule)
+        events_end_date = events_start_date + timedelta(days=5)
+        self.room_page.export_schedule_events_to_ical(events_start_date, events_end_date)
+        self.room_page.verify_ical_export_download(self.recording_schedule)
+        self.i_calendar_page.load_validator_page()
+        self.i_calendar_page.validate_file()
+
     # COURSE HISTORY
 
     def test_course_history_instructor_removed(self):
+        self.course_page.load_page(self.section)
         self.course_page.verify_history_row(field='instructor_uids',
                                             old_value=CoursePage.expected_uids_converter([self.original_instructor]),
                                             new_value=[],

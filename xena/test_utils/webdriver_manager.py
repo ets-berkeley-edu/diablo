@@ -57,12 +57,8 @@ class WebDriverManager(object):
             options.binary_location = util.get_xena_browser_chrome_binary_path()
             if _headless:
                 options.add_argument('--headless=new')
-            prefs = {
-                'profile.default_content_settings.popups': 0,
-                'download.default_directory': util.default_download_dir(),
-                'directory_upgrade': True,
-            }
-            options.add_experimental_option('prefs', prefs)
+            _set_chrome_preferences(options)
+            _add_chrome_extension(options)
             driver = webdriver.Chrome(options=options)
             WebDriverManager.allow_canvas_iframe_in_chrome(driver)
         driver.set_window_size(1600, 900) if _headless else driver.maximize_window()
@@ -91,3 +87,18 @@ class WebDriverManager(object):
     def quit_browser(cls, driver):
         app.logger.warning(f'Quitting {util.get_xena_browser().capitalize()}')
         driver.quit()
+
+
+def _set_chrome_preferences(options):
+    prefs = {
+        'profile.default_content_settings.popups': 0,
+        'download.default_directory': util.default_download_dir(),
+        'directory_upgrade': True,
+    }
+    options.add_experimental_option('prefs', prefs)
+
+
+def _add_chrome_extension(options):
+    path = app.config['XENA_BROWSER_EXTENSION_PATH']
+    if path:
+        options.add_extension(path)

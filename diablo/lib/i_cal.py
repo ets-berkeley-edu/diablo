@@ -27,6 +27,8 @@ from tempfile import TemporaryFile
 from textwrap import TextWrapper
 
 from diablo.externals.kaltura import Kaltura
+from diablo.lib.util import utc_now
+from diablo.models.scheduled import Scheduled
 from flask import current_app as app
 from KalturaClient.Plugins.Schedule import KalturaScheduleEventRecurrenceType
 
@@ -49,14 +51,18 @@ ICS_SUMMARY_PREFIX = 'qqq'
 
 
 def generate_ics_file(room, period_end_date, period_start_date):
-    if not len(room.scheduled):
-        app.logger.info(f'{room.location} has nothing scheduled between {period_start_date} and {period_end_date}; will not generate .ics file.')
+    room_courses = Scheduled.get_scheduled_per_room(
+        room_id=room.id,
+        term_id=app.config['CURRENT_TERM_ID'],
+    )
+    if not len(room_courses):
+        app.logger.info(f'{room.location} has nothing scheduled for the current term; will not generate .ics file.')
         return None
 
     app.logger.info(f'Generating .ics file for {room.location}, {period_start_date} to {period_end_date}')
     wrapper = TextWrapper(expand_tabs=False, drop_whitespace=False, subsequent_indent=' ')
     events = []
-    for scheduled_course in room.scheduled:
+    for scheduled_course in room_courses:
         course_events = Kaltura().get_events_in_date_range(
             end_date=period_end_date,
             start_date=period_start_date,
@@ -82,7 +88,7 @@ def generate_ics_file(room, period_end_date, period_start_date):
 
 def _format_events(location, section_id, events, wrapper):
     host = app.config.get('EB_ENVIRONMENT', 'diablo-local')
-    now = datetime.now(timezone.utc)
+    now = utc_now()
     ics_events = []
     for index, event in enumerate(events):
         event_start_date = _to_utc(event.get('startDate'))

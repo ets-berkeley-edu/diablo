@@ -114,13 +114,14 @@ class Page(object):
             message=f'Failed wait for presence_of_element_located: {str(locator)}',
         )
 
-    def wait_for_text_in_element(self, locator, string):
+    def wait_for_text_in_element(self, locator, string, delay=0):
         tries = 0
         retries = util.get_short_timeout()
+        time.sleep(delay)
         while tries <= retries:
             tries += 1
             try:
-                assert string in self.element(locator).get_attribute('innerText')
+                assert string in self.element(locator).text
                 break
             except AssertionError:
                 if tries == retries:
@@ -193,9 +194,9 @@ class Page(object):
     def title(self):
         return self.driver.title
 
-    def wait_for_title(self, string):
+    def wait_for_title(self, string, timeout=None):
         app.logger.info(f"'Waiting for page title '{string}'")
-        Wait(self.driver, util.get_short_timeout()).until(
+        Wait(self.driver, timeout or util.get_short_timeout()).until(
             method=(ec.title_contains(string)),
             message=f'Failed wait_for_title: {string}',
         )
@@ -223,6 +224,11 @@ class Page(object):
 
     def scroll_to_bottom(self):
         self.driver.execute_script('window.scrollTo(0, document.body.scrollHeight);')
+
+    def scroll_to_element(self, locator):
+        self.when_present(locator, util.get_medium_timeout())
+        scroll_height = self.element(locator).get_attribute('offsetTop')
+        self.driver.execute_script(f'window.scrollTo(0, {scroll_height});')
 
     def mouseover(self, element):
         ActionChains(self.driver).move_to_element(element).perform()

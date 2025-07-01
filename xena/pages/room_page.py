@@ -24,6 +24,8 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 
 from datetime import datetime
+import glob
+import time
 
 from flask import current_app as app
 from selenium.webdriver.common.by import By
@@ -42,6 +44,21 @@ class RoomPage(DiabloPages):
     # COURSES TABLE
 
     COURSE_LINK = (By.XPATH, '//a[contains(@id, "link-course-")]')
+
+    def course_rows_present(self):
+        return any(self.elements(RoomPage.COURSE_LINK))
+
+    def click_first_course_link(self):
+        self.wait_for_element_and_click(RoomPage.COURSE_LINK)
+
+    # KALTURA EVENTS TABLE
+
+    SCROLL_TO_EVENTS_LINK = (By.ID, 'skip-to-kaltura-event-list')
+    EVENTS_EXPORT_BUTTON = (By.ID, 'kaltura-events-export-menu-btn')
+    EVENTS_START_DATE_INPUT = (By.ID, 'kaltura-events-export-start-input')
+    EVENTS_END_DATE_INPUT = (By.ID, 'kaltura-events-export-end-input')
+    EVENTS_EXPORT_DOWNLOAD_BUTTON = (By.ID, 'kaltura-events-export-submit-btn')
+    EVENTS_EXPORT_ERROR_MESSAGE = (By.ID, 'kaltura-events-export-error')
 
     @staticmethod
     def series_row_xpath(recording_sched):
@@ -74,11 +91,64 @@ class RoomPage(DiabloPages):
         self.hide_diablo_footer()
         self.wait_for_element_and_click((By.XPATH, f'{RoomPage.series_row_xpath(recording_sched)}//button'))
 
-    def course_rows_present(self):
-        return any(self.elements(RoomPage.COURSE_LINK))
+    def export_schedule_events_to_ical(self, events_start_date, events_end_date):
+        # Make sure a clean download directory exists
+        util.create_download_directory()
 
-    def click_first_course_link(self):
-        self.wait_for_element_and_click(RoomPage.COURSE_LINK)
+        app.logger.info('Scrolling to Kaltura events table')
+        self.wait_for_element_and_click(RoomPage.SCROLL_TO_EVENTS_LINK)
+
+        app.logger.info('Clicking Export to iCal button')
+        self.wait_for_element_and_click(RoomPage.EVENTS_EXPORT_BUTTON)
+
+        start_date_str = events_start_date.strftime('%m/%d/%Y')
+        end_date_str = events_end_date.strftime('%m/%d/%Y')
+        app.logger.info(f'Entering date range {start_date_str} - {end_date_str}')
+        self.wait_for_element_and_type(RoomPage.EVENTS_START_DATE_INPUT, start_date_str, 2)
+        self.wait_for_element_and_type(RoomPage.EVENTS_END_DATE_INPUT, end_date_str, 2)
+        self.wait_for_element_and_click(RoomPage.EVENTS_EXPORT_DOWNLOAD_BUTTON)
+
+    def verify_ical_export_error(self, location):
+        error_message = f'No Kaltura events found for {location} between the specified dates.'
+        app.logger.info(f'Waiting for error message "{error_message}"')
+        self.wait_for_text_in_element(RoomPage.EVENTS_EXPORT_ERROR_MESSAGE, error_message, util.get_short_timeout())
+
+    def verify_ical_export_download(self, recording_sched):
+        time.sleep(2)
+        app.logger.info(f'Looking for Kaltura events .ics file in {util.default_download_dir()}')
+        tries = 0
+        max_tries = 15
+        while tries <= max_tries:
+            tries += 1
+            try:
+                assert len(glob.glob(f'{util.default_download_dir()}/*.ics')) == 1
+                break
+            except AssertionError:
+                if tries == max_tries:
+                    raise
+                else:
+                    time.sleep(1)
+
+        app.logger.info('Parsing Kaltura events .ics file')
+        file = glob.glob(f'{util.default_download_dir()}/*.ics')[0]
+        events = []
+        header = []
+        expected_event_summary = f'qqq {recording_sched.section.ccn}\n'
+        with open(file) as ics_file:
+            for index, line in enumerate(ics_file):
+                if index < 7:
+                    header.append(line)
+                elif line.startswith('BEGIN:VEVENT'):
+                    event = {}
+                elif line.startswith('END:VEVENT'):
+                    events.append(event)
+                else:
+                    parsed_line = line.split(':')
+                    if len(parsed_line) > 1:
+                        event[parsed_line[0]] = parsed_line[1]
+                    else:
+                        event['DESCRIPTION'] += line
+        assert next((event for event in events if event['SUMMARY'] == expected_event_summary), None)
 
     # KALTURA SERIES TABLE
 

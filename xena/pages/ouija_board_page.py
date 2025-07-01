@@ -25,8 +25,6 @@ ENHANCEMENTS, OR MODIFICATIONS.
 
 import csv
 import glob
-import os
-import shutil
 import time
 
 from flask import current_app as app
@@ -74,9 +72,7 @@ class OuijaBoardPage(CoursesPage):
         app.logger.info(f'Downloading course CSV to {util.default_download_dir()}')
 
         # Make sure a clean download directory exists
-        if os.path.isdir(util.default_download_dir()):
-            shutil.rmtree(util.default_download_dir())
-        os.mkdir(util.default_download_dir())
+        util.create_download_directory()
 
         # Click the download button and wait for the download to complete
         self.wait_for_page_and_click(OuijaBoardPage.DOWNLOAD_CSV_BUTTON)

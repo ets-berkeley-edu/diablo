@@ -22,12 +22,36 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from diablo import db
-from diablo.lib.util import utc_now
+import glob
+import time
+
+from flask import current_app as app
+from selenium.webdriver.common.by import By
+from xena.pages.page import Page
+from xena.test_utils import util
 
 
-class Base(db.Model):
-    __abstract__ = True
+class ICalendarPage(Page):
 
-    created_at = db.Column(db.DateTime, nullable=False, default=utc_now)
-    updated_at = db.Column(db.DateTime, nullable=False, default=utc_now, onupdate=utc_now)
+    VALIDATOR_FORM = (By.ID, 'validate-form')
+    VALIDATOR_TEXTAREA = (By.ID, 'jform_ical_text')
+    VALIDATOR_SUCCESS_MESSAGE = (By.XPATH, '//div[@id="results"]/div[contains(@class, "alert-success")]')
+
+    def load_validator_page(self):
+        app.logger.info('Loading iCalendar validator page')
+        self.driver.get('http://icalendar.org/validator.html')
+
+    def validate_file(self):
+        app.logger.info('Validating iCalendar file by entering the text')
+        file = glob.glob(f'{util.default_download_dir()}/*.ics')[0]
+        self.scroll_to_element(ICalendarPage.VALIDATOR_TEXTAREA)
+        with open(file) as ics_file:
+            self.wait_for_element_and_type(ICalendarPage.VALIDATOR_TEXTAREA, ics_file.read())
+            time.sleep(1)
+        self.element(ICalendarPage.VALIDATOR_FORM).submit()
+        app.logger.info('Waiting for validator success message')
+        self.wait_for_element(ICalendarPage.VALIDATOR_SUCCESS_MESSAGE, util.get_short_timeout())
+        self.wait_for_text_in_element(
+            ICalendarPage.VALIDATOR_SUCCESS_MESSAGE,
+            'Success',
+        )

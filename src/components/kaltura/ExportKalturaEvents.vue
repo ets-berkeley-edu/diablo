@@ -90,6 +90,7 @@
 </template>
 
 <script setup>
+import {DateTime} from 'luxon'
 import {ref} from 'vue'
 import {size} from 'lodash'
 import AccessibleDateInput from '@/components/util/AccessibleDateInput'
@@ -110,6 +111,10 @@ const isExporting = ref(false)
 const menu = ref(false)
 const startDate = ref()
 
+const formatDate = d => {
+  return DateTime.fromJSDate(d).toISODate()
+}
+
 const onChangeStartDate = v => {
   startDate.value = v
   error.value = ''
@@ -123,7 +128,13 @@ const onChangeEndDate = v => {
 const onSubmit = () => {
   isExporting.value = true
   error.value = ''
-  downloadKalturaEvents(props.room.id, props.room.location, startDate.value, endDate.value)
+
+  downloadKalturaEvents(
+    props.room.id,
+    props.room.location,
+    formatDate(startDate.value),
+    formatDate(endDate.value)
+  )
     .then(() => {
       isExporting.value = false
       endDate.value = null

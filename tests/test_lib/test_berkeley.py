@@ -27,7 +27,7 @@ from datetime import datetime, timedelta
 from diablo.lib.berkeley import are_scheduled_dates_obsolete, are_scheduled_times_obsolete, DAYS, \
     get_canvas_sis_term_id, get_first_matching_datetime_of_term, get_recording_end_date, get_recording_start_date, \
     term_name_for_sis_id
-from diablo.lib.util import format_days
+from diablo.lib.util import format_days, local_now
 from diablo.models.sis_section import SisSection
 from flask import current_app as app
 import pytz
@@ -137,9 +137,9 @@ class TestObsoleteScheduledDates:
             expect_obsolete_times=False,
             meeting=_create_meeting(
                 days='MO',
-                end_date=_format(datetime.now() + timedelta(days=100)),
+                end_date=_format(local_now() + timedelta(days=100)),
                 end_time='10:59',
-                start_date=_format(datetime.now() - timedelta(days=100)),
+                start_date=_format(local_now() - timedelta(days=100)),
                 start_time='10:00',
             ),
         )
@@ -205,9 +205,9 @@ class TestObsoleteScheduledDates:
         with test_scheduling_workflow(app):
             meeting = _create_meeting(
                 days='MO',
-                end_date=_format(datetime.now() + timedelta(days=100)),
+                end_date=_format(local_now() + timedelta(days=100)),
                 end_time='10:59',
-                start_date=_format(datetime.now() - timedelta(days=100)),
+                start_date=_format(local_now() - timedelta(days=100)),
                 start_time='10:00',
             )
             with override_config(app, 'CURRENT_TERM_RECORDINGS_BEGIN', meeting['startDate']):

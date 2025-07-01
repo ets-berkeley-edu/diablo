@@ -26,7 +26,7 @@ from datetime import datetime, timedelta
 
 from diablo import db, std_commit
 from diablo.externals.loch import get_loch_basic_attributes
-from diablo.lib.util import basic_attributes_to_api_json, format_days, format_time, get_names_of_days, local_now, to_isoformat
+from diablo.lib.util import basic_attributes_to_api_json, format_days, format_time, get_names_of_days, local_now, to_isoformat, utc_now
 from diablo.models.course_preference import NAMES_PER_PUBLISH_TYPE, NAMES_PER_RECORDING_TYPE, publish_type, recording_type
 from diablo.models.email_template import email_template_type
 from diablo.models.room import Room
@@ -53,10 +53,8 @@ class Scheduled(db.Model):
     publish_type = db.Column(publish_type, nullable=False)
     recording_type = db.Column(recording_type, nullable=False)
     room_id = db.Column(db.Integer, db.ForeignKey('rooms.id'), nullable=False)
-    created_at = db.Column(db.DateTime, nullable=False, default=datetime.now)
+    created_at = db.Column(db.DateTime, nullable=False, default=utc_now)
     deleted_at = db.Column(db.DateTime, nullable=True)
-
-    room = db.relationship('Room', back_populates='scheduled')
 
     def __init__(
             self,
@@ -176,11 +174,16 @@ class Scheduled(db.Model):
         return [r[0] for r in db.session.query(cls.section_id).filter(criteria).all()]
 
     @classmethod
+    def get_scheduled_per_room(cls, room_id, term_id):
+        criteria = and_(cls.room_id == room_id, cls.term_id == term_id, cls.deleted_at == None)  # noqa: E711
+        return cls.query.filter(criteria).all()
+
+    @classmethod
     def delete(cls, section_id, term_id, kaltura_schedule_id=None, hard_delete=False):
         if hard_delete:
             sql = 'DELETE FROM scheduled'
         else:
-            sql = 'UPDATE scheduled SET deleted_at = now()'
+            sql = "UPDATE scheduled SET deleted_at = now() AT TIME ZONE 'utc'"
         sql += ' WHERE term_id = :term_id AND section_id = :section_id AND deleted_at IS NULL'
         params = {
             'section_id': section_id,

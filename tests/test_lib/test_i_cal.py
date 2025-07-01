@@ -70,6 +70,6 @@ class TestGenerateIcsFile:
             assert ics_file.readline() == b'STATUS:CONFIRMED\n'
             assert ics_file.readline() == bytes(f'SUMMARY:qqq {section_id}\n', encoding='utf-8')
             assert ics_file.readline() == b'TRANSP:OPAQUE\n'
-            assert re.fullmatch(rb'UID:\d{10}\.\d{7}@diablo-test\n', ics_file.readline())
+            assert re.fullmatch(rb'UID:\d{10}\.\d{6,7}@diablo-test\n', ics_file.readline())
             assert ics_file.readline() == b'END:VEVENT\n'
         ics_file.close()

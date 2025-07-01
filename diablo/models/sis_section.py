@@ -22,12 +22,10 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from datetime import datetime
-
 from diablo import db
 from diablo.externals.canvas import get_course_sites_by_id
 from diablo.lib.berkeley import get_recording_end_date, get_recording_start_date
-from diablo.lib.util import format_days, format_time, get_names_of_days, safe_strftime
+from diablo.lib.util import format_days, format_time, get_names_of_days, safe_strftime, utc_now
 from diablo.models.course_preference import CoursePreference
 from diablo.models.cross_listing import CrossListing
 from diablo.models.note import Note
@@ -57,7 +55,7 @@ class SisSection(db.Model):
     allowed_units = db.Column(db.String)
     course_name = db.Column(db.String)
     course_title = db.Column(db.Text)
-    created_at = db.Column(db.DateTime, nullable=False, default=datetime.now)
+    created_at = db.Column(db.DateTime, nullable=False, default=utc_now)
     deleted_at = db.Column(db.DateTime)
     instruction_format = db.Column(db.String)
     instructor_name = db.Column(db.Text)
