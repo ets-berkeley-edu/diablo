@@ -22,12 +22,10 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from datetime import datetime
-
 from diablo import db, std_commit
 from diablo.externals.canvas import get_course_sites_by_id
 from diablo.externals.loch import get_loch_basic_attributes
-from diablo.lib.util import basic_attributes_to_api_json, to_isoformat
+from diablo.lib.util import basic_attributes_to_api_json, to_isoformat, utc_now
 from diablo.models.cross_listing import CrossListing
 from sqlalchemy import and_
 from sqlalchemy.dialects.postgresql import ARRAY, ENUM
@@ -74,7 +72,7 @@ class CoursePreference(db.Model):
     publish_type = db.Column(publish_type, nullable=False)
     recording_type = db.Column(recording_type, nullable=False)
     canvas_site_ids = db.Column(ARRAY(db.Integer))
-    created_at = db.Column(db.DateTime, nullable=False, default=datetime.now)
+    created_at = db.Column(db.DateTime, nullable=False, default=utc_now)
 
     def __init__(
             self,

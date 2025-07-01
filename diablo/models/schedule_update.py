@@ -22,12 +22,11 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from datetime import datetime
 from itertools import groupby
 import json
 
 from diablo import db, std_commit
-from diablo.lib.util import to_isoformat
+from diablo.lib.util import to_isoformat, utc_now
 from sqlalchemy import and_, text
 from sqlalchemy.dialects.postgresql import ENUM
 
@@ -54,7 +53,7 @@ class ScheduleUpdate(db.Model):
     requested_by_uid = db.Column(db.String, nullable=True)
     requested_by_name = db.Column(db.String, nullable=True)
     status = db.Column(schedule_update_status_type)
-    requested_at = db.Column(db.DateTime, nullable=False, default=datetime.now)
+    requested_at = db.Column(db.DateTime, nullable=False, default=utc_now)
     published_at = db.Column(db.DateTime, nullable=True)
 
     def __init__(
@@ -187,13 +186,13 @@ class ScheduleUpdate(db.Model):
 
     def mark_success(self):
         self.status = 'succeeded'
-        self.published_at = datetime.now()
+        self.published_at = utc_now()
         db.session.add(self)
         std_commit()
 
     def mark_error(self):
         self.status = 'errored'
-        self.published_at = datetime.now()
+        self.published_at = utc_now()
         db.session.add(self)
         std_commit()
 

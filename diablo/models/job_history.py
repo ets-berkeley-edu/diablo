@@ -22,10 +22,8 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from datetime import datetime, timezone
-
 from diablo import db, std_commit
-from diablo.lib.util import to_isoformat
+from diablo.lib.util import to_isoformat, utc_now
 from sqlalchemy import and_, text
 from sqlalchemy.sql import desc
 
@@ -36,13 +34,13 @@ class JobHistory(db.Model):
     id = db.Column(db.Integer, nullable=False, primary_key=True)  # noqa: A003
     job_key = db.Column(db.String(80), nullable=False)
     failed = db.Column(db.Boolean, nullable=False, default=False)
-    started_at = db.Column(db.DateTime, nullable=False, default=datetime.now(timezone.utc))
+    started_at = db.Column(db.DateTime, nullable=False, default=utc_now)
     finished_at = db.Column(db.DateTime)
 
     def __init__(self, job_key):
         self.job_key = job_key
         self.failed = False
-        self.started_at = datetime.now(timezone.utc)
+        self.started_at = utc_now()
 
     def __repr__(self):
         return f"""<Room
@@ -68,7 +66,7 @@ class JobHistory(db.Model):
     def job_finished(cls, id_, failed=False):
         row = cls.query.filter_by(id=id_).first()
         row.failed = failed
-        row.finished_at = datetime.now(timezone.utc)
+        row.finished_at = utc_now()
         db.session.add(row)
         std_commit()
         return row
@@ -86,13 +84,13 @@ class JobHistory(db.Model):
     def fail_orphans():
         sql = """
             UPDATE job_history
-            SET failed = TRUE, finished_at = now()
+            SET failed = TRUE, finished_at = now() AT TIME ZONE 'utc'
             WHERE finished_at IS NULL"""
         db.session.execute(text(sql))
 
     @staticmethod
     def expire_old_rows(days):
-        sql = f"DELETE FROM job_history WHERE started_at < (now() - INTERVAL '{days} DAYS')"
+        sql = f"DELETE FROM job_history WHERE started_at < ((now() AT TIME ZONE 'utc') - INTERVAL '{days} DAYS')"
         db.session.execute(text(sql))
 
     def to_api_json(self):

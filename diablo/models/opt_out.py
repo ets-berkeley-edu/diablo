@@ -22,10 +22,8 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from datetime import datetime
-
 from diablo import db, std_commit
-from diablo.lib.util import to_isoformat
+from diablo.lib.util import to_isoformat, utc_now
 from diablo.models.cross_listing import CrossListing
 from sqlalchemy import and_, or_
 
@@ -37,7 +35,7 @@ class OptOut(db.Model):
     instructor_uid = db.Column(db.String, nullable=False)
     term_id = db.Column(db.Integer)
     section_id = db.Column(db.Integer)
-    created_at = db.Column(db.DateTime, nullable=False, default=datetime.now)
+    created_at = db.Column(db.DateTime, nullable=False, default=utc_now)
 
     def __init__(
             self,

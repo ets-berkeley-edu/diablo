@@ -22,7 +22,7 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from datetime import datetime
+from datetime import datetime, timezone
 
 from dateutil.tz import tzutc
 from flask import current_app as app
@@ -127,4 +127,4 @@ def to_isoformat(value):
 
 
 def utc_now():
-    return datetime.utcnow().replace(tzinfo=pytz.utc)
+    return datetime.now(timezone.utc)

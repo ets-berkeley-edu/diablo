@@ -22,7 +22,6 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from datetime import datetime, timezone
 import os
 import threading
 import time
@@ -30,6 +29,7 @@ import time
 from diablo.externals import rds
 from diablo.jobs.base_job import BaseJob
 from diablo.jobs.errors import BackgroundJobError
+from diablo.lib.util import utc_now
 from diablo.models.job import Job
 from diablo.models.job_history import JobHistory
 import schedule
@@ -56,7 +56,7 @@ class BackgroundJobManager:
             return
         else:
             self.monitor.notify(is_running=True)
-            self.started_at = datetime.now(timezone.utc)
+            self.started_at = utc_now()
 
         class JobRunnerThread(threading.Thread):
 

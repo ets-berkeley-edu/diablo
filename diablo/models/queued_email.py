@@ -22,13 +22,11 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from datetime import datetime
-
 from diablo import db, std_commit
 from diablo.externals.canvas import get_course_sites_by_id
 from diablo.externals.loch import get_loch_basic_attributes
 from diablo.lib.interpolator import interpolate_content
-from diablo.lib.util import to_isoformat
+from diablo.lib.util import to_isoformat, utc_now
 from diablo.merged.emailer import get_admin_alert_recipient, send_system_error_email
 from diablo.models.course_preference import NAMES_PER_PUBLISH_TYPE, NAMES_PER_RECORDING_TYPE
 from diablo.models.email_template import email_template_type, EmailTemplate
@@ -47,7 +45,7 @@ class QueuedEmail(db.Model):
     section_id = db.Column(db.Integer, nullable=False)
     template_type = db.Column(email_template_type, nullable=False)
     term_id = db.Column(db.Integer, nullable=False)
-    created_at = db.Column(db.DateTime, nullable=False, default=datetime.now)
+    created_at = db.Column(db.DateTime, nullable=False, default=utc_now)
 
     __table_args__ = (db.UniqueConstraint(
         'section_id',

@@ -22,11 +22,8 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-
-from datetime import datetime
-
 from diablo import db, std_commit
-from diablo.lib.util import to_isoformat
+from diablo.lib.util import to_isoformat, utc_now
 from diablo.models.course_preference import NAMES_PER_RECORDING_TYPE
 from flask import current_app as app
 from sqlalchemy import func, text
@@ -48,9 +45,7 @@ class Room(db.Model):
     is_auditorium = db.Column(db.Boolean, nullable=False)
     kaltura_resource_id = db.Column(db.Integer)
     location = db.Column(db.String(255), nullable=False, unique=True)
-    created_at = db.Column(db.DateTime, nullable=False, default=datetime.now)
-
-    scheduled = db.relationship('Scheduled', back_populates='room', lazy=True)
+    created_at = db.Column(db.DateTime, nullable=False, default=utc_now)
 
     def __init__(
             self,
@@ -71,8 +66,7 @@ class Room(db.Model):
                     location={self.location},
                     is_auditorium={self.is_auditorium},
                     kaltura_resource_id={self.kaltura_resource_id},
-                    created_at={self.created_at},
-                    scheduled={self.scheduled}>
+                    created_at={self.created_at}>
                 """
 
     @classmethod

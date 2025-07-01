@@ -22,11 +22,8 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-
-from datetime import datetime
-
 from diablo import db, std_commit
-from diablo.lib.util import to_isoformat
+from diablo.lib.util import to_isoformat, utc_now
 from diablo.models.email_template import email_template_type, EmailTemplate
 from sqlalchemy import and_
 
@@ -39,7 +36,7 @@ class SentEmail(db.Model):
     section_id = db.Column(db.Integer)
     template_type = db.Column(email_template_type)
     term_id = db.Column(db.Integer, nullable=False)
-    sent_at = db.Column(db.DateTime, nullable=False, default=datetime.now)
+    sent_at = db.Column(db.DateTime, nullable=False, default=utc_now)
 
     def __init__(self, recipient_uid, section_id, template_type, term_id):
         self.recipient_uid = recipient_uid

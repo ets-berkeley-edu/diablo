@@ -32,7 +32,7 @@ from diablo.lib.berkeley import get_first_matching_datetime_of_term, get_recordi
     term_name_for_sis_id
 from diablo.lib.kaltura_util import get_classification_name, get_recurrence_name, get_series_description, \
     get_status_name, represents_recording_series
-from diablo.lib.util import default_timezone, epoch_time_to_isoformat, format_days
+from diablo.lib.util import default_timezone, epoch_time_to_isoformat, format_days, local_now
 from flask import current_app as app
 from KalturaClient import KalturaClient, KalturaConfiguration
 from KalturaClient.exceptions import KalturaClientException
@@ -252,7 +252,7 @@ class Kaltura:
     def delete(self, event_id, force_delete_past_events=False):
         def is_future(kaltura_event):
             start_date = dateutil.parser.parse(kaltura_event['startDate'])
-            return start_date.timestamp() > datetime.now().timestamp()
+            return start_date.timestamp() > local_now().timestamp()
 
         event = self.get_event(event_id)
         if event:

@@ -24,7 +24,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 from datetime import datetime, timedelta
 
-from diablo.lib.util import default_timezone, format_days, safe_strftime
+from diablo.lib.util import default_timezone, format_days, local_now, safe_strftime
 from flask import current_app as app
 
 # This order of days is aligned with datetime module: https://pythontic.com/datetime/date/weekday
@@ -135,7 +135,7 @@ def are_scheduled_dates_obsolete(meeting, scheduled):
         end_date_mismatch = safe_strftime(recording_end_date, '%Y-%m-%d') != scheduled['meetingEndDate']
 
         # If we've moved beyond the SIS start date, ignore start_date mismatch
-        scheduled_after_start_date = formatted_start_date and datetime.now().strftime('%Y-%m-%d') > formatted_start_date
+        scheduled_after_start_date = formatted_start_date and local_now().strftime('%Y-%m-%d') > formatted_start_date
         return end_date_mismatch if scheduled_after_start_date else (start_date_mismatch or end_date_mismatch)
     else:
         return True

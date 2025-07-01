@@ -26,6 +26,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 from datetime import datetime, timedelta
 import json
 import os
+import shutil
 
 import dateutil.parser
 from diablo import db, std_commit
@@ -92,6 +93,12 @@ def get_kaltura_term_date_str(date):
 
 
 # TEST DATA MANAGEMENT
+
+
+def create_download_directory():
+    if os.path.isdir(default_download_dir()):
+        shutil.rmtree(default_download_dir())
+    os.mkdir(default_download_dir())
 
 
 def get_test_script_course(test_script_str):

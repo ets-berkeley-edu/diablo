@@ -22,7 +22,6 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from datetime import datetime
 import re
 
 from diablo.api.errors import BadRequestError, ForbiddenRequestError, InternalServerError, ResourceNotFoundError
@@ -31,6 +30,7 @@ from diablo.externals.canvas import get_course_site
 from diablo.externals.kaltura import Kaltura
 from diablo.lib.http_util import tolerant_jsonify
 from diablo.lib.interpolator import get_sign_up_url
+from diablo.lib.util import local_now
 from diablo.models.course_preference import CoursePreference, get_all_publish_types, get_all_recording_types
 from diablo.models.note import Note
 from diablo.models.opt_out import OptOut
@@ -122,7 +122,7 @@ def download_courses_csv():
     params = request.get_json()
     term_id = params.get('termId')
     filter_ = params.get('filter', 'Scheduled')
-    now = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+    now = local_now().strftime('%Y-%m-%d_%H-%M-%S')
     rows = []
     for c in _get_courses_per_filter(filter_=filter_, term_id=term_id):
         for scheduled in (c['scheduled'] or [{}]):

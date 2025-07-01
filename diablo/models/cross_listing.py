@@ -22,10 +22,8 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from datetime import datetime
-
 from diablo import db, std_commit
-from diablo.lib.util import to_isoformat
+from diablo.lib.util import to_isoformat, utc_now
 from sqlalchemy import and_, text
 from sqlalchemy.dialects.postgresql import ARRAY
 
@@ -36,7 +34,7 @@ class CrossListing(db.Model):
     term_id = db.Column(db.Integer, nullable=False, primary_key=True)
     section_id = db.Column(db.Integer, nullable=False, primary_key=True)
     cross_listed_section_ids = db.Column(ARRAY(db.Integer), nullable=False)
-    created_at = db.Column(db.DateTime, nullable=False, default=datetime.now)
+    created_at = db.Column(db.DateTime, nullable=False, default=utc_now)
 
     def __init__(
             self,
