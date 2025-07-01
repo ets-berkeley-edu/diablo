@@ -217,9 +217,7 @@ const toggleTheme = () => {
   position: fixed !important;
   width: 100% !important;
 }
-:deep(.v-navigation-drawer) {
-  top: 63px !important;
-}
+
 .sidebar-with-banner .v-navigation-drawer__content {
   padding-top: 64px; /* or however tall your banner is */
 }
