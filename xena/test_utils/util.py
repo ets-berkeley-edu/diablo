@@ -27,6 +27,7 @@ from datetime import datetime, timedelta
 import json
 import os
 import shutil
+import time
 
 import dateutil.parser
 from diablo import db, std_commit
@@ -127,6 +128,7 @@ def get_kaltura_ids(section):
 
 
 def get_kaltura_id(recording_schedule):
+    time.sleep(2)
     section = recording_schedule.section
     meeting = recording_schedule.meeting
     schedule = meeting.meeting_schedule
@@ -608,9 +610,11 @@ def set_course_meeting_time(section, meeting):
 def change_course_instructor(section, old_instructor=None, new_instructor=None):
     conditional = f" AND instructor_uid = '{old_instructor.uid}'" if old_instructor else ''
     if new_instructor:
+        first = new_instructor.first_name.replace("'", "''")
+        last = new_instructor.last_name.replace("'", "''")
         sql = f"""UPDATE sis_sections
                      SET instructor_uid = '{new_instructor.uid}',
-                         instructor_name = '{new_instructor.first_name} {new_instructor.last_name}',
+                         instructor_name = '{first} {last}',
                          instructor_role_code = '{new_instructor.role}'
                    WHERE section_id = {section.ccn}
                      AND term_id = {section.term.id}

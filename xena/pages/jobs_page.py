@@ -186,29 +186,29 @@ class JobsPage(DiabloPages):
         self.wait_for_element_and_type(JobsPage.SEARCH_HISTORY_INPUT, async_job.value)
 
     @staticmethod
-    def job_most_recent_locator(async_job):
-        return By.XPATH, f'//div[@id="job-history-table"]//tbody/tr[contains(., "{async_job.value}")][1]'
+    def job_most_recent_xpath(async_job):
+        return f'//div[@id="job-history-table"]//tbody/tr[contains(., "{async_job.value}")][1]'
 
     def wait_for_most_recent_job_success(self, async_job):
         app.logger.info(f'Waiting for {async_job} to succeed')
         time.sleep(2)
-        tries = 1
-        retries = util.get_long_timeout()
-        success = By.XPATH, f'{JobsPage.job_most_recent_locator(async_job)[1]}//i[contains(@title, "job finished")]'
-        failure = By.XPATH, f'{JobsPage.job_most_recent_locator(async_job)[1]}//i[contains(@title, "job failed")]'
+        tries = 0
+        retries = util.get_short_timeout()
+        success = By.XPATH, f'{JobsPage.job_most_recent_xpath(async_job)}//i[contains(@title, "job finished")]'
+        failure = By.XPATH, f'{JobsPage.job_most_recent_xpath(async_job)}//i[contains(@title, "job failed")]'
         while tries <= retries:
             tries += 1
             try:
-                if self.is_present(success):
-                    app.logger.info('Job succeeded')
-                    break
-                else:
-                    Wait(self.driver, 1).until(ec.visibility_of_element_located(failure))
-                    app.logger.info('Job failed')
-                    break
+                app.logger.info('Waiting for success')
+                self.when_present(success, util.get_short_timeout())
+                app.logger.info('Job succeeded')
+                break
             except TimeoutException:
-                if tries == retries:
+                if self.is_present(failure):
+                    app.logger.info('Job failed')
+                    raise
+                elif tries == retries:
+                    app.logger.info('Timed out')
                     raise
                 else:
-                    time.sleep(1)
-        Wait(self.driver, 1).until(ec.visibility_of_element_located(success))
+                    app.logger.info('Retrying')
