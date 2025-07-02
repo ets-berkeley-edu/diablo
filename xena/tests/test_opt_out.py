@@ -494,8 +494,7 @@ class TestOptOut6:
         self.jobs_page.run_schedule_update_job_sequence()
 
     def test_section_still_not_scheduled(self):
-        self.kaltura_page.load_event_edit_page(recording_schedule_1.series_id)
-        self.kaltura_page.wait_for_title('Access Denied - UC Berkeley - Test')
+        assert not util.get_kaltura_id(recording_schedule_1)
 
     def test_no_opt_out_emails_sent(self):
         assert util.get_sent_email_count(EmailTemplateType.INSTR_OPTED_OUT, section_1, instructor_0) == 0
@@ -557,8 +556,7 @@ class TestOptOut7:
         self.jobs_page.run_schedule_update_job_sequence()
 
     def test_section_still_not_scheduled(self):
-        self.kaltura_page.load_event_edit_page(recording_schedule_1.series_id)
-        self.kaltura_page.wait_for_title('Access Denied - UC Berkeley - Test')
+        assert not util.get_kaltura_id(recording_schedule_1)
 
 
 @pytest.mark.usefixtures('page_objects')

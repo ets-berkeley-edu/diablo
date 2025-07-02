@@ -258,7 +258,8 @@ class TestWeirdTypeB:
         self.kaltura_page.verify_publish_status(self.recording_schedule)
 
     def test_instructor_added_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_ADDED, self.section, self.new_instructor) == 1
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_NEW_COURSE_SCHED, self.section,
+                                         self.new_instructor) == 1
 
     # START / END DATES CHANGE FOR ELIGIBLE SECTION
 
@@ -341,7 +342,7 @@ class TestWeirdTypeB:
 
     def test_course_scheduled_email(self):
         assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_NEW_COURSE_SCHED, section=None,
-                                         instructor=self.new_instructor) == 1
+                                         instructor=self.new_instructor) == 2
 
     # NEW ROOM SCHEDULE EVENTS EXPORT
 
