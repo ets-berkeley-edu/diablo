@@ -45,7 +45,7 @@ def download_events():
     room = Room.get_room(room_id)
     if not room:
         raise ResourceNotFoundError('No such room')
-    end_date = datetime.fromisoformat(params.get('endDate'))
+    end_date = datetime.fromisoformat(params.get('endDate')).replace(hour=23, minute=59, second=59)
     start_date = datetime.fromisoformat(params.get('startDate'))
     filename = f"{room.location}_{start_date.strftime('%Y%m%d')}-{end_date.strftime('%Y%m%d')}.ics"
     safe_filename = secure_filename(filename)

@@ -30,7 +30,7 @@ from diablo import db, std_commit
 from diablo.externals.kaltura import CREATED_BY_DIABLO_TAG, Kaltura
 from diablo.lib.berkeley import get_recording_end_date, get_recording_start_date
 from diablo.lib.kaltura_util import represents_recording_series
-from diablo.lib.util import localize_datetime, utc_now
+from diablo.lib.util import utc_now
 from diablo.merged.calnet import get_calnet_users_for_uids
 from diablo.merged.emailer import send_system_error_email
 from diablo.models.blackout import Blackout
@@ -317,18 +317,17 @@ def update_new_cross_listings(term_id, section_ids, tablename):
 
 def remove_blackout_events(kaltura_schedule_id=None):
     kaltura = Kaltura()
+    now = utc_now()
     for blackout in Blackout.all_blackouts():
-        if blackout.end_date < utc_now():
+        if blackout.end_date < now:
             app.logger.info(f'Removing past blackout: {blackout}')
             Blackout.delete_blackout(blackout.id)
         else:
-            end_date = localize_datetime(blackout.end_date)
-            start_date = localize_datetime(blackout.start_date)
             events = kaltura.get_events_in_date_range(
-                end_date=end_date,
+                end_date=blackout.end_date,
                 kaltura_schedule_id=kaltura_schedule_id,
                 recurrence_type=KalturaScheduleEventRecurrenceType.RECURRENCE,
-                start_date=start_date,
+                start_date=blackout.start_date,
             )
             for event in events:
                 created_by_diablo = CREATED_BY_DIABLO_TAG in event['tags']

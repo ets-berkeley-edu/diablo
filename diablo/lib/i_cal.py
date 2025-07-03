@@ -30,7 +30,7 @@ from diablo.externals.kaltura import Kaltura
 from diablo.lib.util import utc_now
 from diablo.models.scheduled import Scheduled
 from flask import current_app as app
-from KalturaClient.Plugins.Schedule import KalturaScheduleEventRecurrenceType
+from KalturaClient.Plugins.Schedule import KalturaScheduleEventRecurrenceType, KalturaScheduleEventStatus
 
 
 """Converts Kaltura schedule events to an iCalendar file in conformance with RFC 5545."""
@@ -68,6 +68,7 @@ def generate_ics_file(room, period_end_date, period_start_date):
             start_date=period_start_date,
             kaltura_schedule_id=scheduled_course.kaltura_schedule_id,
             recurrence_type=KalturaScheduleEventRecurrenceType.RECURRENCE,
+            status=KalturaScheduleEventStatus.ACTIVE,
         )
         if len(course_events):
             events.extend(_format_events(room.location, scheduled_course.section_id, course_events, wrapper))

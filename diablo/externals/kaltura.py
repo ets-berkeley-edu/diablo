@@ -148,27 +148,27 @@ class Kaltura:
         return events[0] if events else None
 
     @skip_when_pytest(mock_object='kaltura/schedule_events.json', is_fixture_json_file=True)
-    def get_events_in_date_range(self, end_date, start_date, kaltura_schedule_id=None, recurrence_type=None):
+    def get_events_in_date_range(
+        self,
+        end_date,
+        start_date,
+        kaltura_schedule_id=None,
+        recurrence_type=None,
+        status=None,
+    ):
         end_date_timestamp = int(end_date.timestamp())
         start_date_timestamp = int(start_date.timestamp())
-        if recurrence_type is None:
-            event_filter = KalturaRecordScheduleEventFilter(
-                endDateLessThanOrEqual=end_date_timestamp,
-                startDateGreaterThanOrEqual=start_date_timestamp,
-            )
-        elif kaltura_schedule_id is None:
-            event_filter = KalturaRecordScheduleEventFilter(
-                endDateLessThanOrEqual=end_date_timestamp,
-                recurrenceTypeEqual=recurrence_type,
-                startDateGreaterThanOrEqual=start_date_timestamp,
-            )
-        else:
-            event_filter = KalturaRecordScheduleEventFilter(
-                endDateLessThanOrEqual=end_date_timestamp,
-                parentIdEqual=kaltura_schedule_id,
-                recurrenceTypeEqual=recurrence_type,
-                startDateGreaterThanOrEqual=start_date_timestamp,
-            )
+        filter_args = {
+            'endDateLessThanOrEqual': end_date_timestamp,
+            'startDateGreaterThanOrEqual': start_date_timestamp,
+        }
+        if kaltura_schedule_id:
+            filter_args['parentIdEqual'] = kaltura_schedule_id
+        if recurrence_type:
+            filter_args['recurrenceTypeEqual'] = recurrence_type
+        if status:
+            filter_args['statusEqual'] = status
+        event_filter = KalturaRecordScheduleEventFilter(**filter_args)
         return self._get_events(kaltura_event_filter=event_filter)
 
     @cachify('kaltura/schedule_resources', timeout=30)

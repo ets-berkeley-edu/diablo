@@ -155,6 +155,7 @@ class TestWeirdTypeB:
         self.ouija_page.click_rooms_link()
         self.rooms_page.find_room(self.original_room)
         self.rooms_page.click_room_link(self.original_room)
+        self.room_page.scroll_to_kaltura_events()
         self.room_page.wait_for_series_row(self.recording_schedule)
         self.room_page.verify_series_link_text(self.recording_schedule)
 
@@ -167,6 +168,7 @@ class TestWeirdTypeB:
     # ROOM SCHEDULE EVENTS EXPORT
 
     def test_export_schedule_no_events(self):
+        self.room_page.scroll_to_kaltura_events()
         earliest_recording_date = dateutil.parser.parse(app.config['CURRENT_TERM_RECORDINGS_BEGIN']).date()
         events_start_date = earliest_recording_date - timedelta(days=2)
         events_end_date = earliest_recording_date - timedelta(days=1)
@@ -174,12 +176,11 @@ class TestWeirdTypeB:
         self.room_page.verify_ical_export_error(self.original_room.name)
 
     def test_export_schedule_events(self):
-        self.room_page.reload_page()
-        self.room_page.wait_for_series_row(self.recording_schedule)
-        events_start_date = self.room_page.series_row_start_date(self.recording_schedule)
-        events_end_date = events_start_date + timedelta(days=5)
+        events_start_date = self.recording_schedule.meeting.meeting_schedule.start_date_for_ical_export(self.recording_schedule.section.term)
+        events_end_date = events_start_date + timedelta(days=6)
         self.room_page.export_schedule_events_to_ical(events_start_date, events_end_date)
-        self.room_page.verify_ical_export_download(self.recording_schedule)
+        self.room_page.verify_ical_export_download()
+        self.room_page.verify_ical_export_events(self.recording_schedule, events_start_date, events_end_date)
         self.i_calendar_page.load_validator_page()
         self.i_calendar_page.validate_file()
 
@@ -351,11 +352,14 @@ class TestWeirdTypeB:
         self.course_page.click_rooms_link()
         self.rooms_page.find_room(self.new_room)
         self.rooms_page.click_room_link(self.new_room)
+        self.room_page.scroll_to_kaltura_events()
         self.room_page.wait_for_series_row(self.recording_schedule)
-        events_start_date = self.room_page.series_row_start_date(self.recording_schedule)
-        events_end_date = events_start_date + timedelta(days=5)
+
+        events_start_date = self.recording_schedule.meeting.meeting_schedule.start_date_for_ical_export(self.recording_schedule.section.term)
+        events_end_date = events_start_date + timedelta(days=6)
         self.room_page.export_schedule_events_to_ical(events_start_date, events_end_date)
-        self.room_page.verify_ical_export_download(self.recording_schedule)
+        self.room_page.verify_ical_export_download()
+        self.room_page.verify_ical_export_events(self.recording_schedule, events_start_date, events_end_date)
         self.i_calendar_page.load_validator_page()
         self.i_calendar_page.validate_file()
 

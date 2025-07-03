@@ -179,3 +179,13 @@ class MeetingSchedule(object):
     def kaltura_series_end(self, term):
         days = self.kaltura_series_days(term)
         return days[-1]
+
+    def start_date_for_ical_export(self, term):
+        blackout_dates = self.expected_blackout_dates(term)
+        kaltura_series_start_date = self.kaltura_series_start(term)
+        kaltura_series_end_date = self.kaltura_series_end(term)
+        blackout_date_within_series = next((d for d in blackout_dates if d >= kaltura_series_start_date and d <= kaltura_series_end_date), None)
+        if blackout_date_within_series:
+            return blackout_date_within_series - timedelta(days=1)
+        else:
+            return kaltura_series_start_date

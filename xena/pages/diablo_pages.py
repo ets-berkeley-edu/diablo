@@ -42,7 +42,6 @@ class DiabloPages(Page):
     JOBS_LINK = (By.ID, 'sidebar-link-the-chancel')
 
     MENU_BUTTON = (By.ID, 'btn-main-menu')
-    JOB_HISTORY_LINK = (By.ID, 'menu-item-job-history')
     DARK_MODE = (By.ID, 'menu-item-dark-mode"]')
     LOG_OUT_LINK = (By.ID, 'menu-item-log-out')
 
@@ -80,31 +79,26 @@ class DiabloPages(Page):
         time.sleep(1)
         self.mouseover(self.element(DiabloPages.MENU_BUTTON))
 
-    def click_menu_button(self):
-        self.wait_for_page_and_click_js(DiabloPages.MENU_BUTTON)
+    def click_menu_button(self, locator):
+        self.wait_for_page_and_click_js(locator)
 
-    def open_menu(self):
-        if not self.is_present(DiabloPages.LOG_OUT_LINK) or not self.element(DiabloPages.LOG_OUT_LINK).is_displayed():
-            app.logger.info('Clicking header menu button')
-            self.click_menu_button()
+    def open_menu(self, button_locator, content_locator, name):
+        if not self.is_present(content_locator) or not self.element(content_locator).is_displayed():
+            app.logger.info(f'Clicking {name} menu button')
+            self.click_menu_button(button_locator)
             time.sleep(1)
-        if not self.is_present(DiabloPages.LOG_OUT_LINK) or not self.element(DiabloPages.LOG_OUT_LINK).is_displayed():
+        if not self.is_present(content_locator) or not self.element(content_locator).is_displayed():
             app.logger.info('Retrying the menu button')
-            self.click_menu_button()
-
-    def click_job_history_link(self):
-        app.logger.info('Clicking Job History link')
-        self.open_menu()
-        self.wait_for_element_and_click(DiabloPages.JOB_HISTORY_LINK)
+            self.click_menu_button(button_locator)
 
     def log_out(self):
         app.logger.info('Logging out')
-        self.open_menu()
+        self.open_menu(DiabloPages.MENU_BUTTON, DiabloPages.LOG_OUT_LINK, 'header')
         self.wait_for_page_and_click_js(DiabloPages.LOG_OUT_LINK)
         # Logging out is not working the first time in some cases, retry for now
         time.sleep(2)
         if self.is_present(DiabloPages.LOG_OUT_LINK):
-            self.open_menu()
+            self.open_menu(DiabloPages.MENU_BUTTON, DiabloPages.LOG_OUT_LINK, 'header')
             self.wait_for_page_and_click_js(DiabloPages.LOG_OUT_LINK)
 
     def click_menu_option(self, option_text):
