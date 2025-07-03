@@ -49,7 +49,7 @@ class TestCourseCancellation:
 
     # INITIALIZE TESTS
 
-    test_data = util.get_test_script_course('test_course_cancellation')
+    test_data = util.get_test_script_course('test_single_meeting_sis_cancellation')
     section = util.get_test_section(test_data)
     instructor = section.instructors[0]
     meeting = section.meetings[0]
@@ -94,7 +94,7 @@ class TestCourseCancellation:
     def test_cancel_pre_sched_no_teacher_result(self):
         self.course_page.log_out()
         self.login_page.dev_auth(self.instructor.uid)
-        self.courses_page.wait_for_title_contains(f"Your {app.config['CURRENT_TERM_NAME']} Courses")
+        self.courses_page.wait_for_title_contains(f"Your {app.config['CURRENT_TERM_NAME']} Course")
         assert not self.courses_page.is_present(OuijaBoardPage.course_row_link_locator(self.section))
 
     # RECORDINGS NOT SCHEDULED FOR CANCELLED COURSE

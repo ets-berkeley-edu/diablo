@@ -83,10 +83,7 @@ def get_password():
 
 
 def get_test_collaborator():
-    return User({
-        'email': app.config['TEST_DATA_USER_EMAIL'],
-        'uid': app.config['TEST_DATA_USER_UID'],
-    })
+    return User({'uid': app.config['TEST_DATA_USER_UID']})
 
 
 def get_kaltura_term_date_str(date):

@@ -47,7 +47,7 @@ class TestScheduling0:
     - Series updated
     """
 
-    test_data = util.get_test_script_course('test_scheduling_0')
+    test_data = util.get_test_script_course('test_single_meeting_settings_changes_0')
     section = util.get_test_section(test_data)
     admin = User({'uid': util.get_admin_uid()})
     instructor = section.instructors[0]

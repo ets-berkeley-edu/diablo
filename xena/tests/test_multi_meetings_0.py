@@ -50,7 +50,7 @@ class TestWeirdTypeB:
     """
 
     # Initial course data
-    test_data = util.get_test_script_course('test_weird_type_b')
+    test_data = util.get_test_script_course('test_multi_meetings_0')
     section = util.get_test_section(test_data)
     meeting_physical = section.meetings[0]
     meeting_online = section.meetings[1]
@@ -60,7 +60,7 @@ class TestWeirdTypeB:
     recording_schedule = RecordingSchedule(section, meeting_physical)
 
     # Course changes data
-    test_data_changes = util.get_test_script_course('test_weird_type_b_changes')
+    test_data_changes = util.get_test_script_course('test_multi_meetings_0_changes')
     uids_to_exclude = list(map(lambda i: i.uid, section.instructors))
     util.get_test_section_instructor_data(test_data_changes, uids_to_exclude=uids_to_exclude)
     changed_section = Section(test_data_changes)

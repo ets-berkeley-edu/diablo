@@ -56,7 +56,6 @@ RIPLEY_BASE_URL = 'https://ripley-dev.ets.berkeley.edu'
 TESTING = True
 
 TEST_DATA_COURSES = f'{BASE_DIR}/xena/fixtures/test-courses.json'
-TEST_DATA_USER_EMAIL = 'foo@bar.edu'
 TEST_DATA_USER_UID = '1234567'
 
 TIMEOUT_SHORT = 10

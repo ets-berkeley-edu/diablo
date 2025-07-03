@@ -46,12 +46,12 @@ class TestCourseInstructorChanges:
     - Series updated - instructor replaced, no other changes
     """
 
-    new_instructor_test_data = util.get_test_script_course('test_course_changes_auditorium')
+    new_instructor_test_data = util.get_test_script_course('test_single_meeting_sis_changes')
     section = util.get_test_section(new_instructor_test_data)
     meeting = section.meetings[0]
     new_instructor = section.instructors[0]
 
-    old_instructor_test_data = util.get_test_script_course('test_course_changes_ineligible')
+    old_instructor_test_data = util.get_test_script_course('test_single_meeting_sis_changes_room_ineligible')
     util.get_test_section_instructor_data(old_instructor_test_data, uids_to_exclude=[new_instructor.uid])
     old_instructor = Section(old_instructor_test_data).instructors[0]
 

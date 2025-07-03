@@ -43,15 +43,15 @@ class TestCourseScheduleChanges:
     - SIS schedule vanishes altogether, recordings unscheduled
     """
 
-    section = util.get_test_section(util.get_test_script_course('test_course_changes_auditorium'))
+    section = util.get_test_section(util.get_test_script_course('test_single_meeting_sis_changes'))
     instr = section.instructors[0]
     meeting = section.meetings[0]
     room = section.meetings[0].room
     recording_schedule = RecordingSchedule(section, meeting)
 
-    new_meeting = Section(util.get_test_script_course('test_course_changes_eligible')).meetings[0]
+    new_meeting = Section(util.get_test_script_course('test_single_meeting_sis_changes_room_eligible')).meetings[0]
     new_meeting.room = room
-    newer_meeting = Section(util.get_test_script_course('test_course_changes_faker')).meetings[0]
+    newer_meeting = Section(util.get_test_script_course('test_single_meeting_sis_changes_schedule')).meetings[0]
     newer_meeting.room = room
 
     def test_setup(self):

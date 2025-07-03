@@ -47,7 +47,7 @@ class TestWeirdTypeD:
     - Series updated
     """
 
-    test_data = util.get_test_script_course('test_weird_type_d')
+    test_data = util.get_test_script_course('test_multi_meetings_2')
     section = util.get_test_section(test_data)
     meeting_0 = section.meetings[0]
     meeting_0.meeting_schedule.end_date = meeting_0.meeting_schedule.end_date - timedelta(days=8)
