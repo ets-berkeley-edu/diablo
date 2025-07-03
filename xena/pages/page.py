@@ -173,6 +173,14 @@ class Page(object):
         self.wait_for_page_and_click_js((By.ID, element_id), addl_pause)
         self.driver.execute_script(f"document.getElementById('{element_id}').value='{string}'")
 
+    def wait_for_textbox_and_send_keys(self, locator, string, addl_pause=None):
+        self.wait_for_element_and_click(locator, addl_pause)
+        self.remove_and_enter_chars(locator, string)
+
+    def remove_and_enter_chars(self, locator, string):
+        self.remove_chars(locator)
+        self.element(locator).send_keys(string)
+
     def remove_chars(self, locator):
         self.wait_for_element_and_click(locator)
         repeat = 300
@@ -184,10 +192,6 @@ class Page(object):
         for i in string:
             time.sleep(0.5)
             self.element(locator).send_keys(i)
-
-    def remove_and_enter_chars(self, locator, string):
-        self.remove_chars(locator)
-        self.element(locator).send_keys(string)
 
     # PAGE TITLE AND HEADING
 
