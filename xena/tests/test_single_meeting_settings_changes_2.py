@@ -46,7 +46,7 @@ class TestScheduling2:
     - Instructor two reverts to no auto-publish
     """
 
-    test_data = util.get_test_script_course('test_scheduling_2')
+    test_data = util.get_test_script_course('test_single_meeting_settings_changes_2')
     section = util.get_test_section(test_data)
     instructor_0 = section.instructors[0]
     instructor_1 = section.instructors[1]

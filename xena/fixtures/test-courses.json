@@ -1,100 +1,6 @@
 {
   "courses": [
     {
-      "test_script": "test_user_permissions",
-      "dept_code": "HISTORY",
-      "instructors": [
-        {
-          "role": "PI"
-        }
-      ],
-      "proxies": [],
-      "meetings": [
-        {
-          "room": {
-            "name": "O'Brien 212"
-          },
-          "meeting_schedule": {
-            "days": "TU, TH",
-            "start_time": "2:00 pm",
-            "end_time": "3:29 pm"
-          }
-        }
-      ]
-    },
-    {
-      "test_script": "test_scheduling_0",
-      "dept_code": "ECON",
-      "instructors": [
-        {
-          "role": "TNIC"
-        }
-      ],
-      "proxies": [],
-      "meetings": [
-        {
-          "room": {
-            "name": "Pimentel 1"
-          },
-          "meeting_schedule": {
-            "days": "TU, TH",
-            "start_time": "7:00 am",
-            "end_time": "8:29 am"
-          }
-        }
-      ],
-      "listings": []
-    },
-    {
-      "test_script": "test_scheduling_1",
-      "dept_code": "PSYCH",
-      "instructors": [
-        {
-          "role": "PI"
-        }
-      ],
-      "proxies": [],
-      "meetings": [
-        {
-          "room": {
-            "name": "Pimentel 1"
-          },
-          "meeting_schedule": {
-            "days": "MO, WE",
-            "start_time": "7:00 am",
-            "end_time": "7:59 am"
-          }
-        }
-      ],
-      "listings": []
-    },
-    {
-      "test_script": "test_scheduling_2",
-      "dept_code": "PHYSICS",
-      "instructors": [
-        {
-          "role": "PI"
-        },
-        {
-          "role": "ICNT"
-        }
-      ],
-      "proxies": [],
-      "meetings": [
-        {
-          "room": {
-            "name": "O'Brien 212"
-          },
-          "meeting_schedule": {
-            "days": "TU, TH",
-            "start_time": "6:30 am",
-            "end_time": "7:59 am"
-          }
-        }
-      ],
-      "listings": []
-    },
-    {
       "test_script": "test_collaborators_0",
       "dept_code": "GERMAN",
       "instructors": [
@@ -181,51 +87,6 @@
           },
           "meeting_schedule": {
             "days": "TU, TH",
-            "start_time": "7:00 am",
-            "end_time": "7:59 am"
-          }
-        }
-      ],
-      "listings": []
-    },
-    {
-      "test_script": "test_x_listings",
-      "instructors": [
-        {
-          "role": "PI"
-        }
-      ],
-      "proxies": [],
-      "meetings": [
-        {
-          "room": {
-            "name": "O'Brien 212"
-          },
-          "meeting_schedule": {
-            "days": "MO, WE, FR",
-            "start_time": "8:00 am",
-            "end_time": "8:59 am"
-          }
-        }
-      ],
-      "listings": []
-    },
-    {
-      "test_script": "test_course_cancellation",
-      "dept_code": "CHEM",
-      "instructors": [
-        {
-          "role": "PI"
-        }
-      ],
-      "proxies": [],
-      "meetings": [
-        {
-          "room": {
-            "name": "O'Brien 212"
-          },
-          "meeting_schedule": {
-            "days": "MO, WE, FR",
             "start_time": "5:00 pm",
             "end_time": "5:59 pm"
           }
@@ -234,119 +95,7 @@
       "listings": []
     },
     {
-      "test_script": "test_course_changes_auditorium",
-      "dept_code": "ENGLISH",
-      "instructors": [
-        {
-          "role": "TNIC"
-        }
-      ],
-      "proxies": [],
-      "meetings": [
-        {
-          "room": {
-            "name": "Pimentel 1"
-          },
-          "meeting_schedule": {
-            "days": "MO, WE",
-            "start_time": "6:00 am",
-            "end_time": "6:59 am"
-          }
-        }
-      ]
-    },
-    {
-      "test_script": "test_course_changes_ineligible",
-      "instructors": [
-        {
-          "role": "PI"
-        }
-      ],
-      "proxies": [
-        {
-          "role": "APRX"
-        }
-      ],
-      "meetings": [
-        {
-          "room": {
-            "name": "Chavez 100"
-          },
-          "meeting_schedule": {
-            "days": "TU, TH",
-            "start_time": "9:30 pm",
-            "end_time": "10:59 pm"
-          }
-        }
-      ]
-    },
-    {
-      "test_script": "test_course_changes_faker",
-      "instructors": [
-        {
-          "role": "PI"
-        }
-      ],
-      "proxies": [],
-      "meetings": [
-        {
-          "room": {
-            "name": "Pimentel 1"
-          },
-          "meeting_schedule": {
-            "days": "TU, TH",
-            "start_time": "6:30 pm",
-            "end_time": "7:59 pm"
-          }
-        }
-      ]
-    },
-    {
-      "test_script": "test_course_changes_eligible",
-      "instructors": [
-        {
-          "role": "PI"
-        }
-      ],
-      "proxies": [],
-      "meetings": [
-        {
-          "room": {
-            "name": "Dwinelle 104"
-          },
-          "meeting_schedule": {
-            "days": "TU, TH",
-            "start_time": "8:30 pm",
-            "end_time": "9:59 pm"
-          }
-        }
-      ]
-    },
-    {
-      "test_script": "test_unschedule",
-      "dept_code": "EPS",
-      "instructors": [
-        {
-          "role": "PI"
-        }
-      ],
-      "proxies": [],
-      "meetings": [
-        {
-          "room": {
-            "name": "Pimentel 1"
-          },
-          "meeting_schedule": {
-            "days": "FR",
-            "start_time": "4:00 am",
-            "end_time": "5:59 am"
-          }
-        }
-      ],
-      "listings": []
-    },
-    {
-      "test_script": "test_weird_type_b",
+      "test_script": "test_multi_meetings_0",
       "dept_code": "LEGALST",
       "instructors": [
         {
@@ -361,8 +110,8 @@
           },
           "meeting_schedule": {
             "days": "MO, WE, FR",
-            "start_time": "5:00 am",
-            "end_time": "5:59 am"
+            "start_time": "6:00 pm",
+            "end_time": "6:59 pm"
           }
         },
         {
@@ -371,14 +120,14 @@
           },
           "meeting_schedule": {
             "days": "MO, WE, FR",
-            "start_time": "5:00 am",
-            "end_time": "5:59 am"
+            "start_time": "6:00 pm",
+            "end_time": "6:59 pm"
           }
         }
       ]
     },
     {
-      "test_script": "test_weird_type_b_changes",
+      "test_script": "test_multi_meetings_0_changes",
       "instructors": [
         {
           "role": "PI"
@@ -392,8 +141,8 @@
           },
           "meeting_schedule": {
             "days": "MO, WE, FR",
-            "start_time": "5:00 am",
-            "end_time": "5:59 am"
+            "start_time": "5:00 pm",
+            "end_time": "5:59 pm"
           }
         },
         {
@@ -402,14 +151,14 @@
           },
           "meeting_schedule": {
             "days": "MO, WE, FR",
-            "start_time": "5:00 am",
-            "end_time": "5:59 am"
+            "start_time": "5:00 pm",
+            "end_time": "5:59 pm"
           }
         }
       ]
     },
     {
-      "test_script": "test_weird_type_c",
+      "test_script": "test_multi_meetings_1",
       "dept_code": "STAT",
       "instructors": [
         {
@@ -441,7 +190,7 @@
       ]
     },
     {
-      "test_script": "test_weird_type_c_changes",
+      "test_script": "test_multi_meetings_1_changes",
       "instructors": [
         {
           "role": "PI"
@@ -472,7 +221,7 @@
       ]
     },
     {
-      "test_script": "test_weird_type_d",
+      "test_script": "test_multi_meetings_2",
       "dept_code": "COMPSCI",
       "instructors": [
         {
@@ -504,7 +253,7 @@
       ]
     },
     {
-     "test_script": "test_opt_out_0",
+      "test_script": "test_opt_out_0",
       "dept_code": "COMPSCI",
       "instructors": [
         {
@@ -539,7 +288,7 @@
       ]
     },
     {
-     "test_script": "test_opt_out_1",
+      "test_script": "test_opt_out_1",
       "dept_code": "PHYSICS",
       "instructors": [
         {
@@ -559,6 +308,234 @@
           }
         }
       ]
+    },
+    {
+      "test_script": "test_single_meeting_settings_changes_0",
+      "dept_code": "ECON",
+      "instructors": [
+        {
+          "role": "TNIC"
+        }
+      ],
+      "proxies": [],
+      "meetings": [
+        {
+          "room": {
+            "name": "Pimentel 1"
+          },
+          "meeting_schedule": {
+            "days": "TU, TH",
+            "start_time": "7:00 pm",
+            "end_time": "7:59 pm"
+          }
+        }
+      ],
+      "listings": []
+    },
+    {
+      "test_script": "test_single_meeting_settings_changes_1",
+      "dept_code": "PSYCH",
+      "instructors": [
+        {
+          "role": "PI"
+        }
+      ],
+      "proxies": [],
+      "meetings": [
+        {
+          "room": {
+            "name": "Pimentel 1"
+          },
+          "meeting_schedule": {
+            "days": "MO, WE",
+            "start_time": "7:00 pm",
+            "end_time": "7:59 pm"
+          }
+        }
+      ],
+      "listings": []
+    },
+    {
+      "test_script": "test_single_meeting_settings_changes_2",
+      "dept_code": "PHYSICS",
+      "instructors": [
+        {
+          "role": "PI"
+        },
+        {
+          "role": "ICNT"
+        }
+      ],
+      "proxies": [],
+      "meetings": [
+        {
+          "room": {
+            "name": "O'Brien 212"
+          },
+          "meeting_schedule": {
+            "days": "TU, TH",
+            "start_time": "6:00 pm",
+            "end_time": "6:59 pm"
+          }
+        }
+      ],
+      "listings": []
+    },
+    {
+      "test_script": "test_single_meeting_sis_cancellation",
+      "dept_code": "CHEM",
+      "instructors": [
+        {
+          "role": "PI"
+        }
+      ],
+      "proxies": [],
+      "meetings": [
+        {
+          "room": {
+            "name": "O'Brien 212"
+          },
+          "meeting_schedule": {
+            "days": "MO, WE, FR",
+            "start_time": "5:00 pm",
+            "end_time": "5:59 pm"
+          }
+        }
+      ],
+      "listings": []
+    },
+    {
+      "test_script": "test_single_meeting_sis_changes",
+      "dept_code": "ENGLISH",
+      "instructors": [
+        {
+          "role": "TNIC"
+        }
+      ],
+      "proxies": [],
+      "meetings": [
+        {
+          "room": {
+            "name": "Pimentel 1"
+          },
+          "meeting_schedule": {
+            "days": "MO, WE",
+            "start_time": "6:00 pm",
+            "end_time": "6:59 pm"
+          }
+        }
+      ]
+    },
+    {
+      "test_script": "test_single_meeting_sis_changes_room_eligible",
+      "instructors": [
+        {
+          "role": "PI"
+        }
+      ],
+      "proxies": [],
+      "meetings": [
+        {
+          "room": {
+            "name": "Dwinelle 104"
+          },
+          "meeting_schedule": {
+            "days": "TU, TH",
+            "start_time": "8:30 pm",
+            "end_time": "9:59 pm"
+          }
+        }
+      ]
+    },
+    {
+      "test_script": "test_single_meeting_sis_changes_room_ineligible",
+      "instructors": [
+        {
+          "role": "PI"
+        }
+      ],
+      "proxies": [
+        {
+          "role": "APRX"
+        }
+      ],
+      "meetings": [
+        {
+          "room": {
+            "name": "Chavez 100"
+          },
+          "meeting_schedule": {
+            "days": "TU, TH",
+            "start_time": "9:30 pm",
+            "end_time": "10:59 pm"
+          }
+        }
+      ]
+    },
+    {
+      "test_script": "test_single_meeting_sis_changes_schedule",
+      "instructors": [
+        {
+          "role": "PI"
+        }
+      ],
+      "proxies": [],
+      "meetings": [
+        {
+          "room": {
+            "name": "Pimentel 1"
+          },
+          "meeting_schedule": {
+            "days": "TU, TH",
+            "start_time": "6:30 pm",
+            "end_time": "7:59 pm"
+          }
+        }
+      ]
+    },
+    {
+      "test_script": "test_user_permissions",
+      "dept_code": "HISTORY",
+      "instructors": [
+        {
+          "role": "PI"
+        }
+      ],
+      "proxies": [],
+      "meetings": [
+        {
+          "room": {
+            "name": "O'Brien 212"
+          },
+          "meeting_schedule": {
+            "days": "TU, TH",
+            "start_time": "2:00 pm",
+            "end_time": "3:29 pm"
+          }
+        }
+      ]
+    },
+    {
+      "test_script": "test_x_listings",
+      "instructors": [
+        {
+          "role": "PI"
+        }
+      ],
+      "proxies": [],
+      "meetings": [
+        {
+          "room": {
+            "name": "O'Brien 212"
+          },
+          "meeting_schedule": {
+            "days": "MO, WE, FR",
+            "start_time": "8:00 pm",
+            "end_time": "8:59 pm"
+          }
+        }
+      ],
+      "listings": []
     }
   ]
 }

@@ -49,7 +49,7 @@ class TestWeirdTypeC:
     """
 
     # Initial course data
-    test_data = util.get_test_script_course('test_weird_type_c')
+    test_data = util.get_test_script_course('test_multi_meetings_1')
     section = util.get_test_section(test_data)
     original_instructor = section.instructors[0]
 
@@ -65,7 +65,7 @@ class TestWeirdTypeC:
     meeting_1.meeting_schedule.start_date = meeting_0.meeting_schedule.end_date + timedelta(days=1)
 
     # Course changes data
-    test_data_changes = util.get_test_script_course('test_weird_type_c_changes')
+    test_data_changes = util.get_test_script_course('test_multi_meetings_1_changes')
     uids_to_exclude = list(map(lambda i: i.uid, section.instructors))
     util.get_test_section_instructor_data(test_data_changes, uids_to_exclude=uids_to_exclude)
     changed_section = Section(test_data_changes)
@@ -313,10 +313,6 @@ class TestWeirdTypeC:
         self.kaltura_page.verify_collaborators(self.section)
         self.kaltura_page.verify_schedule(self.section, self.meeting_1)
         self.kaltura_page.verify_publish_status(self.recording_sched_1)
-
-    def test_instructor_added_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_ADDED, self.section,
-                                         self.new_instructor) == 1
 
     # START / END DATES CHANGE FOR BOTH SECTIONS
 

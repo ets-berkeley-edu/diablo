@@ -47,13 +47,15 @@ class TestCourseRoomChanges:
     - Room removed altogether, recordings unscheduled
     """
 
-    section = util.get_test_section(util.get_test_script_course('test_course_changes_auditorium'))
+    section = util.get_test_section(util.get_test_script_course('test_single_meeting_sis_changes'))
     instr = section.instructors[0]
     meeting = section.meetings[0]
     recording_schedule = RecordingSchedule(section, meeting)
 
-    new_ineligible_room = Section(util.get_test_script_course('test_course_changes_ineligible')).meetings[0].room
-    new_eligible_room = Section(util.get_test_script_course('test_course_changes_eligible')).meetings[0].room
+    new_ineligible_room = Section(util.get_test_script_course(
+        'test_single_meeting_sis_changes_room_ineligible')).meetings[0].room
+    new_eligible_room = Section(util.get_test_script_course(
+        'test_single_meeting_sis_changes_room_eligible')).meetings[0].room
 
     def test_setup(self):
         self.login_page.load_page()

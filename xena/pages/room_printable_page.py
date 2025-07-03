@@ -64,7 +64,7 @@ class RoomPrintablePage(DiabloPages):
 
     def visible_times(self, section):
         els = self.elements((By.XPATH, f'//td[@id="course-{section.ccn}-times"]/div'))
-        return [el.get_dom_attribute('innerText').strip() for el in els]
+        return [el.text.strip() for el in els]
 
     def visible_recording_type(self, section):
         return self.element((By.ID, f'course-{section.ccn}-recording-type')).text.strip()
