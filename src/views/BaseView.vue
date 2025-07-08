@@ -123,7 +123,7 @@ import Footer from '@/components/util/Footer'
 import Snackbar from '@/components/util/Snackbar'
 import Spinner from '@/components/util/Spinner'
 import {getCasLogoutUrl} from '@/api/auth'
-import {getCourseCodes, stripAnchorRef} from '@/lib/utils'
+import {getCourseCodes, putFocusNextTick, stripAnchorRef} from '@/lib/utils'
 import {useContextStore} from '@/stores/context'
 
 const contextStore = useContextStore()
@@ -208,6 +208,7 @@ const toggleTheme = () => {
   theme.global.name.value = theme.global.current.value.dark
     ? 'light'
     : 'dark'
+  putFocusNextTick('btn-main-menu')
 }
 </script>
 

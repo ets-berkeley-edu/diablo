@@ -85,7 +85,8 @@
                   aria-label="Add bCourses Site"
                   color="success"
                   :disabled="!pendingCanvasSite"
-                  @click="addCanvasSiteConfirm"
+                  @click.stop="addCanvasSiteConfirm"
+                  @keydown.enter.prevent.stop="addCanvasSiteConfirm"
                 >
                   Add
                 </v-btn>
