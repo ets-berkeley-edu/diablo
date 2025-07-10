@@ -1,23 +1,25 @@
+// Lazy-loaded view components
+const Attic = () => import('@/views/Attic.vue')
+const BaseView = () => import('@/views/BaseView.vue')
+const Blackouts = () => import('@/views/blackout/Blackouts.vue')
+const Course = () => import('@/views/Course.vue')
+const EditEmailTemplate = () => import('@/views/email/EditEmailTemplate.vue')
+const EmailTemplates = () => import('@/views/email/EmailTemplates.vue')
+const ErrorView = () => import('@/views/Error.vue')
+const Home = () => import('@/views/Home.vue')
+const Jobs = () => import('@/views/Jobs.vue')
+const Login = () => import('@/views/Login.vue')
+const NotFound = () => import('@/views/NotFound.vue')
+const Ouija = () => import('@/views/Ouija.vue')
+const Room = () => import('@/views/room/Room.vue')
+const Rooms = () => import('@/views/room/Rooms.vue')
+const User = () => import('@/views/User.vue')
+const PrintableRoom = () => import('@/views/room/PrintableRoom.vue')
+
 import {NavigationGuardNext, RouteLocationNormalized, createRouter, createWebHistory} from 'vue-router'
 import {trim} from 'lodash'
 import {useContextStore} from '@/stores/context'
 import {requiresAdmin, requiresInstructor} from '@/auth'
-import Attic from '@/views/Attic.vue'
-import BaseView from '@/views/BaseView.vue'
-import Blackouts from '@/views/blackout/Blackouts.vue'
-import Course from '@/views/Course.vue'
-import EditEmailTemplate from '@/views/email/EditEmailTemplate.vue'
-import EmailTemplates from '@/views/email/EmailTemplates.vue'
-import ErrorView from '@/views/Error.vue'
-import Home from '@/views/Home.vue'
-import Jobs from '@/views/Jobs.vue'
-import Login from '@/views/Login.vue'
-import NotFound from '@/views/NotFound.vue'
-import Ouija from '@/views/Ouija.vue'
-import Room from '@/views/room/Room.vue'
-import Rooms from '@/views/room/Rooms.vue'
-import User from '@/views/User.vue'
-import PrintableRoom from '@/views/room/PrintableRoom.vue'
 
 const router = createRouter({
   history: createWebHistory(),
