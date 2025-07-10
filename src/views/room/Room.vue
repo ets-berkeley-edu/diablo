@@ -61,15 +61,19 @@
       </v-card-text>
     </v-card>
     <v-card v-if="kalturaEventList" class="mt-8 border-sm">
-      <v-card-title>
-        <h2 id="kaltura-events-header" tabindex="-1">The Kaltura Events of {{ room.location }}</h2>
-        <div class="text-subtitle-2">
-          Kaltura events tagged with '{{ contextStore.config.createdByDiabloTag }}' and
-          a start-date between {{ contextStore.config.currentTermRecordingsBegin }} and  {{ contextStore.config.currentTermRecordingsEnd }}.
+      <v-card-title class="d-flex flex-wrap">
+        <div class="pb-3">
+          <h2 id="kaltura-events-header" tabindex="-1">The Kaltura Events of {{ room.location }}</h2>
+          <div class="text-subtitle-2 text-wrap">
+            Kaltura events tagged with '{{ contextStore.config.createdByDiabloTag }}' and
+            a start-date between {{ contextStore.config.currentTermRecordingsBegin }} and  {{ contextStore.config.currentTermRecordingsEnd }}.
+          </div>
+        </div>
+        <div class="d-flex ml-auto py-1">
+          <ExportKalturaEvents :room="room" />
         </div>
       </v-card-title>
-      <v-card-text class="pt-5">
-        <ExportKalturaEvents class="mb-4" :room="room" />
+      <v-card-text>
         <KalturaEventList
           :events="kalturaEventList"
           :is-loading="isLoadingEventList"

@@ -22,12 +22,15 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
+import io
 import json
+import zipfile
 
 from diablo.models.room import Room
+from flask import current_app as app
 import pytest
 from tests.test_api.api_test_utils import mock_scheduled
-from tests.util import override_config
+from tests.util import override_config, test_scheduling_workflow
 
 
 @pytest.fixture()
@@ -40,17 +43,55 @@ def instructor_session(fake_auth):
     fake_auth.login('10001')
 
 
-class TestDownloadEvents:
+class TestDownloadRoomEvents:
 
     @staticmethod
-    def _api_download_events(client, room_id=None, expected_status_code=200):
+    def _api_download_room_events(client, room_id=None, expected_status_code=200):
         if not room_id:
-            rooms = Room.all_rooms()
+            rooms = Room.get_eligible_rooms()
             room_id = rooms[0].id
         response = client.post(
             '/api/room/download_events',
             data=json.dumps({
                 'roomId': room_id,
+                'startDate': '2025-05-01',
+                'endDate': '2025-05-15',
+            }),
+            content_type='application/json',
+        )
+        assert response.status_code == expected_status_code
+        return response
+
+    def test_anonymous(self, client):
+        """Denies anonymous access."""
+        self._api_download_room_events(client, expected_status_code=401)
+
+    def test_unauthorized(self, client, instructor_session):
+        """Denies access if user is not an admin."""
+        self._api_download_room_events(client, expected_status_code=401)
+
+    def test_authorized_no_events(self, client, admin_session):
+        """Admin user gets a message instead of a file when there is no data."""
+        with test_scheduling_workflow(app):
+            response = self._api_download_room_events(client, expected_status_code=400)
+            assert response.json['message'] == 'No Kaltura events found for Barker 101 between the specified dates.'
+
+    def test_authorized(self, client, admin_session):
+        """Admin user can download events for a single room."""
+        room = Room.find_room("O'Brien 212")
+        with test_scheduling_workflow(app):
+            mock_scheduled(section_id=50000, term_id=2218, override_room_id=room.id)
+            ics_file = self._api_download_room_events(client, room_id=room.id).data
+            assert len(ics_file)
+
+
+class TestDownloadEvents:
+
+    @staticmethod
+    def _api_download_events(client, expected_status_code=200):
+        response = client.post(
+            '/api/rooms/download_events',
+            data=json.dumps({
                 'startDate': '2025-05-01',
                 'endDate': '2025-05-15',
             }),
@@ -69,15 +110,26 @@ class TestDownloadEvents:
 
     def test_authorized_no_events(self, client, admin_session):
         """Admin user gets a message instead of a file when there is no data."""
-        response = self._api_download_events(client)
-        assert response.json['message']
+        with test_scheduling_workflow(app):
+            response = self._api_download_events(client, expected_status_code=400)
+            assert response.json['message'] == 'No Kaltura events found for any eligible room between the specified dates.'
 
     def test_authorized(self, client, admin_session):
-        """Admin user can download events."""
-        room = Room.find_room("O'Brien 212")
-        mock_scheduled(section_id=50000, term_id=2218, override_room_id=room.id)
-        ics_file = self._api_download_events(client, room_id=room.id)
-        assert len(ics_file.data)
+        """Admin user can download events for all rooms."""
+        section_ids = [50000, 50001, 50002, 50003, 50004, 50005, 50006, 50007]
+        with test_scheduling_workflow(app):
+            for section_id in section_ids:
+                mock_scheduled(section_id=section_id, term_id=2218)
+            bytes_representation = self._api_download_events(client).data
+            assert len(bytes_representation)
+            zip_file = zipfile.ZipFile(io.BytesIO(bytes_representation))
+            assert not zip_file.testzip()
+            assert zip_file.namelist() == [
+                'Barker_101_20250501-20250515.ics',
+                'Li_Ka_Shing_145_20250501-20250515.ics',
+                "O'Brien_212_20250501-20250515.ics",
+                '_manifest.txt',
+            ]
 
 
 class TestGetAllRooms:

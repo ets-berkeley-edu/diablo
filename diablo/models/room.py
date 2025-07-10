@@ -87,7 +87,7 @@ class Room(db.Model):
 
     @classmethod
     def get_eligible_rooms(cls):
-        return cls.query.filter(cls.capability != None).all()  # noqa: E711
+        return cls.query.filter(cls.capability != None).order_by(cls.location).all()  # noqa: E711
 
     @classmethod
     def get_room(cls, room_id):

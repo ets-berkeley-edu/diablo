@@ -28,18 +28,39 @@ from diablo.api.errors import BadRequestError, ResourceNotFoundError
 from diablo.api.util import admin_required
 from diablo.externals.kaltura import CREATED_BY_DIABLO_TAG, Kaltura
 from diablo.lib.http_util import tolerant_jsonify
-from diablo.lib.i_cal import generate_ics_file
+from diablo.lib.i_cal import generate_ics_file, get_ics_file_name, get_zip_file_name, get_zip_stream
 from diablo.lib.util import localize_datetime
 from diablo.models.room import Room
 from diablo.models.sis_section import SisSection
-from flask import current_app as app, request, send_file
+from flask import current_app as app, request, Response, send_file, stream_with_context
 from flask_login import login_required
 from werkzeug.utils import secure_filename
 
 
-@app.route('/api/room/download_events', methods=['POST'])
+@app.route('/api/rooms/download_events', methods=['POST'])
 @admin_required
 def download_events():
+    params = request.get_json()
+    end_date = datetime.fromisoformat(params.get('endDate')).replace(hour=23, minute=59, second=59)
+    start_date = datetime.fromisoformat(params.get('startDate'))
+    if end_date < start_date:
+        raise BadRequestError('End Date must be on or after Start Date.')
+    zip_stream = get_zip_stream(end_date, start_date)
+    if not zip_stream:
+        raise BadRequestError('No Kaltura events found for any eligible room between the specified dates.')
+
+    def generator():
+        for chunk in zip_stream:
+            yield chunk
+
+    response = Response(stream_with_context(generator()), mimetype='application/zip')
+    response.headers['Content-Disposition'] = f'attachment; filename={get_zip_file_name(start_date, end_date)}'
+    return response
+
+
+@app.route('/api/room/download_events', methods=['POST'])
+@admin_required
+def download_room_events():
     params = request.get_json()
     room_id = params.get('roomId')
     room = Room.get_room(room_id)
@@ -47,18 +68,17 @@ def download_events():
         raise ResourceNotFoundError('No such room')
     end_date = datetime.fromisoformat(params.get('endDate')).replace(hour=23, minute=59, second=59)
     start_date = datetime.fromisoformat(params.get('startDate'))
-    filename = f"{room.location}_{start_date.strftime('%Y%m%d')}-{end_date.strftime('%Y%m%d')}.ics"
-    safe_filename = secure_filename(filename)
     ics_file = generate_ics_file(room, end_date, start_date)
     if ics_file:
+        filename = get_ics_file_name(room.location, start_date, end_date)
         return send_file(
             ics_file,
             mimetype='text',
             as_attachment=False,
-            download_name=safe_filename,
+            download_name=secure_filename(filename),
         )
     else:
-        return tolerant_jsonify({'message': f'No Kaltura events found for {room.location} between the specified dates.'})
+        raise BadRequestError(f'No Kaltura events found for {room.location} between the specified dates.')
 
 
 @app.route('/api/rooms/all')
