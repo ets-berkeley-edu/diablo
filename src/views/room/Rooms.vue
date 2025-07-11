@@ -1,11 +1,15 @@
 <template>
   <v-card v-if="!contextStore.loading" class="border-sm">
-    <v-card-title class="align-start">
-      <v-row>
-        <v-col class="pt-2" cols="12" md="6">
-          <PageTitle :icon="mdiDomain" :text="`${size(rooms)} Rooms`" />
-        </v-col>
-        <v-col class="pr-4" cols="12" md="6">
+    <v-card-title>
+      <div class="d-flex align-center flex-wrap">
+        <PageTitle :icon="mdiDomain" :text="`${size(rooms)} Rooms`" />
+        <div class="d-flex ml-auto pl-4 pt-2">
+          <ExportKalturaEvents />
+        </div>
+      </div>
+      <v-row class="mt-0">
+        <v-spacer />
+        <v-col cols="12" md="6">
           <v-tooltip v-model="adviseAgainstRoom237" class="tooltip" location="bottom">
             <template #activator="{props: tooltipProps}">
               <v-text-field
@@ -108,8 +112,9 @@ import {computed, onMounted, ref} from 'vue'
 import {find, get, size, startsWith} from 'lodash'
 import {mdiDomain, mdiMagnify} from '@mdi/js'
 import {alertScreenReader} from '@/lib/utils'
-import PageTitle from '@/components/util/PageTitle'
+import ExportKalturaEvents from '@/components/kaltura/ExportKalturaEvents'
 import {getAllRooms} from '@/api/room'
+import PageTitle from '@/components/util/PageTitle'
 import {useContextStore} from '@/stores/context'
 
 const contextStore = useContextStore()

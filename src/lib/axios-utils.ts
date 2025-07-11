@@ -5,7 +5,10 @@ import type {DiabloUser} from '@/lib/types.ts'
 import router from '@/router'
 import {useContextStore} from '@/stores/context'
 
-const SKIP_REDIRECT_ON_ERROR = ['/api/user/create_or_update', '/api/peer_advising/create_peer_advisor']
+const SKIP_REDIRECT_ON_ERROR = [
+  'api/room/download_events',
+  'api/rooms/download_events'
+]
 
 const axiosErrorHandler = (error: object, axios: AxiosStatic): void => {
   const errorStatus = get(error, 'response.status')
@@ -25,7 +28,7 @@ const axiosErrorHandler = (error: object, axios: AxiosStatic): void => {
     router.push({path: '/404'})
   } else {
     if (!axios.isCancel(error)) {
-      const url = get(error, 'response.config.url')
+      const url = get(error, 'config.url')
       if (!find(SKIP_REDIRECT_ON_ERROR, path => includes(url, path))) {
         router.push({
           path: '/error',
