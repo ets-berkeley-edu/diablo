@@ -23,11 +23,10 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-from datetime import datetime, time as d_time, timezone
+from datetime import datetime
 import glob
 import time
 
-from diablo.lib.util import default_timezone
 from flask import current_app as app
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
@@ -55,11 +54,6 @@ class RoomPage(DiabloPages):
     # KALTURA EVENTS TABLE
 
     SCROLL_TO_EVENTS_LINK = (By.ID, 'skip-to-kaltura-event-list')
-    EVENTS_EXPORT_BUTTON = (By.ID, 'kaltura-events-export-menu-btn')
-    EVENTS_START_DATE_INPUT = (By.ID, 'kaltura-events-export-start-input')
-    EVENTS_END_DATE_INPUT = (By.ID, 'kaltura-events-export-end-input')
-    EVENTS_EXPORT_DOWNLOAD_BUTTON = (By.ID, 'kaltura-events-export-submit-btn')
-    EVENTS_EXPORT_ERROR_MESSAGE = (By.ID, 'kaltura-events-export-error')
 
     @staticmethod
     def series_row_xpath(recording_sched):
@@ -97,25 +91,6 @@ class RoomPage(DiabloPages):
         self.hide_diablo_footer()
         self.wait_for_element_and_click((By.XPATH, f'{RoomPage.series_row_xpath(recording_sched)}//button'))
 
-    def export_schedule_events_to_ical(self, events_start_date, events_end_date):
-        # Make sure a clean download directory exists
-        util.create_download_directory()
-
-        # Click Export to iCal button
-        self.open_menu(RoomPage.EVENTS_EXPORT_BUTTON, RoomPage.EVENTS_START_DATE_INPUT, 'Export to iCal')
-
-        start_date_str = events_start_date.strftime('%m/%d/%Y')
-        end_date_str = events_end_date.strftime('%m/%d/%Y')
-        app.logger.info(f'Entering date range {start_date_str} - {end_date_str}')
-        self.wait_for_textbox_and_send_keys(RoomPage.EVENTS_START_DATE_INPUT, start_date_str, addl_pause=1)
-        self.wait_for_textbox_and_send_keys(RoomPage.EVENTS_END_DATE_INPUT, end_date_str, addl_pause=1)
-        self.wait_for_element_and_click(RoomPage.EVENTS_EXPORT_DOWNLOAD_BUTTON)
-
-    def verify_ical_export_error(self, location):
-        error_message = f'No Kaltura events found for {location} between the specified dates.'
-        app.logger.info(f'Waiting for error message "{error_message}"')
-        self.wait_for_text_in_element(RoomPage.EVENTS_EXPORT_ERROR_MESSAGE, error_message, util.get_short_timeout())
-
     def verify_ical_export_download(self):
         time.sleep(2)
         app.logger.info(f'Looking for Kaltura events .ics file in {util.default_download_dir()}')
@@ -131,53 +106,6 @@ class RoomPage(DiabloPages):
                     raise
                 else:
                     time.sleep(1)
-
-    def verify_ical_export_events(self, recording_sched, start_date, end_date):
-        app.logger.info('Parsing Kaltura events .ics file')
-        file = glob.glob(f'{util.default_download_dir()}/*.ics')[0]
-        events = []
-        with open(file) as ics_file:
-            for index, line in enumerate(ics_file):
-                if index < 7:
-                    # first 7 lines are the file header
-                    continue
-                elif line.startswith('BEGIN:VEVENT'):
-                    event = {}
-                elif line.startswith('END:VEVENT'):
-                    events.append(event)
-                else:
-                    parsed_line = line.split(':')
-                    if len(parsed_line) > 1:
-                        event[parsed_line[0]] = parsed_line[1]
-                    else:
-                        event['DESCRIPTION'] += line
-
-        start_time = recording_sched.meeting.meeting_schedule.get_berkeley_start_time()
-        end_time = recording_sched.meeting.meeting_schedule.get_berkeley_end_time()
-        expected_description = f'{recording_sched.section.code}, {recording_sched.section.number}'
-        expected_location = f'{recording_sched.meeting.room.name}\n'
-        expected_summary = f'qqq {recording_sched.section.ccn}\n'
-        section_events = [event for event in events if event['SUMMARY'] == expected_summary]
-        app.logger.info(f'File contains {len(section_events)} events for section {recording_sched.section.ccn}')
-        section_events = iter(section_events)
-        for recording_date in recording_sched.meeting.meeting_schedule.expected_recording_dates(recording_sched.section.term):
-            if recording_date < start_date:
-                continue
-            elif recording_date > end_date:
-                break
-            meeting_start_time = datetime.combine(recording_date, d_time(start_time.hour, start_time.minute)).astimezone(default_timezone())
-            meeting_end_time = datetime.combine(recording_date, d_time(end_time.hour, end_time.minute)).astimezone(default_timezone())
-            expected_start_date = f"{meeting_start_time.astimezone(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}\n"
-            expected_end_date = f"{meeting_end_time.astimezone(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}\n"
-            event = next(section_events, None)
-            assert event
-            assert event['CLASS'] == 'PUBLIC\n'
-            assert event['DESCRIPTION'].startswith(expected_description)
-            assert event['DTSTART'] == expected_start_date
-            assert event['DTEND'] == expected_end_date
-            assert event['LOCATION'] == expected_location
-            assert event['STATUS'] == 'CONFIRMED\n'
-            assert event['TRANSP'] == 'OPAQUE\n'
 
     # KALTURA SERIES TABLE
 

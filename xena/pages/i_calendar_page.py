@@ -22,7 +22,6 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-import glob
 import time
 
 from flask import current_app as app
@@ -41,11 +40,10 @@ class ICalendarPage(Page):
         app.logger.info('Loading iCalendar validator page')
         self.driver.get('http://icalendar.org/validator.html')
 
-    def validate_file(self):
+    def validate_file(self, file_path):
         app.logger.info('Validating iCalendar file by entering the text')
-        file = glob.glob(f'{util.default_download_dir()}/*.ics')[0]
         self.scroll_to_element(ICalendarPage.VALIDATOR_TEXTAREA)
-        with open(file) as ics_file:
+        with open(file_path) as ics_file:
             self.wait_for_element_and_type(ICalendarPage.VALIDATOR_TEXTAREA, ics_file.read())
             time.sleep(1)
         self.element(ICalendarPage.VALIDATOR_FORM).submit()
@@ -55,3 +53,4 @@ class ICalendarPage(Page):
             ICalendarPage.VALIDATOR_SUCCESS_MESSAGE,
             'Success',
         )
+        time.sleep(util.get_click_sleep())

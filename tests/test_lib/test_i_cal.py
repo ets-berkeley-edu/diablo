@@ -90,7 +90,7 @@ class TestGetIcsFiles:
             assert not get_zip_stream(datetime(2025, 6, 1), datetime(2025, 5, 30))
 
     def test_scheduled_events(self):
-        filename_location_pattern = re.compile(r"([A-Za-z0-9_']+)_\d{8}-\d{8}.ics")
+        filename_location_pattern = re.compile(r"([A-Za-z0-9&_']+)_\d{8}-\d{8}.ics")
         section_ids = [50000, 50001, 50002, 50003, 50004, 50005, 50006, 50007]
         with test_scheduling_workflow(app):
             for section_id in section_ids:

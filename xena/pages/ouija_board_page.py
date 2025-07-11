@@ -117,7 +117,7 @@ class OuijaBoardPage(CoursesPage):
         time.sleep(1)
 
     def filter_for_option(self, opt_locator):
-        if not self.is_present(opt_locator) or not self.element(opt_locator).is_displayed():
+        if not self.is_visible(opt_locator):
             self.wait_for_page_and_click_js(OuijaBoardPage.SEARCH_SELECT_BUTTON)
         self.wait_for_page_and_click_js(opt_locator)
         time.sleep(2)

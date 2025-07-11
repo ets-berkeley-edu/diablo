@@ -22,6 +22,8 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
+import glob
+import time
 
 from flask import current_app as app
 from selenium.webdriver.common.by import By
@@ -63,3 +65,20 @@ class RoomsPage(DiabloPages):
 
     def click_room_link(self, room):
         self.wait_for_element_and_click(RoomsPage.room_row_locator(room))
+
+    def verify_ical_export_download(self):
+        app.logger.info('Waiting for Kaltura events .zip file download')
+        time.sleep(30)
+        app.logger.info(f'Looking for Kaltura events .zip file in {util.default_download_dir()}')
+        tries = 0
+        max_tries = util.get_medium_timeout()
+        while tries <= max_tries:
+            tries += 1
+            try:
+                assert len(glob.glob(f'{util.default_download_dir()}/*.zip')) == 1
+                break
+            except AssertionError:
+                if tries == max_tries:
+                    raise
+                else:
+                    time.sleep(1)
