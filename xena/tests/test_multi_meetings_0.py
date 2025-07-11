@@ -22,8 +22,9 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-
 from datetime import timedelta
+import glob
+from zipfile import ZipFile
 
 import dateutil.parser
 from flask import current_app as app
@@ -165,24 +166,24 @@ class TestWeirdTypeB:
     def test_room_series_recordings(self):
         self.room_page.verify_series_recordings(self.recording_schedule)
 
-    # ROOM SCHEDULE EVENTS EXPORT
+    # EXPORT ROOM SCHEDULED EVENTS TO ICAL
 
-    def test_export_schedule_no_events(self):
+    def test_ical_export_room_no_events(self):
         self.room_page.scroll_to_kaltura_events()
         earliest_recording_date = dateutil.parser.parse(app.config['CURRENT_TERM_RECORDINGS_BEGIN']).date()
-        events_start_date = earliest_recording_date - timedelta(days=2)
-        events_end_date = earliest_recording_date - timedelta(days=1)
-        self.room_page.export_schedule_events_to_ical(events_start_date, events_end_date)
+        self.room_page.export_schedule_events_to_ical(events_start_date=earliest_recording_date, events_end_date=earliest_recording_date)
         self.room_page.verify_ical_export_error(self.original_room.name)
 
-    def test_export_schedule_events(self):
-        events_start_date = self.recording_schedule.meeting.meeting_schedule.start_date_for_ical_export(self.recording_schedule.section.term)
-        events_end_date = events_start_date + timedelta(days=6)
+    def test_ical_export_room_events(self):
+        events_start_date, events_end_date = self.recording_schedule.meeting.meeting_schedule.date_range_for_ical_export(
+            self.recording_schedule.section.term,
+        )
         self.room_page.export_schedule_events_to_ical(events_start_date, events_end_date)
         self.room_page.verify_ical_export_download()
-        self.room_page.verify_ical_export_events(self.recording_schedule, events_start_date, events_end_date)
+        file_path = glob.glob(f'{util.default_download_dir()}/*.ics')[0]
+        self.room_page.verify_ical_export_events(file_path, events_start_date, events_end_date, self.recording_schedule)
         self.i_calendar_page.load_validator_page()
-        self.i_calendar_page.validate_file()
+        self.i_calendar_page.validate_file(file_path)
 
     # VERIFY SERIES IN KALTURA
 
@@ -345,24 +346,6 @@ class TestWeirdTypeB:
         assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_NEW_COURSE_SCHED, section=None,
                                          instructor=self.new_instructor) == 2
 
-    # NEW ROOM SCHEDULE EVENTS EXPORT
-
-    def test_new_room_export_schedule_events(self):
-        assert util.get_kaltura_id(self.recording_schedule)
-        self.course_page.click_rooms_link()
-        self.rooms_page.find_room(self.new_room)
-        self.rooms_page.click_room_link(self.new_room)
-        self.room_page.scroll_to_kaltura_events()
-        self.room_page.wait_for_series_row(self.recording_schedule)
-
-        events_start_date = self.recording_schedule.meeting.meeting_schedule.start_date_for_ical_export(self.recording_schedule.section.term)
-        events_end_date = events_start_date + timedelta(days=6)
-        self.room_page.export_schedule_events_to_ical(events_start_date, events_end_date)
-        self.room_page.verify_ical_export_download()
-        self.room_page.verify_ical_export_events(self.recording_schedule, events_start_date, events_end_date)
-        self.i_calendar_page.load_validator_page()
-        self.i_calendar_page.validate_file()
-
     # COURSE HISTORY
 
     def test_course_history_instructor_removed(self):
@@ -397,3 +380,48 @@ class TestWeirdTypeB:
                                             requestor=None,
                                             status='succeeded',
                                             published=True)
+
+    # EXPORT NEW ROOM SCHEDULED EVENTS TO ICAL
+
+    def test_new_room_ical_export_events(self):
+        assert util.get_kaltura_id(self.recording_schedule)
+        self.course_page.click_rooms_link()
+        self.rooms_page.find_room(self.new_room)
+        self.rooms_page.click_room_link(self.new_room)
+        self.room_page.scroll_to_kaltura_events()
+
+        events_start_date, events_end_date = self.recording_schedule.meeting.meeting_schedule.date_range_for_ical_export(
+            self.recording_schedule.section.term,
+        )
+        self.room_page.export_schedule_events_to_ical(events_start_date, events_end_date)
+        self.room_page.verify_ical_export_download()
+        file_path = glob.glob(f'{util.default_download_dir()}/*.ics')[0]
+        self.room_page.verify_ical_export_events(file_path, events_start_date, events_end_date, self.recording_schedule)
+        self.i_calendar_page.load_validator_page()
+        self.i_calendar_page.validate_file(file_path)
+
+    # EXPORT ALL ROOMS SCHEDULED EVENTS TO ICAL
+
+    def test_ical_export_no_events(self):
+        self.rooms_page.load_page()
+        earliest_recording_date = dateutil.parser.parse(app.config['CURRENT_TERM_RECORDINGS_BEGIN']).date()
+        self.rooms_page.export_schedule_events_to_ical(events_start_date=earliest_recording_date, events_end_date=earliest_recording_date)
+        self.rooms_page.verify_ical_export_error()
+
+    def test_ical_export_events(self):
+        events_start_date, events_end_date = self.recording_schedule.meeting.meeting_schedule.date_range_for_ical_export(
+            self.recording_schedule.section.term,
+        )
+        self.rooms_page.export_schedule_events_to_ical(events_start_date, events_end_date)
+        self.rooms_page.verify_ical_export_download()
+        zip_file_path = glob.glob(f'{util.default_download_dir()}/*.zip')[0]
+        with ZipFile(zip_file_path) as zip_file:
+            self.rooms_page.verify_ical_export_manifest(zip_file)
+            for name in zip_file.namelist():
+                if name.endswith('.ics'):
+                    file_path = zip_file.extract(name, util.default_download_dir())
+                    events = self.rooms_page.verify_ical_export_events(file_path, events_start_date, events_end_date)
+                    if name.replace('_', ' ').startswith(self.new_room.name):
+                        self.rooms_page.compare_ical_export_to_recording_schedule(events, events_start_date, events_end_date, self.recording_schedule)
+                    self.i_calendar_page.load_validator_page()
+                    self.i_calendar_page.validate_file(file_path)

@@ -132,16 +132,16 @@ class MeetingSchedule(object):
     def expected_recording_dates(self, term):
         weekday_indices = self.__weekday_indices()
         holidays = self.__holidays()
-
-        start = self.record_start.date()
-        end = term.last_record_date.date() if self.end_date > term.last_record_date else self.end_date.date()
-        delta = end - start
-
         recording_dates = []
-        for i in range(delta.days + 1):
-            day = start + timedelta(i)
-            if day.weekday() in weekday_indices and day not in holidays:
-                recording_dates.append(day)
+        if (self.start_date and self.end_date):
+            start = self.record_start.date()
+            end = term.last_record_date.date() if self.end_date > term.last_record_date else self.end_date.date()
+            delta = end - start
+
+            for i in range(delta.days + 1):
+                day = start + timedelta(i)
+                if day.weekday() in weekday_indices and day not in holidays:
+                    recording_dates.append(day)
         return recording_dates
 
     def expected_blackout_dates(self, term):
@@ -180,12 +180,22 @@ class MeetingSchedule(object):
         days = self.kaltura_series_days(term)
         return days[-1]
 
-    def start_date_for_ical_export(self, term):
-        blackout_dates = self.expected_blackout_dates(term)
+    def date_range_for_ical_export(self, term):
+        # Return 2 dates that are ~1 week apart where both dates are within the recording series
+        # and, ideally, there is a blackout date between them.
+        three_days = timedelta(days=3)
+        six_days = timedelta(days=6)
+        blackout_dates = self.__holidays()
         kaltura_series_start_date = self.kaltura_series_start(term)
         kaltura_series_end_date = self.kaltura_series_end(term)
         blackout_date_within_series = next((d for d in blackout_dates if d >= kaltura_series_start_date and d <= kaltura_series_end_date), None)
         if blackout_date_within_series:
-            return blackout_date_within_series - timedelta(days=1)
-        else:
-            return kaltura_series_start_date
+            days_from_start = blackout_date_within_series - kaltura_series_start_date
+            days_from_end = kaltura_series_end_date - blackout_date_within_series
+            if days_from_start <= three_days:
+                return blackout_date_within_series, blackout_date_within_series + six_days
+            elif days_from_end <= three_days:
+                return blackout_date_within_series - six_days, blackout_date_within_series
+            else:
+                return blackout_date_within_series - three_days, blackout_date_within_series + three_days
+        return kaltura_series_start_date, kaltura_series_start_date + six_days

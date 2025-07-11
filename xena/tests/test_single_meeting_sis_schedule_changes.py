@@ -22,7 +22,12 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
+from datetime import timedelta
+import glob
+from zipfile import ZipFile
 
+import dateutil.parser
+from flask import current_app as app
 import pytest
 from xena.models.email_template_type import EmailTemplateType
 from xena.models.recording_placement import RecordingPlacement
@@ -53,6 +58,7 @@ class TestCourseScheduleChanges:
     new_meeting.room = room
     newer_meeting = Section(util.get_test_script_course('test_single_meeting_sis_changes_schedule')).meetings[0]
     newer_meeting.room = room
+    newer_meeting_original_record_start = newer_meeting.meeting_schedule.record_start
 
     def test_setup(self):
         self.login_page.load_page()
@@ -97,6 +103,8 @@ class TestCourseScheduleChanges:
     def test_schedule_change_email(self):
         assert util.get_sent_email_count(EmailTemplateType.INSTR_SCHEDULE_CHANGE, self.section, self.instr) == 1
 
+    # VERIFY SERIES IN DIABLO
+
     def test_room_new_series(self):
         self.rooms_page.load_page()
         self.rooms_page.find_room(self.room)
@@ -114,6 +122,8 @@ class TestCourseScheduleChanges:
 
     def test_verify_printable(self):
         self.room_printable_page.verify_printable(self.recording_schedule)
+
+    # VERIFY SERIES IN KALTURA
 
     def test_series_title_and_desc(self):
         self.room_printable_page.close_printable_schedule()
@@ -137,6 +147,8 @@ class TestCourseScheduleChanges:
         self.kaltura_page.close_window_and_switch()
         assert util.get_sent_email_count(EmailTemplateType.INSTR_SCHEDULE_CHANGE, self.section, self.instr) == 1
 
+    # VERIFY COURSE HISTORY
+
     def test_history_new_eligible_times(self):
         self.course_page.load_page(self.section)
         self.course_page.verify_history_row(field='meeting_updated',
@@ -145,6 +157,28 @@ class TestCourseScheduleChanges:
                                             requestor=None,
                                             status='succeeded',
                                             published=True)
+
+    # EXPORT ROOM SCHEDULED EVENTS TO ICAL
+
+    def test_ical_export_room_no_events(self):
+        self.course_page.click_rooms_link()
+        self.rooms_page.find_room(self.room)
+        self.rooms_page.click_room_link(self.room)
+        self.room_page.scroll_to_kaltura_events()
+        earliest_recording_date = dateutil.parser.parse(app.config['CURRENT_TERM_RECORDINGS_BEGIN']).date()
+        self.room_page.export_schedule_events_to_ical(events_start_date=earliest_recording_date, events_end_date=earliest_recording_date)
+        self.room_page.verify_ical_export_error(self.room.name)
+
+    def test_ical_export_room_events(self):
+        events_start_date, events_end_date = self.recording_schedule.meeting.meeting_schedule.date_range_for_ical_export(
+            self.recording_schedule.section.term,
+        )
+        self.room_page.export_schedule_events_to_ical(events_start_date, events_end_date)
+        self.room_page.verify_ical_export_download()
+        file_path = glob.glob(f'{util.default_download_dir()}/*.ics')[0]
+        self.room_page.verify_ical_export_events(file_path, events_start_date, events_end_date, self.recording_schedule)
+        self.i_calendar_page.load_validator_page()
+        self.i_calendar_page.validate_file(file_path)
 
     # SCHEDULED COURSE MEETING START/END AND MEETING DAYS/TIMES CHANGE TO NULL
 
@@ -181,6 +215,31 @@ class TestCourseScheduleChanges:
                                             requestor=None,
                                             status='succeeded',
                                             published=True)
+
+    # EXPORT ALL ROOMS SCHEDULED EVENTS TO ICAL
+
+    def test_ical_export_no_events(self):
+        self.rooms_page.load_page()
+        earliest_recording_date = dateutil.parser.parse(app.config['CURRENT_TERM_RECORDINGS_BEGIN']).date()
+        self.rooms_page.export_schedule_events_to_ical(events_start_date=earliest_recording_date, events_end_date=earliest_recording_date)
+        self.rooms_page.verify_ical_export_error()
+
+    def test_ical_export_events(self):
+        events_start_date = self.newer_meeting_original_record_start
+        events_end_date = events_start_date + timedelta(days=6)
+        self.rooms_page.export_schedule_events_to_ical(events_start_date, events_end_date)
+        self.rooms_page.verify_ical_export_download()
+        zip_file_path = glob.glob(f'{util.default_download_dir()}/*.zip')[0]
+        with ZipFile(zip_file_path) as zip_file:
+            self.rooms_page.verify_ical_export_manifest(zip_file)
+            for name in zip_file.namelist():
+                if name.endswith('.ics'):
+                    file_path = zip_file.extract(name, util.default_download_dir())
+                    events = self.rooms_page.verify_ical_export_events(file_path, events_start_date, events_end_date)
+                    if name.replace('_', ' ').startswith(self.room.name):
+                        self.rooms_page.compare_ical_export_to_recording_schedule(events, events_start_date, events_end_date, self.recording_schedule)
+                    self.i_calendar_page.load_validator_page()
+                    self.i_calendar_page.validate_file(file_path)
 
     def test_reset_data(self):
         util.update_course_start_end_dates(self.section, self.meeting, self.new_meeting.meeting_schedule)

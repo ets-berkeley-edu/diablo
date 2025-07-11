@@ -104,6 +104,14 @@ class Page(object):
                 else:
                     time.sleep(1)
 
+    def is_visible(self, locator):
+        if not self.is_present(locator):
+            return False
+        if not self.element(locator).is_displayed():
+            return False
+        else:
+            return True
+
     def wait_for_element(self, locator, timeout):
         if util.get_xena_browser() == 'chrome':
             for entry in self.driver.get_log('browser'):
@@ -114,10 +122,10 @@ class Page(object):
             message=f'Failed wait for presence_of_element_located: {str(locator)}',
         )
 
-    def wait_for_text_in_element(self, locator, string, delay=0):
+    def wait_for_text_in_element(self, locator, string, timeout=None):
         tries = 0
-        retries = util.get_short_timeout()
-        time.sleep(delay)
+        retries = timeout or util.get_short_timeout()
+        time.sleep(1)
         while tries <= retries:
             tries += 1
             try:
@@ -133,7 +141,7 @@ class Page(object):
         Wait(self.driver, util.get_medium_timeout()).until(ec.title_contains(string))
 
     def hide_diablo_footer(self):
-        if self.is_present(Page.DIABLO_FOOTER) and self.element(Page.DIABLO_FOOTER).is_displayed():
+        if self.is_visible(Page.DIABLO_FOOTER) and self.element(Page.DIABLO_FOOTER).is_displayed():
             self.driver.execute_script('document.getElementById("footer").style.display="none";')
 
     def click_element(self, locator, addl_pause=None):
