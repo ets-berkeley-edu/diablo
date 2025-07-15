@@ -96,6 +96,10 @@ def _set_chrome_preferences(options):
         'directory_upgrade': True,
     }
     options.add_experimental_option('prefs', prefs)
+    options.add_argument('--disable-background-timer-throttling')
+    options.add_argument('--disable-backgrounding-occluded-windows')
+    options.add_argument('--disable-features=TabDiscarding')
+    options.add_argument('--disable-renderer-backgrounding')
 
 
 def _add_chrome_extension(options):
