@@ -50,6 +50,7 @@ KALTURA_TOOL_URL = 'https://kaltura.tool.url'
 KALTURA_BLACKOUT_DATES = []
 
 LOGGING_LEVEL = logging.INFO
+LOGGING_LOCATION = 'xena.log'
 
 RIPLEY_BASE_URL = 'https://ripley-dev.ets.berkeley.edu'
 
