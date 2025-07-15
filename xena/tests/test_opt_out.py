@@ -103,7 +103,6 @@ class TestOptOut0:
 
     def test_opt_out_all_terms(self):
         self.ouija_page.log_out()
-        self.login_page.load_page()
         self.login_page.dev_auth(instructor_0.uid)
         self.instructor_page.enable_opt_out_all_terms()
 
@@ -189,7 +188,6 @@ class TestOptOut1:
 
     def test_opt_in_all_terms(self):
         self.jobs_page.log_out()
-        self.login_page.load_page()
         self.login_page.dev_auth(instructor_0.uid)
         self.instructor_page.disable_opt_out_all_terms()
 
@@ -236,7 +234,6 @@ class TestOptOut2:
 
     def test_opt_out_one_section(self):
         self.jobs_page.log_out()
-        self.login_page.load_page()
         self.login_page.dev_auth(instructor_1.uid)
         self.instructor_page.enable_opt_out_section(section_0)
 
@@ -297,7 +294,6 @@ class TestOptOut3:
 
     def test_opt_out_current_term(self):
         self.jobs_page.log_out()
-        self.login_page.load_page()
         self.login_page.dev_auth(instructor_0.uid)
         self.instructor_page.enable_opt_out_current_term()
 
@@ -345,7 +341,6 @@ class TestOptOut4:
     def test_opt_out_all_terms(self):
         self.jobs_page.load_page()
         self.jobs_page.log_out()
-        self.login_page.load_page()
         self.login_page.dev_auth(instructor_0.uid)
         self.instructor_page.enable_opt_out_all_terms()
 
@@ -367,7 +362,6 @@ class TestOptOut4:
 
     def test_opt_in_one_section(self):
         self.jobs_page.log_out()
-        self.login_page.load_page()
         self.login_page.dev_auth(instructor_0.uid)
         self.instructor_page.disable_opt_out_all_terms()
         self.instructor_page.enable_opt_out_section(section_0)
@@ -422,7 +416,6 @@ class TestOptOut5:
 
     def test_opt_out_all_terms(self):
         self.jobs_page.log_out()
-        self.login_page.load_page()
         self.login_page.dev_auth(instructor_0.uid)
         self.instructor_page.enable_opt_out_all_terms()
 
@@ -480,7 +473,6 @@ class TestOptOut6:
     def test_opt_out_all_terms(self):
         self.jobs_page.load_page()
         self.jobs_page.log_out()
-        self.login_page.load_page()
         self.login_page.dev_auth(instructor_0.uid)
         self.instructor_page.enable_opt_out_all_terms()
 
@@ -502,7 +494,6 @@ class TestOptOut6:
     def test_opt_in_all_terms(self):
         self.jobs_page.load_page()
         self.jobs_page.log_out()
-        self.login_page.load_page()
         self.login_page.dev_auth(instructor_0.uid)
         self.instructor_page.disable_opt_out_all_terms()
 
@@ -535,15 +526,13 @@ class TestOptOut7:
     def test_opt_out_all_terms(self):
         self.jobs_page.load_page()
         self.jobs_page.log_out()
-        self.login_page.load_page()
         self.login_page.dev_auth(instructor_0.uid)
         self.instructor_page.enable_opt_out_all_terms()
 
     def test_run_update(self):
         self.jobs_page.log_out()
-        self.login_page.load_page()
         self.login_page.dev_auth()
-        self.jobs_page.load_page()
+        self.ouija_page.click_jobs_link()
         self.jobs_page.run_kaltura_job()
 
     def test_section_not_scheduled(self):
@@ -583,7 +572,7 @@ class TestOptOut8:
     def test_schedule_update(self):
         self.instructor_page.log_out()
         self.login_page.dev_auth()
-        self.jobs_page.load_page()
+        self.ouija_page.click_jobs_link()
         self.jobs_page.run_schedule_update_job_sequence()
 
     def test_section_not_scheduled(self):

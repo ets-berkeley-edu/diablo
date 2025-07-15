@@ -51,6 +51,15 @@ class ScheduleUpdatesJob(BaseJob):
 
 
 def _queue_schedule_updates(term_id):
+    for course in SisSection.get_courses_to_be_scheduled(term_id=term_id):
+        try:
+            eligible_meetings = course.get('meetings', {}).get('eligible', [])
+            if _valid_meeting_count(eligible_meetings):
+                _queue_instructor_updates(course)
+        except Exception as e:
+            app.logger.error(f"Failed to queue schedule updates for section {course.get('sectionId')}, aborting job")
+            raise e
+
     for course in SisSection.get_courses_scheduled(term_id=term_id, include_administrative_proxies=True):
         try:
             eligible_meetings = course.get('meetings', {}).get('eligible', [])
@@ -223,7 +232,7 @@ def _queue_meeting_updates(course):
 
 def _queue_instructor_updates(course):
     instructors = list(filter(lambda i: i['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES and not i['deletedAt'], course['instructors']))
-    scheduled_instructor_uids = course['scheduled'][0].get('instructorUids') or []
+    scheduled_instructor_uids = (course['scheduled'] and course['scheduled'][0].get('instructorUids')) or []
 
     if set(i['uid'] for i in instructors) != set(scheduled_instructor_uids):
         ScheduleUpdate.queue(
@@ -251,7 +260,7 @@ def _queue_instructor_updates(course):
                     opt_out=True,
                 )
 
-    scheduled_collaborator_uids = course['scheduled'][0].get('collaboratorUids') or []
+    scheduled_collaborator_uids = (course['scheduled'] and course['scheduled'][0].get('collaboratorUids')) or []
     new_collaborator_uids = build_merged_collaborators_list(course, scheduled_collaborator_uids)
 
     if new_collaborator_uids != set(scheduled_collaborator_uids):
