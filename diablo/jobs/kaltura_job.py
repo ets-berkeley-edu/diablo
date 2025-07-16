@@ -233,7 +233,7 @@ def _update_already_scheduled_events(term_id, newly_scheduled_instructors):  # n
             QueuedEmail.notify_instructors_no_longer_scheduled(course)
         elif no_longer_eligible:
             QueuedEmail.notify_instructors_no_longer_eligible(course)
-        elif opted_out:
+        elif opted_out and course['scheduled'] is not None:
             QueuedEmail.notify_instructors_opted_out(course)
         else:
             scheduled = (course['scheduled'] or [{}])[0]

@@ -55,9 +55,7 @@ class WebDriverManager(object):
         else:
             options = Coptions()
             options.binary_location = util.get_xena_browser_chrome_binary_path()
-            if _headless:
-                options.add_argument('--headless=new')
-            _set_chrome_preferences(options)
+            _set_chrome_preferences(options, _headless)
             _add_chrome_extension(options)
             driver = webdriver.Chrome(options=options)
             WebDriverManager.allow_canvas_iframe_in_chrome(driver)
@@ -89,17 +87,20 @@ class WebDriverManager(object):
         driver.quit()
 
 
-def _set_chrome_preferences(options):
+def _set_chrome_preferences(options, headless):
     prefs = {
         'profile.default_content_settings.popups': 0,
         'download.default_directory': util.default_download_dir(),
         'directory_upgrade': True,
     }
     options.add_experimental_option('prefs', prefs)
-    options.add_argument('--disable-background-timer-throttling')
-    options.add_argument('--disable-backgrounding-occluded-windows')
-    options.add_argument('--disable-features=TabDiscarding')
-    options.add_argument('--disable-renderer-backgrounding')
+    if headless:
+        options.add_argument('--headless=new')
+    else:
+        options.add_argument('--disable-background-timer-throttling')
+        options.add_argument('--disable-backgrounding-occluded-windows')
+        options.add_argument('--disable-features=TabDiscarding')
+        options.add_argument('--disable-renderer-backgrounding')
 
 
 def _add_chrome_extension(options):

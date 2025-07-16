@@ -323,8 +323,9 @@ class TestOptOut4:
     """
     SCENARIO.
 
-    - Instructor is opted out of all terms
     - Recordings not scheduled
+    - Instructor is opted out of all terms
+    - Recordings still not scheduled
     - Instructor opts in to one section
     - Recordings scheduled for that section only
     """
@@ -355,10 +356,10 @@ class TestOptOut4:
         assert not util.get_kaltura_id(recording_schedule_0_1)
         assert not util.get_kaltura_id(recording_schedule_1)
 
-    def test_opt_out_emails_all_sections(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_OPTED_OUT, section_0, instructor_0) == 1
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_OPTED_OUT, section_0, instructor_1) == 1
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_OPTED_OUT, section_1, instructor_0) == 1
+    def test_no_opt_out_emails_sent(self):
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_OPTED_OUT, section_0, instructor_0) == 0
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_OPTED_OUT, section_0, instructor_1) == 0
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_OPTED_OUT, section_1, instructor_0) == 0
 
     def test_opt_in_one_section(self):
         self.jobs_page.log_out()
@@ -378,10 +379,10 @@ class TestOptOut4:
         assert not util.get_kaltura_id(recording_schedule_0_1)
         assert util.get_kaltura_id(recording_schedule_1)
 
-    def test_opt_out_emails_one_section(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_OPTED_OUT, section_0, instructor_0) == 2
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_OPTED_OUT, section_0, instructor_1) == 2
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_OPTED_OUT, section_1, instructor_0) == 1
+    def test_no_opt_out_emails(self):
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_OPTED_OUT, section_0, instructor_0) == 0
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_OPTED_OUT, section_0, instructor_1) == 0
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_OPTED_OUT, section_1, instructor_0) == 0
 
 
 @pytest.mark.usefixtures('page_objects')

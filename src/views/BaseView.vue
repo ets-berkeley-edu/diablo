@@ -2,7 +2,7 @@
   <v-app>
     <v-app-bar
       v-if="!route.meta.printable"
-      v-wave="assign(waveOptions, theme.global.current.value.dark ? waveOptionsDark : waveOptionsLight)"
+      v-wave="waveOptions"
       color="banner"
     >
       <a
@@ -103,8 +103,8 @@
 </template>
 
 <script setup>
-import {assign, kebabCase} from 'lodash'
-import {onMounted, ref} from 'vue'
+import {computed, onMounted, ref} from 'vue'
+import {kebabCase} from 'lodash'
 import {useRoute} from 'vue-router'
 import {storeToRefs} from 'pinia'
 import {useTheme} from 'vuetify'
@@ -117,7 +117,6 @@ import {
   mdiVideoOffOutline,
   mdiVideoPlus,
 } from '@mdi/js'
-
 import CourseCaptureBanner from '@/components/util/CourseCaptureBanner'
 import Footer from '@/components/util/Footer'
 import Snackbar from '@/components/util/Snackbar'
@@ -132,7 +131,7 @@ const drawer = ref(true)
 const navItems = ref([])
 const route = useRoute()
 const theme = useTheme()
-const waveOptions = ref({
+const waveOptionsDefault = ref({
   cancellationPeriod: 75,
   dissolveDuration: 0.4,
   easing: 'ease-out',
@@ -158,6 +157,13 @@ const waveOptionsLight = {
   duration: 1.8,
   initialOpacity: 0.2
 }
+
+const waveOptions = computed(() => {
+  return {
+    ...waveOptionsDefault.value,
+    ...(theme.global.current.value.dark ? waveOptionsDark : waveOptionsLight)
+  }
+})
 
 onMounted(() => {
   prefersColorScheme()
