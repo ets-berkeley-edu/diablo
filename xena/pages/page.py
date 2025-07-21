@@ -113,7 +113,7 @@ class Page(object):
             return True
 
     def wait_for_element(self, locator, timeout):
-        if util.get_xena_browser() == 'chrome':
+        if self.driver.name == 'chrome':
             for entry in self.driver.get_log('browser'):
                 if app.config['BASE_URL'] in entry:
                     app.logger.warning(f'Console error: {entry}')
