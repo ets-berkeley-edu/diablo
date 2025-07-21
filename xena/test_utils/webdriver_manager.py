@@ -50,7 +50,11 @@ class WebDriverManager(object):
             p.set_preference(key='devtools.jsonview.enabled', value=False)
             options = Foptions()
             options.profile = p
-            options.headless = _headless
+            p.set_preference('browser.download.folderList', 2)
+            p.set_preference('browser.helperApps.neverAsk.saveToDisk', 'text/csv')
+            p.set_preference('browser.download.dir', util.default_download_dir())
+            if _headless:
+                options.add_argument('-headless')
             driver = webdriver.Firefox(options=options)
         else:
             options = Coptions()
