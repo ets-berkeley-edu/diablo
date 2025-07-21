@@ -92,7 +92,12 @@ class TestCollaborators0:
 
     def test_history_new_course_scheduled(self):
         self.course_page.load_page(self.section)
-        assert not len(self.course_page.update_history_table_rows())
+        self.course_page.verify_history_row(field='instructor_uids',
+                                            old_value=[],
+                                            new_value=[self.instructor.uid],
+                                            requestor=None,
+                                            status='succeeded',
+                                            published=True)
 
     def test_course_page_sis_data(self):
         self.jobs_page.load_page()

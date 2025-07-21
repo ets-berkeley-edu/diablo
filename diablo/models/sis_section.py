@@ -525,6 +525,7 @@ class SisSection(db.Model):
             JOIN instructors i ON i.uid = s.instructor_uid
             WHERE
                 s.term_id = :term_id
+                AND s.deleted_at IS NULL
                 AND d.id is NULL
                 AND s.instructor_role_code = ANY(:instructor_role_codes)
                 AND s.is_principal_listing IS TRUE

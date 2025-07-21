@@ -53,15 +53,17 @@ class ScheduleUpdatesJob(BaseJob):
 def _queue_schedule_updates(term_id):
     for course in SisSection.get_courses_to_be_scheduled(term_id=term_id):
         try:
+            instructors = list(filter(lambda i: i['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES and not i['deletedAt'], course['instructors']))
             eligible_meetings = course.get('meetings', {}).get('eligible', [])
-            if _valid_meeting_count(eligible_meetings):
-                _queue_instructor_updates(course)
+            if len(instructors) and _valid_meeting_count(eligible_meetings):
+                _queue_instructor_updates(course, instructors)
         except Exception as e:
             app.logger.error(f"Failed to queue schedule updates for section {course.get('sectionId')}, aborting job")
             raise e
 
     for course in SisSection.get_courses_scheduled(term_id=term_id, include_administrative_proxies=True):
         try:
+            instructors = list(filter(lambda i: i['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES and not i['deletedAt'], course['instructors']))
             eligible_meetings = course.get('meetings', {}).get('eligible', [])
             ineligible_meetings = course.get('meetings', {}).get('ineligible', [])
             if course['deletedAt'] or (_valid_meeting_count(eligible_meetings) + _valid_meeting_count(ineligible_meetings) == 0):
@@ -72,7 +74,8 @@ def _queue_schedule_updates(term_id):
                 _queue_room_not_eligible_update(course)
             else:
                 _queue_meeting_updates(course)
-                _queue_instructor_updates(course)
+                _queue_instructor_updates(course, instructors)
+                _queue_collaborator_updates(course)
         except Exception as e:
             app.logger.error(f"Failed to queue schedule updates for section {course.get('sectionId')}, aborting job")
             raise e
@@ -230,8 +233,7 @@ def _queue_meeting_updates(course):
             )
 
 
-def _queue_instructor_updates(course):
-    instructors = list(filter(lambda i: i['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES and not i['deletedAt'], course['instructors']))
+def _queue_instructor_updates(course, instructors):
     scheduled_instructor_uids = (course['scheduled'] and course['scheduled'][0].get('instructorUids')) or []
 
     if set(i['uid'] for i in instructors) != set(scheduled_instructor_uids):
@@ -260,6 +262,8 @@ def _queue_instructor_updates(course):
                     opt_out=True,
                 )
 
+
+def _queue_collaborator_updates(course):
     scheduled_collaborator_uids = (course['scheduled'] and course['scheduled'][0].get('collaboratorUids')) or []
     new_collaborator_uids = build_merged_collaborators_list(course, scheduled_collaborator_uids)
 
