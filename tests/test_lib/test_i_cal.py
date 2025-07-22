@@ -42,6 +42,8 @@ DATE_STAMP_PATTERN = re.compile(rb'DTSTAMP:\d{8}T\d{6}Z\n')
 LAST_MODIFIED_PATTERN = re.compile(rb'LAST-MODIFIED:\d{8}T\d{6}Z\n')
 UNIQUE_ID_PATTERN = re.compile(rb'UID:\d{10}\.\d{6,7}@diablo-test\n')
 
+CURRENT_YEAR = datetime.now().year
+
 
 def validate_header(ics_file):
     assert ics_file.readline() == b'BEGIN:VCALENDAR\n'
@@ -58,12 +60,17 @@ def validate_event(ics_file, section_id, location):
     assert ics_file.readline() == b'CLASS:PUBLIC\n'
     assert CREATED_DATE_PATTERN.fullmatch(ics_file.readline())
 
-    assert ics_file.readline().startswith(b'DESCRIPTION:')
     # description should wrap to 2 or 3 lines
-    assert ics_file.readline()
+    description = ics_file.readline()
+    description += ics_file.readline()
     next_line = ics_file.readline()
     if not next_line.startswith(b'DTSTART:'):
+        description += next_line
         next_line = ics_file.readline()
+    # remove newlines and extra spaces added by text wrapping
+    description = description.replace(b'\n', b'').replace(b'  ', b' ')
+    assert description.startswith(b'DESCRIPTION:')
+    assert description.decode().endswith(f'Copyright ©{CURRENT_YEAR} UC Regents; all rights reserved.')
 
     assert START_DATE_PATTERN.fullmatch(next_line)
     assert END_DATE_PATTERN.fullmatch(ics_file.readline())
@@ -124,9 +131,10 @@ class TestGetIcsFiles:
                 validate_header(ics_file)
                 location_match = filename_location_pattern.findall(filename)[0]
                 location = location_match.replace('_', ' ')
+                location_alphanumeric = location.replace("'", '')
                 for scheduled in room_schedules[location]:
                     for i in range(6):
-                        validate_event(ics_file, scheduled.section_id, location)
+                        validate_event(ics_file, scheduled.section_id, location_alphanumeric)
                 validate_footer(ics_file)
                 ics_file.close()
                 assert ics_file.closed
@@ -136,22 +144,23 @@ class TestGetIcsFiles:
 class TestGenerateIcsFile:
 
     def test_no_scheduled_events(self):
-        room = Room.find_room('Barker 101')
+        room = Room.find_room("O'Brien 212")
         with test_scheduling_workflow(app):
             assert not generate_ics_file(room, datetime(2025, 6, 1), datetime(2025, 5, 30))
 
     def test_scheduled_events(self):
         term_id = 2218
         section_id = 50000
-        room = Room.find_room('Barker 101')
+        room = Room.find_room("O'Brien 212")
         with test_scheduling_workflow(app):
             mock_scheduled(section_id, term_id, override_room_id=room.id)
 
             ics_file = generate_ics_file(room, datetime(2025, 6, 1), datetime(2025, 5, 30))
             assert ics_file
             validate_header(ics_file)
+            location_alphanumeric = room.location.replace("'", '')
             for i in range(6):
-                validate_event(ics_file, section_id, room.location)
+                validate_event(ics_file, section_id, location_alphanumeric)
             validate_footer(ics_file)
             ics_file.close()
             assert ics_file.closed
