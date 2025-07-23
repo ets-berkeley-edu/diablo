@@ -23,6 +23,7 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 from datetime import datetime, timezone
+import re
 from tempfile import TemporaryFile
 from textwrap import TextWrapper
 
@@ -39,17 +40,19 @@ import zipstream
 
 
 ICS_FILE_HEADER = [
-    b'BEGIN:VCALENDAR\n',
-    b'PRODID:-//Google Inc//Google Calendar 70.9054//EN\n',
-    b'VERSION:2.0\n',
-    b'CALSCALE:GREGORIAN\n',
-    b'METHOD:PUBLISH\n',
-    b'X-WR-CALNAME:iCal Test\n',
-    b'X-WR-TIMEZONE:America/Los_Angeles\n',
+    'BEGIN:VCALENDAR\n',
+    'PRODID:-//Google Inc//Google Calendar 70.9054//EN\n',
+    'VERSION:2.0\n',
+    'CALSCALE:GREGORIAN\n',
+    'METHOD:PUBLISH\n',
+    'X-WR-CALNAME:iCal Test\n',
+    'X-WR-TIMEZONE:America/Los_Angeles\n',
 ]
-ICS_FILE_FOOTER = b'END:VCALENDAR'
+ICS_FILE_FOOTER = 'END:VCALENDAR'
 # The prefix makes these events easily searchable in Kaltura
 ICS_SUMMARY_PREFIX = 'qqq'
+KALTURA_TEXT_ENCODING = 'latin-1'
+NON_ALPHANUMERIC_PATTERN = re.compile(r'[^a-zA-Z0-9_ ]')
 
 wrapper = TextWrapper(expand_tabs=False, drop_whitespace=False, subsequent_indent=' ')
 
@@ -70,7 +73,7 @@ def get_zip_stream(period_end_date, period_start_date):
                 get_ics_file_name(room.location, period_start_date, period_end_date),
                 _ics_generator(events),
             )
-            manifest.append(bytes(f'{room.location}: {count} events\n', encoding='utf-8'))
+            manifest.append(f'{room.location}: {count} events\n')
             total_events += count
     if len(zip_stream.paths_to_write):
         zip_stream.write_iter('_manifest.txt', _manifest_generator(manifest, total_events))
@@ -104,6 +107,7 @@ def _get_scheduled_events(room, period_end_date, period_start_date, count=None):
     if not len(schedule):
         app.logger.info(f'{room.location} has nothing scheduled for the current term; will not generate .ics file')
 
+    location_alphanumeric = NON_ALPHANUMERIC_PATTERN.sub('', room.location.replace('&', 'and'))
     formatted_events = []
     count = 0
     for scheduled_course in schedule:
@@ -114,7 +118,7 @@ def _get_scheduled_events(room, period_end_date, period_start_date, count=None):
             recurrence_type=KalturaScheduleEventRecurrenceType.RECURRENCE,
             status=KalturaScheduleEventStatus.ACTIVE,
         )
-        formatted_events.extend(_events_to_ics_format(room.location, scheduled_course.section_id, course_meetings))
+        formatted_events.extend(_events_to_ics_format(location_alphanumeric, scheduled_course.section_id, course_meetings))
         count += len(course_meetings)
     if count:
         app.logger.info(
@@ -139,21 +143,21 @@ def _events_to_ics_format(location, section_id, events):
         description = f"DESCRIPTION:{event.get('description')}"
         unique_id = f'{now.timestamp()}{index}@{host}'
         ics_events.extend([
-            b'BEGIN:VEVENT\n',
-            b'CLASS:PUBLIC\n',
-            bytes(f'CREATED:{_format_date_for_ical(event_created_date)}\n', encoding='utf-8'),
-            bytes(f'{_wrap_text(description, wrapper)}\n', encoding='utf-8'),
-            bytes(f'DTSTART:{_format_date_for_ical(event_start_date)}\n', encoding='utf-8'),
-            bytes(f'DTEND:{_format_date_for_ical(event_end_date)}\n', encoding='utf-8'),
-            bytes(f'DTSTAMP:{_format_date_for_ical(now)}\n', encoding='utf-8'),
-            bytes(f'LAST-MODIFIED:{_format_date_for_ical(event_updated_date)}\n', encoding='utf-8'),
-            bytes(f'LOCATION:{location}\n', encoding='utf-8'),
-            b'SEQUENCE:0\n',
-            b'STATUS:CONFIRMED\n',
-            bytes(f'SUMMARY:{ICS_SUMMARY_PREFIX} {section_id}\n', encoding='utf-8'),
-            b'TRANSP:OPAQUE\n',
-            bytes(f'UID:{unique_id}\n', encoding='utf-8'),
-            b'END:VEVENT\n',
+            'BEGIN:VEVENT\n',
+            'CLASS:PUBLIC\n',
+            f'CREATED:{_format_date_for_ical(event_created_date)}\n',
+            f'{_wrap_text(description, wrapper)}\n',
+            f'DTSTART:{_format_date_for_ical(event_start_date)}\n',
+            f'DTEND:{_format_date_for_ical(event_end_date)}\n',
+            f'DTSTAMP:{_format_date_for_ical(now)}\n',
+            f'LAST-MODIFIED:{_format_date_for_ical(event_updated_date)}\n',
+            f'LOCATION:{location}\n',
+            'SEQUENCE:0\n',
+            'STATUS:CONFIRMED\n',
+            f'SUMMARY:{ICS_SUMMARY_PREFIX} {section_id}\n',
+            'TRANSP:OPAQUE\n',
+            f'UID:{unique_id}\n',
+            'END:VEVENT\n',
         ])
     return ics_events
 
@@ -168,16 +172,16 @@ def _format_date_for_filename(d):
 
 def _ics_generator(events):
     for line in ICS_FILE_HEADER:
-        yield line
+        yield bytes(line, encoding=KALTURA_TEXT_ENCODING)
     for line in events:
-        yield line
-    yield ICS_FILE_FOOTER
+        yield bytes(line, encoding=KALTURA_TEXT_ENCODING)
+    yield bytes(ICS_FILE_FOOTER, encoding=KALTURA_TEXT_ENCODING)
 
 
 def _manifest_generator(manifest, total_events):
-    yield bytes(f'Total: {total_events} events in {len(manifest)} rooms.\n\n', encoding='utf-8')
+    yield bytes(f'Total: {total_events} events in {len(manifest)} rooms.\n\n', encoding=KALTURA_TEXT_ENCODING)
     for line in manifest:
-        yield line
+        yield bytes(line, encoding=KALTURA_TEXT_ENCODING)
 
 
 def _to_utc(date_str):
