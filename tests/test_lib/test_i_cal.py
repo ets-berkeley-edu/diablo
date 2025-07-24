@@ -97,14 +97,14 @@ class TestGetIcsFiles:
             assert not get_zip_stream(datetime(2025, 6, 1), datetime(2025, 5, 30))
 
     def test_scheduled_events(self):
-        filename_location_pattern = re.compile(r"([A-Za-z0-9&_']+)_\d{8}-\d{8}.ics")
+        filename_location_pattern = re.compile(r'([A-Za-z0-9_-]+)_\d{8}-\d{8}.ics')
         section_ids = [50000, 50001, 50002, 50003, 50004, 50005, 50006, 50007]
         with test_scheduling_workflow(app):
             for section_id in section_ids:
                 mock_scheduled(section_id=section_id, term_id=2218)
 
             rooms = Room.all_rooms()
-            room_schedules = {room.location: Scheduled.get_scheduled_per_room(room.id, term_id=2218) for room in rooms}
+            room_schedules = {room.location.replace("'", ''): Scheduled.get_scheduled_per_room(room.id, term_id=2218) for room in rooms}
             zip_stream = get_zip_stream(datetime(2025, 6, 1), datetime(2025, 5, 30))
             assert zip_stream
             assert not zip_stream.testzip()
@@ -131,10 +131,9 @@ class TestGetIcsFiles:
                 validate_header(ics_file)
                 location_match = filename_location_pattern.findall(filename)[0]
                 location = location_match.replace('_', ' ')
-                location_alphanumeric = location.replace("'", '')
                 for scheduled in room_schedules[location]:
                     for i in range(6):
-                        validate_event(ics_file, scheduled.section_id, location_alphanumeric)
+                        validate_event(ics_file, scheduled.section_id, location)
                 validate_footer(ics_file)
                 ics_file.close()
                 assert ics_file.closed

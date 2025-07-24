@@ -26,8 +26,6 @@ from datetime import timedelta
 import glob
 from zipfile import ZipFile
 
-import dateutil.parser
-from flask import current_app as app
 import pytest
 from xena.models.email_template_type import EmailTemplateType
 from xena.models.recording_placement import RecordingPlacement
@@ -170,8 +168,10 @@ class TestWeirdTypeB:
 
     def test_ical_export_room_no_events(self):
         self.room_page.scroll_to_kaltura_events()
-        earliest_recording_date = dateutil.parser.parse(app.config['CURRENT_TERM_RECORDINGS_BEGIN']).date()
-        self.room_page.export_schedule_events_to_ical(events_start_date=earliest_recording_date, events_end_date=earliest_recording_date)
+        date_with_no_recordings = self.recording_schedule.meeting.meeting_schedule.date_with_no_recordings(
+            self.recording_schedule.section.term,
+        )
+        self.room_page.export_schedule_events_to_ical(events_start_date=date_with_no_recordings, events_end_date=date_with_no_recordings)
         self.room_page.verify_ical_export_error(self.original_room.name)
 
     def test_ical_export_room_events(self):
@@ -404,8 +404,10 @@ class TestWeirdTypeB:
 
     def test_ical_export_no_events(self):
         self.rooms_page.load_page()
-        earliest_recording_date = dateutil.parser.parse(app.config['CURRENT_TERM_RECORDINGS_BEGIN']).date()
-        self.rooms_page.export_schedule_events_to_ical(events_start_date=earliest_recording_date, events_end_date=earliest_recording_date)
+        date_with_no_recordings = self.recording_schedule.meeting.meeting_schedule.date_with_no_recordings(
+            self.recording_schedule.section.term,
+        )
+        self.rooms_page.export_schedule_events_to_ical(events_start_date=date_with_no_recordings, events_end_date=date_with_no_recordings)
         self.rooms_page.verify_ical_export_error()
 
     def test_ical_export_events(self):

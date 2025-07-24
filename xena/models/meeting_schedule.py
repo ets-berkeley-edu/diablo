@@ -180,6 +180,19 @@ class MeetingSchedule(object):
         days = self.kaltura_series_days(term)
         return days[-1]
 
+    def date_with_no_recordings(self, term):
+        # Return a blackout date within the recording series, or if none exists, return a Sunday.
+        blackout_dates = self.__holidays()
+        kaltura_series_start_date = self.kaltura_series_start(term)
+        kaltura_series_end_date = self.kaltura_series_end(term)
+        blackout_date_within_series = next((d for d in blackout_dates if d >= kaltura_series_start_date and d <= kaltura_series_end_date), None)
+        if blackout_date_within_series:
+            return blackout_date_within_series
+
+        days_until_sunday = (6 - kaltura_series_start_date.weekday() + 7) % 7
+        first_sunday_in_series = kaltura_series_start_date + timedelta(days=days_until_sunday)
+        return first_sunday_in_series
+
     def date_range_for_ical_export(self, term):
         # Return 2 dates that are ~1 week apart where both dates are within the recording series
         # and, ideally, there is a blackout date between them.

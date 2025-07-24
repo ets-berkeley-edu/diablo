@@ -127,7 +127,7 @@ class TestDownloadEvents:
             assert zip_file.namelist() == [
                 'Barker_101_20250501-20250515.ics',
                 'Li_Ka_Shing_145_20250501-20250515.ics',
-                "O'Brien_212_20250501-20250515.ics",
+                'OBrien_212_20250501-20250515.ics',
                 '_manifest.txt',
             ]
 
