@@ -26,6 +26,7 @@ from datetime import datetime, time, timezone
 import re
 from time import sleep
 
+from diablo.lib.i_cal import get_kaltura_safe_name
 from diablo.lib.util import default_timezone
 from flask import current_app as app
 from selenium.webdriver.common.by import By
@@ -292,7 +293,7 @@ class DiabloPages(Page):
                 assert event['DESCRIPTION']
                 assert event['DTSTART']
                 assert event['DTEND']
-                assert event['LOCATION'] == f'{location}\n'
+                assert event['LOCATION'] == f'{get_kaltura_safe_name(location)}\n'
                 assert event['STATUS'] == 'CONFIRMED\n'
                 assert event['SUMMARY'].startswith('qqq')
                 assert event['TRANSP'] == 'OPAQUE\n'
@@ -316,7 +317,7 @@ class DiabloPages(Page):
             recording_start_time = time(berkeley_start_time.hour, berkeley_start_time.minute)
             recording_end_time = time(berkeley_end_time.hour, berkeley_end_time.minute)
             expected_description = f'{recording_sched.section.code}, {recording_sched.section.number}'
-            expected_location = f'{recording_sched.meeting.room.name}\n'
+            expected_location = f'{get_kaltura_safe_name(recording_sched.meeting.room.name)}\n'
 
             section_events = iter(section_events)
             for recording_date in expected_section_event_dates:
