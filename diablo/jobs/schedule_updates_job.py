@@ -25,7 +25,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 import json
 
 from diablo.jobs.base_job import BaseJob
-from diablo.jobs.util import build_merged_collaborators_list, is_valid_meeting_schedule
+from diablo.jobs.util import build_merged_collaborators_list, get_eligible_unscheduled_courses, is_valid_meeting_schedule
 from diablo.lib.berkeley import are_scheduled_dates_obsolete, are_scheduled_times_obsolete, get_recording_end_date, get_recording_start_date
 from diablo.lib.util import safe_strftime
 from diablo.models.course_preference import CoursePreference
@@ -51,7 +51,7 @@ class ScheduleUpdatesJob(BaseJob):
 
 
 def _queue_schedule_updates(term_id):
-    for course in SisSection.get_courses_to_be_scheduled(term_id=term_id):
+    for course in get_eligible_unscheduled_courses(term_id):
         try:
             instructors = list(filter(lambda i: i['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES and not i['deletedAt'], course['instructors']))
             eligible_meetings = course.get('meetings', {}).get('eligible', [])

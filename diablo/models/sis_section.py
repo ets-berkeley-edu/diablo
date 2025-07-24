@@ -412,16 +412,6 @@ class SisSection(db.Model):
         )
 
     @classmethod
-    def get_courses_to_be_scheduled(cls, term_id):
-        section_ids_to_be_scheduled = list(cls._section_ids_to_be_scheduled(term_id))
-        return cls.get_courses(
-            term_id=term_id,
-            section_ids=section_ids_to_be_scheduled,
-            exclude_scheduled=True,
-            include_administrative_proxies=True,
-        )
-
-    @classmethod
     def get_courses_without_instructors(cls, term_id, include_full_schedules=True):
         sql = f"""
             SELECT
@@ -504,30 +494,6 @@ class SisSection(db.Model):
             WHERE
                 s.term_id = :term_id
                 AND (s.instructor_uid IS NULL OR s.instructor_role_code = ANY(:instructor_role_codes))
-                AND s.is_principal_listing IS TRUE
-            ORDER BY s.section_id
-        """
-        rows = db.session.execute(
-            text(sql),
-            {
-                'instructor_role_codes': ALL_INSTRUCTOR_ROLE_CODES,
-                'term_id': term_id,
-            },
-        )
-        return set([row['section_id'] for row in rows])
-
-    @classmethod
-    def _section_ids_to_be_scheduled(cls, term_id):
-        sql = """
-            SELECT DISTINCT s.section_id
-            FROM sis_sections s
-            LEFT JOIN scheduled d ON d.section_id = s.section_id AND d.term_id = s.term_id AND d.deleted_at IS NULL
-            JOIN instructors i ON i.uid = s.instructor_uid
-            WHERE
-                s.term_id = :term_id
-                AND s.deleted_at IS NULL
-                AND d.id is NULL
-                AND s.instructor_role_code = ANY(:instructor_role_codes)
                 AND s.is_principal_listing IS TRUE
             ORDER BY s.section_id
         """

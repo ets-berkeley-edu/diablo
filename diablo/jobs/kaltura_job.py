@@ -66,25 +66,17 @@ class KalturaJob(BaseJob):
         return 'kaltura'
 
 
-def _get_subset_of_instructors(section_id, term_id, uids, include_deleted=False):
-    course = SisSection.get_course(
-        include_deleted=include_deleted,
-        section_id=section_id,
-        term_id=term_id,
-    )
-    return list(filter(lambda instructor: instructor['uid'] in uids, course['instructors']))
-
-
 def _schedule_new_courses(term_id, newly_scheduled_instructors):
     unscheduled_courses = get_eligible_unscheduled_courses(term_id)
     app.logger.info(f'Preparing to schedule recordings for {len(unscheduled_courses)} courses.')
     for course in unscheduled_courses:
         if course['hasOptedOut']:
             continue
-        if not len(course['instructors']):
+        authorized_instructors = list(filter(lambda i: i['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES, course['instructors']))
+        if not len(authorized_instructors):
             continue
         schedule_recordings(course, remove_blackout_conflicts=True)
-        for instructor in list(filter(lambda i: i['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES, course['instructors'])):
+        for instructor in authorized_instructors:
             newly_scheduled_instructors.add(instructor['uid'])
 
 
@@ -175,7 +167,6 @@ def _update_already_scheduled_events(term_id, newly_scheduled_instructors):  # n
                 if updated_collaborator_uids is not None or updated_instructor_uids is not None:
                     _handle_instructor_updates(
                         kaltura, course, scheduled, scheduled_model, schedule_updates, kaltura_schedule, updated_collaborator_uids,
-                        updated_instructor_uids,
                     )
 
                 if updated_recording_type:
@@ -271,8 +262,7 @@ def _update_already_scheduled_events(term_id, newly_scheduled_instructors):  # n
 
 
 def _handle_instructor_updates(
-    kaltura, course, scheduled, scheduled_model, schedule_updates, kaltura_schedule,
-    updated_collaborator_uids, updated_instructor_uids,
+    kaltura, course, scheduled, scheduled_model, schedule_updates, kaltura_schedule, updated_collaborator_uids,
 ):
     instructors = [i for i in course['instructors'] if i['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES and not i['deletedAt']]
 
