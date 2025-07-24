@@ -52,7 +52,7 @@ ICS_FILE_FOOTER = 'END:VCALENDAR'
 # The prefix makes these events easily searchable in Kaltura
 ICS_SUMMARY_PREFIX = 'qqq'
 KALTURA_TEXT_ENCODING = 'latin-1'
-NON_ALPHANUMERIC_PATTERN = re.compile(r'[^a-zA-Z0-9_ ]')
+NON_ALPHANUMERIC_PATTERN = re.compile(r'[^a-zA-Z0-9 -]')
 
 wrapper = TextWrapper(expand_tabs=False, drop_whitespace=False, subsequent_indent=' ')
 
@@ -63,11 +63,12 @@ def get_zip_stream(period_end_date, period_start_date):
         app.logger.warning('No eligible rooms found; will not generate .ics files')
 
     app.logger.info(f'Exporting events to iCalendar for {len(rooms)} eligible rooms')
+    kaltura = Kaltura()
     zip_stream = zipstream.ZipFile(mode='w', compression=zipstream.ZIP_DEFLATED)
     manifest = []
     total_events = 0
     for room in rooms:
-        events, count = _get_scheduled_events(room, period_end_date, period_start_date)
+        events, count = _get_scheduled_events(kaltura, room, period_end_date, period_start_date)
         if count:
             zip_stream.write_iter(
                 get_ics_file_name(room.location, period_start_date, period_end_date),
@@ -83,7 +84,8 @@ def get_zip_stream(period_end_date, period_start_date):
 
 
 def generate_ics_file(room, period_end_date, period_start_date):
-    events, count = _get_scheduled_events(room, period_end_date, period_start_date)
+    kaltura = Kaltura()
+    events, count = _get_scheduled_events(kaltura, room, period_end_date, period_start_date)
     if count:
         ics_file = TemporaryFile()
         ics_file.writelines(_ics_generator(events))
@@ -92,14 +94,19 @@ def generate_ics_file(room, period_end_date, period_start_date):
 
 
 def get_ics_file_name(location, start_date, end_date):
-    return f"{location.replace(' ', '_')}_{_format_date_for_filename(start_date)}-{_format_date_for_filename(end_date)}.ics"
+    location_alphanumeric = get_kaltura_safe_name(location)
+    return f"{location_alphanumeric.replace(' ', '_')}_{_format_date_for_filename(start_date)}-{_format_date_for_filename(end_date)}.ics"
+
+
+def get_kaltura_safe_name(location):
+    return NON_ALPHANUMERIC_PATTERN.sub('', location.replace('&', 'and'))
 
 
 def get_zip_file_name(start_date, end_date):
     return f'iCal_export_{_format_date_for_filename(start_date)}-{_format_date_for_filename(end_date)}.zip'
 
 
-def _get_scheduled_events(room, period_end_date, period_start_date, count=None):
+def _get_scheduled_events(kaltura, room, period_end_date, period_start_date, count=None):
     schedule = Scheduled.get_scheduled_per_room(
         room_id=room.id,
         term_id=app.config['CURRENT_TERM_ID'],
@@ -107,11 +114,11 @@ def _get_scheduled_events(room, period_end_date, period_start_date, count=None):
     if not len(schedule):
         app.logger.info(f'{room.location} has nothing scheduled for the current term; will not generate .ics file')
 
-    location_alphanumeric = NON_ALPHANUMERIC_PATTERN.sub('', room.location.replace('&', 'and'))
+    location_alphanumeric = get_kaltura_safe_name(room.location)
     formatted_events = []
     count = 0
     for scheduled_course in schedule:
-        course_meetings = Kaltura().get_events_in_date_range(
+        course_meetings = kaltura.get_events_in_date_range(
             end_date=period_end_date,
             start_date=period_start_date,
             kaltura_schedule_id=scheduled_course.kaltura_schedule_id,
