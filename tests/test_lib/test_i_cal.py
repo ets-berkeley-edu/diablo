@@ -40,7 +40,7 @@ START_DATE_PATTERN = re.compile(rb'DTSTART:\d{8}T\d{6}Z\n')
 END_DATE_PATTERN = re.compile(rb'DTEND:\d{8}T\d{6}Z\n')
 DATE_STAMP_PATTERN = re.compile(rb'DTSTAMP:\d{8}T\d{6}Z\n')
 LAST_MODIFIED_PATTERN = re.compile(rb'LAST-MODIFIED:\d{8}T\d{6}Z\n')
-UNIQUE_ID_PATTERN = re.compile(rb'UID:\d{10}\.\d{6,7}@diablo-test\n')
+UNIQUE_ID_PATTERN = re.compile(rb'UID:\d+\.\d+@diablo-test\n')
 
 CURRENT_YEAR = datetime.now().year
 
