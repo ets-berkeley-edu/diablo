@@ -1,6 +1,6 @@
 <template>
   <v-app theme="light">
-    <Snackbar include-contact-us-prompt />
+    <Snackbar include-contact-us-prompt include-tool-description />
     <v-main>
       <v-container class="background-splash" fill-height fluid>
         <v-card
@@ -84,7 +84,7 @@
 import {onMounted, ref} from 'vue'
 import {get, trim} from 'lodash'
 import {mdiArrowRightCircleOutline, mdiEmoticonDevilOutline} from '@mdi/js'
-import router from '@/router'
+import {useRoute, useRouter} from 'vue-router'
 import Snackbar from '@/components/util/Snackbar'
 import {devAuthLogIn, getCasLoginURL} from '@/api/auth'
 import {useContextStore} from '@/stores/context'
@@ -94,15 +94,17 @@ const contextStore = useContextStore()
 
 const devAuthUid = ref(undefined)
 const devAuthPassword = ref(undefined)
+const route = useRoute()
+const router = useRouter()
 
 onMounted(() => {
   contextStore.loadingComplete()
-  putFocusNextTick('log-in')
-  const error = get(router.currentRoute, 'query.error')
+  const error = get(route.query, 'error')
   if (error) {
     contextStore.snackbarReportError(error)
   } else {
     alertScreenReader('Welcome to Course Capture. Please log in.')
+    putFocusNextTick('log-in')
   }
 })
 
@@ -113,7 +115,7 @@ const devAuth = () => {
     devAuthLogIn(uid, password).then(
       data => {
         if (data.isAuthenticated) {
-          const redirect = get(router, 'currentRoute.query.redirect')
+          const redirect = get(route.query, 'redirect')
           router.push({path: redirect || '/home'})
           alertScreenReader('Welcome to Course Capture')
         } else {
