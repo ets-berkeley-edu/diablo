@@ -39,13 +39,11 @@ from sqlalchemy import text
 AUTHORIZED_INSTRUCTOR_ROLE_CODES = ['ICNT', 'PI', 'TNIC']
 ALL_INSTRUCTOR_ROLE_CODES = ['APRX'] + AUTHORIZED_INSTRUCTOR_ROLE_CODES
 
-INSTRUCTOR_NAME_SUB_QUERY = """
-    CASE
+INSTRUCTOR_NAME_SUB_QUERY = """CASE
       WHEN i.last_name IS NULL OR i.last_name = '' THEN s.instructor_name
       ELSE i.first_name || ' ' || i.last_name
     END
-    AS instructor_name,
-"""
+    AS instructor_name,"""
 
 
 class SisSection(db.Model):
@@ -220,29 +218,33 @@ class SisSection(db.Model):
             include_administrative_proxies=False,
             include_deleted=False,
             include_full_schedules=True,
-            include_ineligible=False,
+            include_ineligible_rooms=False,
             include_non_principal_sections=False,
             instructor_uids=None,
+            require_authorized_instructor=False,
             section_ids=None,
     ):
-        instructor_role_codes = ALL_INSTRUCTOR_ROLE_CODES
         params = {
-            'instructor_role_codes': instructor_role_codes,
+            'instructor_role_codes': ALL_INSTRUCTOR_ROLE_CODES,
             'term_id': term_id,
         }
         if section_ids is None:
             # If no section IDs are specified, return any section with at least one eligible room, unless we've been told to ignore
             # eligibility altogether.
-            if include_ineligible:
+            if include_ineligible_rooms:
                 course_filter = 'TRUE'
             else:
-                course_filter = f's.section_id IN ({_sections_with_at_least_one_eligible_room()})'
+                course_filter = f's.section_id IN ({_sections_with_at_least_one_eligible_room()}'
+                if require_authorized_instructor:
+                    course_filter += '\nAND s2.instructor_role_code = ANY(:authorized_instructor_role_codes)'
+                    params['authorized_instructor_role_codes'] = AUTHORIZED_INSTRUCTOR_ROLE_CODES
+                course_filter += '\n)'
         else:
             course_filter = 's.section_id = ANY(:section_ids)'
             params['section_ids'] = section_ids
 
         if instructor_uids is not None:
-            course_filter += ' AND s.instructor_uid = ANY(:instructor_uids)'
+            course_filter += '\nAND s.instructor_uid = ANY(:instructor_uids)'
             params['instructor_uids'] = list(instructor_uids)
 
         if exclude_scheduled:
@@ -261,7 +263,7 @@ class SisSection(db.Model):
                 r.id AS room_id,
                 r.location AS room_location
             FROM sis_sections s
-            {'LEFT' if include_ineligible else ''} JOIN rooms r ON r.location = s.meeting_location
+            {'LEFT ' if include_ineligible_rooms else ''}JOIN rooms r ON r.location = s.meeting_location
             LEFT JOIN instructors i ON i.uid = s.instructor_uid
             {exclude_scheduled_join}
             WHERE
@@ -269,7 +271,7 @@ class SisSection(db.Model):
                 AND s.term_id = :term_id
                 AND (s.instructor_uid IS NULL OR s.instructor_role_code = ANY(:instructor_role_codes))
                 {'' if include_non_principal_sections else 'AND s.is_principal_listing IS TRUE'}
-                {'' if include_deleted else ' AND s.deleted_at IS NULL '}
+                {'' if include_deleted else 'AND s.deleted_at IS NULL'}
                 {'AND sch.kaltura_schedule_id IS NULL' if exclude_scheduled else ''}
             ORDER BY s.course_name, s.section_id, s.instructor_uid, r.capability NULLS LAST
         """
@@ -406,7 +408,7 @@ class SisSection(db.Model):
             section_ids=scheduled_section_ids,
             instructor_uids=instructor_uids,
             include_deleted=True,
-            include_ineligible=True,
+            include_ineligible_rooms=True,
             include_administrative_proxies=include_administrative_proxies,
             include_full_schedules=include_full_schedules,
         )
@@ -805,8 +807,7 @@ def _sections_with_at_least_one_eligible_room():
             AND r2.capability IS NOT NULL
             AND s2.term_id = :term_id
             AND s2.is_principal_listing IS TRUE
-            AND s2.deleted_at IS NULL
-    """
+            AND s2.deleted_at IS NULL"""
 
 
 def _to_instructor_json(row):

@@ -390,7 +390,7 @@ def _get_courses_per_filter(filter_, term_id):
         raise BadRequestError('One or more required params are missing or invalid')
 
     if filter_ == 'All':
-        courses = SisSection.get_courses(term_id, include_full_schedules=False, include_ineligible=True)
+        courses = SisSection.get_courses(term_id, include_full_schedules=False, include_ineligible_rooms=True)
     elif filter_ == 'Eligible':
         courses = SisSection.get_courses(term_id, include_full_schedules=False)
     elif filter_ == 'Opted Out':

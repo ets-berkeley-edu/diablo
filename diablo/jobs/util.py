@@ -98,6 +98,7 @@ def get_eligible_unscheduled_courses(term_id):
     return SisSection.get_courses(
         exclude_scheduled=True,
         include_administrative_proxies=True,
+        require_authorized_instructor=True,
         term_id=term_id,
     )
 
