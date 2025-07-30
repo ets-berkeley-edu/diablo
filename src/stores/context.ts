@@ -14,7 +14,7 @@ export const useContextStore = defineStore('context', {
     snackbar: {
       color: 'primary' as string | undefined,
       text: undefined as string | undefined,
-      timeout: 8000 as number,
+      timeout: -1 as number,
     },
     snackbarShow: false as boolean,
     currentUser: ANONYMOUS_USER as DiabloUser,
