@@ -141,8 +141,8 @@
           },
           "meeting_schedule": {
             "days": "MO, WE, FR",
-            "start_time": "5:00 pm",
-            "end_time": "5:59 pm"
+            "start_time": "6:00 pm",
+            "end_time": "6:59 pm"
           }
         },
         {
@@ -151,8 +151,8 @@
           },
           "meeting_schedule": {
             "days": "MO, WE, FR",
-            "start_time": "5:00 pm",
-            "end_time": "5:59 pm"
+            "start_time": "6:00 pm",
+            "end_time": "6:59 pm"
           }
         }
       ]
