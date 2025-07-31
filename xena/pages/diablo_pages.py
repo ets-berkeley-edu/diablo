@@ -301,7 +301,7 @@ class DiabloPages(Page):
 
     def compare_ical_export_to_recording_schedule(self, events, start_date, end_date, recording_sched):
         expected_recording_dates = recording_sched.meeting.meeting_schedule.expected_recording_dates(recording_sched.section.term)
-        expected_section_event_dates = [d for d in expected_recording_dates if d >= start_date and d <= end_date]
+        expected_section_event_dates = [d for d in expected_recording_dates if start_date <= d <= end_date]
         expected_summary = f'qqq {recording_sched.section.ccn}\n'
 
         section_events = [event for event in events if event['SUMMARY'] == expected_summary]
@@ -327,10 +327,10 @@ class DiabloPages(Page):
                 expected_end_date = f"{recording_end.astimezone(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}\n"
                 event = next(section_events, None)
                 assert event
-                assert event['CLASS'] == 'PUBLIC\n'
+                util.assert_equivalence(event['CLASS'], 'PUBLIC\n')
                 assert event['DESCRIPTION'].startswith(expected_description)
-                assert event['DTSTART'] == expected_start_date
-                assert event['DTEND'] == expected_end_date
-                assert event['LOCATION'] == expected_location
-                assert event['STATUS'] == 'CONFIRMED\n'
-                assert event['TRANSP'] == 'OPAQUE\n'
+                util.assert_equivalence(event['DTSTART'], expected_start_date)
+                util.assert_equivalence(event['DTEND'], expected_end_date)
+                util.assert_equivalence(event['LOCATION'], expected_location)
+                util.assert_equivalence(event['STATUS'], 'CONFIRMED\n')
+                util.assert_equivalence(event['TRANSP'], 'OPAQUE\n')

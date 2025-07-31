@@ -268,8 +268,8 @@ class TestCollaborators1:
         self.kaltura_page.verify_collaborators(self.section, [self.manual_collaborator])
 
     def test_email_new_scheduled(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_NEW_COURSE_SCHED, section=None,
-                                         instructor=self.instructor) == 1
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_NEW_COURSE_SCHED, self.section,
+                                         self.instructor) == 1
 
     def test_email_new_collaborator(self):
         assert util.get_sent_email_count(EmailTemplateType.INSTR_CHANGES_CONFIRMED, self.section,
