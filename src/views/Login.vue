@@ -30,7 +30,7 @@
             <v-row v-if="contextStore.config.devAuthEnabled">
               <hr class="mx-6 my-8 w-100" role="presentation">
             </v-row>
-            <v-row>
+            <v-row v-if="contextStore.config.devAuthEnabled">
               <v-card class="opaque-card pa-4 w-100" color="transparent" flat>
                 <v-form @submit.prevent="devAuth">
                   <v-text-field
