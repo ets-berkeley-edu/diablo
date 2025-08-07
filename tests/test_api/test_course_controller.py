@@ -23,8 +23,10 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 import csv
-from io import StringIO
 import json
+from io import StringIO
+
+from flask import current_app as app
 
 from diablo import std_commit
 from diablo.jobs.emails_job import EmailsJob
@@ -32,7 +34,6 @@ from diablo.models.opt_out import OptOut
 from diablo.models.scheduled import Scheduled
 from diablo.models.sent_email import SentEmail
 from diablo.models.sis_section import SisSection
-from flask import current_app as app
 from tests.test_api.api_test_utils import api_get_course, api_get_user, get_instructor_uids, mock_scheduled
 from tests.util import override_config, simply_yield, test_scheduling_workflow
 

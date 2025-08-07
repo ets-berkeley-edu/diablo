@@ -22,6 +22,8 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
+from flask import current_app as app
+
 from diablo import std_commit
 from diablo.jobs.emails_job import EmailsJob
 from diablo.jobs.remind_instructors_job import RemindInstructorsJob
@@ -29,7 +31,6 @@ from diablo.jobs.semester_start_job import SemesterStartJob
 from diablo.models.queued_email import QueuedEmail
 from diablo.models.scheduled import Scheduled
 from diablo.models.sent_email import SentEmail
-from flask import current_app as app
 from tests.util import simply_yield, test_scheduling_workflow
 
 

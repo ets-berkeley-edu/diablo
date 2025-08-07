@@ -29,6 +29,7 @@ import pytest
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.wait import WebDriverWait as Wait
+
 from xena.models.meeting import Meeting
 from xena.pages.course_page import CoursePage
 from xena.pages.login_page import LoginPage

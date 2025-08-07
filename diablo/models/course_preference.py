@@ -22,14 +22,14 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
+from sqlalchemy import and_
+from sqlalchemy.dialects.postgresql import ARRAY, ENUM
+
 from diablo import db, std_commit
 from diablo.externals.canvas import get_course_sites_by_id
 from diablo.externals.loch import get_loch_basic_attributes
 from diablo.lib.util import basic_attributes_to_api_json, to_isoformat, utc_now
 from diablo.models.cross_listing import CrossListing
-from sqlalchemy import and_
-from sqlalchemy.dialects.postgresql import ARRAY, ENUM
-
 
 publish_type = ENUM(
     'kaltura_media_gallery',

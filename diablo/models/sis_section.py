@@ -22,6 +22,9 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
+from flask import current_app as app
+from sqlalchemy import text
+
 from diablo import db
 from diablo.externals.canvas import get_course_sites_by_id
 from diablo.lib.berkeley import get_recording_end_date, get_recording_start_date
@@ -33,8 +36,6 @@ from diablo.models.opt_out import OptOut
 from diablo.models.room import Room
 from diablo.models.schedule_update import ScheduleUpdate
 from diablo.models.scheduled import Scheduled
-from flask import current_app as app
-from sqlalchemy import text
 
 AUTHORIZED_INSTRUCTOR_ROLE_CODES = ['ICNT', 'PI', 'TNIC']
 ALL_INSTRUCTOR_ROLE_CODES = ['APRX'] + AUTHORIZED_INSTRUCTOR_ROLE_CODES

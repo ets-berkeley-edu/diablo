@@ -24,21 +24,20 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 import random
 
+from flask import current_app as app
+from sqlalchemy import text
+
 from diablo import db, std_commit
 from diablo.jobs.emails_job import EmailsJob
 from diablo.jobs.kaltura_job import KalturaJob
 from diablo.jobs.schedule_updates_job import ScheduleUpdatesJob
-from diablo.lib.berkeley import are_scheduled_dates_obsolete, are_scheduled_times_obsolete, get_recording_end_date, \
-    get_recording_start_date
+from diablo.lib.berkeley import are_scheduled_dates_obsolete, are_scheduled_times_obsolete, get_recording_end_date, get_recording_start_date
 from diablo.models.room import Room
 from diablo.models.scheduled import Scheduled
 from diablo.models.sent_email import SentEmail
 from diablo.models.sis_section import SisSection
-from flask import current_app as app
-from sqlalchemy import text
 from tests.test_api.api_test_utils import api_get_course, get_eligible_meeting, get_instructor_uids, mock_scheduled
 from tests.util import override_config, simply_yield, test_scheduling_workflow
-
 
 admin_uid = '90001'
 deleted_section_id = 50018

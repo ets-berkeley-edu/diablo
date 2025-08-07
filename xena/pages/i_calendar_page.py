@@ -26,6 +26,7 @@ import time
 
 from flask import current_app as app
 from selenium.webdriver.common.by import By
+
 from xena.pages.page import Page
 from xena.test_utils import util
 

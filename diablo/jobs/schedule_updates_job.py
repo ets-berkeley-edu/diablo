@@ -24,6 +24,8 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 import json
 
+from flask import current_app as app
+
 from diablo.jobs.base_job import BaseJob
 from diablo.jobs.util import build_merged_collaborators_list, get_eligible_unscheduled_courses, is_valid_meeting_schedule
 from diablo.lib.berkeley import are_scheduled_dates_obsolete, are_scheduled_times_obsolete, get_recording_end_date, get_recording_start_date
@@ -32,7 +34,6 @@ from diablo.models.course_preference import CoursePreference
 from diablo.models.opt_out import OptOut
 from diablo.models.schedule_update import ScheduleUpdate
 from diablo.models.sis_section import AUTHORIZED_INSTRUCTOR_ROLE_CODES, SisSection
-from flask import current_app as app
 
 
 class ScheduleUpdatesJob(BaseJob):

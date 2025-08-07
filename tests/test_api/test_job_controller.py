@@ -25,13 +25,14 @@ ENHANCEMENTS, OR MODIFICATIONS.
 import json
 import time
 
+import pytest
+from flask import current_app as app
+
 from diablo import std_commit
 from diablo.jobs.emails_job import EmailsJob
 from diablo.jobs.house_keeping_job import HouseKeepingJob
 from diablo.models.job import Job
 from diablo.models.job_history import JobHistory
-from flask import current_app as app
-import pytest
 from tests.util import scheduled_job, simply_yield
 
 admin_uid = '90001'

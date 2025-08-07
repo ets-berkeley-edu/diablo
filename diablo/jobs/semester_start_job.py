@@ -22,12 +22,13 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
+from flask import current_app as app
+
 from diablo.jobs.base_job import BaseJob
 from diablo.jobs.util import get_eligible_courses, remove_blackout_events, schedule_recordings
 from diablo.models.email_template import EmailTemplate
-from diablo.models.queued_email import announce_semester_start, QueuedEmail
+from diablo.models.queued_email import QueuedEmail, announce_semester_start
 from diablo.models.sis_section import AUTHORIZED_INSTRUCTOR_ROLE_CODES
-from flask import current_app as app
 
 
 class SemesterStartJob(BaseJob):

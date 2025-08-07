@@ -22,18 +22,18 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from datetime import datetime
 import io
 import re
+from datetime import datetime
 from zipfile import ZipFile
+
+from flask import current_app as app
 
 from diablo.lib.i_cal import generate_ics_file, get_zip_stream
 from diablo.models.room import Room
 from diablo.models.scheduled import Scheduled
-from flask import current_app as app
 from tests.test_api.api_test_utils import mock_scheduled
 from tests.util import test_scheduling_workflow
-
 
 CREATED_DATE_PATTERN = re.compile(rb'CREATED:\d{8}T\d{6}Z\n')
 START_DATE_PATTERN = re.compile(rb'DTSTART:\d{8}T\d{6}Z\n')

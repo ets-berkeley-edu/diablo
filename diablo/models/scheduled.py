@@ -24,14 +24,15 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 from datetime import datetime, timedelta
 
+from sqlalchemy import and_, func, text
+from sqlalchemy.dialects.postgresql import ARRAY
+
 from diablo import db, std_commit
 from diablo.externals.loch import get_loch_basic_attributes
 from diablo.lib.util import basic_attributes_to_api_json, format_days, format_time, get_names_of_days, local_now, to_isoformat, utc_now
 from diablo.models.course_preference import NAMES_PER_PUBLISH_TYPE, NAMES_PER_RECORDING_TYPE, publish_type, recording_type
 from diablo.models.email_template import email_template_type
 from diablo.models.room import Room
-from sqlalchemy import and_, func, text
-from sqlalchemy.dialects.postgresql import ARRAY
 
 
 class Scheduled(db.Model):

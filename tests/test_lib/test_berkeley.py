@@ -24,13 +24,21 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 from datetime import datetime, timedelta
 
-from diablo.lib.berkeley import are_scheduled_dates_obsolete, are_scheduled_times_obsolete, DAYS, \
-    get_canvas_sis_term_id, get_first_matching_datetime_of_term, get_recording_end_date, get_recording_start_date, \
-    term_name_for_sis_id
+import pytz
+from flask import current_app as app
+
+from diablo.lib.berkeley import (
+    DAYS,
+    are_scheduled_dates_obsolete,
+    are_scheduled_times_obsolete,
+    get_canvas_sis_term_id,
+    get_first_matching_datetime_of_term,
+    get_recording_end_date,
+    get_recording_start_date,
+    term_name_for_sis_id,
+)
 from diablo.lib.util import format_days, local_now
 from diablo.models.sis_section import SisSection
-from flask import current_app as app
-import pytz
 from tests.test_api.api_test_utils import mock_scheduled
 from tests.util import override_config, test_scheduling_workflow
 

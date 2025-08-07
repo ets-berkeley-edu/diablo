@@ -22,10 +22,11 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
+from sqlalchemy import and_, or_
+
 from diablo import db, std_commit
 from diablo.lib.util import to_isoformat, utc_now
 from diablo.models.cross_listing import CrossListing
-from sqlalchemy import and_, or_
 
 
 class OptOut(db.Model):

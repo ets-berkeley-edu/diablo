@@ -24,12 +24,13 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 import os
 
+from flask import Flask
+
 from diablo import cache, db
 from diablo.configs import load_configs
 from diablo.jobs.background_job_manager import BackgroundJobManager
 from diablo.logger import initialize_logger
 from diablo.routes import register_routes
-from flask import Flask
 
 background_job_manager = BackgroundJobManager()
 
@@ -55,9 +56,9 @@ def _register_jobs(app):
     from diablo.jobs.blackouts_job import BlackoutsJob  # noqa: F401
     from diablo.jobs.clear_schedules_job import ClearSchedulesJob  # noqa: F401
     from diablo.jobs.delete_zoom_recordings_job import DeleteZoomRecordingsJob  # noqa: F401
+    from diablo.jobs.emails_job import EmailsJob  # noqa: F401
     from diablo.jobs.house_keeping_job import HouseKeepingJob  # noqa: F401
     from diablo.jobs.kaltura_job import KalturaJob  # noqa: F401
-    from diablo.jobs.emails_job import EmailsJob  # noqa: F401
     from diablo.jobs.opt_out_report_job import OptOutReportJob  # noqa: F401
     from diablo.jobs.remind_instructors_job import RemindInstructorsJob  # noqa: F401
     from diablo.jobs.schedule_updates_job import ScheduleUpdatesJob  # noqa: F401

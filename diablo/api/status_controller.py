@@ -24,7 +24,11 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 import traceback
 
+import psycopg2
 from canvasapi.exceptions import CanvasException
+from flask import current_app as app
+from sqlalchemy.exc import SQLAlchemyError
+
 from diablo import db
 from diablo.externals.b_connected import BConnected
 from diablo.externals.canvas import ping_canvas
@@ -32,9 +36,6 @@ from diablo.externals.kaltura import Kaltura
 from diablo.externals.rds import log_db_error
 from diablo.lib.http_util import tolerant_jsonify
 from diablo.merged.emailer import send_system_error_email
-from flask import current_app as app
-import psycopg2
-from sqlalchemy.exc import SQLAlchemyError
 
 
 @app.route('/api/ping')

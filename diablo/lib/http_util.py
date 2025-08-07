@@ -25,8 +25,8 @@ ENHANCEMENTS, OR MODIFICATIONS.
 
 import urllib
 
-from flask import Response
 import simplejson as json
+from flask import Response
 
 
 def add_param_to_url(url, param):

@@ -24,10 +24,11 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 from contextlib import contextmanager
 
+from sqlalchemy import text
+
 from diablo import db, std_commit
 from diablo.jobs.doomed_to_failure import DoomedToFailure  # noqa: F401
 from diablo.models.job import Job
-from sqlalchemy import text
 
 
 @contextmanager

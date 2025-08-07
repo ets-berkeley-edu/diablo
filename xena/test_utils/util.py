@@ -23,16 +23,17 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-from datetime import datetime, timedelta
 import json
 import os
 import shutil
 import time
+from datetime import datetime, timedelta
 
 import dateutil.parser
-from diablo import db, std_commit
 from flask import current_app as app
 from sqlalchemy import text
+
+from diablo import db, std_commit
 from xena.models.section import Section
 from xena.models.term import Term
 from xena.models.user import User

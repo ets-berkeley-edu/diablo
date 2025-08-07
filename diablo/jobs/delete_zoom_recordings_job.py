@@ -24,10 +24,11 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 import traceback
 
+from flask import current_app as app
+
 from diablo.externals.kaltura import Kaltura
 from diablo.jobs.base_job import BaseJob
 from diablo.merged.emailer import send_system_error_email
-from flask import current_app as app
 
 
 class DeleteZoomRecordingsJob(BaseJob):

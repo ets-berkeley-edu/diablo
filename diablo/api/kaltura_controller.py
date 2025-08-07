@@ -22,10 +22,11 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
+from flask import current_app as app
+
 from diablo.api.util import admin_required
 from diablo.externals.kaltura import Kaltura
 from diablo.lib.http_util import tolerant_jsonify
-from flask import current_app as app
 
 
 @app.route('/api/kaltura/category/canvas/<course_site_id>')

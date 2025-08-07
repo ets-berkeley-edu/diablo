@@ -24,6 +24,10 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 import re
 
+from flask import current_app as app
+from flask import request
+from flask_login import current_user, login_required
+
 from diablo.api.errors import BadRequestError, ForbiddenRequestError, InternalServerError, ResourceNotFoundError
 from diablo.api.util import admin_required, csv_download_response, get_search_filter_options
 from diablo.externals.canvas import get_course_site
@@ -38,8 +42,6 @@ from diablo.models.queued_email import QueuedEmail
 from diablo.models.schedule_update import ScheduleUpdate
 from diablo.models.scheduled import Scheduled
 from diablo.models.sis_section import SisSection
-from flask import current_app as app, request
-from flask_login import current_user, login_required
 
 
 @app.route('/api/course/<term_id>/<section_id>')

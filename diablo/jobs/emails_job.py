@@ -24,11 +24,12 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 from time import sleep
 
+from flask import current_app as app
+
 from diablo.externals.b_connected import BConnected
 from diablo.jobs.base_job import BaseJob
 from diablo.models.queued_email import QueuedEmail
 from diablo.models.sis_section import SisSection
-from flask import current_app as app
 
 
 class EmailsJob(BaseJob):

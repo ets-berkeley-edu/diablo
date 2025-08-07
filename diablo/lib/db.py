@@ -22,13 +22,13 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from contextlib import contextmanager
 import re
+from contextlib import contextmanager
 
-from flask import current_app as app
 import psycopg2
 import psycopg2.extras
 import psycopg2.sql
+from flask import current_app as app
 
 
 @contextmanager

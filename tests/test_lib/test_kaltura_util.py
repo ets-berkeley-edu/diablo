@@ -22,13 +22,12 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from diablo.lib.berkeley import term_name_for_sis_id
-from diablo.lib.kaltura_util import get_classification_name, get_recurrence_name, get_series_description, \
-    get_status_name
-from diablo.models.sis_section import SisSection
 from flask import current_app as app
-from KalturaClient.Plugins.Schedule import KalturaScheduleEventClassificationType, KalturaScheduleEventRecurrenceType, \
-    KalturaScheduleEventStatus
+from KalturaClient.Plugins.Schedule import KalturaScheduleEventClassificationType, KalturaScheduleEventRecurrenceType, KalturaScheduleEventStatus
+
+from diablo.lib.berkeley import term_name_for_sis_id
+from diablo.lib.kaltura_util import get_classification_name, get_recurrence_name, get_series_description, get_status_name
+from diablo.models.sis_section import SisSection
 
 
 class TestKalturaEnums:

@@ -28,6 +28,7 @@ import time
 
 from flask import current_app as app
 from selenium.webdriver.common.by import By
+
 from xena.models.recording_placement import RecordingPlacement
 from xena.models.recording_type import RecordingType
 from xena.pages.diablo_pages import DiabloPages

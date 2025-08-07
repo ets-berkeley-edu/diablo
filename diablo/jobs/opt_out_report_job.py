@@ -25,11 +25,12 @@ ENHANCEMENTS, OR MODIFICATIONS.
 import csv
 import tempfile
 
+from flask import current_app as app
+
 from diablo.externals import s3
 from diablo.jobs.base_job import BaseJob
 from diablo.jobs.util import get_eligible_courses
 from diablo.lib.util import get_eb_environment
-from flask import current_app as app
 
 
 class OptOutReportJob(BaseJob):

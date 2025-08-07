@@ -25,10 +25,11 @@ ENHANCEMENTS, OR MODIFICATIONS.
 from contextlib import contextmanager
 from datetime import datetime
 
-from diablo.lib.db import get_psycopg_cursor
-from flask import current_app as app
 import psycopg2
 import psycopg2.extras
+from flask import current_app as app
+
+from diablo.lib.db import get_psycopg_cursor
 
 """Run queries against RDS."""
 

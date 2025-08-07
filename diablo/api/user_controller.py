@@ -22,6 +22,10 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
+from flask import current_app as app
+from flask import request
+from flask_login import current_user, login_required
+
 from diablo.api.errors import BadRequestError, ResourceNotFoundError
 from diablo.api.util import admin_required
 from diablo.externals.canvas import get_teaching_courses
@@ -32,8 +36,6 @@ from diablo.merged.calnet import get_calnet_user_for_uid, get_calnet_users_for_u
 from diablo.models.admin_user import AdminUser
 from diablo.models.note import Note
 from diablo.models.user import User
-from flask import current_app as app, request
-from flask_login import current_user, login_required
 
 
 @app.route('/api/user/my_profile')

@@ -22,9 +22,10 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
+from flask import current_app as app
+
 from diablo.jobs.base_job import BaseJob
 from diablo.models.job_history import JobHistory
-from flask import current_app as app
 
 
 class HouseKeepingJob(BaseJob):

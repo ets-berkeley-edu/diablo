@@ -26,6 +26,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 from flask import current_app as app
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait as Wait
+
 from xena.pages.diablo_pages import DiabloPages
 from xena.test_utils import util
 

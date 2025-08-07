@@ -22,10 +22,13 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from collections import OrderedDict
 import json
+from collections import OrderedDict
 
-from diablo import __version__ as version, cache
+from flask import current_app as app
+
+from diablo import __version__ as version
+from diablo import cache
 from diablo.api.util import admin_required, get_search_filter_options
 from diablo.externals.kaltura import CREATED_BY_DIABLO_TAG
 from diablo.lib.berkeley import term_name_for_sis_id
@@ -34,7 +37,6 @@ from diablo.lib.util import get_eb_environment
 from diablo.models.course_preference import NAMES_PER_PUBLISH_TYPE
 from diablo.models.email_template import EmailTemplate
 from diablo.models.room import Room
-from flask import current_app as app
 
 PUBLIC_CONFIGS = [
     'CANVAS_BASE_URL',

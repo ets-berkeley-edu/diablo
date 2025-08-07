@@ -25,6 +25,9 @@ ENHANCEMENTS, OR MODIFICATIONS.
 import glob
 import json
 
+from flask import current_app as app
+from sqlalchemy.sql import text
+
 from diablo import cache, db, std_commit
 from diablo.factory import background_job_manager
 from diablo.jobs.house_keeping_job import HouseKeepingJob
@@ -37,8 +40,6 @@ from diablo.models.email_template import EmailTemplate
 from diablo.models.job import Job
 from diablo.models.room import Room
 from diablo.models.sis_section import SisSection
-from flask import current_app as app
-from sqlalchemy.sql import text
 from tests.util import simply_yield
 
 _test_users = [

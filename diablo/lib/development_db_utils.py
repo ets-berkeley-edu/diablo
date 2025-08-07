@@ -24,10 +24,11 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 import json
 
+from sqlalchemy import text
+
 from diablo import db, std_commit
 from diablo.lib.util import utc_now
 from diablo.models.sis_section import SisSection
-from sqlalchemy import text
 
 
 def save_mock_courses(json_file_path):

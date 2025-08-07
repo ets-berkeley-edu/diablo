@@ -24,10 +24,9 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 from datetime import datetime, timezone
 
+import pytz
 from dateutil.tz import tzutc
 from flask import current_app as app
-import pytz
-
 
 """Generic utilities."""
 

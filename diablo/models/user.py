@@ -22,12 +22,13 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
+from flask import current_app as app
+from flask_login import UserMixin
+
 from diablo.merged.calnet import get_calnet_user_for_uid
 from diablo.models.admin_user import AdminUser
 from diablo.models.opt_out import OptOut
 from diablo.models.sis_section import SisSection
-from flask import current_app as app
-from flask_login import UserMixin
 
 
 class User(UserMixin):

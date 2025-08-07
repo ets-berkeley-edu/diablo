@@ -22,11 +22,12 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
+from flask import current_app as app
+
 from diablo.jobs.base_job import BaseJob
 from diablo.jobs.util import get_eligible_courses
 from diablo.models.queued_email import remind_instructors_scheduled
 from diablo.models.sis_section import AUTHORIZED_INSTRUCTOR_ROLE_CODES
-from flask import current_app as app
 
 
 class RemindInstructorsJob(BaseJob):

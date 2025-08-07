@@ -23,9 +23,10 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
+from flask import current_app as app
+
 import diablo.api.errors
 from diablo.lib.http_util import tolerant_jsonify
-from flask import current_app as app
 
 
 @app.errorhandler(diablo.api.errors.BadRequestError)

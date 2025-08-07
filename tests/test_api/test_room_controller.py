@@ -26,9 +26,10 @@ import io
 import json
 import zipfile
 
-from diablo.models.room import Room
-from flask import current_app as app
 import pytest
+from flask import current_app as app
+
+from diablo.models.room import Room
 from tests.test_api.api_test_utils import mock_scheduled
 from tests.util import override_config, test_scheduling_workflow
 

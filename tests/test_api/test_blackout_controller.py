@@ -24,9 +24,10 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 import json
 
+import pytest
+
 from diablo import std_commit
 from diablo.models.blackout import Blackout
-import pytest
 
 instructor_uid = '00001'
 
