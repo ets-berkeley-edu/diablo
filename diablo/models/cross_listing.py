@@ -22,10 +22,11 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from diablo import db, std_commit
-from diablo.lib.util import to_isoformat, utc_now
 from sqlalchemy import and_, text
 from sqlalchemy.dialects.postgresql import ARRAY
+
+from diablo import db, std_commit
+from diablo.lib.util import to_isoformat, utc_now
 
 
 class CrossListing(db.Model):

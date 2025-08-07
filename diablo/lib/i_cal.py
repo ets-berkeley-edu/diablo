@@ -22,19 +22,19 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from datetime import datetime, timezone
 import re
+from datetime import datetime, timezone
 from tempfile import TemporaryFile
 from textwrap import TextWrapper
+
+import zipstream
+from flask import current_app as app
+from KalturaClient.Plugins.Schedule import KalturaScheduleEventRecurrenceType, KalturaScheduleEventStatus
 
 from diablo.externals.kaltura import Kaltura
 from diablo.lib.util import utc_now
 from diablo.models.room import Room
 from diablo.models.scheduled import Scheduled
-from flask import current_app as app
-from KalturaClient.Plugins.Schedule import KalturaScheduleEventRecurrenceType, KalturaScheduleEventStatus
-import zipstream
-
 
 """Converts Kaltura schedule events to an iCalendar file in conformance with RFC 5545."""
 

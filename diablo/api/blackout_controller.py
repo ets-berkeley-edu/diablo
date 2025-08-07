@@ -22,12 +22,14 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
+from flask import current_app as app
+from flask import request
+
 from diablo.api.errors import BadRequestError, ResourceNotFoundError
 from diablo.api.util import admin_required
 from diablo.lib.http_util import tolerant_jsonify
 from diablo.lib.util import localized_timestamp_to_utc
 from diablo.models.blackout import Blackout
-from flask import current_app as app, request
 
 
 @app.route('/api/blackouts/all')

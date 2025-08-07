@@ -22,6 +22,8 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
+from flask import current_app as app
+
 from diablo.externals.rds import execute
 from diablo.jobs.base_job import BaseJob
 from diablo.jobs.errors import BackgroundJobError
@@ -29,7 +31,6 @@ from diablo.jobs.schedule_updates_job import _queue_schedule_updates
 from diablo.jobs.util import insert_or_update_instructors, refresh_cross_listings, refresh_rooms
 from diablo.lib.db import resolve_sql_template
 from diablo.models.sis_section import SisSection
-from flask import current_app as app
 
 
 class SisDataRefreshJob(BaseJob):

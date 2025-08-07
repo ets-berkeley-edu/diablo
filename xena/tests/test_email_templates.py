@@ -24,6 +24,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 
 import pytest
+
 from xena.models.email_template import EmailTemplate
 from xena.models.email_template_type import EmailTemplateType
 from xena.models.term import Term

@@ -25,8 +25,9 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 import json
 
-from diablo.models.email_template import EmailTemplate
 import pytest
+
+from diablo.models.email_template import EmailTemplate
 
 instructor_uid = '00001'
 

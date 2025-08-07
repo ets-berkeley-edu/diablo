@@ -26,6 +26,7 @@ import copy
 from datetime import timedelta
 
 import pytest
+
 from xena.models.email_template_type import EmailTemplateType
 from xena.models.recording_schedule import RecordingSchedule
 from xena.models.user import User

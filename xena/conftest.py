@@ -25,8 +25,9 @@ ENHANCEMENTS, OR MODIFICATIONS.
 
 import os
 
-from diablo.factory import create_app
 import pytest
+
+from diablo.factory import create_app
 from xena.models.term import Term
 from xena.pages.api_page import ApiPage
 from xena.pages.attic_page import AtticPage
@@ -46,7 +47,6 @@ from xena.pages.room_page import RoomPage
 from xena.pages.room_printable_page import RoomPrintablePage
 from xena.pages.rooms_page import RoomsPage
 from xena.test_utils.webdriver_manager import WebDriverManager
-
 
 os.environ['DIABLO_ENV'] = 'xena'
 

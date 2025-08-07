@@ -26,11 +26,11 @@ import json
 import os
 import re
 
-from diablo import db
-from diablo.lib.db import resolve_sql_template_string
 from flask import current_app as app
 from sqlalchemy.sql import text
 
+from diablo import db
+from diablo.lib.db import resolve_sql_template_string
 
 """Loch queries."""
 

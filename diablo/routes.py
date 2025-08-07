@@ -25,10 +25,11 @@ ENHANCEMENTS, OR MODIFICATIONS.
 import datetime
 import traceback
 
-from diablo.merged.emailer import send_system_error_email
 from flask import jsonify, make_response, redirect, request, session
 from flask_login import LoginManager
 from werkzeug.exceptions import HTTPException
+
+from diablo.merged.emailer import send_system_error_email
 
 
 def register_routes(app):
@@ -44,14 +45,14 @@ def register_routes(app):
     import diablo.api.config_controller
     import diablo.api.course_controller
     import diablo.api.email_controller
+
+    # Register error handlers.
+    import diablo.api.error_handlers
     import diablo.api.job_controller
     import diablo.api.kaltura_controller
     import diablo.api.room_controller
     import diablo.api.status_controller
     import diablo.api.user_controller
-
-    # Register error handlers.
-    import diablo.api.error_handlers
 
     index_html = open(app.config['INDEX_HTML']).read()
 

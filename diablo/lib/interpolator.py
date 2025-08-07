@@ -25,9 +25,10 @@ ENHANCEMENTS, OR MODIFICATIONS.
 
 import re
 
+from flask import current_app as app
+
 from diablo.lib.berkeley import term_name_for_sis_id
 from diablo.lib.util import format_days, format_time, get_names_of_days, readable_join
-from flask import current_app as app
 
 
 def interpolate_content(

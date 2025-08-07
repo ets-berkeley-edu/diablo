@@ -24,6 +24,8 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 import traceback
 
+from flask import current_app as app
+
 from diablo.externals.kaltura import CREATED_BY_DIABLO_TAG, Kaltura
 from diablo.jobs.base_job import BaseJob
 from diablo.jobs.util import get_eligible_unscheduled_courses, notify_newly_scheduled_instructors, remove_blackout_events, schedule_recordings
@@ -35,9 +37,8 @@ from diablo.models.email_template import EmailTemplate
 from diablo.models.instructor import instructor_json_from_uids
 from diablo.models.queued_email import QueuedEmail
 from diablo.models.schedule_update import ScheduleUpdate
-from diablo.models.scheduled import is_meeting_in_session, Scheduled
+from diablo.models.scheduled import Scheduled, is_meeting_in_session
 from diablo.models.sis_section import AUTHORIZED_INSTRUCTOR_ROLE_CODES, SisSection
-from flask import current_app as app
 
 
 class KalturaJob(BaseJob):

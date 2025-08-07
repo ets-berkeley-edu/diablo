@@ -23,8 +23,9 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-from diablo.factory import create_app
 from pprintpp import pprint as pp  # noqa: F401
+
+from diablo.factory import create_app
 
 """Run Flask-wrapped code from a Python console.
 

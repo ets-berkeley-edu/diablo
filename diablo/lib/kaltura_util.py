@@ -22,12 +22,12 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
+from flask import current_app as app
+from KalturaClient.Plugins.Schedule import KalturaScheduleEventClassificationType, KalturaScheduleEventRecurrenceType, KalturaScheduleEventStatus
+
 from diablo.lib.berkeley import term_year_for_sis_id
 from diablo.lib.util import readable_join
 from diablo.models.sis_section import AUTHORIZED_INSTRUCTOR_ROLE_CODES
-from flask import current_app as app
-from KalturaClient.Plugins.Schedule import KalturaScheduleEventClassificationType, KalturaScheduleEventRecurrenceType, \
-    KalturaScheduleEventStatus
 
 
 def get_classification_name(classification_type):

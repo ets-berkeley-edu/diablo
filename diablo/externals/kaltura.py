@@ -22,27 +22,49 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from datetime import date, datetime, time, timedelta
 import hashlib
 import json
+from datetime import date, datetime, time, timedelta
 
 import dateutil.parser
-from diablo import cachify, skip_when_pytest
-from diablo.lib.berkeley import get_first_matching_datetime_of_term, get_recording_end_date, get_recording_start_date, \
-    term_name_for_sis_id
-from diablo.lib.kaltura_util import get_classification_name, get_recurrence_name, get_series_description, \
-    get_status_name, represents_recording_series
-from diablo.lib.util import default_timezone, epoch_time_to_isoformat, format_days, local_now
 from flask import current_app as app
 from KalturaClient import KalturaClient, KalturaConfiguration
 from KalturaClient.exceptions import KalturaClientException
-from KalturaClient.Plugins.Core import KalturaBaseEntry, KalturaBaseEntryFilter, KalturaCategory, KalturaCategoryEntry, KalturaCategoryEntryFilter, \
-    KalturaCategoryEntryStatus, KalturaCategoryFilter, KalturaEntryDisplayInSearchType, KalturaEntryModerationStatus, \
-    KalturaEntryStatus, KalturaEntryType, KalturaFilterPager, KalturaMediaEntryFilter, KalturaNullableBoolean
-from KalturaClient.Plugins.Schedule import KalturaRecordScheduleEvent, KalturaRecordScheduleEventFilter, \
-    KalturaScheduleEventClassificationType, KalturaScheduleEventFilter, KalturaScheduleEventRecurrence, \
-    KalturaScheduleEventRecurrenceFrequency, KalturaScheduleEventRecurrenceType, KalturaScheduleEventResource, \
-    KalturaScheduleEventResourceFilter, KalturaScheduleEventStatus, KalturaScheduleResourceFilter, KalturaSessionType
+from KalturaClient.Plugins.Core import (
+    KalturaBaseEntry,
+    KalturaBaseEntryFilter,
+    KalturaCategory,
+    KalturaCategoryEntry,
+    KalturaCategoryEntryFilter,
+    KalturaCategoryEntryStatus,
+    KalturaCategoryFilter,
+    KalturaEntryDisplayInSearchType,
+    KalturaEntryModerationStatus,
+    KalturaEntryStatus,
+    KalturaEntryType,
+    KalturaFilterPager,
+    KalturaMediaEntryFilter,
+    KalturaNullableBoolean,
+)
+from KalturaClient.Plugins.Schedule import (
+    KalturaRecordScheduleEvent,
+    KalturaRecordScheduleEventFilter,
+    KalturaScheduleEventClassificationType,
+    KalturaScheduleEventFilter,
+    KalturaScheduleEventRecurrence,
+    KalturaScheduleEventRecurrenceFrequency,
+    KalturaScheduleEventRecurrenceType,
+    KalturaScheduleEventResource,
+    KalturaScheduleEventResourceFilter,
+    KalturaScheduleEventStatus,
+    KalturaScheduleResourceFilter,
+    KalturaSessionType,
+)
+
+from diablo import cachify, skip_when_pytest
+from diablo.lib.berkeley import get_first_matching_datetime_of_term, get_recording_end_date, get_recording_start_date, term_name_for_sis_id
+from diablo.lib.kaltura_util import get_classification_name, get_recurrence_name, get_series_description, get_status_name, represents_recording_series
+from diablo.lib.util import default_timezone, epoch_time_to_isoformat, format_days, local_now
 
 CREATED_BY_DIABLO_TAG = 'rtl_course_capture'
 

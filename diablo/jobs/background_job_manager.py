@@ -26,13 +26,14 @@ import os
 import threading
 import time
 
+import schedule
+
 from diablo.externals import rds
 from diablo.jobs.base_job import BaseJob
 from diablo.jobs.errors import BackgroundJobError
 from diablo.lib.util import utc_now
 from diablo.models.job import Job
 from diablo.models.job_history import JobHistory
-import schedule
 
 
 class BackgroundJobManager:

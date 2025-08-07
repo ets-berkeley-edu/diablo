@@ -26,7 +26,6 @@ import json
 
 import pytest
 
-
 admin_uid = '90001'
 instructor_not_teaching_uid = '10000'
 instructor_uid = '10001'

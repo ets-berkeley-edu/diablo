@@ -25,7 +25,8 @@ ENHANCEMENTS, OR MODIFICATIONS.
 import csv
 from functools import wraps
 
-from flask import current_app as app, request, Response
+from flask import Response, request
+from flask import current_app as app
 from flask_login import current_user
 from werkzeug.wrappers import ResponseStream
 

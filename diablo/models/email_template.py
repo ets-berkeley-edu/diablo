@@ -22,11 +22,11 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
+from sqlalchemy.dialects.postgresql import ENUM
+
 from diablo import db, std_commit
 from diablo.lib.util import to_isoformat
 from diablo.models.base import Base
-from sqlalchemy.dialects.postgresql import ENUM
-
 
 email_template_type = ENUM(
     'admin_operator_requested',

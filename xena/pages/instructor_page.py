@@ -25,6 +25,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 
 from flask import current_app as app
 from selenium.webdriver.common.by import By
+
 from xena.pages.courses_page import CoursesPage
 from xena.test_utils import util
 

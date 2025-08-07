@@ -22,8 +22,9 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from diablo.models.queued_email import QueuedEmail
 from flask import current_app as app
+
+from diablo.models.queued_email import QueuedEmail
 
 
 class TestQueuedEmail:

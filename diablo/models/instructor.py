@@ -24,10 +24,11 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 import json
 
+from sqlalchemy import text
+
 from diablo import db
 from diablo.lib.util import utc_now
 from diablo.models.base import Base
-from sqlalchemy import text
 
 
 class Instructor(Base):

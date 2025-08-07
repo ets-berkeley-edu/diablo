@@ -22,11 +22,12 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
+from flask import current_app as app
+
 from diablo.externals.kaltura import Kaltura
 from diablo.jobs.base_job import BaseJob
 from diablo.models.scheduled import Scheduled
 from diablo.models.sis_section import SisSection
-from flask import current_app as app
 
 
 class ClearSchedulesJob(BaseJob):

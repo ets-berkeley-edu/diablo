@@ -22,16 +22,17 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
+import logging
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-import logging
 from smtplib import SMTP
+
+from flask import current_app as app
 
 from diablo import skip_when_pytest
 from diablo.lib.util import get_eb_environment
 from diablo.models.cross_listing import CrossListing
 from diablo.models.sent_email import SentEmail
-from flask import current_app as app
 
 
 class BConnected:

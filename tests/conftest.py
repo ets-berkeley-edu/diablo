@@ -25,12 +25,13 @@ ENHANCEMENTS, OR MODIFICATIONS.
 import json
 import os
 
-from diablo import cache
-import diablo.factory
-from flask_login import logout_user
 import pytest
+from flask_login import logout_user
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import scoped_session, sessionmaker
+
+import diablo.factory
+from diablo import cache
 from tests.util import override_config
 
 os.environ['DIABLO_ENV'] = 'test'

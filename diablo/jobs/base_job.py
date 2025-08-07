@@ -23,16 +23,17 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 import os
-from threading import Thread
 import traceback
+from threading import Thread
+
+from flask import current_app as app
+from sqlalchemy import text
 
 from diablo import db
 from diablo.jobs.errors import BackgroundJobError
 from diablo.merged.emailer import send_system_error_email
 from diablo.models.job import Job
 from diablo.models.job_history import JobHistory
-from flask import current_app as app
-from sqlalchemy import text
 
 
 class BaseJob:

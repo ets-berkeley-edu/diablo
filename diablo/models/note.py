@@ -22,10 +22,11 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
+from sqlalchemy import and_
+
 from diablo import db, std_commit
 from diablo.lib.util import utc_now
 from diablo.models.base import Base
-from sqlalchemy import and_
 
 
 class Note(Base):

@@ -25,11 +25,12 @@ ENHANCEMENTS, OR MODIFICATIONS.
 
 import time
 
-from flask import current_app as app
 import pytest
+from flask import current_app as app
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.wait import WebDriverWait as Wait
+
 from xena.pages.page import Page
 from xena.test_utils import util
 

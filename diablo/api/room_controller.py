@@ -24,6 +24,11 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 from datetime import datetime, timedelta
 
+from flask import Response, request, send_file, stream_with_context
+from flask import current_app as app
+from flask_login import login_required
+from werkzeug.utils import secure_filename
+
 from diablo.api.errors import BadRequestError, ResourceNotFoundError
 from diablo.api.util import admin_required
 from diablo.externals.kaltura import CREATED_BY_DIABLO_TAG, Kaltura
@@ -32,9 +37,6 @@ from diablo.lib.i_cal import generate_ics_file, get_ics_file_name, get_zip_file_
 from diablo.lib.util import localize_datetime
 from diablo.models.room import Room
 from diablo.models.sis_section import SisSection
-from flask import current_app as app, request, Response, send_file, stream_with_context
-from flask_login import login_required
-from werkzeug.utils import secure_filename
 
 
 @app.route('/api/rooms/download_events', methods=['POST'])

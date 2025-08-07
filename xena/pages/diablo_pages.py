@@ -22,16 +22,17 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from datetime import datetime, time, timezone
 import re
+from datetime import datetime, time, timezone
 from time import sleep
 
-from diablo.lib.i_cal import get_kaltura_safe_name
-from diablo.lib.util import default_timezone
 from flask import current_app as app
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.wait import WebDriverWait as Wait
+
+from diablo.lib.i_cal import get_kaltura_safe_name
+from diablo.lib.util import default_timezone
 from xena.pages.page import Page
 from xena.test_utils import util
 

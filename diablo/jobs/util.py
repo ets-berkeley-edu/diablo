@@ -22,9 +22,13 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from itertools import islice
 import re
 import traceback
+from itertools import islice
+
+from flask import current_app as app
+from KalturaClient.Plugins.Schedule import KalturaScheduleEventRecurrenceType
+from sqlalchemy import text
 
 from diablo import db, std_commit
 from diablo.externals.kaltura import CREATED_BY_DIABLO_TAG, Kaltura
@@ -43,9 +47,6 @@ from diablo.models.room import Room
 from diablo.models.schedule_update import ScheduleUpdate
 from diablo.models.scheduled import Scheduled
 from diablo.models.sis_section import AUTHORIZED_INSTRUCTOR_ROLE_CODES, SisSection
-from flask import current_app as app
-from KalturaClient.Plugins.Schedule import KalturaScheduleEventRecurrenceType
-from sqlalchemy import text
 
 
 def build_merged_collaborators_list(course, manually_set_collaborator_uids):

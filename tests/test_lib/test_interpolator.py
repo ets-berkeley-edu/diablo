@@ -24,11 +24,12 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 import re
 
+from flask import current_app as app
+
 from diablo.externals.b_connected import BConnected
 from diablo.lib.interpolator import interpolate_content
 from diablo.merged.calnet import get_calnet_user_for_uid
 from diablo.models.sis_section import SisSection
-from flask import current_app as app
 from tests.util import override_config
 
 

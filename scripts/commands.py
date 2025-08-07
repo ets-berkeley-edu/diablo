@@ -29,6 +29,7 @@ abspath = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(abspath)
 
 import click  # noqa: E402, F401
+
 from diablo.factory import create_app  # noqa: E402
 
 application = create_app(standalone=True)

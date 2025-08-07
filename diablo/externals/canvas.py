@@ -24,15 +24,15 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 import re
 
+import requests
 from canvasapi import Canvas
 from canvasapi.external_tool import ExternalTool
 from canvasapi.user import User
+from flask import current_app as app
+
 from diablo import skip_when_pytest
 from diablo.lib.berkeley import get_canvas_sis_term_id
 from diablo.lib.util import resolve_xml_template
-from flask import current_app as app
-import requests
-
 
 INSTRUCTOR_ROLES = ['TeacherEnrollment', 'TaEnrollment', 'Lead TA', 'DesignerEnrollment', 'Maintainer', 'Owner', 'CanvasAdmin']
 

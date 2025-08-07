@@ -24,6 +24,10 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 import re
 
+from flask import current_app as app
+from flask import request
+from flask_login import current_user
+
 from diablo.api.errors import BadRequestError, ResourceNotFoundError
 from diablo.api.util import admin_required
 from diablo.factory import background_job_manager
@@ -32,8 +36,6 @@ from diablo.lib.http_util import tolerant_jsonify
 from diablo.lib.util import to_isoformat
 from diablo.models.job import Job
 from diablo.models.job_history import JobHistory
-from flask import current_app as app, request
-from flask_login import current_user
 
 
 @app.route('/api/job/<job_key>/start')

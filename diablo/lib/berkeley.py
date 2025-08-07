@@ -24,8 +24,9 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 from datetime import datetime, timedelta
 
-from diablo.lib.util import default_timezone, format_days, local_now, safe_strftime
 from flask import current_app as app
+
+from diablo.lib.util import default_timezone, format_days, local_now, safe_strftime
 
 # This order of days is aligned with datetime module: https://pythontic.com/datetime/date/weekday
 DAYS = ('MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU')
