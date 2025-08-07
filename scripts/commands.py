@@ -28,8 +28,8 @@ import sys
 abspath = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(abspath)
 
-import click  # noqa
-from diablo.factory import create_app  # noqa
+import click  # noqa: E402, F401
+from diablo.factory import create_app  # noqa: E402
 
 application = create_app(standalone=True)
 
@@ -40,15 +40,15 @@ def update_lti():
     with application.app_context():
         from diablo.externals.canvas import update_lti_configurations
 
-        print('Starting LTI configuration update...')
+        print('Starting LTI configuration update...')  # noqa: T201
 
         successes, errors = update_lti_configurations()
         if successes:
-            print('The following tools were updated:')
+            print('The following tools were updated:')  # noqa: T201
             for tool_name in successes:
-                print(f'  * {tool_name}')
+                print(f'  * {tool_name}')  # noqa: T201
         if errors:
-            print('The following tools could not be updated:')
+            print('The following tools could not be updated:')  # noqa: T201
             for tool_name in errors:
-                print(f'  * {tool_name}')
-            print('Check app logs for details.')
+                print(f'  * {tool_name}')  # noqa: T201
+            print('Check app logs for details.')  # noqa: T201

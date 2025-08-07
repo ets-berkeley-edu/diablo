@@ -38,7 +38,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 class QueuedEmail(db.Model):
     __tablename__ = 'queued_emails'
 
-    id = db.Column(db.Integer, nullable=False, primary_key=True)  # noqa: A003
+    id = db.Column(db.Integer, nullable=False, primary_key=True)
     subject_line = db.Column(db.String(255))
     message = db.Column(db.Text)
     recipient = db.Column(JSONB)
@@ -179,7 +179,7 @@ class QueuedEmail(db.Model):
         cls._queue_instructor_email('instructors_removed', instructor, course)
 
     @classmethod
-    def _queue_admin_email(cls, template_type, course, **kwargs):
+    def _queue_admin_email(cls, template_type, course, **kwargs):  # noqa: ARG003
         template = _get_email_template(course=course, template_type=template_type)
         if template:
             recipient = get_admin_alert_recipient()

@@ -49,7 +49,7 @@ email_template_type = ENUM(
 class EmailTemplate(Base):
     __tablename__ = 'email_templates'
 
-    id = db.Column(db.Integer, nullable=False, primary_key=True)  # noqa: A003
+    id = db.Column(db.Integer, nullable=False, primary_key=True)
     template_type = db.Column(email_template_type, nullable=False)
     subject_line = db.Column(db.String(255), nullable=False)
     message = db.Column(db.Text, nullable=False)

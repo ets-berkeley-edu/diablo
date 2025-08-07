@@ -194,7 +194,7 @@ def refresh_cross_listings(term_id):
     register_cross_listings(rows, term_id)
 
 
-def register_cross_listings(rows, term_id):  # noqa C901
+def register_cross_listings(rows, term_id):  # noqa: C901
     cross_listings = {}
     previous_schedule = None
     primary_section = None

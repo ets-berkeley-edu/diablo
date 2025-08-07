@@ -31,7 +31,7 @@ from sqlalchemy import and_
 class SentEmail(db.Model):
     __tablename__ = 'sent_emails'
 
-    id = db.Column(db.Integer, nullable=False, primary_key=True)  # noqa: A003
+    id = db.Column(db.Integer, nullable=False, primary_key=True)
     recipient_uid = db.Column(db.String(80), nullable=False)
     section_id = db.Column(db.Integer)
     template_type = db.Column(email_template_type)

@@ -30,7 +30,7 @@ from diablo.models.base import Base
 class AdminUser(Base):
     __tablename__ = 'admin_users'
 
-    id = db.Column(db.Integer, nullable=False, primary_key=True)  # noqa: A003
+    id = db.Column(db.Integer, nullable=False, primary_key=True)
     uid = db.Column(db.String(255), nullable=False, unique=True)
     deleted_at = db.Column(db.DateTime, nullable=True)
 

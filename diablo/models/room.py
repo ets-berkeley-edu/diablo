@@ -40,7 +40,7 @@ room_capability_type = ENUM(
 class Room(db.Model):
     __tablename__ = 'rooms'
 
-    id = db.Column(db.Integer, nullable=False, primary_key=True)  # noqa: A003
+    id = db.Column(db.Integer, nullable=False, primary_key=True)
     capability = db.Column(room_capability_type)
     is_auditorium = db.Column(db.Boolean, nullable=False)
     kaltura_resource_id = db.Column(db.Integer)

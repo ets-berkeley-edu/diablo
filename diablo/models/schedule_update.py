@@ -43,7 +43,7 @@ schedule_update_status_type = ENUM(
 class ScheduleUpdate(db.Model):
     __tablename__ = 'schedule_updates'
 
-    id = db.Column(db.Integer, nullable=False, primary_key=True)  # noqa: A003
+    id = db.Column(db.Integer, nullable=False, primary_key=True)
     term_id = db.Column(db.Integer, nullable=False)
     section_id = db.Column(db.Integer, nullable=False)
     field_name = db.Column(db.String, nullable=False)

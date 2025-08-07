@@ -48,7 +48,7 @@ from xena.pages.rooms_page import RoomsPage
 from xena.test_utils.webdriver_manager import WebDriverManager
 
 
-os.environ['DIABLO_ENV'] = 'xena'  # noqa
+os.environ['DIABLO_ENV'] = 'xena'
 
 _app = create_app(standalone=True)
 

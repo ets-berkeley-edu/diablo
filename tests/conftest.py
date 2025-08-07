@@ -33,10 +33,10 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 from tests.util import override_config
 
-os.environ['DIABLO_ENV'] = 'test'  # noqa
+os.environ['DIABLO_ENV'] = 'test'
 
 
-class FakeAuth(object):
+class FakeAuth(object):  # noqa: UP004
     def __init__(self, the_app, the_client):
         self.app = the_app
         self.client = the_client
@@ -73,12 +73,12 @@ def app(request):
         cache.clear()
         ctx.pop()
 
-    request.addfinalizer(teardown)
+    request.addfinalizer(teardown)  # noqa: PT021
 
     return _app
 
 
-# TODO Perform DB schema creation and deletion outside an app context, enabling test-specific app configurations.
+# TODO: Perform DB schema creation and deletion outside an app context, enabling test-specific app configurations.
 @pytest.fixture(scope='session')
 def db(app):
     """Fixture database object, shared by all tests."""
@@ -91,12 +91,12 @@ def db(app):
     return _db
 
 
-@pytest.fixture(autouse=True, scope='function')
+@pytest.fixture(autouse=True, scope='function')  # noqa: PT003
 def logout():
     logout_user()
 
 
-@pytest.fixture(scope='function', autouse=True)
+@pytest.fixture(scope='function', autouse=True)  # noqa: PT003
 def db_session(db):
     """Fixture database session used for the scope of a single test.
 
@@ -126,7 +126,7 @@ def db_session(db):
     return _session
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope='function')  # noqa: PT003
 def fake_auth(app, db, client):
     """Shortcut to start an authenticated session."""
     return FakeAuth(app, client)

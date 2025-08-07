@@ -80,7 +80,7 @@ def _schedule_new_courses(term_id, newly_scheduled_instructors):
             newly_scheduled_instructors.add(instructor['uid'])
 
 
-def _update_already_scheduled_events(term_id, newly_scheduled_instructors):  # noqa C901
+def _update_already_scheduled_events(term_id, newly_scheduled_instructors):  # noqa: C901, PLR0912, PLR0915
     kaltura = Kaltura(disable_entitlements=True)
     for section_id, schedule_updates in ScheduleUpdate.get_queued_by_section_id(term_id=term_id).items():
         course = SisSection.get_course(term_id=term_id, section_id=section_id, include_deleted=True)
@@ -378,7 +378,7 @@ def _handle_publish_type_update(updated_publish_type, scheduled_model):
     return publish_to_course_sites
 
 
-def _handle_course_site_categories(kaltura, course, publish_to_course_sites, schedule_updates, update_options):  # noqa C901
+def _handle_course_site_categories(kaltura, course, publish_to_course_sites, schedule_updates, update_options):  # noqa: C901, PLR0912
     if publish_to_course_sites and course['canvasSiteIds']:
         updated_canvas_site_ids = course['canvasSiteIds']
     else:

@@ -38,12 +38,12 @@ admin_uid = '90001'
 instructor_uid = '10001'
 
 
-@pytest.fixture()
+@pytest.fixture
 def admin_session(fake_auth):
     fake_auth.login(admin_uid)
 
 
-@pytest.fixture()
+@pytest.fixture
 def instructor_session(fake_auth):
     fake_auth.login(instructor_uid)
 

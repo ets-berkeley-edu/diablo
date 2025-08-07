@@ -520,7 +520,6 @@ class TestCrossListedNameGeneration:
         )
 
     def _verify_name_generation(self, client, section_id, expected_name):
-        # section_id = self._create_cross_listed(courses=courses)
         api_json = api_get_course(
             client,
             section_id=section_id,

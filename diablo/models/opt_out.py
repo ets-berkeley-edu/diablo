@@ -31,7 +31,7 @@ from sqlalchemy import and_, or_
 class OptOut(db.Model):
     __tablename__ = 'opt_outs'
 
-    id = db.Column(db.Integer, nullable=False, primary_key=True)  # noqa: A003
+    id = db.Column(db.Integer, nullable=False, primary_key=True)
     instructor_uid = db.Column(db.String, nullable=False)
     term_id = db.Column(db.Integer)
     section_id = db.Column(db.Integer)
@@ -57,15 +57,15 @@ class OptOut(db.Model):
 
     @classmethod
     def get_all_opt_outs(cls, term_id):
-        return cls.query.filter(or_(cls.term_id == term_id, cls.term_id == None)).all()  # noqa E711
+        return cls.query.filter(or_(cls.term_id == term_id, cls.term_id == None)).all()  # noqa: E711
 
     @classmethod
     def get_blanket_opt_outs_for_uid(cls, uid):
-        return cls.query.filter(and_(cls.instructor_uid == uid, cls.section_id == None)).all()  # noqa E711
+        return cls.query.filter(and_(cls.instructor_uid == uid, cls.section_id == None)).all()  # noqa: E711
 
     @classmethod
     def get_opt_outs_for_instructor_uid(cls, instructor_uid, term_id):
-        return cls.query.filter(and_(cls.instructor_uid == instructor_uid, or_(cls.term_id == term_id, cls.term_id == None))).all()  # noqa E711
+        return cls.query.filter(and_(cls.instructor_uid == instructor_uid, or_(cls.term_id == term_id, cls.term_id == None))).all()  # noqa: E711
 
     @classmethod
     def get_opt_outs_for_section(cls, section_id=None, term_id=None):
@@ -75,7 +75,7 @@ class OptOut(db.Model):
     def update_opt_out(cls, instructor_uid, term_id, section_id, opt_out):
         if section_id is None:
             section_ids = [None]
-            criteria = and_(cls.section_id == None, cls.term_id == term_id, cls.instructor_uid == instructor_uid)  # noqa E711
+            criteria = and_(cls.section_id == None, cls.term_id == term_id, cls.instructor_uid == instructor_uid)  # noqa: E711
         else:
             section_ids = _get_section_ids_with_xlistings(section_id, term_id)
             criteria = and_(cls.section_id.in_(section_ids), cls.term_id == term_id, cls.instructor_uid == instructor_uid)
@@ -86,7 +86,7 @@ class OptOut(db.Model):
             for row in cls.query.filter(criteria).all():
                 if row.section_id in section_ids:
                     section_ids.remove(row.section_id)
-            for section_id in section_ids:
+            for section_id in section_ids:  # noqa: PLR1704
                 opt_out = cls(
                     instructor_uid=instructor_uid,
                     term_id=term_id,

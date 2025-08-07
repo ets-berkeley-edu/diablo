@@ -30,7 +30,7 @@ from diablo.models.base import Base
 class Blackout(Base):
     __tablename__ = 'blackouts'
 
-    id = db.Column(db.Integer, nullable=False, primary_key=True)  # noqa: A003
+    id = db.Column(db.Integer, nullable=False, primary_key=True)
     name = db.Column(db.String(255), nullable=False, unique=True)
     start_date = db.Column(db.DateTime, nullable=False)
     end_date = db.Column(db.DateTime, nullable=False)
