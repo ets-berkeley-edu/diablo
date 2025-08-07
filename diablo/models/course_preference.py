@@ -122,7 +122,7 @@ class CoursePreference(db.Model):
             existing_row.collaborator_uids = list(collaborator_uids)
             if existing_row.section_id in section_ids:
                 section_ids.remove(existing_row.section_id)
-        for section_id in section_ids:
+        for section_id in section_ids:  # noqa: PLR1704
             preferences = cls(
                 term_id=term_id,
                 section_id=section_id,
@@ -146,7 +146,7 @@ class CoursePreference(db.Model):
             existing_row.publish_type = publish_type
             existing_row.canvas_site_ids = list(canvas_site_ids) if canvas_site_ids else None
             section_ids.remove(existing_row.section_id)
-        for section_id in section_ids:
+        for section_id in section_ids:  # noqa: PLR1704
             preferences = cls(
                 term_id=term_id,
                 section_id=section_id,
@@ -169,7 +169,7 @@ class CoursePreference(db.Model):
         for existing_row in cls.query.filter(criteria).all():
             existing_row.recording_type = recording_type
             section_ids.remove(existing_row.section_id)
-        for section_id in section_ids:
+        for section_id in section_ids:  # noqa: PLR1704
             preferences = cls(
                 term_id=term_id,
                 section_id=section_id,

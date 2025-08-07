@@ -52,17 +52,17 @@ def create_app(standalone=False):
 
 
 def _register_jobs(app):
-    from diablo.jobs.blackouts_job import BlackoutsJob  # noqa
-    from diablo.jobs.clear_schedules_job import ClearSchedulesJob  # noqa
-    from diablo.jobs.delete_zoom_recordings_job import DeleteZoomRecordingsJob  # noqa
-    from diablo.jobs.house_keeping_job import HouseKeepingJob  # noqa
-    from diablo.jobs.kaltura_job import KalturaJob  # noqa
-    from diablo.jobs.emails_job import EmailsJob  # noqa
-    from diablo.jobs.opt_out_report_job import OptOutReportJob  # noqa
-    from diablo.jobs.remind_instructors_job import RemindInstructorsJob  # noqa
-    from diablo.jobs.schedule_updates_job import ScheduleUpdatesJob  # noqa
-    from diablo.jobs.semester_start_job import SemesterStartJob  # noqa
-    from diablo.jobs.sis_data_refresh_job import SisDataRefreshJob  # noqa
+    from diablo.jobs.blackouts_job import BlackoutsJob  # noqa: F401
+    from diablo.jobs.clear_schedules_job import ClearSchedulesJob  # noqa: F401
+    from diablo.jobs.delete_zoom_recordings_job import DeleteZoomRecordingsJob  # noqa: F401
+    from diablo.jobs.house_keeping_job import HouseKeepingJob  # noqa: F401
+    from diablo.jobs.kaltura_job import KalturaJob  # noqa: F401
+    from diablo.jobs.emails_job import EmailsJob  # noqa: F401
+    from diablo.jobs.opt_out_report_job import OptOutReportJob  # noqa: F401
+    from diablo.jobs.remind_instructors_job import RemindInstructorsJob  # noqa: F401
+    from diablo.jobs.schedule_updates_job import ScheduleUpdatesJob  # noqa: F401
+    from diablo.jobs.semester_start_job import SemesterStartJob  # noqa: F401
+    from diablo.jobs.sis_data_refresh_job import SisDataRefreshJob  # noqa: F401
 
     if app.config['JOBS_AUTO_START'] and (not app.debug or os.environ.get('WERKZEUG_RUN_MAIN') == 'true'):
         background_job_manager.start(app)

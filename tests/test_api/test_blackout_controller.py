@@ -31,12 +31,12 @@ import pytest
 instructor_uid = '00001'
 
 
-@pytest.fixture()
+@pytest.fixture
 def admin_session(fake_auth):
     fake_auth.login('90001')
 
 
-@pytest.fixture()
+@pytest.fixture
 def instructor_session(fake_auth):
     fake_auth.login(instructor_uid)
 

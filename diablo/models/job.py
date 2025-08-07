@@ -40,7 +40,7 @@ job_schedule_types = ENUM(
 class Job(Base):
     __tablename__ = 'jobs'
 
-    id = db.Column(db.Integer, nullable=False, primary_key=True)  # noqa: A003
+    id = db.Column(db.Integer, nullable=False, primary_key=True)
     disabled = db.Column(db.Boolean, nullable=False)
     is_schedulable = db.Column(db.Boolean, nullable=False)
     job_schedule_type = db.Column(job_schedule_types, nullable=False)

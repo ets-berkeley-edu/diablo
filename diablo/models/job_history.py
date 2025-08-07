@@ -31,7 +31,7 @@ from sqlalchemy.sql import desc
 class JobHistory(db.Model):
     __tablename__ = 'job_history'
 
-    id = db.Column(db.Integer, nullable=False, primary_key=True)  # noqa: A003
+    id = db.Column(db.Integer, nullable=False, primary_key=True)
     job_key = db.Column(db.String(80), nullable=False)
     failed = db.Column(db.Boolean, nullable=False, default=False)
     started_at = db.Column(db.DateTime, nullable=False, default=utc_now)

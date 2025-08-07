@@ -49,7 +49,7 @@ INSTRUCTOR_NAME_SUB_QUERY = """CASE
 class SisSection(db.Model):
     __tablename__ = 'sis_sections'
 
-    id = db.Column(db.Integer, nullable=False, primary_key=True)  # noqa: A003
+    id = db.Column(db.Integer, nullable=False, primary_key=True)
     allowed_units = db.Column(db.String)
     course_name = db.Column(db.String)
     course_title = db.Column(db.Text)
@@ -509,7 +509,7 @@ class SisSection(db.Model):
         return set([row['section_id'] for row in rows])
 
 
-def _to_api_json(  # noqa C901
+def _to_api_json(  # noqa: C901, PLR0912, PLR0915
     term_id,
     rows,
     include_administrative_proxies=False,

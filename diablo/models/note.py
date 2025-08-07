@@ -31,7 +31,7 @@ from sqlalchemy import and_
 class Note(Base):
     __tablename__ = 'notes'
 
-    id = db.Column(db.Integer, nullable=False, primary_key=True)  # noqa: A003
+    id = db.Column(db.Integer, nullable=False, primary_key=True)
     term_id = db.Column(db.Integer)
     section_id = db.Column(db.Integer)
     uid = db.Column(db.String(80))

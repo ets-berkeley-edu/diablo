@@ -37,7 +37,7 @@ from sqlalchemy.dialects.postgresql import ARRAY
 class Scheduled(db.Model):
     __tablename__ = 'scheduled'
 
-    id = db.Column(db.Integer, nullable=False, primary_key=True)  # noqa: A003
+    id = db.Column(db.Integer, nullable=False, primary_key=True)
     section_id = db.Column(db.Integer, nullable=False)
     term_id = db.Column(db.Integer, nullable=False)
     alerts = db.Column(ARRAY(email_template_type))

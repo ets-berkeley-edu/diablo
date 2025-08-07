@@ -200,7 +200,7 @@ def update_course_note():
 
 @app.route('/api/course/opt_out/update', methods=['POST'])
 @login_required
-def update_opt_out():  # noqa C901
+def update_opt_out():  # noqa: C901, PLR0912
     params = request.get_json()
     instructor_uid = params.get('instructorUid')
     term_id = params.get('termId')

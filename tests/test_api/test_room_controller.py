@@ -33,12 +33,12 @@ from tests.test_api.api_test_utils import mock_scheduled
 from tests.util import override_config, test_scheduling_workflow
 
 
-@pytest.fixture()
+@pytest.fixture
 def admin_session(fake_auth):
     fake_auth.login('90001')
 
 
-@pytest.fixture()
+@pytest.fixture
 def instructor_session(fake_auth):
     fake_auth.login('10001')
 
