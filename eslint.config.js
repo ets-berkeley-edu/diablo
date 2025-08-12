@@ -28,11 +28,6 @@ configureVueProject({
 
 export default [
   includeIgnoreFile(gitignorePath),
-  {
-    ignores: [
-      '**/src-vue2/**'
-    ],
-  },
   ...defineConfigWithVueTs(
     pluginVue.configs['flat/recommended'],
     vueTsConfigs.recommended
