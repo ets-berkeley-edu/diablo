@@ -286,6 +286,28 @@ CREATE UNIQUE INDEX uid_idx ON notes (uid) WHERE section_id IS NULL;
 
 --
 
+CREATE TABLE opt_ins (
+    id INTEGER NOT NULL,
+    instructor_uid VARCHAR(80) NOT NULL,
+    term_id INTEGER,
+    section_id INTEGER,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL
+);
+ALTER TABLE opt_ins OWNER TO diablo;
+CREATE SEQUENCE opt_ins_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+ALTER TABLE opt_ins_id_seq OWNER TO diablo;
+ALTER SEQUENCE opt_ins_id_seq OWNED BY opt_ins.id;
+ALTER TABLE ONLY opt_ins ALTER COLUMN id SET DEFAULT nextval('opt_ins_id_seq'::regclass);
+ALTER TABLE ONLY opt_ins
+    ADD CONSTRAINT opt_ins_pkey PRIMARY KEY (id);
+
+--
+
 CREATE TABLE opt_outs (
     id INTEGER NOT NULL,
     instructor_uid VARCHAR(80) NOT NULL,
@@ -479,6 +501,16 @@ ALTER TABLE sis_sections ALTER COLUMN created_at SET DEFAULT now();
 CREATE INDEX sis_sections_instructor_uid_idx ON sis_sections USING btree (instructor_uid);
 CREATE INDEX sis_sections_meeting_location_idx ON sis_sections USING btree (meeting_location);
 CREATE INDEX sis_sections_term_id_section_id_idx ON sis_sections(term_id, section_id);
+
+--
+
+CREATE TABLE user_preferences (
+    uid VARCHAR(255) NOT NULL NOT NULL,
+    do_not_email BOOLEAN DEFAULT FALSE NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL
+);
+ALTER TABLE user_preferences OWNER TO diablo;
+ALTER TABLE user_preferences ADD CONSTRAINT user_preferences_pkey PRIMARY KEY (uid);
 
 --
 

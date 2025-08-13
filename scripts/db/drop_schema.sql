@@ -54,6 +54,7 @@ ALTER TABLE IF EXISTS ONLY public.instructors DROP CONSTRAINT IF EXISTS instruct
 ALTER TABLE IF EXISTS ONLY public.jobs DROP CONSTRAINT IF EXISTS jobs_key_unique_constraint;
 ALTER TABLE IF EXISTS ONLY public.jobs DROP CONSTRAINT IF EXISTS jobs_pkey;
 ALTER TABLE IF EXISTS ONLY public.notes DROP CONSTRAINT IF EXISTS notes_pkey;
+ALTER TABLE IF EXISTS ONLY public.opt_ins DROP CONSTRAINT IF EXISTS opt_ins_pkey;
 ALTER TABLE IF EXISTS ONLY public.opt_outs DROP CONSTRAINT IF EXISTS opt_outs_pkey;
 ALTER TABLE IF EXISTS ONLY public.queued_emails DROP CONSTRAINT IF EXISTS queued_emails_pkey;
 ALTER TABLE IF EXISTS ONLY public.queued_emails DROP CONSTRAINT IF EXISTS queued_emails_section_id_template_type_unique_constraint;
@@ -63,6 +64,7 @@ ALTER TABLE IF EXISTS ONLY public.scheduled DROP CONSTRAINT IF EXISTS schedule_u
 ALTER TABLE IF EXISTS ONLY public.scheduled DROP CONSTRAINT IF EXISTS scheduled_pkey;
 ALTER TABLE IF EXISTS ONLY public.sent_emails DROP CONSTRAINT IF EXISTS sent_emails_pkey;
 ALTER TABLE IF EXISTS ONLY public.sis_sections DROP CONSTRAINT IF EXISTS sis_sections_pkey;
+ALTER TABLE IF EXISTS ONLY public.user_preferences DROP CONSTRAINT IF EXISTS user_preferences_pkey;
 
 --
 
@@ -94,6 +96,8 @@ DROP TABLE IF EXISTS public.job_runner;
 DROP SEQUENCE IF EXISTS jobs_id_seq;
 DROP TABLE IF EXISTS public.notes;
 DROP SEQUENCE IF EXISTS public.notes_id_seq;
+DROP TABLE IF EXISTS public.opt_ins;
+DROP SEQUENCE IF EXISTS public.opt_ins_id_seq;
 DROP TABLE IF EXISTS public.opt_outs;
 DROP SEQUENCE IF EXISTS public.opt_outs_id_seq;
 DROP TABLE IF EXISTS public.queued_emails;
@@ -107,6 +111,7 @@ DROP TABLE IF EXISTS public.sent_emails;
 DROP SEQUENCE IF EXISTS public.sent_emails_id_seq;
 DROP TABLE IF EXISTS public.sis_sections;
 DROP SEQUENCE IF EXISTS public.sis_sections_id_seq;
+DROP TABLE IF EXISTS public.user_preferences;
 
 --
 
