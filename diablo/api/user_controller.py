@@ -26,7 +26,7 @@ from flask import current_app as app
 from flask import request
 from flask_login import current_user, login_required
 
-from diablo.api.errors import BadRequestError, ResourceNotFoundError
+from diablo.api.errors import BadRequestError, ForbiddenRequestError, ResourceNotFoundError
 from diablo.api.util import admin_required
 from diablo.externals.canvas import get_teaching_courses
 from diablo.externals.loch import get_loch_basic_attributes_by_uid_or_email
@@ -36,11 +36,16 @@ from diablo.merged.calnet import get_calnet_user_for_uid, get_calnet_users_for_u
 from diablo.models.admin_user import AdminUser
 from diablo.models.note import Note
 from diablo.models.user import User
+from diablo.models.user_preference import UserPreference
 
 
 @app.route('/api/user/my_profile')
 def my_profile():
     profile = current_user.to_api_json(include_courses=True)
+
+    preferences = UserPreference.get_user_preferences(current_user.uid)
+    profile['doNotEmail'] = preferences.do_not_email if preferences else False
+
     return tolerant_jsonify(profile)
 
 
@@ -56,6 +61,9 @@ def get_user(uid):
     if note:
         feed['note'] = note.body
 
+    preferences = UserPreference.get_user_preferences(uid)
+    feed['doNotEmail'] = preferences.do_not_email if preferences else False
+
     return tolerant_jsonify(feed)
 
 
@@ -63,6 +71,22 @@ def get_user(uid):
 @login_required
 def get_calnet_user(uid):
     return tolerant_jsonify(get_calnet_user_for_uid(app=app, uid=uid))
+
+
+@app.route('/api/user/<uid>/do_not_email/update', methods=['POST'])
+@login_required
+def update_do_not_email(uid):
+    params = request.get_json()
+    do_not_email = params.get('doNotEmail')
+
+    if not uid or do_not_email is None:
+        raise BadRequestError('Required params missing or invalid')
+
+    if not current_user.is_admin and uid != current_user.uid:
+        raise ForbiddenRequestError(f'Unauthorized to update user {uid}.')
+
+    preferences = UserPreference.update_do_not_email(uid, do_not_email)
+    return tolerant_jsonify(preferences.to_api_json())
 
 
 @app.route('/api/user/<uid>/note/delete', methods=['POST'])

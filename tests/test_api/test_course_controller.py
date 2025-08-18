@@ -30,6 +30,7 @@ from flask import current_app as app
 
 from diablo import std_commit
 from diablo.jobs.emails_job import EmailsJob
+from diablo.models.opt_in import OptIn
 from diablo.models.opt_out import OptOut
 from diablo.models.scheduled import Scheduled
 from diablo.models.sent_email import SentEmail
@@ -804,6 +805,414 @@ class TestUpdateRecordingType:
         assert len(_get_operator_emails()) == 0
         EmailsJob(simply_yield).run()
         assert len(_get_operator_emails()) == 1
+
+
+class TestUpdateOptIn:
+
+    @property
+    def term_id(self):
+        return app.config['CURRENT_TERM_ID']
+
+    @staticmethod
+    def _api_opt_in_update(
+            client,
+            instructor_uid,
+            term_id,
+            section_id,
+            opt_in,
+            expected_status_code=200,
+    ):
+        response = client.post(
+            '/api/course/opt_in/update',
+            data=json.dumps({
+                'instructorUid': instructor_uid,
+                'termId': term_id,
+                'sectionId': section_id,
+                'optIn': opt_in,
+            }),
+            content_type='application/json',
+        )
+        assert response.status_code == expected_status_code
+        return response.json
+
+    def test_not_authenticated(self, client):
+        """Deny anonymous access."""
+        instructor_uids = get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
+        self._api_opt_in_update(
+            client,
+            instructor_uid=instructor_uids[0],
+            term_id=self.term_id,
+            section_id=section_1_id,
+            opt_in=True,
+            expected_status_code=401,
+        )
+
+    def test_unauthorized(self, client, fake_auth):
+        """Deny non-instructors."""
+        instructor_uids = get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
+        fake_auth.login([collaborator_uid])
+        self._api_opt_in_update(
+            client,
+            instructor_uid=instructor_uids[0],
+            term_id=self.term_id,
+            section_id=section_1_id,
+            opt_in=True,
+            expected_status_code=401,
+        )
+
+    def test_authorized(self, client, fake_auth):
+        """Instructors can toggle the opt-in preference for courses."""
+        instructor_uids = get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
+        fake_auth.login(instructor_uids[0])
+        with test_scheduling_workflow(app):
+            opt_ins = OptIn.get_opt_ins_for_section(
+                section_id=section_1_id,
+                term_id=self.term_id,
+            )
+            assert not len(opt_ins)
+            course_feed = api_get_course(client, self.term_id, section_1_id)
+            assert course_feed['hasBlanketOptedIn'] is False
+            assert course_feed['hasOptedIn'] is False
+            assert next(i['hasOptedIn'] for i in course_feed['instructors'] if i['uid'] == instructor_uids[0]) is False
+
+            self._api_opt_in_update(
+                client,
+                instructor_uid=instructor_uids[0],
+                term_id=self.term_id,
+                section_id=section_1_id,
+                opt_in=True,
+            )
+            std_commit(allow_test_environment=True)
+
+            opt_ins = OptIn.get_opt_ins_for_section(
+                section_id=section_1_id,
+                term_id=self.term_id,
+            )
+            assert len(opt_ins)
+            course_feed = api_get_course(client, self.term_id, section_1_id)
+            assert course_feed['hasBlanketOptedIn'] is False
+            assert course_feed['hasOptedIn'] is True
+            assert next(i['hasOptedIn'] for i in course_feed['instructors'] if i['uid'] == instructor_uids[0]) is True
+
+            self._api_opt_in_update(
+                client,
+                instructor_uid=instructor_uids[0],
+                term_id=self.term_id,
+                section_id=section_1_id,
+                opt_in=False,
+            )
+            std_commit(allow_test_environment=True)
+
+            opt_ins = OptIn.get_opt_ins_for_section(
+                section_id=section_1_id,
+                term_id=self.term_id,
+            )
+            assert not len(opt_ins)
+            course_feed = api_get_course(client, self.term_id, section_1_id)
+            assert course_feed['hasBlanketOptedIn'] is False
+            assert course_feed['hasOptedIn'] is False
+            assert next(i['hasOptedIn'] for i in course_feed['instructors'] if i['uid'] == instructor_uids[0]) is False
+
+            opt_in_updates = [u for u in course_feed['updateHistory'] if u['fieldName'] == 'opted_in']
+            assert len(opt_in_updates) == 2
+            assert opt_in_updates[1]['fieldValueOld'] is None
+            assert opt_in_updates[1]['fieldValueNew'] == instructor_uids[0]
+            assert opt_in_updates[1]['status'] == 'queued'
+            assert opt_in_updates[1]['requestedByUid'] == instructor_uids[0]
+            assert opt_in_updates[1]['requestedByName'] == 'William Peter Blatty'
+            assert opt_in_updates[0]['fieldValueOld'] == instructor_uids[0]
+            assert opt_in_updates[0]['fieldValueNew'] is None
+            assert opt_in_updates[0]['status'] == 'queued'
+            assert opt_in_updates[0]['requestedByUid'] == instructor_uids[0]
+            assert opt_in_updates[0]['requestedByName'] == 'William Peter Blatty'
+
+    def test_authorized_blanket_per_term(self, client, fake_auth):
+        """Instructors can toggle the opt-in preference for all courses in a term."""
+        instructor_uids = get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
+        fake_auth.login(instructor_uids[0])
+        with test_scheduling_workflow(app):
+            mock_scheduled(
+                section_id=section_1_id,
+                term_id=self.term_id,
+            )
+
+            blanket_term_opt_ins = OptIn.get_opt_ins_for_section(
+                section_id=None,
+                term_id=self.term_id,
+            )
+            assert not len(blanket_term_opt_ins)
+            course_feed = api_get_course(client, self.term_id, section_1_id)
+            assert course_feed['hasBlanketOptedIn'] is False
+            assert course_feed['hasOptedIn'] is False
+            assert next(i['hasOptedIn'] for i in course_feed['instructors'] if i['uid'] == instructor_uids[0]) is False
+
+            self._api_opt_in_update(
+                client,
+                instructor_uid=instructor_uids[0],
+                term_id=self.term_id,
+                section_id='all',
+                opt_in=True,
+            )
+            std_commit(allow_test_environment=True)
+
+            blanket_term_opt_ins = OptIn.get_opt_ins_for_section(
+                section_id=None,
+                term_id=self.term_id,
+            )
+            assert len(blanket_term_opt_ins)
+            course_feed = api_get_course(client, self.term_id, section_1_id)
+            assert course_feed['hasBlanketOptedIn'] is True
+            assert course_feed['hasOptedIn'] is True
+            assert next(i['hasOptedIn'] for i in course_feed['instructors'] if i['uid'] == instructor_uids[0]) is True
+
+            self._api_opt_in_update(
+                client,
+                instructor_uid=instructor_uids[0],
+                term_id=self.term_id,
+                section_id='all',
+                opt_in=False,
+            )
+            std_commit(allow_test_environment=True)
+
+            blanket_term_opt_ins = OptIn.get_opt_ins_for_section(
+                section_id=None,
+                term_id=self.term_id,
+            )
+            assert not len(blanket_term_opt_ins)
+            course_feed = api_get_course(client, self.term_id, section_1_id)
+            assert course_feed['hasBlanketOptedIn'] is False
+            assert course_feed['hasOptedIn'] is False
+            assert next(i['hasOptedIn'] for i in course_feed['instructors'] if i['uid'] == instructor_uids[0]) is False
+
+            # Blanket opt-ins still leave notations in per-course update history.
+            opt_in_updates = [u for u in course_feed['updateHistory'] if u['fieldName'] == 'opted_in']
+            assert len(opt_in_updates) == 2
+            assert opt_in_updates[1]['fieldValueOld'] is None
+            assert opt_in_updates[1]['fieldValueNew'] == instructor_uids[0]
+            assert opt_in_updates[1]['status'] == 'queued'
+            assert opt_in_updates[1]['requestedByUid'] == instructor_uids[0]
+            assert opt_in_updates[1]['requestedByName'] == 'William Peter Blatty'
+            assert opt_in_updates[0]['fieldValueOld'] == instructor_uids[0]
+            assert opt_in_updates[0]['fieldValueNew'] is None
+            assert opt_in_updates[0]['status'] == 'queued'
+            assert opt_in_updates[0]['requestedByUid'] == instructor_uids[0]
+            assert opt_in_updates[0]['requestedByName'] == 'William Peter Blatty'
+
+    def test_authorized_blanket_all_terms(self, client, fake_auth):
+        """Instructors can toggle the opt-out preference for all courses in all terms."""
+        instructor_uids = get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
+        fake_auth.login(instructor_uids[0])
+        with test_scheduling_workflow(app):
+            mock_scheduled(
+                section_id=section_1_id,
+                term_id=self.term_id,
+            )
+
+            blanket_opt_ins = OptIn.get_opt_ins_for_section(
+                section_id=None,
+                term_id=None,
+            )
+            assert not len(blanket_opt_ins)
+            course_feed = api_get_course(client, self.term_id, section_1_id)
+            assert course_feed['hasBlanketOptedIn'] is False
+            assert course_feed['hasOptedIn'] is False
+            assert next(i['hasOptedIn'] for i in course_feed['instructors'] if i['uid'] == instructor_uids[0]) is False
+
+            self._api_opt_in_update(
+                client,
+                instructor_uid=instructor_uids[0],
+                term_id='all',
+                section_id='all',
+                opt_in=True,
+            )
+            std_commit(allow_test_environment=True)
+
+            blanket_opt_ins = OptIn.get_opt_ins_for_section(
+                section_id=None,
+                term_id=None,
+            )
+            assert len(blanket_opt_ins)
+            course_feed = api_get_course(client, self.term_id, section_1_id)
+            assert course_feed['hasBlanketOptedIn'] is True
+            assert course_feed['hasOptedIn'] is True
+            assert next(i['hasOptedIn'] for i in course_feed['instructors'] if i['uid'] == instructor_uids[0]) is True
+
+            self._api_opt_in_update(
+                client,
+                instructor_uid=instructor_uids[0],
+                term_id='all',
+                section_id='all',
+                opt_in=False,
+            )
+            std_commit(allow_test_environment=True)
+
+            blanket_opt_outs = OptIn.get_opt_ins_for_section(
+                section_id=None,
+                term_id=None,
+            )
+            assert not len(blanket_opt_outs)
+            course_feed = api_get_course(client, self.term_id, section_1_id)
+            assert course_feed['hasBlanketOptedIn'] is False
+            assert course_feed['hasOptedIn'] is False
+            assert next(i['hasOptedIn'] for i in course_feed['instructors'] if i['uid'] == instructor_uids[0]) is False
+
+            # Blanket opt-outs still leave notations in per-course update history.
+            opt_in_updates = [u for u in course_feed['updateHistory'] if u['fieldName'] == 'opted_in']
+            assert len(opt_in_updates) == 2
+            assert opt_in_updates[1]['fieldValueOld'] is None
+            assert opt_in_updates[1]['fieldValueNew'] == instructor_uids[0]
+            assert opt_in_updates[1]['status'] == 'queued'
+            assert opt_in_updates[1]['requestedByUid'] == instructor_uids[0]
+            assert opt_in_updates[1]['requestedByName'] == 'William Peter Blatty'
+            assert opt_in_updates[0]['fieldValueOld'] == instructor_uids[0]
+            assert opt_in_updates[0]['fieldValueNew'] is None
+            assert opt_in_updates[0]['status'] == 'queued'
+            assert opt_in_updates[0]['requestedByUid'] == instructor_uids[0]
+            assert opt_in_updates[0]['requestedByName'] == 'William Peter Blatty'
+
+    def test_no_redundant_opt_in_scheduling(self, client, fake_auth):
+        instructor_uids = get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
+        fake_auth.login(instructor_uids[0])
+        with test_scheduling_workflow(app):
+            mock_scheduled(
+                section_id=section_1_id,
+                term_id=self.term_id,
+            )
+
+            self._api_opt_in_update(
+                client,
+                instructor_uid=instructor_uids[0],
+                term_id=self.term_id,
+                section_id=section_1_id,
+                opt_in=True,
+            )
+            std_commit(allow_test_environment=True)
+
+            self._api_opt_in_update(
+                client,
+                instructor_uid=instructor_uids[0],
+                term_id=self.term_id,
+                section_id='all',
+                opt_in=True,
+            )
+            std_commit(allow_test_environment=True)
+
+            self._api_opt_in_update(
+                client,
+                instructor_uid=instructor_uids[0],
+                term_id=self.term_id,
+                section_id='all',
+                opt_in=False,
+            )
+            std_commit(allow_test_environment=True)
+
+            course_feed = api_get_course(client, self.term_id, section_1_id)
+            assert course_feed['hasBlanketOptedIn'] is False
+            assert course_feed['hasOptedIn'] is True
+
+            # Blanket opt-out changes leave no per-course notation for courses already opted out.
+            opt_in_updates = [u for u in course_feed['updateHistory'] if u['fieldName'] == 'opted_in']
+            assert len(opt_in_updates) == 1
+
+    def test_no_redundant_blanket_opt_in_scheduling(self, client, fake_auth):
+        instructor_uids = get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
+        fake_auth.login(instructor_uids[0])
+        with test_scheduling_workflow(app):
+            mock_scheduled(
+                section_id=section_1_id,
+                term_id=self.term_id,
+            )
+
+            self._api_opt_in_update(
+                client,
+                instructor_uid=instructor_uids[0],
+                term_id=self.term_id,
+                section_id='all',
+                opt_in=True,
+            )
+            std_commit(allow_test_environment=True)
+
+            self._api_opt_in_update(
+                client,
+                instructor_uid=instructor_uids[0],
+                term_id='all',
+                section_id='all',
+                opt_in=True,
+            )
+            std_commit(allow_test_environment=True)
+
+            self._api_opt_in_update(
+                client,
+                instructor_uid=instructor_uids[0],
+                term_id='all',
+                section_id='all',
+                opt_in=False,
+            )
+            std_commit(allow_test_environment=True)
+
+            course_feed = api_get_course(client, self.term_id, section_1_id)
+            assert course_feed['hasBlanketOptedIn'] is True
+            assert course_feed['hasOptedIn'] is True
+
+            # Blanket all-term opt-out changes leave no per-course notation for courses already blanket opted out per term.
+            opt_in_updates = [u for u in course_feed['updateHistory'] if u['fieldName'] == 'opted_in']
+            assert len(opt_in_updates) == 1
+
+    def test_admin_toggle_opt_in(self, client, fake_auth):
+        fake_auth.login(admin_uid)
+        with test_scheduling_workflow(app):
+            instructor_uids = get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
+            self._api_opt_in_update(
+                client,
+                instructor_uid=instructor_uids[0],
+                term_id=self.term_id,
+                section_id=section_1_id,
+                opt_in=True,
+            )
+            api_json = api_get_course(client, section_id=section_1_id, term_id=self.term_id)
+            assert api_json['hasOptedIn'] is True
+
+            self._api_opt_in_update(
+                client,
+                instructor_uid=instructor_uids[0],
+                term_id=self.term_id,
+                section_id=section_1_id,
+                opt_in=False,
+            )
+            api_json = api_get_course(client, section_id=section_1_id, term_id=self.term_id)
+            assert api_json['hasOptedIn'] is False
+
+    def test_admin_toggle_blanket_opt_in(self, client, fake_auth):
+        fake_auth.login(admin_uid)
+        with test_scheduling_workflow(app):
+            instructor_uids = get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
+            self._api_opt_in_update(
+                client,
+                instructor_uid=instructor_uids[0],
+                term_id=self.term_id,
+                section_id='all',
+                opt_in=True,
+            )
+            std_commit(allow_test_environment=True)
+
+            api_json = api_get_course(client, section_id=section_1_id, term_id=self.term_id)
+            assert api_json['hasOptedIn'] is True
+            api_json = api_get_user(client, uid=instructor_uids[0])
+            assert api_json['hasOptedInForTerm'] is True
+
+            self._api_opt_in_update(
+                client,
+                instructor_uid=instructor_uids[0],
+                term_id=self.term_id,
+                section_id='all',
+                opt_in=False,
+            )
+            std_commit(allow_test_environment=True)
+
+            api_json = api_get_course(client, section_id=section_1_id, term_id=self.term_id)
+            assert api_json['hasOptedIn'] is False
+            api_json = api_get_user(client, uid=instructor_uids[0])
+            assert api_json['hasOptedInForTerm'] is False
 
 
 class TestUpdateOptOut:
