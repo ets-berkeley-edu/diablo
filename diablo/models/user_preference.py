@@ -68,7 +68,7 @@ class UserPreference(db.Model):
             )
         db.session.add(preferences)
         std_commit()
-        return True
+        return preferences
 
     def to_api_json(self):
         feed = {

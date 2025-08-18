@@ -30,7 +30,6 @@ admin_uid = '90001'
 instructor_not_teaching_uid = '10000'
 instructor_uid = '10001'
 
-
 @pytest.fixture
 def admin_session(fake_auth):
     fake_auth.login(admin_uid)
@@ -204,6 +203,59 @@ class TestNote:
         response = self._api_delete_note(client, uid='10000')
         assert response == {'deleted': True}
         assert 'note' not in client.get('/api/user/10000').json
+
+
+class TestDoNotEmail:
+
+    @staticmethod
+    def _api_update_do_not_email(client, uid, do_not_email, expected_status_code=200):
+        response = client.post(
+            f'/api/user/{uid}/do_not_email/update',
+            data=json.dumps({'doNotEmail': do_not_email}),
+            content_type='application/json',
+        )
+        assert response.status_code == expected_status_code
+        return response.json
+
+    def test_anonymous(self, client):
+        """Denies anonymous access."""
+        self._api_update_do_not_email(client, uid=instructor_uid, do_not_email=False, expected_status_code=401)
+
+    def test_no_value(self, client, fake_auth):
+        """Updates require do-not-email value."""
+        fake_auth.login(admin_uid)
+        self._api_update_do_not_email(client, uid=instructor_uid, do_not_email=None, expected_status_code=400)
+
+    def test_unauthorized(self, client, fake_auth):
+        """Non-admin cannot update another user."""
+        fake_auth.login(instructor_uid)
+        self._api_update_do_not_email(client, uid=instructor_not_teaching_uid, do_not_email=True, expected_status_code=403)
+
+    def test_authorized(self, client, fake_auth):
+        """User can update their own preference."""
+        fake_auth.login(instructor_uid)
+        assert client.get('/api/user/my_profile').json['doNotEmail'] is False
+
+        response = self._api_update_do_not_email(client, uid=instructor_uid, do_not_email=True)
+        assert response['doNotEmail'] is True
+        assert client.get('/api/user/my_profile').json['doNotEmail'] is True
+
+        response = self._api_update_do_not_email(client, uid=instructor_uid, do_not_email=False)
+        assert response['doNotEmail'] is False
+        assert client.get('/api/user/my_profile').json['doNotEmail'] is False
+
+    def test_admin(self, client, fake_auth):
+        """Admin can update user email preference."""
+        fake_auth.login(admin_uid)
+        assert client.get(f'/api/user/{instructor_uid}').json['doNotEmail'] is False
+
+        response = self._api_update_do_not_email(client, uid=instructor_uid, do_not_email=True)
+        assert response['doNotEmail'] is True
+        assert client.get(f'/api/user/{instructor_uid}').json['doNotEmail'] is True
+
+        response = self._api_update_do_not_email(client, uid=instructor_uid, do_not_email=False)
+        assert response['doNotEmail'] is False
+        assert client.get(f'/api/user/{instructor_uid}').json['doNotEmail'] is False
 
 
 class TestGetCalnetUser:

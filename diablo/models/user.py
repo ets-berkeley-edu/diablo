@@ -27,6 +27,7 @@ from flask_login import UserMixin
 
 from diablo.merged.calnet import get_calnet_user_for_uid
 from diablo.models.admin_user import AdminUser
+from diablo.models.opt_in import OptIn
 from diablo.models.opt_out import OptOut
 from diablo.models.sis_section import SisSection
 
@@ -115,11 +116,21 @@ class User(UserMixin):
             elif opt_out.term_id is None:
                 has_opted_out_for_all_terms = True
 
+        has_opted_in_for_term = False
+        has_opted_in_for_all_terms = False
+        for opt_in in OptIn.get_blanket_opt_ins_for_uid(uid):
+            if opt_in.term_id == app.config['CURRENT_TERM_ID']:
+                has_opted_in_for_term = True
+            elif opt_in.term_id is None:
+                has_opted_in_for_all_terms = True
+
         return {
             **calnet_profile,
             **{
                 'id': uid,
                 'emailAddress': calnet_profile.get('email'),
+                'hasOptedInForAllTerms': has_opted_in_for_all_terms,
+                'hasOptedInForTerm': has_opted_in_for_term,
                 'hasOptedOutForAllTerms': has_opted_out_for_all_terms,
                 'hasOptedOutForTerm': has_opted_out_for_term,
                 'isActive': is_active,

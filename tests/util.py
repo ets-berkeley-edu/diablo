@@ -70,6 +70,7 @@ def test_scheduling_workflow(app):
     """Delete all schedules before and after test."""
     def _delete_all_schedules():
         db.session.execute(text('DELETE FROM course_preferences'))
+        db.session.execute(text('DELETE FROM opt_ins'))
         db.session.execute(text('DELETE FROM opt_outs'))
         db.session.execute(text('DELETE FROM schedule_updates'))
         db.session.execute(text('DELETE FROM scheduled'))
