@@ -613,9 +613,8 @@ def _to_api_json(  # noqa: C901, PLR0912, PLR0915
                 'courseTitle': row['course_title'],
                 'crossListings': cross_listed_courses,
                 'deletedAt': safe_strftime(row['deleted_at'], '%Y-%m-%d'),
-                'hasBlanketOptedIn': False,
-                'hasOptedIn': False,
                 'hasBlanketOptedOut': False,
+                'hasOptedIn': False,
                 'hasOptedOut': False,
                 'instructionFormat': row['instruction_format'],
                 'instructors': instructors,
@@ -724,10 +723,7 @@ def _to_api_json(  # noqa: C901, PLR0912, PLR0915
             course['hasOptedOut'] = True
 
         if blanket_opt_ins:
-            course['hasBlanketOptedIn'] = True
             course['optIns'] += [o.to_api_json() for o in blanket_opt_ins]
-        if len(course['optIns']):
-            course['hasOptedIn'] = True
 
         meeting = _to_meeting_json(row)
         eligible_meetings = course['meetings']['eligible']
@@ -763,6 +759,7 @@ def _to_api_json(  # noqa: C901, PLR0912, PLR0915
     api_json = []
     for section_id, course in courses_per_id.items():
         _decorate_course_meeting_type(course)
+        _decorate_course_opt_in(course)
         # Add course to the feed
         api_json.append(course)
 
@@ -779,6 +776,16 @@ def _decorate_course_meeting_type(course):
         course['meetingType'] = 'B'
     else:
         course['meetingType'] = 'A'
+
+
+def _decorate_course_opt_in(course):
+    # All non-APRX instructors must agree to opt in. If there are no non-APRX instructors, an admin opt-in suffices.
+    instructors_not_aprx = [i for i in course['instructors'] if i['roleCode'] != 'APRX']
+    instructors_not_opted_in = [i for i in instructors_not_aprx if not i['hasOptedIn']]
+    admin_opt_in = next((o for o in course['optIns'] if o['instructorUid'] == 'admin'), None)
+
+    if (len(instructors_not_aprx) and not len(instructors_not_opted_in)) or (not len(instructors_not_aprx) and admin_opt_in):
+        course['hasOptedIn'] = True
 
 
 def _get_cross_listed_courses(section_ids, term_id):
