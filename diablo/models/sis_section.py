@@ -247,7 +247,9 @@ class SisSection(db.Model):
 
         if instructor_uids is not None:
             course_filter += '\nAND s.instructor_uid = ANY(:instructor_uids)'
+            course_filter += '\nAND s.instructor_role_code = ANY(:authorized_instructor_role_codes)'
             params['instructor_uids'] = list(instructor_uids)
+            params['authorized_instructor_role_codes'] = AUTHORIZED_INSTRUCTOR_ROLE_CODES
 
         if exclude_scheduled:
             exclude_scheduled_join = 'LEFT JOIN scheduled sch ON sch.term_id = s.term_id AND sch.section_id = s.section_id AND sch.deleted_at IS NULL'
