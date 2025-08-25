@@ -238,7 +238,7 @@ def _update_already_scheduled_events(term_id, newly_scheduled_instructors):  # n
 
                 canvas_site_ids = updated_canvas_site_ids
                 if canvas_site_ids is None:
-                    canvas_site_ids = scheduled.get('canvasSiteIds', [])
+                    canvas_site_ids = course.get('canvasSiteIds', [])
 
                 QueuedEmail.notify_instructors_changes_confirmed(
                     course,
