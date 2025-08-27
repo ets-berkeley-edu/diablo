@@ -22,7 +22,7 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from sqlalchemy import and_, or_
+from sqlalchemy import and_
 
 from diablo import db, std_commit
 from diablo.lib.util import to_isoformat, utc_now
@@ -41,8 +41,8 @@ class OptIn(db.Model):
     def __init__(
             self,
             instructor_uid,
-            term_id=None,
-            section_id=None,
+            term_id,
+            section_id,
     ):
         self.instructor_uid = instructor_uid
         self.term_id = term_id
@@ -58,15 +58,7 @@ class OptIn(db.Model):
 
     @classmethod
     def get_all_opt_ins(cls, term_id):
-        return cls.query.filter(or_(cls.term_id == term_id, cls.term_id == None)).all()  # noqa: E711
-
-    @classmethod
-    def get_blanket_opt_ins_for_uid(cls, uid):
-        return cls.query.filter(and_(cls.instructor_uid == uid, cls.section_id == None)).all()  # noqa: E711
-
-    @classmethod
-    def get_opt_ins_for_instructor_uid(cls, instructor_uid, term_id):
-        return cls.query.filter(and_(cls.instructor_uid == instructor_uid, or_(cls.term_id == term_id, cls.term_id == None))).all()  # noqa: E711
+        return cls.query.filter_by(term_id=term_id).all()
 
     @classmethod
     def get_opt_ins_for_section(cls, section_id=None, term_id=None):
@@ -74,12 +66,8 @@ class OptIn(db.Model):
 
     @classmethod
     def update_opt_in(cls, instructor_uid, term_id, section_id, opt_in):
-        if section_id is None:
-            section_ids = [None]
-            criteria = and_(cls.section_id == None, cls.term_id == term_id, cls.instructor_uid == instructor_uid)  # noqa: E711
-        else:
-            section_ids = _get_section_ids_with_xlistings(section_id, term_id)
-            criteria = and_(cls.section_id.in_(section_ids), cls.term_id == term_id, cls.instructor_uid == instructor_uid)
+        section_ids = _get_section_ids_with_xlistings(section_id, term_id)
+        criteria = and_(cls.section_id.in_(section_ids), cls.term_id == term_id, cls.instructor_uid == instructor_uid)
 
         if opt_in is False:
             cls.query.filter(criteria).delete()

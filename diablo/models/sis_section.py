@@ -543,16 +543,10 @@ def _to_api_json(  # noqa: C901, PLR0912, PLR0915
             blanket_opt_outs_by_instructor_uid[o.instructor_uid].append(o)
 
     opt_ins_by_section_id = {}
-    blanket_opt_ins_by_instructor_uid = {}
     for o in OptIn.get_all_opt_ins(term_id=term_id):
-        if o.section_id:
-            if o.section_id not in opt_ins_by_section_id:
-                opt_ins_by_section_id[o.section_id] = []
-            opt_ins_by_section_id[o.section_id].append(o)
-        else:
-            if o.instructor_uid not in blanket_opt_ins_by_instructor_uid:
-                blanket_opt_ins_by_instructor_uid[o.instructor_uid] = []
-            blanket_opt_ins_by_instructor_uid[o.instructor_uid].append(o)
+        if o.section_id not in opt_ins_by_section_id:
+            opt_ins_by_section_id[o.section_id] = []
+        opt_ins_by_section_id[o.section_id].append(o)
 
     scheduled_results = Scheduled.get_scheduled_per_section_ids(section_ids=section_ids, term_id=term_id)
 
@@ -669,7 +663,6 @@ def _to_api_json(  # noqa: C901, PLR0912, PLR0915
                 if not instructor_json['deletedAt'] or course['deletedAt']:
                     course['instructors'].append(instructor_json)
 
-        blanket_opt_ins = []
         blanket_opt_outs = []
         decorated_course_instructors = []
         for i in course['instructors']:
@@ -687,15 +680,10 @@ def _to_api_json(  # noqa: C901, PLR0912, PLR0915
                         course['optOuts'].append(instructor_opt_out.to_api_json())
                         instructor_has_opted_out = True
 
-                blanket_opt_ins_for_instructor = blanket_opt_ins_by_instructor_uid.get(i['uid'])
-                if blanket_opt_ins_for_instructor:
+                instructor_opt_in = next((o for o in opt_ins if o.instructor_uid == i['uid']), None)
+                if instructor_opt_in:
+                    course['optIns'].append(instructor_opt_in.to_api_json())
                     instructor_has_opted_in = True
-                    blanket_opt_ins += blanket_opt_ins_for_instructor
-                else:
-                    instructor_opt_in = next((o for o in opt_ins if o.instructor_uid == i['uid']), None)
-                    if instructor_opt_in:
-                        course['optIns'].append(instructor_opt_in.to_api_json())
-                        instructor_has_opted_in = True
 
             decorated_course_instructors.append({
                 **i,
@@ -723,9 +711,6 @@ def _to_api_json(  # noqa: C901, PLR0912, PLR0915
             course['optOuts'] += [o.to_api_json() for o in blanket_opt_outs]
         if len(course['optOuts']):
             course['hasOptedOut'] = True
-
-        if blanket_opt_ins:
-            course['optIns'] += [o.to_api_json() for o in blanket_opt_ins]
 
         meeting = _to_meeting_json(row)
         eligible_meetings = course['meetings']['eligible']

@@ -289,8 +289,8 @@ CREATE UNIQUE INDEX uid_idx ON notes (uid) WHERE section_id IS NULL;
 CREATE TABLE opt_ins (
     id INTEGER NOT NULL,
     instructor_uid VARCHAR(80) NOT NULL,
-    term_id INTEGER,
-    section_id INTEGER,
+    term_id INTEGER NOT NULL,
+    section_id INTEGER NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL
 );
 ALTER TABLE opt_ins OWNER TO diablo;
@@ -507,6 +507,7 @@ CREATE INDEX sis_sections_term_id_section_id_idx ON sis_sections(term_id, sectio
 CREATE TABLE user_preferences (
     uid VARCHAR(255) NOT NULL NOT NULL,
     do_not_email BOOLEAN DEFAULT FALSE NOT NULL,
+    opt_in_new_courses BOOLEAN DEFAULT FALSE NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL
 );
 ALTER TABLE user_preferences OWNER TO diablo;
