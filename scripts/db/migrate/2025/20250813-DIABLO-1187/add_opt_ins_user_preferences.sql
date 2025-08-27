@@ -26,8 +26,8 @@
 CREATE TABLE opt_ins (
     id INTEGER NOT NULL,
     instructor_uid VARCHAR(80) NOT NULL,
-    term_id INTEGER,
-    section_id INTEGER,
+    term_id INTEGER NOT NULL,
+    section_id INTEGER NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL
 );
 CREATE SEQUENCE opt_ins_id_seq
@@ -45,6 +45,7 @@ ALTER TABLE ONLY opt_ins
 CREATE TABLE user_preferences (
     uid VARCHAR(255) NOT NULL NOT NULL,
     do_not_email BOOLEAN DEFAULT FALSE NOT NULL,
+    opt_in_new_courses BOOLEAN DEFAULT FALSE NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL
 );
 ALTER TABLE user_preferences OWNER TO diablo;

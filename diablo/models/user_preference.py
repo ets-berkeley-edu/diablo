@@ -31,20 +31,24 @@ class UserPreference(db.Model):
     __tablename__ = 'user_preferences'
 
     uid = db.Column(db.String(255), primary_key=True)
+    opt_in_new_courses = db.Column(db.Boolean, nullable=False)
     do_not_email = db.Column(db.Boolean, nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=utc_now)
 
     def __init__(
             self,
             uid,
+            opt_in_new_courses=False,
             do_not_email=False,
     ):
         self.uid = uid
+        self.opt_in_new_courses = opt_in_new_courses
         self.do_not_email = do_not_email
 
     def __repr__(self):
         return f"""<UserPreferences
                     uid={self.uid},
+                    opt_in_new_courses={self.opt_in_new_courses},
                     do_not_email={self.do_not_email},
                 """
 
@@ -70,10 +74,34 @@ class UserPreference(db.Model):
         std_commit()
         return preferences
 
+    @classmethod
+    def update_opt_in_new_courses(
+            cls,
+            uid,
+            opt_in_new_courses,
+    ):
+        preferences = cls.get_user_preferences(uid)
+        if preferences:
+            preferences.opt_in_new_courses = opt_in_new_courses
+        else:
+            preferences = cls(
+                uid=uid,
+                opt_in_new_courses=opt_in_new_courses,
+            )
+
+        # opt_in_new_courses and do_not_email cannot both be true.
+        if opt_in_new_courses is True:
+            preferences.do_not_email = False
+
+        db.session.add(preferences)
+        std_commit()
+        return preferences
+
     def to_api_json(self):
         feed = {
             'uid': self.uid,
             'doNotEmail': self.do_not_email,
+            'optInNewCourses': self.opt_in_new_courses,
             'createdAt': to_isoformat(self.created_at),
         }
         return feed

@@ -258,6 +258,82 @@ class TestDoNotEmail:
         assert client.get(f'/api/user/{instructor_uid}').json['doNotEmail'] is False
 
 
+class TestOptInNewCourses:
+
+    @staticmethod
+    def _api_update_opt_in_new_courses(client, uid, opt_in_new_courses, expected_status_code=200):
+        response = client.post(
+            f'/api/user/{uid}/opt_in_new_courses/update',
+            data=json.dumps({'optInNewCourses': opt_in_new_courses}),
+            content_type='application/json',
+        )
+        assert response.status_code == expected_status_code
+        return response.json
+
+    def test_anonymous(self, client):
+        """Denies anonymous access."""
+        self._api_update_opt_in_new_courses(client, uid=instructor_uid, opt_in_new_courses=False, expected_status_code=401)
+
+    def test_no_value(self, client, fake_auth):
+        """Updates require opt-in value."""
+        fake_auth.login(admin_uid)
+        self._api_update_opt_in_new_courses(client, uid=instructor_uid, opt_in_new_courses=None, expected_status_code=400)
+
+    def test_unauthorized(self, client, fake_auth):
+        """Non-admin cannot update another user."""
+        fake_auth.login(instructor_uid)
+        self._api_update_opt_in_new_courses(client, uid=instructor_not_teaching_uid, opt_in_new_courses=True, expected_status_code=403)
+
+    def test_authorized(self, client, fake_auth):
+        """User can update their own preference."""
+        fake_auth.login(instructor_uid)
+        assert client.get('/api/user/my_profile').json['optInNewCourses'] is False
+
+        response = self._api_update_opt_in_new_courses(client, uid=instructor_uid, opt_in_new_courses=True)
+        assert response['optInNewCourses'] is True
+        assert client.get('/api/user/my_profile').json['optInNewCourses'] is True
+
+        response = self._api_update_opt_in_new_courses(client, uid=instructor_uid, opt_in_new_courses=False)
+        assert response['optInNewCourses'] is False
+        assert client.get('/api/user/my_profile').json['optInNewCourses'] is False
+
+    def test_opt_in_toggles_do_not_email(self, client, fake_auth):
+        """Enabling default opt-in disables do-not-email setting."""
+        fake_auth.login(instructor_uid)
+        assert client.get('/api/user/my_profile').json['doNotEmail'] is False
+        assert client.get('/api/user/my_profile').json['optInNewCourses'] is False
+
+        response = TestDoNotEmail._api_update_do_not_email(client, uid=instructor_uid, do_not_email=True)
+        assert response['doNotEmail'] is True
+        assert client.get('/api/user/my_profile').json['doNotEmail'] is True
+        assert client.get('/api/user/my_profile').json['optInNewCourses'] is False
+
+        response = self._api_update_opt_in_new_courses(client, uid=instructor_uid, opt_in_new_courses=True)
+        assert response['optInNewCourses'] is True
+        assert client.get('/api/user/my_profile').json['doNotEmail'] is False
+        assert client.get('/api/user/my_profile').json['optInNewCourses'] is True
+
+        TestDoNotEmail._api_update_do_not_email(client, uid=instructor_uid, do_not_email=True, expected_status_code=400)
+
+        response = self._api_update_opt_in_new_courses(client, uid=instructor_uid, opt_in_new_courses=False)
+        assert response['optInNewCourses'] is False
+        assert client.get('/api/user/my_profile').json['optInNewCourses'] is False
+        assert client.get('/api/user/my_profile').json['doNotEmail'] is False
+
+    def test_admin(self, client, fake_auth):
+        """Admin can update user email preference."""
+        fake_auth.login(admin_uid)
+        assert client.get(f'/api/user/{instructor_uid}').json['optInNewCourses'] is False
+
+        response = self._api_update_opt_in_new_courses(client, uid=instructor_uid, opt_in_new_courses=True)
+        assert response['optInNewCourses'] is True
+        assert client.get(f'/api/user/{instructor_uid}').json['optInNewCourses'] is True
+
+        response = self._api_update_opt_in_new_courses(client, uid=instructor_uid, opt_in_new_courses=False)
+        assert response['optInNewCourses'] is False
+        assert client.get(f'/api/user/{instructor_uid}').json['optInNewCourses'] is False
+
+
 class TestGetCalnetUser:
     """Admin user can fetch CalNet user profile."""
 

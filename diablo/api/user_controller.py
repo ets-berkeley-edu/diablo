@@ -45,6 +45,7 @@ def my_profile():
 
     preferences = UserPreference.get_user_preferences(current_user.uid)
     profile['doNotEmail'] = preferences.do_not_email if preferences else False
+    profile['optInNewCourses'] = preferences.opt_in_new_courses if preferences else False
 
     return tolerant_jsonify(profile)
 
@@ -63,6 +64,7 @@ def get_user(uid):
 
     preferences = UserPreference.get_user_preferences(uid)
     feed['doNotEmail'] = preferences.do_not_email if preferences else False
+    feed['optInNewCourses'] = preferences.opt_in_new_courses if preferences else False
 
     return tolerant_jsonify(feed)
 
@@ -85,7 +87,27 @@ def update_do_not_email(uid):
     if not current_user.is_admin and uid != current_user.uid:
         raise ForbiddenRequestError(f'Unauthorized to update user {uid}.')
 
+    preferences = UserPreference.get_user_preferences(uid)
+    if preferences and preferences.opt_in_new_courses:
+        raise BadRequestError('Email preference cannot be changed while default opt-in is enabled.')
+
     preferences = UserPreference.update_do_not_email(uid, do_not_email)
+    return tolerant_jsonify(preferences.to_api_json())
+
+
+@app.route('/api/user/<uid>/opt_in_new_courses/update', methods=['POST'])
+@login_required
+def update_opt_in_new_courses(uid):
+    params = request.get_json()
+    opt_in_new_courses = params.get('optInNewCourses')
+
+    if not uid or opt_in_new_courses is None:
+        raise BadRequestError('Required params missing or invalid')
+
+    if not current_user.is_admin and uid != current_user.uid:
+        raise ForbiddenRequestError(f'Unauthorized to update user {uid}.')
+
+    preferences = UserPreference.update_opt_in_new_courses(uid, opt_in_new_courses)
     return tolerant_jsonify(preferences.to_api_json())
 
 
