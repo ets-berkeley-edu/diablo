@@ -80,4 +80,16 @@ INSERT INTO sis_sections (allowed_units, course_name, course_title, deleted_at, 
   WHERE t.term_id = {term_id} AND s2.section_id IS NULL AND s2.term_id IS NULL
 );
 
+-- Newly created course-instructor pairings should generate new opt-in entries if the instructor has enabled the opt_in_new_courses preference.
+INSERT INTO opt_ins (term_id, section_id, instructor_uid, created_at)
+SELECT {term_id} AS term_id, s.section_id AS section_id, s.instructor_uid AS instructor_uid, now() AS created_at
+  FROM sis_sections s
+  LEFT JOIN tmp_sis_sections t
+  ON s.section_id = t.section_id AND s.term_id = t.term_id AND s.instructor_uid = t.instructor_uid AND t.deleted_at IS NULL
+  JOIN user_preferences u
+  ON s.instructor_uid = u.uid
+  WHERE s.term_id = {term_id} AND t.section_id IS NULL AND s.instructor_uid IS NOT NULL AND s.deleted_at IS NULL
+  AND s.instructor_role_code IN ('ICNT', 'PI', 'TNIC')
+  AND u.opt_in_new_courses IS TRUE;
+
 DROP TABLE tmp_sis_sections;
