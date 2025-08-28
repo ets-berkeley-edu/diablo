@@ -28,7 +28,7 @@ from diablo import std_commit
 from diablo.jobs.emails_job import EmailsJob
 from diablo.jobs.semester_start_job import SemesterStartJob
 from diablo.lib.util import utc_now
-from diablo.models.opt_out import OptOut
+from diablo.models.opt_in import OptIn
 from diablo.models.queued_email import QueuedEmail
 from diablo.models.scheduled import Scheduled
 from diablo.models.sent_email import SentEmail
@@ -38,21 +38,28 @@ from tests.util import simply_yield, test_scheduling_workflow
 
 class TestSemesterStartJob:
 
-    def test_semester_start(self):
-        """Eligible courses are scheduled for recording by default at semester start."""
+    def test_semester_start_x(self):
+        """Opted-in courses are scheduled for recording by default at semester start."""
         with test_scheduling_workflow(app):
             term_id = app.config['CURRENT_TERM_ID']
             instructor_uid = '10008'
-            section_ids = ['50007', '50010']
+            co_teacher_uid = '10009'
+            solo_taught_section_id = '50007'
+            co_taught_section_id = '50010'
             no_instructor_section_id = '50017'
 
             # Verify that nothing is scheduled
             assert Scheduled.get_all_scheduled(term_id=term_id) == []
 
+            OptIn.update_opt_in(instructor_uid=instructor_uid, term_id=term_id, section_id=solo_taught_section_id, opt_in=True)
+            OptIn.update_opt_in(instructor_uid=instructor_uid, term_id=term_id, section_id=co_taught_section_id, opt_in=True)
+            OptIn.update_opt_in(instructor_uid=co_teacher_uid, term_id=term_id, section_id=co_taught_section_id, opt_in=True)
+            std_commit(allow_test_environment=True)
+
             emails_to_instructor_count = len(SentEmail.get_emails_sent_to(instructor_uid))
             SemesterStartJob(simply_yield).run()
             std_commit(allow_test_environment=True)
-            for section_id in section_ids:
+            for section_id in [solo_taught_section_id, co_taught_section_id]:
                 scheduled = Scheduled.get_scheduled(section_id=section_id, term_id=term_id)
                 assert instructor_uid in scheduled.instructor_uids
 
@@ -64,9 +71,11 @@ class TestSemesterStartJob:
             assert len(emails_queued_for_instructor) == 1
             assert emails_queued_for_instructor[0].template_type == 'semester_start'
             assert emails_queued_for_instructor[0].message == "Well, then let's introduce ourselves. "\
-                "I'm William Kinderman and these are my courses:\n"\
+                "I'm William Kinderman and these are my scheduled courses:\n"\
                 'IND ENG 95, COL 001 | IND ENG 195, COL 001: Richard Newton Lecture Series,<br>\n'\
-                'MATH C51, LEC 001 | STAT C51, LEC 003: Linear algebra and differential calculus'
+                'MATH C51, LEC 001 | STAT C51, LEC 003: Linear algebra and differential calculus\n'\
+                'Partially approved courses:\nNone\n'\
+                'Opted-out courses:\nNone'
 
             EmailsJob(simply_yield).run()
             emails_sent = SentEmail.get_emails_sent_to(instructor_uid)
@@ -80,15 +89,11 @@ class TestSemesterStartJob:
             SemesterStartJob(simply_yield).run()
             assert len(SentEmail.get_emails_sent_to(instructor_uid)) == emails_to_instructor_count
 
-    def test_course_opted_out(self, app):
-        """Do not send email to courses that have opted out."""
+    def test_course_ineligible(self, app):
+        """Do not send email to ineligible courses."""
         term_id = app.config['CURRENT_TERM_ID']
         with test_scheduling_workflow(app):
-            instructor_uid = '10001'
             section_id = 50006
-            OptOut.update_opt_out(instructor_uid=instructor_uid, term_id=term_id, section_id=section_id, opt_out=True)
-            std_commit(allow_test_environment=True)
-
             timestamp = utc_now()
             # Emails are queued but not sent.
             SemesterStartJob(simply_yield).run()
@@ -104,6 +109,68 @@ class TestSemesterStartJob:
                 term_id=term_id,
             )
             assert not next((e for e in announcements if e.section_id == section_id), None)
+
+    def test_course_no_opt_in(self, app):
+        """Eligible courses that have not opted in are not scheduled but do get emails."""
+        term_id = app.config['CURRENT_TERM_ID']
+        with test_scheduling_workflow(app):
+            section_id = 50007
+            instructor_uid = '10008'
+            timestamp = utc_now()
+            # Emails are queued but not sent.
+            SemesterStartJob(simply_yield).run()
+            assert len(_get_announcements_since(term_id, timestamp)) == 0
+
+            email_queued_for_instructor = next(e for e in QueuedEmail.get_all(term_id=term_id) if e.recipient['uid'] == instructor_uid)
+            assert email_queued_for_instructor.message == "Well, then let's introduce ourselves. "\
+                "I'm William Kinderman and these are my scheduled courses:\nNone\n"\
+                'Partially approved courses:\nNone\n'\
+                'Opted-out courses:\nIND ENG 95, COL 001 | IND ENG 195, COL 001: Richard Newton Lecture Series,<br>\n'\
+                'MATH C51, LEC 001 | STAT C51, LEC 003: Linear algebra and differential calculus'
+
+            # Emails are sent.
+            EmailsJob(simply_yield).run()
+            announcements = _get_announcements_since(term_id, timestamp)
+            # Course email was sent.
+            assert next(e for e in announcements if e.section_id == section_id)
+            # But the course was not scheduled.
+            assert Scheduled.get_scheduled(section_id=section_id, term_id=term_id) is None
+
+    def test_course_partially_approved(self, app):
+        """Eligible courses that are partialluy approved are not scheduled but do get emails."""
+        term_id = app.config['CURRENT_TERM_ID']
+        with test_scheduling_workflow(app):
+            co_taught_section_id = 50010
+            instructor_1_uid = '10008'
+            instructor_2_uid = '10009'
+
+            OptIn.update_opt_in(instructor_uid=instructor_1_uid, term_id=term_id, section_id=co_taught_section_id, opt_in=True)
+            std_commit(allow_test_environment=True)
+
+            timestamp = utc_now()
+            # Emails are queued but not sent.
+            SemesterStartJob(simply_yield).run()
+            assert len(_get_announcements_since(term_id, timestamp)) == 0
+
+            email_queued_for_instructor_1 = next(e for e in QueuedEmail.get_all(term_id=term_id) if e.recipient['uid'] == instructor_1_uid)
+            email_queued_for_instructor_2 = next(e for e in QueuedEmail.get_all(term_id=term_id) if e.recipient['uid'] == instructor_2_uid)
+            assert email_queued_for_instructor_1.message == "Well, then let's introduce ourselves. "\
+                "I'm William Kinderman and these are my scheduled courses:\nNone\n"\
+                'Partially approved courses:\nMATH C51, LEC 001 | STAT C51, LEC 003: Linear algebra and differential calculus\n'\
+                'Opted-out courses:\nIND ENG 95, COL 001 | IND ENG 195, COL 001: Richard Newton Lecture Series'
+            assert email_queued_for_instructor_2.message == "Well, then let's introduce ourselves. "\
+                "I'm Arthur Storch and these are my scheduled courses:\nNone\n"\
+                'Partially approved courses:\nMATH C51, LEC 001 | STAT C51, LEC 003: Linear algebra and differential calculus\n'\
+                'Opted-out courses:\nMATH C51, LEC 001 | STAT C151, COL 001: Linear algebra and differential calculus'
+
+            # Emails are sent.
+            EmailsJob(simply_yield).run()
+            announcements = _get_announcements_since(term_id, timestamp)
+            # Course email was sent to both instructors.
+            assert next(e for e in announcements if e.recipient_uid == instructor_1_uid)
+            assert next(e for e in announcements if e.recipient_uid == instructor_2_uid)
+            # But the course was not scheduled.
+            assert Scheduled.get_scheduled(section_id=co_taught_section_id, term_id=term_id) is None
 
 
 def _assert_coverage_of_cross_listings(expected_cross_listing_count, sent_emails, term_id):
