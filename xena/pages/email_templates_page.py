@@ -63,6 +63,7 @@ class EmailTemplatesPage(DiabloPages):
             'course.title',
             'courseList',
             'courseList.optedOut',
+            'courseList.partiallyApproved',
             'courseList.scheduled',
             'instructors.all',
             'publish.type',
