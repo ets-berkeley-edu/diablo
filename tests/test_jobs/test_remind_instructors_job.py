@@ -28,6 +28,7 @@ from diablo import std_commit
 from diablo.jobs.emails_job import EmailsJob
 from diablo.jobs.remind_instructors_job import RemindInstructorsJob
 from diablo.jobs.semester_start_job import SemesterStartJob
+from diablo.models.opt_in import OptIn
 from diablo.models.queued_email import QueuedEmail
 from diablo.models.scheduled import Scheduled
 from diablo.models.sent_email import SentEmail
@@ -37,11 +38,18 @@ from tests.util import simply_yield, test_scheduling_workflow
 class TestRemindInstructorsJob:
 
     def test_remind_instructors(self):
-        """Eligible courses are scheduled for recording by default at semester start."""
+        """Eligible, opted-in courses are scheduled for recording and get reminder emails."""
         with test_scheduling_workflow(app):
             term_id = app.config['CURRENT_TERM_ID']
             instructor_uid = '10008'
-            section_ids = ['50007', '50010']
+            co_teacher_uid = '10009'
+            solo_taught_section_id = '50007'
+            co_taught_section_id = '50010'
+
+            OptIn.update_opt_in(instructor_uid=instructor_uid, term_id=term_id, section_id=solo_taught_section_id, opt_in=True)
+            OptIn.update_opt_in(instructor_uid=instructor_uid, term_id=term_id, section_id=co_taught_section_id, opt_in=True)
+            OptIn.update_opt_in(instructor_uid=co_teacher_uid, term_id=term_id, section_id=co_taught_section_id, opt_in=True)
+            std_commit(allow_test_environment=True)
 
             emails_to_instructor_count = len(SentEmail.get_emails_sent_to(instructor_uid))
             SemesterStartJob(simply_yield).run()
@@ -49,7 +57,7 @@ class TestRemindInstructorsJob:
             RemindInstructorsJob(simply_yield).run()
             std_commit(allow_test_environment=True)
 
-            for section_id in section_ids:
+            for section_id in [solo_taught_section_id, co_taught_section_id]:
                 scheduled = Scheduled.get_scheduled(section_id=section_id, term_id=term_id)
                 assert instructor_uid in scheduled.instructor_uids
 

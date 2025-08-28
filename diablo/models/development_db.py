@@ -165,7 +165,12 @@ def _create_email_templates():
     EmailTemplate.create(
         template_type='semester_start',
         subject_line="It's a new semester, tally ho!",
-        message="Well, then let's introduce ourselves. I'm <code>recipient.name</code> and these are my courses:\n<code>courseList</code>",
+        message=(
+            "Well, then let's introduce ourselves. I'm <code>recipient.name</code> "
+            "and these are my scheduled courses:\n<code>courseList.scheduled</code>\n"
+            "Partially approved courses:\n<code>courseList.partiallyApproved</code>\n"
+            "Opted-out courses:\n<code>courseList.optedOut</code>"
+        ),
     )
     std_commit(allow_test_environment=True)
 
