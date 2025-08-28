@@ -48,5 +48,4 @@ CREATE TABLE user_preferences (
     opt_in_new_courses BOOLEAN DEFAULT FALSE NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL
 );
-ALTER TABLE user_preferences OWNER TO diablo;
 ALTER TABLE user_preferences ADD CONSTRAINT user_preferences_pkey PRIMARY KEY (uid);
