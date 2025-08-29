@@ -27,9 +27,11 @@ from flask import current_app as app
 from diablo import std_commit
 from diablo.jobs.emails_job import EmailsJob
 from diablo.lib.util import utc_now
+from diablo.models.opt_in import OptIn
 from diablo.models.queued_email import QueuedEmail
 from diablo.models.sent_email import SentEmail
 from diablo.models.sis_section import SisSection
+from tests.test_api.api_test_utils import get_instructor_uids
 from tests.util import simply_yield
 
 
@@ -112,6 +114,9 @@ class TestEmailsJob:
                 'uid': recipient_uid,
             },
         )
+        instructor_uids = get_instructor_uids(section_id=section_id, term_id=term_id)
+        for uid in instructor_uids:
+            OptIn.update_opt_in(instructor_uid=uid, term_id=term_id, section_id=section_id, opt_in=True)
         std_commit(allow_test_environment=True)
 
         before = utc_now()
@@ -132,6 +137,11 @@ class TestEmailsJob:
         assert email_json['templateType'] == email_template_type
         assert email_json['termId'] == term_id
         assert email_json['sentAt']
+
+        #Cleanup.
+        for uid in instructor_uids:
+            OptIn.update_opt_in(instructor_uid=uid, term_id=term_id, section_id=section_id, opt_in=False)
+        std_commit(allow_test_environment=True)
 
 
 def _get_emails_sent(email_template_type, section_id, term_id):

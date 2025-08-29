@@ -71,7 +71,7 @@ def _schedule_new_courses(term_id, newly_scheduled_instructors):
     unscheduled_courses = get_eligible_unscheduled_courses(term_id)
     app.logger.info(f'Preparing to schedule recordings for {len(unscheduled_courses)} courses.')
     for course in unscheduled_courses:
-        if course['hasOptedOut']:
+        if not course['hasOptedIn']:
             continue
         authorized_instructors = list(filter(lambda i: i['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES, course['instructors']))
         if not len(authorized_instructors):
@@ -113,7 +113,8 @@ def _update_already_scheduled_events(term_id, newly_scheduled_instructors):  # n
 
         no_longer_eligible = False
         no_longer_scheduled = False
-        opted_out = False
+        opted_in = True
+        opt_in_changes_per_instructor_uid = {}
 
         publish_to_course_sites = False
 
@@ -141,10 +142,19 @@ def _update_already_scheduled_events(term_id, newly_scheduled_instructors):  # n
                 meetings_updated_by_schedule_id[schedule_update.kaltura_schedule_id] = schedule_update.deserialize('field_value_new')
             elif schedule_update.field_name == 'not_scheduled':
                 no_longer_scheduled = True
-            elif schedule_update.field_name == 'opted_out':
-                opted_out = True if schedule_update.field_value_new is not None else False
+            elif schedule_update.field_name == 'opted_in':
+                # Opt-in removed.
+                if schedule_update.field_value_new is None:
+                    opt_in_changes_per_instructor_uid[schedule_update.field_value_old] = False
+                # Opt-in added.
+                else:
+                    opt_in_changes_per_instructor_uid[schedule_update.field_value_new] = True
             elif schedule_update.field_name == 'room_not_eligible':
                 no_longer_eligible = True
+
+        for instructor_uid, instructor_opted_in in opt_in_changes_per_instructor_uid.items():
+            if instructor_opted_in is False:
+                opted_in = False
 
         for meeting_added in meetings_added:
             _handle_meeting_added(
@@ -161,7 +171,7 @@ def _update_already_scheduled_events(term_id, newly_scheduled_instructors):  # n
             kaltura_schedule = kaltura.get_event(event_id=scheduled['kalturaScheduleId'])
             scheduled_model = Scheduled.get_by_id(scheduled['id'])
             if kaltura_schedule:
-                if no_longer_scheduled or no_longer_eligible or opted_out or scheduled['kalturaScheduleId'] in meetings_removed_by_schedule_id:
+                if no_longer_scheduled or no_longer_eligible or not opted_in or scheduled['kalturaScheduleId'] in meetings_removed_by_schedule_id:
                     _handle_meeting_removed(kaltura, course, scheduled, schedule_updates)
                     continue
 
@@ -216,7 +226,7 @@ def _update_already_scheduled_events(term_id, newly_scheduled_instructors):  # n
                 'collaborator_uids',
                 'canvas_site_ids',
                 'not_scheduled',
-                'opted_out',
+                'opted_in',
                 'room_not_eligible',
             ),
         )
@@ -225,8 +235,8 @@ def _update_already_scheduled_events(term_id, newly_scheduled_instructors):  # n
             QueuedEmail.notify_instructors_no_longer_scheduled(course)
         elif no_longer_eligible:
             QueuedEmail.notify_instructors_no_longer_eligible(course)
-        elif opted_out and course['scheduled'] is not None:
-            QueuedEmail.notify_instructors_opted_out(course)
+        elif not opted_in and course['scheduled'] is not None:
+            QueuedEmail.notify_instructors_no_longer_opted_in(course)
         else:
             scheduled = (course['scheduled'] or [{}])[0]
             if updated_publish_type or\
@@ -344,7 +354,7 @@ def _handle_meeting_removed(kaltura, course, scheduled, schedule_updates):
             'meeting_removed',
             kaltura_schedule_id=scheduled['kalturaScheduleId'],
         )
-        _mark_error(schedule_updates, e, None, ('not_scheduled', 'opted_out', 'room_not_eligible'))
+        _mark_error(schedule_updates, e, None, ('not_scheduled', 'opted_in', 'room_not_eligible'))
 
 
 def _handle_meeting_updates(kaltura, meetings_updated_by_schedule_id, kaltura_schedule_id, scheduled_model, schedule_updates):

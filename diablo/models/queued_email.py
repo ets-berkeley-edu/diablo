@@ -159,7 +159,7 @@ class QueuedEmail(db.Model):
                 cls._queue_instructor_email('room_change_no_longer_eligible', instructor, course)
 
     @classmethod
-    def notify_instructors_opted_out(cls, course):
+    def notify_instructors_no_longer_opted_in(cls, course):
         for instructor in filter(lambda i: i['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES, course['instructors']):
             cls._queue_instructor_email('opted_out', instructor, course)
 
@@ -286,13 +286,17 @@ def _send_course_list_email(instructor, courses, template_type):
         course=courses[0],
         recipient_name=instructor['name'],
     )
+
+    # The section_id value is a bit arbitrary for list emails, but we should only be associating them with opted-in courses.
+    course = next((c for c in courses if c['hasOptedIn']), courses[0])
+
     QueuedEmail.create(
         message=message,
         recipient=instructor,
-        section_id=courses[0]['sectionId'],
+        section_id=course['sectionId'],
         subject_line=subject_line,
         template_type=template_type,
-        term_id=courses[0]['termId'],
+        term_id=course['termId'],
     )
 
 

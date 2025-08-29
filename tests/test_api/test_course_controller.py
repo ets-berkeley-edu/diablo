@@ -783,6 +783,8 @@ class TestUpdateRecordingType:
             section_id=section_1_id,
             recording_type='presenter_presentation_audio_with_operator',
         )
+        for uid in instructor_uids:
+            OptIn.update_opt_in(instructor_uid=uid, term_id=self.term_id, section_id=section_1_id, opt_in=True)
         std_commit(allow_test_environment=True)
 
         course = SisSection.get_course(section_id=section_1_id, term_id=self.term_id)
@@ -805,6 +807,11 @@ class TestUpdateRecordingType:
         assert len(_get_operator_emails()) == 0
         EmailsJob(simply_yield).run()
         assert len(_get_operator_emails()) == 1
+
+        #Cleanup.
+        for uid in instructor_uids:
+            OptIn.update_opt_in(instructor_uid=uid, term_id=self.term_id, section_id=section_1_id, opt_in=False)
+        std_commit(allow_test_environment=True)
 
 
 class TestUpdateOptIn:
