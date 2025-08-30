@@ -31,7 +31,6 @@ from diablo.jobs.util import build_merged_collaborators_list, get_eligible_unsch
 from diablo.lib.berkeley import are_scheduled_dates_obsolete, are_scheduled_times_obsolete, get_recording_end_date, get_recording_start_date
 from diablo.lib.util import safe_strftime
 from diablo.models.course_preference import CoursePreference
-from diablo.models.opt_out import OptOut
 from diablo.models.schedule_update import ScheduleUpdate
 from diablo.models.sis_section import AUTHORIZED_INSTRUCTOR_ROLE_CODES, SisSection
 
@@ -69,8 +68,8 @@ def _queue_schedule_updates(term_id):
             ineligible_meetings = course.get('meetings', {}).get('ineligible', [])
             if course['deletedAt'] or (_valid_meeting_count(eligible_meetings) + _valid_meeting_count(ineligible_meetings) == 0):
                 _queue_not_scheduled_update(course)
-            if course['optOuts']:
-                _queue_opt_out_update(course)
+            if not course['hasOptedIn'] and len(instructors):
+                _queue_not_opted_in_update(course)
             elif _valid_meeting_count(eligible_meetings) == 0 and _valid_meeting_count(ineligible_meetings) > 0:
                 _queue_room_not_eligible_update(course)
             else:
@@ -82,6 +81,18 @@ def _queue_schedule_updates(term_id):
             raise e
 
 
+def _queue_not_opted_in_update(course):
+    for instructor in filter(lambda i: i['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES and not i['deletedAt'], course['instructors']):
+        ScheduleUpdate.queue(
+            term_id=course['termId'],
+            section_id=course['sectionId'],
+            field_name='opted_in',
+            field_value_old=instructor['uid'],
+            field_value_new=None,
+        )
+    _downgrade_recording_type(course)
+
+
 def _queue_not_scheduled_update(course):
     scheduled = course['scheduled'][0]
     ScheduleUpdate.queue(
@@ -90,18 +101,6 @@ def _queue_not_scheduled_update(course):
         field_name='not_scheduled',
         field_value_old=json.dumps(scheduled),
         field_value_new=None,
-    )
-    _downgrade_recording_type(course)
-
-
-def _queue_opt_out_update(course):
-    opted_out_instructor_uid = course['optOuts'][0].get('instructorUid')
-    ScheduleUpdate.queue(
-        term_id=course['termId'],
-        section_id=course['sectionId'],
-        field_name='opted_out',
-        field_value_old=None,
-        field_value_new=opted_out_instructor_uid,
     )
     _downgrade_recording_type(course)
 
@@ -245,23 +244,6 @@ def _queue_instructor_updates(course, instructors):
             field_value_old=scheduled_instructor_uids,
             field_value_new=[i['uid'] for i in instructors],
         )
-
-        # In the special case of an admin-opted-out no-instructor course acquiring instructor(s), the admin opt-out
-        # should be converted to instructor opt-out(s).
-        if len(instructors) and not len(scheduled_instructor_uids) and next((o for o in course['optOuts'] if o['instructorUid'] == 'admin'), None):
-            OptOut.update_opt_out(
-                term_id=course['termId'],
-                section_id=course['sectionId'],
-                instructor_uid='admin',
-                opt_out=False,
-            )
-            for i in instructors:
-                OptOut.update_opt_out(
-                    term_id=course['termId'],
-                    section_id=course['sectionId'],
-                    instructor_uid=i['uid'],
-                    opt_out=True,
-                )
 
 
 def _queue_collaborator_updates(course):

@@ -22,6 +22,7 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
+import json
 import random
 
 from flask import current_app as app
@@ -32,6 +33,7 @@ from diablo.jobs.emails_job import EmailsJob
 from diablo.jobs.kaltura_job import KalturaJob
 from diablo.jobs.schedule_updates_job import ScheduleUpdatesJob
 from diablo.lib.berkeley import are_scheduled_dates_obsolete, are_scheduled_times_obsolete, get_recording_end_date, get_recording_start_date
+from diablo.models.opt_in import OptIn
 from diablo.models.room import Room
 from diablo.models.scheduled import Scheduled
 from diablo.models.sent_email import SentEmail
@@ -46,7 +48,7 @@ deleted_section_id = 50018
 class TestKalturaJob:
 
     def test_new_course_scheduled(self, client):
-        """New courses are scheduled for recording by default."""
+        """New opted-in courses are scheduled for recording."""
         with test_scheduling_workflow(app):
             section_id = 50012
             no_instructor_section_id = 50017
@@ -64,6 +66,10 @@ class TestKalturaJob:
                     term_id=term_id,
                 )
 
+            for i in instructors:
+                OptIn.update_opt_in(instructor_uid=i['uid'], term_id=term_id, section_id=section_id, opt_in=True)
+            std_commit(allow_test_environment=True)
+
             """If a course is scheduled for recording then email is sent to its instructor(s)."""
             email_count = len(_get_emails_sent())
             KalturaJob(simply_yield).run()
@@ -79,8 +85,9 @@ class TestKalturaJob:
             std_commit(allow_test_environment=True)
             emails_sent = _get_emails_sent()
             assert len(emails_sent) >= email_count + 2
-            for recipient_uid in ['10009', '10010']:
-                email_sent = next(e for e in emails_sent if e.recipient_uid == recipient_uid)
+
+            for i in instructors:
+                email_sent = next(e for e in emails_sent if e.recipient_uid == i['uid'])
                 assert email_sent.template_type == 'new_class_scheduled'
                 assert email_sent.term_id == term_id
 
@@ -89,14 +96,62 @@ class TestKalturaJob:
             KalturaJob(simply_yield).run()
             assert len(_get_emails_sent()) == email_count
 
+    def test_opt_in(self, client, fake_auth):
+        """Courses are scheduled only while opted in."""
+        with test_scheduling_workflow(app):
+            section_id = 50012
+            term_id = app.config['CURRENT_TERM_ID']
+            course = SisSection.get_course(section_id=section_id, term_id=term_id)
+            instructors = course['instructors']
+            assert len(instructors) == 2
+
+            # Course is not scheduled.
+            assert Scheduled.get_scheduled(section_id=section_id, term_id=term_id) is None
+            _assert_email_count(0, section_id, 'new_class_scheduled')
+            _assert_email_count(0, section_id, 'opted_out')
+
+            # Job runs, course is still not scheduled.
+            KalturaJob(simply_yield).run()
+            EmailsJob(simply_yield).run()
+            assert Scheduled.get_scheduled(section_id=section_id, term_id=term_id) is None
+            _assert_email_count(0, section_id, 'new_class_scheduled')
+
+            # First instructor opts in, job runs, course is still not scheduled.
+            _api_opt_in_update(client, fake_auth, instructors[0]['uid'], term_id, section_id, True)
+            OptIn.update_opt_in(instructor_uid=instructors[0]['uid'], term_id=term_id, section_id=section_id, opt_in=True)
+            KalturaJob(simply_yield).run()
+            EmailsJob(simply_yield).run()
+            assert Scheduled.get_scheduled(section_id=section_id, term_id=term_id) is None
+            _assert_email_count(0, section_id, 'new_class_scheduled')
+
+            # Second instructor opts in, job runs, course is scheduled, both get email.
+            _api_opt_in_update(client, fake_auth, instructors[1]['uid'], term_id, section_id, True)
+            KalturaJob(simply_yield).run()
+            EmailsJob(simply_yield).run()
+            assert Scheduled.get_scheduled(section_id=section_id, term_id=term_id)
+            _assert_email_count(2, section_id, 'new_class_scheduled')
+            _assert_email_count(0, section_id, 'opted_out')
+
+            # First instructor opts out, job runs, course is unscheduled, both get email.
+            _api_opt_in_update(client, fake_auth, instructors[0]['uid'], term_id, section_id, False)
+            KalturaJob(simply_yield).run()
+            EmailsJob(simply_yield).run()
+            assert Scheduled.get_scheduled(section_id=section_id, term_id=term_id) is None
+            _assert_email_count(2, section_id, 'new_class_scheduled')
+            _assert_email_count(2, section_id, 'opted_out')
+
     def test_canceled_course(self, db_session):
         term_id = app.config['CURRENT_TERM_ID']
         with test_scheduling_workflow(app):
             course = SisSection.get_course(section_id=deleted_section_id, term_id=term_id, include_deleted=True)
             room = course.get('meetings', {}).get('eligible', [])[0]['room']
+            for i in course['instructors']:
+                OptIn.update_opt_in(instructor_uid=i['uid'], term_id=term_id, section_id=deleted_section_id, opt_in=True)
             _schedule(room['id'], deleted_section_id)
+            assert Scheduled.get_scheduled(section_id=deleted_section_id, term_id=term_id)
             _run_jobs()
             _assert_email_count(1, deleted_section_id, 'no_longer_scheduled')
+            assert Scheduled.get_scheduled(section_id=deleted_section_id, term_id=term_id) is None
 
     def test_room_change(self, db_session, client, fake_auth):
         section_id = 50004
@@ -119,6 +174,8 @@ class TestKalturaJob:
             assert original_room['location'] == 'Li Ka Shing 145'
 
             # Schedule
+            for i in course['instructors']:
+                OptIn.update_opt_in(instructor_uid=i['uid'], term_id=term_id, section_id=section_id, opt_in=True)
             _schedule(original_room['id'], section_id)
             _run_jobs()
             _assert_email_count(0, section_id, 'schedule_change')
@@ -200,6 +257,10 @@ class TestKalturaJob:
                             assert are_scheduled_dates_obsolete(meeting=meeting, scheduled=scheduled) is False
                             assert are_scheduled_times_obsolete(meeting=meeting, scheduled=scheduled) is True
 
+                    course = SisSection.get_course(section_id=section_id, term_id=term_id)
+                    for i in course['instructors']:
+                        OptIn.update_opt_in(instructor_uid=i['uid'], term_id=term_id, section_id=section_id, opt_in=True)
+
                     # First time scheduled.
                     _schedule()
                     _run_jobs()
@@ -238,8 +299,11 @@ class TestKalturaJob:
             term_id = app.config['CURRENT_TERM_ID']
             section_id = 50005
             room_id = Room.find_room('Barker 101').id
-            # The course has two instructors.
+            # The course has two instructors, both opted in.
             instructor_1_uid, instructor_2_uid = get_instructor_uids(section_id=section_id, term_id=term_id)
+            OptIn.update_opt_in(instructor_uid=instructor_1_uid, term_id=term_id, section_id=section_id, opt_in=True)
+            OptIn.update_opt_in(instructor_uid=instructor_2_uid, term_id=term_id, section_id=section_id, opt_in=True)
+
             # Uh oh! Only one of them has been scheduled.
             meeting = get_eligible_meeting(section_id=section_id, term_id=term_id)
             Scheduled.create(
@@ -285,6 +349,8 @@ class TestKalturaJob:
             room_id = Room.find_room('Barker 101').id
             # The course has two instructors.
             instructor_1_uid, instructor_2_uid = get_instructor_uids(section_id=section_id, term_id=term_id)
+            OptIn.update_opt_in(instructor_uid=instructor_1_uid, term_id=term_id, section_id=section_id, opt_in=True)
+            OptIn.update_opt_in(instructor_uid=instructor_2_uid, term_id=term_id, section_id=section_id, opt_in=True)
             # Uh oh! A third instructor somehow got scheduled.
             instructor_3_uid = '10010'
             meeting = get_eligible_meeting(section_id=section_id, term_id=term_id)
@@ -348,6 +414,7 @@ class TestKalturaJob:
                 section_id=section_id,
                 term_id=term_id,
             )
+            OptIn.update_opt_in(instructor_uid=instructor_uid, term_id=term_id, section_id=section_id, opt_in=True)
 
             ScheduleUpdatesJob(simply_yield).run()
             KalturaJob(simply_yield).run()
@@ -365,6 +432,30 @@ class TestKalturaJob:
             assert course['updateHistory'][0]['requestedByName'] is None
             assert course['updateHistory'][0]['requestedByUid'] is None
             assert course['updateHistory'][0]['status'] == 'succeeded'
+
+
+def _api_opt_in_update(
+    client,
+    fake_auth,
+    instructor_uid,
+    term_id,
+    section_id,
+    opt_in,
+    expected_status_code=200,
+):
+    fake_auth.login(instructor_uid)
+    response = client.post(
+        '/api/course/opt_in/update',
+        data=json.dumps({
+            'instructorUid': instructor_uid,
+            'termId': term_id,
+            'sectionId': section_id,
+            'optIn': opt_in,
+        }),
+        content_type='application/json',
+    )
+    assert response.status_code == expected_status_code
+    return response.json
 
 
 def _assert_email_count(expected_count, section_id, template_type):

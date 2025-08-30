@@ -41,7 +41,7 @@ class EmailsJob(BaseJob):
             if not course:
                 app.logger.warning(f'Email will remain queued until course data is present: {queued_email}')
                 continue
-            if course['hasOptedOut'] and queued_email.template_type != 'opted_out':
+            if not course['hasOptedIn'] and queued_email.template_type not in ('opted_out', 'semester_start', 'remind_scheduled'):
                 QueuedEmail.delete(queued_email)
                 continue
             if BConnected().send(
