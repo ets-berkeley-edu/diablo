@@ -148,6 +148,16 @@ def _create_email_templates():
         message='Class opted out: <code>course.name</code>',
     )
     EmailTemplate.create(
+        template_type='remind_opted_out',
+        subject_line='Did you opt out of remembering?',
+        message='You are opted out, <code>recipient.name</code>!\n<code>courseList.optedOut</code>',
+    )
+    EmailTemplate.create(
+        template_type='remind_partially_approved',
+        subject_line='Did you remember, even partially?',
+        message='You are partially approved, <code>recipient.name</code>!\n<code>courseList.partiallyApproved</code>',
+    )
+    EmailTemplate.create(
         template_type='remind_scheduled',
         subject_line='Did you remember??',
         message='You are scheduled, <code>recipient.name</code>!\n<code>courseList</code>',

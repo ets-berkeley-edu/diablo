@@ -40,6 +40,14 @@ class EmailTemplateType(Enum):
         'desc': 'New class scheduled',
         'type': 'new_class_scheduled',
     }
+    INSTR_ANNUNCIATION_OPTED_OUT = {
+        'desc': 'Remind opted-out instructors',
+        'type': 'remind_opted_out',
+    }
+    INSTR_ANNUNCIATION_PARTIALLY_APPROVED = {
+        'desc': 'Remind instructors of partially approved courses',
+        'type': 'remind_partially_approved',
+    }
     INSTR_ANNUNCIATION_REMINDER = {
         'desc': 'Remind scheduled instructors',
         'type': 'remind_scheduled',
