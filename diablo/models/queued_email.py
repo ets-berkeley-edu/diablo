@@ -267,6 +267,14 @@ def notify_instructor_recordings_scheduled(instructor, courses):
     _send_course_list_email(instructor, courses, 'new_class_scheduled')
 
 
+def remind_instructors_opted_out(instructor, courses):
+    _send_course_list_email(instructor, courses, 'remind_opted_out')
+
+
+def remind_instructors_partially_approved(instructor, courses):
+    _send_course_list_email(instructor, courses, 'remind_partially_approved')
+
+
 def remind_instructors_scheduled(instructor, courses):
     _send_course_list_email(instructor, courses, 'remind_scheduled')
 
