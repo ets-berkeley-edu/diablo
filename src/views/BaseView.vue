@@ -204,16 +204,14 @@ const logOut = () => {
 const prefersColorScheme = () => {
   const mq = window.matchMedia('(prefers-color-scheme: dark)')
   const setColorScheme = (dark) => {
-    theme.global.name.value = dark ? 'dark' : 'light'
+    theme.change(dark ? 'dark' : 'light')
   }
   setColorScheme(mq.matches)
   mq.addEventListener?.('change', (e) => setColorScheme(e.matches))
 }
 
 const toggleTheme = () => {
-  theme.global.name.value = theme.global.current.value.dark
-    ? 'light'
-    : 'dark'
+  theme.change(theme.global.current.value.dark ? 'light' : 'dark')
   putFocusNextTick('btn-main-menu')
 }
 </script>

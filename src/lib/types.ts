@@ -9,10 +9,10 @@ export type DiabloConfig = {
   searchItemsPerPage: number,
   isVueAppDebugMode: boolean,
   emailCourseCaptureSupport: string,
-  currentTermRecordingsBegin: any,
-  currentTermRecordingsEnd: any,
-  searchFilterOptions: any,
-  emailTemplateTypes: any,
+  currentTermRecordingsBegin: string,
+  currentTermRecordingsEnd: string,
+  searchFilterOptions: {[key: string]: string},
+  emailTemplateTypes: {[key: string]: string}
 }
 
 export interface Collaborator {
