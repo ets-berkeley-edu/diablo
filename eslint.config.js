@@ -53,8 +53,13 @@ export default [
       }
     },
     rules: {
-      '@typescript-eslint/no-explicit-any': 1,
+      // TODO: '@typescript-eslint/no-shadow': 2,
+      '@typescript-eslint/consistent-type-imports': 1,
+      '@typescript-eslint/default-param-last': 2,
+      '@typescript-eslint/no-explicit-any': 2,
+      '@typescript-eslint/no-require-imports': 2,
       '@typescript-eslint/no-unsafe-function-type': 1,
+      '@typescript-eslint/no-unused-vars': 2,
       'array-bracket-spacing': 2,
       'eqeqeq': 2,
       'import/no-duplicates': 2,
@@ -62,7 +67,7 @@ export default [
       'import/order': 2,
       'key-spacing': 2,
       'no-console': 2,
-      'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'off',
+      'no-debugger': 2,
       'no-multi-spaces': 2,
       'no-trailing-spaces': 2,
       'no-undef': 1,

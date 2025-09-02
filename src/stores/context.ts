@@ -66,10 +66,10 @@ export const useContextStore = defineStore('context', {
       this.snackbar.color = 'error'
       this.snackbarShow = true
     },
-    setConfig(data: any) {
+    setConfig(data: DiabloConfig) {
       this.config = data
     },
-    setCurrentUser(user: any) {
+    setCurrentUser(user: DiabloUser) {
       this.currentUser = user
     }
   }
