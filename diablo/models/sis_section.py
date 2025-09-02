@@ -323,6 +323,56 @@ class SisSection(db.Model):
         return _to_api_json(term_id=term_id, rows=rows, include_full_schedules=include_full_schedules)
 
     @classmethod
+    def get_courses_partially_approved(cls, term_id):
+        # All courses where some, but not all, instructors have opted in.
+        sql = """
+            SELECT DISTINCT
+                s.*,
+                i.dept_code AS instructor_dept_code,
+                i.email AS instructor_email,
+                i.first_name || ' ' || i.last_name AS instructor_name,
+                i.uid AS instructor_uid,
+                r.id AS room_id,
+                r.location AS room_location,
+                r.capability AS room_capability
+            FROM sis_sections s
+            JOIN opt_ins o ON
+                s.term_id = :term_id
+                AND s.instructor_role_code = ANY(:instructor_role_codes)
+                AND s.is_principal_listing IS TRUE
+                AND o.section_id = s.section_id
+                AND o.term_id = :term_id
+            JOIN instructors i ON i.uid = s.instructor_uid
+            JOIN sis_sections s2 ON
+                s.term_id = s2.term_id
+                AND s.section_id = s2.section_id
+                AND s2.instructor_role_code = ANY(:instructor_role_codes)
+            JOIN instructors i2 ON
+                i2.uid = s2.instructor_uid
+                AND i2.uid NOT IN (
+                    SELECT instructor_uid
+                    FROM opt_ins
+                    WHERE section_id = s.section_id AND term_id = :term_id
+                )
+            JOIN sis_sections s3 ON
+                s3.term_id = s2.term_id
+                AND s3.section_id = s2.section_id
+                AND s3.instructor_uid = o.instructor_uid
+            JOIN rooms r ON r.location = s.meeting_location
+            WHERE
+                s.deleted_at IS NULL
+            ORDER BY s.course_name, s.section_id, s.instructor_uid, r.capability NULLS LAST
+        """
+        rows = db.session.execute(
+            text(sql),
+            {
+                'instructor_role_codes': AUTHORIZED_INSTRUCTOR_ROLE_CODES,
+                'term_id': term_id,
+            },
+        )
+        return _to_api_json(term_id=term_id, rows=rows)
+
+    @classmethod
     def get_courses_per_instructor_uid(cls, term_id, instructor_uid):
         # Find all section_ids, including cross-listings
         sql = """
