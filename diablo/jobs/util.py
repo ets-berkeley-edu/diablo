@@ -95,6 +95,16 @@ def get_eligible_courses(term_id):
     )
 
 
+def get_eligible_courses_by_instructor_uid(term_id):
+    courses_by_instructor_uid = {}
+    for course in get_eligible_courses(term_id):
+        for instructor in list(filter(lambda i: i['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES, course['instructors'])):
+            if instructor['uid'] not in courses_by_instructor_uid:
+                courses_by_instructor_uid[instructor['uid']] = {'instructor': instructor, 'courses': []}
+            courses_by_instructor_uid[instructor['uid']]['courses'].append(course)
+    return courses_by_instructor_uid
+
+
 def get_eligible_unscheduled_courses(term_id):
     return SisSection.get_courses(
         exclude_scheduled=True,

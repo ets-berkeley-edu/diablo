@@ -25,32 +25,22 @@ ENHANCEMENTS, OR MODIFICATIONS.
 from flask import current_app as app
 
 from diablo.jobs.base_job import BaseJob
-from diablo.jobs.util import get_eligible_courses
-from diablo.models.queued_email import remind_instructors_scheduled
-from diablo.models.sis_section import AUTHORIZED_INSTRUCTOR_ROLE_CODES
+from diablo.jobs.util import get_eligible_courses_by_instructor_uid
+from diablo.models.queued_email import remind_instructors_partially_approved
 
 
-class RemindInstructorsJob(BaseJob):
+class RemindInstructorsPartiallyApprovedJob(BaseJob):
 
     def _run(self):
         term_id = app.config['CURRENT_TERM_ID']
-        courses_by_instructor_uid = {}
 
-        # Schedule recordings
-        for course in get_eligible_courses(term_id):
-            for instructor in list(filter(lambda i: i['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES, course['instructors'])):
-                if instructor['uid'] not in courses_by_instructor_uid:
-                    courses_by_instructor_uid[instructor['uid']] = {'instructor': instructor, 'courses': []}
-                courses_by_instructor_uid[instructor['uid']]['courses'].append(course)
-
-        # Queue semester start emails
-        for uid, instructor_courses in courses_by_instructor_uid.items():
-            remind_instructors_scheduled(instructor_courses['instructor'], instructor_courses['courses'])
+        for uid, instructor_courses in get_eligible_courses_by_instructor_uid(term_id).items():
+            remind_instructors_partially_approved(instructor_courses['instructor'], instructor_courses['courses'])
 
     @classmethod
     def description(cls):
-        return 'This job is intended for manual run. It queues up reminder emails to instructors with scheduled courses.'
+        return 'This job is intended for manual run. It queues up reminder emails to instructors with partially approved courses.'
 
     @classmethod
     def key(cls):
-        return 'remind_instructors'
+        return 'remind_instructors_partially_approved'
