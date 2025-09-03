@@ -388,6 +388,28 @@ class TestGetCourses:
             assert api_json[0]['sectionId'] == section_8_id
             assert api_json[0]['instructors'] == []
 
+    def test_partially_approved_filter(self, app, client, db, fake_auth):
+        """The 'Partially Approved' filter returns courses where some, but not all, instructors have opted in."""
+        fake_auth.login(admin_uid)
+        with test_scheduling_workflow(app):
+            partially_approved_section_ids = [section_1_id, section_7_id]
+            for section_id in partially_approved_section_ids:
+                # Verify that course has multiple instructors and then ONLY ONE instructor will opt in.
+                instructor_uids = get_instructor_uids(section_id=section_id, term_id=self.term_id)
+                assert len(instructor_uids) > 1
+                _api_opt_in_update(
+                    client,
+                    instructor_uid=instructor_uids[0],
+                    term_id=self.term_id,
+                    section_id=section_id,
+                    opt_in=True,
+                )
+                std_commit(allow_test_environment=True)
+            # Fetch courses per filter
+            api_json = self._api_courses(client, term_id=self.term_id, filter_='Partially Approved')
+            actual_section_ids = [c['sectionId'] for c in api_json]
+            assert set(actual_section_ids) == set(partially_approved_section_ids)
+
     def test_eligible_filter(self, client, fake_auth):
         """The 'eligible' filter returns all courses in eligible rooms."""
         fake_auth.login(admin_uid)
@@ -820,32 +842,10 @@ class TestUpdateOptIn:
     def term_id(self):
         return app.config['CURRENT_TERM_ID']
 
-    @staticmethod
-    def _api_opt_in_update(
-            client,
-            instructor_uid,
-            term_id,
-            section_id,
-            opt_in,
-            expected_status_code=200,
-    ):
-        response = client.post(
-            '/api/course/opt_in/update',
-            data=json.dumps({
-                'instructorUid': instructor_uid,
-                'termId': term_id,
-                'sectionId': section_id,
-                'optIn': opt_in,
-            }),
-            content_type='application/json',
-        )
-        assert response.status_code == expected_status_code
-        return response.json
-
     def test_not_authenticated(self, client):
         """Deny anonymous access."""
         instructor_uids = get_instructor_uids(section_id=section_2_id, term_id=self.term_id)
-        self._api_opt_in_update(
+        _api_opt_in_update(
             client,
             instructor_uid=instructor_uids[0],
             term_id=self.term_id,
@@ -858,7 +858,7 @@ class TestUpdateOptIn:
         """Deny non-instructors."""
         instructor_uids = get_instructor_uids(section_id=section_2_id, term_id=self.term_id)
         fake_auth.login([collaborator_uid])
-        self._api_opt_in_update(
+        _api_opt_in_update(
             client,
             instructor_uid=instructor_uids[0],
             term_id=self.term_id,
@@ -871,7 +871,7 @@ class TestUpdateOptIn:
         """Numeric section id required."""
         instructor_uids = get_instructor_uids(section_id=section_2_id, term_id=self.term_id)
         fake_auth.login(instructor_uids[0])
-        self._api_opt_in_update(
+        _api_opt_in_update(
             client,
             instructor_uid=instructor_uids[0],
             term_id=self.term_id,
@@ -894,7 +894,7 @@ class TestUpdateOptIn:
             assert course_feed['hasOptedIn'] is False
             assert next(i['hasOptedIn'] for i in course_feed['instructors'] if i['uid'] == instructor_uids[0]) is False
 
-            self._api_opt_in_update(
+            _api_opt_in_update(
                 client,
                 instructor_uid=instructor_uids[0],
                 term_id=self.term_id,
@@ -913,7 +913,7 @@ class TestUpdateOptIn:
             assert course_feed['hasOptedIn'] is True
             assert next(i['hasOptedIn'] for i in course_feed['instructors'] if i['uid'] == instructor_uids[0]) is True
 
-            self._api_opt_in_update(
+            _api_opt_in_update(
                 client,
                 instructor_uid=instructor_uids[0],
                 term_id=self.term_id,
@@ -948,7 +948,7 @@ class TestUpdateOptIn:
         fake_auth.login(admin_uid)
         with test_scheduling_workflow(app):
             instructor_uids = get_instructor_uids(section_id=section_2_id, term_id=self.term_id)
-            self._api_opt_in_update(
+            _api_opt_in_update(
                 client,
                 instructor_uid=instructor_uids[0],
                 term_id=self.term_id,
@@ -958,7 +958,7 @@ class TestUpdateOptIn:
             api_json = api_get_course(client, section_id=section_2_id, term_id=self.term_id)
             assert api_json['hasOptedIn'] is True
 
-            self._api_opt_in_update(
+            _api_opt_in_update(
                 client,
                 instructor_uid=instructor_uids[0],
                 term_id=self.term_id,
@@ -983,7 +983,7 @@ class TestUpdateOptIn:
             assert next(i['hasOptedIn'] for i in course_feed['instructors'] if i['uid'] == instructor_uids[0]) is False
 
             # First instructor opts in.
-            self._api_opt_in_update(
+            _api_opt_in_update(
                 client,
                 instructor_uid=instructor_uids[0],
                 term_id=self.term_id,
@@ -1004,7 +1004,7 @@ class TestUpdateOptIn:
 
             # Second instructor opts in.
             fake_auth.login(instructor_uids[1])
-            self._api_opt_in_update(
+            _api_opt_in_update(
                 client,
                 instructor_uid=instructor_uids[1],
                 term_id=self.term_id,
@@ -1026,7 +1026,7 @@ class TestUpdateOptIn:
 
             # First instructor opts out.
             fake_auth.login(instructor_uids[0])
-            self._api_opt_in_update(
+            _api_opt_in_update(
                 client,
                 instructor_uid=instructor_uids[0],
                 term_id=self.term_id,
@@ -1618,3 +1618,25 @@ def _find_course(api_json, section_id, term_id):
 def _is_course_in_enabled_room(section_id, term_id):
     eligible_meetings = SisSection.get_course(term_id=term_id, section_id=section_id)['meetings']['eligible']
     return eligible_meetings and eligible_meetings[0]['room']['capability'] is not None
+
+
+def _api_opt_in_update(
+        client,
+        instructor_uid,
+        term_id,
+        section_id,
+        opt_in,
+        expected_status_code=200,
+):
+    response = client.post(
+        '/api/course/opt_in/update',
+        data=json.dumps({
+            'instructorUid': instructor_uid,
+            'termId': term_id,
+            'sectionId': section_id,
+            'optIn': opt_in,
+        }),
+        content_type='application/json',
+    )
+    assert response.status_code == expected_status_code
+    return response.json
