@@ -54,7 +54,7 @@ class TestBackgroundJobManager:
         assert _get_admin_email_count() == email_count
         # Alert on sad job.
         all_jobs = Job.get_all(include_disabled=True)
-        doomed_job = next((j for j in all_jobs if j.key == DoomedToFailure.key()))
+        doomed_job = next(j for j in all_jobs if j.key == DoomedToFailure.key())
 
         # Make sure job is enabled
         Job.update_disabled(job_id=doomed_job.id, disable=False)

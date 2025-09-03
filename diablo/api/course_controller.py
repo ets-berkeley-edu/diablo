@@ -457,6 +457,8 @@ def _get_courses_per_filter(filter_, term_id):
         courses = SisSection.get_courses(term_id, include_full_schedules=False, include_ineligible_rooms=True)
     elif filter_ == 'Eligible':
         courses = SisSection.get_courses(term_id, include_full_schedules=False)
+    elif filter_ == 'Eligible Unscheduled':
+        courses = SisSection.get_courses_eligible_and_unscheduled(term_id)
     elif filter_ == 'Opted Out':
         courses = SisSection.get_courses_opted_out(term_id, include_full_schedules=False)
     elif filter_ == 'Partially Approved':

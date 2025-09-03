@@ -373,6 +373,15 @@ class SisSection(db.Model):
         return _to_api_json(term_id=term_id, rows=rows)
 
     @classmethod
+    def get_courses_eligible_and_unscheduled(cls, term_id):
+        # Eligible courses not yet scheduled because an instructor has not opted in.
+        return SisSection.get_courses(
+            exclude_scheduled=True,
+            include_full_schedules=False,
+            term_id=term_id,
+        )
+
+    @classmethod
     def get_courses_per_instructor_uid(cls, term_id, instructor_uid):
         # Find all section_ids, including cross-listings
         sql = """
