@@ -427,6 +427,37 @@ class TestGetCourses:
                 assert _find_course(api_json=api_json, section_id=section_id, term_id=self.term_id)
             assert not _find_course(api_json=api_json, section_id=section_in_ineligible_room, term_id=self.term_id)
 
+    def test_eligible_unscheduled_filter(self, client, fake_auth):
+        """The 'Eligible Unscheduled' filter returns courses not yet scheduled because an instructor has not opted in."""
+        fake_auth.login(admin_uid)
+        with test_scheduling_workflow(app):
+            # Schedule an eligible section.
+            mock_scheduled(
+                section_id=section_1_id,
+                term_id=self.term_id,
+            )
+            # Partially approve an eligible section.
+            instructor_uids = get_instructor_uids(section_id=section_7_id, term_id=self.term_id)
+            assert len(instructor_uids) > 1
+            _api_opt_in_update(
+                client,
+                instructor_uid=instructor_uids[0],
+                term_id=self.term_id,
+                section_id=section_7_id,
+                opt_in=True,
+            )
+            std_commit(allow_test_environment=True)
+
+            api_json = self._api_courses(client, term_id=self.term_id, filter_='Eligible Unscheduled')
+            actual_section_ids = [c['sectionId'] for c in api_json]
+            # Assert the non-presence of our scheduled course.
+            assert section_1_id not in actual_section_ids
+            # Assert presence of our partially approved section.
+            assert section_7_id in actual_section_ids
+            # Assert presence of zero-approval sections.
+            for section_id in (section_3_id, section_4_id, section_5_id, section_6_id):
+               assert section_id in actual_section_ids
+
     def test_all_filter(self, client, fake_auth):
         """The 'all' filter returns even ineligible courses."""
         fake_auth.login(admin_uid)

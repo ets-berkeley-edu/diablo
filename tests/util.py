@@ -35,7 +35,7 @@ from diablo.models.job import Job
 def scheduled_job(job_key):
     """Temporarily enabled job."""
     all_jobs = Job.get_all(include_disabled=True)
-    job = next((j for j in all_jobs if j.key == job_key))
+    job = next(j for j in all_jobs if j.key == job_key)
     disabled = job.disabled
     schedule_type = job.job_schedule_type
     schedule_value = job.job_schedule_value

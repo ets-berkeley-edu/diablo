@@ -46,6 +46,7 @@ def get_search_filter_options():
     return {
         'All': 'All courses, including those not in eligible rooms.',
         'Eligible': 'All courses in eligible rooms.',
+        'Eligible Unscheduled': 'Eligible courses not yet scheduled because an instructor has not opted in.',
         'No Instructors': 'Courses in eligible rooms with no assigned instructors.',
         'Opted Out': 'Courses in eligible rooms that have opted out.',
         'Partially Approved': 'All courses where some, but not all, instructors have opted in.',
