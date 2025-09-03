@@ -60,7 +60,9 @@ def _register_jobs(app):
     from diablo.jobs.house_keeping_job import HouseKeepingJob  # noqa: F401
     from diablo.jobs.kaltura_job import KalturaJob  # noqa: F401
     from diablo.jobs.opt_out_report_job import OptOutReportJob  # noqa: F401
-    from diablo.jobs.remind_instructors_job import RemindInstructorsJob  # noqa: F401
+    from diablo.jobs.remind_instructors_opted_out_job import RemindInstructorsOptedOutJob  # noqa: F401
+    from diablo.jobs.remind_instructors_partially_approved_job import RemindInstructorsPartiallyApprovedJob  # noqa: F401
+    from diablo.jobs.remind_instructors_scheduled_job import RemindInstructorsScheduledJob  # noqa: F401
     from diablo.jobs.schedule_updates_job import ScheduleUpdatesJob  # noqa: F401
     from diablo.jobs.semester_start_job import SemesterStartJob  # noqa: F401
     from diablo.jobs.sis_data_refresh_job import SisDataRefreshJob  # noqa: F401
