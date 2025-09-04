@@ -69,6 +69,7 @@ ALTER TABLE IF EXISTS ONLY public.user_preferences DROP CONSTRAINT IF EXISTS use
 --
 
 DROP INDEX IF EXISTS notes.term_id_section_id_idx;
+DROP INDEX IF EXISTS opt_ins.instructor_uid_term_id_section_id_idx;
 DROP INDEX IF EXISTS notes.uid_idx;
 DROP INDEX IF EXISTS public.rooms_location_idx;
 DROP INDEX IF EXISTS public.sent_emails_section_id_idx;
