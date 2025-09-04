@@ -307,6 +307,7 @@ ALTER SEQUENCE opt_ins_id_seq OWNED BY opt_ins.id;
 ALTER TABLE ONLY opt_ins ALTER COLUMN id SET DEFAULT nextval('opt_ins_id_seq'::regclass);
 ALTER TABLE ONLY opt_ins
     ADD CONSTRAINT opt_ins_pkey PRIMARY KEY (id);
+CREATE UNIQUE INDEX instructor_uid_term_id_section_id_idx ON opt_ins (instructor_uid, term_id, section_id);
 
 --
 
