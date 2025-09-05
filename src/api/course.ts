@@ -3,7 +3,7 @@ import axios from 'axios'
 import fileDownload from 'js-file-download'
 import {DateTime} from 'luxon'
 import {getApiBaseUrl} from '@/api/api-utils'
-import type {OptOut} from '@/lib/types'
+import type {OptIn} from '@/lib/types'
 
 export function deleteCourseNote(termId: number, sectionId: number) {
   return axios.post(`${getApiBaseUrl()}/api/course/note/delete`, {
@@ -68,15 +68,15 @@ export function updateCourseNote(
   }).then(response => response.data)
 }
 
-export function updateOptOut(
+export function updateOptIn(
     instructorUid: string,
     termId: string,
     sectionId: number,
-    optOut: OptOut
+    optIn: OptIn
   ) {
-  return axios.post(`${getApiBaseUrl()}/api/course/opt_out/update`, {
+  return axios.post(`${getApiBaseUrl()}/api/course/opt_in/update`, {
     instructorUid,
-    optOut,
+    optIn,
     sectionId,
     termId
   }).then(response => response.data)

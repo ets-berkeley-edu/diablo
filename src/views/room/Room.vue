@@ -55,6 +55,7 @@
         <CoursesDataTable
           :courses="room.courses"
           :include-room-column="false"
+          :show-opt-in="false"
           :message-for-courses="summarize(room.courses)"
           :refreshing="false"
         />

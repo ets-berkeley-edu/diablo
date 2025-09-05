@@ -76,6 +76,18 @@
           <!-- eslint-disable-next-line vue/no-v-for-template-key -->
           <template v-for="course in items" :key="course.sectionId">
             <tr>
+              <td v-if="showOptIn" :class="tdc(course)">
+                <ToggleOptOut
+                  v-if="course.statusLabel !== 'Not Eligible' && (includeOptOutColumnForUids || course.instructors?.length > 0)"
+                  :key="course.sectionId"
+                  :term-id="`${course.termId}`"
+                  :section-id="`${course.sectionId}`"
+                  :instructor-uids="instructorUidsFor(course)"
+                  :initial-value="course.hasOptedIn"
+                  :disabled="course.hasBlanketOptedOut"
+                  :on-toggle="onToggleOptOut(course)"
+                />
+              </td>
               <td
                 :id="`course-name-${course.sectionId}`"
                 :aria-rowspan="size(course.displayMeetings)"
@@ -127,18 +139,12 @@
                 </div>
               </td>
               <td :id="`course-${course.sectionId}-status`" :class="tdc(course)" columnheader="courses-table-status-th">
-                <div v-if="course.deletedAt" class="canceled-indicator d-flex">
+                <div v-if="course.statusLabel === 'Canceled'" class="canceled-indicator d-flex">
                   <v-icon color="error" :icon="mdiClose" />
-                  <span class="font-weight-bold text-error">Canceled</span>
+                  <span class="font-weight-bold text-error">{{ course.statusLabel }}</span>
                 </div>
-                <div v-if="!course.deletedAt && course.scheduled">
-                  Scheduled
-                </div>
-                <div v-if="!course.deletedAt && !course.scheduled && course.meetings.eligible.length">
-                  Not Scheduled
-                </div>
-                <div v-if="!course.deletedAt && !course.scheduled && !course.meetings.eligible.length">
-                  Not Eligible
+                <div v-else>
+                  {{ course.statusLabel }}
                 </div>
               </td>
               <td :class="tdc(course)" columnheader="courses-table-instructors-th">
@@ -154,17 +160,6 @@
               <td :id="`course-${course.sectionId}-publish-types`" :class="tdc(course)" columnheader="courses-table-publish-th">
                 <span aria-hidden="true">{{ (course.scheduled && course.publishTypeName) || '&mdash;' }}</span>
                 <span class="sr-only">{{ (course.scheduled && course.publishTypeName) || 'blank' }}</span>
-              </td>
-              <td v-if="includeOptOutColumnForUid" :class="tdc(course)">
-                <ToggleOptOut
-                  :key="course.sectionId"
-                  :term-id="`${course.termId}`"
-                  :section-id="`${course.sectionId}`"
-                  :instructor-uid="includeOptOutColumnForUid"
-                  :initial-value="course.hasOptedOut"
-                  :disabled="course.hasBlanketOptedOut"
-                  :on-toggle="onToggleOptOut(course)"
-                />
               </td>
             </tr>
             <tr v-for="(meeting, meetingIndex) in tail(course.displayMeetings)" :key="`${course.sectionId}-${meetingIndex}`">
@@ -250,9 +245,9 @@ const props = defineProps({
     default: undefined,
     type: String
   },
-  includeOptOutColumnForUid: {
+  includeOptOutColumnForUids: {
     required: false,
-    type: String,
+    type: Array,
     default: undefined
   },
   includeRoomColumn: {
@@ -271,11 +266,16 @@ const props = defineProps({
   searchText: {
     default: undefined,
     type: String
+  },
+  showOptIn: {
+    required: true,
+    type: Boolean
   }
 })
 
 const contextStore = useContextStore()
 const headers = ref([
+  {key: 'optIn', title: 'Opt In', value: 'hasOptedIn', sortable: false},
   {key: 'course', title: 'Course', sortable: true, value: 'label'},
   {key: 'section', title: 'Section', sortable: true, value: 'sectionId', class: 'w-10'},
   {key: 'room', title: 'Room', sortable: true, value: 'room.location'},
@@ -283,12 +283,16 @@ const headers = ref([
   {key: 'time', title: 'Time', sortable: false},
   {key: 'status', title: 'Status', class: 'w-10', sortable: false},
   {key: 'instructors', title: 'Instructor(s)', value: 'instructorNames', sortable: false},
-  {key: 'publish', title: 'Publish', sortable: true, value: 'publishTypeName', class: 'w-10'},
-  {key: 'optOut', title: 'Opt out', value: 'hasOptedOut', sortable: false}
+  {key: 'publish', title: 'Publish', sortable: true, value: 'publishTypeName', class: 'w-10'}
 ])
 const pageCurrent = ref(1)
 const selectedRows = ref([])
 const sortBy = ref({})
+
+const instructorUidsFor = course =>
+  (props.includeOptOutColumnForUids && props.includeOptOutColumnForUids.length)
+    ? props.includeOptOutColumnForUids
+    : map(course.instructors, 'uid')
 
 watch(() => props.refreshing, async(value) => {
   if (!value) {
@@ -301,8 +305,8 @@ onMounted(() => {
   if (!props.includeRoomColumn) {
     headers.value = filter(headers.value, h => h.title !== 'Room')
   }
-  if (!props.includeOptOutColumnForUid) {
-    headers.value = filter(headers.value, h => h.title !== 'Opt out')
+  if (!props.showOptIn) {
+    headers.value = filter(headers.value, h => h.title !== 'Opt In')
   }
   refresh()
 })
@@ -325,6 +329,11 @@ const refresh = () => {
     const meetings = getDisplayMeetings(course)
     course.displayMeetings = meetings
     course.room = meetings.length && meetings[0].room ? meetings[0].room : null
+    course.statusLabel = course.deletedAt
+      ? 'Canceled'
+      : (course.scheduled
+        ? 'Scheduled'
+        : (get(course, 'meetings.eligible.length', 0) > 0 ? 'Not Scheduled' : 'Not Eligible'))
   })
 }
 

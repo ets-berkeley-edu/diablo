@@ -20,7 +20,7 @@
 <script setup>
 import {onMounted, ref} from 'vue'
 import {putFocusNextTick} from '@/lib/utils'
-import {updateOptOut} from '@/api/course'
+import {updateOptIn} from '@/api/course'
 
 const props = defineProps({
   ariaLabel: {
@@ -41,9 +41,9 @@ const props = defineProps({
     required: true,
     type: Boolean
   },
-  instructorUid: {
+  instructorUids: {
     required: true,
-    type: String
+    type: Array
   },
   label: {
     required: false,
@@ -79,10 +79,13 @@ onMounted(() => {
 
 const toggleOptOut = () => {
   props.beforeToggle()
-  updateOptOut(props.instructorUid, props.termId, props.sectionId, optOut.value).then(data => {
-    props.onToggle(`Opted ${data.optedOut ? 'out' : 'in'} ${props.label}`)
-    putFocusNextTick(`toggle-opt-out-${switchId.value}`)
+  props.instructorUids.forEach(uid => {
+    updateOptIn(uid, props.termId, props.sectionId, optOut.value).then(data => {
+      props.onToggle(`Opted ${data.optedOut ? 'out' : 'in'} ${props.label}`)
+      putFocusNextTick(`toggle-opt-out-${switchId.value}`)
+    })
   })
+
 }
 </script>
 
