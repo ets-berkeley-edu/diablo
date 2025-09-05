@@ -13,7 +13,7 @@
         <ToggleOptOut
           :term-id="config.currentTermId.toString()"
           section-id="all"
-          :instructor-uid="user.uid"
+          :instructor-uids="[user.uid]"
           :initial-value="!!user.hasOptedOutForTerm"
           :disabled="!!user.hasOptedOutForAllTerms"
           label="for current semester"
@@ -25,7 +25,7 @@
         <ToggleOptOut
           term-id="all"
           section-id="all"
-          :instructor-uid="user.uid"
+          :instructor-uids="[user.uid]"
           :initial-value="!!user.hasOptedOutForAllTerms"
           label="for all semesters"
           :before-toggle="() => (isRefreshingCourses = true)"
@@ -37,7 +37,8 @@
           class="pt-5"
           :courses="eligibleCourses"
           :include-room-column="true"
-          :include-opt-out-column-for-uid="user.uid"
+          :show-opt-in="true"
+          :include-opt-out-column-for-uid="[user.uid]"
           :message-for-courses="summarize(eligibleCourses)"
           :refreshing="isRefreshingCourses"
         />
@@ -48,6 +49,7 @@
           class="pt-5"
           :courses="ineligibleCourses"
           :include-room-column="true"
+          :show-opt-in="false"
           :message-for-courses="summarize(ineligibleCourses)"
           :refreshing="false"
         />

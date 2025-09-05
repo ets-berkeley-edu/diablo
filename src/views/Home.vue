@@ -15,7 +15,7 @@
           <ToggleOptOut
             :term-id="`${config.currentTermId}`"
             section-id="all"
-            :instructor-uid="currentUser.uid"
+            :instructor-uids="[currentUser.uid]"
             :initial-value="currentUser.hasOptedOutForTerm"
             :disabled="currentUser.hasOptedOutForAllTerms"
             label="for current semester"
@@ -27,7 +27,7 @@
           <ToggleOptOut
             term-id="all"
             section-id="all"
-            :instructor-uid="currentUser.uid"
+            :instructor-uids="[currentUser.uid]"
             :initial-value="currentUser.hasOptedOutForAllTerms"
             label="for all semesters"
             :before-toggle="() => refreshingCourses = true"
@@ -76,6 +76,22 @@
                 <!-- eslint-disable-next-line vue/no-v-for-template-key -->
                 <template v-for="course in items" :key="course.sectionId">
                   <tr :id="`${getTableId(index)}-${course.sectionId}`">
+                    <td
+                      v-if="index === 0"
+                      :id="`${getTableId(index)}-${course.sectionId}-hasOptedIn`"
+                      :aria-rowspan="size(course.displayMeetings)"
+                      :class="{'border-b-0': size(course.displayMeetings) > 1}"
+                      class="text-no-wrap"
+                    >
+                      <ToggleOptOut
+                        :aria-label="`Opt out course ${get(course.courseCodes, '0', course.title)}.`"
+                        :disabled="course.hasBlanketOptedOut"
+                        :initial-value="course.hasOptedIn"
+                        :instructor-uids="[currentUser.uid]"
+                        :section-id="`${course.sectionId}`"
+                        :term-id="`${course.termId}`"
+                      />
+                    </td>
                     <td
                       :id="`${getTableId(index)}-${course.sectionId}-label`"
                       :aria-rowspan="size(course.displayMeetings)"
@@ -150,22 +166,6 @@
                       </div>
                       <span aria-hidden="true" class="text-no-wrap">{{ course.displayMeetings[0].startTimeFormatted }} - {{ course.displayMeetings[0].endTimeFormatted }}</span>
                       <span class="sr-only">{{ course.displayMeetings[0].startTimeFormatted }} to {{ course.displayMeetings[0].endTimeFormatted }}</span>
-                    </td>
-                    <td
-                      v-if="index === 0"
-                      :id="`${getTableId(index)}-${course.sectionId}-hasOptedOut`"
-                      :aria-rowspan="size(course.displayMeetings)"
-                      :class="{'border-b-0': size(course.displayMeetings) > 1}"
-                      class="text-no-wrap"
-                    >
-                      <ToggleOptOut
-                        :aria-label="`Opt out course ${get(course.courseCodes, '0', course.title)}.`"
-                        :disabled="course.hasBlanketOptedOut"
-                        :initial-value="course.hasOptedOut"
-                        :instructor-uid="currentUser.uid"
-                        :section-id="`${course.sectionId}`"
-                        :term-id="`${course.termId}`"
-                      />
                     </td>
                   </tr>
                   <tr v-for="(meeting, meetingIndex) in tail(course.displayMeetings)" :id="`${getTableId(index)}-${course.sectionId}-${meetingIndex}`" :key="`${course.sectionId}-${meetingIndex}`">
@@ -248,8 +248,8 @@ const ineligibleHeaders = [
   {title: 'Time', value: 'time'},
 ]
 const eligibleHeaders = [
-  ...ineligibleHeaders,
-  {title: 'Opt out', value: 'hasOptedOut'}
+  {title: 'Opt In', value: 'hasOptedIn'},
+  ...ineligibleHeaders
 ]
 const pageTitle = ref('')
 const refreshingCourses = ref(false)

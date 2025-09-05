@@ -33,7 +33,7 @@ export interface Instructor {
   uid: string
 }
 
-export interface OptOut {
+export interface OptIn {
   createdAt: string,
   instructorUid: string,
   sectionId: number | null,

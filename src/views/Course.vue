@@ -78,7 +78,7 @@
           <ToggleOptOut
             :term-id="`${course.termId}`"
             :section-id="`${course.sectionId}`"
-            instructor-uid="admin"
+            :instructor-uids="['admin']"
             label="as admin"
             :initial-value="course.hasOptedOut"
             :on-toggle="onToggle"

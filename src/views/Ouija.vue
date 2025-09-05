@@ -74,6 +74,7 @@
       :courses="courses"
       :description="coursesTableDescription"
       :include-room-column="true"
+      :show-opt-in="true"
       :on-toggle-opt-out="onToggleOptOut"
       :refreshing="isRefreshing"
       :search-text="searchText"
