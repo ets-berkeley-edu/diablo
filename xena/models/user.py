@@ -34,6 +34,10 @@ class User(object):
         return self.data['uid']
 
     @property
+    def email(self):
+        return self.data['email']
+
+    @property
     def first_name(self):
         return self.data['first_name']
 
@@ -42,8 +46,20 @@ class User(object):
         return self.data['last_name']
 
     @property
-    def email(self):
-        return self.data['email']
+    def no_reminders(self):
+        return self.data.get('no_reminders')
+
+    @no_reminders.setter
+    def no_reminders(self, value):
+        self.data['no_reminders'] = value
+
+    @property
+    def opt_in_automatically(self):
+        return self.data.get('opt_in_automatically')
+
+    @opt_in_automatically.setter
+    def opt_in_automatically(self, value):
+        self.data['opt_in_automatically'] = value
 
     @property
     def role(self):

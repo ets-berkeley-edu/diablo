@@ -177,7 +177,7 @@ class TestWeirdTypeC:
         assert len(self.course_page.visible_rooms()) == 1
 
     def test_new_course_scheduled_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_NEW_COURSE_SCHED, section=None,
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_NEW_COURSE_ELIGIBLE, section=None,
                                          instructor=self.original_instructor) == 1
 
     # INELIGIBLE MEETING BECOMES ELIGIBLE

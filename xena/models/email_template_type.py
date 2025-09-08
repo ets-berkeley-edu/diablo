@@ -32,33 +32,13 @@ class EmailTemplateType(Enum):
         'desc': 'Admin alert: operator requested',
         'type': 'admin_operator_requested',
     }
-    INSTR_ADDED = {
-        'desc': 'Instructor(s) added to class',
-        'type': 'instructors_added',
-    }
-    INSTR_ANNUNCIATION_NEW_COURSE_SCHED = {
-        'desc': 'New class scheduled',
-        'type': 'new_class_scheduled',
-    }
-    INSTR_ANNUNCIATION_OPTED_OUT = {
-        'desc': 'Remind opted-out instructors',
-        'type': 'remind_opted_out',
-    }
-    INSTR_ANNUNCIATION_PARTIALLY_APPROVED = {
-        'desc': 'Remind instructors of partially approved courses',
-        'type': 'remind_partially_approved',
-    }
-    INSTR_ANNUNCIATION_REMINDER = {
-        'desc': 'Remind scheduled instructors',
-        'type': 'remind_scheduled',
-    }
-    INSTR_ANNUNCIATION_SEM_START = {
-        'desc': 'Semester start',
-        'type': 'semester_start',
-    }
     INSTR_CHANGES_CONFIRMED = {
         'desc': 'Changes confirmed',
         'type': 'changes_confirmed',
+    }
+    INSTR_CLASS_SCHEDULED = {
+        'desc': 'Class scheduled',
+        'type': 'class_scheduled',
     }
     INSTR_COURSE_CANCELLED = {
         'desc': 'Class no longer scheduled',
@@ -68,9 +48,25 @@ class EmailTemplateType(Enum):
         'desc': 'Multiple meeting pattern change',
         'type': 'multiple_meeting_pattern_change',
     }
+    INSTR_NEW_COURSE_ELIGIBLE = {
+        'desc': 'New class eligible',
+        'type': 'new_class_eligible',
+    }
     INSTR_OPTED_OUT = {
         'desc': 'Opted out',
         'type': 'opted_out',
+    }
+    INSTR_REMIND_OPTED_OUT = {
+        'desc': 'Remind opted-out instructors',
+        'type': 'remind_opted_out',
+    }
+    INSTR_REMIND_PARTIALLY_APPROVED = {
+        'desc': 'Remind instructors of partially approved courses',
+        'type': 'remind_partially_approved',
+    }
+    INSTR_REMIND_SCHEDULED = {
+        'desc': 'Remind scheduled instructors',
+        'type': 'remind_scheduled',
     }
     INSTR_REMOVED = {
         'desc': 'Instructor(s) removed from class',
@@ -83,4 +79,8 @@ class EmailTemplateType(Enum):
     INSTR_SCHEDULE_CHANGE = {
         'desc': 'Schedule change',
         'type': 'schedule_change',
+    }
+    INSTR_WELCOME = {
+        'desc': 'Semester start',
+        'type': 'semester_start',
     }

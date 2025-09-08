@@ -110,7 +110,7 @@ class TestCourseCancellation:
         assert not util.get_kaltura_id(self.recording_schedule)
 
     def test_no_annunciation(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_NEW_COURSE_SCHED, section=None,
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_NEW_COURSE_ELIGIBLE, section=None,
                                          instructor=self.instructor) == 0
 
     # COURSE IS RESTORED AND SCHEDULED

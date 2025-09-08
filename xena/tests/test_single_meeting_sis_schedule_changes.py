@@ -85,7 +85,7 @@ class TestCourseScheduleChanges:
         self.recording_schedule.recording_placement = RecordingPlacement.PLACE_IN_MY_MEDIA
 
     def test_welcome_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_NEW_COURSE_SCHED, section=None,
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_NEW_COURSE_ELIGIBLE, section=None,
                                          instructor=self.instr) == 1
 
     # SCHEDULED COURSE CHANGES MEETING TIME

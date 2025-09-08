@@ -86,7 +86,7 @@ class TestCourseRoomChanges:
         self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
 
     def test_welcome_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_NEW_COURSE_SCHED, section=None,
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_NEW_COURSE_ELIGIBLE, section=None,
                                          instructor=self.instr) == 1
 
     def test_modify_recording_settings(self):
@@ -212,7 +212,7 @@ class TestCourseRoomChanges:
         self.jobs_page.run_schedule_update_job_sequence()
 
     def test_eligible_room_again_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_NEW_COURSE_SCHED, section=None,
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_NEW_COURSE_ELIGIBLE, section=None,
                                          instructor=self.instr) == 2
 
     def test_eligible_room_again_reschedule_series(self):
@@ -291,7 +291,7 @@ class TestCourseRoomChanges:
     # VERIFY TOTAL EMAILS
 
     def test_welcome_email_ttl(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_NEW_COURSE_SCHED, section=None,
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_NEW_COURSE_ELIGIBLE, section=None,
                                          instructor=self.instr) == 2
 
     def test_settings_update_email_ttl(self):
