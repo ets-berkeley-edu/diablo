@@ -88,7 +88,7 @@ class TestCollaborators0:
         assert self.kaltura_page.collaborator_perm(self.proxy) == 'Co-Editor, Co-Publisher'
 
     def test_email_new_course_scheduled(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_NEW_COURSE_SCHED, section=None,
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_NEW_COURSE_ELIGIBLE, section=None,
                                          instructor=self.instructor) == 1
 
     def test_history_new_course_scheduled(self):
@@ -189,7 +189,7 @@ class TestCollaborators0:
         assert self.kaltura_page.collaborator_perm(self.manual_collaborator) == 'Co-Editor, Co-Publisher'
 
     def test_email_room_restored(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_NEW_COURSE_SCHED, section=None,
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_NEW_COURSE_ELIGIBLE, section=None,
                                          instructor=self.instructor) == 2
 
     def test_no_email_new_collaborator(self):
@@ -269,7 +269,7 @@ class TestCollaborators1:
         self.kaltura_page.verify_collaborators(self.section, [self.manual_collaborator])
 
     def test_email_new_scheduled(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_NEW_COURSE_SCHED, self.section,
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_NEW_COURSE_ELIGIBLE, self.section,
                                          self.instructor) == 1
 
     def test_email_new_collaborator(self):
@@ -403,7 +403,7 @@ class TestCollaborators2:
         self.kaltura_page.verify_collaborators(self.section, self.section.proxies)
 
     def test_email_new_course(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_NEW_COURSE_SCHED, section=None,
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_NEW_COURSE_ELIGIBLE, section=None,
                                          instructor=self.instructor) == 1
 
     def test_course_page_sis_data(self):

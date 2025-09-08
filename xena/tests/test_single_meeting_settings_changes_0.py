@@ -40,8 +40,8 @@ class TestScheduling0:
     """
     SCENARIO.
 
-    - Section has one instructor, one meeting, and one course site
-    - Recordings scheduled
+    - Section has one instructor, one meeting
+    - Instructor opts in, recordings scheduled
     - Instructor selects camera operator and auto-publish, adding course site
     - Series updated
     - Admin reverts to no camera operator and no auto-publish
@@ -76,7 +76,8 @@ class TestScheduling0:
         self.kaltura_page.log_in_via_calnet(self.calnet_page)
         self.kaltura_page.reset_test_data(self.section)
 
-        util.reset_section_test_data(self.section)
+        util.reset_section_test_data(self.section, delete_opt_ins=True)
+        util.reset_user_preferences(self.instructor)
 
         util.reset_sent_email_test_data(self.section)
         util.reset_sent_email_test_data(section=None, instructor=self.instructor)
@@ -87,7 +88,11 @@ class TestScheduling0:
         self.canvas_page.create_site(self.section, self.site)
         self.canvas_page.add_user_to_site(self.site, self.instructor, 'Teacher')
 
+    # TODO - trigger and verify welcome email
+
     # CHECK FILTERS - NOT SCHEDULED
+
+    # TODO - will there be filter for not-invited again?
 
     def test_not_scheduled_filter_all(self):
         self.ouija_page.load_page()
@@ -110,35 +115,105 @@ class TestScheduling0:
         self.ouija_page.filter_for_no_instructors()
         assert not self.ouija_page.is_course_in_results(self.section)
 
-    # COURSE CAPTURE OPTIONS NOT AVAILABLE PRE-SCHEDULING
-
-    def test_no_collaborator_edits(self):
-        self.course_page.load_page(self.section)
-        assert not self.course_page.is_present(CoursePage.COLLAB_EDIT_BUTTON)
-
-    def test_no_recording_type_edits(self):
-        assert not self.course_page.is_present(CoursePage.RECORDING_TYPE_EDIT_BUTTON)
-
-    def test_no_recording_placement_edits(self):
-        assert not self.course_page.is_present(CoursePage.PLACEMENT_EDIT_BUTTON)
-
-    def test_scheduling_upcoming_msg(self):
-        assert self.course_page.is_present(CoursePage.SCHEDULING_TO_COME_MSG)
-        assert not self.course_page.is_present(CoursePage.SCHEDULED_MSG)
-        assert not self.course_page.is_present(CoursePage.UPDATES_QUEUED_MSG)
-        assert not self.course_page.is_present(CoursePage.OPT_OUT_QUEUED_MSG)
-        assert not self.course_page.is_present(CoursePage.OPT_OUT_DONE_MSG)
-        assert not self.course_page.is_present(CoursePage.NOT_ELIGIBLE_MSG)
-
     # VERIFY COURSE HISTORY
 
     def test_no_history(self):
         assert not self.course_page.update_history_table_rows()
 
+    # INSTRUCTOR LOGS IN
+
+    def test_opt_in(self):
+        self.course_page.log_out()
+        self.login_page.dev_auth(self.instructor)
+        self.courses_page.click_course_page_link(self.section)
+        self.course_page.wait_for_diablo_title(f'{self.section.code}, {self.section.number}')
+
+    # VERIFY STATIC COURSE SIS DATA
+
+    def test_visible_section_sis_data(self):
+        self.course_page.verify_section_sis_data(self.section)
+
+    def test_visible_meeting_sis_data(self):
+        self.course_page.verify_meeting_sis_data(self.meeting, idx=0)
+
+    def test_visible_site_ids(self):
+        assert self.course_page.visible_course_site_ids() == []
+
+    def test_visible_listings(self):
+        listing_codes = [li.code for li in self.section.listings]
+        assert self.course_page.visible_cross_listing_codes() == listing_codes
+
+    def test_course_scheduled_msg(self):
+        assert self.course_page.is_present(CoursePage.SCHEDULED_MSG)
+        assert not self.course_page.is_present(CoursePage.SCHEDULING_TO_COME_MSG)
+        assert not self.course_page.is_present(CoursePage.UPDATES_QUEUED_MSG)
+        assert not self.course_page.is_present(CoursePage.OPT_OUT_QUEUED_MSG)
+        assert not self.course_page.is_present(CoursePage.OPT_OUT_DONE_MSG)
+        assert not self.course_page.is_present(CoursePage.NOT_ELIGIBLE_MSG)
+
+    # VERIFY NO SETTINGS OPTIONS UNTIL OPT-IN
+
+    def test_no_rec_type_options(self):
+        assert not self.course_page.is_present(self.course_page.RECORDING_TYPE_EDIT_BUTTON)
+
+    def test_no_rec_placement_options(self):
+        assert not self.course_page.is_present(self.course_page.PLACEMENT_EDIT_BUTTON)
+
+    # TODO - def test_opt_in(self):
+
+    def test_rec_type_options(self):
+        self.course_page.click_rec_type_edit_button()
+        assert not self.course_page.is_present(self.course_page.RECORDING_TYPE_NO_OP_RADIO)
+        assert self.course_page.is_present(self.course_page.RECORDING_TYPE_OP_RADIO)
+
+    def test_rec_placement_options(self):
+        self.course_page.cancel_recording_type_edits()
+        self.course_page.click_edit_recording_placement()
+        assert self.course_page.is_present(self.course_page.PLACEMENT_MY_MEDIA_RADIO)
+        assert self.course_page.is_present(self.course_page.PLACEMENT_AUTOMATIC_RADIO)
+
+    # VERIFY DEFAULT SETTINGS AND EXTERNAL LINKS
+
+    def test_default_instructors(self):
+        assert self.course_page.visible_instructor_uids() == [str(self.instructor.uid)]
+
+    def test_no_collaborators(self):
+        assert not self.course_page.visible_collaborator_uids()
+
+    def test_default_recording_type(self):
+        assert self.course_page.visible_recording_type() == self.recording_schedule.recording_type.value['desc']
+
+    def test_default_recording_placement(self):
+        assert self.recording_schedule.recording_placement.value['desc'] in self.course_page.visible_recording_placement()
+
+    def test_no_instructor_kaltura_link(self):
+        assert not self.course_page.is_present(self.course_page.kaltura_series_link(self.recording_schedule))
+
+    def test_how_to_publish_from_my_media_link(self):
+        title = 'IT - How do I publish media from My Media to a Media Gallery in bCourses?'
+        assert self.course_page.external_link_valid(self.course_page.HOW_TO_PUBLISH_LINK, title)
+
+    def test_how_to_embed_in_bcourses_link(self):
+        title = 'IT - How do I embed Kaltura media in bCourses using the Rich Content Editor?'
+        assert self.course_page.external_link_valid(self.course_page.HOW_TO_EMBED_LINK, title)
+
+    def test_no_how_to_remove_a_recording_link(self):
+        assert not self.course_page.is_present(self.course_page.HOW_TO_REMOVE_LINK)
+
+    def test_how_to_download_second_stream_link(self):
+        title = 'IT - How do I download the second stream of a dual-stream video?'
+        assert self.course_page.external_link_valid(self.course_page.HOW_TO_DOWNLOAD_LINK, title)
+
+    def test_course_capture_faq_link(self):
+        title = 'Course Capture FAQ | Research, Teaching, & Learning'
+        assert self.course_page.external_link_valid(self.course_page.COURSE_CAPTURE_FAQ_LINK, title)
+
     # RUN SCHEDULE UPDATE JOB
 
     def test_schedule_update(self):
-        self.jobs_page.load_page()
+        self.course_page.log_out()
+        self.login_page.dev_auth()
+        self.jobs_page.click_jobs_link()
         self.jobs_page.run_schedule_update_job_sequence()
         assert util.get_kaltura_id(self.recording_schedule)
         self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
@@ -211,8 +286,8 @@ class TestScheduling0:
     # VERIFY ANNUNCIATION EMAIL
 
     def test_receive_annunciation_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_NEW_COURSE_SCHED, section=None,
-                                         instructor=self.instructor) == 1
+            assert util.get_sent_email_count(EmailTemplateType.INSTR_NEW_COURSE_ELIGIBLE, section=None,
+                                             instructor=self.instructor) == 1
 
     # INSTRUCTOR LOGS IN
 
@@ -223,82 +298,7 @@ class TestScheduling0:
         self.courses_page.click_course_page_link(self.section)
         self.course_page.wait_for_diablo_title(f'{self.section.code}, {self.section.number}')
 
-    # VERIFY STATIC COURSE SIS DATA
-
-    def test_visible_section_sis_data(self):
-        self.course_page.verify_section_sis_data(self.section)
-
-    def test_visible_meeting_sis_data(self):
-        self.course_page.verify_meeting_sis_data(self.meeting, idx=0)
-
-    def test_visible_site_ids(self):
-        assert self.course_page.visible_course_site_ids() == []
-
-    def test_visible_listings(self):
-        listing_codes = [li.code for li in self.section.listings]
-        assert self.course_page.visible_cross_listing_codes() == listing_codes
-
-    def test_course_scheduled_msg(self):
-        assert self.course_page.is_present(CoursePage.SCHEDULED_MSG)
-        assert not self.course_page.is_present(CoursePage.SCHEDULING_TO_COME_MSG)
-        assert not self.course_page.is_present(CoursePage.UPDATES_QUEUED_MSG)
-        assert not self.course_page.is_present(CoursePage.OPT_OUT_QUEUED_MSG)
-        assert not self.course_page.is_present(CoursePage.OPT_OUT_DONE_MSG)
-        assert not self.course_page.is_present(CoursePage.NOT_ELIGIBLE_MSG)
-
-    # VERIFY DEFAULT SETTINGS AND EXTERNAL LINKS
-
-    def test_default_instructors(self):
-        assert self.course_page.visible_instructor_uids() == [str(self.instructor.uid)]
-
-    def test_no_collaborators(self):
-        assert not self.course_page.visible_collaborator_uids()
-
-    def test_default_recording_type(self):
-        assert self.course_page.visible_recording_type() == self.recording_schedule.recording_type.value['desc']
-
-    def test_default_recording_placement(self):
-        assert self.recording_schedule.recording_placement.value['desc'] in self.course_page.visible_recording_placement()
-
-    def test_no_instructor_kaltura_link(self):
-        assert not self.course_page.is_present(self.course_page.kaltura_series_link(self.recording_schedule))
-
-    def test_how_to_publish_from_my_media_link(self):
-        title = 'IT - How do I publish media from My Media to a Media Gallery in bCourses?'
-        assert self.course_page.external_link_valid(self.course_page.HOW_TO_PUBLISH_LINK, title)
-
-    def test_how_to_embed_in_bcourses_link(self):
-        title = 'IT - How do I embed Kaltura media in bCourses using the Rich Content Editor?'
-        assert self.course_page.external_link_valid(self.course_page.HOW_TO_EMBED_LINK, title)
-
-    def test_no_how_to_remove_a_recording_link(self):
-        assert not self.course_page.is_present(self.course_page.HOW_TO_REMOVE_LINK)
-
-    def test_how_to_download_second_stream_link(self):
-        title = 'IT - How do I download the second stream of a dual-stream video?'
-        assert self.course_page.external_link_valid(self.course_page.HOW_TO_DOWNLOAD_LINK, title)
-
-    def test_course_capture_faq_link(self):
-        title = 'Course Capture FAQ | Research, Teaching, & Learning'
-        assert self.course_page.external_link_valid(self.course_page.COURSE_CAPTURE_FAQ_LINK, title)
-
-    # VERIFY AVAILABLE OPTIONS
-
-    def test_rec_type_options(self):
-        self.course_page.click_rec_type_edit_button()
-        assert self.course_page.is_present(self.course_page.RECORDING_TYPE_NO_OP_RADIO)
-        assert self.course_page.is_present(self.course_page.RECORDING_TYPE_OP_RADIO)
-
-    def test_rec_placement_options(self):
-        self.course_page.cancel_recording_type_edits()
-        self.course_page.click_edit_recording_placement()
-        assert self.course_page.is_present(self.course_page.PLACEMENT_MY_MEDIA_RADIO)
-        assert self.course_page.is_present(self.course_page.PLACEMENT_AUTOMATIC_RADIO)
-
-    # SELECT OPTIONS, SAVE
-
-    def test_choose_rec_placement(self):
-        self.course_page.cancel_recording_placement_edits()
+    def test_choose_placement(self):
         self.course_page.click_edit_recording_placement()
         self.course_page.select_recording_placement(RecordingPlacement.PUBLISH_AUTOMATICALLY, sites=[self.site])
         self.course_page.save_recording_placement_edits()

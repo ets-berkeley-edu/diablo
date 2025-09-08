@@ -254,6 +254,28 @@
     },
     {
       "test_script": "test_opt_out_0",
+      "dept_code": "PHYSICS",
+      "instructors": [
+        {
+          "role": "PI"
+        }
+      ],
+      "proxies": [],
+      "meetings": [
+        {
+          "room": {
+            "name": "O'Brien 212"
+          },
+          "meeting_schedule": {
+            "days": "MO, WE",
+            "start_time": "8:00 pm",
+            "end_time": "8:59 pm"
+          }
+        }
+      ]
+    },
+    {
+      "test_script": "test_opt_out_1",
       "dept_code": "COMPSCI",
       "instructors": [
         {
@@ -281,28 +303,6 @@
           },
           "meeting_schedule": {
             "days": "TU, TH",
-            "start_time": "8:00 pm",
-            "end_time": "8:59 pm"
-          }
-        }
-      ]
-    },
-    {
-      "test_script": "test_opt_out_1",
-      "dept_code": "PHYSICS",
-      "instructors": [
-        {
-          "role": "PI"
-        }
-      ],
-      "proxies": [],
-      "meetings": [
-        {
-          "room": {
-            "name": "O'Brien 212"
-          },
-          "meeting_schedule": {
-            "days": "MO, WE",
             "start_time": "8:00 pm",
             "end_time": "8:59 pm"
           }

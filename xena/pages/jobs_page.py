@@ -38,14 +38,13 @@ from xena.test_utils import util
 
 class JobsPage(DiabloPages):
     RUN_BLACKOUTS_JOB_BUTTON = (By.ID, 'run-job-blackouts')
-    RUN_CANVAS_JOB_BUTTON = (By.ID, 'run-job-canvas')
-    RUN_HOUSEKEEPING_JOB_BUTTON = (By.ID, 'run-job-house_keeping')
     RUN_KALTURA_JOB_BUTTON = (By.ID, 'run-job-kaltura')
     RUN_EMAILS_JOB_BUTTON = (By.ID, 'run-job-emails')
-    RUN_REMIND_INSTRUCTORS_BUTTON = (By.ID, 'run-job-remind_instructors')
+    RUN_REMIND_OPT_OUTS_BUTTON = (By.ID, 'run-job-remind_opt_outs')
+    RUN_REMIND_PARTIALLY_APPROVED_BUTTON = (By.ID< 'run-job-remind_partially_approved')
+    RUN_REMIND_SCHEDULED_BUTTON = (By.ID, 'run-job-remind_scheduled')
     RUN_SCHEDULE_UPDATES_JOB_BUTTON = (By.ID, 'run-job-schedule_updates')
     RUN_SEMESTER_START_JOB_BUTTON = (By.ID, 'run-job-semester_start')
-    RUN_SIS_DATA_REFRESH_JOB_BUTTON = (By.ID, 'run-job-sis_data_refresh')
 
     SEARCH_HISTORY_INPUT = (By.ID, 'search-job-history-input')
 
@@ -64,20 +63,6 @@ class JobsPage(DiabloPages):
         self.wait_for_page_and_click(JobsPage.RUN_BLACKOUTS_JOB_BUTTON)
         self.wait_for_most_recent_job_success(AsyncJob.BLACKOUTS)
 
-    def run_canvas_job(self):
-        app.logger.info('Running the Canvas job')
-        self.scroll_to_top()
-        time.sleep(1)
-        self.wait_for_page_and_click(JobsPage.RUN_CANVAS_JOB_BUTTON)
-        self.wait_for_most_recent_job_success(AsyncJob.CANVAS)
-
-    def run_housekeeping_job(self):
-        app.logger.info('Vacuuming, dusting, and scrubbing the tub')
-        self.scroll_to_top()
-        time.sleep(1)
-        self.wait_for_page_and_click(JobsPage.RUN_HOUSEKEEPING_JOB_BUTTON)
-        self.wait_for_most_recent_job_success(AsyncJob.HOUSEKEEPING)
-
     def run_kaltura_job(self):
         app.logger.info('Running Kaltura job')
         self.scroll_to_top()
@@ -92,12 +77,26 @@ class JobsPage(DiabloPages):
         self.wait_for_page_and_click(JobsPage.RUN_EMAILS_JOB_BUTTON)
         self.wait_for_most_recent_job_success(AsyncJob.EMAILS)
 
-    def run_remind_instructors_job(self):
-        app.logger.info('Running remind instructors job')
+    def run_remind_scheduled_job(self):
+        app.logger.info('Running remind scheduled job')
         self.scroll_to_top()
         time.sleep(1)
-        self.wait_for_page_and_click(JobsPage.RUN_REMIND_INSTRUCTORS_BUTTON)
-        self.wait_for_most_recent_job_success(AsyncJob.REMIND_INSTRUCTORS)
+        self.wait_for_page_and_click(JobsPage.RUN_REMIND_SCHEDULED_BUTTON)
+        self.wait_for_most_recent_job_success(AsyncJob.REMIND_SCHEDULED)
+
+    def run_remind_opt_outs_job(self):
+        app.logger.info('Running remind opt-outs job')
+        self.scroll_to_top()
+        time.sleep(1)
+        self.wait_for_page_and_click(JobsPage.RUN_REMIND_OPT_OUTS_BUTTON)
+        self.wait_for_most_recent_job_success(AsyncJob.REMIND_OPT_OUTS)
+
+    def run_remind_partially_approved_job(self):
+        app.logger.info('Running remind partially approved job')
+        self.scroll_to_top()
+        time.sleep(1)
+        self.wait_for_page_and_click(JobsPage.RUN_REMIND_PARTIALLY_APPROVED_BUTTON)
+        self.wait_for_most_recent_job_success(AsyncJob.REMIND_PARTIALLY_APPROVED)
 
     def run_schedule_updates_job(self):
         app.logger.info('Running Schedule Updates job')
@@ -113,12 +112,17 @@ class JobsPage(DiabloPages):
         self.wait_for_page_and_click(JobsPage.RUN_SEMESTER_START_JOB_BUTTON)
         self.wait_for_most_recent_job_success(AsyncJob.SEMESTER_START)
 
-    def run_sis_data_refresh_job(self):
-        app.logger.info('Running SIS data refresh job')
-        self.scroll_to_top()
-        time.sleep(1)
-        self.wait_for_page_and_click(JobsPage.RUN_SIS_DATA_REFRESH_JOB_BUTTON)
-        self.wait_for_most_recent_job_success(AsyncJob.SIS_DATA_REFRESH)
+    def run_remind_opt_outs_job_sequence(self):
+        self.run_remind_opt_outs_job()
+        self.run_emails_job()
+
+    def run_remind_partially_approved_job_sequence(self):
+        self.run_remind_partially_approved_job()
+        self.run_emails_job()
+
+    def run_remind_scheduled_job_sequence(self):
+        self.run_remind_scheduled_job()
+        self.run_emails_job()
 
     def run_semester_start_job_sequence(self):
         self.run_semester_start_job()
@@ -131,10 +135,6 @@ class JobsPage(DiabloPages):
 
     def run_settings_update_job_sequence(self):
         self.run_kaltura_job()
-        self.run_emails_job()
-
-    def run_remind_instructors_job_sequence(self):
-        self.run_remind_instructors_job()
         self.run_emails_job()
 
     def wait_for_jobs_table(self):

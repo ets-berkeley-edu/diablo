@@ -31,7 +31,7 @@ from xena.models.term import Term
 from xena.pages.email_templates_page import EmailTemplatesPage
 from xena.test_utils import util
 
-util.reset_email_template_test_data(EmailTemplateType.INSTR_ANNUNCIATION_SEM_START)
+util.reset_email_template_test_data(EmailTemplateType.INSTR_WELCOME)
 
 
 @pytest.mark.usefixtures('page_objects')
@@ -39,7 +39,7 @@ class TestEmailTemplates:
 
     term = Term()
     template = EmailTemplate(
-        template_type=EmailTemplateType.INSTR_ANNUNCIATION_SEM_START,
+        template_type=EmailTemplateType.INSTR_WELCOME,
         subject='Welcome to Course Capture <code>term.name</code>',
         body='',
     )
@@ -99,7 +99,7 @@ class TestEmailTemplates:
 
     def test_restore_template(self):
         template = EmailTemplate(
-            template_type=EmailTemplateType.INSTR_ANNUNCIATION_SEM_START,
+            template_type=EmailTemplateType.INSTR_WELCOME,
             subject='Welcome to <code>term.name</code> Course Capture <code>recipient.name</code>',
             body='',
         )
@@ -114,37 +114,28 @@ class TestEmailTemplates:
         )
         self.templates_page.create_template(template)
 
-    def test_instructors_added(self):
-        util.reset_email_template_test_data(EmailTemplateType.INSTR_ADDED)
-        template = EmailTemplate(
-            template_type=EmailTemplateType.INSTR_ADDED,
-            subject='<code>course.name</code> Instructor(s) added to class',
-            body='',
-        )
-        self.templates_page.create_template(template)
-
     def test_instructor_new_class_scheduled(self):
-        util.reset_email_template_test_data(EmailTemplateType.INSTR_ANNUNCIATION_NEW_COURSE_SCHED)
+        util.reset_email_template_test_data(EmailTemplateType.INSTR_NEW_COURSE_ELIGIBLE)
         template = EmailTemplate(
-            template_type=EmailTemplateType.INSTR_ANNUNCIATION_NEW_COURSE_SCHED,
+            template_type=EmailTemplateType.INSTR_NEW_COURSE_ELIGIBLE,
             subject='<code>course.name</code> has been scheduled',
             body='',
         )
         self.templates_page.create_template(template)
 
     def test_instructor_remind_scheduled(self):
-        util.reset_email_template_test_data(EmailTemplateType.INSTR_ANNUNCIATION_REMINDER)
+        util.reset_email_template_test_data(EmailTemplateType.INSTR_REMIND_SCHEDULED)
         template = EmailTemplate(
-            template_type=EmailTemplateType.INSTR_ANNUNCIATION_REMINDER,
+            template_type=EmailTemplateType.INSTR_REMIND_SCHEDULED,
             subject='<code>recipient.name</code>: you have <code>term.name</code> classes scheduled for recording',
             body='',
         )
         self.templates_page.create_template(template)
 
     def test_instr_semester_start(self):
-        util.reset_email_template_test_data(EmailTemplateType.INSTR_ANNUNCIATION_SEM_START)
+        util.reset_email_template_test_data(EmailTemplateType.INSTR_WELCOME)
         template = EmailTemplate(
-            template_type=EmailTemplateType.INSTR_ANNUNCIATION_SEM_START,
+            template_type=EmailTemplateType.INSTR_WELCOME,
             subject='Welcome to <code>term.name</code> Course Capture <code>recipient.name</code>',
             body='',
         )

@@ -40,11 +40,14 @@ class TestScheduling2:
     SCENARIO.
 
     - Section has two instructors and one meeting
-    - Recordings scheduled via scheduling update job
-    - Course site created, instructor selects auto-publish and selects course site
-    - Second course site created, other instructor adds the new site as well
-    - Instructor two removes the second course site
-    - Instructor two reverts to no auto-publish
+    - Instructor 1 opts in, selects auto-publish, and selects course site
+    - Series updated
+    - Instructor 2 opts in and selects an additional course site
+    - Series updated
+    - Instructor 2 removes the second course site
+    - Series updated
+    - Instructor 2 reverts to no auto-publish
+    - Series updated
     """
 
     test_data = util.get_test_script_course('test_single_meeting_settings_changes_2')
@@ -80,7 +83,9 @@ class TestScheduling2:
         self.kaltura_page.log_in_via_calnet(self.calnet_page)
         self.kaltura_page.reset_test_data(self.section)
 
-        util.reset_section_test_data(self.section)
+        util.reset_section_test_data(self.section, delete_opt_ins=True)
+        util.reset_user_preferences(self.instructor_0)
+        util.reset_user_preferences(self.instructor_1)
 
         util.reset_sent_email_test_data(self.section)
         util.reset_sent_email_test_data(section=None, instructor=self.instructor_0)
@@ -97,6 +102,94 @@ class TestScheduling2:
         self.canvas_page.create_site(self.section, self.site_1)
         self.canvas_page.add_user_to_site(self.site_1, self.instructor_0, 'Teacher')
         self.canvas_page.add_user_to_site(self.site_1, self.instructor_1, 'Lead TA')
+
+    # TODO - trigger and verify welcome email
+
+    # VERIFY STATIC COURSE SIS DATA
+
+    def test_visible_section_sis_data(self):
+        self.kaltura_page.close_window_and_switch()
+        self.ouija_page.load_page()
+        self.ouija_page.log_out()
+        self.login_page.dev_auth(self.instructor_0.uid)
+        # TODO opt in on instructor landing page
+        self.instructor_page.click_course_page_link(self.section)
+        self.course_page.wait_for_diablo_title(f'{self.section.code}, {self.section.number}')
+        self.course_page.verify_section_sis_data(self.section)
+
+    def test_visible_meeting_sis_data(self):
+        self.course_page.verify_meeting_sis_data(self.meeting, idx=0)
+
+    def test_visible_listings(self):
+        listing_codes = [li.code for li in self.section.listings]
+        assert self.course_page.visible_cross_listing_codes() == listing_codes
+
+    # VERIFY AVAILABLE OPTIONS
+
+    def test_rec_type_options(self):
+        assert not self.course_page.is_present(self.course_page.RECORDING_TYPE_EDIT_BUTTON)
+
+    def test_rec_placement_options(self):
+        self.course_page.click_edit_recording_placement()
+        assert self.course_page.is_present(self.course_page.PLACEMENT_MY_MEDIA_RADIO)
+        assert self.course_page.is_present(self.course_page.PLACEMENT_AUTOMATIC_RADIO)
+
+    # SELECT OPTIONS, SAVE
+
+    def test_choose_rec_placement(self):
+        self.course_page.select_recording_placement(RecordingPlacement.PUBLISH_AUTOMATICALLY, sites=[self.site_0])
+        self.course_page.save_recording_placement_edits()
+        self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_AUTOMATICALLY
+
+    def test_visible_site_ids_updated(self):
+        assert self.course_page.visible_course_site_ids() == [self.site_0.site_id]
+
+    def test_site_link(self):
+        assert self.course_page.external_link_valid(CoursePage.selected_placement_site_loc(self.site_0), self.site_0.name)
+
+    # RUN KALTURA AND EMAIL JOBS, VERIFY NO RECORDINGS SCHEDULED AND NO SETTINGS UPDATE EMAIL SENT YET
+
+    def test_recordings_not_scheduled(self):
+        self.course_page.close_window_and_switch()
+        self.ouija_page.load_page()
+        self.ouija_page.log_out()
+        self.login_page.dev_auth()
+        self.ouija_page.click_jobs_link()
+        self.jobs_page.run_settings_update_job_sequence()
+
+    # TODO - verify no recordings scheduled yet
+
+    # TODO - verify no settings-update email sent
+
+    # OTHER INSTRUCTOR LOGS IN, VERIFY NO SETTINGS OPTIONS UNTIL OPT-IN
+
+    def test_instructor_2_login(self):
+        self.course_page.close_window_and_switch()
+        self.ouija_page.load_page()
+        self.ouija_page.log_out()
+        self.login_page.dev_auth(self.instructor_1.uid)
+        self.instructor_page.click_course_page_link(self.section)
+
+    def test_no_rec_type_options(self):
+        assert not self.course_page.is_present(self.course_page.RECORDING_TYPE_EDIT_BUTTON)
+
+    def test_no_rec_placement_options(self):
+        assert not self.course_page.is_present(self.course_page.PLACEMENT_EDIT_BUTTON)
+
+    # TODO - def test_opt_in(self):
+
+    def test_another_site_add_to_channels(self):
+        self.course_page.click_edit_recording_placement()
+        self.course_page.select_recording_placement(RecordingPlacement.PUBLISH_AUTOMATICALLY, sites=[self.site_1])
+        self.course_page.save_recording_placement_edits()
+        self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_AUTOMATICALLY
+
+    def test_another_site_visible_site_ids_updated(self):
+        assert self.course_page.visible_course_site_ids() == [self.site_0.site_id, self.site_1.site_id]
+
+    def test_another_site_link(self):
+        assert self.course_page.external_link_valid(CoursePage.selected_placement_site_loc(self.site_1),
+                                                    self.site_1.name)
 
     # SCHEDULE RECORDINGS
 
@@ -150,74 +243,10 @@ class TestScheduling2:
     # VERIFY ANNUNCIATION EMAILS
 
     def test_receive_annunciation_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_NEW_COURSE_SCHED, self.section,
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_NEW_COURSE_ELIGIBLE, self.section,
                                          self.instructor_0) == 1
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_NEW_COURSE_SCHED, self.section,
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_NEW_COURSE_ELIGIBLE, self.section,
                                          self.instructor_1) == 1
-
-    # VERIFY STATIC COURSE SIS DATA
-
-    def test_visible_section_sis_data(self):
-        self.kaltura_page.close_window_and_switch()
-        self.ouija_page.load_page()
-        self.ouija_page.log_out()
-        self.login_page.dev_auth(self.instructor_0.uid)
-        self.instructor_page.click_course_page_link(self.section)
-        self.course_page.wait_for_diablo_title(f'{self.section.code}, {self.section.number}')
-        self.course_page.verify_section_sis_data(self.section)
-
-    def test_visible_meeting_sis_data(self):
-        self.course_page.verify_meeting_sis_data(self.meeting, idx=0)
-
-    def test_visible_listings(self):
-        listing_codes = [li.code for li in self.section.listings]
-        assert self.course_page.visible_cross_listing_codes() == listing_codes
-
-    # VERIFY AVAILABLE OPTIONS
-
-    def test_rec_type_options(self):
-        assert not self.course_page.is_present(self.course_page.RECORDING_TYPE_EDIT_BUTTON)
-
-    def test_rec_placement_options(self):
-        self.course_page.click_edit_recording_placement()
-        assert self.course_page.is_present(self.course_page.PLACEMENT_MY_MEDIA_RADIO)
-        assert self.course_page.is_present(self.course_page.PLACEMENT_AUTOMATIC_RADIO)
-
-    # SELECT OPTIONS, SAVE
-
-    def test_choose_rec_placement(self):
-        self.course_page.select_recording_placement(RecordingPlacement.PUBLISH_AUTOMATICALLY, sites=[self.site_0])
-        self.course_page.save_recording_placement_edits()
-        self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_AUTOMATICALLY
-
-    def test_visible_site_ids_updated(self):
-        assert self.course_page.visible_course_site_ids() == [self.site_0.site_id]
-
-    def test_site_link(self):
-        assert self.course_page.external_link_valid(CoursePage.selected_placement_site_loc(self.site_0), self.site_0.name)
-
-    def test_changes_queued(self):
-        self.course_page.load_page(self.section)
-        assert self.course_page.is_present(CoursePage.UPDATES_QUEUED_MSG)
-        assert self.course_page.is_present(CoursePage.SCHEDULED_MSG)
-
-    # UPDATE SERIES IN KALTURA
-
-    def test_update_run_kaltura_job(self):
-        self.course_page.log_out()
-        self.login_page.dev_auth()
-        self.ouija_page.click_jobs_link()
-        self.jobs_page.run_settings_update_job_sequence()
-
-    # VERIFY SERIES IN KALTURA
-
-    def test_update_series_publish_status(self):
-        self.course_page.load_page(self.section)
-        self.course_page.click_kaltura_series_link(self.recording_schedule)
-        self.kaltura_page.verify_publish_status(self.recording_schedule)
-
-    def test_update_kaltura_course_site(self):
-        self.kaltura_page.verify_site_categories([self.site_0])
 
     # VERIFY EMAILS
 
@@ -228,57 +257,6 @@ class TestScheduling2:
     def test_update_receive_schedule_conf_email_instr_2(self):
         assert util.get_sent_email_count(EmailTemplateType.INSTR_CHANGES_CONFIRMED, self.section,
                                          self.instructor_1) == 1
-
-    def test_another_site_add_to_channels(self):
-        self.kaltura_page.close_window_and_switch()
-        self.ouija_page.load_page()
-        self.ouija_page.log_out()
-        self.login_page.dev_auth(self.instructor_1.uid)
-        self.instructor_page.click_course_page_link(self.section)
-        self.course_page.load_page(self.section)
-        self.course_page.click_edit_recording_placement()
-        self.course_page.select_recording_placement(RecordingPlacement.PUBLISH_AUTOMATICALLY, sites=[self.site_1])
-        self.course_page.save_recording_placement_edits()
-        self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_AUTOMATICALLY
-
-    def test_another_site_visible_site_ids_updated(self):
-        assert self.course_page.visible_course_site_ids() == [self.site_0.site_id, self.site_1.site_id]
-
-    def test_another_site_link(self):
-        assert self.course_page.external_link_valid(CoursePage.selected_placement_site_loc(self.site_1),
-                                                    self.site_1.name)
-
-    def test_changes_queued_again(self):
-        self.course_page.load_page(self.section)
-        self.course_page.when_present(CoursePage.UPDATES_QUEUED_MSG, util.get_short_timeout())
-        assert self.course_page.is_present(CoursePage.SCHEDULED_MSG)
-
-    def test_another_site_run_kaltura_job(self):
-        self.course_page.log_out()
-        self.login_page.dev_auth()
-        self.ouija_page.click_jobs_link()
-        self.jobs_page.run_settings_update_job_sequence()
-
-    # VERIFY SERIES IN KALTURA
-
-    def test_another_site_series_publish_status(self):
-        self.course_page.load_page(self.section)
-        self.course_page.click_kaltura_series_link(self.recording_schedule)
-        self.kaltura_page.verify_publish_status(self.recording_schedule)
-
-    def test_another_site_kaltura_course_sites(self):
-        # The second site won't immediately appear as a category, so expect 3 site IDs not 4
-        self.kaltura_page.verify_site_categories([self.site_0, self.site_1], expected_count=3)
-
-    # VERIFY EMAILS
-
-    def test_update_receive_site_conf_email_instr_1(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_CHANGES_CONFIRMED, self.section,
-                                         self.instructor_0) == 2
-
-    def test_update_receive_site_conf_email_instr_2(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_CHANGES_CONFIRMED, self.section,
-                                         self.instructor_1) == 2
 
     # DELETE ONE COURSE SITE
 

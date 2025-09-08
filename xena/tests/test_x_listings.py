@@ -109,7 +109,7 @@ class TestCrossListings:
         self.kaltura_page.verify_site_categories([])
 
     def test_receive_annunciation_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_NEW_COURSE_SCHED, section=None,
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_NEW_COURSE_ELIGIBLE, section=None,
                                          instructor=self.instructor) == 2
 
     # CHANGE PUBLISH TYPE TO AUTOMATIC

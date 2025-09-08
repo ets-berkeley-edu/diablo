@@ -491,7 +491,7 @@ def get_blackout_date_ranges():
     return ranges
 
 
-def reset_section_test_data(section, delete_opt_outs=True):
+def reset_section_test_data(section, delete_opt_ins=True):
     reset_test_data(section)
     term_id = app.config['CURRENT_TERM_ID']
     sql = f'DELETE FROM scheduled WHERE section_id = {section.ccn} AND term_id = {term_id}'
@@ -510,18 +510,18 @@ def reset_section_test_data(section, delete_opt_outs=True):
     app.logger.info(sql)
     db.session.execute(text(sql))
     std_commit(allow_test_environment=True)
-    if delete_opt_outs:
-        sql = 'DELETE FROM opt_outs'
+    if delete_opt_ins:
+        sql = f'DELETE FROM opt_ins WHERE section_id = {section.ccn} AND term_id = {term_id}'
         app.logger.info(sql)
         db.session.execute(text(sql))
         std_commit(allow_test_environment=True)
 
 
-def set_past_term_opt_out(instructor):
-    current_term_id = int(app.config['CURRENT_TERM_ID'])
-    previous_term_id = current_term_id - (4 if (current_term_id % 10 == 2) else 3)
-    sql = f"""INSERT INTO opt_outs (instructor_uid, term_id, section_id, created_at)
-                   SELECT '{instructor.uid}', {previous_term_id}, NULL, now()"""
+def reset_user_preferences(instructor):
+    sql = f"""UPDATE user_preferences
+                 SET do_not_email = FALSE,
+                     opt_in_new_courses = FALSE
+               WHERE uid = {instructor.uid}"""
     app.logger.info(sql)
     db.session.execute(text(sql))
     std_commit(allow_test_environment=True)

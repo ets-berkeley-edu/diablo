@@ -41,8 +41,8 @@ class TestScheduling1:
     SCENARIO.
 
     - Section has one instructor and one meeting
-    - Recordings scheduled via scheduling update job
-    - Course site created, admin selects auto-publish and enters course site ID
+    - Admin opts the course in, recordings scheduled
+    - Admin selects auto-publish, entering course site ID
     - Series updated
     """
 
@@ -79,7 +79,14 @@ class TestScheduling1:
         util.reset_sent_email_test_data(self.section)
         util.reset_sent_email_test_data(section=None, instructor=self.instructor)
 
+        util.reset_section_test_data(self.section, delete_opt_ins=True)
+        util.reset_user_preferences(self.instructor)
+
+    # TODO - trigger and verify welcome email
+
     # CHECK FILTERS - NOT SCHEDULED
+
+    # TODO - will there be filter for not-invited again?
 
     def test_not_scheduled_filter_all(self):
         self.ouija_page.load_page()
@@ -102,11 +109,66 @@ class TestScheduling1:
         self.ouija_page.filter_for_no_instructors()
         assert not self.ouija_page.is_course_in_results(self.section)
 
+    # VERIFY STATIC COURSE SIS DATA
+
+    def test_visible_section_sis_data(self):
+        self.kaltura_page.close_window_and_switch()
+        self.course_page.load_page(self.section)
+        self.course_page.verify_section_sis_data(self.section)
+
+    def test_visible_meeting_sis_data(self):
+        self.course_page.verify_meeting_sis_data(self.meeting, idx=0)
+
+    def test_visible_site_ids(self):
+        assert self.course_page.visible_course_site_ids() == []
+
+    def test_visible_listings(self):
+        listing_codes = [li.code for li in self.section.listings]
+        assert self.course_page.visible_cross_listing_codes() == listing_codes
+
+    # CREATE COURSE SITE
+
+    def test_create_course_site(self):
+        self.canvas_page.create_site(self.section, self.site)
+        self.canvas_page.add_user_to_site(self.site, self.instructor, 'TA')
+
+    # VERIFY AVAILABLE OPTIONS
+
+    def test_opt_in(self):
+        self.course_page.load_page(self.section)
+        # TODO click opt-in button
+
+    def test_rec_type_options(self):
+        self.course_page.click_rec_type_edit_button()
+        assert self.course_page.is_present(self.course_page.RECORDING_TYPE_NO_OP_RADIO)
+        assert self.course_page.is_present(self.course_page.RECORDING_TYPE_OP_RADIO)
+
+    def test_rec_placement_options(self):
+        self.course_page.cancel_recording_type_edits()
+        self.course_page.click_edit_recording_placement()
+        assert self.course_page.is_present(self.course_page.PLACEMENT_MY_MEDIA_RADIO)
+        assert self.course_page.is_present(self.course_page.PLACEMENT_AUTOMATIC_RADIO)
+
+    def test_no_changes_to_rec_placement(self):
+        self.course_page.select_recording_placement(RecordingPlacement.PUBLISH_AUTOMATICALLY)
+        assert not self.course_page.element(self.course_page.PLACEMENT_SAVE_BUTTON).is_enabled()
+
+    def test_add_new_site(self):
+        self.course_page.click_edit_recording_placement()
+        self.course_page.enter_recording_placement(RecordingPlacement.PUBLISH_AUTOMATICALLY, sites=[self.site])
+        self.course_page.save_recording_placement_edits()
+        self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_AUTOMATICALLY
+
+    # TODO - admin opts in course
+
+    def test_visible_site_ids_updated(self):
+        assert self.course_page.visible_course_site_ids() == [self.site.site_id]
+
     # SCHEDULE RECORDINGS
 
-    def test_semester_start(self):
+    def test_update_job(self):
         self.jobs_page.load_page()
-        self.jobs_page.run_schedule_update_job_sequence()
+        self.jobs_page.run_settings_update_job_sequence()
         assert util.get_kaltura_id(self.recording_schedule)
         self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
         self.recording_schedule.recording_placement = RecordingPlacement.PLACE_IN_MY_MEDIA
@@ -177,58 +239,8 @@ class TestScheduling1:
     # VERIFY ANNUNCIATION EMAIL
 
     def test_receive_annunciation_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_NEW_COURSE_SCHED, section=None,
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_NEW_COURSE_ELIGIBLE, section=None,
                                          instructor=self.instructor) == 1
-
-    # VERIFY STATIC COURSE SIS DATA
-
-    def test_visible_section_sis_data(self):
-        self.kaltura_page.close_window_and_switch()
-        self.course_page.load_page(self.section)
-        self.course_page.verify_section_sis_data(self.section)
-
-    def test_visible_meeting_sis_data(self):
-        self.course_page.verify_meeting_sis_data(self.meeting, idx=0)
-
-    def test_visible_site_ids(self):
-        assert self.course_page.visible_course_site_ids() == []
-
-    def test_visible_listings(self):
-        listing_codes = [li.code for li in self.section.listings]
-        assert self.course_page.visible_cross_listing_codes() == listing_codes
-
-    # VERIFY AVAILABLE OPTIONS
-
-    def test_rec_type_options(self):
-        self.course_page.click_rec_type_edit_button()
-        assert self.course_page.is_present(self.course_page.RECORDING_TYPE_NO_OP_RADIO)
-        assert self.course_page.is_present(self.course_page.RECORDING_TYPE_OP_RADIO)
-
-    def test_rec_placement_options(self):
-        self.course_page.cancel_recording_type_edits()
-        self.course_page.click_edit_recording_placement()
-        assert self.course_page.is_present(self.course_page.PLACEMENT_MY_MEDIA_RADIO)
-        assert self.course_page.is_present(self.course_page.PLACEMENT_AUTOMATIC_RADIO)
-
-    def test_no_changes_to_rec_placement(self):
-        self.course_page.select_recording_placement(RecordingPlacement.PUBLISH_AUTOMATICALLY)
-        assert not self.course_page.element(self.course_page.PLACEMENT_SAVE_BUTTON).is_enabled()
-
-    # CREATE COURSE SITE
-
-    def test_create_course_site(self):
-        self.canvas_page.create_site(self.section, self.site)
-        self.canvas_page.add_user_to_site(self.site, self.instructor, 'TA')
-
-    def test_add_new_site(self):
-        self.course_page.load_page(self.section)
-        self.course_page.click_edit_recording_placement()
-        self.course_page.enter_recording_placement(RecordingPlacement.PUBLISH_AUTOMATICALLY, sites=[self.site])
-        self.course_page.save_recording_placement_edits()
-        self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_AUTOMATICALLY
-
-    def test_visible_site_ids_updated(self):
-        assert self.course_page.visible_course_site_ids() == [self.site.site_id]
 
     # VERIFY COURSE HISTORY
 
@@ -246,37 +258,6 @@ class TestScheduling1:
                                             new_value=CoursePage.expected_site_ids_converter([self.site]),
                                             requestor=self.admin,
                                             status='queued')
-
-    def test_changes_queued(self):
-        assert self.course_page.is_present(CoursePage.UPDATES_QUEUED_MSG)
-        assert self.course_page.is_present(CoursePage.SCHEDULED_MSG)
-
-    # UPDATE SERIES IN KALTURA
-
-    def test_run_kaltura_job(self):
-        self.ouija_page.click_jobs_link()
-        self.jobs_page.run_settings_update_job_sequence()
-
-    # VERIFY SERIES IN KALTURA
-
-    def test_update_series_title_and_desc(self):
-        self.course_page.load_page(self.section)
-        self.course_page.click_kaltura_series_link(self.recording_schedule)
-        self.kaltura_page.verify_title_and_desc(self.section, self.meeting)
-
-    def test_update_series_collab(self):
-        self.kaltura_page.verify_collaborators(self.section)
-
-    def test_update_schedule(self):
-        self.kaltura_page.verify_schedule(self.section, self.meeting)
-
-    def test_update_series_publish_status(self):
-        self.kaltura_page.reload_page()
-        self.kaltura_page.wait_for_publish_category_el()
-        self.kaltura_page.verify_publish_status(self.recording_schedule)
-
-    def test_update_kaltura_course_site(self):
-        self.kaltura_page.verify_site_categories([self.site])
 
     # VERIFY EMAIL
 
