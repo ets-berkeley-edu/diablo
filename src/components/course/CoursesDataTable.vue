@@ -8,7 +8,7 @@
     <v-data-table
       id="courses-data-table"
       v-model="selectedRows"
-      v-model:page="pageCurrent"
+      v-model:page="page"
       :disable-sort="courses.length < 2"
       :headers="headers"
       :items="courses"
@@ -212,7 +212,7 @@
         <div v-if="!refreshing && pageCount > 1" class="text-center pb-4 pt-2">
           <v-pagination
             id="ouija-pagination"
-            v-model="pageCurrent"
+            v-model="page"
             :length="pageCount"
           />
         </div>
@@ -285,7 +285,7 @@ const headers = ref([
   {key: 'instructors', title: 'Instructor(s)', value: 'instructorNames', sortable: false},
   {key: 'publish', title: 'Publish', sortable: true, value: 'publishTypeName', class: 'w-10'}
 ])
-const pageCurrent = ref(1)
+const page = defineModel({type: Number})
 const selectedRows = ref([])
 const sortBy = ref({})
 
@@ -297,6 +297,7 @@ const instructorUidsFor = course =>
 watch(() => props.refreshing, async(value) => {
   if (!value) {
     // False value means that the refresh just ended in the parent component and we can proceed.
+    page.value = 1
     refresh()
   }
 })
@@ -315,14 +316,13 @@ const onUpdateSortBy = primarySortBy => {
   const key = primarySortBy[0].key
   const header = find(headers.value, {key: key})
   sortBy.value = primarySortBy[0]
-  pageCurrent.value = 1
+  page.value = 1
   if (header) {
     alertScreenReader(`Sorted by ${header.title}, ${sortBy.value.order}ending`)
   }
 }
 
 const refresh = () => {
-  pageCurrent.value = 1
   each(props.courses, course => {
     course.instructorNames = map(course.instructors, 'name')
     course.isSelectable = !course.hasOptedOut

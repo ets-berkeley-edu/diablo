@@ -41,7 +41,7 @@
           />
           <v-select
             id="ouija-filter-options"
-            v-model="selectedFilter"
+            v-model="ouijaStore.filter"
             aria-label="Filter courses table"
             autocomplete="off"
             class="pb-2"
@@ -55,6 +55,9 @@
             @update:menu="onToggleFilterOptionsMenu"
             @update:model-value="refresh"
           >
+            <template #selection="{item}">
+              {{ item.value }}
+            </template>
             <template #item="{props: itemProps, item}">
               <v-list-item
                 :id="`filter-option-${kebabCase(item.value)}`"
@@ -71,6 +74,7 @@
       </v-row>
     </v-card-title>
     <CoursesDataTable
+      v-model="ouijaStore.pageNumber"
       :courses="courses"
       :description="coursesTableDescription"
       :include-room-column="true"
@@ -82,50 +86,62 @@
   </v-card>
 </template>
 
-<script setup>
-import {computed, onMounted, ref} from 'vue'
+<script lang="ts" setup>
+import {computed, onMounted, onUnmounted, ref} from 'vue'
 import {each, kebabCase, map} from 'lodash'
 import {mdiAutoFix, mdiMagnify} from '@mdi/js'
 import {alertScreenReader, getCourseCodes, pluralize, putFocusNextTick} from '@/lib/utils'
-import CoursesDataTable from '@/components/course/CoursesDataTable'
-import PageTitle from '@/components/util/PageTitle'
+import CoursesDataTable from '@/components/course/CoursesDataTable.vue'
+import PageTitle from '@/components/util/PageTitle.vue'
+import type {Course} from '@/lib/types'
+import {OuijaFilter, useOuijaStore} from '@/stores/ouija'
 import {downloadCSV, getCourses} from '@/api/course'
 import {useContextStore} from '@/stores/context'
 
 const contextStore = useContextStore()
-const courses = ref([])
+const courses = ref<Course[]>([])
 const filterOptions = map(contextStore.config.searchFilterOptions, (v, k) => {
   return {title: k, subtitle: v}
 })
 const isDownloading = ref(false)
 const isRefreshing = ref(false)
 const menuContainer = ref()
+const ouijaStore = useOuijaStore()
 const searchText = ref('')
-const selectedFilter = ref('Scheduled')
 const coursesTableDescription = computed(() => {
   const pluralized = pluralize('course', courses.value.length, false)
-  const description = `${courses.value.length ? courses.value.length.toLocaleString() : 'No'} ${selectedFilter.value || ''} ${pluralized}`
-  if (selectedFilter.value === 'No Instructors') {
-    return description.replace(`No Instructors ${pluralized}`, `${pluralized} with no instructor`)
-  } else if (selectedFilter.value === 'All') {
-    return description.replace(`All ${pluralized}`, pluralized)
+  let description = `${courses.value.length ? courses.value.length.toLocaleString() : 'No'} ${ouijaStore.filter || ''} ${pluralized}`
+  if (ouijaStore.filter === OuijaFilter.NoInstructors) {
+    description = description.replace(`No Instructors ${pluralized}`, `${pluralized} with no instructor`)
+  } else if (ouijaStore.filter === OuijaFilter.All) {
+    description = description.replace(`All ${pluralized}`, pluralized)
   }
-  else {
-    return description
-  }
+  return description
 })
 
 contextStore.loadingStart()
 
 onMounted(() => {
+  contextStore.setEventHandler('sidebar-navigation-click', onSidebarNavigationClick)
   loadCourses().then(() => {
     contextStore.loadingComplete('Ouija Board', `Showing ${coursesTableDescription.value}`)
   })
 })
 
+onUnmounted(() => {
+  contextStore.removeEventHandler('sidebar-navigation-click', onSidebarNavigationClick)
+})
+
+const onSidebarNavigationClick = navItem => {
+  if (navItem.title === 'Ouija Board' && !contextStore.loading) {
+    useOuijaStore().$reset()
+    refresh()
+  }
+}
+
 const loadCourses = () => {
   isRefreshing.value = true
-  return getCourses(selectedFilter.value, contextStore.config.currentTermId).then(data => {
+  return getCourses(ouijaStore.filter, contextStore.config.currentTermId).then(data => {
     courses.value = data
     each(courses.value, course => {
       // In support of search, we index nested course data
@@ -139,7 +155,7 @@ const loadCourses = () => {
 
 const onClickDownload = () => {
   isDownloading.value = true
-  downloadCSV(selectedFilter.value, contextStore.config.currentTermId).then(() => {
+  downloadCSV(ouijaStore.filter, contextStore.config.currentTermId).then(() => {
     contextStore.snackbarOpen('The CSV file has been downloaded.')
     isDownloading.value = false
   })
@@ -150,17 +166,19 @@ const onToggleFilterOptionsMenu = isOpen => {
     putFocusNextTick('filter-option-scheduled')
   }
 }
-const onToggleOptOut = course => {
-  if (!course.hasOptedOut && selectedFilter.value === 'Do Not Email') {
-    const indexOf = courses.value.findIndex(c => c.sectionId === course.sectionId)
-    if (indexOf >= 0) {
-      courses.value.splice(indexOf, 1)
-    }
-    contextStore.snackbarOpen(`${course.label} removed from list.`)
+const onToggleOptOut = (course: Course) => {
+  if (!course.hasOptedOut) {
+    // TODO: Do we need to alter or extend this logic?
+    // const indexOf = courses.value.findIndex(c => c.sectionId === course.sectionId)
+    // if (indexOf >= 0) {
+    //   courses.value.splice(indexOf, 1)
+    // }
+    // contextStore.snackbarOpen(`${course.label} removed from list.`)
   }
 }
 
 const refresh = () => {
+  ouijaStore.setPageNumber(1)
   alertScreenReader('Refreshing courses table')
   loadCourses().then(() => {
     alertScreenReader(`Showing ${coursesTableDescription.value}`)

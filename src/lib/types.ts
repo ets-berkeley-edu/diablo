@@ -152,6 +152,13 @@ export interface DiabloUser {
   uid: string | null
 }
 
+export type OptOut = {
+  instructorUid: string,
+  termId: number,
+  sectionId: number,
+  createdAt: string
+}
+
 export type ScreenReaderAlert = {
   message: string,
   politeness: string

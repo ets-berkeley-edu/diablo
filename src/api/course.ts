@@ -1,9 +1,10 @@
-import _ from 'lodash'
+import {snakeCase} from 'lodash'
 import axios from 'axios'
 import fileDownload from 'js-file-download'
 import {DateTime} from 'luxon'
 import {getApiBaseUrl} from '@/api/api-utils'
 import type {OptIn} from '@/lib/types'
+import type {OuijaFilter} from '@/stores/ouija'
 
 export function deleteCourseNote(termId: number, sectionId: number) {
   return axios.post(`${getApiBaseUrl()}/api/course/note/delete`, {
@@ -12,9 +13,9 @@ export function deleteCourseNote(termId: number, sectionId: number) {
   }).then(response => response.data)
 }
 
-export function downloadCSV(filter: string, termId: string) {
+export function downloadCSV(filter: string | OuijaFilter, termId: number) {
   const now = DateTime.now().toFormat('yyyy-MM-dd_HH-mm-ss')
-  const filename = `courses-${_.snakeCase(filter)}-${termId}_${now}.csv`
+  const filename = `courses-${snakeCase(filter.toString())}-${termId}_${now}.csv`
   return axios.post(`${getApiBaseUrl()}/api/courses/csv`, {
     filter,
     termId
@@ -31,7 +32,7 @@ export function getCourseSite(siteId: number) {
     .then(response => response.data)
 }
 
-export function getCourses(filter: string, termId: string) {
+export function getCourses(filter: string | OuijaFilter, termId: number) {
   return axios.post(`${getApiBaseUrl()}/api/courses`, {
     filter,
     termId
