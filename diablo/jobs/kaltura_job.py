@@ -28,7 +28,7 @@ from flask import current_app as app
 
 from diablo.externals.kaltura import CREATED_BY_DIABLO_TAG, Kaltura
 from diablo.jobs.base_job import BaseJob
-from diablo.jobs.util import get_eligible_unscheduled_courses, notify_newly_scheduled_instructors, remove_blackout_events, schedule_recordings
+from diablo.jobs.util import get_eligible_unscheduled_courses, remove_blackout_events, schedule_recordings
 from diablo.lib.berkeley import get_recording_end_date, get_recording_start_date, term_name_for_sis_id
 from diablo.lib.kaltura_util import get_series_description
 from diablo.merged.emailer import send_system_error_email
@@ -45,11 +45,9 @@ class KalturaJob(BaseJob):
 
     def _run(self):
         term_id = app.config['CURRENT_TERM_ID']
-        newly_scheduled_instructors = set()
 
-        _schedule_new_courses(term_id, newly_scheduled_instructors)
-        _update_already_scheduled_events(term_id, newly_scheduled_instructors)
-        notify_newly_scheduled_instructors(term_id, newly_scheduled_instructors)
+        _schedule_new_courses(term_id)
+        _update_already_scheduled_events(term_id)
 
     @classmethod
     def description(cls):
@@ -57,7 +55,7 @@ class KalturaJob(BaseJob):
             This job:
             <ul>
                 <li>Schedules recordings via Kaltura API</li>
-                <li>Queues up '{EmailTemplate.get_template_type_options()['new_class_scheduled']}' emails</li>
+                <li>Queues up '{EmailTemplate.get_template_type_options()['class_scheduled']}' emails</li>
                 <li>Updates existing schedules in Kaltura</li>
             </ul>
         """
@@ -67,7 +65,7 @@ class KalturaJob(BaseJob):
         return 'kaltura'
 
 
-def _schedule_new_courses(term_id, newly_scheduled_instructors):
+def _schedule_new_courses(term_id):
     unscheduled_courses = get_eligible_unscheduled_courses(term_id)
     app.logger.info(f'Preparing to schedule recordings for {len(unscheduled_courses)} courses.')
     for course in unscheduled_courses:
@@ -77,11 +75,10 @@ def _schedule_new_courses(term_id, newly_scheduled_instructors):
         if not len(authorized_instructors):
             continue
         schedule_recordings(course, remove_blackout_conflicts=True)
-        for instructor in authorized_instructors:
-            newly_scheduled_instructors.add(instructor['uid'])
+        QueuedEmail.notify_instructors_class_scheduled(course)
 
 
-def _update_already_scheduled_events(term_id, newly_scheduled_instructors):  # noqa: C901, PLR0912, PLR0915
+def _update_already_scheduled_events(term_id):  # noqa: C901, PLR0912, PLR0915
     kaltura = Kaltura(disable_entitlements=True)
     for section_id, schedule_updates in ScheduleUpdate.get_queued_by_section_id(term_id=term_id).items():
         course = SisSection.get_course(term_id=term_id, section_id=section_id, include_deleted=True)
@@ -163,7 +160,6 @@ def _update_already_scheduled_events(term_id, newly_scheduled_instructors):  # n
                 updated_publish_type,
                 updated_recording_type,
                 updated_collaborator_uids,
-                newly_scheduled_instructors,
             )
 
         scheduled_model = None
@@ -322,7 +318,7 @@ def _handle_instructor_updates(
 
 def _handle_meeting_added(
     course, meeting_added, updated_publish_type, updated_recording_type,
-    updated_collaborator_uids, newly_scheduled_instructors,
+    updated_collaborator_uids,
 ):
     meeting = meeting_added.deserialize('field_value_new')
     updates = _construct_schedule_update_options(course, updated_publish_type, updated_recording_type, updated_collaborator_uids)
@@ -335,8 +331,7 @@ def _handle_meeting_added(
     if newly_scheduled:
         meeting_added.mark_success()
         course['scheduled'].append(newly_scheduled[0].to_api_json())
-        for instructor in list(filter(lambda i: i['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES, course['instructors'])):
-            newly_scheduled_instructors.add(instructor['uid'])
+        QueuedEmail.notify_instructors_class_scheduled(course)
     else:
         meeting_added.mark_error()
 

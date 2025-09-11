@@ -133,8 +133,8 @@ def _create_email_templates():
         message='<code>course.name</code> had a complicated change, better go check it out in Diablo.',
     )
     EmailTemplate.create(
-        template_type='new_class_scheduled',
-        subject_line='New class scheduled: <code>course.name</code>',
+        template_type='class_scheduled',
+        subject_line='Class scheduled: <code>course.name</code>',
         message='Intensely.',
     )
     EmailTemplate.create(

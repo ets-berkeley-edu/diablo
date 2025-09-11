@@ -31,10 +31,10 @@ from diablo.models.base import Base
 email_template_type = ENUM(
     'admin_operator_requested',
     'changes_confirmed',
+    'class_scheduled',
     'instructors_added',
     'instructors_removed',
     'multiple_meeting_pattern_change',
-    'new_class_scheduled',
     'no_longer_scheduled',
     'opted_out',
     'remind_opted_out',
@@ -118,10 +118,10 @@ class EmailTemplate(Base):
         return {
             'admin_operator_requested': 'Admin alert: operator requested',
             'changes_confirmed': 'Changes confirmed',
+            'class_scheduled': 'Class scheduled',
             'instructors_added': 'Instructor(s) added to class',
             'instructors_removed': 'Instructor(s) removed from class',
             'multiple_meeting_pattern_change': 'Multiple meeting pattern change',
-            'new_class_scheduled': 'New class scheduled',
             'no_longer_scheduled': 'Class no longer scheduled',
             'opted_out': 'Opted out',
             'remind_opted_out': 'Remind opted-out instructors',

@@ -23,5 +23,6 @@
  * ENHANCEMENTS, OR MODIFICATIONS.
  */
 
+ALTER TYPE email_template_types ADD VALUE IF NOT EXISTS 'class_scheduled';
 ALTER TYPE email_template_types ADD VALUE IF NOT EXISTS 'remind_opted_out';
 ALTER TYPE email_template_types ADD VALUE IF NOT EXISTS 'remind_partially_approved';
