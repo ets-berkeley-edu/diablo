@@ -3,7 +3,6 @@ import axios from 'axios'
 import fileDownload from 'js-file-download'
 import {DateTime} from 'luxon'
 import {getApiBaseUrl} from '@/api/api-utils'
-import type {OptIn} from '@/lib/types'
 import type {OuijaFilter} from '@/stores/ouija'
 
 export function deleteCourseNote(termId: number, sectionId: number) {
@@ -72,8 +71,8 @@ export function updateCourseNote(
 export function updateOptIn(
     instructorUid: string,
     termId: string,
-    sectionId: number,
-    optIn: OptIn
+    sectionId: number | string,
+    optIn: boolean
   ) {
   return axios.post(`${getApiBaseUrl()}/api/course/opt_in/update`, {
     instructorUid,
