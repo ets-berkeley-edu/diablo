@@ -13,7 +13,7 @@ import {
   trim,
 } from 'lodash'
 import {nextTick} from 'vue'
-import type {Course, DiabloUser} from '@/lib/types'
+import type {Course, DiabloUser, Meeting} from '@/lib/types'
 import {useContextStore} from '@/stores/context'
 
 export const ANONYMOUS_USER: DiabloUser = {
@@ -66,7 +66,7 @@ export function getTermName(termId: number) {
   return termName
 }
 
-export function getDisplayMeetings(course: Course) {
+export function getDisplayMeetings(course: Course): Meeting[] {
   if (course.meetings.eligible.length) {
     return course.meetings.eligible
   } else {

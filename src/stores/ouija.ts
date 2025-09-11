@@ -1,4 +1,5 @@
 import {defineStore} from 'pinia'
+import type {SortBy} from '@/lib/types'
 
 export enum OuijaFilter {
   All = 'All',
@@ -13,7 +14,8 @@ export enum OuijaFilter {
 export const useOuijaStore = defineStore('ouija', {
   state: () => ({
     filter: OuijaFilter.All,
-    pageNumber: 1
+    pageNumber: 1,
+    sortBy: {} as SortBy
   }),
   actions: {
     setFilter(filter: OuijaFilter) {
