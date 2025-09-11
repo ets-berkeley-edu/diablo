@@ -176,8 +176,8 @@ class QueuedEmail(db.Model):
                 cls._queue_instructor_email('schedule_change', instructor, course)
 
     @classmethod
-    def notify_instructor_added(cls, instructor, course):
-        cls._queue_instructor_email('instructors_added', instructor, course)
+    def notify_new_course_eligible(cls, instructor, course):
+        cls._queue_instructor_email('new_class_eligible', instructor, course)
 
     @classmethod
     def notify_instructor_removed(cls, instructor, course):

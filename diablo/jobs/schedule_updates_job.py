@@ -234,14 +234,17 @@ def _queue_meeting_updates(course):
 
 
 def _queue_instructor_updates(course, instructors):
-    scheduled_instructor_uids = (course['scheduled'] and course['scheduled'][0].get('instructorUids')) or []
+    if course['scheduled']:
+        previous_instructor_uids = course['scheduled'][0].get('instructorUids') or []
+    else:
+        previous_instructor_uids = ScheduleUpdate.find_last_updated_instructors(term_id=course['termId'], section_id=course['sectionId'])
 
-    if set(i['uid'] for i in instructors) != set(scheduled_instructor_uids):
+    if set(i['uid'] for i in instructors) != set(previous_instructor_uids):
         ScheduleUpdate.queue(
             term_id=course['termId'],
             section_id=course['sectionId'],
             field_name='instructor_uids',
-            field_value_old=scheduled_instructor_uids,
+            field_value_old=previous_instructor_uids,
             field_value_new=[i['uid'] for i in instructors],
         )
 

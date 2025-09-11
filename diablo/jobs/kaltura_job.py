@@ -262,7 +262,7 @@ def _update_already_scheduled_events(term_id):  # noqa: C901, PLR0912, PLR0915
                 removed_instructor_uids = [i for i in previously_scheduled_instructor_uids if i not in updated_instructor_uids]
                 if added_instructor_uids:
                     for instructor in instructor_json_from_uids(added_instructor_uids):
-                        QueuedEmail.notify_instructor_added(instructor, course)
+                        QueuedEmail.notify_new_course_eligible(instructor, course)
                 if removed_instructor_uids:
                     for instructor in instructor_json_from_uids(removed_instructor_uids):
                         QueuedEmail.notify_instructor_removed(instructor, course)

@@ -118,11 +118,6 @@ def _create_email_templates():
         message='Changes confirmed for class <code>course.name</code>',
     )
     EmailTemplate.create(
-        template_type='instructors_added',
-        subject_line='Instructor(s) added to class',
-        message='Instructor(s) added to class <code>course.name</code>',
-    )
-    EmailTemplate.create(
         template_type='instructors_removed',
         subject_line='Instructor(s) removed from class',
         message='Instructor(s) removed from class <code>course.name</code>',
@@ -131,6 +126,14 @@ def _create_email_templates():
         template_type='multiple_meeting_pattern_change',
         subject_line='Marvelous multiple meeting patterns',
         message='<code>course.name</code> had a complicated change, better go check it out in Diablo.',
+    )
+    EmailTemplate.create(
+        template_type='new_class_eligible',
+        subject_line='New class eligible',
+        message="Mirabile dictu, <code>recipient.name</code>...\n"
+            "Scheduled courses:\n<code>courseList.scheduled</code>\n"
+            "Partially approved courses:\n<code>courseList.partiallyApproved</code>\n"
+            "Opted-out courses:\n<code>courseList.optedOut</code>",
     )
     EmailTemplate.create(
         template_type='class_scheduled',
