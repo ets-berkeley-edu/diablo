@@ -40,10 +40,10 @@ SET default_with_oids = false;
 CREATE TYPE email_template_types AS ENUM (
     'admin_operator_requested',
     'changes_confirmed',
+    'class_scheduled',
     'instructors_added',
     'instructors_removed',
     'multiple_meeting_pattern_change',
-    'new_class_scheduled',
     'no_longer_scheduled',
     'opted_out',
     'remind_opted_out',

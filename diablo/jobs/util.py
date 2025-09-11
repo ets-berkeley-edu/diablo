@@ -42,7 +42,6 @@ from diablo.models.course_preference import CoursePreference
 from diablo.models.cross_listing import CrossListing
 from diablo.models.instructor import Instructor
 from diablo.models.opt_out import OptOut
-from diablo.models.queued_email import notify_instructor_recordings_scheduled
 from diablo.models.room import Room
 from diablo.models.schedule_update import ScheduleUpdate
 from diablo.models.scheduled import Scheduled
@@ -454,17 +453,6 @@ def schedule_recordings(course, remove_blackout_conflicts=False, updates=None):
             """)
 
     return all_scheduled
-
-
-def notify_newly_scheduled_instructors(term_id, instructor_uids):
-    courses_by_instructor_uid = {}
-    for course in get_eligible_courses_per_instructor_uids(term_id, instructor_uids):
-        for instructor in list(filter(lambda i: i['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES, course['instructors'])):
-            if instructor['uid'] not in courses_by_instructor_uid:
-                courses_by_instructor_uid[instructor['uid']] = {'instructor': instructor, 'courses': []}
-            courses_by_instructor_uid[instructor['uid']]['courses'].append(course)
-    for uid, instructor_courses in courses_by_instructor_uid.items():
-        notify_instructor_recordings_scheduled(instructor_courses['instructor'], instructor_courses['courses'])
 
 
 def _join(items, separator=', '):

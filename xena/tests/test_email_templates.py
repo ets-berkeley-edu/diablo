@@ -114,11 +114,20 @@ class TestEmailTemplates:
         )
         self.templates_page.create_template(template)
 
-    def test_instructor_new_class_scheduled(self):
+    def test_instructor_class_scheduled(self):
+        util.reset_email_template_test_data(EmailTemplateType.INSTR_CLASS_SCHEDULED)
+        template = EmailTemplate(
+            template_type=EmailTemplateType.INSTR_CLASS_SCHEDULED,
+            subject='<code>course.name</code> is now scheduled',
+            body='',
+        )
+        self.templates_page.create_template(template)
+
+    def test_instructor_new_class_eligible(self):
         util.reset_email_template_test_data(EmailTemplateType.INSTR_NEW_COURSE_ELIGIBLE)
         template = EmailTemplate(
             template_type=EmailTemplateType.INSTR_NEW_COURSE_ELIGIBLE,
-            subject='<code>course.name</code> has been scheduled',
+            subject='<code>course.name</code> is now eligible',
             body='',
         )
         self.templates_page.create_template(template)
