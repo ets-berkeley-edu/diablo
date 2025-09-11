@@ -115,7 +115,7 @@ export interface Course extends BaseCourse {
   deletedAt: string | null,
   displayMeetings: Meeting[],
   hasBlanketOptedOut: boolean,
-  hasOptedOut: boolean,
+  hasOptedIn: boolean,
   instructors: Instructor[],
   meetingType: string,
   meetings: {
@@ -128,7 +128,14 @@ export interface Course extends BaseCourse {
   publishTypeName: string,
   recordingType: string,
   recordingTypeName: string,
+  room: Room | undefined,
   scheduled: ScheduledCourse[] | null,
+  statusLabel?: string
+}
+
+export interface CourseSortable extends Course {
+  instructorNames: string[]
+  isSelectable: boolean
 }
 
 export interface DiabloUser {
@@ -162,4 +169,9 @@ export type OptOut = {
 export type ScreenReaderAlert = {
   message: string,
   politeness: string
+}
+
+export type SortBy = {
+  key: string,
+  order: 'asc' | 'desc'
 }

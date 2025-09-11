@@ -74,7 +74,8 @@
       </v-row>
     </v-card-title>
     <CoursesDataTable
-      v-model="ouijaStore.pageNumber"
+      v-model:page="ouijaStore.pageNumber"
+      v-model:sort-by="ouijaStore.sortBy"
       :courses="courses"
       :description="coursesTableDescription"
       :include-room-column="true"
@@ -93,13 +94,13 @@ import {mdiAutoFix, mdiMagnify} from '@mdi/js'
 import {alertScreenReader, getCourseCodes, pluralize, putFocusNextTick} from '@/lib/utils'
 import CoursesDataTable from '@/components/course/CoursesDataTable.vue'
 import PageTitle from '@/components/util/PageTitle.vue'
-import type {Course} from '@/lib/types'
+import type {Course, CourseSortable} from '@/lib/types'
 import {OuijaFilter, useOuijaStore} from '@/stores/ouija'
 import {downloadCSV, getCourses} from '@/api/course'
 import {useContextStore} from '@/stores/context'
 
 const contextStore = useContextStore()
-const courses = ref<Course[]>([])
+const courses = ref<CourseSortable[]>([])
 const filterOptions = map(contextStore.config.searchFilterOptions, (v, k) => {
   return {title: k, subtitle: v}
 })
@@ -132,8 +133,8 @@ onUnmounted(() => {
   contextStore.removeEventHandler('sidebar-navigation-click', onSidebarNavigationClick)
 })
 
-const onSidebarNavigationClick = navItem => {
-  if (navItem.title === 'Ouija Board' && !contextStore.loading) {
+const onSidebarNavigationClick = () => {
+  if (!contextStore.loading) {
     useOuijaStore().$reset()
     refresh()
   }
@@ -147,7 +148,7 @@ const loadCourses = () => {
       // In support of search, we index nested course data
       course.courseCodes = getCourseCodes(course)
       course.instructorNames = map(course.instructors, 'name')
-      course.isSelectable = !course.hasOptedOut
+      course.isSelectable = course.hasOptedIn
     })
     isRefreshing.value = false
   })
