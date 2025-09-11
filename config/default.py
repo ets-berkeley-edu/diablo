@@ -126,7 +126,7 @@ LDAP_PASSWORD = 'secret'
 LOGGING_FORMAT = '[%(asctime)s] - %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
 LOGGING_LOCATION = 'diablo.log'
 LOGGING_LEVEL = logging.DEBUG
-LOGGING_PROPAGATION_LEVEL = logging.WARN
+LOGGING_PROPAGATION_LEVEL = logging.WARNING
 
 PING_TIMEOUT_SECONDS = 5
 

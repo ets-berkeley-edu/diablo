@@ -55,7 +55,7 @@ if __name__.startswith('_mod_wsgi'):
     try:
         instance_metadata = subprocess.Popen(['ec2-metadata', '-i'], stdout=subprocess.PIPE)
         os.environ['EC2_INSTANCE_ID'] = next(instance_metadata.stdout).decode('utf-8').partition(':')[2].strip()
-    except Exception:
+    except Exception:  # noqa: S110
         pass
 
 

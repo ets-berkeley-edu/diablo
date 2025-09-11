@@ -80,10 +80,10 @@ class QueuedEmail(db.Model):
         course = SisSection.get_course(term_id, section_id, include_deleted=True)
         if not course:
             app.logger.error(f'Attempt to queue email for unknown course (term_id={term_id}, section_id={section_id})')
-            return
+            return None
         if not course['instructors']:
             app.logger.error(f'Attempt to queue email for course without instructors (term_id={term_id}, section_id={section_id})')
-            return
+            return None
         queued_email = cls(
             section_id=section_id,
             template_type=template_type,
@@ -95,7 +95,7 @@ class QueuedEmail(db.Model):
         course = SisSection.get_course(term_id, queued_email.section_id, include_deleted=True)
         if not queued_email.is_interpolated() and not queued_email.interpolate(course):
             app.logger.error(f'Failed to interpolate all required values for queued email ({queued_email})')
-            return
+            return None
         db.session.add(queued_email)
         std_commit()
         return queued_email
