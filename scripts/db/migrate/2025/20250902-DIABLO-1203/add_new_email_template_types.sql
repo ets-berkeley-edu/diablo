@@ -24,5 +24,6 @@
  */
 
 ALTER TYPE email_template_types ADD VALUE IF NOT EXISTS 'class_scheduled';
+ALTER TYPE email_template_types ADD VALUE IF NOT EXISTS 'new_class_eligible';
 ALTER TYPE email_template_types ADD VALUE IF NOT EXISTS 'remind_opted_out';
 ALTER TYPE email_template_types ADD VALUE IF NOT EXISTS 'remind_partially_approved';

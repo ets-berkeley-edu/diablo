@@ -326,10 +326,10 @@ class TestKalturaJob:
             # Message queued but not sent.
             ScheduleUpdatesJob(simply_yield).run()
             KalturaJob(simply_yield).run()
-            _assert_email_count(0, section_id, 'instructors_added')
+            _assert_email_count(0, section_id, 'new_class_eligible')
 
             EmailsJob(simply_yield).run()
-            _assert_email_count(1, section_id, 'instructors_added')
+            _assert_email_count(1, section_id, 'new_class_eligible')
 
             fake_auth.login(admin_uid)
             course = api_get_course(client, term_id, section_id)
