@@ -457,8 +457,47 @@ def get_sent_email_count(template, section=None, instructor=None):
     return count
 
 
-def reset_email_template_test_data(template_type):
+def get_email_template_content(template):
+    sql = f"""SELECT subject_line,
+                     message
+                FROM email_templates
+               WHERE template_type = '{template.template_type.value['type']}'"""
+    app.logger.info(sql)
+    result = db.session.execute(text(sql)).first()
+    std_commit(allow_test_environment=True)
+    if result:
+        template.subject = result['subject_line']
+        template.body = result['message']
+    return result
+
+
+def restore_email_template_content(template):
+    sql = f"SELECT id FROM email_templates WHERE template_type = '{template.template_type.value['type']}'"
+    app.logger.info(sql)
+    result = db.session.execute(text(sql)).first()
+    std_commit(allow_test_environment=True)
+    if result:
+        sql = f"""UPDATE email_templates
+                     SET subject_line = '{template.subject.replace("'", "''")}',
+                         message = '{template.body.replace("'", "''")}'
+                   WHERE template_type = '{template.template_type.value['type']}'"""
+    elif template.body and template.subject:
+        sql = f"""INSERT INTO email_templates (template_type, message, subject_line, created_at, updated_at)
+                  SELECT
+                      '{template.template_type.value['type']}',
+                      '{template.body.replace("'", "''")}',
+                      '{template.subject.replace("'", "''")}',
+                       NOW(),
+                       NOW()
+               """
+    app.logger.info(sql)
+    db.session.execute(text(sql))
+    std_commit(allow_test_environment=True)
+
+
+def delete_email_template(template_type):
     sql = f"DELETE FROM email_templates WHERE template_type = '{template_type.value['type']}'"
+    app.logger.info(sql)
     db.session.execute(text(sql))
     std_commit(allow_test_environment=True)
 

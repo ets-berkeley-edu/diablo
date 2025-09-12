@@ -86,7 +86,7 @@ class TestCourseRoomChanges:
         self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
 
     def test_welcome_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_NEW_COURSE_ELIGIBLE, section=None,
+        assert util.get_sent_email_count(EmailTemplateType.NEW_CLASS_ELIGIBLE, section=None,
                                          instructor=self.instr) == 1
 
     def test_modify_recording_settings(self):
@@ -106,7 +106,7 @@ class TestCourseRoomChanges:
         self.jobs_page.run_settings_update_job_sequence()
 
     def test_settings_update_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_CHANGES_CONFIRMED, self.section, self.instr) == 1
+        assert util.get_sent_email_count(EmailTemplateType.CHANGES_CONFIRMED, self.section, self.instr) == 1
 
     def test_paging_operator_email(self):
         assert util.get_sent_email_count(EmailTemplateType.ADMIN_OPERATOR_REQUESTED, self.section) == 1
@@ -122,13 +122,13 @@ class TestCourseRoomChanges:
         self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
 
     def test_new_eligible_room_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_SCHEDULE_CHANGE, self.section, self.instr) == 1
+        assert util.get_sent_email_count(EmailTemplateType.SCHEDULE_CHANGE, self.section, self.instr) == 1
 
     def test_settings_downgrade_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_CHANGES_CONFIRMED, self.section, self.instr) == 2
+        assert util.get_sent_email_count(EmailTemplateType.CHANGES_CONFIRMED, self.section, self.instr) == 2
 
     def test_no_multi_meeting_new_room_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_MULTIPLE_MEETING_PATTERN_CHANGE, self.section,
+        assert util.get_sent_email_count(EmailTemplateType.MULTIPLE_MEETING_PATTERN_CHANGE, self.section,
                                          self.instr) == 0
 
     def test_new_eligible_room_series(self):
@@ -171,10 +171,10 @@ class TestCourseRoomChanges:
         self.jobs_page.run_schedule_update_job_sequence()
 
     def test_room_ineligible_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_ROOM_CHANGE_INELIGIBLE, self.section, self.instr) == 1
+        assert util.get_sent_email_count(EmailTemplateType.ROOM_CHANGE_NO_LONGER_ELIGIBLE, self.section, self.instr) == 1
 
     def test_no_multi_meeting_room_ineligible_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_MULTIPLE_MEETING_PATTERN_CHANGE, self.section,
+        assert util.get_sent_email_count(EmailTemplateType.MULTIPLE_MEETING_PATTERN_CHANGE, self.section,
                                          self.instr) == 0
 
     def test_ineligible_room_unschedule_series(self):
@@ -212,7 +212,7 @@ class TestCourseRoomChanges:
         self.jobs_page.run_schedule_update_job_sequence()
 
     def test_eligible_room_again_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_NEW_COURSE_ELIGIBLE, section=None,
+        assert util.get_sent_email_count(EmailTemplateType.NEW_CLASS_ELIGIBLE, section=None,
                                          instructor=self.instr) == 2
 
     def test_eligible_room_again_reschedule_series(self):
@@ -260,7 +260,7 @@ class TestCourseRoomChanges:
         self.jobs_page.run_schedule_update_job_sequence()
 
     def test_null_room_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_ROOM_CHANGE_INELIGIBLE, self.section,
+        assert util.get_sent_email_count(EmailTemplateType.ROOM_CHANGE_NO_LONGER_ELIGIBLE, self.section,
                                          self.instr) == 2
 
     def test_null_room_unschedule_series(self):
@@ -291,20 +291,20 @@ class TestCourseRoomChanges:
     # VERIFY TOTAL EMAILS
 
     def test_welcome_email_ttl(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_NEW_COURSE_ELIGIBLE, section=None,
+        assert util.get_sent_email_count(EmailTemplateType.NEW_CLASS_ELIGIBLE, section=None,
                                          instructor=self.instr) == 2
 
     def test_settings_update_email_ttl(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_CHANGES_CONFIRMED, self.section, self.instr) == 2
+        assert util.get_sent_email_count(EmailTemplateType.CHANGES_CONFIRMED, self.section, self.instr) == 2
 
     def test_paging_operator_email_ttl(self):
         assert util.get_sent_email_count(EmailTemplateType.ADMIN_OPERATOR_REQUESTED, self.section) == 1
 
     def test_schedule_change_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_SCHEDULE_CHANGE, self.section, self.instr) == 1
+        assert util.get_sent_email_count(EmailTemplateType.SCHEDULE_CHANGE, self.section, self.instr) == 1
 
     def test_room_ineligible_email_ttl(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_ROOM_CHANGE_INELIGIBLE, self.section, self.instr) == 2
+        assert util.get_sent_email_count(EmailTemplateType.ROOM_CHANGE_NO_LONGER_ELIGIBLE, self.section, self.instr) == 2
 
     # HISTORY
 

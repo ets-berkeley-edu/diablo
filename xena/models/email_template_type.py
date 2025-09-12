@@ -32,55 +32,55 @@ class EmailTemplateType(Enum):
         'desc': 'Admin alert: operator requested',
         'type': 'admin_operator_requested',
     }
-    INSTR_CHANGES_CONFIRMED = {
+    CHANGES_CONFIRMED = {
         'desc': 'Changes confirmed',
         'type': 'changes_confirmed',
     }
-    INSTR_CLASS_SCHEDULED = {
+    CLASS_SCHEDULED = {
         'desc': 'Class scheduled',
         'type': 'class_scheduled',
     }
-    INSTR_COURSE_CANCELLED = {
-        'desc': 'Class no longer scheduled',
-        'type': 'no_longer_scheduled',
-    }
-    INSTR_MULTIPLE_MEETING_PATTERN_CHANGE = {
-        'desc': 'Multiple meeting pattern change',
-        'type': 'multiple_meeting_pattern_change',
-    }
-    INSTR_NEW_COURSE_ELIGIBLE = {
-        'desc': 'New class eligible',
-        'type': 'new_class_eligible',
-    }
-    INSTR_OPTED_OUT = {
-        'desc': 'Opted out',
-        'type': 'opted_out',
-    }
-    INSTR_REMIND_OPTED_OUT = {
-        'desc': 'Remind opted-out instructors',
-        'type': 'remind_opted_out',
-    }
-    INSTR_REMIND_PARTIALLY_APPROVED = {
-        'desc': 'Remind instructors of partially approved courses',
-        'type': 'remind_partially_approved',
-    }
-    INSTR_REMIND_SCHEDULED = {
-        'desc': 'Remind scheduled instructors',
-        'type': 'remind_scheduled',
-    }
-    INSTR_REMOVED = {
+    INSTRUCTORS_REMOVED = {
         'desc': 'Instructor(s) removed from class',
         'type': 'instructors_removed',
     }
-    INSTR_ROOM_CHANGE_INELIGIBLE = {
+    MULTIPLE_MEETING_PATTERN_CHANGE = {
+        'desc': 'Multiple meeting pattern change',
+        'type': 'multiple_meeting_pattern_change',
+    }
+    NEW_CLASS_ELIGIBLE = {
+        'desc': 'New class eligible',
+        'type': 'new_class_eligible',
+    }
+    NO_LONGER_SCHEDULED = {
+        'desc': 'Class no longer scheduled',
+        'type': 'no_longer_scheduled',
+    }
+    OPTED_OUT = {
+        'desc': 'Opted out',
+        'type': 'opted_out',
+    }
+    REMIND_OPTED_OUT = {
+        'desc': 'Remind opted-out instructors',
+        'type': 'remind_opted_out',
+    }
+    REMIND_PARTIALLY_APPROVED = {
+        'desc': 'Remind instructors of partially approved courses',
+        'type': 'remind_partially_approved',
+    }
+    REMIND_SCHEDULED = {
+        'desc': 'Remind scheduled instructors',
+        'type': 'remind_scheduled',
+    }
+    ROOM_CHANGE_NO_LONGER_ELIGIBLE = {
         'desc': 'Room change: no longer eligible',
         'type': 'room_change_no_longer_eligible',
     }
-    INSTR_SCHEDULE_CHANGE = {
+    SCHEDULE_CHANGE = {
         'desc': 'Schedule change',
         'type': 'schedule_change',
     }
-    INSTR_WELCOME = {
+    SEMESTER_START = {
         'desc': 'Semester start',
         'type': 'semester_start',
     }

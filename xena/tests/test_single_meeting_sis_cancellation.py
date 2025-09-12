@@ -110,7 +110,7 @@ class TestCourseCancellation:
         assert not util.get_kaltura_id(self.recording_schedule)
 
     def test_no_annunciation(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_NEW_COURSE_ELIGIBLE, section=None,
+        assert util.get_sent_email_count(EmailTemplateType.NEW_CLASS_ELIGIBLE, section=None,
                                          instructor=self.instructor) == 0
 
     # COURSE IS RESTORED AND SCHEDULED
@@ -151,7 +151,7 @@ class TestCourseCancellation:
         assert not self.ouija_page.is_course_in_results(self.section)
 
     def test_instructor_email_canceled_ineligible(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_COURSE_CANCELLED, self.section,
+        assert util.get_sent_email_count(EmailTemplateType.NO_LONGER_SCHEDULED, self.section,
                                          self.instructor) == 1
 
     def test_history(self):

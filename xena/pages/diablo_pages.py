@@ -51,7 +51,7 @@ class DiabloPages(Page):
 
     SPINNER = (By.XPATH, '//div[contains(@class, "spinner")]')
     ALERT_MSG = (By.ID, 'alert-text')
-    VISIBLE_MENU_OPTION = (By.XPATH, '//div[contains(@class, "v-menu")]//div[contains(@class, "v-list-item-title")]')
+    VISIBLE_MENU_OPTION = (By.XPATH, '//div[@role="option"]')
 
     @staticmethod
     def menu_option_locator(option_str):

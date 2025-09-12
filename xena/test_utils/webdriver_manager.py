@@ -22,12 +22,10 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-import time
 
 from flask import current_app as app
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options as Coptions
-from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
 from selenium.webdriver.firefox.options import Options as Foptions
 
@@ -63,28 +61,8 @@ class WebDriverManager(object):
             _set_chrome_preferences(options, _headless)
             _add_chrome_extension(options)
             driver = webdriver.Chrome(options=options)
-            WebDriverManager.allow_canvas_iframe_in_chrome(driver)
         driver.set_window_size(1600, 900) if _headless else driver.maximize_window()
         return driver
-
-    @classmethod
-    def allow_canvas_iframe_in_chrome(cls, driver):
-        driver.get('chrome://settings/trackingProtection')
-        time.sleep(util.get_click_sleep())
-        site_list_root = (driver.find_element(By.CSS_SELECTOR, 'settings-ui').shadow_root
-                          .find_element(By.CSS_SELECTOR, 'settings-main').shadow_root
-                          .find_element(By.CSS_SELECTOR, 'settings-basic-page').shadow_root
-                          .find_element(By.CSS_SELECTOR, 'settings-privacy-page').shadow_root
-                          .find_element(By.CSS_SELECTOR, 'settings-cookies-page').shadow_root
-                          .find_element(By.CSS_SELECTOR, 'site-list').shadow_root)
-        driver.execute_script('arguments[0].click();', site_list_root.find_element(By.CSS_SELECTOR, 'cr-button[id=addSite]'))
-        time.sleep(util.get_click_sleep())
-        add_site_dialog_root = site_list_root.find_element(By.CSS_SELECTOR, 'add-site-dialog').shadow_root
-        add_site_input_root = add_site_dialog_root.find_element(By.CSS_SELECTOR, 'cr-input[id=site]').shadow_root
-        add_site_input_root.find_element(By.CSS_SELECTOR, 'input[id=input]').click()
-        add_site_input_root.find_element(By.CSS_SELECTOR, 'input[id=input]').send_keys('[*.]instructure.com')
-        add_site_dialog_root.find_element(By.CSS_SELECTOR, 'cr-button[id=add]').click()
-        time.sleep(util.get_click_sleep())
 
     @classmethod
     def quit_browser(cls, driver):

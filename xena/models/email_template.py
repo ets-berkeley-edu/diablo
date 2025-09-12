@@ -26,7 +26,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 
 class EmailTemplate(object):
 
-    def __init__(self, template_type, subject, body):
+    def __init__(self, template_type, subject=None, body=None):
         self.template_type = template_type
         self.subject = subject
         self.body = body

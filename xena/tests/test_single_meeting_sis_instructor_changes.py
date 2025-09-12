@@ -166,12 +166,12 @@ class TestCourseInstructorChanges:
 
     def test_old_instructor_removed_email(self):
         self.kaltura_page.close_window_and_switch()
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_REMOVED, self.section, self.old_instructor) == 1
+        assert util.get_sent_email_count(EmailTemplateType.INSTRUCTORS_REMOVED, self.section, self.old_instructor) == 1
 
     def test_new_instructor_added_emails(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_NEW_COURSE_ELIGIBLE, section=None,
+        assert util.get_sent_email_count(EmailTemplateType.NEW_CLASS_ELIGIBLE, section=None,
                                          instructor=self.new_instructor) == 1
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_OPTED_OUT, self.section, self.new_instructor) == 1
+        assert util.get_sent_email_count(EmailTemplateType.OPTED_OUT, self.section, self.new_instructor) == 1
 
     # HISTORY
 
