@@ -85,7 +85,7 @@ class TestCourseScheduleChanges:
         self.recording_schedule.recording_placement = RecordingPlacement.PLACE_IN_MY_MEDIA
 
     def test_welcome_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_NEW_COURSE_ELIGIBLE, section=None,
+        assert util.get_sent_email_count(EmailTemplateType.NEW_CLASS_ELIGIBLE, section=None,
                                          instructor=self.instr) == 1
 
     # SCHEDULED COURSE CHANGES MEETING TIME
@@ -100,7 +100,7 @@ class TestCourseScheduleChanges:
         self.jobs_page.run_schedule_update_job_sequence()
 
     def test_schedule_change_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_SCHEDULE_CHANGE, self.section, self.instr) == 1
+        assert util.get_sent_email_count(EmailTemplateType.SCHEDULE_CHANGE, self.section, self.instr) == 1
 
     # VERIFY SERIES IN DIABLO
 
@@ -144,7 +144,7 @@ class TestCourseScheduleChanges:
 
     def test_email_instr_new_meeting(self):
         self.kaltura_page.close_window_and_switch()
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_SCHEDULE_CHANGE, self.section, self.instr) == 1
+        assert util.get_sent_email_count(EmailTemplateType.SCHEDULE_CHANGE, self.section, self.instr) == 1
 
     # VERIFY COURSE HISTORY
 
@@ -203,10 +203,10 @@ class TestCourseScheduleChanges:
         self.kaltura_page.wait_for_title('Access Denied - UC Berkeley - Test')
 
     def test_run_email_job_with_null_dates(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_COURSE_CANCELLED, self.section, self.instr) == 1
+        assert util.get_sent_email_count(EmailTemplateType.NO_LONGER_SCHEDULED, self.section, self.instr) == 1
 
     def test_no_new_schedule_update_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_SCHEDULE_CHANGE, self.section, self.instr) == 1
+        assert util.get_sent_email_count(EmailTemplateType.SCHEDULE_CHANGE, self.section, self.instr) == 1
 
     def test_history_no_room(self):
         self.course_page.load_page(self.section)

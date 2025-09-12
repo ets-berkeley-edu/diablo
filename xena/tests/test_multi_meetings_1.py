@@ -177,7 +177,7 @@ class TestWeirdTypeC:
         assert len(self.course_page.visible_rooms()) == 1
 
     def test_new_course_scheduled_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_NEW_COURSE_ELIGIBLE, section=None,
+        assert util.get_sent_email_count(EmailTemplateType.NEW_CLASS_ELIGIBLE, section=None,
                                          instructor=self.original_instructor) == 1
 
     # INELIGIBLE MEETING BECOMES ELIGIBLE
@@ -239,11 +239,11 @@ class TestWeirdTypeC:
         self.kaltura_page.verify_publish_status(self.recording_sched_1)
 
     def test_no_schedule_change_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_SCHEDULE_CHANGE, self.section,
+        assert util.get_sent_email_count(EmailTemplateType.SCHEDULE_CHANGE, self.section,
                                          self.original_instructor) == 0
 
     def test_multi_meeting_sched_change_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_MULTIPLE_MEETING_PATTERN_CHANGE, self.section,
+        assert util.get_sent_email_count(EmailTemplateType.MULTIPLE_MEETING_PATTERN_CHANGE, self.section,
                                          self.original_instructor) == 1
 
     # INSTRUCTOR REMOVED
@@ -274,7 +274,7 @@ class TestWeirdTypeC:
         assert self.ouija_page.is_course_in_results(self.section)
 
     def test_no_instructor_removed_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_REMOVED, self.section,
+        assert util.get_sent_email_count(EmailTemplateType.INSTRUCTORS_REMOVED, self.section,
                                          self.original_instructor) == 0
 
     # INSTRUCTOR ADDED
@@ -369,11 +369,11 @@ class TestWeirdTypeC:
         self.kaltura_page.verify_publish_status(self.recording_sched_1)
 
     def test_no_email_schedule_change_date(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_SCHEDULE_CHANGE, self.section,
+        assert util.get_sent_email_count(EmailTemplateType.SCHEDULE_CHANGE, self.section,
                                          self.new_instructor) == 0
 
     def test_email_multi_meeting_sched_change(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_MULTIPLE_MEETING_PATTERN_CHANGE, self.section,
+        assert util.get_sent_email_count(EmailTemplateType.MULTIPLE_MEETING_PATTERN_CHANGE, self.section,
                                          self.new_instructor) == 1
 
     # ROOM REMOVED FROM FIRST ELIGIBLE SECTION
@@ -408,11 +408,11 @@ class TestWeirdTypeC:
         self.kaltura_page.wait_for_title('Access Denied - UC Berkeley - Test')
 
     def test_no_email_schedule_change_room_removed(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_SCHEDULE_CHANGE, self.section,
+        assert util.get_sent_email_count(EmailTemplateType.SCHEDULE_CHANGE, self.section,
                                          self.new_instructor) == 0
 
     def test_email_multi_meeting_sched_room_removed(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_MULTIPLE_MEETING_PATTERN_CHANGE, self.section,
+        assert util.get_sent_email_count(EmailTemplateType.MULTIPLE_MEETING_PATTERN_CHANGE, self.section,
                                          self.new_instructor) == 2
 
     # COURSE HISTORY

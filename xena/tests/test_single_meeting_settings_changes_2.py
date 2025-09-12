@@ -243,19 +243,19 @@ class TestScheduling2:
     # VERIFY ANNUNCIATION EMAILS
 
     def test_receive_annunciation_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_NEW_COURSE_ELIGIBLE, self.section,
+        assert util.get_sent_email_count(EmailTemplateType.NEW_CLASS_ELIGIBLE, self.section,
                                          self.instructor_0) == 1
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_NEW_COURSE_ELIGIBLE, self.section,
+        assert util.get_sent_email_count(EmailTemplateType.NEW_CLASS_ELIGIBLE, self.section,
                                          self.instructor_1) == 1
 
     # VERIFY EMAILS
 
     def test_update_receive_schedule_conf_email_instr_1(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_CHANGES_CONFIRMED, self.section,
+        assert util.get_sent_email_count(EmailTemplateType.CHANGES_CONFIRMED, self.section,
                                          self.instructor_0) == 1
 
     def test_update_receive_schedule_conf_email_instr_2(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_CHANGES_CONFIRMED, self.section,
+        assert util.get_sent_email_count(EmailTemplateType.CHANGES_CONFIRMED, self.section,
                                          self.instructor_1) == 1
 
     # DELETE ONE COURSE SITE
@@ -342,11 +342,11 @@ class TestScheduling2:
 
     def test_updated_receive_schedule_conf_email_instr_1(self):
         self.kaltura_page.close_window_and_switch()
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_CHANGES_CONFIRMED, self.section,
+        assert util.get_sent_email_count(EmailTemplateType.CHANGES_CONFIRMED, self.section,
                                          self.instructor_0) == 4
 
     def test_updated_receive_schedule_conf_email_instr_2(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_CHANGES_CONFIRMED, self.section,
+        assert util.get_sent_email_count(EmailTemplateType.CHANGES_CONFIRMED, self.section,
                                          self.instructor_1) == 4
 
     # VERIFY COURSE HISTORY

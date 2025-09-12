@@ -31,20 +31,20 @@ from xena.models.term import Term
 from xena.pages.email_templates_page import EmailTemplatesPage
 from xena.test_utils import util
 
-util.reset_email_template_test_data(EmailTemplateType.INSTR_WELCOME)
 
-
+@pytest.mark.usefixtures('email_templates')
 @pytest.mark.usefixtures('page_objects')
 class TestEmailTemplates:
 
     term = Term()
     template = EmailTemplate(
-        template_type=EmailTemplateType.INSTR_WELCOME,
+        template_type=EmailTemplateType.SEMESTER_START,
         subject='Welcome to Course Capture <code>term.name</code>',
         body='',
     )
 
     def test_log_in(self):
+        util.delete_email_template(EmailTemplateType.SEMESTER_START)
         self.login_page.load_page()
         self.login_page.dev_auth()
         self.ouija_page.click_email_templates_link()
@@ -55,7 +55,7 @@ class TestEmailTemplates:
         options.sort()
         types = [templ.value['desc'] for templ in EmailTemplateType]
         types.sort()
-        assert options == types
+        util.assert_equivalence(options, types)
 
     def test_create_template_cancel(self):
         self.templates_page.click_menu_option(self.template.template_type.value['desc'])
@@ -99,107 +99,21 @@ class TestEmailTemplates:
 
     def test_restore_template(self):
         template = EmailTemplate(
-            template_type=EmailTemplateType.INSTR_WELCOME,
+            template_type=EmailTemplateType.SEMESTER_START,
             subject='Welcome to <code>term.name</code> Course Capture <code>recipient.name</code>',
             body='',
         )
         self.templates_page.create_template(template)
 
-    def test_admin_operator_requested(self):
-        util.reset_email_template_test_data(EmailTemplateType.ADMIN_OPERATOR_REQUESTED)
+    @pytest.mark.parametrize(argnames='t_type',
+                             argvalues=[t for t in EmailTemplateType],
+                             ids=[e.value['type'] for e in EmailTemplateType],
+                             scope='function')
+    def test_edit_templates(self, t_type):
+        util.delete_email_template(t_type)
         template = EmailTemplate(
-            template_type=EmailTemplateType.ADMIN_OPERATOR_REQUESTED,
-            subject='Admin alert: <code>course.name</code> operator requested',
-            body='',
-        )
-        self.templates_page.create_template(template)
-
-    def test_instructor_class_scheduled(self):
-        util.reset_email_template_test_data(EmailTemplateType.INSTR_CLASS_SCHEDULED)
-        template = EmailTemplate(
-            template_type=EmailTemplateType.INSTR_CLASS_SCHEDULED,
-            subject='<code>course.name</code> is now scheduled',
-            body='',
-        )
-        self.templates_page.create_template(template)
-
-    def test_instructor_new_class_eligible(self):
-        util.reset_email_template_test_data(EmailTemplateType.INSTR_NEW_COURSE_ELIGIBLE)
-        template = EmailTemplate(
-            template_type=EmailTemplateType.INSTR_NEW_COURSE_ELIGIBLE,
-            subject='<code>course.name</code> is now eligible',
-            body='',
-        )
-        self.templates_page.create_template(template)
-
-    def test_instructor_remind_scheduled(self):
-        util.reset_email_template_test_data(EmailTemplateType.INSTR_REMIND_SCHEDULED)
-        template = EmailTemplate(
-            template_type=EmailTemplateType.INSTR_REMIND_SCHEDULED,
-            subject='<code>recipient.name</code>: you have <code>term.name</code> classes scheduled for recording',
-            body='',
-        )
-        self.templates_page.create_template(template)
-
-    def test_instr_semester_start(self):
-        util.reset_email_template_test_data(EmailTemplateType.INSTR_WELCOME)
-        template = EmailTemplate(
-            template_type=EmailTemplateType.INSTR_WELCOME,
-            subject='Welcome to <code>term.name</code> Course Capture <code>recipient.name</code>',
-            body='',
-        )
-        self.templates_page.create_template(template)
-
-    def test_instr_changes_confirmed(self):
-        util.reset_email_template_test_data(EmailTemplateType.INSTR_CHANGES_CONFIRMED)
-        template = EmailTemplate(
-            template_type=EmailTemplateType.INSTR_CHANGES_CONFIRMED,
-            subject='<code>course.name</code> changes confirmed',
-            body='',
-        )
-        self.templates_page.create_template(template)
-
-    def test_instr_no_longer_scheduled(self):
-        util.reset_email_template_test_data(EmailTemplateType.INSTR_COURSE_CANCELLED)
-        template = EmailTemplate(
-            template_type=EmailTemplateType.INSTR_COURSE_CANCELLED,
-            subject='<code>course.name</code>, we regret to inform you',
-            body='',
-        )
-        self.templates_page.create_template(template)
-
-    def test_instr_opted_out(self):
-        util.reset_email_template_test_data(EmailTemplateType.INSTR_OPTED_OUT)
-        template = EmailTemplate(
-            template_type=EmailTemplateType.INSTR_OPTED_OUT,
-            subject='<code>recipient.name</code> you have opted out of Course Capture',
-            body='',
-        )
-        self.templates_page.create_template(template)
-
-    def test_instr_instructors_removed(self):
-        util.reset_email_template_test_data(EmailTemplateType.INSTR_REMOVED)
-        template = EmailTemplate(
-            template_type=EmailTemplateType.INSTR_REMOVED,
-            subject='<code>course.name</code> instructor(s) removed from class',
-            body='',
-        )
-        self.templates_page.create_template(template)
-
-    def test_instr_room_change_no_longer_eligible(self):
-        util.reset_email_template_test_data(EmailTemplateType.INSTR_ROOM_CHANGE_INELIGIBLE)
-        template = EmailTemplate(
-            template_type=EmailTemplateType.INSTR_ROOM_CHANGE_INELIGIBLE,
-            subject='Your course <code>course.name</code> is no longer eligible for course capture',
-            body='',
-        )
-        self.templates_page.create_template(template)
-
-    def test_instr_schedule_change(self):
-        util.reset_email_template_test_data(EmailTemplateType.INSTR_SCHEDULE_CHANGE)
-        template = EmailTemplate(
-            template_type=EmailTemplateType.INSTR_SCHEDULE_CHANGE,
-            subject='Changes to your Course Capture schedule for <code>course.name</code>',
+            template_type=t_type,
+            subject=t_type.value['desc'],
             body='',
         )
         self.templates_page.create_template(template)

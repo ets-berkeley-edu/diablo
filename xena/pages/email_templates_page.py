@@ -171,12 +171,16 @@ class EmailTemplatesPage(DiabloPages):
         self.wait_for_page_and_click_js(EmailTemplatesPage.delete_email_button_locator(template))
         time.sleep(1)
 
-    def create_template(self, template):
+    def create_template(self, template, enter_all_codes=False):
         app.logger.info(f"Creating a template of type '{template.template_type.value['desc']}'")
         self.load_page()
         self.click_template_select()
         self.click_menu_option(template.template_type.value['desc'])
         self.enter_subject(template.subject)
-        self.enter_all_codes_in_body()
+        if enter_all_codes:
+            self.enter_all_codes_in_body()
+        else:
+            self.wait_for_element_and_click(self.TEMPLATE_BODY_INPUT)
+            self.element(self.TEMPLATE_BODY_INPUT).send_keys(template.template_type.value['desc'])
         self.click_save()
         self.wait_for_template_row(template)

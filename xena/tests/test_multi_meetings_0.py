@@ -221,7 +221,7 @@ class TestWeirdTypeB:
         self.kaltura_page.wait_for_title('Access Denied - UC Berkeley - Test', util.get_short_timeout())
 
     def test_no_instructor_removed_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_REMOVED, self.section) == 0
+        assert util.get_sent_email_count(EmailTemplateType.INSTRUCTORS_REMOVED, self.section) == 0
 
     def test_ouija_no_instructor_filter(self):
         self.kaltura_page.close_window_and_switch()
@@ -261,7 +261,7 @@ class TestWeirdTypeB:
         self.kaltura_page.verify_publish_status(self.recording_schedule)
 
     def test_instructor_added_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_NEW_COURSE_ELIGIBLE, self.section,
+        assert util.get_sent_email_count(EmailTemplateType.NEW_CLASS_ELIGIBLE, self.section,
                                          self.new_instructor) == 1
 
     # START / END DATES CHANGE FOR ELIGIBLE SECTION
@@ -294,11 +294,11 @@ class TestWeirdTypeB:
         self.kaltura_page.verify_publish_status(self.recording_schedule)
 
     def test_no_schedule_change_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_SCHEDULE_CHANGE, self.section,
+        assert util.get_sent_email_count(EmailTemplateType.SCHEDULE_CHANGE, self.section,
                                          self.new_instructor) == 0
 
     def test_multi_meet_schedule_change_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_MULTIPLE_MEETING_PATTERN_CHANGE, self.section,
+        assert util.get_sent_email_count(EmailTemplateType.MULTIPLE_MEETING_PATTERN_CHANGE, self.section,
                                          self.new_instructor) == 1
 
     # ROOM REMOVED
@@ -320,11 +320,11 @@ class TestWeirdTypeB:
         self.kaltura_page.wait_for_title('Access Denied - UC Berkeley - Test')
 
     def test_no_room_no_longer_eligible_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_ROOM_CHANGE_INELIGIBLE, self.section,
+        assert util.get_sent_email_count(EmailTemplateType.ROOM_CHANGE_NO_LONGER_ELIGIBLE, self.section,
                                          self.new_instructor) == 0
 
     def test_multi_meet_room_change_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_MULTIPLE_MEETING_PATTERN_CHANGE, self.section,
+        assert util.get_sent_email_count(EmailTemplateType.MULTIPLE_MEETING_PATTERN_CHANGE, self.section,
                                          self.new_instructor) == 2
 
     # ROOM ADDED
@@ -344,7 +344,7 @@ class TestWeirdTypeB:
         self.course_page.verify_recording_placement(self.recording_schedule)
 
     def test_course_scheduled_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_NEW_COURSE_ELIGIBLE, section=None,
+        assert util.get_sent_email_count(EmailTemplateType.NEW_CLASS_ELIGIBLE, section=None,
                                          instructor=self.new_instructor) == 2
 
     # COURSE HISTORY
