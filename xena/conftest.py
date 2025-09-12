@@ -28,6 +28,8 @@ import os
 import pytest
 
 from diablo.factory import create_app
+from xena.models.email_template import EmailTemplate
+from xena.models.email_template_type import EmailTemplateType
 from xena.models.term import Term
 from xena.pages.api_page import ApiPage
 from xena.pages.attic_page import AtticPage
@@ -46,6 +48,7 @@ from xena.pages.ouija_board_page import OuijaBoardPage
 from xena.pages.room_page import RoomPage
 from xena.pages.room_printable_page import RoomPrintablePage
 from xena.pages.rooms_page import RoomsPage
+from xena.test_utils import util
 from xena.test_utils.webdriver_manager import WebDriverManager
 
 os.environ['DIABLO_ENV'] = 'xena'
@@ -115,3 +118,14 @@ def page_objects(request):
         yield
     finally:
         WebDriverManager.quit_browser(driver)
+
+
+@pytest.fixture(scope='session')
+def email_templates(request):
+
+    templates = [EmailTemplate(t) for t in EmailTemplateType]
+    for t in templates:
+        util.get_email_template_content(t)
+    yield
+    for t in templates:
+        util.restore_email_template_content(t)

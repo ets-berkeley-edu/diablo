@@ -109,7 +109,7 @@ class TestCrossListings:
         self.kaltura_page.verify_site_categories([])
 
     def test_receive_annunciation_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_NEW_COURSE_ELIGIBLE, section=None,
+        assert util.get_sent_email_count(EmailTemplateType.NEW_CLASS_ELIGIBLE, section=None,
                                          instructor=self.instructor) == 2
 
     # CHANGE PUBLISH TYPE TO AUTOMATIC
@@ -127,11 +127,11 @@ class TestCrossListings:
         self.jobs_page.run_settings_update_job_sequence()
 
     def test_notify_of_changes_inst_1(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_CHANGES_CONFIRMED, self.section,
+        assert util.get_sent_email_count(EmailTemplateType.CHANGES_CONFIRMED, self.section,
                                          self.instructor) == 1
 
     def test_listing_notify_of_changes_inst_1(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_CHANGES_CONFIRMED, self.section.listings[0],
+        assert util.get_sent_email_count(EmailTemplateType.CHANGES_CONFIRMED, self.section.listings[0],
                                          self.instructor) == 1
 
     def test_update_click_series_link(self):

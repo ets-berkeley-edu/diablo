@@ -88,7 +88,7 @@ class TestCollaborators0:
         assert self.kaltura_page.collaborator_perm(self.proxy) == 'Co-Editor, Co-Publisher'
 
     def test_email_new_course_scheduled(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_NEW_COURSE_ELIGIBLE, section=None,
+        assert util.get_sent_email_count(EmailTemplateType.NEW_CLASS_ELIGIBLE, section=None,
                                          instructor=self.instructor) == 1
 
     def test_history_new_course_scheduled(self):
@@ -132,7 +132,7 @@ class TestCollaborators0:
         self.kaltura_page.verify_collaborators(self.section, [self.proxy, self.manual_collaborator])
 
     def test_email_new_collaborator(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_CHANGES_CONFIRMED, self.section,
+        assert util.get_sent_email_count(EmailTemplateType.CHANGES_CONFIRMED, self.section,
                                          self.instructor) == 1
 
     def test_history_new_collaborator(self):
@@ -159,7 +159,7 @@ class TestCollaborators0:
         self.kaltura_page.wait_for_title('Access Denied - UC Berkeley - Test')
 
     def test_email_room_removed(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_ROOM_CHANGE_INELIGIBLE, self.section,
+        assert util.get_sent_email_count(EmailTemplateType.ROOM_CHANGE_NO_LONGER_ELIGIBLE, self.section,
                                          self.instructor) == 1
 
     def test_history_room_removed(self):
@@ -189,11 +189,11 @@ class TestCollaborators0:
         assert self.kaltura_page.collaborator_perm(self.manual_collaborator) == 'Co-Editor, Co-Publisher'
 
     def test_email_room_restored(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_NEW_COURSE_ELIGIBLE, section=None,
+        assert util.get_sent_email_count(EmailTemplateType.NEW_CLASS_ELIGIBLE, section=None,
                                          instructor=self.instructor) == 2
 
     def test_no_email_new_collaborator(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_CHANGES_CONFIRMED, self.section,
+        assert util.get_sent_email_count(EmailTemplateType.CHANGES_CONFIRMED, self.section,
                                          self.instructor) == 1
 
 
@@ -269,11 +269,11 @@ class TestCollaborators1:
         self.kaltura_page.verify_collaborators(self.section, [self.manual_collaborator])
 
     def test_email_new_scheduled(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_NEW_COURSE_ELIGIBLE, self.section,
+        assert util.get_sent_email_count(EmailTemplateType.NEW_CLASS_ELIGIBLE, self.section,
                                          self.instructor) == 1
 
     def test_email_new_collaborator(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_CHANGES_CONFIRMED, self.section,
+        assert util.get_sent_email_count(EmailTemplateType.CHANGES_CONFIRMED, self.section,
                                          self.instructor) == 1
 
     def test_history_new_collaborator(self):
@@ -311,7 +311,7 @@ class TestCollaborators1:
         self.course_page.verify_collaborator_uids([self.proxy, self.manual_collaborator])
 
     def test_email_new_proxy(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_CHANGES_CONFIRMED, self.section,
+        assert util.get_sent_email_count(EmailTemplateType.CHANGES_CONFIRMED, self.section,
                                          self.instructor) == 2
 
     def test_history_new_proxy(self):
@@ -348,7 +348,7 @@ class TestCollaborators1:
         assert self.kaltura_page.collaborator_perm(self.proxy) == 'Co-Editor, Co-Publisher'
 
     def test_email_collaborator_removed(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_CHANGES_CONFIRMED, self.section,
+        assert util.get_sent_email_count(EmailTemplateType.CHANGES_CONFIRMED, self.section,
                                          self.instructor) == 3
 
     def test_history_collaborator_removed(self):
@@ -403,7 +403,7 @@ class TestCollaborators2:
         self.kaltura_page.verify_collaborators(self.section, self.section.proxies)
 
     def test_email_new_course(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_NEW_COURSE_ELIGIBLE, section=None,
+        assert util.get_sent_email_count(EmailTemplateType.NEW_CLASS_ELIGIBLE, section=None,
                                          instructor=self.instructor) == 1
 
     def test_course_page_sis_data(self):
@@ -437,7 +437,7 @@ class TestCollaborators2:
         self.kaltura_page.verify_collaborators(self.section, [self.proxy_1])
 
     def test_email_proxy_collaborator_removed(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_CHANGES_CONFIRMED, self.section,
+        assert util.get_sent_email_count(EmailTemplateType.CHANGES_CONFIRMED, self.section,
                                          self.instructor) == 1
 
     # SIS removes other proxy
@@ -458,7 +458,7 @@ class TestCollaborators2:
         assert self.kaltura_page.collaborator_perm(self.instructor) == 'Co-Editor, Co-Publisher'
 
     def test_email_other_proxy_removed(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_CHANGES_CONFIRMED, self.section,
+        assert util.get_sent_email_count(EmailTemplateType.CHANGES_CONFIRMED, self.section,
                                          self.instructor) == 2
 
     def test_history_proxy_removed(self):

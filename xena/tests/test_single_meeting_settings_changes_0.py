@@ -286,7 +286,7 @@ class TestScheduling0:
     # VERIFY ANNUNCIATION EMAIL
 
     def test_receive_annunciation_email(self):
-            assert util.get_sent_email_count(EmailTemplateType.INSTR_NEW_COURSE_ELIGIBLE, section=None,
+            assert util.get_sent_email_count(EmailTemplateType.NEW_CLASS_ELIGIBLE, section=None,
                                              instructor=self.instructor) == 1
 
     # INSTRUCTOR LOGS IN
@@ -414,7 +414,7 @@ class TestScheduling0:
     # VERIFY EMAILS
 
     def test_update_receive_schedule_conf_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_CHANGES_CONFIRMED, self.section,
+        assert util.get_sent_email_count(EmailTemplateType.CHANGES_CONFIRMED, self.section,
                                          self.instructor) == 1
 
     def test_update_admin_email_operator_requested(self):
@@ -490,7 +490,7 @@ class TestScheduling0:
     # VERIFY REVERTED PLACEMENT EMAIL
 
     def test_reverted_schedule_conf_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_CHANGES_CONFIRMED, self.section,
+        assert util.get_sent_email_count(EmailTemplateType.CHANGES_CONFIRMED, self.section,
                                          self.instructor) == 2
 
     # VERIFY COURSE HISTORY

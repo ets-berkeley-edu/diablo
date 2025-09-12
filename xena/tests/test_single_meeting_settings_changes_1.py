@@ -239,7 +239,7 @@ class TestScheduling1:
     # VERIFY ANNUNCIATION EMAIL
 
     def test_receive_annunciation_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_NEW_COURSE_ELIGIBLE, section=None,
+        assert util.get_sent_email_count(EmailTemplateType.NEW_CLASS_ELIGIBLE, section=None,
                                          instructor=self.instructor) == 1
 
     # VERIFY COURSE HISTORY
@@ -262,7 +262,7 @@ class TestScheduling1:
     # VERIFY EMAIL
 
     def test_update_receive_schedule_conf_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_CHANGES_CONFIRMED, self.section,
+        assert util.get_sent_email_count(EmailTemplateType.CHANGES_CONFIRMED, self.section,
                                          self.instructor) == 1
 
     # VERIFY COURSE HISTORY
