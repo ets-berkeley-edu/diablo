@@ -1,11 +1,14 @@
+import mitt from 'mitt'
 import {defineStore} from 'pinia'
 import {get, toString} from 'lodash'
+import type {Handler} from 'mitt'
 import type {DiabloConfig, DiabloUser, ScreenReaderAlert} from '@/lib/types'
 import {ANONYMOUS_USER, putFocusNextTick} from '@/lib/utils'
 import router from '@/router'
 
 export const useContextStore = defineStore('context', {
   state: () => ({
+    eventHub: mitt(),
     loading: false,
     screenReaderAlert: {
       message: '',
@@ -22,6 +25,9 @@ export const useContextStore = defineStore('context', {
   }),
 
   actions: {
+    broadcast(eventType, data?) {
+      this.eventHub.emit(eventType, data)
+    },
     loadingStart(title?: string) {
       const route = router.currentRoute.value
       const pageTitle: string = title || toString(get(route, 'name'))
@@ -47,6 +53,12 @@ export const useContextStore = defineStore('context', {
         message: message,
         politeness: politeness || 'polite'
       }
+    },
+    removeEventHandler(type: string, handler?: Handler) {
+      this.eventHub.off(type, handler)
+    },
+    setEventHandler(type: string, handler: Handler) {
+      this.eventHub.on(type, handler)
     },
     snackbarClose() {
       this.snackbarShow = false

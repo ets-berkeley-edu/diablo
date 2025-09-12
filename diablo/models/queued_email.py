@@ -80,10 +80,10 @@ class QueuedEmail(db.Model):
         course = SisSection.get_course(term_id, section_id, include_deleted=True)
         if not course:
             app.logger.error(f'Attempt to queue email for unknown course (term_id={term_id}, section_id={section_id})')
-            return
+            return None
         if not course['instructors']:
             app.logger.error(f'Attempt to queue email for course without instructors (term_id={term_id}, section_id={section_id})')
-            return
+            return None
         queued_email = cls(
             section_id=section_id,
             template_type=template_type,
@@ -95,7 +95,7 @@ class QueuedEmail(db.Model):
         course = SisSection.get_course(term_id, queued_email.section_id, include_deleted=True)
         if not queued_email.is_interpolated() and not queued_email.interpolate(course):
             app.logger.error(f'Failed to interpolate all required values for queued email ({queued_email})')
-            return
+            return None
         db.session.add(queued_email)
         std_commit()
         return queued_email
@@ -144,6 +144,10 @@ class QueuedEmail(db.Model):
                 canvas_site_ids=canvas_site_ids,
                 canvas_sites=canvas_sites,
             )
+    @classmethod
+    def notify_instructors_class_scheduled(cls, course):
+        for instructor in filter(lambda i: i['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES, course['instructors']):
+            cls._queue_instructor_email('class_scheduled', instructor, course)
 
     @classmethod
     def notify_instructors_no_longer_scheduled(cls, course):
@@ -172,8 +176,8 @@ class QueuedEmail(db.Model):
                 cls._queue_instructor_email('schedule_change', instructor, course)
 
     @classmethod
-    def notify_instructor_added(cls, instructor, course):
-        cls._queue_instructor_email('instructors_added', instructor, course)
+    def notify_new_course_eligible(cls, instructor, course):
+        cls._queue_instructor_email('new_class_eligible', instructor, course)
 
     @classmethod
     def notify_instructor_removed(cls, instructor, course):
@@ -261,10 +265,6 @@ class QueuedEmail(db.Model):
 
 def announce_semester_start(instructor, courses):
     _send_course_list_email(instructor, courses, 'semester_start')
-
-
-def notify_instructor_recordings_scheduled(instructor, courses):
-    _send_course_list_email(instructor, courses, 'new_class_scheduled')
 
 
 def remind_instructors_opted_out(instructor, courses):

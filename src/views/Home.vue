@@ -12,7 +12,7 @@
     <v-card-text>
       <v-container class="ml-8 mb-6">
         <v-row class="px-6 py-2">
-          <ToggleOptOut
+          <ToggleOptIn
             :term-id="`${config.currentTermId}`"
             section-id="all"
             :instructor-uids="[currentUser.uid]"
@@ -24,7 +24,7 @@
           />
         </v-row>
         <v-row class="px-6 py-2">
-          <ToggleOptOut
+          <ToggleOptIn
             term-id="all"
             section-id="all"
             :instructor-uids="[currentUser.uid]"
@@ -83,7 +83,7 @@
                       :class="{'border-b-0': size(course.displayMeetings) > 1}"
                       class="text-no-wrap"
                     >
-                      <ToggleOptOut
+                      <ToggleOptIn
                         :aria-label="`Opt out course ${get(course.courseCodes, '0', course.title)}.`"
                         :disabled="course.hasBlanketOptedOut"
                         :initial-value="course.hasOptedIn"
@@ -232,7 +232,7 @@ import Days from '@/components/util/Days'
 import {getCurrentUser} from '@/api/auth'
 import PageTitle from '@/components/util/PageTitle'
 import Spinner from '@/components/util/Spinner'
-import ToggleOptOut from '@/components/course/ToggleOptOut'
+import ToggleOptIn from '@/components/course/ToggleOptIn'
 import {useContextStore} from '@/stores/context'
 
 const contextStore = useContextStore()

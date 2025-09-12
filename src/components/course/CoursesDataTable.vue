@@ -3,12 +3,12 @@
     <v-row id="courses-data-table-message" class="text-medium-emphasis pb-1 px-4">
       <span class="ml-4">{{ messageForCourses }}</span>
       <v-spacer />
-      <v-col cols="12" md="6"><span v-if="!refreshing && !searchText">{{ description }}</span></v-col>
+      <v-col class="text-right" cols="12" md="6"><span v-if="!refreshing && !searchText">{{ description }}</span></v-col>
     </v-row>
     <v-data-table
       id="courses-data-table"
       v-model="selectedRows"
-      v-model:page="pageCurrent"
+      v-model:page="page"
       :disable-sort="courses.length < 2"
       :headers="headers"
       :items="courses"
@@ -77,7 +77,7 @@
           <template v-for="course in items" :key="course.sectionId">
             <tr>
               <td v-if="showOptIn" :class="tdc(course)">
-                <ToggleOptOut
+                <ToggleOptIn
                   v-if="course.statusLabel !== 'Not Eligible' && (includeOptOutColumnForUids || course.instructors?.length > 0)"
                   :key="course.sectionId"
                   :term-id="`${course.termId}`"
@@ -192,7 +192,7 @@
               </td>
               <td :aria-hidden="true" colspan="3" :class="tdcLower(course)" />
             </tr>
-            <tr v-if="size(course.scheduled)" :key="`approvals-${course.sectionId}`">
+            <tr v-if="course.scheduled && size(course.scheduled)" :key="`approvals-${course.sectionId}`">
               <td :colspan="headers.length" class="pb-2">
                 <div class="pb-3">
                   <span>Recordings scheduled on </span>
@@ -212,7 +212,7 @@
         <div v-if="!refreshing && pageCount > 1" class="text-center pb-4 pt-2">
           <v-pagination
             id="ouija-pagination"
-            v-model="pageCurrent"
+            v-model="page"
             :length="pageCount"
           />
         </div>
@@ -221,21 +221,23 @@
   </div>
 </template>
 
-<script setup>
+<script lang="ts" setup>
+import type {PropType} from 'vue'
 import {each, filter, find, get, map, size, tail} from 'lodash'
 import {mdiClose} from '@mdi/js'
 import {onMounted, ref, watch} from 'vue'
+import type {CourseSortable, SortBy} from '@/lib/types'
 import {alertScreenReader,getDisplayMeetings} from '@/lib/utils'
-import Date from '@/components/util/Date'
-import Days from '@/components/util/Days'
-import Instructor from '@/components/course/Instructor'
-import ToggleOptOut from '@/components/course/ToggleOptOut'
 import {useContextStore} from '@/stores/context'
+import Date from '@/components/util/Date.vue'
+import Days from '@/components/util/Days.vue'
+import Instructor from '@/components/course/Instructor.vue'
+import ToggleOptIn from '@/components/course/ToggleOptIn.vue'
 
 const props = defineProps({
   courses: {
     required: true,
-    type: Array
+    type: Array as PropType<CourseSortable[]>
   },
   description: {
     default: undefined,
@@ -285,9 +287,15 @@ const headers = ref([
   {key: 'instructors', title: 'Instructor(s)', value: 'instructorNames', sortable: false},
   {key: 'publish', title: 'Publish', sortable: true, value: 'publishTypeName', class: 'w-10'}
 ])
-const pageCurrent = ref(1)
+const page = defineModel('page', {type: Number})
+const sortBy = defineModel(
+  'sortBy',
+  {
+    default: {},
+    type: Object as PropType<SortBy>
+  },
+)
 const selectedRows = ref([])
-const sortBy = ref({})
 
 const instructorUidsFor = course =>
   (props.includeOptOutColumnForUids && props.includeOptOutColumnForUids.length)
@@ -297,6 +305,7 @@ const instructorUidsFor = course =>
 watch(() => props.refreshing, async(value) => {
   if (!value) {
     // False value means that the refresh just ended in the parent component and we can proceed.
+    page.value = 1
     refresh()
   }
 })
@@ -311,24 +320,23 @@ onMounted(() => {
   refresh()
 })
 
-const onUpdateSortBy = primarySortBy => {
+const onUpdateSortBy = (primarySortBy:SortBy) => {
   const key = primarySortBy[0].key
   const header = find(headers.value, {key: key})
   sortBy.value = primarySortBy[0]
-  pageCurrent.value = 1
+  page.value = 1
   if (header) {
     alertScreenReader(`Sorted by ${header.title}, ${sortBy.value.order}ending`)
   }
 }
 
 const refresh = () => {
-  pageCurrent.value = 1
   each(props.courses, course => {
     course.instructorNames = map(course.instructors, 'name')
-    course.isSelectable = !course.hasOptedOut
+    course.isSelectable = course.hasOptedIn
     const meetings = getDisplayMeetings(course)
     course.displayMeetings = meetings
-    course.room = meetings.length && meetings[0].room ? meetings[0].room : null
+    course.room = meetings.length && meetings[0].room ? meetings[0].room : undefined
     course.statusLabel = course.deletedAt
       ? 'Canceled'
       : (course.scheduled

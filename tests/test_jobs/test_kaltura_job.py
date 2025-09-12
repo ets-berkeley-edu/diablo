@@ -62,7 +62,7 @@ class TestKalturaJob:
 
             def _get_emails_sent():
                 return SentEmail.get_emails_of_type(
-                    template_type='new_class_scheduled',
+                    template_type='class_scheduled',
                     term_id=term_id,
                 )
 
@@ -88,7 +88,7 @@ class TestKalturaJob:
 
             for i in instructors:
                 email_sent = next(e for e in emails_sent if e.recipient_uid == i['uid'])
-                assert email_sent.template_type == 'new_class_scheduled'
+                assert email_sent.template_type == 'class_scheduled'
                 assert email_sent.term_id == term_id
 
             """If recordings were already scheduled then do nothing, send no email."""
@@ -107,14 +107,14 @@ class TestKalturaJob:
 
             # Course is not scheduled.
             assert Scheduled.get_scheduled(section_id=section_id, term_id=term_id) is None
-            _assert_email_count(0, section_id, 'new_class_scheduled')
+            _assert_email_count(0, section_id, 'class_scheduled')
             _assert_email_count(0, section_id, 'opted_out')
 
             # Job runs, course is still not scheduled.
             KalturaJob(simply_yield).run()
             EmailsJob(simply_yield).run()
             assert Scheduled.get_scheduled(section_id=section_id, term_id=term_id) is None
-            _assert_email_count(0, section_id, 'new_class_scheduled')
+            _assert_email_count(0, section_id, 'class_scheduled')
 
             # First instructor opts in, job runs, course is still not scheduled.
             _api_opt_in_update(client, fake_auth, instructors[0]['uid'], term_id, section_id, True)
@@ -122,14 +122,14 @@ class TestKalturaJob:
             KalturaJob(simply_yield).run()
             EmailsJob(simply_yield).run()
             assert Scheduled.get_scheduled(section_id=section_id, term_id=term_id) is None
-            _assert_email_count(0, section_id, 'new_class_scheduled')
+            _assert_email_count(0, section_id, 'class_scheduled')
 
             # Second instructor opts in, job runs, course is scheduled, both get email.
             _api_opt_in_update(client, fake_auth, instructors[1]['uid'], term_id, section_id, True)
             KalturaJob(simply_yield).run()
             EmailsJob(simply_yield).run()
             assert Scheduled.get_scheduled(section_id=section_id, term_id=term_id)
-            _assert_email_count(2, section_id, 'new_class_scheduled')
+            _assert_email_count(2, section_id, 'class_scheduled')
             _assert_email_count(0, section_id, 'opted_out')
 
             # First instructor opts out, job runs, course is unscheduled, both get email.
@@ -137,7 +137,7 @@ class TestKalturaJob:
             KalturaJob(simply_yield).run()
             EmailsJob(simply_yield).run()
             assert Scheduled.get_scheduled(section_id=section_id, term_id=term_id) is None
-            _assert_email_count(2, section_id, 'new_class_scheduled')
+            _assert_email_count(2, section_id, 'class_scheduled')
             _assert_email_count(2, section_id, 'opted_out')
 
     def test_canceled_course(self, db_session):
@@ -326,10 +326,10 @@ class TestKalturaJob:
             # Message queued but not sent.
             ScheduleUpdatesJob(simply_yield).run()
             KalturaJob(simply_yield).run()
-            _assert_email_count(0, section_id, 'instructors_added')
+            _assert_email_count(0, section_id, 'new_class_eligible')
 
             EmailsJob(simply_yield).run()
-            _assert_email_count(1, section_id, 'instructors_added')
+            _assert_email_count(1, section_id, 'new_class_eligible')
 
             fake_auth.login(admin_uid)
             course = api_get_course(client, term_id, section_id)

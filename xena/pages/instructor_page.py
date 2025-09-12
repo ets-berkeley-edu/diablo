@@ -35,12 +35,12 @@ class InstructorPage(CoursesPage):
     def hit_admin_url(self, instructor):
         self.driver.get(f'{app.config["BASE_URL"]}/user/{instructor.uid}')
 
-    OPT_OUT_ALL_BUTTON = By.ID, 'toggle-opt-out-all-terms'
-    OPT_OUT_CURRENT_BUTTON = By.ID, 'toggle-opt-out-current-term'
+    OPT_OUT_ALL_BUTTON = By.ID, 'toggle-opt-in-all-terms'
+    OPT_OUT_CURRENT_BUTTON = By.ID, 'toggle-opt-in-current-term'
 
     @staticmethod
     def opt_out_section_button_loc(section):
-        return By.ID, f'toggle-opt-out-{section.ccn}'
+        return By.ID, f'toggle-opt-in-{section.ccn}'
 
     def enable_opt_out_all_terms(self):
         app.logger.info('Opting out of all terms')

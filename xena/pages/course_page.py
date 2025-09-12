@@ -59,7 +59,7 @@ class CoursePage(DiabloPages):
 
     @staticmethod
     def admin_opt_out_button_locator(section):
-        return By.ID, f'toggle-opt-out-{section.ccn}'
+        return By.ID, f'toggle-opt-in-{section.ccn}'
 
     @staticmethod
     def expected_final_record_date_str(meeting, term):

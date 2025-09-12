@@ -171,6 +171,18 @@ class ScheduleUpdate(db.Model):
             },
         ).all()
 
+    @classmethod
+    def find_last_updated_instructors(cls, term_id, section_id):
+        last_update = cls.query.filter_by(
+            field_name='instructor_uids',
+            term_id=term_id,
+            section_id=section_id,
+        ).order_by(cls.requested_at.desc()).first()
+        if last_update:
+            return last_update.deserialize('field_value_new')
+        else:
+            return []
+
     def deserialize(self, column):
         field_value = getattr(self, column)
         if field_value is None:

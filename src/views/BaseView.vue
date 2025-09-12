@@ -75,6 +75,7 @@
             :aria-current="route.path === item.path ? 'page' : false"
             tabindex="0"
             tag="a"
+            @click="() => contextStore.broadcast('sidebar-navigation-click', item)"
           >
             <template #prepend>
               <v-icon color="icon-nav" :icon="item.icon" />

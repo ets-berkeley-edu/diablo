@@ -10,7 +10,7 @@
         </a>
       </v-card-subtitle>
       <v-row v-if="user.uid" class="mx-4">
-        <ToggleOptOut
+        <ToggleOptIn
           :term-id="config.currentTermId.toString()"
           section-id="all"
           :instructor-uids="[user.uid]"
@@ -22,7 +22,7 @@
         />
       </v-row>
       <v-row v-if="user.uid" class="mx-4 mt-0 mb-2">
-        <ToggleOptOut
+        <ToggleOptIn
           term-id="all"
           section-id="all"
           :instructor-uids="[user.uid]"
@@ -123,7 +123,7 @@ import {useContextStore} from '@/stores/context'
 import CoursesDataTable from '@/components/course/CoursesDataTable.vue'
 import PageTitle from '@/components/util/PageTitle.vue'
 import ProgressButton from '@/components/util/ProgressButton'
-import ToggleOptOut from '@/components/course/ToggleOptOut.vue'
+import ToggleOptIn from '@/components/course/ToggleOptIn.vue'
 
 const contextStore = useContextStore()
 const {config, currentUser, loading} = storeToRefs(contextStore)
