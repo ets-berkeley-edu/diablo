@@ -77,7 +77,7 @@
           <template v-for="course in items" :key="course.sectionId">
             <tr>
               <td v-if="showOptIn" :class="tdc(course)">
-                <ToggleOptOut
+                <ToggleOptIn
                   v-if="course.statusLabel !== 'Not Eligible' && (includeOptOutColumnForUids || course.instructors?.length > 0)"
                   :key="course.sectionId"
                   :term-id="`${course.termId}`"
@@ -232,7 +232,7 @@ import {useContextStore} from '@/stores/context'
 import Date from '@/components/util/Date.vue'
 import Days from '@/components/util/Days.vue'
 import Instructor from '@/components/course/Instructor.vue'
-import ToggleOptOut from '@/components/course/ToggleOptOut.vue'
+import ToggleOptIn from '@/components/course/ToggleOptIn.vue'
 
 const props = defineProps({
   courses: {

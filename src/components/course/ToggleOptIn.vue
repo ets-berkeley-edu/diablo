@@ -1,23 +1,22 @@
 <template>
-  <div>
-    <v-switch
-      :id="`toggle-opt-out-${switchId}`"
-      v-model="optOut"
-      :aria-describedby="undefined"
-      :aria-label="ariaLabel"
-      class="toggle-opt-out"
-      color="primary"
-      :disabled="disabled"
-      flat
-      hide-details
-      inset
-      :label="label ? `Opt out ${label}` : ''"
-      @update:model-value="toggleOptOut"
-    />
-  </div>
+  <v-switch
+    :id="`toggle-opt-in-${switchId}`"
+    v-model="optIn"
+    :aria-describedby="undefined"
+    :aria-label="ariaLabel"
+    class="toggle-opt-in"
+    color="primary"
+    :disabled="disabled"
+    flat
+    hide-details
+    inset
+    :label="label ? `Opt out ${label}` : ''"
+    @update:model-value="toggleOptIn"
+  />
 </template>
 
-<script setup>
+<script lang="ts" setup>
+import type {PropType} from 'vue'
 import {onMounted, ref} from 'vue'
 import {putFocusNextTick} from '@/lib/utils'
 import {updateOptIn} from '@/api/course'
@@ -43,7 +42,7 @@ const props = defineProps({
   },
   instructorUids: {
     required: true,
-    type: Array
+    type: Array as PropType<string[]>
   },
   label: {
     required: false,
@@ -65,11 +64,10 @@ const props = defineProps({
   }
 })
 
-const optOut = ref(undefined)
-const switchId = ref(undefined)
+const optIn = ref(props.initialValue)
+const switchId = ref<string | undefined>()
 
 onMounted(() => {
-  optOut.value = props.initialValue
   if (props.sectionId === 'all') {
     switchId.value = props.termId === 'all' ? 'all-terms' : 'current-term'
   } else {
@@ -77,12 +75,12 @@ onMounted(() => {
   }
 })
 
-const toggleOptOut = () => {
+const toggleOptIn = () => {
   props.beforeToggle()
-  props.instructorUids.forEach(uid => {
-    updateOptIn(uid, props.termId, props.sectionId, optOut.value).then(data => {
-      props.onToggle(`Opted ${data.optedOut ? 'out' : 'in'} ${props.label}`)
-      putFocusNextTick(`toggle-opt-out-${switchId.value}`)
+  props.instructorUids.forEach((uid: string) => {
+    updateOptIn(uid, props.termId, props.sectionId, optIn.value).then(data => {
+      props.onToggle(`Opted ${data.optedIn ? 'in' : 'out'} ${props.label}`)
+      putFocusNextTick(`toggle-opt-in-${switchId.value}`)
     })
   })
 
@@ -90,7 +88,7 @@ const toggleOptOut = () => {
 </script>
 
 <style>
-.toggle-opt-out label {
+.toggle-opt-in label {
   font-size: 1.25rem;
   font-weight: 500;
   padding-inline: 12px !important;

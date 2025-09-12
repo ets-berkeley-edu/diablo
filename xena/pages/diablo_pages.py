@@ -123,11 +123,11 @@ class DiabloPages(Page):
 
     @staticmethod
     def course_opt_out_button_locator(section):
-        return By.ID, f'toggle-opt-out-{section.ccn}'
+        return By.ID, f'toggle-opt-in-{section.ccn}'
 
     @staticmethod
     def course_opt_out_button_clickable_locator(section):
-        return By.XPATH, f'//input[@id="toggle-opt-out-{section.ccn}"]/following-sibling::div'
+        return By.XPATH, f'//input[@id="toggle-opt-in-{section.ccn}"]/following-sibling::div'
 
     def toggle_course_opt_out(self, section):
         app.logger.info(f'Clicking the opt-out button for {section.code}')

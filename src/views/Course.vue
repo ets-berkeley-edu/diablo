@@ -75,7 +75,7 @@
       </div>
       <div v-if="currentUser.isAdmin">
         <v-col>
-          <ToggleOptOut
+          <ToggleOptIn
             :term-id="`${course.termId}`"
             :section-id="`${course.sectionId}`"
             :instructor-uids="['admin']"
@@ -292,7 +292,7 @@ import PageTitle from '@/components/util/PageTitle'
 import RecordingPlacement from '@/components/course/RecordingPlacement'
 import RecordingType from '@/components/course/RecordingType'
 import ScheduledCourse from '@/components/course/ScheduledCourse'
-import ToggleOptOut from '@/components/course/ToggleOptOut.vue'
+import ToggleOptIn from '@/components/course/ToggleOptIn.vue'
 import {getCourse} from '@/api/course'
 import {useContextStore} from '@/stores/context'
 
