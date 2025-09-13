@@ -75,17 +75,19 @@
   </v-row>
 </template>
 
-<script setup>
+<script lang="ts" setup>
+import type {PropType} from 'vue'
 import {computed, onMounted, ref} from 'vue'
+import type {Course} from '@/lib/types'
 import {alertScreenReader, putFocusNextTick} from '@/lib/utils'
-import ProgressButton from '@/components/util/ProgressButton'
 import {updateRecordingType} from '@/api/course'
 import {useContextStore} from '@/stores/context'
+import ProgressButton from '@/components/util/ProgressButton.vue'
 
 const props = defineProps({
   course: {
     required: true,
-    type: Object
+    type: Object as PropType<Course>
   },
   labels: {
     required: true,
@@ -101,7 +103,7 @@ const {currentUser} = useContextStore()
 const isEditing = ref(false)
 const isSaving = ref(false)
 const recordingType = ref(props.course.recordingType)
-const recordingTypeOptions = ref([])
+const recordingTypeOptions = ref<string[]>([])
 const recordingTypeEditable = computed(() =>
   recordingTypeOptions.value.length > 1 &&
   (currentUser.isAdmin || props.course.recordingType !== 'presenter_presentation_audio_with_operator')

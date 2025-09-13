@@ -1,18 +1,19 @@
 
 export type DiabloConfig = {
   apiBaseUrl: string,
-  devAuthEnabled: boolean,
-  currentTermName: string,
-  currentTermId: number,
   canvasBaseUrl: string,
-  kalturaMediaSpaceUrl: string,
-  searchItemsPerPage: number,
-  isVueAppDebugMode: boolean,
-  emailCourseCaptureSupport: string,
+  currentTermId: number,
+  currentTermName: string,
   currentTermRecordingsBegin: string,
   currentTermRecordingsEnd: string,
+  devAuthEnabled: boolean,
+  emailCourseCaptureSupport: string,
+  emailTemplateTypes: {[key: string]: string},
+  isVueAppDebugMode: boolean,
+  kalturaMediaSpaceUrl: string,
+  publishTypeOptions: {[key: string]: string},
   searchFilterOptions: {[key: string]: string},
-  emailTemplateTypes: {[key: string]: string}
+  searchItemsPerPage: number,
 }
 
 export interface Collaborator {
@@ -105,12 +106,22 @@ export interface ScheduledCourse {
   termId: number
 }
 
+export type CanvasSite = {
+  canvasSiteId: string,
+  courseCode: string,
+  name: string,
+  sisCourseId: number | string,
+  sisTermId: number | string,
+  url: string
+}
+
 export interface Course extends BaseCourse {
   allowedUnits: number,
   canvasSiteIds: number[] | null,
   collaboratorUids: string[],
   collaborators: Collaborator[],
   courseCodes: string[],
+  canvasSites?: CanvasSite[],
   crossListings: BaseCourse[],
   deletedAt: string | null,
   displayMeetings: Meeting[],
@@ -123,6 +134,7 @@ export interface Course extends BaseCourse {
     ineligible: Meeting[],
   },
   nonstandardMeetingDates: boolean,
+  note: string,
   optOuts: OptOut[],
   publishType: string,
   publishTypeName: string,

@@ -128,16 +128,17 @@
         </div>
       </v-col>
     </v-row>
-    <v-row v-if="currentUser.isAdmin && course.hasOptedOut" id="opted-out" class="mt-3">
+    <v-row v-if="currentUser.isAdmin && course.hasOptedIn" id="opted-out" class="mt-3">
       <v-col class="py-1" cols="auto">
         <v-icon :icon="mdiMinusCircle" />
       </v-col>
-      <v-col class="py-1">Opted out</v-col>
+      <v-col class="py-1">Opted in</v-col>
     </v-row>
   </v-card>
 </template>
 
-<script setup>
+<script lang="ts" setup>
+import type {PropType} from 'vue'
 import {onMounted, ref} from 'vue'
 import {DateTime} from 'luxon'
 import {
@@ -148,21 +149,22 @@ import {
   mdiMinusCircle,
   mdiSchoolOutline
 } from '@mdi/js'
+import type {Course, Meeting} from '@/lib/types'
 import {getDisplayMeetings, pluralize} from '@/lib/utils'
 import {useContextStore} from '@/stores/context'
-import Date from '@/components/util/Date'
-import Days from '@/components/util/Days'
-import OxfordJoin from '@/components/util/OxfordJoin'
+import Date from '@/components/util/Date.vue'
+import Days from '@/components/util/Days.vue'
+import OxfordJoin from '@/components/util/OxfordJoin.vue'
 
 const props = defineProps({
   course: {
-    type: Object,
+    type: Object as PropType<Course>,
     required: true
   }
 })
 
 const {config, currentUser} = useContextStore()
-const displayMeetings = ref([])
+const displayMeetings = ref<Meeting[]>([])
 const today = ref(DateTime.local().startOf('day'))
 
 onMounted(() => {

@@ -84,9 +84,9 @@ export function updateOptIn(
 
 export function updatePublishType(
     canvasSiteIds: string[],
-    publishType: boolean,
-    sectionId: string,
-    termId: string
+    publishType: string,
+    sectionId: number | string,
+    termId: number | string
 ) {
   return axios
     .post(`${getApiBaseUrl()}/api/course/publish_type/update`, {
@@ -98,9 +98,9 @@ export function updatePublishType(
 }
 
 export function updateRecordingType(
-    recordingType: boolean,
-    sectionId: string,
-    termId: string
+    recordingType: string,
+    sectionId: number | string,
+    termId: number | string
 ) {
   return axios
     .post(`${getApiBaseUrl()}/api/course/recording_type/update`, {

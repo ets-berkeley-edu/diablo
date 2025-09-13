@@ -79,10 +79,10 @@
       :courses="courses"
       :description="coursesTableDescription"
       :include-room-column="true"
-      :show-opt-in="true"
-      :on-toggle-opt-out="onToggleOptOut"
+      :on-toggle-opt-in="onToggleOptIn"
       :refreshing="isRefreshing"
       :search-text="searchText"
+      :show-opt-in="true"
     />
   </v-card>
 </template>
@@ -91,13 +91,13 @@
 import {computed, onMounted, onUnmounted, ref} from 'vue'
 import {each, kebabCase, map} from 'lodash'
 import {mdiAutoFix, mdiMagnify} from '@mdi/js'
-import {alertScreenReader, getCourseCodes, pluralize, putFocusNextTick} from '@/lib/utils'
-import CoursesDataTable from '@/components/course/CoursesDataTable.vue'
-import PageTitle from '@/components/util/PageTitle.vue'
 import type {Course, CourseSortable} from '@/lib/types'
 import {OuijaFilter, useOuijaStore} from '@/stores/ouija'
+import {alertScreenReader, getCourseCodes, pluralize, putFocusNextTick} from '@/lib/utils'
 import {downloadCSV, getCourses} from '@/api/course'
 import {useContextStore} from '@/stores/context'
+import CoursesDataTable from '@/components/course/CoursesDataTable.vue'
+import PageTitle from '@/components/util/PageTitle.vue'
 
 const contextStore = useContextStore()
 const courses = ref<CourseSortable[]>([])
@@ -167,8 +167,8 @@ const onToggleFilterOptionsMenu = isOpen => {
     putFocusNextTick('filter-option-scheduled')
   }
 }
-const onToggleOptOut = (course: Course) => {
-  if (!course.hasOptedOut) {
+const onToggleOptIn = (course: Course) => {
+  if (!course.hasOptedIn) {
     // TODO: Do we need to alter or extend this logic?
     // const indexOf = courses.value.findIndex(c => c.sectionId === course.sectionId)
     // if (indexOf >= 0) {

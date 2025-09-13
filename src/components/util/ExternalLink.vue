@@ -5,6 +5,7 @@
     target="_blank"
   >
     <slot />
+    {{ text }}
     <span class="sr-only">&nbsp;(opens in new tab)</span>
     <v-icon class="external-link-icon" :icon="mdiOpenInNew" :size="iconSize" />
   </a>
@@ -15,19 +16,24 @@ import {computed} from 'vue'
 import {mdiOpenInNew} from '@mdi/js'
 
 const props = defineProps({
+  href: {
+    required: true,
+    type: String
+  },
   iconSize: {
     default: 14,
     required: false,
     type: Number
   },
-  href: {
-    required: true,
-    type: String
-  },
   linkId: {
     required: true,
     type: String
   },
+  text: {
+    default: undefined,
+    required: false,
+    type: String
+  }
 })
 
 const iconBottomMargin = computed(() => `${props.iconSize - 13}px`)
