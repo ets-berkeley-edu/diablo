@@ -117,9 +117,20 @@ def get_template_substitutions(
         return name
 
     course_list = course_list or []
-    scheduled_courses = [_get_course_name(course) for course in course_list if course['scheduled']]
-    partially_approved_courses = [_get_course_name(course) for course in course_list if len(course['optIns']) and not course['hasOptedIn']]
-    opted_out_courses = [_get_course_name(course) for course in course_list if not len(course['optIns'])]
+    scheduled_courses = []
+    partially_approved_courses = []
+    opted_out_courses = []
+
+    for c in course_list:
+        course_name = _get_course_name(c)
+        if c['scheduled']:
+            scheduled_courses.append(course_name)
+        elif not c['hasOptedIn']:
+            non_admin_opt_ins = [o for o in c['optIns'] if o['instructorUid'] != 'admin']
+            if len(non_admin_opt_ins):
+                partially_approved_courses.append(course_name)
+            else:
+                opted_out_courses.append(course_name)
 
     return {
         'bcourses.list': ', '.join([f"<a href=\"{site['url']}\">{site['courseCode']}</a>" for site in canvas_sites]) if canvas_sites else None,
