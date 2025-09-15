@@ -38,10 +38,12 @@
         <div v-if="!course.deletedAt && (course.hasOptedOut || !course.scheduled)">
           <v-col class="font-weight-bold mb-1">
             <span v-if="course.hasOptedOut && !course.scheduled && course.instructors.length" id="notice-opt-out" class="text-error">
-              {{ currentUser.isAdmin ? 'The' : 'Your' }} course is not scheduled for Course Capture because one or more instructors have opted out. To schedule recordings, please have all instructors remove their opt-out status.
+              {{ currentUser.isAdmin ? 'The' : 'Your' }} course is not scheduled for Course Capture because one or more
+              instructors have opted out. To schedule recordings, please have all instructors remove their opt-out status.
             </span>
             <span v-if="course.hasOptedOut && !course.scheduled && !course.instructors.length" id="notice-opt-out" class="text-error">
-              {{ currentUser.isAdmin ? 'The' : 'Your' }} course is not scheduled for Course Capture due to an admin override. Please contact
+              {{ currentUser.isAdmin ? 'The' : 'Your' }} course is not scheduled for Course Capture due to an admin override.
+              Please contact
               <a
                 id="course-page-diablo-support-mailto"
                 :href="`mailto:${config.emailCourseCaptureSupport}`"
@@ -51,10 +53,13 @@
               </a>.
             </span>
             <span v-if="course.scheduled && course.hasOptedOut && course.instructors.length" id="notice-opt-out-pending-instructors" class="text-error">
-              {{ currentUser.isAdmin ? 'The' : 'Your' }} course is scheduled for Course Capture, but will be unscheduled shortly because one or more instructors have opted out. To keep recordings scheduled, please have all instructors remove their opt-out status.
+              {{ currentUser.isAdmin ? 'The' : 'Your' }} course is scheduled for Course Capture, but will be unscheduled
+              shortly because one or more instructors have opted out. To keep recordings scheduled, please have all
+              instructors remove their opt-out status.
             </span>
             <span v-if="course.scheduled && course.hasOptedOut && !course.instructors.length" id="notice-opt-out-pending-no-instructors" class="text-error">
-              {{ currentUser.isAdmin ? 'The' : 'Your' }} course is scheduled for Course Capture, but will be unscheduled shortly due to an admin override. Please contact
+              {{ currentUser.isAdmin ? 'The' : 'Your' }} course is scheduled for Course Capture, but will be unscheduled
+              shortly due to an admin override. Please contact
               <a
                 id="course-page-diablo-support-mailto"
                 :href="`mailto:${config.emailCourseCaptureSupport}`"
@@ -65,7 +70,8 @@
               if you have any questions.
             </span>
             <span v-if="!course.scheduled && !course.hasOptedOut && course.instructors.length" id="notice-eligible-not-scheduled" class="text-success">
-              This course is eligible for scheduling, but has not yet been scheduled. Instructors will be notified when scheduling has taken place.
+              This course is eligible for scheduling, but has not yet been scheduled. Instructors will be notified when
+              scheduling has taken place.
             </span>
             <span v-if="!course.scheduled && !course.hasOptedOut && !course.instructors.length" id="notice-eligible-not-scheduled" class="text-success">
               This course is eligible for scheduling, but has not been scheduled because it has no instructors.
@@ -152,36 +158,32 @@
                       href="https://berkeley.service-now.com/kb?id=kb_article_view&sysparm_article=KB0013882"
                       :icon-size="16"
                       link-id="link-publish-my-media"
-                    >
-                      How to Publish from My Media
-                    </ExternalLink>
+                      text="How to Publish from My Media"
+                    />
                   </li>
                   <li>
                     <ExternalLink
                       href="https://berkeley.service-now.com/kb?id=kb_article_view&sysparm_article=KB0013623"
                       :icon-size="16"
                       link-id="link-embed-rich-content"
-                    >
-                      How to Embed in bCourses using the Rich Content Editor
-                    </ExternalLink>
+                      text="How to Embed in bCourses using the Rich Content Editor"
+                    />
                   </li>
                   <li>
                     <ExternalLink
                       href="https://berkeley.service-now.com/kb?id=kb_article_view&sysparm_article=KB0014115"
                       :icon-size="16"
                       link-id="link-download-second-stream"
-                    >
-                      How to Download the Second Stream of the Recording
-                    </ExternalLink>
+                      text="How to Download the Second Stream of the Recording"
+                    />
                   </li>
                   <li>
                     <ExternalLink
                       href="https://rtl.berkeley.edu/services-programs/course-capture/instructors-getting-started/course-capture-faq"
                       :icon-size="16"
                       link-id="link-faq"
-                    >
-                      Course Capture FAQ
-                    </ExternalLink>
+                      text="Course Capture FAQ"
+                    />
                   </li>
                 </ul>
               </v-col>
@@ -195,27 +197,24 @@
                       href="https://berkeley.service-now.com/kb?id=kb_article_view&sysparm_article=KB0014032"
                       :icon-size="16"
                       link-id="link-remove-recording"
-                    >
-                      How to Remove a Recording from the Media Gallery
-                    </ExternalLink>
+                      text="How to Remove a Recording from the Media Gallery"
+                    />
                   </li>
                   <li>
                     <ExternalLink
                       href="https://berkeley.service-now.com/kb?id=kb_article_view&sysparm_article=KB0014115"
                       :icon-size="16"
                       link-id="link-download-second-stream"
-                    >
-                      How to Download the Second Stream of the Recording
-                    </ExternalLink>
+                      text="How to Download the Second Stream of the Recording"
+                    />
                   </li>
                   <li>
                     <ExternalLink
                       href="https://rtl.berkeley.edu/services-programs/course-capture/instructors-getting-started/course-capture-faq"
                       :icon-size="16"
                       link-id="link-faq"
-                    >
-                      Course Capture FAQ
-                    </ExternalLink>
+                      text="Course Capture FAQ"
+                    />
                   </li>
                 </ul>
               </v-col>
@@ -280,21 +279,21 @@ import {get, isEmpty} from 'lodash'
 import {mdiAlert, mdiBookMultipleOutline} from '@mdi/js'
 import {storeToRefs} from 'pinia'
 import {useRoute} from 'vue-router'
+import {getAuditoriums} from '@/api/room'
+import {getCourse} from '@/api/course'
 import {getCourseCodes, getTermName} from '@/lib/utils'
+import {useContextStore} from '@/stores/context'
 import Collaborators from '@/components/course/Collaborators'
 import CourseHistory from '@/components/course/CourseHistory'
 import CourseNotes from '@/components/course/CourseNotes'
 import CoursePageSidebar from '@/components/course/CoursePageSidebar'
 import Date from '@/components/util/Date'
 import ExternalLink from '@/components/util/ExternalLink'
-import {getAuditoriums} from '@/api/room'
 import PageTitle from '@/components/util/PageTitle'
 import RecordingPlacement from '@/components/course/RecordingPlacement'
 import RecordingType from '@/components/course/RecordingType'
 import ScheduledCourse from '@/components/course/ScheduledCourse'
 import ToggleOptIn from '@/components/course/ToggleOptIn.vue'
-import {getCourse} from '@/api/course'
-import {useContextStore} from '@/stores/context'
 
 const contextStore = useContextStore()
 const {config, currentUser, loading} = storeToRefs(contextStore)

@@ -10,7 +10,7 @@
     flat
     hide-details
     inset
-    :label="label ? `Opt out ${label}` : ''"
+    :label="label ? `Opt in ${label}` : ''"
     @update:model-value="toggleOptIn"
   />
 </template>

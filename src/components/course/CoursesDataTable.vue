@@ -78,14 +78,14 @@
             <tr>
               <td v-if="showOptIn" :class="tdc(course)">
                 <ToggleOptIn
-                  v-if="course.statusLabel !== 'Not Eligible' && (includeOptOutColumnForUids || course.instructors?.length > 0)"
+                  v-if="course.statusLabel !== 'Not Eligible' && (includeOptInColumnForUids || course.instructors?.length > 0)"
                   :key="course.sectionId"
                   :term-id="`${course.termId}`"
                   :section-id="`${course.sectionId}`"
                   :instructor-uids="instructorUidsFor(course)"
                   :initial-value="course.hasOptedIn"
                   :disabled="course.hasBlanketOptedOut"
-                  :on-toggle="onToggleOptOut(course)"
+                  :on-toggle="onToggleOptIn(course)"
                 />
               </td>
               <td
@@ -247,7 +247,7 @@ const props = defineProps({
     default: undefined,
     type: String
   },
-  includeOptOutColumnForUids: {
+  includeOptInColumnForUids: {
     required: false,
     type: Array,
     default: undefined
@@ -256,7 +256,7 @@ const props = defineProps({
     required: true,
     type: Boolean
   },
-  onToggleOptOut: {
+  onToggleOptIn: {
     required: false,
     type: Function,
     default: () => {}
@@ -298,8 +298,8 @@ const sortBy = defineModel(
 const selectedRows = ref([])
 
 const instructorUidsFor = course =>
-  (props.includeOptOutColumnForUids && props.includeOptOutColumnForUids.length)
-    ? props.includeOptOutColumnForUids
+  (props.includeOptInColumnForUids && props.includeOptInColumnForUids.length)
+    ? props.includeOptInColumnForUids
     : map(course.instructors, 'uid')
 
 watch(() => props.refreshing, async(value) => {

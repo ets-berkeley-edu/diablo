@@ -36,11 +36,11 @@
         <CoursesDataTable
           class="pt-5"
           :courses="eligibleCourses"
+          :include-opt-in-column-for-uid="[user.uid]"
           :include-room-column="true"
-          :show-opt-in="true"
-          :include-opt-out-column-for-uid="[user.uid]"
           :message-for-courses="summarize(eligibleCourses)"
           :refreshing="isRefreshingCourses"
+          :show-opt-in="true"
         />
       </div>
       <div v-if="!isRefreshingCourses && ineligibleCourses.length" id="user-courses-ineligible">
@@ -49,9 +49,9 @@
           class="pt-5"
           :courses="ineligibleCourses"
           :include-room-column="true"
-          :show-opt-in="false"
           :message-for-courses="summarize(ineligibleCourses)"
           :refreshing="false"
+          :show-opt-in="false"
         />
       </div>
     </v-card>

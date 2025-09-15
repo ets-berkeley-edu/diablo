@@ -14,12 +14,11 @@
         <v-card-title>
           <ExternalLink
             class="text-subtitle-1"
-            :icon-size="16"
             :href="`${config.kalturaMediaSpaceUrl}/recscheduling/index/edit-event/eventid/${scheduled.kalturaScheduleId}`"
+            :icon-size="16"
             link-id="link-to-edit-kaltura-event"
-          >
-            Kaltura series {{ scheduled.kalturaScheduleId }}
-          </ExternalLink>
+            :text="`Kaltura series ${scheduled.kalturaScheduleId}`"
+          />
         </v-card-title>
         <v-card-text>
           <v-row>
@@ -53,15 +52,17 @@
   </v-row>
 </template>
 
-<script setup>
+<script lang="ts" setup>
+import type {PropType} from 'vue'
 import {isEmpty} from 'lodash'
-import Date from '@/components/util/Date'
-import ExternalLink from '@/components/util/ExternalLink'
+import type {Course} from '@/lib/types'
 import {useContextStore} from '@/stores/context'
+import Date from '@/components/util/Date.vue'
+import ExternalLink from '@/components/util/ExternalLink.vue'
 
 defineProps({
   course: {
-    type: Object,
+    type: Object as PropType<Course>,
     required: true
   }
 })

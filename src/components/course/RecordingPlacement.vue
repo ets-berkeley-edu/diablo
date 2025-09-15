@@ -181,20 +181,30 @@
   </v-row>
 </template>
 
-<script setup>
+<script lang="ts" setup>
+import type {PropType} from 'vue'
 import {filter, find, get, isEmpty, map, size} from 'lodash'
 import {onMounted, ref} from 'vue'
+import type {CanvasSite, Course} from '@/lib/types'
 import {alertScreenReader, putFocusNextTick} from '@/lib/utils'
-import CanvasCourseSite from '@/components/course/CanvasCourseSite'
 import {getCanvasSitesTeaching} from '@/api/user'
 import {getCourseSite, updatePublishType} from '@/api/course'
-import ProgressButton from '@/components/util/ProgressButton'
 import {useContextStore} from '@/stores/context'
+import CanvasCourseSite from '@/components/course/CanvasCourseSite.vue'
+import ProgressButton from '@/components/util/ProgressButton.vue'
+
+type CanvasSiteOption = {
+  id: string,
+  disabled: boolean,
+  role: string,
+  title: string,
+  value: CanvasSite
+}
 
 const props = defineProps({
   course: {
     required: true,
-    type: Object
+    type: Object as PropType<Course>
   },
   labels: {
     required: true,
@@ -213,13 +223,13 @@ const isSaving = ref(false)
 const menuContainer = ref()
 const pendingCanvasSite = ref()
 const pendingCanvasSiteId = ref()
-const publishCanvasSites = ref(props.course.canvasSites)
-const publishCanvasSiteOptions = ref([])
+const publishCanvasSites = ref<CanvasSite[]>(props.course.canvasSites || [])
+const publishCanvasSiteOptions = ref<CanvasSiteOption[]>([])
 const publishType = ref(props.course.publishType)
 const publishTypeOptions = Object.keys(config.publishTypeOptions).sort().reverse()
 
 onMounted(() => {
-  if (!currentUser.isAdmin) {
+  if (!currentUser.isAdmin && currentUser.uid) {
     getCanvasSitesTeaching(currentUser.uid).then(sites => {
       publishCanvasSiteOptions.value = map(sites, site => {
         return {
@@ -263,7 +273,7 @@ const isCanvasSiteIdStaged = (siteId) => {
 }
 
 const onPublishTypeChange = (option, idx) => {
-  publishType.value = publishType.value === option ? publishTypeOptions.value[idx - 1] : option
+  publishType.value = publishType.value === option ? publishTypeOptions[idx - 1] : option
 }
 
 const onToggleCanvasSitesMenu = isOpen => {
@@ -276,7 +286,7 @@ const removeCanvasSite = (canvasSiteId, index) => {
   const nextFocusIndex = (index + 1 === size(publishCanvasSites.value)) ? index - 1 : index + 1
   const nextFocusSiteId = get(publishCanvasSites.value, `${nextFocusIndex}.canvasSiteId`)
   const canvasSite = find(publishCanvasSites.value, c => c.canvasSiteId === canvasSiteId)
-  const canvasSiteName = canvasSite.name || ''
+  const canvasSiteName = get(canvasSite, 'name', '')
   let nextFocusId = `btn-canvas-site-remove-${nextFocusSiteId}`
   publishCanvasSites.value = filter(publishCanvasSites.value, c => c.canvasSiteId !== canvasSiteId )
   alertScreenReader(`Removed course site ${canvasSiteName}.`)

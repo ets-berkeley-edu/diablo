@@ -13,7 +13,7 @@ export enum OuijaFilter {
 
 export const useOuijaStore = defineStore('ouija', {
   state: () => ({
-    filter: OuijaFilter.All,
+    filter: OuijaFilter.Scheduled,
     pageNumber: 1,
     sortBy: {} as SortBy
   }),

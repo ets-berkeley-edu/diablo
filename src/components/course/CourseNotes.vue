@@ -12,22 +12,20 @@
         id="btn-edit-note"
         aria-label="Edit note"
         :disabled="isSaving"
+        text="Edit"
         variant="elevated"
         @click="editNote"
-      >
-        Edit
-      </v-btn>
+      />
       <v-btn
         v-if="course.note"
         id="btn-delete-note"
         aria-label="Delete Note"
         class="ml-2"
         :disabled="isSaving"
+        text="Delete"
         variant="elevated"
         @click="deleteNote"
-      >
-        Delete
-      </v-btn>
+      />
     </v-card-actions>
     <v-card-text v-if="isEditing">
       <v-textarea
@@ -54,26 +52,27 @@
         aria-label="Cancel Note Edit"
         class="ml-2"
         :disabled="isSaving"
+        text="Cancel"
         variant="text"
         @click="cancelNote"
-      >
-        Cancel
-      </v-btn>
+      />
     </v-card-actions>
   </v-card>
 </template>
 
-<script setup>
+<script lang="ts" setup>
+import type {PropType} from 'vue'
 import {ref} from 'vue'
+import type {Course} from '@/lib/types'
 import {alertScreenReader, putFocusNextTick} from '@/lib/utils'
 import {deleteCourseNote, updateCourseNote} from '@/api/course'
-import ProgressButton from '@/components/util/ProgressButton'
+import ProgressButton from '@/components/util/ProgressButton.vue'
 import {useContextStore} from '@/stores/context'
 
 const props = defineProps({
   course: {
     required: true,
-    type: Object
+    type: Object as PropType<Course>
   },
   setModel: {
     required: true,
@@ -84,7 +83,7 @@ const props = defineProps({
 const {currentUser} = useContextStore()
 const isEditing = ref(false)
 const isSaving = ref(false)
-const noteBody = ref('')
+const noteBody = ref<string | undefined>()
 
 
 const cancelNote = () => {
@@ -100,7 +99,7 @@ const deleteNote = () => {
   deleteCourseNote(props.course.termId, props.course.sectionId)
     .then(() => {
       props.setModel(null)
-      noteBody.value = null
+      noteBody.value = undefined
       isSaving.value = false
       alertScreenReader('Note deleted.')
       putFocusNextTick('btn-edit-note')
@@ -114,9 +113,9 @@ const editNote = () => {
 }
 
 const saveNote = () => {
-  isSaving.value = true
-  updateCourseNote(props.course.termId, props.course.sectionId, noteBody.value)
-    .then(data => {
+  if (noteBody.value) {
+    isSaving.value = true
+    updateCourseNote(props.course.termId, props.course.sectionId, noteBody.value).then(data => {
       noteBody.value = data.note
       props.setModel(data.note)
       isEditing.value = false
@@ -124,5 +123,6 @@ const saveNote = () => {
       alertScreenReader('Note updated.')
       putFocusNextTick('btn-edit-note')
     })
+  }
 }
 </script>
