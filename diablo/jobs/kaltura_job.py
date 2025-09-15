@@ -347,9 +347,11 @@ def _handle_meeting_removed(kaltura, course, scheduled, schedule_updates):
             e,
             f"Failed to delete Kaltura schedule: {scheduled['kalturaScheduleId']}",
             'meeting_removed',
-            kaltura_schedule_id=scheduled['kalturaScheduleId'],
         )
         _mark_error(schedule_updates, e, None, ('not_scheduled', 'opted_in', 'room_not_eligible'))
+    finally:
+        # Clean up any stray updates associated with the deleted schedule.
+        _mark_error_for_kaltura_schedule(schedule_updates, scheduled['kalturaScheduleId'])
 
 
 def _handle_meeting_updates(kaltura, meetings_updated_by_schedule_id, kaltura_schedule_id, scheduled_model, schedule_updates):
@@ -371,7 +373,7 @@ def _handle_meeting_updates(kaltura, meetings_updated_by_schedule_id, kaltura_sc
             )
         _mark_success(schedule_updates, 'meeting_updated', kaltura_schedule_id)
     except Exception as e:
-        _mark_error(schedule_updates, e, f'Failed to update Kaltura schedule: {kaltura_schedule_id}', 'meeting_updated', kaltura_schedule_id)
+        _mark_error(schedule_updates, e, f'Failed to update Kaltura schedule: {kaltura_schedule_id}', 'meeting_updated')
 
 
 def _handle_publish_type_update(updated_publish_type, scheduled_model):
@@ -415,6 +417,10 @@ def _handle_course_site_categories(kaltura, course, publish_to_course_sites, sch
                 'canvas_site_ids',
             )
             return None
+        finally:
+            # Clean up any stray updates associated with the deleted schedule.
+            _mark_error_for_kaltura_schedule(schedule_updates, scheduled['kalturaScheduleId'])
+
 
     if not (schedule_deletion_required or schedule_ids_to_update):
         return None
@@ -485,18 +491,22 @@ def _mark_success(schedule_updates, field_names, kaltura_schedule_id=None):
             su.mark_success()
 
 
-def _mark_error(schedule_updates, e, message, field_names, kaltura_schedule_id=None):
+def _mark_error(schedule_updates, e, message, field_names):
     if message:
         su = schedule_updates[0]
-        message = f'Schedule update error: term {su.term_id}, section {su.section_id}, fields {field_names}\n' + message
-        app.logger.error(message)
+        error_description = f'Schedule update error: term {su.term_id}, section {su.section_id}, fields {field_names}'
+        app.logger.error(f'{error_description}\n{message}')
         app.logger.exception(e)
         send_system_error_email(
-            message=f'{message}\n\n<pre>{traceback.format_exc()}</pre>',
-            subject=message,
+            message=f'{error_description}\n\n{message}\n\n<pre>{traceback.format_exc()}</pre>',
+            subject=error_description,
         )
     for su in schedule_updates:
-        if su.field_name in field_names and \
-                su.status == 'queued' and \
-                (kaltura_schedule_id is None or su.kaltura_schedule_id == kaltura_schedule_id):
+        if su.field_name in field_names and su.status == 'queued':
+            su.mark_error()
+
+
+def _mark_error_for_kaltura_schedule(schedule_updates, kaltura_schedule_id):
+    for su in schedule_updates:
+        if su.kaltura_schedule_id == kaltura_schedule_id and su.status == 'queued':
             su.mark_error()
