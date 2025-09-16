@@ -86,7 +86,7 @@
             :section-id="`${course.sectionId}`"
             :instructor-uids="['admin']"
             label="as admin"
-            :initial-value="course.hasOptedOut"
+            :initial-value="course.hasOptedIn"
             :on-toggle="onToggle"
           />
         </v-col>

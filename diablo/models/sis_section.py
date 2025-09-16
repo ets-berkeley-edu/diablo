@@ -342,6 +342,7 @@ class SisSection(db.Model):
                 AND s.is_principal_listing IS TRUE
                 AND o.section_id = s.section_id
                 AND o.term_id = :term_id
+                AND o.instructor_uid != 'admin'
             JOIN instructors i ON i.uid = s.instructor_uid
             JOIN sis_sections s2 ON
                 s.term_id = s2.term_id

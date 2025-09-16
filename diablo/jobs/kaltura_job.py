@@ -72,7 +72,8 @@ def _schedule_new_courses(term_id):
         if not course['hasOptedIn']:
             continue
         authorized_instructors = list(filter(lambda i: i['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES, course['instructors']))
-        if not len(authorized_instructors):
+        admin_opt_in = next((o for o in course['optIns'] if o['instructorUid'] == 'admin'), None)
+        if not len(authorized_instructors) and not admin_opt_in:
             continue
         schedule_recordings(course, remove_blackout_conflicts=True)
         QueuedEmail.notify_instructors_class_scheduled(course)
@@ -273,8 +274,8 @@ def _handle_instructor_updates(
 ):
     instructors = [i for i in course['instructors'] if i['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES and not i['deletedAt']]
 
-    # Courses with no remaining instructors should be simply unscheduled.
-    if not len(instructors):
+    # Courses with no remaining instructors should be simply unscheduled, unless admin opted-in.
+    if not len(instructors) and not course['hasOptedIn']:
         _handle_meeting_removed(kaltura, course, scheduled, schedule_updates)
         return
 
