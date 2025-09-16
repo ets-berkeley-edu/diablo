@@ -45,7 +45,7 @@ export function getCoursesReport(termId: string) {
 
 export function updateCollaborators(
     collaboratorUids: string[],
-    sectionId: string,
+    sectionId: number | string,
     termId: string
 ) {
   return axios

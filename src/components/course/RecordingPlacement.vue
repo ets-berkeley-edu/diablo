@@ -5,13 +5,22 @@
     justify="start"
     role="region"
   >
-    <v-col cols="12" class="pa-4 my-2" :class="{'bg-surface-light rounded': isEditing}">
-      <h3 id="publish-type-header">
-        <label v-if="isEditing" for="select-publish-type">Recording Placement</label>
-        <span v-if="!isEditing">Recording Placement</span>
-      </h3>
-      <div v-if="!isEditing" id="publish-type-name" class="pl-4 pt-2">
-        {{ labels[course.publishType] }}
+    <v-col cols="12" class="px-4" :class="{'bg-surface-light rounded': isEditing}">
+      <div v-if="!isEditing">
+        <h3 id="publish-type-header">Recording Placement</h3>
+        <div class="pl-4">
+          <div id="publish-type-name" class="mt-2">
+            {{ labels[course.publishType] }}
+          </div>
+          <v-btn
+            id="btn-publish-type-edit"
+            aria-label="Edit Recording Placement"
+            class="elevation-1 mt-2"
+            text="Edit"
+            variant="outlined"
+            @click="toggleIsEditing"
+          />
+        </div>
       </div>
       <div
         v-if="isEditing"
@@ -21,6 +30,9 @@
         role="radiogroup"
         tabindex="0"
       >
+        <h3 id="publish-type-header">
+          <label for="select-publish-type">Recording Placement</label>
+        </h3>
         <div
           v-for="(publishTypeOption, index) in publishTypeOptions"
           :key="publishTypeOption"
@@ -148,15 +160,6 @@
           </div>
         </div>
       </div>
-      <v-btn
-        v-if="!isEditing"
-        id="btn-publish-type-edit"
-        aria-label="Edit Recording Placement"
-        class="mt-3"
-        @click="toggleIsEditing"
-      >
-        Edit
-      </v-btn>
       <div v-if="isEditing" class="pt-4">
         <ProgressButton
           id="btn-publish-type-save"
