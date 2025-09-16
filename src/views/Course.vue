@@ -6,7 +6,7 @@
       :icon="mdiBookMultipleOutline"
       :text="config.currentTermId === course.termId ? courseDisplayTitle : `${courseDisplayTitle} (${getTermName(course.termId)})`"
     />
-    <div class="pl-16 pb-4">
+    <div class="pl-16">
       <span v-if="course.deletedAt" class="text-subtitle-1">
         <span class="font-weight-bold text-error">UC Berkeley has canceled this section.</span>
       </span>
@@ -15,7 +15,7 @@
         Section ID: <span id="section-id">{{ course.sectionId }}</span>
       </div>
     </div>
-    <div v-if="isCurrentTerm && !!capability && hasValidMeetingTimes" class="pa-4">
+    <div v-if="isCurrentTerm && !!capability && hasValidMeetingTimes" class="px-4">
       <div aria-live="polite">
         <div v-if="course.scheduled">
           <v-alert
@@ -35,16 +35,16 @@
             </span>
           </div>
         </div>
+        <!--
+        --------------------------------------------------------------
         <div v-if="!course.deletedAt && !course.scheduled">
           <v-col class="font-weight-bold mb-1">
+            TODO: How will this messaging change in our new opt-in model? This logic is based on the obsolete 'hasOptedOut' value.
+
             <span v-if="!course.scheduled && course.instructors.length" id="notice-opt-out" class="text-error">
               {{ currentUser.isAdmin ? 'The' : 'Your' }} course is not scheduled for Course Capture because one or more
               instructors have opted out. To schedule recordings, please have all instructors remove their opt-out status.
             </span>
-            <!--
-            --------------------------------------------------------------
-            TODO: How will this messaging change in our new opt-in model? This logic is based on the obsolete 'hasOptedOut' value.
-
             <span v-if="course.hasOptedOut && !course.scheduled && !course.instructors.length" id="notice-opt-out" class="text-error">
               {{ currentUser.isAdmin ? 'The' : 'Your' }} course is not scheduled for Course Capture due to an admin override.
               Please contact
@@ -73,7 +73,6 @@
               </a>
               if you have any questions.
             </span>
-            -->
             <span v-if="!course.scheduled && course.instructors.length" id="notice-eligible-not-scheduled" class="text-success">
               This course is eligible for scheduling, but has not yet been scheduled. Instructors will be notified when
               scheduling has taken place.
@@ -83,6 +82,7 @@
             </span>
           </v-col>
         </div>
+        -->
       </div>
       <div v-if="currentUser.isAdmin">
         <v-col>
@@ -105,14 +105,14 @@
         xl="9"
       >
         <v-card>
-          <v-container v-if="isCurrentTerm && !!capability && hasValidMeetingTimes" class="pt-6">
+          <v-container v-if="isCurrentTerm && !!capability && hasValidMeetingTimes" class="pt-5">
             <v-row
               align="center"
               aria-label="Instructors"
               justify="start"
               role="region"
             >
-              <v-col id="instructors-list" class="px-4 mb-2" cols="12">
+              <v-col id="instructors-list" class="px-4" cols="12">
                 <h3 id="instructors-header">
                   <span v-if="course.scheduled">
                     <span :aria-hidden="true">Instructor(s)</span><span class="sr-only">Instructors</span> listed will have editing and publishing access:
@@ -121,38 +121,40 @@
                     <span :aria-hidden="true">Instructor(s):</span><span class="sr-only">Instructors</span>
                   </span>
                 </h3>
-                <div v-if="isEmpty(course.instructors)" class="pl-4 pt-2 text-medium-emphasis">
-                  No instructors
-                </div>
-                <div
-                  v-for="instructor in course.instructors"
-                  :id="`instructor-${instructor.uid}`"
-                  :key="`instructor-${instructor.uid}`"
-                  class="pl-4 pt-2"
-                >
-                  {{ instructor.name }} ({{ instructor.uid }})
+                <div class="pl-4">
+                  <div v-if="isEmpty(course.instructors)" class="mt-1 text-medium-emphasis">
+                    No instructors
+                  </div>
+                  <div
+                    v-for="instructor in course.instructors"
+                    :id="`instructor-${instructor.uid}`"
+                    :key="`instructor-${instructor.uid}`"
+                    class="mt-1"
+                  >
+                    {{ instructor.name }} ({{ instructor.uid }})
+                  </div>
                 </div>
               </v-col>
             </v-row>
             <Collaborators
-              v-if="course.scheduled"
+              v-if="!!capability"
               :course="course"
               :set-model="collaborators => course.collaborators = collaborators"
             />
             <RecordingType
-              v-if="course.scheduled"
+              v-if="!!capability"
               :course="course"
               :labels="displayLabels"
               :set-model="setRecordingType"
             />
             <RecordingPlacement
-              v-if="course.scheduled"
+              v-if="!!capability"
               :course="course"
               :labels="displayLabels"
               :set-model="setRecordingPlacement"
             />
             <v-row v-if="!currentUser.isAdmin && get(course, 'publishType', '') === 'kaltura_my_media'">
-              <v-col class="pa-4 my-2">
+              <v-col class="px-4">
                 Based on the selected Recording Placement, please review the following KB articles:
                 <ul>
                   <li>
@@ -221,7 +223,9 @@
                 </ul>
               </v-col>
             </v-row>
-            <ScheduledCourse v-if="currentUser.isAdmin" :course="course" />
+            <div class="my-3">
+              <ScheduledCourse v-if="currentUser.isAdmin" :course="course" />
+            </div>
           </v-container>
           <v-container v-if="isCurrentTerm && !capability" class="pt-6">
             <v-row>

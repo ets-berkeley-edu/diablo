@@ -5,24 +5,24 @@
     justify="start"
     role="region"
   >
-    <v-col cols="12" class="pa-4 my-2" :class="{'bg-surface-light rounded': isEditing}">
+    <v-col cols="12" class="pa-4" :class="{'bg-surface-light rounded': isEditing}">
       <h3 id="recording-type-header">
         <label v-if="isEditing && recordingTypeEditable" for="select-recording-type">Recording Type</label>
         <span v-if="!(isEditing && recordingTypeEditable)">Recording Type</span>
       </h3>
-      <div v-if="!isEditing">
-        <div id="recording-type-name" class="pl-4 pt-2">
+      <div v-if="!isEditing" class="mt-2 pl-4">
+        <div id="recording-type-name">
           {{ labels[course.recordingType] }}
         </div>
         <v-btn
           v-if="!isEditing && recordingTypeEditable"
           id="btn-recording-type-edit"
           aria-label="Edit Recording Type"
-          class="mt-3"
+          class="elevation-1 mt-2"
+          text="Edit"
+          variant="outlined"
           @click="toggleIsEditing"
-        >
-          Edit
-        </v-btn>
+        />
       </div>
       <div
         v-if="isEditing && recordingTypeEditable"
