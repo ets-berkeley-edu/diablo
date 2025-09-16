@@ -19,8 +19,6 @@ import {useContextStore} from '@/stores/context'
 export const ANONYMOUS_USER: DiabloUser = {
   courses: [],
   emailAddress: null,
-  hasOptedOutForAllTerms: false,
-  hasOptedOutForTerm: false,
   id: null,
   isActive: false,
   isAdmin: false,

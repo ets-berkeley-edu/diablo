@@ -54,7 +54,7 @@
           <div>
             <Date :date="meeting.startDate" /> to <Date :date="meeting.endDate" />
             <div
-              v-if="course.scheduled && !course.hasOptedOut && meeting.recordingEndDate && meeting.endDate !== meeting.recordingEndDate"
+              v-if="course.scheduled && meeting.recordingEndDate && meeting.endDate !== meeting.recordingEndDate"
               class="font-size-14 text-medium-emphasis"
             >
               <div v-if="course.termId === config.currentTermId">

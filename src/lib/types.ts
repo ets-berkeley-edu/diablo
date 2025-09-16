@@ -28,7 +28,6 @@ export interface Instructor {
   deletedAt: string | null,
   deptCode: string,
   email: string,
-  hasOptedOut: boolean,
   name: string,
   roleCode: string,
   uid: string
@@ -151,14 +150,12 @@ export interface CourseSortable extends Course {
 }
 
 export interface DiabloUser {
+  id: string | null,
   courses: Course[],
   deptCode?: string,
   email?: string,
   emailAddress: string | null,
   firstName?: string,
-  hasOptedOutForAllTerms: boolean,
-  hasOptedOutForTerm: boolean,
-  id: string | null,
   isActive: boolean,
   isAdmin: boolean,
   isAnonymous: boolean,
