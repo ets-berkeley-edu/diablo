@@ -37,7 +37,7 @@ const props = defineProps({
     type: Boolean
   },
   initialValue: {
-    required: true,
+    required: false,
     type: Boolean
   },
   instructorUids: {

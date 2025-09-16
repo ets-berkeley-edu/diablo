@@ -27,7 +27,6 @@ from flask_login import UserMixin
 
 from diablo.merged.calnet import get_calnet_user_for_uid
 from diablo.models.admin_user import AdminUser
-from diablo.models.opt_out import OptOut
 from diablo.models.sis_section import SisSection
 
 
@@ -94,9 +93,7 @@ class User(UserMixin):
             )
         return {
             **self.user,
-            **{
-                'courses': _load_courses() if include_courses else [],
-            },
+            'courses': _load_courses() if include_courses else [],
         }
 
     @classmethod
@@ -107,28 +104,16 @@ class User(UserMixin):
         is_teaching = not expired and SisSection.is_teaching(term_id=app.config['CURRENT_TERM_ID'], uid=uid)
         is_active = is_teaching or is_admin
 
-        has_opted_out_for_term = False
-        has_opted_out_for_all_terms = False
-        for opt_out in OptOut.get_blanket_opt_outs_for_uid(uid):
-            if opt_out.term_id == app.config['CURRENT_TERM_ID']:
-                has_opted_out_for_term = True
-            elif opt_out.term_id is None:
-                has_opted_out_for_all_terms = True
-
         return {
+            'id': uid,
+            'emailAddress': calnet_profile.get('email'),
+            'isActive': is_active,
+            'isAdmin': is_admin,
+            'isAnonymous': not is_active,
+            'isAuthenticated': is_active,
+            'isExpired': expired,
+            'isTeaching': is_teaching,
+            'name': calnet_profile.get('name') or f'UID {uid}',
+            'uid': uid,
             **calnet_profile,
-            **{
-                'id': uid,
-                'emailAddress': calnet_profile.get('email'),
-                'hasOptedOutForAllTerms': has_opted_out_for_all_terms,
-                'hasOptedOutForTerm': has_opted_out_for_term,
-                'isActive': is_active,
-                'isAdmin': is_admin,
-                'isAnonymous': not is_active,
-                'isAuthenticated': is_active,
-                'isExpired': expired,
-                'isTeaching': is_teaching,
-                'name': calnet_profile.get('name') or f'UID {uid}',
-                'uid': uid,
-            },
         }
