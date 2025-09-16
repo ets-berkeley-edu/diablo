@@ -33,7 +33,6 @@ from diablo.models.course_preference import CoursePreference
 from diablo.models.cross_listing import CrossListing
 from diablo.models.note import Note
 from diablo.models.opt_in import OptIn
-from diablo.models.opt_out import OptOut
 from diablo.models.room import Room
 from diablo.models.schedule_update import ScheduleUpdate
 from diablo.models.scheduled import Scheduled
@@ -590,18 +589,6 @@ def _to_api_json(  # noqa: C901, PLR0912, PLR0915
     all_course_preferences = CoursePreference.get_all_course_preferences(term_id=term_id)
     course_preferences_by_section_id = dict((p.section_id, p) for p in all_course_preferences)
 
-    opt_outs_by_section_id = {}
-    blanket_opt_outs_by_instructor_uid = {}
-    for o in OptOut.get_all_opt_outs(term_id=term_id):
-        if o.section_id:
-            if o.section_id not in opt_outs_by_section_id:
-                opt_outs_by_section_id[o.section_id] = []
-            opt_outs_by_section_id[o.section_id].append(o)
-        else:
-            if o.instructor_uid not in blanket_opt_outs_by_instructor_uid:
-                blanket_opt_outs_by_instructor_uid[o.instructor_uid] = []
-            blanket_opt_outs_by_instructor_uid[o.instructor_uid].append(o)
-
     opt_ins_by_section_id = {}
     for o in OptIn.get_all_opt_ins(term_id=term_id):
         if o.section_id not in opt_ins_by_section_id:
@@ -646,7 +633,6 @@ def _to_api_json(  # noqa: C901, PLR0912, PLR0915
             # Construct course
             scheduled = scheduled_by_section_id.get(section_id)
             opt_ins = opt_ins_by_section_id.get(section_id) or []
-            opt_outs = opt_outs_by_section_id.get(section_id) or []
 
             preferences = course_preferences_by_section_id.get(section_id)
             if preferences:
@@ -687,7 +673,6 @@ def _to_api_json(  # noqa: C901, PLR0912, PLR0915
                 },
                 'nonstandardMeetingDates': False,
                 'optIns': [],
-                'optOuts': [],
                 'publishType': preferences.get('publishType'),
                 'publishTypeName': preferences.get('publishTypeName'),
                 'recordingType': preferences.get('recordingType'),
@@ -723,23 +708,10 @@ def _to_api_json(  # noqa: C901, PLR0912, PLR0915
                 if not instructor_json['deletedAt'] or course['deletedAt']:
                     course['instructors'].append(instructor_json)
 
-        blanket_opt_outs = []
         decorated_course_instructors = []
         for i in course['instructors']:
             instructor_has_opted_in = False
-            instructor_has_opted_out = False
             if i['roleCode'] != 'APRX':
-
-                blanket_opt_outs_for_instructor = blanket_opt_outs_by_instructor_uid.get(i['uid'])
-                if blanket_opt_outs_for_instructor:
-                    instructor_has_opted_out = True
-                    blanket_opt_outs += blanket_opt_outs_for_instructor
-                else:
-                    instructor_opt_out = next((o for o in opt_outs if o.instructor_uid == i['uid']), None)
-                    if instructor_opt_out:
-                        course['optOuts'].append(instructor_opt_out.to_api_json())
-                        instructor_has_opted_out = True
-
                 instructor_opt_in = next((o for o in opt_ins if o.instructor_uid == i['uid']), None)
                 if instructor_opt_in:
                     course['optIns'].append(instructor_opt_in.to_api_json())
@@ -747,10 +719,7 @@ def _to_api_json(  # noqa: C901, PLR0912, PLR0915
 
             decorated_course_instructors.append({
                 **i,
-                **{
-                    'hasOptedOut': instructor_has_opted_out,
-                    'hasOptedIn': instructor_has_opted_in,
-                },
+                'hasOptedIn': instructor_has_opted_in,
             })
 
         if include_administrative_proxies:
@@ -758,19 +727,9 @@ def _to_api_json(  # noqa: C901, PLR0912, PLR0915
         else:
             course['instructors'] = [i for i in decorated_course_instructors if i['roleCode'] != 'APRX']
 
-        admin_opt_out = next((o for o in opt_outs if o.instructor_uid == 'admin'), None)
-        if admin_opt_out:
-            course['optOuts'].append(admin_opt_out.to_api_json())
-
         admin_opt_in = next((o for o in opt_ins if o.instructor_uid == 'admin'), None)
         if admin_opt_in:
             course['optIns'].append(admin_opt_in.to_api_json())
-
-        if blanket_opt_outs:
-            course['hasBlanketOptedOut'] = True
-            course['optOuts'] += [o.to_api_json() for o in blanket_opt_outs]
-        if len(course['optOuts']):
-            course['hasOptedOut'] = True
 
         meeting = _to_meeting_json(row)
         eligible_meetings = course['meetings']['eligible']
