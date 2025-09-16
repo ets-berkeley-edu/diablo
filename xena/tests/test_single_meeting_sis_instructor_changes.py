@@ -41,10 +41,11 @@ class TestCourseInstructorChanges:
     SCENARIO.
 
     - Section has one meeting, one instructor, and a course site
-    - Recordings are scheduled
+    - Instructor opts in, and recordings are scheduled
     - Instructor adds operator and auto-publish, adding site
     - Instructor is replaced by new Instructor
-    - Series updated - instructor replaced, no other changes
+    - Recordings are unscheduled
+    - New instructor opts in, recordings scheduled with default settings
     """
 
     new_instructor_test_data = util.get_test_script_course('test_single_meeting_sis_changes')
@@ -77,8 +78,12 @@ class TestCourseInstructorChanges:
         self.kaltura_page.reset_test_data(self.section)
 
         util.reset_section_test_data(self.section)
+        util.reset_user_preferences(self.old_instructor)
+        util.reset_user_preferences(self.new_instructor)
 
         util.reset_sent_email_test_data(self.section)
+        util.reset_sent_email_test_data(section=None, instructor=self.old_instructor)
+        util.reset_sent_email_test_data(section=None, instructor=self.new_instructor)
 
     def test_set_old_instructor_first(self):
         util.change_course_instructor(self.section, self.new_instructor, self.old_instructor)
@@ -89,14 +94,22 @@ class TestCourseInstructorChanges:
 
     # COURSE SCHEDULED WITH INSTRUCTOR 1, WHO MODIFIES RECORDING SETTINGS
 
-    def test_schedule_course_instr_1(self):
-        self.jobs_page.load_page()
-        self.jobs_page.run_schedule_update_job_sequence()
+    def test_old_instructor_opt_in(self):
+        self.ouija_page.load_page()
+        self.ouija_page.log_out()
+        self.login_page.dev_auth(self.old_instructor.uid)
+        # TODO - opt in
+
+    def test_old_instructor_recordings_scheduled(self):
+        self.courses_page.log_out()
+        self.login_page.dev_auth()
+        self.ouija_page.click_jobs_link()
+        self.jobs_page.run_settings_update_job_sequence()
         util.get_kaltura_id(self.recording_schedule)
         self.recording_schedule.recording_placement = RecordingPlacement.PLACE_IN_MY_MEDIA
         self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
 
-    def test_modify_recording_settings(self):
+    def test_old_instructor_modify_recording_settings(self):
         self.jobs_page.log_out()
         self.login_page.dev_auth(self.old_instructor.uid)
         self.ouija_page.click_course_page_link(self.section)
@@ -111,27 +124,67 @@ class TestCourseInstructorChanges:
         self.course_page.save_recording_type_edits()
         self.recording_schedule.recording_type = RecordingType.VIDEO_WITH_OPERATOR
 
-    def test_update_scheduled_recordings(self):
+    def test_old_instructor_update_scheduled_recordings(self):
         self.course_page.log_out()
         self.login_page.dev_auth()
         self.ouija_page.click_jobs_link()
         self.jobs_page.run_settings_update_job_sequence()
+
+    def test_series_title_and_desc(self):
+        self.kaltura_page.load_event_edit_page(self.recording_schedule.series_id)
+        self.kaltura_page.verify_title_and_desc(self.section, self.meeting)
+
+    def test_series_collab(self):
+        self.kaltura_page.verify_collaborators(self.section)
+
+    def test_series_schedule(self):
+        self.kaltura_page.verify_schedule(self.section, self.meeting)
+
+    def test_series_publish_status(self):
+        self.kaltura_page.wait_for_publish_category_el()
+        self.kaltura_page.verify_publish_status(self.recording_schedule)
+
+    def test_update_kaltura_course_site(self):
+        self.kaltura_page.verify_site_categories([self.site])
 
     # INSTRUCTOR 1 REPLACED BY INSTRUCTOR 2
 
     def test_change_to_new_instructor(self):
         util.change_course_instructor(self.section, self.old_instructor, self.new_instructor)
 
-    def test_add_new_instructor_to_site(self):
-        self.canvas_page.add_user_to_site(self.site, self.new_instructor, 'TA')
+    def test_recordings_unscheduled(self):
+        self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
+        assert not util.get_kaltura_id(self.recording_schedule)
+
+    def test_old_instructor_removed_email(self):
+        assert util.get_sent_email_count(EmailTemplateType.INSTRUCTORS_REMOVED, self.section, self.old_instructor) == 1
+
+    def test_new_instructor_class_eligible_email(self):
+        assert util.get_sent_email_count(EmailTemplateType.NEW_CLASS_ELIGIBLE, section=None,
+                                         instructor=self.new_instructor) == 1
+        assert util.get_sent_email_count(EmailTemplateType.OPTED_OUT, self.section, self.new_instructor) == 1
+
+    def test_new_instructor_opts_in(self):
+        self.jobs_page.log_out()
+        self.login_page.dev_auth(self.new_instructor.uid)
+        self.course_page.load_page(self.section)
+        # TODO opt in
 
     # UPDATE KALTURA SERIES
 
     def test_run_instr_change_jobs(self):
-        self.jobs_page.load_page()
-        self.jobs_page.run_schedule_update_job_sequence()
+        self.course_page.log_out()
+        self.login_page.dev_auth()
+        self.ouija_page.click_jobs_link()
+        self.jobs_page.run_settings_update_job_sequence()
+        assert util.get_kaltura_id(self.recording_schedule)
+        self.recording_schedule.recording_placement = RecordingPlacement.PLACE_IN_MY_MEDIA
+        self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
 
-    # VERIFY SERIES INSTRUCTOR UPDATED BUT SETTINGS UNCHANGED
+    def test_new_instructor_class_scheduled_email(self):
+        assert util.get_sent_email_count(EmailTemplateType.CLASS_SCHEDULED, self.section, self.new_instructor) == 1
+
+    # VERIFY SERIES INSTRUCTOR UPDATED AND SETTINGS REVERTED TO DEFAULT
 
     def test_room_series(self):
         self.rooms_page.load_page()
@@ -150,32 +203,23 @@ class TestCourseInstructorChanges:
         self.course_page.load_page(self.section)
         self.course_page.verify_recording_type(self.recording_schedule)
         self.course_page.verify_recording_placement(self.recording_schedule)
-        assert self.course_page.visible_course_site_ids() == [self.site.site_id]
+        assert self.course_page.visible_course_site_ids() == []
 
-    def test_update_series_title_and_desc(self):
+    def test_rescheduled_series_title_and_desc(self):
         self.course_page.click_kaltura_series_link(self.recording_schedule)
         self.kaltura_page.verify_title_and_desc(self.section, self.meeting)
 
-    def test_update_series_collab(self):
+    def test_rescheduled_series_collab(self):
         self.kaltura_page.verify_collaborators(self.section)
 
-    def test_kaltura_publish_type_not_updated(self):
-        self.kaltura_page.verify_site_categories([self.site])
-
-    # VERIFY EMAILS
-
-    def test_old_instructor_removed_email(self):
-        self.kaltura_page.close_window_and_switch()
-        assert util.get_sent_email_count(EmailTemplateType.INSTRUCTORS_REMOVED, self.section, self.old_instructor) == 1
-
-    def test_new_instructor_added_emails(self):
-        assert util.get_sent_email_count(EmailTemplateType.NEW_CLASS_ELIGIBLE, section=None,
-                                         instructor=self.new_instructor) == 1
-        assert util.get_sent_email_count(EmailTemplateType.OPTED_OUT, self.section, self.new_instructor) == 1
+    def test_rescheduled_series_publish_type(self):
+        self.kaltura_page.verify_publish_status(self.recording_schedule)
+        self.kaltura_page.verify_site_categories([])
 
     # HISTORY
 
     def test_history_rec_placement(self):
+        self.kaltura_page.close_window_and_switch()
         self.course_page.verify_history_row(field='publish_type',
                                             old_value=RecordingPlacement.PLACE_IN_MY_MEDIA.value['db'],
                                             new_value=RecordingPlacement.PUBLISH_AUTOMATICALLY.value['db'],
@@ -206,3 +250,28 @@ class TestCourseInstructorChanges:
                                             requestor=None,
                                             status='succeeded',
                                             published=True)
+
+    def test_history_rec_placement_revert(self):
+        self.course_page.verify_history_row(field='publish_type',
+                                            old_value=RecordingPlacement.PUBLISH_AUTOMATICALLY.value['db'],
+                                            new_value=RecordingPlacement.PLACE_IN_MY_MEDIA.value['db'],
+                                            requestor=self.new_instructor,
+                                            status='succeeded',
+                                            published=True)
+
+    def test_history_rec_type_revert(self):
+        self.course_page.verify_history_row(field='recording_type',
+                                            old_value=RecordingType.VIDEO_WITH_OPERATOR.value['db'],
+                                            new_value=RecordingType.VIDEO_SANS_OPERATOR.value['db'],
+                                            requestor=self.new_instructor,
+                                            status='succeeded',
+                                            published=True)
+
+    def test_history_canvas_site_revert(self):
+        self.course_page.verify_history_row(field='canvas_site_ids',
+                                            old_value=CoursePage.expected_site_ids_converter([self.site]),
+                                            new_value='—',
+                                            requestor=self.new_instructor,
+                                            status='succeeded',
+                                            published=True)
+

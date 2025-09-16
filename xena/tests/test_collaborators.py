@@ -69,13 +69,23 @@ class TestCollaborators0:
         self.kaltura_page.reset_test_data(self.section)
 
         util.reset_section_test_data(self.section)
+        util.reset_user_preferences(self.instructor)
+        util.reset_user_preferences(self.proxy)
 
         util.reset_sent_email_test_data(self.section)
         util.reset_sent_email_test_data(section=None, instructor=self.instructor)
 
-    def test_semester_start(self):
-        self.jobs_page.load_page()
-        self.jobs_page.run_schedule_update_job_sequence()
+    def test_instructor_opt_in(self):
+        self.ouija_page.load_page()
+        self.ouija_page.log_out()
+        self.login_page.dev_auth(self.instructor.uid)
+        # TODO - instructor opts in
+
+    def test_schedule_recordings(self):
+        self.course_page.log_out()
+        self.login_page.dev_auth()
+        self.ouija_page.click_jobs_link()
+        self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
         assert util.get_kaltura_id(self.recording_schedule)
 
     def test_kaltura_proxy_collaborator(self):
@@ -87,9 +97,15 @@ class TestCollaborators0:
         assert self.kaltura_page.collaborator_perm(self.instructor) == 'Co-Editor, Co-Publisher'
         assert self.kaltura_page.collaborator_perm(self.proxy) == 'Co-Editor, Co-Publisher'
 
-    def test_email_new_course_scheduled(self):
+    def test_email_new_class_eligible(self):
         assert util.get_sent_email_count(EmailTemplateType.NEW_CLASS_ELIGIBLE, section=None,
                                          instructor=self.instructor) == 1
+        assert util.get_sent_email_count(EmailTemplateType.NEW_CLASS_ELIGIBLE, section=None,
+                                         instructor=self.proxy) == 0
+
+    def test_email_class_scheduled(self):
+        assert util.get_sent_email_count(EmailTemplateType.CLASS_SCHEDULED, self.section, self.instructor) == 1
+        assert util.get_sent_email_count(EmailTemplateType.CLASS_SCHEDULED, self.section, self.proxy) == 0
 
     def test_history_new_course_scheduled(self):
         self.course_page.load_page(self.section)
@@ -134,6 +150,8 @@ class TestCollaborators0:
     def test_email_new_collaborator(self):
         assert util.get_sent_email_count(EmailTemplateType.CHANGES_CONFIRMED, self.section,
                                          self.instructor) == 1
+        assert util.get_sent_email_count(EmailTemplateType.CHANGES_CONFIRMED, self.section,
+                                         self.proxy) == 0
 
     def test_history_new_collaborator(self):
         self.course_page.load_page(self.section)
@@ -176,9 +194,16 @@ class TestCollaborators0:
     def test_room_restored(self):
         util.change_course_room(self.section, self.meeting, new_room=self.meeting_room)
 
+    def test_opt_back_in(self):
+        self.course_page.log_out()
+        self.login_page.dev_auth(self.instructor.uid)
+        # TODO - instructor opts in again
+
     def test_run_kaltura_job_room_restored(self):
-        self.jobs_page.load_page()
-        self.jobs_page.run_schedule_update_job_sequence()
+        self.courses_page.log_out()
+        self.login_page.dev_auth()
+        self.ouija_page.click_jobs_link()
+        self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
 
     def test_kaltura_collaborators_restored(self):
         util.get_kaltura_id(self.recording_schedule)
@@ -192,9 +217,11 @@ class TestCollaborators0:
         assert util.get_sent_email_count(EmailTemplateType.NEW_CLASS_ELIGIBLE, section=None,
                                          instructor=self.instructor) == 2
 
+    def test_email_class_scheduled_room_restored(self):
+        assert util.get_sent_email_count(EmailTemplateType.CLASS_SCHEDULED, self.section, self.instructor) == 2
+
     def test_no_email_new_collaborator(self):
-        assert util.get_sent_email_count(EmailTemplateType.CHANGES_CONFIRMED, self.section,
-                                         self.instructor) == 1
+        assert util.get_sent_email_count(EmailTemplateType.CHANGES_CONFIRMED, self.section, self.instructor) == 1
 
 
 @pytest.mark.usefixtures('page_objects')
@@ -229,15 +256,23 @@ class TestCollaborators1:
         self.kaltura_page.reset_test_data(self.section)
         util.reset_section_test_data(self.section)
         util.delete_course_instructor_row(self.section, self.proxy)
+
+        util.reset_user_preferences(self.instructor)
+        util.reset_user_preferences(self.proxy)
         util.reset_sent_email_test_data(self.section)
         util.reset_sent_email_test_data(section=None, instructor=self.instructor)
 
-        self.login_page.load_page()
-        self.login_page.dev_auth()
+    def test_instructor_opt_in(self):
+        self.ouija_page.load_page()
+        self.ouija_page.log_out()
+        self.login_page.dev_auth(self.instructor.uid)
+        # TODO - instructor opts in
 
     def test_update_jobs(self):
+        self.course_page.log_out()
+        self.login_page.dev_auth()
         self.ouija_page.click_jobs_link()
-        self.jobs_page.run_schedule_update_job_sequence()
+        self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
         assert util.get_kaltura_id(self.recording_schedule_0)
         assert util.get_kaltura_id(self.recording_schedule_1)
 
@@ -290,7 +325,7 @@ class TestCollaborators1:
     def test_proxy_added(self):
         util.add_sis_sections_rows(self.section, instructors=[self.proxy])
         self.jobs_page.load_page()
-        self.jobs_page.run_schedule_update_job_sequence()
+        self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
 
     def test_kaltura_new_proxy_meeting_0(self):
         self.kaltura_page.load_event_edit_page(self.recording_schedule_0.series_id)
@@ -386,15 +421,21 @@ class TestCollaborators2:
         self.kaltura_page.log_in_via_calnet(self.calnet_page)
         self.kaltura_page.reset_test_data(self.section)
         util.reset_section_test_data(self.section)
+        util.reset_user_preferences(self.instructor)
+        util.reset_user_preferences(self.proxy_0)
+        util.reset_user_preferences(self.proxy_1)
         util.reset_sent_email_test_data(self.section)
         util.reset_sent_email_test_data(section=None, instructor=self.instructor)
 
+    def test_admin_opts_course_in(self):
         self.login_page.load_page()
         self.login_page.dev_auth()
+        self.course_page.load_page(self.section)
+        # TODO - admin opts course in
 
     def test_run_updates(self):
-        self.ouija_page.click_jobs_link()
-        self.jobs_page.run_schedule_update_job_sequence()
+        self.course_page.click_jobs_link()
+        self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
         util.get_kaltura_id(self.recording_schedule)
 
     def test_kaltura_proxy_collaborator(self):
@@ -447,7 +488,7 @@ class TestCollaborators2:
 
     def test_run_updates_no_proxies(self):
         self.jobs_page.load_page()
-        self.jobs_page.run_schedule_update_job_sequence()
+        self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
 
     def test_kaltura_no_proxy_collaborators(self):
         self.kaltura_page.load_event_edit_page(self.recording_schedule.series_id)

@@ -130,6 +130,10 @@ class JobsPage(DiabloPages):
 
     def run_schedule_update_job_sequence(self):
         self.run_schedule_updates_job()
+        self.run_emails_job()
+
+    def run_schedule_update_and_kaltura_job_sequence(self):
+        self.run_schedule_updates_job()
         self.run_kaltura_job()
         self.run_emails_job()
 

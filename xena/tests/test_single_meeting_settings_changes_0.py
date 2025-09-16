@@ -76,11 +76,17 @@ class TestScheduling0:
         self.kaltura_page.log_in_via_calnet(self.calnet_page)
         self.kaltura_page.reset_test_data(self.section)
 
-        util.reset_section_test_data(self.section, delete_opt_ins=True)
+        util.reset_section_test_data(self.section)
         util.reset_user_preferences(self.instructor)
 
         util.reset_sent_email_test_data(self.section)
         util.reset_sent_email_test_data(section=None, instructor=self.instructor)
+
+    def test_new_class_eligible_email(self):
+        self.jobs_page.load_page()
+        self.jobs_page.run_schedule_update_job_sequence()
+        assert util.get_sent_email_count(EmailTemplateType.NEW_CLASS_ELIGIBLE, section=None,
+                                         instructor=self.instructor) == 1
 
     # CREATE COURSE SITE
 
@@ -88,11 +94,7 @@ class TestScheduling0:
         self.canvas_page.create_site(self.section, self.site)
         self.canvas_page.add_user_to_site(self.site, self.instructor, 'Teacher')
 
-    # TODO - trigger and verify welcome email
-
     # CHECK FILTERS - NOT SCHEDULED
-
-    # TODO - will there be filter for not-invited again?
 
     def test_not_scheduled_filter_all(self):
         self.ouija_page.load_page()
@@ -103,16 +105,24 @@ class TestScheduling0:
     def test_not_scheduled_sched_status(self):
         assert self.ouija_page.visible_course_row_sched_status(self.section) == 'Not Scheduled'
 
-    def test_not_scheduled_filter_opted_out(self):
-        self.ouija_page.filter_for_opted_out()
+    def test_not_scheduled_filter_eligible(self):
+        self.ouija_page.filter_for_eligible()
+        assert self.ouija_page.is_course_in_results(self.section)
+
+    def test_not_scheduled_filter_eligible_unscheduled(self):
+        self.ouija_page.filter_for_eligible_unscheduled()
+        assert self.ouija_page.is_course_in_results(self.section)
+
+    def test_not_scheduled_filter_no_instructors(self):
+        self.ouija_page.filter_for_no_instructors()
+        assert not self.ouija_page.is_course_in_results(self.section)
+
+    def test_not_scheduled_filter_partially_approved(self):
+        self.ouija_page.filter_for_partially_approved()
         assert not self.ouija_page.is_course_in_results(self.section)
 
     def test_not_scheduled_filter_scheduled(self):
         self.ouija_page.filter_for_scheduled()
-        assert not self.ouija_page.is_course_in_results(self.section)
-
-    def test_not_scheduled_filter_no_instructors(self):
-        self.ouija_page.filter_for_no_instructors()
         assert not self.ouija_page.is_course_in_results(self.section)
 
     # VERIFY COURSE HISTORY
@@ -144,6 +154,7 @@ class TestScheduling0:
         assert self.course_page.visible_cross_listing_codes() == listing_codes
 
     def test_course_scheduled_msg(self):
+        # TODO - update expected messaging below:
         assert self.course_page.is_present(CoursePage.SCHEDULED_MSG)
         assert not self.course_page.is_present(CoursePage.SCHEDULING_TO_COME_MSG)
         assert not self.course_page.is_present(CoursePage.UPDATES_QUEUED_MSG)
@@ -208,13 +219,13 @@ class TestScheduling0:
         title = 'Course Capture FAQ | Research, Teaching, & Learning'
         assert self.course_page.external_link_valid(self.course_page.COURSE_CAPTURE_FAQ_LINK, title)
 
-    # RUN SCHEDULE UPDATE JOB
+    # RUN SETTINGS UPDATE JOB
 
     def test_schedule_update(self):
         self.course_page.log_out()
         self.login_page.dev_auth()
         self.jobs_page.click_jobs_link()
-        self.jobs_page.run_schedule_update_job_sequence()
+        self.jobs_page.run_settings_update_job_sequence()
         assert util.get_kaltura_id(self.recording_schedule)
         self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
         self.recording_schedule.recording_placement = RecordingPlacement.PLACE_IN_MY_MEDIA
@@ -230,17 +241,25 @@ class TestScheduling0:
     def test_scheduled_sched_status(self):
         assert self.ouija_page.visible_course_row_sched_status(self.section) == 'Scheduled'
 
-    def test_scheduled_filter_opted_out(self):
-        self.ouija_page.filter_for_opted_out()
+    def test_scheduled_filter_eligible(self):
+        self.ouija_page.filter_for_eligible()
+        assert self.ouija_page.is_course_in_results(self.section)
+
+    def test_scheduled_filter_eligible_unscheduled(self):
+        self.ouija_page.filter_for_eligible_unscheduled()
+        assert not self.ouija_page.is_course_in_results(self.section)
+
+    def test_scheduled_filter_no_instructors(self):
+        self.ouija_page.filter_for_no_instructors()
+        assert not self.ouija_page.is_course_in_results(self.section)
+
+    def test_scheduled_filter_partially_approved(self):
+        self.ouija_page.filter_for_partially_approved()
         assert not self.ouija_page.is_course_in_results(self.section)
 
     def test_scheduled_filter_scheduled(self):
         self.ouija_page.filter_for_scheduled()
         assert self.ouija_page.is_course_in_results(self.section)
-
-    def test_scheduled_filter_no_instructors(self):
-        self.ouija_page.filter_for_no_instructors()
-        assert not self.ouija_page.is_course_in_results(self.section)
 
     # VERIFY SERIES IN DIABLO
 
@@ -283,11 +302,10 @@ class TestScheduling0:
         assert len(self.kaltura_page.publish_category_els()) == 0
         assert not self.kaltura_page.is_publish_category_present(self.site)
 
-    # VERIFY ANNUNCIATION EMAIL
+    # VERIFY CLASS SCHEDULED EMAIL
 
-    def test_receive_annunciation_email(self):
-            assert util.get_sent_email_count(EmailTemplateType.NEW_CLASS_ELIGIBLE, section=None,
-                                             instructor=self.instructor) == 1
+    def test_class_scheduled_email(self):
+            assert util.get_sent_email_count(EmailTemplateType.CLASS_SCHEDULED, self.section, self.instructor) == 1
 
     # INSTRUCTOR LOGS IN
 
@@ -414,8 +432,7 @@ class TestScheduling0:
     # VERIFY EMAILS
 
     def test_update_receive_schedule_conf_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.CHANGES_CONFIRMED, self.section,
-                                         self.instructor) == 1
+        assert util.get_sent_email_count(EmailTemplateType.CHANGES_CONFIRMED, self.section, self.instructor) == 1
 
     def test_update_admin_email_operator_requested(self):
         assert util.get_sent_email_count(EmailTemplateType.ADMIN_OPERATOR_REQUESTED, self.section) == 1
@@ -490,8 +507,7 @@ class TestScheduling0:
     # VERIFY REVERTED PLACEMENT EMAIL
 
     def test_reverted_schedule_conf_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.CHANGES_CONFIRMED, self.section,
-                                         self.instructor) == 2
+        assert util.get_sent_email_count(EmailTemplateType.CHANGES_CONFIRMED, self.section, self.instructor) == 2
 
     # VERIFY COURSE HISTORY
 
