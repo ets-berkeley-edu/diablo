@@ -72,22 +72,32 @@ class TestCourseRoomChanges:
         self.kaltura_page.reset_test_data(self.section)
 
         util.reset_section_test_data(self.section)
+        util.reset_user_preferences(self.instr)
 
         util.reset_sent_email_test_data(self.section)
         util.reset_sent_email_test_data(section=None, instructor=self.instr)
 
     # COURSE SCHEDULED, INSTRUCTOR SELECTS VIDEO OPERATOR
 
+    def test_instructor_opts_in(self):
+        self.ouija_page.load_page()
+        self.ouija_page.log_out()
+        self.login_page.dev_auth(self.instr.uid)
+        # TODO - opt in
+
     def test_schedule_recordings(self):
-        self.jobs_page.load_page()
-        self.jobs_page.run_schedule_update_job_sequence()
+        self.courses_page.log_out()
+        self.login_page.dev_auth()
+        self.ouija_page.click_jobs_link()
+        self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
         assert util.get_kaltura_id(self.recording_schedule)
         self.recording_schedule.recording_placement = RecordingPlacement.PLACE_IN_MY_MEDIA
         self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
 
-    def test_welcome_email(self):
+    def test_scheduling_email(self):
         assert util.get_sent_email_count(EmailTemplateType.NEW_CLASS_ELIGIBLE, section=None,
                                          instructor=self.instr) == 1
+        assert util.get_sent_email_count(EmailTemplateType.CLASS_SCHEDULED, self.section, self.instr) == 1
 
     def test_modify_recording_settings(self):
         self.ouija_page.load_page()
@@ -118,7 +128,7 @@ class TestCourseRoomChanges:
         util.set_meeting_location(self.section, self.meeting)
 
     def test_new_eligible_room_run_updates(self):
-        self.jobs_page.run_schedule_update_job_sequence()
+        self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
         self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
 
     def test_new_eligible_room_email(self):
@@ -168,7 +178,7 @@ class TestCourseRoomChanges:
 
     def test_update_jobs_ineligible_room(self):
         self.jobs_page.load_page()
-        self.jobs_page.run_schedule_update_job_sequence()
+        self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
 
     def test_room_ineligible_email(self):
         assert util.get_sent_email_count(EmailTemplateType.ROOM_CHANGE_NO_LONGER_ELIGIBLE, self.section, self.instr) == 1
@@ -190,16 +200,24 @@ class TestCourseRoomChanges:
         self.ouija_page.filter_for_all()
         assert self.ouija_page.is_course_in_results(self.section)
 
-    def test_ineligible_room_filter_scheduled(self):
-        self.ouija_page.filter_for_scheduled()
+    def test_ineligible_room_filter_eligible(self):
+        self.ouija_page.filter_for_eligible()
         assert not self.ouija_page.is_course_in_results(self.section)
 
-    def test_ineligible_room_filter_opted_out(self):
-        self.ouija_page.filter_for_opted_out()
+    def test_ineligible_room_filter_eligible_unscheduled(self):
+        self.ouija_page.filter_for_eligible_unscheduled()
         assert not self.ouija_page.is_course_in_results(self.section)
 
     def test_ineligible_room_filter_no_instructors(self):
         self.ouija_page.filter_for_no_instructors()
+        assert not self.ouija_page.is_course_in_results(self.section)
+
+    def test_ineligible_room_filter_partially_approved(self):
+        self.ouija_page.filter_for_partially_approved()
+        assert not self.ouija_page.is_course_in_results(self.section)
+
+    def test_ineligible_room_filter_scheduled(self):
+        self.ouija_page.filter_for_scheduled()
         assert not self.ouija_page.is_course_in_results(self.section)
 
     # BACK TO ELIGIBLE ROOM, SETTINGS REVERT TO DEFAULT
@@ -209,16 +227,26 @@ class TestCourseRoomChanges:
 
     def test_run_updated_jobs_eligible_room_again(self):
         self.jobs_page.load_page()
-        self.jobs_page.run_schedule_update_job_sequence()
+        self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
+        assert not util.get_kaltura_id(self.recording_schedule)
 
     def test_eligible_room_again_email(self):
         assert util.get_sent_email_count(EmailTemplateType.NEW_CLASS_ELIGIBLE, section=None,
                                          instructor=self.instr) == 2
 
+    def test_eligible_room_again_opt_in_again(self):
+        self.course_page.load_page(self.section)
+        # TODO - admin opts course in again
+
     def test_eligible_room_again_reschedule_series(self):
+        self.course_page.click_jobs_link()
+        self.jobs_page.run_settings_update_job_sequence()
         assert util.get_kaltura_id(self.recording_schedule)
         self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
         self.recording_schedule.recording_placement = RecordingPlacement.PLACE_IN_MY_MEDIA
+
+    def test_eligible_room_again_class_scheduled_email(self):
+        assert util.get_sent_email_count(EmailTemplateType.CLASS_SCHEDULED, self.section, self.instr) == 2
 
     def test_eligible_room_again_series(self):
         self.rooms_page.load_page()
@@ -257,7 +285,7 @@ class TestCourseRoomChanges:
 
     def test_update_jobs_null_room(self):
         self.jobs_page.load_page()
-        self.jobs_page.run_schedule_update_job_sequence()
+        self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
 
     def test_null_room_email(self):
         assert util.get_sent_email_count(EmailTemplateType.ROOM_CHANGE_NO_LONGER_ELIGIBLE, self.section,
@@ -280,10 +308,6 @@ class TestCourseRoomChanges:
         self.ouija_page.filter_for_scheduled()
         assert not self.ouija_page.is_course_in_results(self.section)
 
-    def test_null_room_filter_opted_out(self):
-        self.ouija_page.filter_for_opted_out()
-        assert not self.ouija_page.is_course_in_results(self.section)
-
     def test_null_room_filter_no_instructors(self):
         self.ouija_page.filter_for_no_instructors()
         assert not self.ouija_page.is_course_in_results(self.section)
@@ -293,6 +317,9 @@ class TestCourseRoomChanges:
     def test_welcome_email_ttl(self):
         assert util.get_sent_email_count(EmailTemplateType.NEW_CLASS_ELIGIBLE, section=None,
                                          instructor=self.instr) == 2
+
+    def test_class_scheduled_email_ttl(self):
+        assert util.get_sent_email_count(EmailTemplateType.CLASS_SCHEDULED, self.section, self.instr) == 2
 
     def test_settings_update_email_ttl(self):
         assert util.get_sent_email_count(EmailTemplateType.CHANGES_CONFIRMED, self.section, self.instr) == 2

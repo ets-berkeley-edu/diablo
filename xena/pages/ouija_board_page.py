@@ -48,9 +48,11 @@ class OuijaBoardPage(CoursesPage):
     SEARCH_SELECT_SELECTION = (By.XPATH, '//input[@id="ouija-filter-options"]/preceding-sibling::div')
 
     FILTER_ALL_OPTION = (By.ID, 'filter-option-all')
-    FILTER_OPTED_OUT = (By.ID, 'filter-option-opted-out')
-    FILTER_SCHEDULED_OPTION = (By.ID, 'filter-option-scheduled')
+    FILTER_ELIGIBLE_OPTION = (By.ID, 'filter-option-eligible')
+    FILTER_ELIGIBLE_UNSCHEDULED_OPTION = (By.ID, 'filter-option-eligible-unscheduled')
     FILTER_NO_INSTRUCTORS_OPTION = (By.ID, 'filter-option-no-instructors')
+    FILTER_PARTIALLY_APPROVED_OPTION = (By.ID, 'filter-option-partially-approved')
+    FILTER_SCHEDULED_OPTION = (By.ID, 'filter-option-scheduled')
 
     NO_RESULTS_MSG = (By.ID, 'message-when-zero-courses')
 
@@ -151,17 +153,25 @@ class OuijaBoardPage(CoursesPage):
         app.logger.info('Filtering by option All')
         self.filter_for_option(OuijaBoardPage.FILTER_ALL_OPTION)
 
-    def filter_for_opted_out(self):
-        app.logger.info('Filtering by option Opted Out')
-        self.filter_for_option(OuijaBoardPage.FILTER_OPTED_OUT)
+    def filter_for_eligible(self):
+        app.logger.info('Filtering by option Eligible')
+        self.filter_for_option(OuijaBoardPage.FILTER_ELIGIBLE_OPTION)
 
-    def filter_for_scheduled(self):
-        app.logger.info('Filtering by option Scheduled')
-        self.filter_for_option(OuijaBoardPage.FILTER_SCHEDULED_OPTION)
+    def filter_for_eligible_unscheduled(self):
+        app.logger.info('Filtering by option Eligible Unscheduled')
+        self.filter_for_option(OuijaBoardPage.FILTER_ELIGIBLE_UNSCHEDULED_OPTION)
 
     def filter_for_no_instructors(self):
         app.logger.info('Filtering by option No Instructors')
         self.filter_for_option(OuijaBoardPage.FILTER_NO_INSTRUCTORS_OPTION)
+
+    def filter_for_partially_approved(self):
+        app.logger.info('Filtering by option Partially Approved')
+        self.filter_for_option(OuijaBoardPage.FILTER_PARTIALLY_APPROVED_OPTION)
+
+    def filter_for_scheduled(self):
+        app.logger.info('Filtering by option Scheduled')
+        self.filter_for_option(OuijaBoardPage.FILTER_SCHEDULED_OPTION)
 
     # COURSES
 

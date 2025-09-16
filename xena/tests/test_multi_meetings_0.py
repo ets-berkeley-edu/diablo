@@ -87,6 +87,8 @@ class TestWeirdTypeB:
         self.kaltura_page.reset_test_data(self.section)
 
         util.reset_section_test_data(self.section)
+        util.reset_user_preferences(self.original_instructor)
+        util.reset_user_preferences(self.new_instructor)
 
         util.reset_sent_email_test_data(self.section)
         util.reset_sent_email_test_data(section=None, instructor=self.original_instructor)
@@ -94,9 +96,17 @@ class TestWeirdTypeB:
 
     # SCHEDULE RECORDINGS
 
+    def test_instructor_opts_in(self):
+        self.ouija_page.load_page()
+        self.ouija_page.log_out()
+        self.login_page.dev_auth(self.original_instructor.uid)
+        # TODO - instructor opts in
+
     def test_schedule_recordings(self):
-        self.jobs_page.load_page()
-        self.jobs_page.run_schedule_update_job_sequence()
+        self.course_page.log_out()
+        self.login_page.dev_auth()
+        self.ouija_page.click_jobs_link()
+        self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
         assert util.get_kaltura_id(self.recording_schedule)
         self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
         self.recording_schedule.recording_placement = RecordingPlacement.PLACE_IN_MY_MEDIA
@@ -113,23 +123,31 @@ class TestWeirdTypeB:
         visible_status = self.ouija_page.visible_course_row_sched_status(self.section)
         assert visible_status == 'Scheduled'
 
-    def test_scheduled_filter_opted_out(self):
-        self.ouija_page.filter_for_opted_out()
+    def test_scheduled_filter_eligible(self):
+        self.ouija_page.filter_for_eligible()
+        assert self.ouija_page.is_course_in_results(self.section)
+
+    def test_scheduled_filter_eligible_unscheduled(self):
+        self.ouija_page.filter_for_eligible_unscheduled()
+        assert not self.ouija_page.is_course_in_results(self.section)
+
+    def test_scheduled_filter_no_instructors(self):
+        self.ouija_page.filter_for_no_instructors()
+        assert not self.ouija_page.is_course_in_results(self.section)
+
+    def test_scheduled_filter_partially_approved(self):
+        self.ouija_page.filter_for_partially_approved()
         assert not self.ouija_page.is_course_in_results(self.section)
 
     def test_scheduled_filter_scheduled(self):
         self.ouija_page.filter_for_scheduled()
         assert self.ouija_page.is_course_in_results(self.section)
 
-    def test_scheduled_filter_no_instructors(self):
-        self.ouija_page.filter_for_no_instructors()
-        assert not self.ouija_page.is_course_in_results(self.section)
-
     # INSTRUCTOR LOGS IN
 
     def test_home_page(self):
         self.ouija_page.log_out()
-        self.login_page.dev_auth(self.section.instructors[0].uid)
+        self.login_page.dev_auth(self.original_instructor.uid)
         self.ouija_page.wait_for_title_containing(f'Your {self.section.term.name} Course')
 
     def test_course_page_link(self):
@@ -208,7 +226,7 @@ class TestWeirdTypeB:
 
     def test_run_kaltura_job_instr_removed(self):
         self.jobs_page.load_page()
-        self.jobs_page.run_schedule_update_job_sequence()
+        self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
 
     def test_course_page_instr_removed(self):
         self.course_page.load_page(self.section)
@@ -236,9 +254,16 @@ class TestWeirdTypeB:
         util.change_course_instructor(self.section, old_instructor=None, new_instructor=self.new_instructor)
         self.section.instructors = [self.new_instructor]
 
+    def test_new_instructor_opts_in(self):
+        self.ouija_page.log_out()
+        self.login_page.dev_auth(self.new_instructor.uid)
+        # TODO - new instructor opts in
+
     def test_run_kaltura_job_instr_added(self):
-        self.jobs_page.load_page()
-        self.jobs_page.run_schedule_update_job_sequence()
+        self.course_page.log_out()
+        self.login_page.dev_auth()
+        self.ouija_page.click_jobs_link()
+        self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
         assert util.get_kaltura_id(self.recording_schedule)
 
     def test_course_page_instr_added(self):
@@ -272,7 +297,7 @@ class TestWeirdTypeB:
 
     def test_run_kaltura_job_new_dates(self):
         self.jobs_page.load_page()
-        self.jobs_page.run_schedule_update_job_sequence()
+        self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
 
     def test_course_page_new_dates(self):
         self.course_page.load_page(self.section)
@@ -309,7 +334,7 @@ class TestWeirdTypeB:
 
     def test_run_kaltura_job_room_removed(self):
         self.jobs_page.load_page()
-        self.jobs_page.run_schedule_update_job_sequence()
+        self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
 
     def test_course_page_room_removed(self):
         self.course_page.load_page(self.section)
@@ -333,9 +358,13 @@ class TestWeirdTypeB:
         util.change_course_room(self.section, self.meeting_physical, new_room=self.new_room)
         self.meeting_physical.room = self.new_room
 
+    def test_admin_opts_course_in(self):
+        self.course_page.load_page(self.section)
+        # TODO - admin opts course in again
+
     def test_run_kaltura_job_room_added(self):
         self.jobs_page.load_page()
-        self.jobs_page.run_schedule_update_job_sequence()
+        self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
 
     def test_course_page_room_added(self):
         self.course_page.load_page(self.section)

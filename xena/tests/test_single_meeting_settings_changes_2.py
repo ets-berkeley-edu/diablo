@@ -91,6 +91,16 @@ class TestScheduling2:
         util.reset_sent_email_test_data(section=None, instructor=self.instructor_0)
         util.reset_sent_email_test_data(section=None, instructor=self.instructor_1)
 
+    def test_new_class_eligible_email_instructor_0(self):
+        self.jobs_page.load_page()
+        self.jobs_page.run_schedule_update_job_sequence()
+        assert util.get_sent_email_count(EmailTemplateType.NEW_CLASS_ELIGIBLE, section=None,
+                                         instructor=self.instructor_0) == 1
+
+    def test_new_class_eligible_email_instructor_1(self):
+        assert util.get_sent_email_count(EmailTemplateType.NEW_CLASS_ELIGIBLE, section=None,
+                                         instructor=self.instructor_1) == 1
+
     # CREATE COURSE SITE
 
     def test_create_course_site(self):
@@ -102,8 +112,6 @@ class TestScheduling2:
         self.canvas_page.create_site(self.section, self.site_1)
         self.canvas_page.add_user_to_site(self.site_1, self.instructor_0, 'Teacher')
         self.canvas_page.add_user_to_site(self.site_1, self.instructor_1, 'Lead TA')
-
-    # TODO - trigger and verify welcome email
 
     # VERIFY STATIC COURSE SIS DATA
 
@@ -147,6 +155,8 @@ class TestScheduling2:
     def test_site_link(self):
         assert self.course_page.external_link_valid(CoursePage.selected_placement_site_loc(self.site_0), self.site_0.name)
 
+    # TODO def test_partial_approval_messaging_instr_0
+
     # RUN KALTURA AND EMAIL JOBS, VERIFY NO RECORDINGS SCHEDULED AND NO SETTINGS UPDATE EMAIL SENT YET
 
     def test_recordings_not_scheduled(self):
@@ -157,9 +167,44 @@ class TestScheduling2:
         self.ouija_page.click_jobs_link()
         self.jobs_page.run_settings_update_job_sequence()
 
-    # TODO - verify no recordings scheduled yet
+    def test_no_scheduling_yet(self):
+        assert not util.get_kaltura_id(self.recording_schedule)
 
-    # TODO - verify no settings-update email sent
+    def test_no_changes_confirmed_email_yet(self):
+        assert util.get_sent_email_count(EmailTemplateType.CHANGES_CONFIRMED, self.section, self.instructor_0) == 0
+        assert util.get_sent_email_count(EmailTemplateType.CHANGES_CONFIRMED, self.section, self.instructor_1) == 0
+
+    # FILTERS - PARTIALLY APPROVED
+
+    def test_partially_approved_filter_all(self):
+        self.ouija_page.load_page()
+        self.ouija_page.search_for_course_code(self.section)
+        self.ouija_page.filter_for_all()
+        assert self.ouija_page.is_course_in_results(self.section)
+
+    def test_partially_approved_sched_status(self):
+        assert self.ouija_page.visible_course_row_sched_status(self.section) == 'Not Scheduled'
+        # TODO - verify partially approved status
+
+    def test_partially_approved_filter_eligible(self):
+        self.ouija_page.filter_for_eligible()
+        assert self.ouija_page.is_course_in_results(self.section)
+
+    def test_partially_approved_filter_eligible_unscheduled(self):
+        self.ouija_page.filter_for_eligible_unscheduled()
+        assert self.ouija_page.is_course_in_results(self.section)
+
+    def test_partially_approved_filter_no_instructors(self):
+        self.ouija_page.filter_for_no_instructors()
+        assert not self.ouija_page.is_course_in_results(self.section)
+
+    def test_partially_approved_filter_partially_approved(self):
+        self.ouija_page.filter_for_partially_approved()
+        assert self.ouija_page.is_course_in_results(self.section)
+
+    def test_partially_approved_filter_scheduled(self):
+        self.ouija_page.filter_for_scheduled()
+        assert not self.ouija_page.is_course_in_results(self.section)
 
     # OTHER INSTRUCTOR LOGS IN, VERIFY NO SETTINGS OPTIONS UNTIL OPT-IN
 
@@ -176,6 +221,8 @@ class TestScheduling2:
     def test_no_rec_placement_options(self):
         assert not self.course_page.is_present(self.course_page.PLACEMENT_EDIT_BUTTON)
 
+    # TODO def test_partial_approval_messaging_instr_1
+
     # TODO - def test_opt_in(self):
 
     def test_another_site_add_to_channels(self):
@@ -191,10 +238,14 @@ class TestScheduling2:
         assert self.course_page.external_link_valid(CoursePage.selected_placement_site_loc(self.site_1),
                                                     self.site_1.name)
 
+    # TODO def test_full_approval_messaging
+
     # SCHEDULE RECORDINGS
 
     def test_schedule_recordings(self):
-        self.jobs_page.load_page()
+        self.course_page.log_out()
+        self.login_page.dev_auth()
+        self.ouija_page.click_jobs_link()
         self.jobs_page.run_schedule_update_job_sequence()
         assert util.get_kaltura_id(self.recording_schedule)
         self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
@@ -240,28 +291,55 @@ class TestScheduling2:
     def test_kaltura_course_site(self):
         self.kaltura_page.verify_site_categories([])
 
-    # VERIFY ANNUNCIATION EMAILS
+    # VERIFY CLASS SCHEDULED, CHANGES CONFIRMED EMAILS
 
-    def test_receive_annunciation_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.NEW_CLASS_ELIGIBLE, self.section,
-                                         self.instructor_0) == 1
-        assert util.get_sent_email_count(EmailTemplateType.NEW_CLASS_ELIGIBLE, self.section,
-                                         self.instructor_1) == 1
+    def test_class_scheduled_email_instructor_0(self):
+        assert util.get_sent_email_count(EmailTemplateType.CLASS_SCHEDULED, self.section, self.instructor_0) == 1
 
-    # VERIFY EMAILS
+    def test_class_scheduled_email_instructor_1(self):
+        assert util.get_sent_email_count(EmailTemplateType.CLASS_SCHEDULED, self.section, self.instructor_1) == 1
 
-    def test_update_receive_schedule_conf_email_instr_1(self):
-        assert util.get_sent_email_count(EmailTemplateType.CHANGES_CONFIRMED, self.section,
-                                         self.instructor_0) == 1
+    def test_changes_confirmed_email_instructor_0(self):
+        assert util.get_sent_email_count(EmailTemplateType.CHANGES_CONFIRMED, self.section, self.instructor_0) == 1
 
-    def test_update_receive_schedule_conf_email_instr_2(self):
-        assert util.get_sent_email_count(EmailTemplateType.CHANGES_CONFIRMED, self.section,
-                                         self.instructor_1) == 1
+    def test_changes_confirmed_email_instructor_1(self):
+        assert util.get_sent_email_count(EmailTemplateType.CHANGES_CONFIRMED, self.section, self.instructor_1) == 1
+
+    # FILTERS - FULLY APPROVED
+
+    def test_fully_approved_filter_all(self):
+        self.kaltura_page.close_window_and_switch()
+        self.ouija_page.load_page()
+        self.ouija_page.search_for_course_code(self.section)
+        self.ouija_page.filter_for_all()
+        assert self.ouija_page.is_course_in_results(self.section)
+
+    def test_fully_approved_sched_status(self):
+        assert self.ouija_page.visible_course_row_sched_status(self.section) == 'Scheduled'
+
+    def test_fully_approved_filter_eligible(self):
+        self.ouija_page.filter_for_eligible()
+        assert self.ouija_page.is_course_in_results(self.section)
+
+    def test_fully_approved_filter_eligible_unscheduled(self):
+        self.ouija_page.filter_for_eligible_unscheduled()
+        assert not self.ouija_page.is_course_in_results(self.section)
+
+    def test_fully_approved_filter_no_instructors(self):
+        self.ouija_page.filter_for_no_instructors()
+        assert not self.ouija_page.is_course_in_results(self.section)
+
+    def test_fully_approved_filter_partially_approved(self):
+        self.ouija_page.filter_for_partially_approved()
+        assert not self.ouija_page.is_course_in_results(self.section)
+
+    def test_fully_approved_filter_scheduled(self):
+        self.ouija_page.filter_for_scheduled()
+        assert self.ouija_page.is_course_in_results(self.section)
 
     # DELETE ONE COURSE SITE
 
     def test_delete_course_site(self):
-        self.kaltura_page.close_window_and_switch()
         self.ouija_page.load_page()
         self.ouija_page.log_out()
         self.login_page.dev_auth(self.instructor_1.uid)
@@ -342,12 +420,10 @@ class TestScheduling2:
 
     def test_updated_receive_schedule_conf_email_instr_1(self):
         self.kaltura_page.close_window_and_switch()
-        assert util.get_sent_email_count(EmailTemplateType.CHANGES_CONFIRMED, self.section,
-                                         self.instructor_0) == 4
+        assert util.get_sent_email_count(EmailTemplateType.CHANGES_CONFIRMED, self.section, self.instructor_0) == 2
 
     def test_updated_receive_schedule_conf_email_instr_2(self):
-        assert util.get_sent_email_count(EmailTemplateType.CHANGES_CONFIRMED, self.section,
-                                         self.instructor_1) == 4
+        assert util.get_sent_email_count(EmailTemplateType.CHANGES_CONFIRMED, self.section, self.instructor_1) == 2
 
     # VERIFY COURSE HISTORY
 

@@ -73,13 +73,16 @@ class TestCourseScheduleChanges:
         self.kaltura_page.reset_test_data(self.section)
 
         util.reset_section_test_data(self.section)
+        util.reset_user_preferences(self.instr)
 
         util.reset_sent_email_test_data(self.section)
         util.reset_sent_email_test_data(section=None, instructor=self.instr)
 
     def test_schedule_recordings(self):
+        self.course_page.load_page(self.section)
+        # TODO - admin opts course in
         self.jobs_page.load_page()
-        self.jobs_page.run_schedule_update_job_sequence()
+        self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
         util.get_kaltura_id(self.recording_schedule)
         self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
         self.recording_schedule.recording_placement = RecordingPlacement.PLACE_IN_MY_MEDIA
@@ -87,6 +90,9 @@ class TestCourseScheduleChanges:
     def test_welcome_email(self):
         assert util.get_sent_email_count(EmailTemplateType.NEW_CLASS_ELIGIBLE, section=None,
                                          instructor=self.instr) == 1
+
+    def test_class_scheduled_email(self):
+        assert util.get_sent_email_count(EmailTemplateType.CLASS_SCHEDULED, self.section, self.instr) == 1
 
     # SCHEDULED COURSE CHANGES MEETING TIME
 
@@ -97,7 +103,7 @@ class TestCourseScheduleChanges:
 
     def test_reschedule_with_new_times(self):
         self.jobs_page.load_page()
-        self.jobs_page.run_schedule_update_job_sequence()
+        self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
 
     def test_schedule_change_email(self):
         assert util.get_sent_email_count(EmailTemplateType.SCHEDULE_CHANGE, self.section, self.instr) == 1
@@ -196,7 +202,7 @@ class TestCourseScheduleChanges:
 
     def test_unschedule_with_null_schedule(self):
         self.jobs_page.load_page()
-        self.jobs_page.run_schedule_update_job_sequence()
+        self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
 
     def test_verify_updated_kaltura_series_gone(self):
         self.kaltura_page.load_event_edit_page(self.recording_schedule.series_id)

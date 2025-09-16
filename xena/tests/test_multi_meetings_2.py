@@ -50,6 +50,7 @@ class TestWeirdTypeD:
 
     test_data = util.get_test_script_course('test_multi_meetings_2')
     section = util.get_test_section(test_data)
+    instructor = section.instructors[0]
     meeting_0 = section.meetings[0]
     meeting_0.meeting_schedule.end_date = meeting_0.meeting_schedule.end_date - timedelta(days=8)
     meeting_1 = section.meetings[1]
@@ -77,21 +78,30 @@ class TestWeirdTypeD:
         self.kaltura_page.reset_test_data(self.section)
 
         util.reset_section_test_data(self.section)
+        util.reset_user_preferences(self.instructor)
 
         util.reset_sent_email_test_data(self.section)
-        util.reset_sent_email_test_data(section=None, instructor=self.section.instructors[0])
+        util.reset_sent_email_test_data(section=None, instructor=self.instructor)
 
     # CREATE COURSE SITE
 
     def test_create_course_site(self):
         self.canvas_page.create_site(self.section, self.site)
-        self.canvas_page.add_user_to_site(self.site, self.section.instructors[0], 'Designer')
+        self.canvas_page.add_user_to_site(self.site, self.instructor, 'Designer')
 
     # SCHEDULE RECORDINGS
 
+    def test_instructor_opts_in(self):
+        self.ouija_page.load_page()
+        self.ouija_page.log_out()
+        self.login_page.dev_auth(self.instructor.uid)
+        # TODO - instructor opts in
+
     def test_schedule_recordings(self):
-        self.jobs_page.load_page()
-        self.jobs_page.run_schedule_update_job_sequence()
+        self.courses_page.log_out()
+        self.login_page.dev_auth()
+        self.ouija_page.click_jobs_link()
+        self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
 
         assert util.get_kaltura_id(self.recording_schedule_0)
         self.recording_schedule_0.recording_type = RecordingType.VIDEO_SANS_OPERATOR
@@ -109,10 +119,6 @@ class TestWeirdTypeD:
         self.ouija_page.filter_for_all()
         assert self.ouija_page.is_course_in_results(self.section)
 
-    def test_scheduled_filter_opted_out(self):
-        self.ouija_page.filter_for_opted_out()
-        assert not self.ouija_page.is_course_in_results(self.section)
-
     def test_scheduled_filter_scheduled(self):
         self.ouija_page.filter_for_scheduled()
         assert self.ouija_page.is_course_in_results(self.section)
@@ -121,11 +127,14 @@ class TestWeirdTypeD:
         self.ouija_page.filter_for_no_instructors()
         assert not self.ouija_page.is_course_in_results(self.section)
 
-    # VERIFY ANNUNCIATION EMAIL
+    # VERIFY EMAIL
 
-    def test_receive_annunciation_email(self):
+    def test_receive_new_eligible_email(self):
         assert util.get_sent_email_count(EmailTemplateType.NEW_CLASS_ELIGIBLE, section=None,
-                                         instructor=self.section.instructors[0]) == 1
+                                         instructor=self.instructor) == 1
+
+    def test_receive_class_scheduled_email(self):
+        assert util.get_sent_email_count(EmailTemplateType.CLASS_SCHEDULED, self.section, self.instructor) == 1
 
     # FIRST MEETING: VERIFY SERIES IN DIABLO
 
@@ -194,7 +203,7 @@ class TestWeirdTypeD:
     def test_course_page_link(self):
         self.kaltura_page.close_window_and_switch()
         self.ouija_page.log_out()
-        self.login_page.dev_auth(self.section.instructors[0].uid)
+        self.login_page.dev_auth(self.instructor.uid)
         self.courses_page.click_course_page_link(self.section)
         self.course_page.wait_for_diablo_title(f'{self.section.code}, {self.section.number}')
 
@@ -253,7 +262,7 @@ class TestWeirdTypeD:
         self.course_page.verify_history_row(field='publish_type',
                                             old_value=RecordingPlacement.PLACE_IN_MY_MEDIA.value['db'],
                                             new_value=RecordingPlacement.PUBLISH_AUTOMATICALLY.value['db'],
-                                            requestor=self.section.instructors[0],
+                                            requestor=self.instructor,
                                             status='succeeded',
                                             published=True)
 
@@ -261,6 +270,6 @@ class TestWeirdTypeD:
         self.course_page.verify_history_row(field='canvas_site_ids',
                                             old_value='—',
                                             new_value=CoursePage.expected_site_ids_converter([self.site]),
-                                            requestor=self.section.instructors[0],
+                                            requestor=self.instructor,
                                             status='succeeded',
                                             published=True)

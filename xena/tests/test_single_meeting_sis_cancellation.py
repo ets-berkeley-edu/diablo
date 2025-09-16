@@ -70,6 +70,7 @@ class TestCourseCancellation:
         self.kaltura_page.reset_test_data(self.section)
 
         util.reset_section_test_data(self.section)
+        util.reset_user_preferences(self.instructor)
 
         util.reset_sent_email_test_data(self.section)
         util.reset_sent_email_test_data(section=None, instructor=self.instructor)
@@ -98,27 +99,16 @@ class TestCourseCancellation:
         self.courses_page.wait_for_title_contains(f"Your {app.config['CURRENT_TERM_NAME']} Course")
         assert not self.courses_page.is_present(OuijaBoardPage.course_row_link_locator(self.section))
 
-    # RECORDINGS NOT SCHEDULED FOR CANCELLED COURSE
-
-    def test_cancel_pre_sched_jobs(self):
-        self.courses_page.log_out()
-        self.login_page.dev_auth()
-        self.ouija_page.click_jobs_link()
-        self.jobs_page.run_schedule_update_job_sequence()
-
-    def test_cancel_pre_sched_no_kaltura_schedule_id(self):
-        assert not util.get_kaltura_id(self.recording_schedule)
-
-    def test_no_annunciation(self):
-        assert util.get_sent_email_count(EmailTemplateType.NEW_CLASS_ELIGIBLE, section=None,
-                                         instructor=self.instructor) == 0
-
     # COURSE IS RESTORED AND SCHEDULED
 
     def test_restored_pre_sched(self):
         util.restore_section(self.section)
+        self.courses_page.reload_page()
+        # TODO - opt in
+        self.courses_page.log_out()
+        self.login_page.dev_auth()
         self.ouija_page.click_jobs_link()
-        self.jobs_page.run_schedule_update_job_sequence()
+        self.jobs_page.run_settings_update_job_sequence()
 
     def test_kaltura_schedule_id(self):
         assert util.get_kaltura_id(self.recording_schedule)
