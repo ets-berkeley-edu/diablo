@@ -141,7 +141,8 @@ export interface Course extends BaseCourse {
   recordingTypeName: string,
   room: Room | undefined,
   scheduled: ScheduledCourse[] | null,
-  statusLabel?: string
+  statusLabel?: string,
+  updateHistory?: []
 }
 
 export interface CourseSortable extends Course {

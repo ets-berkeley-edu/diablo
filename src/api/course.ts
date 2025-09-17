@@ -46,7 +46,7 @@ export function getCoursesReport(termId: string) {
 export function updateCollaborators(
     collaboratorUids: string[],
     sectionId: number | string,
-    termId: string
+    termId: number | string
 ) {
   return axios
     .post(`${getApiBaseUrl()}/api/course/collaborator_uids/update`, {

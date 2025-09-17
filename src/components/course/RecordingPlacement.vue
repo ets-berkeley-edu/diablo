@@ -5,7 +5,7 @@
     justify="start"
     role="region"
   >
-    <v-col cols="12" class="px-4" :class="{'bg-surface-light rounded': isEditing}">
+    <v-col cols="12" class="pt-0 px-4" :class="{'bg-surface-light rounded': isEditing}">
       <div v-if="!isEditing">
         <h3 id="publish-type-header">Recording Placement</h3>
         <div class="pl-4">
@@ -16,6 +16,7 @@
             id="btn-publish-type-edit"
             aria-label="Edit Recording Placement"
             class="elevation-1 mt-2"
+            :disabled="courseStore.disableButtons"
             text="Edit"
             variant="outlined"
             @click="toggleIsEditing"
@@ -36,7 +37,7 @@
         <div
           v-for="(publishTypeOption, index) in publishTypeOptions"
           :key="publishTypeOption"
-          class="d-flex flex-nowrap py-1"
+          class="d-flex flex-nowrap pl-4 pt-1"
         >
           <input
             :id="`radio-publish-type-${publishTypeOption}`"
@@ -160,7 +161,7 @@
           </div>
         </div>
       </div>
-      <div v-if="isEditing" class="pt-4">
+      <div v-if="isEditing" class="pl-4">
         <ProgressButton
           id="btn-publish-type-save"
           :action="updatePublishTypeClicked"
@@ -172,27 +173,26 @@
         <v-btn
           id="btn-publish-type-cancel"
           aria-label="Cancel Recording Placement Edit"
-          class="ml-2"
+          class="ml-1"
           :disabled="isSaving"
+          text="Cancel"
           variant="text"
           @click="updatePublishTypeCancel"
-        >
-          Cancel
-        </v-btn>
+        />
       </div>
     </v-col>
   </v-row>
 </template>
 
 <script lang="ts" setup>
-import type {PropType} from 'vue'
 import {filter, find, get, isEmpty, map, size} from 'lodash'
-import {onMounted, ref} from 'vue'
-import type {CanvasSite, Course} from '@/lib/types'
+import {onMounted, ref, watch} from 'vue'
+import type {CanvasSite} from '@/lib/types'
 import {alertScreenReader, putFocusNextTick} from '@/lib/utils'
 import {getCanvasSitesTeaching} from '@/api/user'
 import {getCourseSite, updatePublishType} from '@/api/course'
 import {useContextStore} from '@/stores/context'
+import {useCourseStore} from '@/stores/course'
 import CanvasCourseSite from '@/components/course/CanvasCourseSite.vue'
 import ProgressButton from '@/components/util/ProgressButton.vue'
 
@@ -205,10 +205,6 @@ type CanvasSiteOption = {
 }
 
 const props = defineProps({
-  course: {
-    required: true,
-    type: Object as PropType<Course>
-  },
   labels: {
     required: true,
     type: Object
@@ -220,16 +216,21 @@ const props = defineProps({
 })
 
 const {config, currentUser} = useContextStore()
+const courseStore = useCourseStore()
+const course = courseStore.course
 const isEditing = ref(false)
 const isFindingCanvasSite = ref(false)
 const isSaving = ref(false)
 const menuContainer = ref()
 const pendingCanvasSite = ref()
 const pendingCanvasSiteId = ref()
-const publishCanvasSites = ref<CanvasSite[]>(props.course.canvasSites || [])
+const publishCanvasSites = ref<CanvasSite[]>(course.canvasSites || [])
 const publishCanvasSiteOptions = ref<CanvasSiteOption[]>([])
-const publishType = ref(props.course.publishType)
+const publishType = ref(course.publishType)
 const publishTypeOptions = Object.keys(config.publishTypeOptions).sort().reverse()
+
+watch(isEditing, courseStore.setDisableButtons)
+watch(isSaving, courseStore.setDisableButtons)
 
 onMounted(() => {
   if (!currentUser.isAdmin && currentUser.uid) {
@@ -309,8 +310,8 @@ const updatePublishTypeClicked = () => {
   updatePublishType(
     publishCanvasSites.value.map(s => s.canvasSiteId),
     publishType.value,
-    props.course.sectionId,
-    props.course.termId
+    course.sectionId,
+    course.termId
   ).then(course => {
     const message = `Recording placement updated to ${course.publishTypeName}.`
     alertScreenReader(message)
@@ -325,8 +326,8 @@ const updatePublishTypeCancel = () => {
   alertScreenReader('Recording placement edit cancelled.')
   putFocusNextTick('btn-publish-type-edit')
   isEditing.value = false
-  publishType.value = props.course.publishType
-  publishCanvasSites.value = [...props.course.canvasSites]
+  publishType.value = course.publishType
+  publishCanvasSites.value = [...course.canvasSites]
 }
 </script>
 

@@ -30,6 +30,7 @@
           id="btn-collaborators-edit"
           aria-label="Edit Collaborators"
           class="elevation-1 mt-2"
+          :disabled="courseStore.disableButtons"
           text="Edit"
           variant="outlined"
           @click="toggleIsEditing"
@@ -137,36 +138,38 @@
 </template>
 
 <script lang="ts" setup>
-import type {PropType} from 'vue'
-import {computed, ref} from 'vue'
+import {computed, ref, watch} from 'vue'
 import {differenceBy, isEmpty, size} from 'lodash'
-import type {Collaborator, Course} from '@/lib/types'
+import {storeToRefs} from 'pinia'
+import type {Collaborator} from '@/lib/types'
 import {alertScreenReader, putFocusNextTick} from '@/lib/utils'
 import {updateCollaborators} from '@/api/course'
+import {useCourseStore} from '@/stores/course'
 import PersonLookup from '@/components/util/PersonLookup.vue'
 import ProgressButton from '@/components/util/ProgressButton.vue'
 
 const props = defineProps({
-  course: {
-    required: true,
-    type: Object as PropType<Course>
-  },
   setModel: {
     required: true,
     type: Function
   }
 })
 
+const courseStore = useCourseStore()
+const {course} = storeToRefs(courseStore)
 const addCollaboratorError = ref<string | undefined>()
 const collaborators = ref<Collaborator[]>([])
+const hasChanges = computed(() => {
+  return size(collaborators.value) !== size(course.value.collaborators) || !!size(differenceBy(collaborators.value, course.value.collaborators, 'uid'))
+})
 const isEditing = ref(false)
 const isSaving = ref(false)
 const pendingCollaborator = ref<Collaborator | undefined>()
 const personLookup = ref()
 
-const hasChanges = computed(() => {
-  return size(collaborators.value) !== size(props.course.collaborators) || !!size(differenceBy(collaborators.value, props.course.collaborators, 'uid'))
-})
+watch(isEditing, courseStore.setDisableButtons)
+watch(isSaving, courseStore.setDisableButtons)
+
 const addCollaborator = () => {
   if (pendingCollaborator.value) {
     const collaborator = pendingCollaborator.value.raw
@@ -218,12 +221,12 @@ const save = () => {
   isSaving.value = true
   updateCollaborators(
     collaborators.value.map(c => c.uid),
-    props.course.sectionId,
-    props.course.termId
-  ).then(course => {
+    course.value.sectionId,
+    course.value.termId
+  ).then(data => {
     alertScreenReader('Collaborators updated.')
     putFocusNextTick('btn-collaborators-edit')
-    props.setModel(course.collaborators)
+    props.setModel(data.collaborators)
     isEditing.value = false
     isSaving.value = false
     addCollaboratorError.value = undefined
@@ -231,7 +234,7 @@ const save = () => {
 }
 
 const toggleIsEditing = () => {
-  collaborators.value = [...props.course.collaborators]
+  collaborators.value = [...course.value.collaborators]
   isEditing.value = true
   putFocusNextTick('collaborator-lookup-input')
 }

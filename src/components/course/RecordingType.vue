@@ -19,6 +19,7 @@
           id="btn-recording-type-edit"
           aria-label="Edit Recording Type"
           class="elevation-1 mt-2"
+          :disabled="courseStore.disableButtons"
           text="Edit"
           variant="outlined"
           @click="toggleIsEditing"
@@ -76,19 +77,14 @@
 </template>
 
 <script lang="ts" setup>
-import type {PropType} from 'vue'
-import {computed, onMounted, ref} from 'vue'
-import type {Course} from '@/lib/types'
+import {computed, onMounted, ref, watch} from 'vue'
 import {alertScreenReader, putFocusNextTick} from '@/lib/utils'
 import {updateRecordingType} from '@/api/course'
 import {useContextStore} from '@/stores/context'
+import {useCourseStore} from '@/stores/course'
 import ProgressButton from '@/components/util/ProgressButton.vue'
 
 const props = defineProps({
-  course: {
-    required: true,
-    type: Object as PropType<Course>
-  },
   labels: {
     required: true,
     type: Object
@@ -100,17 +96,22 @@ const props = defineProps({
 })
 
 const {currentUser} = useContextStore()
+const courseStore = useCourseStore()
+const course = courseStore.course
 const isEditing = ref(false)
 const isSaving = ref(false)
-const recordingType = ref(props.course.recordingType)
+const recordingType = ref(course.recordingType)
 const recordingTypeOptions = ref<string[]>([])
 const recordingTypeEditable = computed(() =>
   recordingTypeOptions.value.length > 1 &&
-  (currentUser.isAdmin || props.course.recordingType !== 'presenter_presentation_audio_with_operator')
+  (currentUser.isAdmin || course.recordingType !== 'presenter_presentation_audio_with_operator')
 )
 
+watch(isEditing, courseStore.setDisableButtons)
+watch(isSaving, courseStore.setDisableButtons)
+
 onMounted(() => {
-  const meeting = props.course.meetings.eligible[0] || props.course.meetings.ineligible[0]
+  const meeting = course.meetings.eligible[0] || course.meetings.ineligible[0]
   recordingTypeOptions.value = meeting.room ? Object.keys(meeting.room.recordingTypeOptions || {}) : []
 })
 
@@ -118,7 +119,7 @@ const cancel = () => {
   alertScreenReader('Recording type edit cancelled.')
   putFocusNextTick('btn-recording-type-edit')
   isEditing.value = false
-  recordingType.value = props.course.recordingType
+  recordingType.value = course.recordingType
 }
 
 const onRecordingTypeChange = (option, idx) => {
@@ -129,8 +130,8 @@ const save = () => {
   isSaving.value = true
   updateRecordingType(
     recordingType.value,
-    props.course.sectionId,
-    props.course.termId
+    course.sectionId,
+    course.termId
   ).then(course => {
     const message = `Recording type updated to ${props.labels[recordingType.value]}.`
     alertScreenReader(message)
