@@ -80,12 +80,13 @@
                 <ToggleOptIn
                   v-if="course.statusLabel !== 'Not Eligible' && (includeOptInColumnForUids || course.instructors?.length > 0)"
                   :key="course.sectionId"
-                  :term-id="`${course.termId}`"
-                  :section-id="`${course.sectionId}`"
-                  :instructor-uids="instructorUidsFor(course)"
-                  :initial-value="course.hasOptedIn"
                   :disabled="course.hasBlanketOptedOut"
+                  :initial-value="course.hasOptedIn"
+                  :instructor-uids="instructorUidsFor(course)"
+                  label=""
                   :on-toggle="onToggleOptIn(course)"
+                  :section-id="`${course.sectionId}`"
+                  :term-id="`${course.termId}`"
                 />
               </td>
               <td
@@ -227,7 +228,8 @@ import {each, filter, find, get, map, size, tail} from 'lodash'
 import {mdiClose} from '@mdi/js'
 import {onMounted, ref, watch} from 'vue'
 import type {CourseSortable, SortBy} from '@/lib/types'
-import {alertScreenReader,getDisplayMeetings} from '@/lib/utils'
+import {alertScreenReader} from '@/lib/utils'
+import {getDisplayMeetings} from '@/lib/berkeley'
 import {useContextStore} from '@/stores/context'
 import Date from '@/components/util/Date.vue'
 import Days from '@/components/util/Days.vue'

@@ -5,7 +5,7 @@
     justify="start"
     role="region"
   >
-    <v-col cols="12" class="px-4" :class="{'bg-surface-light rounded': isEditing}">
+    <v-col cols="12" :class="{'bg-surface-light rounded': isEditing}">
       <h3 id="recording-type-header">
         <label v-if="isEditing && recordingTypeEditable" for="select-recording-type">Recording Type</label>
         <span v-if="!(isEditing && recordingTypeEditable)">Recording Type</span>

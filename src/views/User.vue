@@ -14,7 +14,7 @@
           :term-id="config.currentTermId.toString()"
           section-id="all"
           :instructor-uids="[user.uid]"
-          label="for current semester"
+          label="Opt in for current semester"
           :before-toggle="() => (isRefreshingCourses = true)"
           :on-toggle="refreshUser"
         />
@@ -24,7 +24,7 @@
           term-id="all"
           section-id="all"
           :instructor-uids="[user.uid]"
-          label="for all semesters"
+          label="Opt in for all semesters"
           :before-toggle="() => (isRefreshingCourses = true)"
           :on-toggle="refreshUser"
         />
@@ -114,7 +114,8 @@ import {useRoute} from 'vue-router'
 import {storeToRefs} from 'pinia'
 import {filter} from 'lodash'
 import {mdiSchoolOutline} from '@mdi/js'
-import {alertScreenReader, getCourseCodes, partitionCoursesByEligibility, putFocusNextTick} from '@/lib/utils'
+import {alertScreenReader, partitionCoursesByEligibility, putFocusNextTick} from '@/lib/utils'
+import {getCourseCodes} from '@/lib/berkeley'
 import {deleteUserNote, getUser, updateUserNote} from '@/api/user'
 import {useContextStore} from '@/stores/context'
 import CoursesDataTable from '@/components/course/CoursesDataTable.vue'

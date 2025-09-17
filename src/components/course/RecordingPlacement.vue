@@ -5,7 +5,7 @@
     justify="start"
     role="region"
   >
-    <v-col cols="12" class="px-4">
+    <v-col cols="12">
       <div :class="{'bg-surface-light border-sm pa-4 rounded w-100': isEditing}">
         <div v-if="!isEditing">
           <h3 id="publish-type-header">Recording Placement</h3>

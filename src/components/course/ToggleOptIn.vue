@@ -10,7 +10,7 @@
     flat
     hide-details
     inset
-    :label="label ? `Opt in ${label}` : ''"
+    :label="label"
     @update:model-value="toggleOptIn"
   />
 </template>
@@ -45,9 +45,8 @@ const props = defineProps({
     type: Array as PropType<string[]>
   },
   label: {
-    required: false,
-    type: String,
-    default: undefined
+    required: true,
+    type: String
   },
   onToggle: {
     default: () => {},

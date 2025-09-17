@@ -9,11 +9,10 @@ import {
   join,
   last,
   split,
-  startsWith,
   trim,
 } from 'lodash'
 import {nextTick} from 'vue'
-import type {Course, DiabloUser, Meeting} from '@/lib/types'
+import type {Course, DiabloUser} from '@/lib/types'
 import {useContextStore} from '@/stores/context'
 
 export const ANONYMOUS_USER: DiabloUser = {
@@ -44,32 +43,8 @@ export function decamelize(str: string, separator = ' ') {
   )
 }
 
-export function getCourseCodes(course: Course) {
-  return course.label.split('|').map((l: string) => l.trim())
-}
-
-export function getTermName(termId: number) {
-  const id = termId.toString()
-  let termName: string = ''
-  if (id.length === 4) {
-    const seasons = {
-      '0': 'Winter',
-      '2': 'Spring',
-      '5': 'Summer',
-      '8': 'Fall',
-    }
-    termName = `${seasons[id.slice(3, 4)]} ${startsWith(id, '1') ? '19' : '20'
-      }${id.slice(1, 3)}`
-  }
-  return termName
-}
-
-export function getDisplayMeetings(course: Course): Meeting[] {
-  if (course.meetings.eligible.length) {
-    return course.meetings.eligible
-  } else {
-    return course.meetings.ineligible
-  }
+export function escapeForRegExp(s: string) {
+  return s && s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
 export function oxfordJoin(arr: string[]) {
@@ -160,8 +135,4 @@ export function summarize(courses: Course[]) {
       } recordings scheduled.`
   }
   return msg
-}
-
-export function escapeForRegExp(s: string) {
-  return s && s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }

@@ -10,23 +10,23 @@
       />
     </v-card-title>
     <v-card-text>
-      <v-container class="ml-8 mb-6">
-        <v-row class="px-6 py-2">
+      <v-container class="ml-8">
+        <v-row>
           <ToggleOptIn
             :term-id="`${config.currentTermId}`"
             section-id="all"
             :instructor-uids="[currentUser.uid]"
-            label="for current semester"
+            label="Opt in for current semester"
             :before-toggle="() => refreshingCourses = true"
             :on-toggle="reloadCoursesTable"
           />
         </v-row>
-        <v-row class="px-6 py-2">
+        <v-row>
           <ToggleOptIn
             term-id="all"
             section-id="all"
             :instructor-uids="[currentUser.uid]"
-            label="for all semesters"
+            label="Opt in for all semesters"
             :before-toggle="() => refreshingCourses = true"
             :on-toggle="reloadCoursesTable"
           />
@@ -85,6 +85,7 @@
                         :disabled="course.hasBlanketOptedOut"
                         :initial-value="course.hasOptedIn"
                         :instructor-uids="[currentUser.uid]"
+                        label=""
                         :section-id="`${course.sectionId}`"
                         :term-id="`${course.termId}`"
                       />
@@ -224,13 +225,14 @@ import {each, get, isEmpty, map, size, tail} from 'lodash'
 import {mdiVideoPlus} from '@mdi/js'
 import {onMounted, ref} from 'vue'
 import {storeToRefs} from 'pinia'
-import {alertScreenReader, getCourseCodes, getDisplayMeetings, oxfordJoin, partitionCoursesByEligibility, pluralize} from '@/lib/utils'
-import Days from '@/components/util/Days'
+import {alertScreenReader, oxfordJoin, partitionCoursesByEligibility, pluralize} from '@/lib/utils'
+import {getCourseCodes, getDisplayMeetings} from '@/lib/berkeley'
 import {getCurrentUser} from '@/api/auth'
+import {useContextStore} from '@/stores/context'
+import Days from '@/components/util/Days'
 import PageTitle from '@/components/util/PageTitle'
 import Spinner from '@/components/util/Spinner'
 import ToggleOptIn from '@/components/course/ToggleOptIn'
-import {useContextStore} from '@/stores/context'
 
 const contextStore = useContextStore()
 const {config, currentUser} = storeToRefs(contextStore)

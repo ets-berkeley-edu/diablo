@@ -123,7 +123,8 @@ import Footer from '@/components/util/Footer'
 import Snackbar from '@/components/util/Snackbar'
 import Spinner from '@/components/util/Spinner'
 import {getCasLogoutUrl} from '@/api/auth'
-import {getCourseCodes, putFocusNextTick, stripAnchorRef} from '@/lib/utils'
+import {getCourseCodes} from '@/lib/berkeley'
+import {putFocusNextTick, stripAnchorRef} from '@/lib/utils'
 import {useContextStore} from '@/stores/context'
 
 const contextStore = useContextStore()
