@@ -116,6 +116,8 @@ class OuijaBoardPage(CoursesPage):
 
     def search_for_course_code(self, section):
         app.logger.info(f'Searching for course code {section.code}')
+        if 'Ouija Board' not in self.title():
+            self.load_page()
         self.remove_and_enter_chars(OuijaBoardPage.SEARCH_INPUT, section.code)
         time.sleep(1)
 

@@ -79,25 +79,11 @@ class TestWeirdTypeC:
     changed_meeting_sched_1.start_date = meeting_1.meeting_schedule.start_date + timedelta(days=7)
 
     def test_setup(self):
-        self.login_page.load_page()
         self.login_page.dev_auth()
-
-        self.ouija_page.click_jobs_link()
         self.jobs_page.disable_all_jobs()
-
-        self.jobs_page.click_blackouts_link()
         self.blackouts_page.create_all_blackouts()
-
-        self.kaltura_page.log_in_via_calnet(self.calnet_page)
-        self.kaltura_page.reset_test_data(self.section)
-
-        util.reset_section_test_data(self.section)
-        util.reset_user_preferences(self.original_instructor)
-        util.reset_user_preferences(self.new_instructor)
-
-        util.reset_sent_email_test_data(self.section)
-        util.reset_sent_email_test_data(section=None, instructor=self.original_instructor)
-        util.reset_sent_email_test_data(section=None, instructor=self.new_instructor)
+        self.kaltura_page.log_in_and_reset_test_data(self.calnet_page, [self.section])
+        util.reset_section_and_user_test_data([self.section], [self.original_instructor, self.new_instructor])
 
     # SCHEDULE RECORDINGS
 
@@ -106,7 +92,6 @@ class TestWeirdTypeC:
         # TODO - admin opts course in
 
     def test_schedule_recordings(self):
-        self.instructor_page.click_jobs_link()
         self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
         assert util.get_kaltura_id(self.recording_sched_0)
         self.recording_sched_0.recording_type = RecordingType.VIDEO_SANS_OPERATOR
@@ -115,7 +100,6 @@ class TestWeirdTypeC:
     # CHECK FILTERS - SCHEDULED
 
     def test_scheduled_filter_all(self):
-        self.ouija_page.load_page()
         self.ouija_page.search_for_course_code(self.section)
         self.ouija_page.filter_for_all()
         assert self.ouija_page.is_course_in_results(self.section)
@@ -143,9 +127,7 @@ class TestWeirdTypeC:
     # VERIFY SERIES IN DIABLO
 
     def test_room_series(self):
-        self.rooms_page.load_page()
-        self.rooms_page.find_room(self.meeting_0.room)
-        self.rooms_page.click_room_link(self.meeting_0.room)
+        self.rooms_page.navigate_to_room_page(self.meeting_0.room)
         self.room_page.wait_for_series_row(self.recording_sched_0)
         self.room_page.verify_series_link_text(self.recording_sched_0)
 
@@ -175,7 +157,6 @@ class TestWeirdTypeC:
 
     def test_course_page_link(self):
         self.kaltura_page.close_window_and_switch()
-        self.ouija_page.log_out()
         self.login_page.dev_auth(self.original_instructor.uid)
         self.ouija_page.wait_for_title_containing(f'Your {self.section.term.name} Course')
         self.ouija_page.click_course_page_link(self.section)
@@ -201,26 +182,20 @@ class TestWeirdTypeC:
         self.meeting_1.room = self.changed_meeting_1.room
 
     def test_run_kaltura_job_ineligible_becomes_eligible(self):
-        self.course_page.log_out()
         self.login_page.dev_auth()
-        self.ouija_page.click_jobs_link()
         self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
         assert util.get_kaltura_id(self.recording_sched_1)
         self.recording_sched_1.recording_type = RecordingType.VIDEO_SANS_OPERATOR
         self.recording_sched_1.recording_placement = RecordingPlacement.PLACE_IN_MY_MEDIA
 
     def test_meeting_0_room_page_ineligible_becomes_eligible(self):
-        self.rooms_page.load_page()
-        self.rooms_page.find_room(self.meeting_0.room)
-        self.rooms_page.click_room_link(self.meeting_0.room)
+        self.rooms_page.navigate_to_room_page(self.meeting_0.room)
         self.room_page.wait_for_series_row(self.recording_sched_0)
         self.room_page.verify_series_schedule(self.recording_sched_0)
         self.room_page.verify_series_recordings(self.recording_sched_0)
 
     def test_meeting_1_room_page_ineligible_becomes_eligible(self):
-        self.rooms_page.load_page()
-        self.rooms_page.find_room(self.meeting_1.room)
-        self.rooms_page.click_room_link(self.meeting_1.room)
+        self.rooms_page.navigate_to_room_page(self.meeting_1.room)
         self.room_page.wait_for_series_row(self.recording_sched_1)
         self.room_page.verify_series_schedule(self.recording_sched_1)
         self.room_page.verify_series_recordings(self.recording_sched_1)
@@ -268,7 +243,6 @@ class TestWeirdTypeC:
 
     def test_run_kaltura_job_instr_removed(self):
         self.kaltura_page.close_window_and_switch()
-        self.jobs_page.load_page()
         self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
 
     def test_meeting_0_course_page_instr_removed(self):
@@ -282,7 +256,6 @@ class TestWeirdTypeC:
         self.course_page.verify_meeting_sis_data(self.meeting_1, idx=1)
 
     def test_ouija_filter_instr_removed(self):
-        self.ouija_page.load_page()
         self.ouija_page.search_for_course_code(self.section)
         self.ouija_page.filter_for_no_instructors()
         assert self.ouija_page.is_course_in_results(self.section)
@@ -298,14 +271,11 @@ class TestWeirdTypeC:
         self.section.instructors = [self.new_instructor]
 
     def test_new_instructor_opts_in(self):
-        self.ouija_page.log_out()
         self.login_page.dev_auth(self.new_instructor.uid)
         # TODO - new instructor opts in
 
     def test_run_kaltura_job_instr_added(self):
-        self.course_page.log_out()
         self.login_page.dev_auth()
-        self.ouija_page.click_jobs_link()
         self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
         assert util.get_kaltura_id(self.recording_sched_0)
         assert util.get_kaltura_id(self.recording_sched_1)
@@ -344,21 +314,16 @@ class TestWeirdTypeC:
 
     def test_run_kaltura_job_date_change(self):
         self.kaltura_page.close_window_and_switch()
-        self.jobs_page.load_page()
         self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
 
     def test_meeting_0_room_page_date_change(self):
-        self.rooms_page.load_page()
-        self.rooms_page.find_room(self.meeting_0.room)
-        self.rooms_page.click_room_link(self.meeting_0.room)
+        self.rooms_page.navigate_to_room_page(self.meeting_0.room)
         self.room_page.wait_for_series_row(self.recording_sched_0)
         self.room_page.verify_series_schedule(self.recording_sched_0)
         self.room_page.verify_series_recordings(self.recording_sched_0)
 
     def test_meeting_1_room_page_date_change(self):
-        self.rooms_page.load_page()
-        self.rooms_page.find_room(self.meeting_1.room)
-        self.rooms_page.click_room_link(self.meeting_1.room)
+        self.rooms_page.navigate_to_room_page(self.meeting_1.room)
         self.room_page.wait_for_series_row(self.recording_sched_1)
         self.room_page.verify_series_schedule(self.recording_sched_1)
         self.room_page.verify_series_recordings(self.recording_sched_1)
@@ -404,7 +369,6 @@ class TestWeirdTypeC:
 
     def test_run_kaltura_job_room_removed(self):
         self.kaltura_page.close_window_and_switch()
-        self.jobs_page.load_page()
         self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
 
     def test_meeting_0_course_page_room_removed(self):

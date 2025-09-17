@@ -59,36 +59,20 @@ class TestCourseRoomChanges:
         'test_single_meeting_sis_changes_room_eligible')).meetings[0].room
 
     def test_setup(self):
-        self.login_page.load_page()
         self.login_page.dev_auth()
-
-        self.ouija_page.click_jobs_link()
         self.jobs_page.disable_all_jobs()
-
-        self.jobs_page.click_blackouts_link()
         self.blackouts_page.create_all_blackouts()
-
-        self.kaltura_page.log_in_via_calnet(self.calnet_page)
-        self.kaltura_page.reset_test_data(self.section)
-
-        util.reset_section_test_data(self.section)
-        util.reset_user_preferences(self.instr)
-
-        util.reset_sent_email_test_data(self.section)
-        util.reset_sent_email_test_data(section=None, instructor=self.instr)
+        self.kaltura_page.log_in_and_reset_test_data(self.calnet_page, [self.section])
+        util.reset_section_and_user_test_data([self.section], [self.instr])
 
     # COURSE SCHEDULED, INSTRUCTOR SELECTS VIDEO OPERATOR
 
     def test_instructor_opts_in(self):
-        self.ouija_page.load_page()
-        self.ouija_page.log_out()
         self.login_page.dev_auth(self.instr.uid)
         # TODO - opt in
 
     def test_schedule_recordings(self):
-        self.courses_page.log_out()
         self.login_page.dev_auth()
-        self.ouija_page.click_jobs_link()
         self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
         assert util.get_kaltura_id(self.recording_schedule)
         self.recording_schedule.recording_placement = RecordingPlacement.PLACE_IN_MY_MEDIA
@@ -100,8 +84,6 @@ class TestCourseRoomChanges:
         assert util.get_sent_email_count(EmailTemplateType.CLASS_SCHEDULED, self.section, self.instr) == 1
 
     def test_modify_recording_settings(self):
-        self.ouija_page.load_page()
-        self.ouija_page.log_out()
         self.login_page.dev_auth(self.instr.uid)
         self.courses_page.click_course_page_link(self.section)
         self.course_page.click_rec_type_edit_button()
@@ -110,9 +92,7 @@ class TestCourseRoomChanges:
         self.recording_schedule.recording_type = RecordingType.VIDEO_WITH_OPERATOR
 
     def test_update_series(self):
-        self.course_page.log_out()
         self.login_page.dev_auth()
-        self.ouija_page.click_jobs_link()
         self.jobs_page.run_settings_update_job_sequence()
 
     def test_settings_update_email(self):
@@ -142,9 +122,7 @@ class TestCourseRoomChanges:
                                          self.instr) == 0
 
     def test_new_eligible_room_series(self):
-        self.rooms_page.load_page()
-        self.rooms_page.find_room(self.meeting.room)
-        self.rooms_page.click_room_link(self.meeting.room)
+        self.rooms_page.navigate_to_room_page(self.meeting.room)
         self.room_page.wait_for_series_row(self.recording_schedule)
 
     def test_new_eligible_room_recordings(self):
@@ -177,7 +155,6 @@ class TestCourseRoomChanges:
         util.change_course_room(self.section, self.meeting, self.new_ineligible_room)
 
     def test_update_jobs_ineligible_room(self):
-        self.jobs_page.load_page()
         self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
 
     def test_room_ineligible_email(self):
@@ -195,7 +172,6 @@ class TestCourseRoomChanges:
         self.kaltura_page.wait_for_title('Access Denied - UC Berkeley - Test')
 
     def test_ineligible_room_filter_all(self):
-        self.ouija_page.load_page()
         self.ouija_page.search_for_course_code(self.section)
         self.ouija_page.filter_for_all()
         assert self.ouija_page.is_course_in_results(self.section)
@@ -226,7 +202,6 @@ class TestCourseRoomChanges:
         util.change_course_room(self.section, self.meeting, self.new_eligible_room)
 
     def test_run_updated_jobs_eligible_room_again(self):
-        self.jobs_page.load_page()
         self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
         assert not util.get_kaltura_id(self.recording_schedule)
 
@@ -239,7 +214,6 @@ class TestCourseRoomChanges:
         # TODO - admin opts course in again
 
     def test_eligible_room_again_reschedule_series(self):
-        self.course_page.click_jobs_link()
         self.jobs_page.run_settings_update_job_sequence()
         assert util.get_kaltura_id(self.recording_schedule)
         self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
@@ -249,9 +223,7 @@ class TestCourseRoomChanges:
         assert util.get_sent_email_count(EmailTemplateType.CLASS_SCHEDULED, self.section, self.instr) == 2
 
     def test_eligible_room_again_series(self):
-        self.rooms_page.load_page()
-        self.rooms_page.find_room(self.meeting.room)
-        self.rooms_page.click_room_link(self.meeting.room)
+        self.rooms_page.navigate_to_room_page(self.meeting.room)
         self.room_page.wait_for_series_row(self.recording_schedule)
 
     def test_eligible_room_again_recordings(self):
@@ -284,7 +256,6 @@ class TestCourseRoomChanges:
         util.change_course_room(self.section, self.meeting, new_room=None)
 
     def test_update_jobs_null_room(self):
-        self.jobs_page.load_page()
         self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
 
     def test_null_room_email(self):
@@ -299,7 +270,6 @@ class TestCourseRoomChanges:
         self.kaltura_page.wait_for_title('Access Denied - UC Berkeley - Test')
 
     def test_null_room_filter_all(self):
-        self.ouija_page.load_page()
         self.ouija_page.search_for_course_code(self.section)
         self.ouija_page.filter_for_all()
         assert self.ouija_page.is_course_in_results(self.section)

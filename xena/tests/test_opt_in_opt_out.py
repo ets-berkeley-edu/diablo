@@ -65,23 +65,12 @@ class TestOptIn0:
     """
 
     def test_set_up(self):
-        self.login_page.load_page()
         self.login_page.dev_auth()
-        self.ouija_page.click_jobs_link()
         self.jobs_page.disable_all_jobs()
-        self.jobs_page.run_emails_job()
-        util.reset_sent_email_test_data(section_0)
-        util.reset_sent_email_test_data(section=None, instructor=instructor_0)
-
-        self.kaltura_page.log_in_via_calnet(self.calnet_page)
-        self.kaltura_page.reset_test_data(section_0)
-
-        util.reset_section_test_data(section_0)
-        util.reset_user_preferences(instructor_0)
+        self.kaltura_page.log_in_and_reset_test_data(self.calnet_page, [section_0])
+        util.reset_section_and_user_test_data([section_0], [instructor_0])
 
     def test_initial_job_runs(self):
-        self.ouija_page.load_page()
-        self.ouija_page.click_jobs_link()
         self.jobs_page.run_schedule_update_job_sequence()
 
     def test_instructor_new_course_eligible_email(self):
@@ -96,14 +85,11 @@ class TestOptIn0:
                                          instructor=instructor_0) == 1
 
     def test_instructor_opts_in(self):
-        self.jobs_page.log_out()
         self.login_page.dev_auth(instructor_0)
         # TODO verifies default settings, opts in
 
     def test_schedule_recordings(self):
-        self.courses_page.log_out()
         self.login_page.dev_auth()
-        self.ouija_page.click_jobs_link()
         self.jobs_page.run_settings_update_job_sequence()
 
     def test_recordings_scheduled(self):
@@ -144,22 +130,15 @@ class TestOptIn1:
     """
 
     def test_set_up(self):
-        util.reset_sent_email_test_data(section_0)
-        util.reset_sent_email_test_data(section=None, instructor=instructor_0)
-        self.kaltura_page.reset_test_data(section_0)
-        util.reset_section_test_data(section_0, delete_opt_ins=True)
-        util.reset_user_preferences(instructor_0)
+        self.kaltura_page.log_in_and_reset_test_data(self.calnet_page, [section_0])
+        util.reset_section_and_user_test_data([section_0], [instructor_0])
 
     def test_instructor_rejects_reminders(self):
-        self.ouija_page.load_page()
-        self.ouija_page.log_out()
         self.login_page.dev_auth(instructor_0)
         # TODO - check "no more email" box
 
     def test_instructor_new_course_eligible_email(self):
-        self.courses_page.log_out()
         self.login_page.dev_auth()
-        self.ouija_page.click_jobs_link()
         self.jobs_page.run_schedule_update_job_sequence()
         assert util.get_sent_email_count(EmailTemplateType.NEW_CLASS_ELIGIBLE, section=None, instructor=instructor_0) == 1
 
@@ -168,15 +147,12 @@ class TestOptIn1:
         assert util.get_sent_email_count(EmailTemplateType.REMIND_OPTED_OUT, section=None, instructor=instructor_0) == 0
 
     def test_instructor_opts_in(self):
-        self.jobs_page.log_out()
         self.login_page.dev_auth(instructor_0)
         # TODO - opts in
         # TODO - verify no-email checkbox vanishes
 
     def test_schedule_recordings(self):
-        self.courses_page.log_out()
         self.login_page.dev_auth()
-        self.ouija_page.click_jobs_link()
         self.jobs_page.run_settings_update_job_sequence()
 
     def test_recordings_scheduled(self):
@@ -190,14 +166,11 @@ class TestOptIn1:
                                          instructor=instructor_0) == 1
 
     def test_instructor_opts_back_out(self):
-        self.jobs_page.log_out()
         self.login_page.dev_auth(instructor_0)
         # TODO - opt out again, don't recheck no-emails box
 
     def test_unschedule_recordings(self):
-        self.courses_page.log_out()
         self.login_page.dev_auth()
-        self.ouija_page.click_jobs_link()
         self.jobs_page.run_settings_update_job_sequence()
 
     def test_recordings_unscheduled(self):
@@ -226,22 +199,15 @@ class TestOptIn2:
     """
 
     def test_set_up(self):
-        util.reset_sent_email_test_data(section_0)
-        util.reset_sent_email_test_data(section=None, instructor=instructor_0)
-        self.kaltura_page.reset_test_data(section_0)
-        util.reset_section_test_data(section_0, delete_opt_ins=True)
-        util.reset_user_preferences(instructor_0)
+        self.kaltura_page.log_in_and_reset_test_data(self.calnet_page, [section_0])
+        util.reset_section_and_user_test_data([section_0], [instructor_0])
 
     def test_opt_in_all(self):
-        self.ouija_page.load_page()
-        self.ouija_page.log_out()
         self.login_page.dev_auth(instructor_0)
         # TODO - opt in all
 
     def test_schedule_recordings(self):
-        self.courses_page.log_out()
         self.login_page.dev_auth()
-        self.ouija_page.click_jobs_link()
         self.jobs_page.run_schedule_update_job_sequence()
 
     def test_recordings_scheduled(self):
@@ -254,14 +220,11 @@ class TestOptIn2:
                                          instructor=instructor_0) == 1
 
     def test_instructor_opts_out(self):
-        self.jobs_page.log_out()
         self.login_page.dev_auth(instructor_0)
         # TODO - opt out course
 
     def test_unschedule_recordings(self):
-        self.courses_page.log_out()
         self.login_page.dev_auth()
-        self.ouija_page.click_jobs_link()
         self.jobs_page.run_settings_update_job_sequence()
 
     def test_recordings_unscheduled(self):
@@ -292,17 +255,10 @@ class TestOptIn3:
     """
 
     def test_set_up(self):
-        util.reset_sent_email_test_data(section_1)
-        util.reset_sent_email_test_data(section=None, instructor=instructor_1_0)
-        self.kaltura_page.reset_test_data(section_1)
-        util.reset_section_test_data(section_1, delete_opt_ins=True)
-        util.reset_user_preferences(instructor_1_0)
-        util.reset_user_preferences(instructor_1_1)
-        util.change_course_instructor(section_1, old_instructor=None, new_instructor=None)
+        self.kaltura_page.log_in_and_reset_test_data(self.calnet_page, [section_1])
+        util.reset_section_and_user_test_data([section_1], [instructor_1_0, instructor_1_1])
 
     def test_instructor_opt_in_all(self):
-        self.ouija_page.load_page()
-        self.ouija_page.log_out()
         self.login_page.dev_auth(instructor_1_0)
         # TODO - opt in for all
 
@@ -311,9 +267,7 @@ class TestOptIn3:
         section_1.instructors = [instructor_1_0]
 
     def test_schedule_recordings(self):
-        self.courses_page.log_out()
         self.login_page.dev_auth()
-        self.ouija_page.click_jobs_link()
         self.jobs_page.run_schedule_update_job_sequence()
 
     def test_recordings_scheduled(self):
@@ -388,17 +342,10 @@ class TestOptIn4:
     """
 
     def test_set_up(self):
-        util.reset_sent_email_test_data(section_1)
-        util.reset_sent_email_test_data(section=None, instructor=instructor_1_0)
-        util.reset_sent_email_test_data(section=None, instructor=instructor_1_1)
-        self.kaltura_page.reset_test_data(section_1)
-        util.reset_section_test_data(section_1)
-        util.reset_user_preferences(instructor_1_0)
-        util.reset_user_preferences(instructor_1_1)
+        self.kaltura_page.log_in_and_reset_test_data(self.calnet_page, [section_1])
+        util.reset_section_and_user_test_data([section_1], [instructor_1_0, instructor_1_1])
 
     def test_run_schedule_update(self):
-        self.ouija_page.load_page()
-        self.ouija_page.click_jobs_link()
         self.jobs_page.run_schedule_update_job_sequence()
 
     def test_instructor_0_new_course_eligible(self):
@@ -410,14 +357,11 @@ class TestOptIn4:
                                          instructor=instructor_1_1) == 1
 
     def test_instructor_0_opts_in(self):
-        self.jobs_page.log_out()
         self.login_page.dev_auth(instructor_1_0)
         # TODO - opt in
 
     def test_run_remind_partially_approved_job(self):
-        self.courses_page.log_out()
         self.login_page.dev_auth()
-        self.ouija_page.click_jobs_link()
         self.jobs_page.run_remind_partially_approved_job_sequence()
 
     def test_instructor_0_partially_approved_reminder(self):
@@ -429,14 +373,11 @@ class TestOptIn4:
                                          instructor=instructor_1_1) == 1
 
     def test_instructor_1_opts_in(self):
-        self.jobs_page.log_out()
         self.login_page.dev_auth(instructor_1_1)
         # TODO - opt in
 
     def test_schedule_recordings(self):
-        self.courses_page.log_out()
         self.login_page.dev_auth()
-        self.ouija_page.click_jobs_link()
         self.jobs_page.run_settings_update_job_sequence()
 
     def test_recordings_scheduled(self):
@@ -511,25 +452,16 @@ class TestOptIn5:
     """
 
     def test_set_up(self):
-        util.reset_sent_email_test_data(section_1)
-        util.reset_sent_email_test_data(section=None, instructor=instructor_1_0)
-        util.reset_sent_email_test_data(section=None, instructor=instructor_1_1)
-        self.kaltura_page.reset_test_data(section_1)
-        util.reset_section_test_data(section_1)
-        util.reset_user_preferences(instructor_1_0)
-        util.reset_user_preferences(instructor_1_1)
+        self.kaltura_page.log_in_and_reset_test_data(self.calnet_page, [section_1])
+        util.reset_section_and_user_test_data([section_1], [instructor_1_0, instructor_1_1])
         util.set_instructor_role(section_1, instructor_1_1, 'ICNT')
 
     def test_decline_reminder_emails(self):
-        self.ouija_page.load_page()
-        self.ouija_page.log_out()
         self.login_page.dev_auth(instructor_1_0)
         # TODO - no reminders
 
     def test_run_schedule_updates(self):
-        self.courses_page.log_out()
         self.login_page.dev_auth()
-        self.ouija_page.click_jobs_link()
         self.jobs_page.run_schedule_update_job_sequence()
 
     def test_recordings_not_scheduled(self):
@@ -556,14 +488,11 @@ class TestOptIn5:
                                          instructor=instructor_1_1) == 0
 
     def test_instructor_0_opts_in(self):
-        self.jobs_page.log_out()
         self.login_page.dev_auth(instructor_1_0)
         # TODO - opt in
 
     def test_run_settings_update(self):
-        self.courses_page.log_out()
         self.login_page.dev_auth()
-        self.ouija_page.click_jobs_link()
         self.jobs_page.run_settings_update_job_sequence()
 
     def test_recordings_still_not_scheduled(self):
@@ -582,14 +511,11 @@ class TestOptIn5:
                                          instructor=instructor_1_1) == 0
 
     def test_instructor_0_opts_out(self):
-        self.jobs_page.log_out()
         self.login_page.dev_auth(instructor_1_0)
         # TODO - opt out
 
     def test_run_settings_update_again(self):
-        self.courses_page.log_out()
         self.login_page.dev_auth()
-        self.ouija_page.click_jobs_link()
         self.jobs_page.run_settings_update_job_sequence()
 
     def test_instructor_0_no_opt_out_email(self):
@@ -621,29 +547,19 @@ class TestOptIn6:
     """
 
     def test_set_up(self):
-        util.reset_sent_email_test_data(section_1)
-        util.reset_sent_email_test_data(section=None, instructor=instructor_1_0)
-        util.reset_sent_email_test_data(section=None, instructor=instructor_1_1)
-        self.kaltura_page.reset_test_data(section_1)
-        util.reset_section_test_data(section_1)
-        util.reset_user_preferences(instructor_1_0)
-        util.reset_user_preferences(instructor_1_1)
+        self.kaltura_page.log_in_and_reset_test_data(self.calnet_page, [section_1])
+        util.reset_section_and_user_test_data([section_1], [instructor_1_0, instructor_1_1])
 
     def test_instructor_0_opt_in_for_all(self):
-        self.ouija_page.load_page()
-        self.ouija_page.log_out()
         self.login_page.dev_auth(instructor_1_0)
         # TODO - opt in for all
 
     def test_instructor_1_decline_reminder_emails(self):
-        self.courses_page.log_out()
         self.login_page.dev_auth(instructor_1_1)
         # TODO - no reminders
 
     def test_run_schedule_updates(self):
-        self.courses_page.log_out()
         self.login_page.dev_auth()
-        self.ouija_page.click_jobs_link()
         self.jobs_page.run_schedule_update_job_sequence()
 
     def test_recordings_not_scheduled(self):
@@ -679,15 +595,12 @@ class TestOptIn6:
                                          instructor=instructor_1_1) == 0
 
     def test_instructor_1_opts_in(self):
-        self.jobs_page.log_out()
         self.login_page.dev_auth(instructor_1_1)
         # TODO opt in
         # TODO verify no-reminders option vanishes
 
     def test_schedule_recordings(self):
-        self.courses_page.log_out()
         self.login_page.dev_auth()
-        self.ouija_page.click_jobs_link()
         self.jobs_page.run_settings_update_job_sequence()
 
     def test_recordings_scheduled(self):
@@ -714,14 +627,11 @@ class TestOptIn6:
                                          instructor=instructor_1_1) == 1
 
     def test_instructor_0_removes_opt_in_all(self):
-        self.jobs_page.log_out()
         self.login_page.dev_auth(instructor_1_0)
         # TODO remove opt-in-all
 
     def test_run_settings_update(self):
-        self.courses_page.log_out()
         self.login_page.dev_auth()
-        self.ouija_page.click_jobs_link()
         self.jobs_page.run_settings_update_job_sequence()
 
     def test_recordings_still_scheduled(self):
@@ -741,30 +651,17 @@ class TestOptIn7:
     """
 
     def test_set_up(self):
-        util.reset_sent_email_test_data(section_1)
-        util.reset_sent_email_test_data(section_0)
-        self.kaltura_page.reset_test_data(section_1)
-        self.kaltura_page.reset_test_data(section_0)
-        util.reset_section_test_data(section_1)
-        util.reset_section_test_data(section_0)
+        self.kaltura_page.log_in_and_reset_test_data(self.calnet_page, [section_0, section_1])
+        util.reset_section_and_user_test_data([section_0, section_1], [instructor_1_0, instructor_1_1])
         util.change_course_instructor(section_0, old_instructor=None, new_instructor=instructor_1_1)
         util.set_instructor_role(section_1, instructor_1_1, 'APRX')
 
-        util.reset_sent_email_test_data(section=None, instructor=instructor_1_0)
-        util.reset_sent_email_test_data(section=None, instructor=instructor_1_1)
-        util.reset_user_preferences(instructor_1_0)
-        util.reset_user_preferences(instructor_1_1)
-
     def test_instructor_1_opts_in_for_all(self):
-        self.ouija_page.load_page()
-        self.ouija_page.log_out()
         self.login_page.dev_auth(instructor_1_1)
         # TODO - opt in for all
 
     def test_run_schedule_update(self):
-        self.courses_page.log_out()
         self.login_page.dev_auth()
-        self.ouija_page.click_jobs_link()
         self.jobs_page.run_schedule_update_job_sequence()
 
     def test_section_0_not_scheduled(self):
@@ -793,14 +690,11 @@ class TestOptIn7:
                                          instructor=instructor_1_0)
 
     def test_instructor_0_opts_in(self):
-        self.jobs_page.log_out()
         self.login_page.dev_auth(instructor_1_0)
         # TODO - opt in
 
     def test_schedule_recordings(self):
-        self.courses_page.log_out()
         self.login_page.dev_auth()
-        self.ouija_page.click_jobs_link()
         self.jobs_page.run_settings_update_job_sequence()
 
     def test_recordings_scheduled(self):
@@ -827,28 +721,19 @@ class TestOptIn8:
     """
 
     def test_setup(self):
-        util.reset_sent_email_test_data(section_1)
-        util.reset_sent_email_test_data(section_0)
-        self.kaltura_page.reset_test_data(section_1)
-        self.kaltura_page.reset_test_data(section_0)
-        util.reset_section_test_data(section_1)
-        util.reset_section_test_data(section_0)
-        util.delete_sis_sections_rows(section_1)
+        self.kaltura_page.log_in_and_reset_test_data(self.calnet_page, [section_0, section_1])
+        util.reset_section_and_user_test_data([section_0, section_1], [instructor_1_0, instructor_1_1])
         util.delete_sis_sections_rows(section_0)
-        util.add_sis_sections_rows(section_1, [instructor_1_0])
+        util.delete_sis_sections_rows(section_1)
         util.add_sis_sections_rows(section_0, [instructor_1_0])
-        util.reset_sent_email_test_data(section=None, instructor=instructor_1_0)
-        util.reset_user_preferences(instructor_1_0)
+        util.add_sis_sections_rows(section_1, [instructor_1_0])
 
     def test_opt_in_for_one(self):
-        self.ouija_page.load_page()
         self.login_page.dev_auth(instructor_1_0)
         # TODO - opt in one course only
 
     def test_schedule_recordings(self):
-        self.courses_page.log_out()
         self.login_page.dev_auth()
-        self.ouija_page.click_jobs_link()
         self.jobs_page.run_schedule_update_job_sequence()
 
     def test_one_course_scheduled_only(self):

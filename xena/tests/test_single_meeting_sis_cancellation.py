@@ -57,23 +57,11 @@ class TestCourseCancellation:
     recording_schedule = RecordingSchedule(section, meeting)
 
     def test_setup(self):
-        self.login_page.load_page()
         self.login_page.dev_auth()
-
-        self.ouija_page.click_jobs_link()
         self.jobs_page.disable_all_jobs()
-
-        self.jobs_page.click_blackouts_link()
         self.blackouts_page.create_all_blackouts()
-
-        self.kaltura_page.log_in_via_calnet(self.calnet_page)
-        self.kaltura_page.reset_test_data(self.section)
-
-        util.reset_section_test_data(self.section)
-        util.reset_user_preferences(self.instructor)
-
-        util.reset_sent_email_test_data(self.section)
-        util.reset_sent_email_test_data(section=None, instructor=self.instructor)
+        self.kaltura_page.log_in_and_reset_test_data(self.calnet_page, [self.section])
+        util.reset_section_and_user_test_data([self.section], [self.instructor])
 
     # COURSE IS CANCELLED BEFORE SCHEDULING
 
@@ -81,7 +69,6 @@ class TestCourseCancellation:
         util.delete_section(self.section)
 
     def test_cancel_pre_sched_no_search_result(self):
-        self.ouija_page.load_page()
         self.ouija_page.search_for_course_code(self.section)
         self.ouija_page.filter_for_all()
         assert not self.ouija_page.is_course_in_results(self.section)
@@ -94,7 +81,6 @@ class TestCourseCancellation:
         assert not self.course_page.is_present(CoursePage.PLACEMENT_EDIT_BUTTON)
 
     def test_cancel_pre_sched_no_teacher_result(self):
-        self.course_page.log_out()
         self.login_page.dev_auth(self.instructor.uid)
         self.courses_page.wait_for_title_contains(f"Your {app.config['CURRENT_TERM_NAME']} Course")
         assert not self.courses_page.is_present(OuijaBoardPage.course_row_link_locator(self.section))
@@ -105,9 +91,7 @@ class TestCourseCancellation:
         util.restore_section(self.section)
         self.courses_page.reload_page()
         # TODO - opt in
-        self.courses_page.log_out()
         self.login_page.dev_auth()
-        self.ouija_page.click_jobs_link()
         self.jobs_page.run_settings_update_job_sequence()
 
     def test_kaltura_schedule_id(self):
@@ -127,7 +111,6 @@ class TestCourseCancellation:
     # UNSCHEDULE CANCELED COURSE
 
     def test_unsched_canceled(self):
-        self.jobs_page.load_page()
         self.jobs_page.run_schedule_update_job_sequence()
 
     def test_no_kaltura_series_canceled_unsched(self):
@@ -135,7 +118,6 @@ class TestCourseCancellation:
         self.kaltura_page.wait_for_title('Access Denied - UC Berkeley - Test')
 
     def test_unsched_again_filter_all(self):
-        self.ouija_page.load_page()
         self.ouija_page.search_for_course_code(self.section)
         self.ouija_page.filter_for_all()
         assert not self.ouija_page.is_course_in_results(self.section)

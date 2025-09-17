@@ -60,28 +60,15 @@ class TestCourseScheduleChanges:
     newer_meeting_original_record_start = newer_meeting.meeting_schedule.record_start
 
     def test_setup(self):
-        self.login_page.load_page()
         self.login_page.dev_auth()
-
-        self.ouija_page.click_jobs_link()
         self.jobs_page.disable_all_jobs()
-
-        self.jobs_page.click_blackouts_link()
         self.blackouts_page.create_all_blackouts()
-
-        self.kaltura_page.log_in_via_calnet(self.calnet_page)
-        self.kaltura_page.reset_test_data(self.section)
-
-        util.reset_section_test_data(self.section)
-        util.reset_user_preferences(self.instr)
-
-        util.reset_sent_email_test_data(self.section)
-        util.reset_sent_email_test_data(section=None, instructor=self.instr)
+        self.kaltura_page.log_in_and_reset_test_data(self.calnet_page, [self.section])
+        util.reset_section_and_user_test_data([self.section], [self.instr])
 
     def test_schedule_recordings(self):
         self.course_page.load_page(self.section)
         # TODO - admin opts course in
-        self.jobs_page.load_page()
         self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
         util.get_kaltura_id(self.recording_schedule)
         self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
@@ -102,7 +89,6 @@ class TestCourseScheduleChanges:
         self.recording_schedule.meeting = self.new_meeting
 
     def test_reschedule_with_new_times(self):
-        self.jobs_page.load_page()
         self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
 
     def test_schedule_change_email(self):
@@ -111,9 +97,7 @@ class TestCourseScheduleChanges:
     # VERIFY SERIES IN DIABLO
 
     def test_room_new_series(self):
-        self.rooms_page.load_page()
-        self.rooms_page.find_room(self.room)
-        self.rooms_page.click_room_link(self.room)
+        self.rooms_page.navigate_to_room_page(self.meeting.room)
         self.room_page.wait_for_series_row(self.recording_schedule)
 
     def test_room_series_link(self):
@@ -166,9 +150,7 @@ class TestCourseScheduleChanges:
     # EXPORT ROOM SCHEDULED EVENTS TO ICAL
 
     def test_ical_export_room_no_events(self):
-        self.course_page.click_rooms_link()
-        self.rooms_page.find_room(self.room)
-        self.rooms_page.click_room_link(self.room)
+        self.rooms_page.navigate_to_room_page(self.meeting.room)
         self.room_page.scroll_to_kaltura_events()
         date_with_no_recordings = self.recording_schedule.meeting.meeting_schedule.date_with_no_recordings(
             self.recording_schedule.section.term,
@@ -201,7 +183,6 @@ class TestCourseScheduleChanges:
         self.recording_schedule.meeting = self.newer_meeting
 
     def test_unschedule_with_null_schedule(self):
-        self.jobs_page.load_page()
         self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
 
     def test_verify_updated_kaltura_series_gone(self):

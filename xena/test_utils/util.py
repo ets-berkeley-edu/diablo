@@ -530,7 +530,7 @@ def get_blackout_date_ranges():
     return ranges
 
 
-def reset_section_test_data(section, delete_opt_ins=True):
+def reset_section_test_data(section):
     reset_test_data(section)
     term_id = app.config['CURRENT_TERM_ID']
     sql = f'DELETE FROM scheduled WHERE section_id = {section.ccn} AND term_id = {term_id}'
@@ -549,11 +549,6 @@ def reset_section_test_data(section, delete_opt_ins=True):
     app.logger.info(sql)
     db.session.execute(text(sql))
     std_commit(allow_test_environment=True)
-    if delete_opt_ins:
-        sql = f'DELETE FROM opt_ins WHERE section_id = {section.ccn} AND term_id = {term_id}'
-        app.logger.info(sql)
-        db.session.execute(text(sql))
-        std_commit(allow_test_environment=True)
 
 
 def reset_user_preferences(instructor):
@@ -564,6 +559,15 @@ def reset_user_preferences(instructor):
     app.logger.info(sql)
     db.session.execute(text(sql))
     std_commit(allow_test_environment=True)
+
+
+def reset_section_and_user_test_data(sections, users):
+    for section in sections:
+        reset_section_test_data(section)
+        reset_sent_email_test_data(section)
+    for user in users:
+        reset_user_preferences(user)
+        reset_sent_email_test_data(section=None, instructor=user)
 
 
 # ADD/UPDATE LOCATION, SCHEDULE, INSTRUCTORS

@@ -45,15 +45,25 @@ class LoginPage(DiabloPages):
     def click_sign_in(self):
         self.wait_for_page_and_click(LoginPage.SIGN_IN_BUTTON)
 
-    def dev_auth(self, uid=None):
+    def enter_dev_auth(self, uid=None):
+        self.load_page()
         if not uid:
             uid = util.get_admin_uid()
         app.logger.info(f'Logging in to El Diablo as UID {uid}')
+
         Wait(self.driver, util.get_medium_timeout()).until(
-            lambda x: 'Welcome' in self.driver.title or 'Ouija Board' in self.driver.title or 'Eligible' in self.driver.title,
+            lambda x: '/login' in self.driver.current_url or '/ouija' in self.driver.current_url or '/home' in self.driver.current_url,
         )
-        if 'Ouija Board' in self.driver.title or 'Eligible' in self.driver.title:
+        if '/login' not in self.driver.current_url:
             self.log_out()
         self.wait_for_element_and_type(LoginPage.USERNAME_INPUT, uid)
         self.wait_for_element_and_type(LoginPage.PASSWORD_INPUT, app.config['DEV_AUTH_PASSWORD'])
         self.wait_for_element_and_click(LoginPage.DEV_AUTH_LOGIN_BUTTON)
+
+    def dev_auth(self, uid=None):
+        self.enter_dev_auth(uid)
+        self.when_present(self.LOG_OUT_LINK, util.get_short_timeout())
+
+    def non_auth_dev_auth(self, uid):
+        self.enter_dev_auth(uid)
+        self.wait_for_element(self.ALERT_MSG, util.get_short_timeout())

@@ -104,5 +104,6 @@ class BlackoutsPage(DiabloPages):
             time.sleep(1)
 
     def create_all_blackouts(self):
+        self.click_blackouts_link()
         for date_pair in util.get_blackout_date_ranges():
             self.create_blackout_date(date_pair)
