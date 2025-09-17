@@ -2,6 +2,7 @@
 export type DiabloConfig = {
   apiBaseUrl: string,
   canvasBaseUrl: string,
+  courseCapturePremiumCost: number,
   currentTermId: number,
   currentTermName: string,
   currentTermRecordingsBegin: string,
