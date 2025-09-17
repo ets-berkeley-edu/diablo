@@ -13,17 +13,18 @@
         aria-label="Edit note"
         :disabled="isSaving"
         text="Edit"
-        variant="elevated"
+        variant="outlined"
         @click="editNote"
       />
       <v-btn
         v-if="course.note"
         id="btn-delete-note"
         aria-label="Delete Note"
-        class="ml-2"
+        class="ml-1"
+        color="red-lighten-2"
         :disabled="isSaving"
         text="Delete"
-        variant="elevated"
+        variant="flat"
         @click="deleteNote"
       />
     </v-card-actions>
@@ -50,7 +51,7 @@
       <v-btn
         id="btn-cancel-note"
         aria-label="Cancel Note Edit"
-        class="ml-2"
+        class="ml-1"
         :disabled="isSaving"
         text="Cancel"
         variant="text"
@@ -61,19 +62,14 @@
 </template>
 
 <script lang="ts" setup>
-import type {PropType} from 'vue'
-import {ref} from 'vue'
-import type {Course} from '@/lib/types'
+import {ref, watch} from 'vue'
 import {alertScreenReader, putFocusNextTick} from '@/lib/utils'
 import {deleteCourseNote, updateCourseNote} from '@/api/course'
-import ProgressButton from '@/components/util/ProgressButton.vue'
 import {useContextStore} from '@/stores/context'
+import {useCourseStore} from '@/stores/course'
+import ProgressButton from '@/components/util/ProgressButton.vue'
 
 const props = defineProps({
-  course: {
-    required: true,
-    type: Object as PropType<Course>
-  },
   setModel: {
     required: true,
     type: Function
@@ -81,13 +77,17 @@ const props = defineProps({
 })
 
 const {currentUser} = useContextStore()
+const courseStore = useCourseStore()
+const course = courseStore.course
 const isEditing = ref(false)
 const isSaving = ref(false)
 const noteBody = ref<string | undefined>()
 
+watch(isEditing, courseStore.setDisableButtons)
+watch(isSaving, courseStore.setDisableButtons)
 
 const cancelNote = () => {
-  noteBody.value = props.course.note
+  noteBody.value = course.note
   isEditing.value = false
   isSaving.value = false
   alertScreenReader('Canceled edit.')
@@ -96,7 +96,7 @@ const cancelNote = () => {
 
 const deleteNote = () => {
   isSaving.value = true
-  deleteCourseNote(props.course.termId, props.course.sectionId)
+  deleteCourseNote(course.termId, course.sectionId)
     .then(() => {
       props.setModel(null)
       noteBody.value = undefined
@@ -107,7 +107,7 @@ const deleteNote = () => {
 }
 
 const editNote = () => {
-  noteBody.value = props.course.note
+  noteBody.value = course.note
   isEditing.value = true
   putFocusNextTick('note-body-edit')
 }
@@ -115,7 +115,7 @@ const editNote = () => {
 const saveNote = () => {
   if (noteBody.value) {
     isSaving.value = true
-    updateCourseNote(props.course.termId, props.course.sectionId, noteBody.value).then(data => {
+    updateCourseNote(course.termId, course.sectionId, noteBody.value).then(data => {
       noteBody.value = data.note
       props.setModel(data.note)
       isEditing.value = false

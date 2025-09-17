@@ -47,14 +47,14 @@
         >
           <v-card class="pa-4">
             <v-container v-if="isCurrentTerm && !!capability && hasValidMeetingTimes" class="pt-2">
-              <v-row class="py-0">
+              <v-row v-if="allowToggleOptIn" class="py-0">
                 <v-col>
                   <ToggleOptIn
                     :before-toggle="() => courseStore.setDisableButtons(true)"
                     :disabled="courseStore.disableButtons"
                     :initial-value="toggleOptInValue"
                     :instructor-uids="currentUser.isAdmin ? ['admin'] : [currentUser.uid]"
-                    :label="`Opt ${toggleOptInValue ? 'out of' : 'in to'} Course Capture`"
+                    :label="`Opt ${currentUser.isAdmin ? 'this course' : ''} ${toggleOptInValue ? 'out of' : 'in to'} Course Capture`"
                     :on-toggle="onToggle"
                     :section-id="`${course.sectionId}`"
                     :term-id="`${course.termId}`"
@@ -198,6 +198,11 @@ const contextStore = useContextStore()
 const courseStore = useCourseStore()
 
 const {course} = storeToRefs(courseStore)
+const allowToggleOptIn = computed(() => {
+  const nonAprxInstructors = course.value.instructors.filter(i => i.roleCode !== 'APRX')
+  const instructorsNotOptedIn = course.value.instructors.filter(i => i.roleCode !== 'APRX' && !i.hasOptedIn)
+  return (nonAprxInstructors.length && !instructorsNotOptedIn.length) || (currentUser.isAdmin && !nonAprxInstructors.length)
+})
 const config = contextStore.config
 const currentUser = contextStore.currentUser
 const agreedToTerms = ref(false)

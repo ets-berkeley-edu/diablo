@@ -1105,14 +1105,13 @@ class TestUpdateOptIn:
             api_json = api_get_course(client, section_id=eligible_course_with_no_instructors, term_id=self.term_id)
             assert api_json['hasOptedIn'] is False
 
-
     def test_admin_opt_in_course_with_instructor(self, client, fake_auth):
         fake_auth.login(admin_uid)
         with test_scheduling_workflow(app):
             api_json = api_get_course(client, section_id=section_2_id, term_id=self.term_id)
             assert api_json['hasOptedIn'] is False
 
-            # If a course has an instructor, an admin opt-in has no effect.
+            # Admin opt-in
             _api_opt_in_update(
                 client,
                 instructor_uid='admin',
@@ -1123,7 +1122,7 @@ class TestUpdateOptIn:
             api_json = api_get_course(client, section_id=section_2_id, term_id=self.term_id)
             assert api_json['hasOptedIn'] is False
 
-            # Undo, still no effect.
+            # Admin opt-out
             _api_opt_in_update(
                 client,
                 instructor_uid='admin',
