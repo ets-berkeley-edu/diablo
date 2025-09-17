@@ -53,19 +53,12 @@
 </template>
 
 <script lang="ts" setup>
-import type {PropType} from 'vue'
 import {isEmpty} from 'lodash'
-import type {Course} from '@/lib/types'
 import {useContextStore} from '@/stores/context'
 import Date from '@/components/util/Date.vue'
 import ExternalLink from '@/components/util/ExternalLink.vue'
-
-defineProps({
-  course: {
-    type: Object as PropType<Course>,
-    required: true
-  }
-})
+import {useCourseStore} from '@/stores/course'
 
 const {config} = useContextStore()
+const {course} = useCourseStore()
 </script>

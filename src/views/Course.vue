@@ -87,12 +87,13 @@
       <div v-if="currentUser.isAdmin">
         <v-col>
           <ToggleOptIn
-            :term-id="`${course.termId}`"
-            :section-id="`${course.sectionId}`"
+            :disabled="courseStore.disableButtons"
+            :initial-value="course.hasOptedIn"
             :instructor-uids="['admin']"
             label="as admin"
-            :initial-value="course.hasOptedIn"
             :on-toggle="onToggle"
+            :section-id="`${course.sectionId}`"
+            :term-id="`${course.termId}`"
           />
         </v-col>
       </div>
@@ -138,12 +139,10 @@
             </v-row>
             <Collaborators
               v-if="!!capability"
-              :course="course"
               :set-model="collaborators => course.collaborators = collaborators"
             />
             <RecordingType
               v-if="!!capability"
-              :course="course"
               :labels="displayLabels"
               :set-model="setRecordingType"
             />
@@ -223,8 +222,8 @@
                 </ul>
               </v-col>
             </v-row>
-            <div class="my-3">
-              <ScheduledCourse v-if="currentUser.isAdmin" :course="course" />
+            <div v-if="currentUser.isAdmin" class="my-3">
+              <ScheduledCourse />
             </div>
           </v-container>
           <v-container v-if="isCurrentTerm && !capability" class="pt-6">
@@ -289,6 +288,7 @@ import {getAuditoriums} from '@/api/room'
 import {getCourse} from '@/api/course'
 import {getCourseCodes, getTermName} from '@/lib/utils'
 import {useContextStore} from '@/stores/context'
+import {useCourseStore} from '@/stores/course.js'
 import Collaborators from '@/components/course/Collaborators'
 import CourseHistory from '@/components/course/CourseHistory'
 import CourseNotes from '@/components/course/CourseNotes'
@@ -302,21 +302,13 @@ import ScheduledCourse from '@/components/course/ScheduledCourse'
 import ToggleOptIn from '@/components/course/ToggleOptIn.vue'
 
 const contextStore = useContextStore()
+const courseStore = useCourseStore()
+
+const {course} = storeToRefs(courseStore)
 const {config, currentUser, loading} = storeToRefs(contextStore)
 const agreedToTerms = ref(false)
 const auditoriums = ref([])
 const capability = ref()
-const course = ref({
-  canvasSites: [],
-  collaborators: [],
-  instructors: [],
-  meetings: {
-    eligible: [],
-    ineligible: []
-  },
-  note: undefined,
-  updateHistory: []
-})
 const courseDisplayTitle = ref('')
 const displayLabels = reactive({
   kaltura_media_gallery: 'Publish to the Media Gallery (all members of the bCourses site will have access)',
@@ -344,22 +336,21 @@ onMounted(() => {
 })
 
 const refreshCourse = (termId, sectionId) => {
-  return getCourse(termId, sectionId)
-    .then(data => {
-      course.value = data
-      agreedToTerms.value = currentUser.isAdmin
-      instructors.value = data.instructors.filter(i => i.roleCode !== 'APRX')
-      instructorProxies.value = data.instructors.filter(i => i.roleCode === 'APRX')
-      const eligible = data.meetings.eligible
-      const meeting = eligible[0] || data.meetings.ineligible[0]
-      capability.value = meeting.room?.capability
-      location.value = meeting.room?.location
-      hasValidMeetingTimes.value = eligible.some(m => m.startDate && m.startTime && m.endDate && m.endTime)
-      courseDisplayTitle.value = getCourseCodes(data)[0]
-      getAuditoriums().then(aud => {
-        auditoriums.value = aud
-      })
+  return getCourse(termId, sectionId).then(data => {
+    courseStore.setCourse(data)
+    agreedToTerms.value = currentUser.isAdmin
+    instructors.value = data.instructors.filter(i => i.roleCode !== 'APRX')
+    instructorProxies.value = data.instructors.filter(i => i.roleCode === 'APRX')
+    const eligible = data.meetings.eligible
+    const meeting = eligible[0] || data.meetings.ineligible[0]
+    capability.value = meeting.room?.capability
+    location.value = meeting.room?.location
+    hasValidMeetingTimes.value = eligible.some(m => m.startDate && m.startTime && m.endDate && m.endTime)
+    courseDisplayTitle.value = getCourseCodes(data)[0]
+    getAuditoriums().then(aud => {
+      auditoriums.value = aud
     })
+  })
 }
 
 const onToggle = () => {
