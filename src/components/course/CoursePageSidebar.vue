@@ -1,7 +1,7 @@
 <template>
   <v-card
     aria-labelledby="course-summary-header"
-    class="pa-6 px-md-4 px-lg-6 mx-1"
+    class="pb-8 pt-6 px-6 px-md-4 px-lg-6 mx-1"
     role="region"
   >
     <h2 id="course-summary-header" class="sr-only">
@@ -11,11 +11,10 @@
       v-if="course.instructors.length"
       id="instructors"
       :class="{'line-through': course.deletedAt}"
-      class="pb-2"
     >
       <v-col cols="auto">
         <h3 class="sr-only">Instructors</h3>
-        <v-icon :icon="mdiSchoolOutline" />
+        <v-icon color="primary" :icon="mdiSchoolOutline" />
       </v-col>
       <v-col>
         <OxfordJoin v-slot="{ item }" :items="course.instructors">
@@ -47,7 +46,7 @@
         :class="{'line-through': course.deletedAt}"
       >
         <v-col class="pb-0" cols="auto">
-          <v-icon :icon="mdiCalendar" />
+          <v-icon color="primary" :icon="mdiCalendar" />
         </v-col>
         <v-col class="pb-0">
           <Days :names-of-days="meeting.daysNames" />
@@ -82,7 +81,7 @@
         :class="{'line-through': course.deletedAt}"
       >
         <v-col cols="auto" class="py-1">
-          <v-icon :icon="mdiClockOutline" />
+          <v-icon color="primary" :icon="mdiClockOutline" />
         </v-col>
         <v-col class="py-1">
           <span aria-hidden="true">
@@ -99,7 +98,7 @@
         :class="{'line-through': course.deletedAt}"
       >
         <v-col class="py-1" cols="auto">
-          <v-icon :icon="mdiMapMarker" />
+          <v-icon color="primary" :icon="mdiMapMarker" />
         </v-col>
         <v-col v-if="currentUser.isAdmin" class="py-1">
           <router-link :to="`/room/${meeting.room.id}`">
@@ -113,7 +112,7 @@
     </div>
     <v-row v-if="course && course.crossListings.length" id="cross-listings" class="mt-3">
       <v-col class="py-1" cols="auto">
-        <v-icon :icon="mdiFormatLineSpacing" />
+        <v-icon color="primary" :icon="mdiFormatLineSpacing" />
       </v-col>
       <v-col class="py-1">
         <span>
@@ -130,7 +129,7 @@
     </v-row>
     <v-row v-if="currentUser.isAdmin && course.hasOptedIn" id="opted-out" class="mt-3">
       <v-col class="py-1" cols="auto">
-        <v-icon :icon="mdiMinusCircle" />
+        <v-icon color="primary" :icon="mdiMinusCircle" />
       </v-col>
       <v-col class="py-1">Opted in</v-col>
     </v-row>
@@ -150,7 +149,8 @@ import {
   mdiSchoolOutline
 } from '@mdi/js'
 import type {Course, Meeting} from '@/lib/types'
-import {getDisplayMeetings, pluralize} from '@/lib/utils'
+import {getDisplayMeetings} from '@/lib/berkeley'
+import {pluralize} from '@/lib/utils'
 import {useContextStore} from '@/stores/context'
 import Date from '@/components/util/Date.vue'
 import Days from '@/components/util/Days.vue'

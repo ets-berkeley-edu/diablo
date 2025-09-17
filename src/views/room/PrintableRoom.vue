@@ -115,9 +115,9 @@ import {storeToRefs} from 'pinia'
 import {DateTime} from 'luxon'
 import {each, filter, get} from 'lodash'
 import {mdiCopyright} from '@mdi/js'
-import {useContextStore} from '@/stores/context'
-import {getDisplayMeetings} from '@/lib/utils'
+import {getDisplayMeetings} from '@/lib/berkeley'
 import {getRoom} from '@/api/room'
+import {useContextStore} from '@/stores/context'
 import Spinner from '@/components/util/Spinner'
 
 const contextStore = useContextStore()

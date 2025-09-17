@@ -8,7 +8,6 @@
     <v-col
       v-if="!isEditing"
       id="collaborators-list"
-      class="px-4"
       cols="12"
     >
       <h3 id="collaborators-header">
@@ -37,7 +36,7 @@
         />
       </div>
     </v-col>
-    <v-col v-if="isEditing" class="px-4">
+    <v-col v-if="isEditing">
       <v-card class="bg-surface-light border-sm elevation-0 w-100">
         <v-container>
           <v-row

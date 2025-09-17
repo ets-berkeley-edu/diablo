@@ -1,5 +1,5 @@
 <template>
-  <div v-if="!loading">
+  <div v-if="!contextStore.loading">
     <PageTitle
       class="pl-4"
       :class-for-h1="course.deletedAt ? 'line-through' : ''"
@@ -36,133 +36,136 @@
           </div>
         </div>
       </div>
-      <div v-if="currentUser.isAdmin">
-        <v-col>
-          <ToggleOptIn
-            :disabled="courseStore.disableButtons"
-            :initial-value="course.hasOptedIn"
-            :instructor-uids="['admin']"
-            label="as admin"
-            :on-toggle="onToggle"
-            :section-id="`${course.sectionId}`"
-            :term-id="`${course.termId}`"
-          />
-        </v-col>
-      </div>
     </div>
-    <v-row>
-      <v-col
-        cols="12"
-        md="8"
-        order="2"
-        xl="9"
-      >
-        <v-card>
-          <v-container v-if="isCurrentTerm && !!capability && hasValidMeetingTimes" class="pt-6">
-            <DescribeCourseSchedulingStatus />
-            <v-row
-              align="center"
-              aria-label="Instructors"
-              justify="start"
-              role="region"
-            >
-              <v-col id="instructors-list" class="px-4" cols="12">
-                <h3 id="instructors-header">
-                  <span v-if="course.scheduled">
-                    <span :aria-hidden="true">Instructor(s)</span><span class="sr-only">Instructors</span> listed will have editing and publishing access:
-                  </span>
-                  <span v-if="!course.deletedAt && !course.scheduled">
-                    <span :aria-hidden="true">Instructor(s):</span><span class="sr-only">Instructors</span>
-                  </span>
-                </h3>
-                <div class="pl-4">
-                  <div v-if="isEmpty(course.instructors)" class="mt-1 text-medium-emphasis">
-                    No instructors
+    <v-container fluid>
+      <v-row>
+        <v-col
+          cols="12"
+          md="8"
+          order="2"
+          xl="9"
+        >
+          <v-card class="pa-4">
+            <v-container v-if="isCurrentTerm && !!capability && hasValidMeetingTimes" class="pt-2">
+              <v-row class="py-0">
+                <v-col>
+                  <ToggleOptIn
+                    :before-toggle="() => courseStore.setDisableButtons(true)"
+                    :disabled="courseStore.disableButtons"
+                    :initial-value="toggleOptInValue"
+                    :instructor-uids="currentUser.isAdmin ? ['admin'] : [currentUser.uid]"
+                    :label="`Opt ${toggleOptInValue ? 'out of' : 'in to'} Course Capture`"
+                    :on-toggle="onToggle"
+                    :section-id="`${course.sectionId}`"
+                    :term-id="`${course.termId}`"
+                  />
+                </v-col>
+              </v-row>
+              <DescribeCourseSchedulingStatus />
+              <v-row
+                align="center"
+                aria-label="Instructors"
+                justify="start"
+                role="region"
+              >
+                <v-col id="instructors-list" cols="12">
+                  <h3 id="instructors-header">
+                    <span v-if="course.scheduled">
+                      <span :aria-hidden="true">Instructor(s)</span><span class="sr-only">Instructors</span> listed will have editing and publishing access:
+                    </span>
+                    <span v-if="!course.deletedAt && !course.scheduled">
+                      <span :aria-hidden="true">Instructor(s):</span><span class="sr-only">Instructors</span>
+                    </span>
+                  </h3>
+                  <div class="pl-4">
+                    <div v-if="isEmpty(course.instructors)" class="mt-1 text-medium-emphasis">
+                      No instructors
+                    </div>
+                    <div
+                      v-for="instructor in course.instructors"
+                      :id="`instructor-${instructor.uid}`"
+                      :key="`instructor-${instructor.uid}`"
+                      class="mt-1"
+                    >
+                      {{ instructor.name }} ({{ instructor.uid }})
+                    </div>
                   </div>
-                  <div
-                    v-for="instructor in course.instructors"
-                    :id="`instructor-${instructor.uid}`"
-                    :key="`instructor-${instructor.uid}`"
-                    class="mt-1"
-                  >
-                    {{ instructor.name }} ({{ instructor.uid }})
+                </v-col>
+              </v-row>
+              <Collaborators
+                v-if="!!capability"
+                :set-model="collaborators => course.collaborators = collaborators"
+              />
+              <RecordingType
+                v-if="!!capability"
+                :set-model="setRecordingType"
+              />
+              <RecordingPlacement
+                v-if="!!capability"
+                :course="course"
+                :set-model="setRecordingPlacement"
+              />
+              <v-row v-if="!currentUser.isAdmin && course.publishType">
+                <v-col>
+                  <hr>
+                  <KnowledgeBaseKalturaMyMedia v-if="course.publishType === 'kaltura_my_media'" class="mt-4" />
+                  <KnowledgeBaseKalturaMediaGallery v-if="course.publishType.startsWith('kaltura_media_gallery')" class="mt-4" />
+                </v-col>
+              </v-row>
+              <div v-if="currentUser.isAdmin" class="my-3">
+                <ScheduledCourse />
+              </div>
+            </v-container>
+            <v-container v-if="isCurrentTerm && !capability" class="pt-6">
+              <v-row>
+                <v-col class="d-flex justify-start pl-7">
+                  <v-icon class="mr-2" color="error" :icon="mdiAlert" />
+                  <div id="course-not-eligible">
+                    This course is not eligible for Course Capture because
+                    <span v-if="location">{{ location }} is not capture-enabled.</span>
+                    <span v-if="!location">it has no meeting location.</span>
                   </div>
-                </div>
-              </v-col>
-            </v-row>
-            <Collaborators
-              v-if="!!capability"
-              :set-model="collaborators => course.collaborators = collaborators"
-            />
-            <RecordingType
-              v-if="!!capability"
-              :set-model="setRecordingType"
-            />
-            <RecordingPlacement
-              v-if="!!capability"
-              :course="course"
-              :set-model="setRecordingPlacement"
-            />
-            <v-row v-if="!currentUser.isAdmin && course.publishType">
-              <v-col class="px-4">
-                <hr>
-                <KnowledgeBaseKalturaMyMedia v-if="course.publishType === 'kaltura_my_media'" class="mt-4" />
-                <KnowledgeBaseKalturaMediaGallery v-if="course.publishType.startsWith('kaltura_media_gallery')" class="mt-4" />
-              </v-col>
-            </v-row>
-            <div v-if="currentUser.isAdmin" class="my-3">
-              <ScheduledCourse />
-            </div>
-          </v-container>
-          <v-container v-if="isCurrentTerm && !capability" class="pt-6">
-            <v-row>
-              <v-col class="d-flex justify-start pl-7">
-                <v-icon class="mr-2" color="error" :icon="mdiAlert" />
-                <div id="course-not-eligible">
-                  This course is not eligible for Course Capture because
-                  <span v-if="location">{{ location }} is not capture-enabled.</span>
-                  <span v-if="!location">it has no meeting location.</span>
-                </div>
-              </v-col>
-            </v-row>
-          </v-container>
-          <v-container v-if="isCurrentTerm && !!capability && !hasValidMeetingTimes" class="pt-6">
-            <v-row>
-              <v-col class="d-flex justify-start">
-                <v-icon class="mr-2" color="error" :icon="mdiAlert" />
-                <div id="invalid-meeting-times">
-                  This course is in a capture-enabled room but the meeting times are missing or invalid.
-                </div>
-              </v-col>
-            </v-row>
-          </v-container>
-          <v-container v-if="!isCurrentTerm" class="pt-6">
-            <v-row>
-              <v-col class="d-flex justify-start">
-                <v-icon class="mr-2" color="error" :icon="mdiAlert" />
-                <div id="course-not-current">
-                  This course is not currently eligible for Course Capture.
-                </div>
-              </v-col>
-            </v-row>
-          </v-container>
-        </v-card>
-      </v-col>
-      <v-col
-        cols="12"
-        md="4"
-        order="1"
-        xl="3"
-      >
-        <CoursePageSidebar :course="course" />
-        <CourseNotes :course="course" :set-model="note => course.note = note" />
-      </v-col>
-    </v-row>
-    <v-row v-if="currentUser.isAdmin">
-      <v-col cols="12">
-        <CourseHistory :history="course.updateHistory" />
-      </v-col>
-    </v-row>
+                </v-col>
+              </v-row>
+            </v-container>
+            <v-container v-if="isCurrentTerm && !!capability && !hasValidMeetingTimes" class="pt-6">
+              <v-row>
+                <v-col class="d-flex justify-start">
+                  <v-icon class="mr-2" color="error" :icon="mdiAlert" />
+                  <div id="invalid-meeting-times">
+                    This course is in a capture-enabled room but the meeting times are missing or invalid.
+                  </div>
+                </v-col>
+              </v-row>
+            </v-container>
+            <v-container v-if="!isCurrentTerm" class="pt-6">
+              <v-row>
+                <v-col class="d-flex justify-start">
+                  <v-icon class="mr-2" color="error" :icon="mdiAlert" />
+                  <div id="course-not-current">
+                    This course is not currently eligible for Course Capture.
+                  </div>
+                </v-col>
+              </v-row>
+            </v-container>
+          </v-card>
+        </v-col>
+        <v-col
+          cols="12"
+          md="4"
+          order="1"
+          xl="3"
+        >
+          <CoursePageSidebar :course="course" />
+          <CourseNotes :course="course" :set-model="note => course.note = note" />
+        </v-col>
+      </v-row>
+      <v-row v-if="currentUser.isAdmin">
+        <v-col cols="12">
+          <CourseHistory :history="course.updateHistory" />
+        </v-col>
+      </v-row>
+    </v-container>
   </div>
 </template>
 
@@ -174,7 +177,7 @@ import {storeToRefs} from 'pinia'
 import {useRoute} from 'vue-router'
 import {getAuditoriums} from '@/api/room'
 import {getCourse} from '@/api/course'
-import {getCourseCodes, getTermName} from '@/lib/utils'
+import {findInstructor, getCourseCodes, getTermName} from '@/lib/berkeley'
 import {useContextStore} from '@/stores/context'
 import {useCourseStore} from '@/stores/course.js'
 import Collaborators from '@/components/course/Collaborators'
@@ -195,7 +198,8 @@ const contextStore = useContextStore()
 const courseStore = useCourseStore()
 
 const {course} = storeToRefs(courseStore)
-const {config, currentUser, loading} = storeToRefs(contextStore)
+const config = contextStore.config
+const currentUser = contextStore.currentUser
 const agreedToTerms = ref(false)
 const auditoriums = ref([])
 const capability = ref()
@@ -203,9 +207,11 @@ const courseDisplayTitle = ref('')
 const hasValidMeetingTimes = ref(false)
 const instructors = ref([])
 const instructorProxies = ref([])
+const isCurrentTerm = computed(() => course.value.termId === config.currentTermId)
 const location = ref('')
-
-const isCurrentTerm = computed(() => course.value.termId === config.value.currentTermId)
+const toggleOptInValue = computed(() => {
+  return currentUser.isAdmin ? course.value.hasOptedIn : findInstructor(course.value, currentUser.uid).hasOptedIn
+})
 const updatesQueued = computed(() => !!course.value.updateHistory.find(u => u.status === 'queued'))
 
 contextStore.loadingStart('Course')
@@ -229,14 +235,14 @@ const refreshCourse = (termId, sectionId) => {
     location.value = meeting.room?.location
     hasValidMeetingTimes.value = eligible.some(m => m.startDate && m.startTime && m.endDate && m.endTime)
     courseDisplayTitle.value = getCourseCodes(data)[0]
-    getAuditoriums().then(aud => {
-      auditoriums.value = aud
+    getAuditoriums().then(data => {
+      auditoriums.value = data
     })
   })
 }
 
 const onToggle = () => {
-  refreshCourse(course.value.termId, course.value.sectionId)
+  refreshCourse(course.value.termId, course.value.sectionId).then(() => courseStore.setDisableButtons(false))
 }
 
 const setRecordingPlacement = updatedCourse => {
