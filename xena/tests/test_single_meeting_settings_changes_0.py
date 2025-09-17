@@ -64,26 +64,13 @@ class TestScheduling0:
     # DELETE PRE-EXISTING DATA
 
     def test_setup(self):
-        self.login_page.load_page()
         self.login_page.dev_auth()
-
-        self.ouija_page.click_jobs_link()
         self.jobs_page.disable_all_jobs()
-
-        self.jobs_page.click_blackouts_link()
         self.blackouts_page.create_all_blackouts()
-
-        self.kaltura_page.log_in_via_calnet(self.calnet_page)
-        self.kaltura_page.reset_test_data(self.section)
-
-        util.reset_section_test_data(self.section)
-        util.reset_user_preferences(self.instructor)
-
-        util.reset_sent_email_test_data(self.section)
-        util.reset_sent_email_test_data(section=None, instructor=self.instructor)
+        self.kaltura_page.log_in_and_reset_test_data(self.calnet_page, [self.section])
+        util.reset_section_and_user_test_data([self.section], [self.instructor])
 
     def test_new_class_eligible_email(self):
-        self.jobs_page.load_page()
         self.jobs_page.run_schedule_update_job_sequence()
         assert util.get_sent_email_count(EmailTemplateType.NEW_CLASS_ELIGIBLE, section=None,
                                          instructor=self.instructor) == 1
@@ -97,7 +84,6 @@ class TestScheduling0:
     # CHECK FILTERS - NOT SCHEDULED
 
     def test_not_scheduled_filter_all(self):
-        self.ouija_page.load_page()
         self.ouija_page.search_for_course_code(self.section)
         self.ouija_page.filter_for_all()
         assert self.ouija_page.is_course_in_results(self.section)
@@ -133,7 +119,6 @@ class TestScheduling0:
     # INSTRUCTOR LOGS IN
 
     def test_opt_in(self):
-        self.course_page.log_out()
         self.login_page.dev_auth(self.instructor)
         self.courses_page.click_course_page_link(self.section)
         self.course_page.wait_for_diablo_title(f'{self.section.code}, {self.section.number}')
@@ -222,9 +207,7 @@ class TestScheduling0:
     # RUN SETTINGS UPDATE JOB
 
     def test_schedule_update(self):
-        self.course_page.log_out()
         self.login_page.dev_auth()
-        self.jobs_page.click_jobs_link()
         self.jobs_page.run_settings_update_job_sequence()
         assert util.get_kaltura_id(self.recording_schedule)
         self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
@@ -233,7 +216,6 @@ class TestScheduling0:
     # CHECK FILTERS - SCHEDULED
 
     def test_scheduled_filter_all(self):
-        self.ouija_page.load_page()
         self.ouija_page.search_for_course_code(self.section)
         self.ouija_page.filter_for_all()
         assert self.ouija_page.is_course_in_results(self.section)
@@ -264,9 +246,7 @@ class TestScheduling0:
     # VERIFY SERIES IN DIABLO
 
     def test_room_series(self):
-        self.rooms_page.load_page()
-        self.rooms_page.find_room(self.meeting.room)
-        self.rooms_page.click_room_link(self.meeting.room)
+        self.rooms_page.navigate_to_room_page(self.meeting.room)
         self.room_page.wait_for_series_row(self.recording_schedule)
 
     def test_room_series_link(self):
@@ -311,7 +291,6 @@ class TestScheduling0:
 
     def test_home_page(self):
         self.kaltura_page.close_window_and_switch()
-        self.jobs_page.log_out()
         self.login_page.dev_auth(self.instructor.uid)
         self.courses_page.click_course_page_link(self.section)
         self.course_page.wait_for_diablo_title(f'{self.section.code}, {self.section.number}')
@@ -366,9 +345,7 @@ class TestScheduling0:
     # VERIFY COURSE HISTORY
 
     def test_course_history_rec_type(self):
-        self.course_page.log_out()
         self.login_page.dev_auth()
-        self.ouija_page.click_jobs_link()
         self.course_page.load_page(self.section)
         self.course_page.verify_history_row(field='recording_type',
                                             old_value=RecordingType.VIDEO_SANS_OPERATOR.value['db'],
@@ -393,15 +370,12 @@ class TestScheduling0:
     # UPDATE SERIES IN KALTURA
 
     def test_run_kaltura_job(self):
-        self.ouija_page.click_jobs_link()
         self.jobs_page.run_settings_update_job_sequence()
 
     # VERIFY SERIES IN DIABLO
 
     def test_update_room_series(self):
-        self.rooms_page.load_page()
-        self.rooms_page.find_room(self.meeting.room)
-        self.rooms_page.click_room_link(self.meeting.room)
+        self.rooms_page.navigate_to_room_page(self.meeting.room)
         self.room_page.wait_for_series_row(self.recording_schedule)
 
     def test_update_open_printable(self):
@@ -454,7 +428,6 @@ class TestScheduling0:
         self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
 
     def test_revert_how_to_publish_from_my_media_link(self):
-        self.course_page.log_out()
         self.login_page.dev_auth(self.instructor.uid)
         self.courses_page.click_course_page_link(self.section)
         self.course_page.wait_for_diablo_title(f'{self.section.code}, {self.section.number}')
@@ -477,9 +450,7 @@ class TestScheduling0:
         assert self.course_page.external_link_valid(self.course_page.COURSE_CAPTURE_FAQ_LINK, title)
 
     def test_update_jobs_revert_placement(self):
-        self.course_page.log_out()
         self.login_page.dev_auth()
-        self.ouija_page.click_jobs_link()
         self.jobs_page.run_settings_update_job_sequence()
 
     def test_kaltura_old_series_deleted(self):

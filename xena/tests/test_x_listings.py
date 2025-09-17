@@ -55,27 +55,15 @@ class TestCrossListings:
     # DELETE PRE-EXISTING DATA
 
     def test_setup(self):
-        self.login_page.load_page()
         self.login_page.dev_auth()
-
-        self.ouija_page.click_jobs_link()
         self.jobs_page.disable_all_jobs()
-
-        self.jobs_page.click_blackouts_link()
         self.blackouts_page.create_all_blackouts()
+        self.kaltura_page.log_in_and_reset_test_data(self.calnet_page, [self.section, self.x_listed_section])
+        util.reset_section_and_user_test_data([self.section], [self.instructor])
 
-        self.kaltura_page.log_in_via_calnet(self.calnet_page)
-        self.kaltura_page.reset_test_data(self.section)
-        self.kaltura_page.reset_test_data(self.x_listed_section)
-
-        util.reset_section_test_data(self.section)
         util.delete_sis_sections_rows(self.x_listed_section)
         util.add_sis_sections_rows(self.x_listed_section)
-        util.reset_user_preferences(self.instructor)
-
-        util.reset_sent_email_test_data(self.section)
         util.reset_sent_email_test_data(self.x_listed_section)
-        util.reset_sent_email_test_data(section=None, instructor=self.instructor)
 
     # CREATE A COURSE SITE
 
@@ -86,15 +74,11 @@ class TestCrossListings:
     # SCHEDULE RECORDINGS
 
     def test_instructor_opts_in(self):
-        self.ouija_page.load_page()
-        self.ouija_page.log_out()
         self.login_page.dev_auth(self.instructor.uid)
         # TODO instructor opts in
 
     def test_semester_start(self):
-        self.course_page.log_out()
         self.login_page.dev_auth()
-        self.ouija_page.click_jobs_link()
         self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
         assert util.get_kaltura_id(self.recording_schedule)
         self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
@@ -135,7 +119,6 @@ class TestCrossListings:
         self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_AUTOMATICALLY
 
     def test_update_run_kaltura_job(self):
-        self.ouija_page.click_jobs_link()
         self.jobs_page.run_settings_update_job_sequence()
 
     def test_notify_of_changes_inst_1(self):
@@ -161,7 +144,6 @@ class TestCrossListings:
     def test_switch_primary_kaltura_job(self):
         self.kaltura_page.close_window_and_switch()
         util.switch_principal_listing(self.section, self.x_listed_section)
-        self.jobs_page.load_page()
         self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
 
     def test_switch_primary_series_title(self):
@@ -182,7 +164,6 @@ class TestCrossListings:
 
     def test_revert_primary_kaltura_job(self):
         util.switch_principal_listing(self.x_listed_section, self.section)
-        self.jobs_page.load_page()
         self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
 
     def test_revert_primary_series_title(self):
@@ -210,7 +191,6 @@ class TestCrossListings:
         assert not self.course_page.visible_cross_listing_ccns()
 
     def test_delete_secondary_kaltura_job(self):
-        self.jobs_page.load_page()
         self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
 
     def test_delete_secondary_site_count(self):
@@ -230,7 +210,6 @@ class TestCrossListings:
         assert visible == expected
 
     def test_restored_secondary_kaltura_job(self):
-        self.jobs_page.load_page()
         self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
 
     def test_restored_secondary_series_title(self):
@@ -258,7 +237,6 @@ class TestCrossListings:
         assert visible == expected
 
     def test_canceled_kaltura_job(self):
-        self.jobs_page.load_page()
         self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
 
     def test_series_deleted(self):

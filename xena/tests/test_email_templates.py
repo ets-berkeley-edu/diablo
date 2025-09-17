@@ -45,7 +45,6 @@ class TestEmailTemplates:
 
     def test_log_in(self):
         util.delete_email_template(EmailTemplateType.SEMESTER_START)
-        self.login_page.load_page()
         self.login_page.dev_auth()
         self.ouija_page.click_email_templates_link()
 

@@ -56,35 +56,18 @@ class TestCollaborators0:
     manual_collaborator = util.get_test_collaborator()
 
     def test_setup(self):
-        self.login_page.load_page()
         self.login_page.dev_auth()
-
-        self.ouija_page.click_jobs_link()
         self.jobs_page.disable_all_jobs()
-
-        self.jobs_page.click_blackouts_link()
         self.blackouts_page.create_all_blackouts()
-
-        self.kaltura_page.log_in_via_calnet(self.calnet_page)
-        self.kaltura_page.reset_test_data(self.section)
-
-        util.reset_section_test_data(self.section)
-        util.reset_user_preferences(self.instructor)
-        util.reset_user_preferences(self.proxy)
-
-        util.reset_sent_email_test_data(self.section)
-        util.reset_sent_email_test_data(section=None, instructor=self.instructor)
+        self.kaltura_page.log_in_and_reset_test_data(self.calnet_page, [self.section])
+        util.reset_section_and_user_test_data([self.section], [self.instructor, self.proxy])
 
     def test_instructor_opt_in(self):
-        self.ouija_page.load_page()
-        self.ouija_page.log_out()
         self.login_page.dev_auth(self.instructor.uid)
         # TODO - instructor opts in
 
     def test_schedule_recordings(self):
-        self.course_page.log_out()
         self.login_page.dev_auth()
-        self.ouija_page.click_jobs_link()
         self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
         assert util.get_kaltura_id(self.recording_schedule)
 
@@ -117,8 +100,6 @@ class TestCollaborators0:
                                             published=True)
 
     def test_course_page_sis_data(self):
-        self.jobs_page.load_page()
-        self.jobs_page.log_out()
         self.login_page.dev_auth(self.instructor.uid)
         self.instructor_page.click_course_page_link(self.section)
         self.course_page.wait_for_instructors()
@@ -136,10 +117,7 @@ class TestCollaborators0:
         self.course_page.verify_collaborator_uids([self.proxy, self.manual_collaborator])
 
     def test_run_updates(self):
-        self.course_page.log_out()
-        self.login_page.load_page()
         self.login_page.dev_auth()
-        self.ouija_page.click_jobs_link()
         self.jobs_page.run_settings_update_job_sequence()
 
     def test_kaltura_new_collaborator(self):
@@ -169,7 +147,6 @@ class TestCollaborators0:
         util.change_course_room(self.section, self.meeting, new_room=None)
 
     def test_run_kaltura_job_room_removed(self):
-        self.jobs_page.load_page()
         self.jobs_page.run_schedule_update_job_sequence()
 
     def test_series_canceled_room_removed(self):
@@ -195,14 +172,11 @@ class TestCollaborators0:
         util.change_course_room(self.section, self.meeting, new_room=self.meeting_room)
 
     def test_opt_back_in(self):
-        self.course_page.log_out()
         self.login_page.dev_auth(self.instructor.uid)
         # TODO - instructor opts in again
 
     def test_run_kaltura_job_room_restored(self):
-        self.courses_page.log_out()
         self.login_page.dev_auth()
-        self.ouija_page.click_jobs_link()
         self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
 
     def test_kaltura_collaborators_restored(self):
@@ -252,26 +226,16 @@ class TestCollaborators1:
     manual_collaborator = util.get_test_collaborator()
 
     def test_setup(self):
-        self.kaltura_page.log_in_via_calnet(self.calnet_page)
-        self.kaltura_page.reset_test_data(self.section)
-        util.reset_section_test_data(self.section)
+        self.kaltura_page.log_in_and_reset_test_data(self.calnet_page, [self.section])
+        util.reset_section_and_user_test_data([self.section], [self.instructor, self.proxy])
         util.delete_course_instructor_row(self.section, self.proxy)
 
-        util.reset_user_preferences(self.instructor)
-        util.reset_user_preferences(self.proxy)
-        util.reset_sent_email_test_data(self.section)
-        util.reset_sent_email_test_data(section=None, instructor=self.instructor)
-
     def test_instructor_opt_in(self):
-        self.ouija_page.load_page()
-        self.ouija_page.log_out()
         self.login_page.dev_auth(self.instructor.uid)
         # TODO - instructor opts in
 
     def test_update_jobs(self):
-        self.course_page.log_out()
         self.login_page.dev_auth()
-        self.ouija_page.click_jobs_link()
         self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
         assert util.get_kaltura_id(self.recording_schedule_0)
         assert util.get_kaltura_id(self.recording_schedule_1)
@@ -290,7 +254,6 @@ class TestCollaborators1:
         self.course_page.verify_collaborator_uids([self.manual_collaborator])
 
     def test_run_updates(self):
-        self.course_page.click_jobs_link()
         self.jobs_page.run_settings_update_job_sequence()
 
     def test_kaltura_new_collaborator_meeting_0(self):
@@ -324,7 +287,6 @@ class TestCollaborators1:
 
     def test_proxy_added(self):
         util.add_sis_sections_rows(self.section, instructors=[self.proxy])
-        self.jobs_page.load_page()
         self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
 
     def test_kaltura_new_proxy_meeting_0(self):
@@ -367,7 +329,6 @@ class TestCollaborators1:
         self.course_page.save_collaborator_edits()
 
     def test_run_updates_remove_collaborator(self):
-        self.jobs_page.load_page()
         self.jobs_page.run_settings_update_job_sequence()
 
     def test_kaltura_collaborator_removed_meeting_0(self):
@@ -418,23 +379,15 @@ class TestCollaborators2:
     proxy_1 = section.proxies[1]
 
     def test_setup(self):
-        self.kaltura_page.log_in_via_calnet(self.calnet_page)
-        self.kaltura_page.reset_test_data(self.section)
-        util.reset_section_test_data(self.section)
-        util.reset_user_preferences(self.instructor)
-        util.reset_user_preferences(self.proxy_0)
-        util.reset_user_preferences(self.proxy_1)
-        util.reset_sent_email_test_data(self.section)
-        util.reset_sent_email_test_data(section=None, instructor=self.instructor)
+        self.kaltura_page.log_in_and_reset_test_data(self.calnet_page, [self.section])
+        util.reset_section_and_user_test_data([self.section], [self.instructor, self.proxy_0, self.proxy_1])
 
     def test_admin_opts_course_in(self):
-        self.login_page.load_page()
         self.login_page.dev_auth()
         self.course_page.load_page(self.section)
         # TODO - admin opts course in
 
     def test_run_updates(self):
-        self.course_page.click_jobs_link()
         self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
         util.get_kaltura_id(self.recording_schedule)
 
@@ -448,8 +401,6 @@ class TestCollaborators2:
                                          instructor=self.instructor) == 1
 
     def test_course_page_sis_data(self):
-        self.jobs_page.load_page()
-        self.jobs_page.log_out()
         self.login_page.dev_auth(self.instructor.uid)
         self.instructor_page.click_course_page_link(self.section)
         self.course_page.wait_for_instructors()
@@ -466,10 +417,7 @@ class TestCollaborators2:
         self.course_page.save_collaborator_edits()
 
     def test_run_updates_proxy_collaborator_removed(self):
-        self.course_page.log_out()
-        self.login_page.load_page()
         self.login_page.dev_auth()
-        self.ouija_page.click_jobs_link()
         self.jobs_page.run_settings_update_job_sequence()
 
     def test_kaltura_proxy_collaborator_removed(self):
@@ -487,7 +435,6 @@ class TestCollaborators2:
         util.delete_course_instructor_row(self.section, self.proxy_1)
 
     def test_run_updates_no_proxies(self):
-        self.jobs_page.load_page()
         self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
 
     def test_kaltura_no_proxy_collaborators(self):

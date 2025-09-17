@@ -67,6 +67,11 @@ class RoomsPage(DiabloPages):
     def click_room_link(self, room):
         self.wait_for_element_and_click(RoomsPage.room_row_locator(room))
 
+    def navigate_to_room_page(self, room):
+        self.load_page()
+        self.find_room(room)
+        self.click_room_link(room)
+
     def verify_ical_export_download(self):
         app.logger.info('Waiting for Kaltura events .zip file download')
         time.sleep(30)

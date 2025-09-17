@@ -83,6 +83,11 @@ class KalturaPage(Page):
             calnet_page.log_in(username, password)
             Wait(self.driver, util.get_medium_timeout()).until(ec.presence_of_element_located(KalturaPage.LOG_OUT_LINK))
 
+    def log_in_and_reset_test_data(self, calnet_page, sections):
+        self.log_in_via_calnet(calnet_page)
+        for section in sections:
+            self.reset_test_data(section)
+
     def load_event_edit_page(self, series_id):
         app.logger.info(f'Loading Kaltura series {series_id}')
         self.driver.get(f'{app.config["KALTURA_MEDIA_SPACE_URL"]}/recscheduling/index/edit-event/eventid/{series_id}')

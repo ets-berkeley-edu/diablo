@@ -65,25 +65,11 @@ class TestCourseInstructorChanges:
     )
 
     def test_setup(self):
-        self.login_page.load_page()
         self.login_page.dev_auth()
-
-        self.ouija_page.click_jobs_link()
         self.jobs_page.disable_all_jobs()
-
-        self.jobs_page.click_blackouts_link()
         self.blackouts_page.create_all_blackouts()
-
-        self.kaltura_page.log_in_via_calnet(self.calnet_page)
-        self.kaltura_page.reset_test_data(self.section)
-
-        util.reset_section_test_data(self.section)
-        util.reset_user_preferences(self.old_instructor)
-        util.reset_user_preferences(self.new_instructor)
-
-        util.reset_sent_email_test_data(self.section)
-        util.reset_sent_email_test_data(section=None, instructor=self.old_instructor)
-        util.reset_sent_email_test_data(section=None, instructor=self.new_instructor)
+        self.kaltura_page.log_in_and_reset_test_data(self.calnet_page, [self.section])
+        util.reset_section_and_user_test_data([self.section], [self.old_instructor, self.new_instructor])
 
     def test_set_old_instructor_first(self):
         util.change_course_instructor(self.section, self.new_instructor, self.old_instructor)
@@ -95,22 +81,17 @@ class TestCourseInstructorChanges:
     # COURSE SCHEDULED WITH INSTRUCTOR 1, WHO MODIFIES RECORDING SETTINGS
 
     def test_old_instructor_opt_in(self):
-        self.ouija_page.load_page()
-        self.ouija_page.log_out()
         self.login_page.dev_auth(self.old_instructor.uid)
         # TODO - opt in
 
     def test_old_instructor_recordings_scheduled(self):
-        self.courses_page.log_out()
         self.login_page.dev_auth()
-        self.ouija_page.click_jobs_link()
         self.jobs_page.run_settings_update_job_sequence()
         util.get_kaltura_id(self.recording_schedule)
         self.recording_schedule.recording_placement = RecordingPlacement.PLACE_IN_MY_MEDIA
         self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
 
     def test_old_instructor_modify_recording_settings(self):
-        self.jobs_page.log_out()
         self.login_page.dev_auth(self.old_instructor.uid)
         self.ouija_page.click_course_page_link(self.section)
 
@@ -125,9 +106,7 @@ class TestCourseInstructorChanges:
         self.recording_schedule.recording_type = RecordingType.VIDEO_WITH_OPERATOR
 
     def test_old_instructor_update_scheduled_recordings(self):
-        self.course_page.log_out()
         self.login_page.dev_auth()
-        self.ouija_page.click_jobs_link()
         self.jobs_page.run_settings_update_job_sequence()
 
     def test_series_title_and_desc(self):
@@ -165,7 +144,6 @@ class TestCourseInstructorChanges:
         assert util.get_sent_email_count(EmailTemplateType.OPTED_OUT, self.section, self.new_instructor) == 1
 
     def test_new_instructor_opts_in(self):
-        self.jobs_page.log_out()
         self.login_page.dev_auth(self.new_instructor.uid)
         self.course_page.load_page(self.section)
         # TODO opt in
@@ -173,9 +151,7 @@ class TestCourseInstructorChanges:
     # UPDATE KALTURA SERIES
 
     def test_run_instr_change_jobs(self):
-        self.course_page.log_out()
         self.login_page.dev_auth()
-        self.ouija_page.click_jobs_link()
         self.jobs_page.run_settings_update_job_sequence()
         assert util.get_kaltura_id(self.recording_schedule)
         self.recording_schedule.recording_placement = RecordingPlacement.PLACE_IN_MY_MEDIA
@@ -187,9 +163,7 @@ class TestCourseInstructorChanges:
     # VERIFY SERIES INSTRUCTOR UPDATED AND SETTINGS REVERTED TO DEFAULT
 
     def test_room_series(self):
-        self.rooms_page.load_page()
-        self.rooms_page.find_room(self.meeting.room)
-        self.rooms_page.click_room_link(self.meeting.room)
+        self.rooms_page.navigate_to_room_page(self.meeting.room)
         self.room_page.wait_for_series_row(self.recording_schedule)
 
     def test_series_recordings(self):

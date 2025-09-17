@@ -32,7 +32,6 @@ from selenium.webdriver.support.wait import WebDriverWait as Wait
 
 from xena.models.meeting import Meeting
 from xena.pages.course_page import CoursePage
-from xena.pages.login_page import LoginPage
 from xena.pages.ouija_board_page import OuijaBoardPage
 from xena.test_utils import util
 
@@ -50,9 +49,7 @@ class TestUserPerms:
         util.reset_test_data(self.section)
 
     def test_schedule_section(self):
-        self.login_page.load_page()
         self.login_page.dev_auth()
-        self.ouija_page.click_jobs_link()
         self.jobs_page.run_schedule_update_job_sequence()
 
     # NOTES
@@ -87,8 +84,6 @@ class TestUserPerms:
     # INSTRUCTOR RESTRICTIONS
 
     def test_instructor_login(self):
-        self.jobs_page.log_out()
-        self.login_page.load_page()
         self.login_page.dev_auth(self.instructor.uid)
 
     def test_no_instructor_notes(self):
@@ -157,23 +152,18 @@ class TestUserPerms:
         assert self.course_page.is_present(CoursePage.COLLAB_EDIT_BUTTON)
 
     def test_aprx_role(self):
-        self.course_page.log_out()
         util.set_instructor_role(self.section, self.instructor, 'APRX')
-        self.login_page.dev_auth(self.instructor.uid)
-        self.login_page.wait_for_element(LoginPage.ALERT_MSG, util.get_short_timeout())
+        self.login_page.non_auth_dev_auth(self.instructor.uid)
 
     def test_invt_role(self):
         util.set_instructor_role(self.section, self.instructor, 'INVT')
-        self.login_page.load_page()
-        self.login_page.dev_auth(self.instructor.uid)
-        self.login_page.wait_for_element(LoginPage.ALERT_MSG, util.get_short_timeout())
+        self.login_page.non_auth_dev_auth(self.instructor.uid)
 
     def test_ineligible_room(self):
         meet = {'room': {'name': 'Chavez 3'}}
         meeting = Meeting(meet)
         util.set_meeting_location(self.section, meeting)
         util.set_instructor_role(self.section, self.instructor, 'PI')
-        self.login_page.load_page()
         self.login_page.dev_auth(self.instructor.uid)
         self.ouija_page.wait_for_element(OuijaBoardPage.MENU_BUTTON, util.get_short_timeout())
         self.course_page.load_page(self.section)
@@ -181,11 +171,7 @@ class TestUserPerms:
 
     def test_not_course_instructor(self):
         util.change_course_instructor(self.section, self.instructor)
-        self.login_page.load_page()
-        self.login_page.dev_auth(self.instructor.uid)
-        self.login_page.wait_for_element(LoginPage.ALERT_MSG, util.get_short_timeout())
+        self.login_page.non_auth_dev_auth(self.instructor.uid)
 
     def test_not_eligible_user(self):
-        self.login_page.load_page()
-        self.login_page.dev_auth('61889')
-        self.login_page.wait_for_element(LoginPage.ALERT_MSG, util.get_short_timeout())
+        self.login_page.non_auth_dev_auth('61889')

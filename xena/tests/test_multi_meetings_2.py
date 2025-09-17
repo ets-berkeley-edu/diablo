@@ -65,23 +65,11 @@ class TestWeirdTypeD:
     )
 
     def test_setup(self):
-        self.login_page.load_page()
         self.login_page.dev_auth()
-
-        self.ouija_page.click_jobs_link()
         self.jobs_page.disable_all_jobs()
-
-        self.jobs_page.click_blackouts_link()
         self.blackouts_page.create_all_blackouts()
-
-        self.kaltura_page.log_in_via_calnet(self.calnet_page)
-        self.kaltura_page.reset_test_data(self.section)
-
-        util.reset_section_test_data(self.section)
-        util.reset_user_preferences(self.instructor)
-
-        util.reset_sent_email_test_data(self.section)
-        util.reset_sent_email_test_data(section=None, instructor=self.instructor)
+        self.kaltura_page.log_in_and_reset_test_data(self.calnet_page, [self.section])
+        util.reset_section_and_user_test_data([self.section], [self.instructor])
 
     # CREATE COURSE SITE
 
@@ -92,15 +80,11 @@ class TestWeirdTypeD:
     # SCHEDULE RECORDINGS
 
     def test_instructor_opts_in(self):
-        self.ouija_page.load_page()
-        self.ouija_page.log_out()
         self.login_page.dev_auth(self.instructor.uid)
         # TODO - instructor opts in
 
     def test_schedule_recordings(self):
-        self.courses_page.log_out()
         self.login_page.dev_auth()
-        self.ouija_page.click_jobs_link()
         self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
 
         assert util.get_kaltura_id(self.recording_schedule_0)
@@ -114,7 +98,6 @@ class TestWeirdTypeD:
     # CHECK FILTERS - SCHEDULED
 
     def test_scheduled_filter_all(self):
-        self.ouija_page.load_page()
         self.ouija_page.search_for_course_code(self.section)
         self.ouija_page.filter_for_all()
         assert self.ouija_page.is_course_in_results(self.section)
@@ -139,9 +122,7 @@ class TestWeirdTypeD:
     # FIRST MEETING: VERIFY SERIES IN DIABLO
 
     def test_meeting_0_room_series(self):
-        self.rooms_page.load_page()
-        self.rooms_page.find_room(self.meeting_0.room)
-        self.rooms_page.click_room_link(self.meeting_0.room)
+        self.rooms_page.navigate_to_room_page(self.meeting_0.room)
         self.room_page.wait_for_series_row(self.recording_schedule_0)
         self.room_page.verify_series_link_text(self.recording_schedule_0)
 
@@ -154,9 +135,7 @@ class TestWeirdTypeD:
     # SECOND MEETING: VERIFY SERIES IN DIABLO
 
     def test_meeting_1_room_series(self):
-        self.rooms_page.load_page()
-        self.rooms_page.find_room(self.meeting_1.room)
-        self.rooms_page.click_room_link(self.meeting_1.room)
+        self.rooms_page.navigate_to_room_page(self.meeting_1.room)
         self.room_page.wait_for_series_row(self.recording_schedule_1)
         self.room_page.verify_series_link_text(self.recording_schedule_1)
 
@@ -202,7 +181,6 @@ class TestWeirdTypeD:
 
     def test_course_page_link(self):
         self.kaltura_page.close_window_and_switch()
-        self.ouija_page.log_out()
         self.login_page.dev_auth(self.instructor.uid)
         self.courses_page.click_course_page_link(self.section)
         self.course_page.wait_for_diablo_title(f'{self.section.code}, {self.section.number}')
@@ -228,9 +206,7 @@ class TestWeirdTypeD:
     # UPDATE BOTH SERIES IN KALTURA
 
     def test_run_kaltura_job(self):
-        self.course_page.log_out()
         self.login_page.dev_auth()
-        self.ouija_page.click_jobs_link()
         self.jobs_page.run_settings_update_job_sequence()
 
     def test_series_recording_placement(self):

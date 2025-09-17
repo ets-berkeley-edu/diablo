@@ -52,9 +52,10 @@ class JobsPage(DiabloPages):
         self.driver.get(f'{app.config["BASE_URL"]}/jobs')
 
     def load_page(self):
-        app.logger.info("Loading the 'Chancel' page")
-        self.hit_url()
-        self.wait_for_diablo_title('The Chancel')
+        if 'The Chancel' not in self.title():
+            app.logger.info("Loading the 'Chancel' page")
+            self.hit_url()
+            self.wait_for_diablo_title('The Chancel')
 
     def run_blackouts_job(self):
         app.logger.info('Running the Blackouts job')
@@ -113,14 +114,17 @@ class JobsPage(DiabloPages):
         self.wait_for_most_recent_job_success(AsyncJob.SEMESTER_START)
 
     def run_remind_opt_outs_job_sequence(self):
+        self.load_page()
         self.run_remind_opt_outs_job()
         self.run_emails_job()
 
     def run_remind_partially_approved_job_sequence(self):
+        self.load_page()
         self.run_remind_partially_approved_job()
         self.run_emails_job()
 
     def run_remind_scheduled_job_sequence(self):
+        self.load_page()
         self.run_remind_scheduled_job()
         self.run_emails_job()
 
@@ -129,15 +133,18 @@ class JobsPage(DiabloPages):
         self.run_emails_job()
 
     def run_schedule_update_job_sequence(self):
+        self.load_page()
         self.run_schedule_updates_job()
         self.run_emails_job()
 
     def run_schedule_update_and_kaltura_job_sequence(self):
+        self.load_page()
         self.run_schedule_updates_job()
         self.run_kaltura_job()
         self.run_emails_job()
 
     def run_settings_update_job_sequence(self):
+        self.load_page()
         self.run_kaltura_job()
         self.run_emails_job()
 
@@ -181,8 +188,8 @@ class JobsPage(DiabloPages):
         else:
             app.logger.info('Job is already enabled')
 
-    @staticmethod
-    def disable_all_jobs():
+    def disable_all_jobs(self):
+        self.click_jobs_link()
         for job in AsyncJob:
             app.logger.info(f'Not disabling {job}')
 
