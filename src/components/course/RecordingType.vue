@@ -5,14 +5,14 @@
     justify="start"
     role="region"
   >
-    <v-col cols="12" class="pa-4" :class="{'bg-surface-light rounded': isEditing}">
+    <v-col cols="12" class="px-4" :class="{'bg-surface-light rounded': isEditing}">
       <h3 id="recording-type-header">
         <label v-if="isEditing && recordingTypeEditable" for="select-recording-type">Recording Type</label>
         <span v-if="!(isEditing && recordingTypeEditable)">Recording Type</span>
       </h3>
       <div v-if="!isEditing" class="mt-2 pl-4">
         <div id="recording-type-name">
-          {{ labels[course.recordingType] }}
+          {{ courseStore.displayLabels[course.recordingType] }}
         </div>
         <v-btn
           v-if="!isEditing && recordingTypeEditable"
@@ -48,7 +48,7 @@
             @change="() => onRecordingTypeChange(recordingTypeOption, index)"
           >
           <label class="font-size-16 text-medium-emphasis" :for="`radio-recording-type-${recordingTypeOption}`">
-            {{ labels[recordingTypeOption] }}
+            {{ courseStore.displayLabels[recordingTypeOption] }}
           </label>
         </div>
       </div>
@@ -85,10 +85,6 @@ import {useCourseStore} from '@/stores/course'
 import ProgressButton from '@/components/util/ProgressButton.vue'
 
 const props = defineProps({
-  labels: {
-    required: true,
-    type: Object
-  },
   setModel: {
     required: true,
     type: Function
@@ -133,7 +129,7 @@ const save = () => {
     course.sectionId,
     course.termId
   ).then(course => {
-    const message = `Recording type updated to ${props.labels[recordingType.value]}.`
+    const message = `Recording type updated to ${courseStore.displayLabels[recordingType.value]}.`
     alertScreenReader(message)
     putFocusNextTick('btn-recording-type-edit')
     props.setModel(course)

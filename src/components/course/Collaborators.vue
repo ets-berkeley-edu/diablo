@@ -38,7 +38,7 @@
       </div>
     </v-col>
     <v-col v-if="isEditing" class="px-4">
-      <v-card class="bg-surface-light border-sm w-100">
+      <v-card class="bg-surface-light border-sm elevation-0 w-100">
         <v-container>
           <v-row
             align="center"
@@ -51,8 +51,8 @@
               </h3>
             </v-col>
           </v-row>
-          <v-row align="end" justify="start">
-            <v-col>
+          <v-row>
+            <v-col class="pt-0">
               <PersonLookup
                 ref="personLookup"
                 class="collaborator-lookup"
@@ -122,7 +122,7 @@
                 <v-btn
                   id="btn-collaborators-cancel"
                   aria-label="Cancel Collaborator Edit"
-                  class="ml-2"
+                  class="ml-1"
                   :disabled="isSaving"
                   text="Cancel"
                   variant="text"

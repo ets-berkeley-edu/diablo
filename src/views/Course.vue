@@ -35,54 +35,6 @@
             </span>
           </div>
         </div>
-        <!--
-        --------------------------------------------------------------
-        <div v-if="!course.deletedAt && !course.scheduled">
-          <v-col class="font-weight-bold mb-1">
-            TODO: How will this messaging change in our new opt-in model? This logic is based on the obsolete 'hasOptedOut' value.
-
-            <span v-if="!course.scheduled && course.instructors.length" id="notice-opt-out" class="text-error">
-              {{ currentUser.isAdmin ? 'The' : 'Your' }} course is not scheduled for Course Capture because one or more
-              instructors have opted out. To schedule recordings, please have all instructors remove their opt-out status.
-            </span>
-            <span v-if="course.hasOptedOut && !course.scheduled && !course.instructors.length" id="notice-opt-out" class="text-error">
-              {{ currentUser.isAdmin ? 'The' : 'Your' }} course is not scheduled for Course Capture due to an admin override.
-              Please contact
-              <a
-                id="course-page-diablo-support-mailto"
-                :href="`mailto:${config.emailCourseCaptureSupport}`"
-                target="_blank"
-              >
-                {{ config.emailCourseCaptureSupport }}
-              </a>.
-            </span>
-            <span v-if="course.scheduled && course.hasOptedOut && course.instructors.length" id="notice-opt-out-pending-instructors" class="text-error">
-              {{ currentUser.isAdmin ? 'The' : 'Your' }} course is scheduled for Course Capture, but will be unscheduled
-              shortly because one or more instructors have opted out. To keep recordings scheduled, please have all
-              instructors remove their opt-out status.
-            </span>
-            <span v-if="course.scheduled && course.hasOptedOut && !course.instructors.length" id="notice-opt-out-pending-no-instructors" class="text-error">
-              {{ currentUser.isAdmin ? 'The' : 'Your' }} course is scheduled for Course Capture, but will be unscheduled
-              shortly due to an admin override. Please contact
-              <a
-                id="course-page-diablo-support-mailto"
-                :href="`mailto:${config.emailCourseCaptureSupport}`"
-                target="_blank"
-              >
-                {{ config.emailCourseCaptureSupport }}
-              </a>
-              if you have any questions.
-            </span>
-            <span v-if="!course.scheduled && course.instructors.length" id="notice-eligible-not-scheduled" class="text-success">
-              This course is eligible for scheduling, but has not yet been scheduled. Instructors will be notified when
-              scheduling has taken place.
-            </span>
-            <span v-if="!course.scheduled && !course.instructors.length" id="notice-eligible-not-scheduled" class="text-success">
-              This course is eligible for scheduling, but has not been scheduled because it has no instructors.
-            </span>
-          </v-col>
-        </div>
-        -->
       </div>
       <div v-if="currentUser.isAdmin">
         <v-col>
@@ -106,7 +58,8 @@
         xl="9"
       >
         <v-card>
-          <v-container v-if="isCurrentTerm && !!capability && hasValidMeetingTimes" class="pt-5">
+          <v-container v-if="isCurrentTerm && !!capability && hasValidMeetingTimes" class="pt-6">
+            <DescribeCourseSchedulingStatus />
             <v-row
               align="center"
               aria-label="Instructors"
@@ -143,83 +96,18 @@
             />
             <RecordingType
               v-if="!!capability"
-              :labels="displayLabels"
               :set-model="setRecordingType"
             />
             <RecordingPlacement
               v-if="!!capability"
               :course="course"
-              :labels="displayLabels"
               :set-model="setRecordingPlacement"
             />
-            <v-row v-if="!currentUser.isAdmin && get(course, 'publishType', '') === 'kaltura_my_media'">
+            <v-row v-if="!currentUser.isAdmin && course.publishType">
               <v-col class="px-4">
-                Based on the selected Recording Placement, please review the following KB articles:
-                <ul>
-                  <li>
-                    <ExternalLink
-                      href="https://berkeley.service-now.com/kb?id=kb_article_view&sysparm_article=KB0013882"
-                      :icon-size="16"
-                      link-id="link-publish-my-media"
-                      text="How to Publish from My Media"
-                    />
-                  </li>
-                  <li>
-                    <ExternalLink
-                      href="https://berkeley.service-now.com/kb?id=kb_article_view&sysparm_article=KB0013623"
-                      :icon-size="16"
-                      link-id="link-embed-rich-content"
-                      text="How to Embed in bCourses using the Rich Content Editor"
-                    />
-                  </li>
-                  <li>
-                    <ExternalLink
-                      href="https://berkeley.service-now.com/kb?id=kb_article_view&sysparm_article=KB0014115"
-                      :icon-size="16"
-                      link-id="link-download-second-stream"
-                      text="How to Download the Second Stream of the Recording"
-                    />
-                  </li>
-                  <li>
-                    <ExternalLink
-                      href="https://rtl.berkeley.edu/services-programs/course-capture/instructors-getting-started/course-capture-faq"
-                      :icon-size="16"
-                      link-id="link-faq"
-                      text="Course Capture FAQ"
-                    />
-                  </li>
-                </ul>
-              </v-col>
-            </v-row>
-            <v-row v-if="!currentUser.isAdmin && get(course, 'publishType', '').startsWith('kaltura_media_gallery')">
-              <v-col class="pa-4 my-2">
-                Based on the selected Recording Placement, please review the following KB articles:
-                <ul>
-                  <li>
-                    <ExternalLink
-                      href="https://berkeley.service-now.com/kb?id=kb_article_view&sysparm_article=KB0014032"
-                      :icon-size="16"
-                      link-id="link-remove-recording"
-                      text="How to Remove a Recording from the Media Gallery"
-                    />
-                  </li>
-                  <li>
-                    <ExternalLink
-                      href="https://berkeley.service-now.com/kb?id=kb_article_view&sysparm_article=KB0014115"
-                      :icon-size="16"
-                      link-id="link-download-second-stream"
-                      text="How to Download the Second Stream of the Recording"
-                    />
-                  </li>
-                  <li>
-                    <ExternalLink
-                      href="https://rtl.berkeley.edu/services-programs/course-capture/instructors-getting-started/course-capture-faq"
-                      :icon-size="16"
-                      link-id="link-faq"
-                      text="Course Capture FAQ"
-                    />
-                  </li>
-                </ul>
+                <hr>
+                <KnowledgeBaseKalturaMyMedia v-if="course.publishType === 'kaltura_my_media'" class="mt-4" />
+                <KnowledgeBaseKalturaMediaGallery v-if="course.publishType.startsWith('kaltura_media_gallery')" class="mt-4" />
               </v-col>
             </v-row>
             <div v-if="currentUser.isAdmin" class="my-3">
@@ -279,8 +167,8 @@
 </template>
 
 <script setup>
-import {computed, onMounted, reactive, ref} from 'vue'
-import {get, isEmpty} from 'lodash'
+import {computed, onMounted, ref} from 'vue'
+import {isEmpty} from 'lodash'
 import {mdiAlert, mdiBookMultipleOutline} from '@mdi/js'
 import {storeToRefs} from 'pinia'
 import {useRoute} from 'vue-router'
@@ -294,12 +182,14 @@ import CourseHistory from '@/components/course/CourseHistory'
 import CourseNotes from '@/components/course/CourseNotes'
 import CoursePageSidebar from '@/components/course/CoursePageSidebar'
 import Date from '@/components/util/Date'
-import ExternalLink from '@/components/util/ExternalLink'
 import PageTitle from '@/components/util/PageTitle'
 import RecordingPlacement from '@/components/course/RecordingPlacement'
 import RecordingType from '@/components/course/RecordingType'
 import ScheduledCourse from '@/components/course/ScheduledCourse'
 import ToggleOptIn from '@/components/course/ToggleOptIn.vue'
+import KnowledgeBaseKalturaMyMedia from '@/components/course/KnowledgeBaseKalturaMyMedia.vue'
+import KnowledgeBaseKalturaMediaGallery from '@/components/course/KnowledgeBaseKalturaMediaGallery.vue'
+import DescribeCourseSchedulingStatus from '@/components/course/DescribeCourseSchedulingStatus.vue'
 
 const contextStore = useContextStore()
 const courseStore = useCourseStore()
@@ -310,19 +200,11 @@ const agreedToTerms = ref(false)
 const auditoriums = ref([])
 const capability = ref()
 const courseDisplayTitle = ref('')
-const displayLabels = reactive({
-  kaltura_media_gallery: 'Publish to the Media Gallery (all members of the bCourses site will have access)',
-  kaltura_my_media: 'Place in My Media (I will decide if and how I want to share)',
-  presenter_presentation_audio: 'Camera Without Operator',
-  presenter_presentation_audio_with_operator: `Camera With Operator ($${config.value.courseCapturePremiumCost} fee)`
-})
 const hasValidMeetingTimes = ref(false)
 const instructors = ref([])
 const instructorProxies = ref([])
 const location = ref('')
 
-// Computed
-// const disableSubmit = computed(() => !agreedToTerms.value || !publishType.value || !recordingType.value)
 const isCurrentTerm = computed(() => course.value.termId === config.value.currentTermId)
 const updatesQueued = computed(() => !!course.value.updateHistory.find(u => u.status === 'queued'))
 
