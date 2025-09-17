@@ -1,9 +1,9 @@
 import {fileURLToPath} from 'node:url'
 import path from 'node:path'
 import {FlatCompat} from '@eslint/eslintrc'
-import globals from 'globals'
 import {includeIgnoreFile} from '@eslint/compat'
 import {configureVueProject, defineConfigWithVueTs, vueTsConfigs} from '@vue/eslint-config-typescript'
+import globals from 'globals'
 import js from '@eslint/js'
 import pluginVue from 'eslint-plugin-vue'
 import parser from 'vue-eslint-parser'
@@ -53,10 +53,10 @@ export default [
       }
     },
     rules: {
-      // TODO: '@typescript-eslint/no-shadow': 2,
-      '@typescript-eslint/consistent-type-imports': 1,
+      '@typescript-eslint/consistent-type-imports': 2,
       '@typescript-eslint/default-param-last': 2,
       '@typescript-eslint/no-explicit-any': 2,
+      // TODO: '@typescript-eslint/no-shadow': 2,
       '@typescript-eslint/no-require-imports': 2,
       '@typescript-eslint/no-unsafe-function-type': 1,
       '@typescript-eslint/no-unused-vars': 2,
@@ -94,6 +94,7 @@ export default [
       'vue/camelcase': 2,
       'vue/comma-dangle': 2,
       'vue/component-name-in-template-casing': 2,
+      'vue/no-deprecated-v-bind-sync': 2,
       'vue/eqeqeq': 2,
       'vue/html-closing-bracket-newline': 2,
       'vue/html-closing-bracket-spacing': 2,
@@ -101,6 +102,7 @@ export default [
       'vue/html-indent': 2,
       'vue/html-quotes': 2,
       'vue/html-self-closing': 2,
+      'vue/attribute-hyphenation': 2,
       'vue/key-spacing': 2,
       'vue/match-component-file-name': 2,
       'vue/max-attributes-per-line': ['error', {

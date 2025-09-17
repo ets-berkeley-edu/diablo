@@ -16,7 +16,8 @@ const Rooms = () => import('@/views/room/Rooms.vue')
 const User = () => import('@/views/User.vue')
 const PrintableRoom = () => import('@/views/room/PrintableRoom.vue')
 
-import {NavigationGuardNext, RouteLocationNormalized, createRouter, createWebHistory} from 'vue-router'
+import type {NavigationGuardNext, RouteLocationNormalized} from 'vue-router'
+import {createRouter, createWebHistory} from 'vue-router'
 import {trim} from 'lodash'
 import {useContextStore} from '@/stores/context'
 import {requiresAdmin, requiresInstructor} from '@/auth'
