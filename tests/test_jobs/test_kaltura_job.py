@@ -147,13 +147,21 @@ class TestKalturaJob:
             room = course.get('meetings', {}).get('eligible', [])[0]['room']
             for i in course['instructors']:
                 OptIn.update_opt_in(instructor_uid=i['uid'], term_id=term_id, section_id=deleted_section_id, opt_in=True)
+
+            course = SisSection.get_course(section_id=deleted_section_id, term_id=term_id, include_deleted=True)
+            assert course['hasOptedIn'] is True
+
             _schedule(room['id'], deleted_section_id)
             assert Scheduled.get_scheduled(section_id=deleted_section_id, term_id=term_id)
             _run_jobs()
             _assert_email_count(1, deleted_section_id, 'no_longer_scheduled')
             assert Scheduled.get_scheduled(section_id=deleted_section_id, term_id=term_id) is None
 
-    def test_room_change(self, db_session, client, fake_auth):
+            course = SisSection.get_course(section_id=deleted_section_id, term_id=term_id, include_deleted=True)
+            assert course['hasOptedIn'] is False
+            assert course['scheduled'] is None
+
+    def test_room_change(self, db_session, client, fake_auth):  # noqa: PLR0915
         section_id = 50004
         term_id = app.config['CURRENT_TERM_ID']
 
@@ -176,6 +184,10 @@ class TestKalturaJob:
             # Schedule
             for i in course['instructors']:
                 OptIn.update_opt_in(instructor_uid=i['uid'], term_id=term_id, section_id=section_id, opt_in=True)
+
+            course = SisSection.get_course(section_id=section_id, term_id=term_id)
+            assert course['hasOptedIn'] is True
+
             _schedule(original_room['id'], section_id)
             _run_jobs()
             _assert_email_count(0, section_id, 'schedule_change')
@@ -194,11 +206,24 @@ class TestKalturaJob:
             _assert_email_count(1, section_id, 'schedule_change')
             _assert_email_count(1, section_id, 'room_change_no_longer_eligible')
 
+            # Opt-ins are cleared
+            course = SisSection.get_course(section_id=section_id, term_id=term_id)
+            assert course['hasOptedIn'] is False
+
             # Move course back to its original location
             _move_course(original_room['location'])
+            _run_jobs()
+
+            # Cleared opt-ins do not spring back to life and the course is not schedueld.
+            course = SisSection.get_course(section_id=section_id, term_id=term_id)
+            assert course['hasOptedIn'] is False
+            assert course['scheduled'] is None
 
             # Finally, let's pretend the course was previously scheduled to an ineligible room.
             Scheduled.delete(section_id=section_id, term_id=term_id)
+            for i in course['instructors']:
+                OptIn.update_opt_in(instructor_uid=i['uid'], term_id=term_id, section_id=section_id, opt_in=True)
+
             _schedule(Room.find_room(ineligible_room).id, section_id)
             _run_jobs()
             # Expect email.
@@ -208,24 +233,27 @@ class TestKalturaJob:
 
             fake_auth.login(admin_uid)
             course = api_get_course(client, term_id, section_id)
-            assert len(course['updateHistory']) == 3
+            assert len(course['updateHistory']) == 4
 
-            assert course['updateHistory'][2]['fieldName'] == 'meeting_updated'
-            assert course['updateHistory'][2]['fieldValueOld']['room']['location'] == 'Li Ka Shing 145'
-            assert course['updateHistory'][2]['fieldValueOld']['room']['kalturaResourceId']
-            assert course['updateHistory'][2]['fieldValueNew']['room']['location'] == 'Barker 101'
-            assert course['updateHistory'][2]['fieldValueNew']['room']['kalturaResourceId']
+            assert course['updateHistory'][3]['fieldName'] == 'meeting_updated'
+            assert course['updateHistory'][3]['fieldValueOld']['room']['location'] == 'Li Ka Shing 145'
+            assert course['updateHistory'][3]['fieldValueOld']['room']['kalturaResourceId']
+            assert course['updateHistory'][3]['fieldValueNew']['room']['location'] == 'Barker 101'
+            assert course['updateHistory'][3]['fieldValueNew']['room']['kalturaResourceId']
+            assert course['updateHistory'][3]['requestedByName'] is None
+            assert course['updateHistory'][3]['requestedByUid'] is None
+            assert course['updateHistory'][3]['status'] == 'succeeded'
+
+            assert course['updateHistory'][2]['fieldName'] == 'room_not_eligible'
+            assert course['updateHistory'][2]['fieldValueOld']['location'] == 'Barker 101'
+            assert course['updateHistory'][2]['fieldValueOld']['kalturaResourceId']
+            assert course['updateHistory'][2]['fieldValueNew']['location'] == 'Wheeler 150'
+            assert course['updateHistory'][2]['fieldValueNew']['kalturaResourceId'] is None
             assert course['updateHistory'][2]['requestedByName'] is None
             assert course['updateHistory'][2]['requestedByUid'] is None
             assert course['updateHistory'][2]['status'] == 'succeeded'
 
-            assert course['updateHistory'][1]['fieldName'] == 'room_not_eligible'
-            assert course['updateHistory'][1]['fieldValueOld']['location'] == 'Barker 101'
-            assert course['updateHistory'][1]['fieldValueOld']['kalturaResourceId']
-            assert course['updateHistory'][1]['fieldValueNew']['location'] == 'Wheeler 150'
-            assert course['updateHistory'][1]['fieldValueNew']['kalturaResourceId'] is None
-            assert course['updateHistory'][1]['requestedByName'] is None
-            assert course['updateHistory'][1]['requestedByUid'] is None
+            assert course['updateHistory'][1]['fieldName'] == 'instructor_uids'
             assert course['updateHistory'][1]['status'] == 'succeeded'
 
             assert course['updateHistory'][0]['fieldName'] == 'meeting_updated'

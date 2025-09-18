@@ -57,6 +57,15 @@ class OptIn(db.Model):
                 """
 
     @classmethod
+    def clear_opt_ins(cls, term_id, section_id):
+        section_ids = _get_section_ids_with_xlistings(section_id, term_id)
+        criteria = and_(cls.section_id.in_(section_ids), cls.term_id == term_id)
+
+        cls.query.filter(criteria).delete()
+        std_commit()
+        return True
+
+    @classmethod
     def get_all_opt_ins(cls, term_id):
         return cls.query.filter_by(term_id=term_id).all()
 

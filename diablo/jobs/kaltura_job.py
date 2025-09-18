@@ -35,6 +35,7 @@ from diablo.merged.emailer import send_system_error_email
 from diablo.models.course_preference import CoursePreference
 from diablo.models.email_template import EmailTemplate
 from diablo.models.instructor import instructor_json_from_uids
+from diablo.models.opt_in import OptIn
 from diablo.models.queued_email import QueuedEmail
 from diablo.models.schedule_update import ScheduleUpdate
 from diablo.models.scheduled import Scheduled, is_meeting_in_session
@@ -230,8 +231,10 @@ def _update_already_scheduled_events(term_id):  # noqa: C901, PLR0912, PLR0915
 
         if no_longer_scheduled:
             QueuedEmail.notify_instructors_no_longer_scheduled(course)
+            OptIn.clear_opt_ins(term_id, section_id)
         elif no_longer_eligible:
             QueuedEmail.notify_instructors_no_longer_eligible(course)
+            OptIn.clear_opt_ins(term_id, section_id)
         elif not opted_in and course['scheduled'] is not None:
             QueuedEmail.notify_instructors_no_longer_opted_in(course)
         else:

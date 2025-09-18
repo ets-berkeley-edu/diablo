@@ -43,10 +43,13 @@ class EmailsJob(BaseJob):
                 continue
             if not course['hasOptedIn'] and queued_email.template_type not in (
                 'new_class_eligible',
+                'no_longer_eligible',
+                'no_longer_scheduled',
                 'opted_out',
                 'remind_opted_out',
                 'remind_partially_approved',
                 'remind_scheduled',
+                'room_change_no_longer_eligible',
                 'semester_start',
             ):
                 QueuedEmail.delete(queued_email)
