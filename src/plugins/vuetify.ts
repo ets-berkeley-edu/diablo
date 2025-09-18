@@ -32,6 +32,9 @@ import {VTextField} from 'vuetify/components/VTextField'
 import {VTooltip} from 'vuetify/components/VTooltip'
 import {VDivider} from 'vuetify/components/VDivider'
 import {VTextarea} from 'vuetify/components/VTextarea'
+import {VRadio} from 'vuetify/components/VRadio'
+import {VRadioGroup} from 'vuetify/components/VRadioGroup'
+import {VCheckbox} from 'vuetify/components/VCheckbox'
 
 export default createVuetify({
   components: {
@@ -49,6 +52,7 @@ export default createVuetify({
     VCardSubtitle,
     VCardText,
     VCardTitle,
+    VCheckbox,
     VChip,
     VCol,
     VContainer,
@@ -68,6 +72,8 @@ export default createVuetify({
     VNavigationDrawer,
     VPagination,
     VProgressCircular,
+    VRadio,
+    VRadioGroup,
     VRow,
     VSelect,
     VSheet,
