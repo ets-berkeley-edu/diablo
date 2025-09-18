@@ -70,11 +70,10 @@
                     class="ml-2"
                     color="primary"
                     :disabled="!pendingCollaborator"
+                    text="Add"
                     variant="flat"
                     @click="addCollaborator"
-                  >
-                    Add
-                  </v-btn>
+                  />
                 </template>
               </PersonLookup>
             </v-col>

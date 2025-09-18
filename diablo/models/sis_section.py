@@ -708,18 +708,15 @@ def _to_api_json(  # noqa: C901, PLR0912, PLR0915
                     course['instructors'].append(instructor_json)
 
         decorated_course_instructors = []
-        for i in course['instructors']:
+        for instructor in course['instructors']:
             instructor_has_opted_in = False
-            if i['roleCode'] != 'APRX':
-                instructor_opt_in = next((o for o in opt_ins if o.instructor_uid == i['uid']), None)
+            if instructor['roleCode'] != 'APRX':
+                instructor_opt_in = next((o for o in opt_ins if o.instructor_uid == instructor['uid']), None)
                 if instructor_opt_in:
                     course['optIns'].append(instructor_opt_in.to_api_json())
                     instructor_has_opted_in = True
 
-            decorated_course_instructors.append({
-                **i,
-                'hasOptedIn': instructor_has_opted_in,
-            })
+            decorated_course_instructors.append({**instructor, 'hasOptedIn': instructor_has_opted_in})
 
         if include_administrative_proxies:
             course['instructors'] = decorated_course_instructors
@@ -785,12 +782,15 @@ def _decorate_course_meeting_type(course):
 
 def _decorate_course_opt_in(course):
     # All non-APRX instructors must agree to opt in. If there are no non-APRX instructors, an admin opt-in suffices.
-    instructors_not_aprx = [i for i in course['instructors'] if i['roleCode'] != 'APRX']
+    all_instructors = course['instructors']
+    instructors_not_aprx = [i for i in all_instructors if i['roleCode'] != 'APRX']
     instructors_not_opted_in = [i for i in instructors_not_aprx if not i['hasOptedIn']]
     admin_opt_in = next((o for o in course['optIns'] if o['instructorUid'] == 'admin'), None)
 
-    if (len(instructors_not_aprx) and not len(instructors_not_opted_in)) or (not len(instructors_not_aprx) and admin_opt_in):
-        course['hasOptedIn'] = True
+    # Opt in the course if (1) we have non-APRX instructors and all have opted in, or
+    # (2) we have zero non-APRX instructors and an Admin user has opted in.
+    has_non_aprx = len(instructors_not_aprx)
+    course['hasOptedIn'] = bool(has_non_aprx and not len(instructors_not_opted_in)) or bool(admin_opt_in and not has_non_aprx)
 
 
 def _get_cross_listed_courses(section_ids, term_id):
