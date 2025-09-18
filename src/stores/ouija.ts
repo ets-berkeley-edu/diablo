@@ -6,8 +6,8 @@ export enum OuijaFilter {
   Eligible = 'Eligible',
   EligibleUnscheduled = 'Eligible Unscheduled',
   NoInstructors = 'No Instructors',
-  OptedOut = 'Opted Out',
   PartiallyApproved = 'Partially Approved',
+  QueuedForScheduling = 'Queued for Scheduling',
   Scheduled = 'Scheduled'
 }
 

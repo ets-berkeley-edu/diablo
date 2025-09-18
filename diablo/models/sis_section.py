@@ -287,39 +287,22 @@ class SisSection(db.Model):
         )
 
     @classmethod
-    def get_courses_opted_out(cls, term_id, include_full_schedules=True):
-        sql = f"""
-            SELECT
-                s.*,
-                i.dept_code AS instructor_dept_code,
-                i.email AS instructor_email,
-                {INSTRUCTOR_NAME_SUB_QUERY}
-                i.uid AS instructor_uid,
-                r.id AS room_id,
-                r.location AS room_location
-            FROM sis_sections s
-            JOIN rooms r ON r.location = s.meeting_location
-            JOIN opt_outs o ON
-                o.instructor_uid = s.instructor_uid AND
-                (o.section_id = s.section_id OR o.section_id IS NULL) AND
-                (o.term_id = :term_id OR o.term_id IS NULL)
-            LEFT JOIN instructors i ON i.uid = s.instructor_uid
-            WHERE
-                s.term_id = :term_id
-                AND (s.instructor_uid IS NULL OR s.instructor_role_code = ANY(:instructor_role_codes))
-                AND s.is_principal_listing IS TRUE
-                AND s.section_id IN ({_sections_with_at_least_one_eligible_room()})
-                AND s.deleted_at IS NULL
-            ORDER BY s.course_name, s.section_id, s.instructor_uid, r.capability NULLS LAST
-        """
-        rows = db.session.execute(
-            text(sql),
-            {
-                'instructor_role_codes': AUTHORIZED_INSTRUCTOR_ROLE_CODES,
-                'term_id': term_id,
-            },
+    def get_courses_queued_for_scheduling(cls, term_id, include_full_schedules=True):
+        courses = []
+        unscheduled_courses = SisSection.get_courses(
+            exclude_scheduled=True,
+            include_administrative_proxies=True,
+            require_authorized_instructor=True,
+            include_full_schedules=include_full_schedules,
+            term_id=term_id,
         )
-        return _to_api_json(term_id=term_id, rows=rows, include_full_schedules=include_full_schedules)
+        for course in unscheduled_courses:
+            if course['hasOptedIn']:
+                authorized_instructors = list(filter(lambda i: i['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES, course['instructors']))
+                admin_opt_in = next((o for o in course['optIns'] if o['instructorUid'] == 'admin'), None)
+                if len(authorized_instructors) or admin_opt_in:
+                    courses.append(course)
+        return courses
 
     @classmethod
     def get_courses_partially_approved(cls, term_id):
