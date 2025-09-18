@@ -72,13 +72,19 @@ onMounted(() => {
   } else {
     switchId.value = props.sectionId
   }
+  props.onToggle('init', {sectionId: props.sectionId, optedIn: optIn.value, initial: true})
 })
 
 const toggleOptIn = () => {
   props.beforeToggle()
+  const suffix = props.label ? ` ${props.label}` : ''
+  props.onToggle(`Opted ${optIn.value ? 'in' : 'out'} ${suffix}`, {
+    sectionId: props.sectionId,
+    optedIn: optIn.value,
+    initial: false
+  })
   props.instructorUids.forEach((uid: string) => {
-    updateOptIn(uid, props.termId, props.sectionId, optIn.value).then(data => {
-      props.onToggle(`Opted ${data.optedIn ? 'in' : 'out'} ${props.label}`)
+    updateOptIn(uid, props.termId, props.sectionId, optIn.value).then(() => {
       putFocusNextTick(`toggle-opt-in-${switchId.value}`)
     })
   })

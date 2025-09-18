@@ -167,7 +167,9 @@ export interface DiabloUser {
   isTeaching: boolean,
   lastName?: string,
   name: string,
-  uid: string | null
+  uid: string | null,
+  doNotEmail: boolean,
+  optInNewCourses: boolean
 }
 
 export type OptOut = {

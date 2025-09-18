@@ -10,28 +10,6 @@
       />
     </v-card-title>
     <v-card-text>
-      <v-container class="ml-8">
-        <v-row>
-          <ToggleOptIn
-            :term-id="`${config.currentTermId}`"
-            section-id="all"
-            :instructor-uids="[currentUser.uid]"
-            label="Opt in for current semester"
-            :before-toggle="() => refreshingCourses = true"
-            :on-toggle="reloadCoursesTable"
-          />
-        </v-row>
-        <v-row>
-          <ToggleOptIn
-            term-id="all"
-            section-id="all"
-            :instructor-uids="[currentUser.uid]"
-            label="Opt in for all semesters"
-            :before-toggle="() => refreshingCourses = true"
-            :on-toggle="reloadCoursesTable"
-          />
-        </v-row>
-      </v-container>
       <Spinner v-if="refreshingCourses" />
       <template v-if="!refreshingCourses">
         <v-row
@@ -42,9 +20,28 @@
           role="region"
         >
           <h2 :id="`${getTableId(index)}-header`" class="pa-4 text-medium-emphasis w-100">
-            {{ index === 0 ? 'Courses eligible for capture' : 'Courses not in a course capture classroom' }}
+            <template v-if="index === 0">
+              Courses eligible for capture
+            </template>
+
+            <!-- Collapsible header for in-eligible courses -->
+            <button
+              v-else
+              class="text-left"
+              type="button"
+              :aria-expanded="showIneligible.toString()"
+              :aria-controls="getTableId(index)"
+              :aria-label="showIneligible
+                ? 'Collapse courses not in a course capture classroom'
+                : 'Expand courses not in a course capture classroom'"
+              style="all: unset; cursor: pointer;"
+              @click="showIneligible = !showIneligible"
+            >
+              Courses not in a course capture classroom
+              <span aria-hidden="true"> {{ showIneligible ? '[-]' : '[+]' }} </span>
+            </button>
           </h2>
-          <div class="overflow-x-auto px-md-4 w-100">
+          <div v-if="index === 0 || showIneligible" class="overflow-x-auto px-md-4 w-100">
             <div v-if="isEmpty(courses)" class="px-4 pt-2">No courses.</div>
             <v-data-table
               v-if="size(courses)"
@@ -88,7 +85,26 @@
                         label=""
                         :section-id="`${course.sectionId}`"
                         :term-id="`${course.termId}`"
+                        :on-toggle="onToggleOptIn"
                       />
+                    </td>
+                    <td :id="`course-${course.sectionId}-status`" columnheader="courses-table-status-th">
+                      <div v-if="course.statusLabel === 'Canceled'" class="canceled-indicator d-flex">
+                        <v-icon color="error" :icon="mdiClose" />
+                        <span class="font-weight-bold text-error">{{ course.statusLabel }}</span>
+                      </div>
+                      <div v-else>
+                        <v-tooltip
+                          v-if="['Pending', 'Waiting on co-instructor'].includes(course.statusLabel)"
+                          :text="getStatusTooltip(course.statusLabel)"
+                          location="top"
+                        >
+                          <template #activator="{ props }">
+                            <span v-bind="props">{{ course.statusLabel }}</span>
+                          </template>
+                        </v-tooltip>
+                        <span v-else>{{ course.statusLabel }}</span>
+                      </div>
                     </td>
                     <td
                       :id="`${getTableId(index)}-${course.sectionId}-label`"
@@ -101,6 +117,7 @@
                         <router-link
                           v-if="courseCodeIndex === 0"
                           :id="`link-course-${course.sectionId}`"
+                          class="course-link"
                           :to="`/course/${config.currentTermId}/${course.sectionId}`"
                         >
                           {{ courseCode }}
@@ -215,30 +232,77 @@
           </div>
         </v-row>
       </template>
+      <v-divider class="my-2" />
+
+      <section aria-labelledby="future-courses-header" class="py-5">
+        <h2 id="future-courses-header" class="pa-4 text-medium-emphasis w-100">
+          Future courses
+        </h2>
+
+        <div class="px-md-4 w-100">
+          <v-radio-group
+            v-model="futureCoursesPref"
+            :aria-labelledby="'future-courses-header'"
+            @update:model-value="onFutureCoursesPreferenceChange"
+          >
+            <v-radio
+              id="all-future-courses-opt-in"
+              value="all"
+              color="primary"
+              label="I want all my future courses to be opted into Course Capture by default"
+            />
+            <v-radio
+              id="choose-courses-opt-in"
+              value="choose"
+              color="primary"
+              label="I want to choose whether or not to opt in future courses to Course Capture"
+            />
+          </v-radio-group>
+        </div>
+      </section>
+      <v-divider class="my-2" />
+
+      <section aria-labelledby="email-settings-header" class="py-5">
+        <h2 id="email-settings-header" class="pa-4 text-medium-emphasis w-100">
+          Email settings
+        </h2>
+
+        <div class="px-md-4 w-100">
+          <v-checkbox
+            id="email-checkbox"
+            v-model="emailReceive"
+            :disabled="isEmailDisabled"
+            :aria-labelledby="'email-settings-header'"
+            label="I want to receive emails from Course Capture (required if opted-in to current or future courses)"
+            @update:model-value="onEmailReceiveChange"
+          />
+        </div>
+      </section>
     </v-card-text>
   </v-card>
 </template>
 
-<script setup>
+<script lang="ts" setup>
 import {DateTime} from 'luxon'
 import {each, get, isEmpty, map, size, tail} from 'lodash'
-import {mdiVideoPlus} from '@mdi/js'
-import {onMounted, ref} from 'vue'
+import {mdiClose, mdiVideoPlus} from '@mdi/js'
+import {computed, onMounted, ref, watch} from 'vue'
 import {storeToRefs} from 'pinia'
 import {alertScreenReader, oxfordJoin, partitionCoursesByEligibility, pluralize} from '@/lib/utils'
 import {getCourseCodes, getDisplayMeetings} from '@/lib/berkeley'
-import {getCurrentUser} from '@/api/auth'
-import {useContextStore} from '@/stores/context'
 import Days from '@/components/util/Days'
 import PageTitle from '@/components/util/PageTitle'
 import Spinner from '@/components/util/Spinner'
 import ToggleOptIn from '@/components/course/ToggleOptIn'
+import {useContextStore} from '@/stores/context'
+import {updateDoNotEmail, updateOptInNewCourses} from '@/api/user'
 
 const contextStore = useContextStore()
 const {config, currentUser} = storeToRefs(contextStore)
 const eligibleCourses = ref([])
 const ineligibleCourses = ref([])
 const ineligibleHeaders = [
+  {title: 'Status', value: 'status'},
   {title: 'Course', value: 'label'},
   {title: 'Title', value: 'title'},
   {title: 'Instructors', value: 'instructors'},
@@ -253,13 +317,53 @@ const eligibleHeaders = [
 const pageTitle = ref('')
 const refreshingCourses = ref(false)
 
+const showIneligible = ref(false)
+const futureCoursesPref = ref(null)
+const emailReceive = ref(true)
+
+// Track current-course opt-ins *only* from ToggleOptIn callbacks
+const optedInCount = ref(0)
+const _optedInSet = new Set<string>()
+
+// Email is disabled if: (a) user opted ALL future courses in OR (b) any current course is opted in
+const isEmailDisabled = computed(() => {
+  const futureAll = futureCoursesPref.value === 'all'
+  const anyCurrentOptIn = optedInCount.value > 0
+  return futureAll || anyCurrentOptIn
+})
+
+watch(isEmailDisabled, (required) => {
+  if (required) {
+    emailReceive.value = true
+    if (currentUser.value.doNotEmail) {
+      onEmailReceiveChange(true, {force: true})
+    }
+  }
+})
+
 contextStore.loadingStart()
 
 onMounted(() => {
   refreshCourses()
   pageTitle.value = `Your ${config.value.currentTermName} ${pluralize('Course', size(currentUser.value.courses), false)}`
+  futureCoursesPref.value = currentUser.value.optInNewCourses ? 'all' : 'choose'
+  emailReceive.value = !currentUser.value.doNotEmail
   contextStore.loadingComplete(pageTitle.value)
 })
+
+const onToggleOptIn = (_msgOrEvent, payload) => {
+  const sectionId = payload?.sectionId
+  const optedIn = !!payload?.optedIn
+  if (!sectionId) return
+  const had = _optedInSet.has(sectionId)
+  if (optedIn && !had) {
+    _optedInSet.add(sectionId)
+    optedInCount.value++
+  } else if (!optedIn && had) {
+    _optedInSet.delete(sectionId)
+    optedInCount.value--
+  }
+}
 
 const getTableId = index => {
   return index === 0 ? 'courses-table-eligible' : 'courses-table-ineligible'
@@ -274,21 +378,78 @@ const refreshCourses = () => {
   partitionCoursesByEligibility(currentUser.value.courses, eligibleCourses.value, ineligibleCourses.value)
   each([...eligibleCourses.value, ...ineligibleCourses.value], course => {
     course.displayMeetings = getDisplayMeetings(course)
+    course.statusLabel = course.deletedAt
+      ? 'Canceled'
+      : (course.scheduled
+        ? 'Scheduled'
+        : (get(course, 'meetings.eligible.length', 0) > 0 ? 'Not Scheduled' : 'Not Eligible'))
   })
 }
 
-const reloadCoursesTable = (srAlert = '') => {
-  getCurrentUser().then(user => {
-    contextStore.setCurrentUser(user)
-    refreshCourses()
-    refreshingCourses.value = false
-    alertScreenReader(`${srAlert}. Courses table refreshed.`)
-  })
+const getStatusTooltip = (label) => {
+  if (label === 'Pending') {
+    return 'Recordings will be scheduled within an hour'
+  }
+  // label === 'Waiting on co-instructor'
+  return 'Recordings are not scheduled. A co-instructor has not opted in'
+}
+
+const onFutureCoursesPreferenceChange = (value) => {
+  const optInNewCourses = value === 'all'
+
+  updateOptInNewCourses(currentUser.value.uid, {optInNewCourses})
+    .then((prefs) => {
+      const {optInNewCourses: optAll, doNotEmail} = prefs
+
+      futureCoursesPref.value = optAll ? 'all' : 'choose'
+      if (typeof doNotEmail === 'boolean') {
+        currentUser.value.doNotEmail = doNotEmail
+        emailReceive.value = !doNotEmail
+      }
+
+      currentUser.value.optInNewCourses = !!optAll
+
+      alertScreenReader('Future courses preference updated.')
+    })
+    .catch(() => {
+      alertScreenReader('Failed to update future courses preference.')
+    })
+}
+
+const onEmailReceiveChange = (value, {force = false} = {}) => {
+  if (isEmailDisabled.value && !force) {
+    emailReceive.value = true
+    return
+  }
+  const body = {doNotEmail: !value}
+  updateDoNotEmail(currentUser.value.uid, body)
+    .then((prefs) => {
+      if (typeof prefs?.doNotEmail === 'boolean') {
+        currentUser.value.doNotEmail = prefs.doNotEmail
+        emailReceive.value = !prefs.doNotEmail
+      }
+      if (typeof prefs?.optInNewCourses === 'boolean') {
+        currentUser.value.optInNewCourses = prefs.optInNewCourses
+        futureCoursesPref.value = prefs.optInNewCourses ? 'all' : 'choose'
+      }
+      alertScreenReader('Email preference updated.')
+    })
+    .catch(() => {
+      alertScreenReader('Failed to update email preference.')
+    })
 }
 </script>
 
 <style>
 .instructor-courses .v-table__wrapper {
   overflow: visible !important;
+}
+
+.instructor-courses .course-link {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.v-selection-control--disabled .v-label {
+  opacity: 0.6;
 }
 </style>
