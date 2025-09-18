@@ -76,15 +76,13 @@ def app_config():
 
     api_json = {
         **dict((_to_api_key(key), app.config[key]) for key in PUBLIC_CONFIGS),
-        **{
-            'createdByDiabloTag': CREATED_BY_DIABLO_TAG,
-            'currentTermName': term_name_for_sis_id(app.config['CURRENT_TERM_ID']),
-            'ebEnvironment': get_eb_environment(),
-            'emailTemplateTypes': EmailTemplate.get_template_type_options(),
-            'publishTypeOptions': NAMES_PER_PUBLISH_TYPE,
-            'roomCapabilityOptions': Room.get_room_capability_options(),
-            'searchFilterOptions': get_search_filter_options(),
-        },
+        'createdByDiabloTag': CREATED_BY_DIABLO_TAG,
+        'currentTermName': term_name_for_sis_id(app.config['CURRENT_TERM_ID']),
+        'ebEnvironment': get_eb_environment(),
+        'emailTemplateTypes': EmailTemplate.get_template_type_options(),
+        'publishTypeOptions': NAMES_PER_PUBLISH_TYPE,
+        'roomCapabilityOptions': Room.get_room_capability_options(),
+        'searchFilterOptions': get_search_filter_options(),
     }
     return tolerant_jsonify(OrderedDict(sorted(api_json.items())))
 

@@ -31,7 +31,6 @@ from flask import current_app as app
 from diablo import std_commit
 from diablo.jobs.emails_job import EmailsJob
 from diablo.models.opt_in import OptIn
-from diablo.models.opt_out import OptOut
 from diablo.models.scheduled import Scheduled
 from diablo.models.sent_email import SentEmail
 from diablo.models.sis_section import SisSection
@@ -318,30 +317,26 @@ class TestGetCourses:
         fake_auth.login(instructor_uids[0])
         self._api_courses(client, term_id=self.term_id, expected_status_code=401)
 
-    def test_opted_out_filter(self, client, fake_auth):
-        """Opted Out filter: Courses in eligible room; "opt out" is true; not scheduled."""
+    def test_queued_for_scheduling_filter(self, client, fake_auth):
+        """Queued for Scheduling filter: Courses which will soon be scheduled by the Kaltura job."""
         fake_auth.login(admin_uid)
         with test_scheduling_workflow(app):
-            # Send invites them opt_out.
-            for section_id in (section_1_id, section_in_ineligible_room, section_3_id, section_4_id):
-                instructor_uids = get_instructor_uids(section_id=section_id, term_id=self.term_id)
-                OptOut.update_opt_out(instructor_uid=instructor_uids[0], section_id=section_id, term_id=self.term_id, opt_out=True)
-
-                in_enabled_room = _is_course_in_enabled_room(section_id=section_id, term_id=self.term_id)
-                if section_id == section_in_ineligible_room:
-                    # Courses in ineligible rooms will be excluded from the feed.
-                    assert not in_enabled_room
-                else:
-                    assert in_enabled_room
-
-            api_json = self._api_courses(client, term_id=self.term_id, filter_='Opted Out')
-
-            # Opted-out courses are in the feed, whether scheduled or not
-            assert _find_course(api_json=api_json, section_id=section_1_id, term_id=self.term_id)
-            assert _find_course(api_json=api_json, section_id=section_3_id, term_id=self.term_id)
-            assert _find_course(api_json=api_json, section_id=section_4_id, term_id=self.term_id)
-            # Ineligible courses are not in the feed
-            assert not _find_course(api_json=api_json, section_id=section_in_ineligible_room, term_id=self.term_id)
+            section_ids = [section_1_id, section_7_id]
+            for section_id in section_ids:
+                # Verify that course has multiple instructors and then ONLY ONE instructor will opt in.
+                for instructor_uid in get_instructor_uids(section_id=section_id, term_id=self.term_id):
+                    _api_opt_in_update(
+                        client,
+                        instructor_uid=instructor_uid,
+                        opt_in=True,
+                        section_id=section_id,
+                        term_id=self.term_id,
+                    )
+                std_commit(allow_test_environment=True)
+            # Fetch courses per filter
+            api_json = self._api_courses(client, term_id=self.term_id, filter_='Queued for Scheduling')
+            queued_section_ids = [c['sectionId'] for c in api_json]
+            assert set(queued_section_ids) == set(section_ids)
 
     def test_scheduled_filter(self, client, fake_auth):
         """Scheduled filter: Courses with recordings scheduled."""
