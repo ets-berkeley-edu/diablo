@@ -330,11 +330,25 @@ def remove_blackout_events(kaltura_schedule_id=None):
                 recurrence_type=KalturaScheduleEventRecurrenceType.RECURRENCE,
                 start_date=blackout.start_date,
             )
+            success_count = 0
+            fail_count = 0
             for event in events:
                 created_by_diablo = CREATED_BY_DIABLO_TAG in event['tags']
                 if created_by_diablo and not represents_recording_series(event):
-                    kaltura.delete(event['id'])
-                    app.logger.info(f"'Event {event['summary']} deleted per {blackout}.")
+                    try:
+                        kaltura.delete(event['id'])
+                        success_count += 1
+                        app.logger.info(f'Event {event["summary"]} deleted per {blackout}.')
+                    except Exception as e:
+                        fail_count += 1
+                        summary = f'Failed to delete Kaltura event for blackout (event summary: {event["summary"]} blackout object: {blackout})'
+                        app.logger.error(summary)
+                        app.logger.exception(e)
+                        send_system_error_email(
+                            message=f'{summary}\n\n<pre>{traceback.format_exc()}</pre>',
+                            subject=summary,
+                        )
+            app.logger.info(f'Job Completed! Success Count: {success_count}; Fail Count: {fail_count}')
 
 
 def schedule_recordings(course, remove_blackout_conflicts=False, updates=None):
