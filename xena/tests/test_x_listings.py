@@ -119,7 +119,7 @@ class TestCrossListings:
         self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_AUTOMATICALLY
 
     def test_update_run_kaltura_job(self):
-        self.jobs_page.run_settings_update_job_sequence()
+        self.jobs_page.run_kaltura_job_sequence()
 
     def test_notify_of_changes_inst_1(self):
         assert util.get_sent_email_count(EmailTemplateType.CHANGES_CONFIRMED, self.section,

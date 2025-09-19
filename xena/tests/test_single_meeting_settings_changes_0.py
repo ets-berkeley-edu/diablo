@@ -208,7 +208,7 @@ class TestScheduling0:
 
     def test_schedule_update(self):
         self.login_page.dev_auth()
-        self.jobs_page.run_settings_update_job_sequence()
+        self.jobs_page.run_kaltura_job_sequence()
         assert util.get_kaltura_id(self.recording_schedule)
         self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
         self.recording_schedule.recording_placement = RecordingPlacement.PLACE_IN_MY_MEDIA
@@ -370,7 +370,7 @@ class TestScheduling0:
     # UPDATE SERIES IN KALTURA
 
     def test_run_kaltura_job(self):
-        self.jobs_page.run_settings_update_job_sequence()
+        self.jobs_page.run_kaltura_job_sequence()
 
     # VERIFY SERIES IN DIABLO
 
@@ -451,7 +451,7 @@ class TestScheduling0:
 
     def test_update_jobs_revert_placement(self):
         self.login_page.dev_auth()
-        self.jobs_page.run_settings_update_job_sequence()
+        self.jobs_page.run_kaltura_job_sequence()
 
     def test_kaltura_old_series_deleted(self):
         self.kaltura_page.load_event_edit_page(self.recording_schedule.series_id)

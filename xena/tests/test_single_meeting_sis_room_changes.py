@@ -93,7 +93,7 @@ class TestCourseRoomChanges:
 
     def test_update_series(self):
         self.login_page.dev_auth()
-        self.jobs_page.run_settings_update_job_sequence()
+        self.jobs_page.run_kaltura_job_sequence()
 
     def test_settings_update_email(self):
         assert util.get_sent_email_count(EmailTemplateType.CHANGES_CONFIRMED, self.section, self.instr) == 1
@@ -214,7 +214,7 @@ class TestCourseRoomChanges:
         # TODO - admin opts course in again
 
     def test_eligible_room_again_reschedule_series(self):
-        self.jobs_page.run_settings_update_job_sequence()
+        self.jobs_page.run_kaltura_job_sequence()
         assert util.get_kaltura_id(self.recording_schedule)
         self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
         self.recording_schedule.recording_placement = RecordingPlacement.PLACE_IN_MY_MEDIA
