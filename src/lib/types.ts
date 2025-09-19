@@ -135,7 +135,7 @@ export interface Course extends BaseCourse {
   },
   nonstandardMeetingDates: boolean,
   note: string,
-  optOuts: OptOut[],
+  optIns: OptIn[],
   publishType: string,
   publishTypeName: string,
   recordingType: string,
@@ -170,13 +170,6 @@ export interface DiabloUser {
   uid: string | null,
   doNotEmail: boolean,
   optInNewCourses: boolean
-}
-
-export type OptOut = {
-  instructorUid: string,
-  termId: number,
-  sectionId: number,
-  createdAt: string
 }
 
 export type ScreenReaderAlert = {
