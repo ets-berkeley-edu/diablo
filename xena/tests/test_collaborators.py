@@ -118,7 +118,7 @@ class TestCollaborators0:
 
     def test_run_updates(self):
         self.login_page.dev_auth()
-        self.jobs_page.run_settings_update_job_sequence()
+        self.jobs_page.run_kaltura_job_sequence()
 
     def test_kaltura_new_collaborator(self):
         self.kaltura_page.load_event_edit_page(self.recording_schedule.series_id)
@@ -254,7 +254,7 @@ class TestCollaborators1:
         self.course_page.verify_collaborator_uids([self.manual_collaborator])
 
     def test_run_updates(self):
-        self.jobs_page.run_settings_update_job_sequence()
+        self.jobs_page.run_kaltura_job_sequence()
 
     def test_kaltura_new_collaborator_meeting_0(self):
         self.kaltura_page.load_event_edit_page(self.recording_schedule_0.series_id)
@@ -329,7 +329,7 @@ class TestCollaborators1:
         self.course_page.save_collaborator_edits()
 
     def test_run_updates_remove_collaborator(self):
-        self.jobs_page.run_settings_update_job_sequence()
+        self.jobs_page.run_kaltura_job_sequence()
 
     def test_kaltura_collaborator_removed_meeting_0(self):
         self.kaltura_page.load_event_edit_page(self.recording_schedule_0.series_id)
@@ -418,7 +418,7 @@ class TestCollaborators2:
 
     def test_run_updates_proxy_collaborator_removed(self):
         self.login_page.dev_auth()
-        self.jobs_page.run_settings_update_job_sequence()
+        self.jobs_page.run_kaltura_job_sequence()
 
     def test_kaltura_proxy_collaborator_removed(self):
         self.kaltura_page.load_event_edit_page(self.recording_schedule.series_id)

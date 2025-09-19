@@ -92,7 +92,7 @@ class TestCourseCancellation:
         self.courses_page.reload_page()
         # TODO - opt in
         self.login_page.dev_auth()
-        self.jobs_page.run_settings_update_job_sequence()
+        self.jobs_page.run_kaltura_job_sequence()
 
     def test_kaltura_schedule_id(self):
         assert util.get_kaltura_id(self.recording_schedule)

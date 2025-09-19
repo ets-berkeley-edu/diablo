@@ -145,7 +145,7 @@ class TestScheduling2:
     def test_recordings_not_scheduled(self):
         self.course_page.close_window_and_switch()
         self.login_page.dev_auth()
-        self.jobs_page.run_settings_update_job_sequence()
+        self.jobs_page.run_kaltura_job_sequence()
 
     def test_no_scheduling_yet(self):
         assert not util.get_kaltura_id(self.recording_schedule)
@@ -328,7 +328,7 @@ class TestScheduling2:
 
     def test_run_jobs(self):
         self.login_page.dev_auth()
-        self.jobs_page.run_settings_update_job_sequence()
+        self.jobs_page.run_kaltura_job_sequence()
 
     def test_kaltura_removed_site_series_deleted(self):
         self.kaltura_page.load_event_edit_page(self.recording_schedule.series_id)
@@ -361,7 +361,7 @@ class TestScheduling2:
 
     def test_run_kaltura_job(self):
         self.login_page.dev_auth()
-        self.jobs_page.run_settings_update_job_sequence()
+        self.jobs_page.run_kaltura_job_sequence()
 
     def test_deleted_kaltura_series(self):
         self.kaltura_page.load_event_edit_page(self.recording_schedule.series_id)

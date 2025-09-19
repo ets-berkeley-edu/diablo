@@ -27,7 +27,9 @@ from datetime import timedelta
 
 import pytest
 
+from xena.models.canvas_site import CanvasSite
 from xena.models.email_template_type import EmailTemplateType
+from xena.models.recording_placement import RecordingPlacement
 from xena.models.recording_schedule import RecordingSchedule
 from xena.test_utils import util
 
@@ -51,8 +53,9 @@ recording_schedule_1_1 = RecordingSchedule(section_1, meeting_1_1)
 # Extra instructor
 instructor_1_2 = util.get_test_instructors(1, uids_to_exclude=[instructor_1_0.uid, instructor_1_1.uid])
 
+
 @pytest.mark.usefixtures('page_objects')
-class TestOptIn0:
+class TestOptIn1:
     """
     SCENARIO.
 
@@ -70,35 +73,27 @@ class TestOptIn0:
         self.kaltura_page.log_in_and_reset_test_data(self.calnet_page, [section_0])
         util.reset_section_and_user_test_data([section_0], [instructor_0])
 
-    def test_initial_job_runs(self):
-        self.jobs_page.run_schedule_update_job_sequence()
-
     def test_instructor_new_course_eligible_email(self):
+        self.jobs_page.run_schedule_update_job_sequence()
         assert util.get_sent_email_count(EmailTemplateType.NEW_CLASS_ELIGIBLE, section=None,
                                          instructor=instructor_0) == 1
 
-    def test_remind_opt_outs_job(self):
-        self.jobs_page.run_remind_opt_outs_job_sequence()
-
     def test_instructor_remind_opt_outs_email(self):
+        self.jobs_page.run_remind_opt_outs_job_sequence()
         assert util.get_sent_email_count(EmailTemplateType.REMIND_OPTED_OUT, section=None,
                                          instructor=instructor_0) == 1
 
     def test_instructor_opts_in(self):
-        self.login_page.dev_auth(instructor_0)
+        self.login_page.dev_auth(instructor_0.uid)
         # TODO verifies default settings, opts in
 
     def test_schedule_recordings(self):
         self.login_page.dev_auth()
-        self.jobs_page.run_settings_update_job_sequence()
-
-    def test_recordings_scheduled(self):
+        self.jobs_page.run_kaltura_job_sequence()
         assert util.get_kaltura_id(recording_schedule_0)
 
-    def test_remind_scheduled_job(self):
-        self.jobs_page.run_remind_scheduled_job_sequence()
-
     def test_instructor_remind_scheduled_email(self):
+        self.jobs_page.run_remind_scheduled_job_sequence()
         assert util.get_sent_email_count(EmailTemplateType.REMIND_SCHEDULED, section=None,
                                          instructor=instructor_0) == 1
 
@@ -106,11 +101,12 @@ class TestOptIn0:
         util.change_course_instructor(section_0, old_instructor=instructor_0, new_instructor=None)
         section_0.instructors = []
 
-    def test_unschedule_recordings(self):
-        self.jobs_page.run_schedule_update_job_sequence()
-
     def test_recordings_unscheduled(self):
+        self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
         assert not util.get_kaltura_id(recording_schedule_0)
+
+    def test_instructor_removed_email(self):
+        assert util.get_sent_email_count(EmailTemplateType.INSTRUCTORS_REMOVED, section_0, instructor_0) == 1
 
     # TODO - admin manually reschedules the instructor-less course
     # TODO - additional job runs do not unschedule the course automatically
@@ -118,7 +114,7 @@ class TestOptIn0:
 
 
 @pytest.mark.usefixtures('page_objects')
-class TestOptIn1:
+class TestOptIn2:
     """
     SCENARIO.
 
@@ -134,46 +130,42 @@ class TestOptIn1:
         util.reset_section_and_user_test_data([section_0], [instructor_0])
 
     def test_instructor_rejects_reminders(self):
-        self.login_page.dev_auth(instructor_0)
+        self.login_page.dev_auth(instructor_0.uid)
         # TODO - check "no more email" box
 
     def test_instructor_new_course_eligible_email(self):
         self.login_page.dev_auth()
         self.jobs_page.run_schedule_update_job_sequence()
-        assert util.get_sent_email_count(EmailTemplateType.NEW_CLASS_ELIGIBLE, section=None, instructor=instructor_0) == 1
+        assert util.get_sent_email_count(EmailTemplateType.NEW_CLASS_ELIGIBLE, section=None,
+                                         instructor=instructor_0) == 1
 
     def test_instructor_no_opt_out_reminder_email(self):
         self.jobs_page.run_remind_opt_outs_job_sequence()
-        assert util.get_sent_email_count(EmailTemplateType.REMIND_OPTED_OUT, section=None, instructor=instructor_0) == 0
+        assert util.get_sent_email_count(EmailTemplateType.REMIND_OPTED_OUT, section=None,
+                                         instructor=instructor_0) == 0
 
     def test_instructor_opts_in(self):
-        self.login_page.dev_auth(instructor_0)
+        self.login_page.dev_auth(instructor_0.uid)
         # TODO - opts in
         # TODO - verify no-email checkbox vanishes
 
     def test_schedule_recordings(self):
         self.login_page.dev_auth()
-        self.jobs_page.run_settings_update_job_sequence()
-
-    def test_recordings_scheduled(self):
+        self.jobs_page.run_kaltura_job_sequence()
         assert util.get_kaltura_id(recording_schedule_0)
 
-    def test_remind_scheduled_job(self):
-        self.jobs_page.run_remind_scheduled_job_sequence()
-
     def test_instructor_remind_scheduled_email(self):
+        self.jobs_page.run_remind_scheduled_job_sequence()
         assert util.get_sent_email_count(EmailTemplateType.REMIND_SCHEDULED, section=None,
                                          instructor=instructor_0) == 1
 
     def test_instructor_opts_back_out(self):
-        self.login_page.dev_auth(instructor_0)
+        self.login_page.dev_auth(instructor_0.uid)
         # TODO - opt out again, don't recheck no-emails box
 
     def test_unschedule_recordings(self):
         self.login_page.dev_auth()
-        self.jobs_page.run_settings_update_job_sequence()
-
-    def test_recordings_unscheduled(self):
+        self.jobs_page.run_kaltura_job_sequence()
         assert not util.get_kaltura_id(recording_schedule_0)
 
     def test_instructor_opted_out_email(self):
@@ -187,12 +179,12 @@ class TestOptIn1:
 
 
 @pytest.mark.usefixtures('page_objects')
-class TestOptIn2:
+class TestOptIn3:
     """
     SCENARIO.
 
     - Instructor opts in by default
-    - Instructor receives new-course-eligible email, recordings are automatically scheduled
+    - Instructor receives new-course-eligible and class scheduled emails, recordings are automatically scheduled
     - Instructor later receives scheduled reminder
     - Instructor opts out, recordings are unscheduled, and instructor receives opted-out email
     - Instructor later receives opted-out reminder
@@ -203,14 +195,12 @@ class TestOptIn2:
         util.reset_section_and_user_test_data([section_0], [instructor_0])
 
     def test_opt_in_all(self):
-        self.login_page.dev_auth(instructor_0)
+        self.login_page.dev_auth(instructor_0.uid)
         # TODO - opt in all
 
     def test_schedule_recordings(self):
         self.login_page.dev_auth()
-        self.jobs_page.run_schedule_update_job_sequence()
-
-    def test_recordings_scheduled(self):
+        self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
         assert util.get_kaltura_id(recording_schedule_0)
 
     def test_instructor_course_scheduled_email(self):
@@ -220,59 +210,97 @@ class TestOptIn2:
                                          instructor=instructor_0) == 1
 
     def test_instructor_opts_out(self):
-        self.login_page.dev_auth(instructor_0)
+        self.login_page.dev_auth(instructor_0.uid)
         # TODO - opt out course
 
     def test_unschedule_recordings(self):
         self.login_page.dev_auth()
-        self.jobs_page.run_settings_update_job_sequence()
-
-    def test_recordings_unscheduled(self):
+        self.jobs_page.run_kaltura_job_sequence()
         assert not util.get_kaltura_id(recording_schedule_0)
 
     def test_instructor_opted_out_email(self):
         assert util.get_sent_email_count(EmailTemplateType.OPTED_OUT, section=section_0,
                                          instructor=instructor_0) == 1
 
-    def test_remind_opt_outs(self):
-        self.jobs_page.run_remind_opt_outs_job_sequence()
-
     def test_instructor_opt_out_reminder(self):
+        self.jobs_page.run_remind_opt_outs_job_sequence()
         assert util.get_sent_email_count(EmailTemplateType.REMIND_OPTED_OUT, section=None,
                                          instructor=instructor_0) == 1
 
 
 @pytest.mark.usefixtures('page_objects')
-class TestOptIn3:
+class TestOptIn4:
     """
     SCENARIO.
 
     - A section has no instructor, and recordings are not scheduled
+    - Admin opts the course in and modifies settings; recordings are scheduled
     - An instructor who has opted in for all terms is added to the section
-    - Recordings are scheduled, and the instructor receives a new-course-scheduled email
+    - Recordings are unchanged, and the instructor receives new-course-eligible and settings changed emails
     - An instructor who opts out by default is added to the section
-    - Recordings are unscheduled, and the instructors both receive an opted-out confirmation and partially approved reminder
+    - Recordings are unscheduled, and the instructors both receive an opted-out confirmation
+    - Both later receive remind-partially-approved and remind-opt-outs emails
     """
+
+    site = CanvasSite(
+        code=f'XENA Scheduling0 - {section_1.code}',
+        name=f'XENA Scheduling0 - {section_1.code}',
+        site_id=None,
+    )
 
     def test_set_up(self):
         self.kaltura_page.log_in_and_reset_test_data(self.calnet_page, [section_1])
         util.reset_section_and_user_test_data([section_1], [instructor_1_0, instructor_1_1])
+        util.change_course_instructor(section_1, old_instructor=instructor_1_0, new_instructor=None)
+        util.change_course_instructor(section_1, old_instructor=instructor_1_1, new_instructor=None)
+
+    def test_create_site(self):
+        self.canvas_page.create_site(section_1, self.site)
 
     def test_instructor_opt_in_all(self):
-        self.login_page.dev_auth(instructor_1_0)
+        self.login_page.dev_auth(instructor_1_0.uid)
         # TODO - opt in for all
+
+    def test_admin_opts_in_with_settings_changes(self):
+        self.login_page.dev_auth()
+        self.course_page.load_page(section_1)
+        # TODO - admin opts in
+        # Update recording placement
+        self.course_page.click_edit_recording_placement()
+        self.course_page.select_recording_placement(RecordingPlacement.PUBLISH_AUTOMATICALLY, sites=[self.site])
+        self.course_page.save_recording_placement_edits()
+        recording_schedule_1_0.recording_placement = RecordingPlacement.PUBLISH_AUTOMATICALLY
+        recording_schedule_1_1.recording_placement = RecordingPlacement.PUBLISH_AUTOMATICALLY
+        # Add a manual collaborator
+        self.course_page.click_edit_collaborators()
+        self.course_page.add_collaborator_by_uid(instructor_1_2)
+        self.course_page.save_collaborator_edits()
+        self.course_page.verify_collaborator_uids([instructor_1_2])
+
+    def test_schedule_recordings(self):
+        self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
+        assert util.get_kaltura_id(recording_schedule_1_0)
+        assert util.get_kaltura_id(recording_schedule_1_1)
 
     def test_add_instructor(self):
         util.change_course_instructor(section_1, old_instructor=None, new_instructor=instructor_1_0)
         section_1.instructors = [instructor_1_0]
 
-    def test_schedule_recordings(self):
-        self.login_page.dev_auth()
-        self.jobs_page.run_schedule_update_job_sequence()
+    def test_recordings_still_scheduled(self):
+        recording_schedule_1_0_kaltura_id = recording_schedule_1_0.series_id
+        recording_schedule_1_1_kaltura_id = recording_schedule_1_1.series_id
+        self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
+        assert util.get_kaltura_id(recording_schedule_1_0) == recording_schedule_1_0_kaltura_id
+        assert util.get_kaltura_id(recording_schedule_1_1) == recording_schedule_1_1_kaltura_id
 
-    def test_recordings_scheduled(self):
-        assert util.get_kaltura_id(recording_schedule_1_0)
-        assert util.get_kaltura_id(recording_schedule_1_1)
+    def test_recording_settings_preserved(self):
+        self.course_page.load_page(section_1)
+        self.course_page.click_kaltura_series_link(recording_schedule_1_0)
+        self.kaltura_page.verify_title_and_desc(section_1, meeting_1_0)
+        self.kaltura_page.verify_collaborators(section_1)
+        self.kaltura_page.wait_for_publish_category_el()
+        self.kaltura_page.verify_publish_status(recording_schedule_1_0)
+        self.kaltura_page.verify_site_categories([self.site])
 
     def test_instructor_course_scheduled_email(self):
         assert util.get_sent_email_count(EmailTemplateType.NEW_CLASS_ELIGIBLE, section=None,
@@ -283,10 +311,9 @@ class TestOptIn3:
     def test_add_another_instructor(self):
         util.add_sis_sections_rows(section_1, [instructor_1_1])
 
-    def test_unschedule_recordings(self):
-        self.jobs_page.run_schedule_update_job_sequence()
-
     def test_recordings_unscheduled(self):
+        self.kaltura_page.close_window_and_switch()
+        self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
         assert not util.get_kaltura_id(recording_schedule_1_0)
         assert not util.get_kaltura_id(recording_schedule_1_1)
 
@@ -303,31 +330,23 @@ class TestOptIn3:
         assert util.get_sent_email_count(EmailTemplateType.NEW_CLASS_ELIGIBLE, section=None,
                                          instructor=instructor_1_1) == 1
 
-    def test_remind_opt_outs(self):
+    def test_instructor_opt_out_reminder(self):
         self.jobs_page.run_remind_opt_outs_job_sequence()
-
-    def test_instructor_0_opt_out_reminder(self):
         assert util.get_sent_email_count(EmailTemplateType.REMIND_OPTED_OUT, section=None,
-                                         instructor=instructor_1_0) == 0
-
-    def test_instructor_1_opt_out_reminder(self):
+                                         instructor=instructor_1_0) == 1
         assert util.get_sent_email_count(EmailTemplateType.REMIND_OPTED_OUT, section=None,
                                          instructor=instructor_1_1) == 1
 
-    def test_remind_partially_approved(self):
+    def test_instructor_partially_approved_reminder(self):
         self.jobs_page.run_remind_partially_approved_job_sequence()
-
-    def test_instructor_0_partially_approved_reminder(self):
         assert util.get_sent_email_count(EmailTemplateType.REMIND_PARTIALLY_APPROVED, section=section_0,
                                          instructor=instructor_1_0) == 1
-
-    def test_instructor_1_partially_approved_reminder(self):
         assert util.get_sent_email_count(EmailTemplateType.REMIND_PARTIALLY_APPROVED, section=section_0,
                                          instructor=instructor_1_1) == 1
 
 
 @pytest.mark.usefixtures('page_objects')
-class TestOptIn4:
+class TestOptIn5:
     """
     SCENARIO.
 
@@ -336,102 +355,77 @@ class TestOptIn4:
     - Instructor 1 opts in, and later both receive partially-approved reminder
     - Instructor 2 opts in, recordings are scheduled, and both receive new-course-scheduled confirmation
     - Both receive scheduled reminder
-    - Instructor 2 is removed. Recordings remain scheduled, and there is no email.
+    - Instructor 2 is removed. Recordings remain scheduled, and an instructor-removed email is sent.
     - Instructor 3 is added, who is opted out by default.
     - Recordings are unscheduled, and opted-out confirmation is sent to both.
     """
 
     def test_set_up(self):
         self.kaltura_page.log_in_and_reset_test_data(self.calnet_page, [section_1])
-        util.reset_section_and_user_test_data([section_1], [instructor_1_0, instructor_1_1])
+        util.reset_section_and_user_test_data([section_1],
+                                              [instructor_1_0, instructor_1_1, instructor_1_2])
 
-    def test_run_schedule_update(self):
+    def test_instructor_new_course_eligible(self):
         self.jobs_page.run_schedule_update_job_sequence()
-
-    def test_instructor_0_new_course_eligible(self):
         assert util.get_sent_email_count(EmailTemplateType.NEW_CLASS_ELIGIBLE, section=None,
                                          instructor=instructor_1_0) == 1
-
-    def test_instructor_1_new_course_eligible(self):
         assert util.get_sent_email_count(EmailTemplateType.NEW_CLASS_ELIGIBLE, section=None,
                                          instructor=instructor_1_1) == 1
 
     def test_instructor_0_opts_in(self):
-        self.login_page.dev_auth(instructor_1_0)
+        self.login_page.dev_auth(instructor_1_0.uid)
         # TODO - opt in
 
-    def test_run_remind_partially_approved_job(self):
+    def test_instructor_partially_approved_reminder(self):
         self.login_page.dev_auth()
         self.jobs_page.run_remind_partially_approved_job_sequence()
-
-    def test_instructor_0_partially_approved_reminder(self):
         assert util.get_sent_email_count(EmailTemplateType.REMIND_PARTIALLY_APPROVED, section=section_1,
                                          instructor=instructor_1_0) == 1
-
-    def test_instructor_1_partially_approved_reminder(self):
         assert util.get_sent_email_count(EmailTemplateType.REMIND_PARTIALLY_APPROVED, section=section_1,
                                          instructor=instructor_1_1) == 1
 
     def test_instructor_1_opts_in(self):
-        self.login_page.dev_auth(instructor_1_1)
+        self.login_page.dev_auth(instructor_1_1.uid)
         # TODO - opt in
 
     def test_schedule_recordings(self):
         self.login_page.dev_auth()
-        self.jobs_page.run_settings_update_job_sequence()
-
-    def test_recordings_scheduled(self):
+        self.jobs_page.run_kaltura_job_sequence()
         assert util.get_kaltura_id(recording_schedule_1_0)
         assert util.get_kaltura_id(recording_schedule_1_1)
 
-    def test_instructor_0_course_scheduled_email(self):
+    def test_instructor_course_scheduled_email(self):
         assert util.get_sent_email_count(EmailTemplateType.CLASS_SCHEDULED, section=section_1,
                                          instructor=instructor_1_0) == 1
-
-    def test_instructor_1_course_scheduled_email(self):
         assert util.get_sent_email_count(EmailTemplateType.CLASS_SCHEDULED, section=section_1,
                                          instructor=instructor_1_1) == 1
 
-    def test_run_remind_scheduled_job(self):
+    def test_instructor_scheduled_reminder(self):
         self.jobs_page.run_remind_scheduled_job_sequence()
-
-    def test_instructor_0_scheduled_reminder(self):
         assert util.get_sent_email_count(EmailTemplateType.REMIND_SCHEDULED, section=None,
                                          instructor=instructor_1_0) == 1
-
-    def test_instructor_1_scheduled_reminder(self):
         assert util.get_sent_email_count(EmailTemplateType.REMIND_SCHEDULED, section=None,
                                          instructor=instructor_1_1) == 1
 
-    def test_instructor_1_removed(self):
+    def test_instructor_removed_recordings_still_scheduled(self):
         util.change_course_instructor(section_1, old_instructor=instructor_1_1, new_instructor=None)
+        self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
+        assert util.get_kaltura_id(recording_schedule_1_0)
+        assert util.get_kaltura_id(recording_schedule_1_1)
 
-    def test_run_schedule_update_job(self):
-        self.jobs_page.run_schedule_update_job_sequence()
-
-    def test_instructor_1_removal_email(self):
+    def test_instructor_removed_email(self):
         assert util.get_sent_email_count(EmailTemplateType.INSTRUCTORS_REMOVED, section=section_1,
                                          instructor=instructor_1_1) == 1
 
-    def test_recordings_still_scheduled(self):
-        assert util.get_kaltura_id(recording_schedule_1_0)
-        assert util.get_kaltura_id(recording_schedule_1_1)
-
-    def test_instructor_2_added(self):
+    def test_instructor_2_added_recordings_unscheduled(self):
         util.add_sis_sections_rows(section_1, instructor_1_2)
-
-    def test_unschedule_recordings(self):
-        self.jobs_page.run_schedule_update_job_sequence()
-
-    def test_recordings_unscheduled(self):
+        self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
         assert not util.get_kaltura_id(recording_schedule_1_0)
         assert not util.get_kaltura_id(recording_schedule_1_0)
 
-    def test_instructor_0_opt_out_email(self):
+    def test_instructor_opt_out_emails(self):
         assert util.get_sent_email_count(EmailTemplateType.OPTED_OUT, section=section_1,
                                          instructor=instructor_1_0) == 1
-
-    def test_instructor_2_opt_out_email(self):
         assert util.get_sent_email_count(EmailTemplateType.OPTED_OUT, section=section_1,
                                          instructor=instructor_1_2) == 1
 
@@ -441,7 +435,7 @@ class TestOptIn4:
 
 
 @pytest.mark.usefixtures('page_objects')
-class TestOptIn5:
+class TestOptIn6:
     """
     SCENARIO.
 
@@ -457,85 +451,65 @@ class TestOptIn5:
         util.set_instructor_role(section_1, instructor_1_1, 'ICNT')
 
     def test_decline_reminder_emails(self):
-        self.login_page.dev_auth(instructor_1_0)
+        self.login_page.dev_auth(instructor_1_0.uid)
         # TODO - no reminders
 
-    def test_run_schedule_updates(self):
-        self.login_page.dev_auth()
-        self.jobs_page.run_schedule_update_job_sequence()
-
     def test_recordings_not_scheduled(self):
+        self.login_page.dev_auth()
+        self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
         assert not util.get_kaltura_id(recording_schedule_1_0)
         assert not util.get_kaltura_id(recording_schedule_1_1)
 
-    def test_instructor_0_new_course_eligible(self):
+    def test_instructor_new_course_eligible_emails(self):
         assert util.get_sent_email_count(EmailTemplateType.NEW_CLASS_ELIGIBLE, section=None,
                                          instructor=instructor_1_0) == 1
-
-    def test_instructor_1_new_course_eligible(self):
         assert util.get_sent_email_count(EmailTemplateType.NEW_CLASS_ELIGIBLE, section=None,
                                          instructor=instructor_1_1) == 1
 
-    def test_run_opt_out_reminders(self):
+    def test_instructor_opt_out_reminder_emails(self):
         self.jobs_page.run_remind_opt_outs_job_sequence()
-
-    def test_instructor_0_opt_out_reminder(self):
         assert util.get_sent_email_count(EmailTemplateType.REMIND_OPTED_OUT, section=section_1,
                                          instructor=instructor_1_0) == 1
-
-    def test_instructor_1_no_opt_out_reminder(self):
         assert util.get_sent_email_count(EmailTemplateType.REMIND_OPTED_OUT, section=section_1,
                                          instructor=instructor_1_1) == 0
 
     def test_instructor_0_opts_in(self):
-        self.login_page.dev_auth(instructor_1_0)
+        self.login_page.dev_auth(instructor_1_0.uid)
         # TODO - opt in
 
-    def test_run_settings_update(self):
-        self.login_page.dev_auth()
-        self.jobs_page.run_settings_update_job_sequence()
-
     def test_recordings_still_not_scheduled(self):
+        self.login_page.dev_auth()
+        self.jobs_page.run_kaltura_job_sequence()
         assert not util.get_kaltura_id(recording_schedule_1_0)
         assert not util.get_kaltura_id(recording_schedule_1_1)
 
-    def test_run_partially_approved_reminders(self):
+    def test_instructor_partial_approval_reminder_emails(self):
         self.jobs_page.run_remind_partially_approved_job_sequence()
-
-    def test_instructor_0_partial_approval_reminder(self):
         assert util.get_sent_email_count(EmailTemplateType.REMIND_PARTIALLY_APPROVED, section=section_1,
                                          instructor=instructor_1_0) == 1
-
-    def test_instructor_1_no_partial_approval_reminder(self):
         assert util.get_sent_email_count(EmailTemplateType.REMIND_PARTIALLY_APPROVED, section=section_1,
                                          instructor=instructor_1_1) == 0
 
     def test_instructor_0_opts_out(self):
-        self.login_page.dev_auth(instructor_1_0)
+        self.login_page.dev_auth(instructor_1_0.uid)
         # TODO - opt out
 
-    def test_run_settings_update_again(self):
-        self.login_page.dev_auth()
-        self.jobs_page.run_settings_update_job_sequence()
-
     def test_instructor_0_no_opt_out_email(self):
+        self.login_page.dev_auth()
+        self.jobs_page.run_kaltura_job_sequence()
         assert not util.get_sent_email_count(EmailTemplateType.OPTED_OUT, section=section_1,
                                              instructor=instructor_1_0) == 0
 
-    def test_run_opted_out_reminders_again(self):
+    def test_instructor_opt_out_reminder_email_again(self):
         self.jobs_page.run_remind_opt_outs_job_sequence()
-
-    def test_instructor_0_opt_out_reminder_again(self):
         assert util.get_sent_email_count(EmailTemplateType.REMIND_OPTED_OUT, section=section_1,
                                          instructor=instructor_1_0) == 2
-
-    def test_instructor_1_still_no_opt_out_reminder(self):
         assert util.get_sent_email_count(EmailTemplateType.REMIND_OPTED_OUT, section=section_1,
                                          instructor=instructor_1_1) == 0
 
 
 @pytest.mark.usefixtures('page_objects')
-class TestOptIn6:
+class TestOptIn7:
     """
     SCENARIO.
 
@@ -551,103 +525,84 @@ class TestOptIn6:
         util.reset_section_and_user_test_data([section_1], [instructor_1_0, instructor_1_1])
 
     def test_instructor_0_opt_in_for_all(self):
-        self.login_page.dev_auth(instructor_1_0)
+        self.login_page.dev_auth(instructor_1_0.uid)
         # TODO - opt in for all
 
     def test_instructor_1_decline_reminder_emails(self):
-        self.login_page.dev_auth(instructor_1_1)
+        self.login_page.dev_auth(instructor_1_1.uid)
         # TODO - no reminders
 
-    def test_run_schedule_updates(self):
-        self.login_page.dev_auth()
-        self.jobs_page.run_schedule_update_job_sequence()
-
     def test_recordings_not_scheduled(self):
+        self.login_page.dev_auth()
+        self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
         assert not util.get_kaltura_id(recording_schedule_1_0)
         assert not util.get_kaltura_id(recording_schedule_1_1)
 
-    def test_instructor_0_new_course_eligible(self):
+    def test_instructor_new_course_eligible_emails(self):
         assert util.get_sent_email_count(EmailTemplateType.NEW_CLASS_ELIGIBLE, section=None,
                                          instructor=instructor_1_0) == 1
-
-    def test_instructor_1_new_course_eligible(self):
         assert util.get_sent_email_count(EmailTemplateType.NEW_CLASS_ELIGIBLE, section=None,
                                          instructor=instructor_1_1) == 1
 
-    def test_run_opt_out_reminder(self):
-        self.jobs_page.run_remind_opt_outs_job_sequence()
-
     def test_no_opt_out_reminders(self):
+        self.jobs_page.run_remind_opt_outs_job_sequence()
         assert util.get_sent_email_count(EmailTemplateType.REMIND_OPTED_OUT, section=section_1,
                                          instructor=instructor_1_0) == 0
         assert util.get_sent_email_count(EmailTemplateType.REMIND_OPTED_OUT, section=section_1,
                                          instructor=instructor_1_1) == 0
 
-    def test_run_partially_approved_reminder(self):
+    def test_instructor_partial_approval_reminder_email(self):
         self.jobs_page.run_remind_partially_approved_job_sequence()
-
-    def test_instructor_0_partial_approval_reminder(self):
         assert util.get_sent_email_count(EmailTemplateType.REMIND_PARTIALLY_APPROVED, section=section_1,
                                          instructor=instructor_1_0) == 1
-
-    def test_instructor_1_partial_approval_reminder(self):
         assert util.get_sent_email_count(EmailTemplateType.REMIND_PARTIALLY_APPROVED, section=section_1,
                                          instructor=instructor_1_1) == 0
 
     def test_instructor_1_opts_in(self):
-        self.login_page.dev_auth(instructor_1_1)
+        self.login_page.dev_auth(instructor_1_1.uid)
         # TODO opt in
         # TODO verify no-reminders option vanishes
 
-    def test_schedule_recordings(self):
-        self.login_page.dev_auth()
-        self.jobs_page.run_settings_update_job_sequence()
-
     def test_recordings_scheduled(self):
+        self.login_page.dev_auth()
+        self.jobs_page.run_kaltura_job_sequence()
         assert util.get_kaltura_id(recording_schedule_1_0)
         assert util.get_kaltura_id(recording_schedule_1_1)
 
-    def test_instructor_0_course_scheduled_email(self):
+    def test_instructor_course_scheduled_emails(self):
         assert util.get_sent_email_count(EmailTemplateType.CLASS_SCHEDULED, section=section_1,
                                          instructor=instructor_1_0) == 1
-
-    def test_instructor_1_course_scheduled_email(self):
         assert util.get_sent_email_count(EmailTemplateType.CLASS_SCHEDULED, section=section_1,
                                          instructor=instructor_1_1) == 1
 
-    def test_run_remind_scheduled(self):
+    def test_instructor_reminder_emails(self):
         self.jobs_page.run_remind_scheduled_job_sequence()
-
-    def test_instructor_0_reminder_email(self):
         assert util.get_sent_email_count(EmailTemplateType.REMIND_SCHEDULED, section=None,
                                          instructor=instructor_1_0) == 1
-
-    def test_instructor_1_reminder_email(self):
         assert util.get_sent_email_count(EmailTemplateType.REMIND_SCHEDULED, section=None,
                                          instructor=instructor_1_1) == 1
 
     def test_instructor_0_removes_opt_in_all(self):
-        self.login_page.dev_auth(instructor_1_0)
+        self.login_page.dev_auth(instructor_1_0.uid)
         # TODO remove opt-in-all
 
-    def test_run_settings_update(self):
-        self.login_page.dev_auth()
-        self.jobs_page.run_settings_update_job_sequence()
-
     def test_recordings_still_scheduled(self):
+        self.login_page.dev_auth()
+        self.jobs_page.run_kaltura_job_sequence()
         assert util.get_kaltura_id(recording_schedule_1_0)
         assert util.get_kaltura_id(recording_schedule_1_1)
 
 
 @pytest.mark.usefixtures('page_objects')
-class TestOptIn7:
+class TestOptIn8:
     """
     SCENARIO.
 
-    - A course has a primary instructor and a proxy
+    - Section 0 has a primary instructor and a proxy. The proxy an instructor on Section 1.
     - The instructor is opt-out by default and accepts reminders; the proxy is opt-in by default
-    - Only the instructor receives a new-course-eligible email and later an opted-out reminder but no partial approval reminder
-    - The instructor opts in, recordings are scheduled, and only the instructor receives the new course scheduled confirmation
+    - For Section 0, only the instructor receives a new-course-eligible email and an opted-out reminder
+    - For Section 0, the instructor opts in, recordings are scheduled
+    - For Section 0, only the instructor receives the new course scheduled confirmation
     """
 
     def test_set_up(self):
@@ -657,12 +612,12 @@ class TestOptIn7:
         util.set_instructor_role(section_1, instructor_1_1, 'APRX')
 
     def test_instructor_1_opts_in_for_all(self):
-        self.login_page.dev_auth(instructor_1_1)
+        self.login_page.dev_auth(instructor_1_1.uid)
         # TODO - opt in for all
 
-    def test_run_schedule_update(self):
+    def test_run_kaltura_job(self):
         self.login_page.dev_auth()
-        self.jobs_page.run_schedule_update_job_sequence()
+        self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
 
     def test_section_0_not_scheduled(self):
         assert not util.get_kaltura_id(recording_schedule_1_0)
@@ -675,43 +630,37 @@ class TestOptIn7:
         assert util.get_sent_email_count(EmailTemplateType.NEW_CLASS_ELIGIBLE, section=None,
                                          instructor=instructor_1_0) == 1
 
-    def test_run_opt_out_reminder(self):
+    def test_instructor_opt_out_reminders(self):
         self.jobs_page.run_remind_opt_outs_job_sequence()
-
-    def test_instructor_0_opt_out_reminder(self):
         assert util.get_sent_email_count(EmailTemplateType.REMIND_OPTED_OUT, section=None,
                                          instructor=instructor_1_0) == 1
-
-    def test_run_partial_approval_reminder(self):
-        self.jobs_page.run_remind_partially_approved_job_sequence()
+        assert util.get_sent_email_count(EmailTemplateType.REMIND_OPTED_OUT, section=None,
+                                         instructor=instructor_1_1) == 0
 
     def test_instructor_0_no_partial_approval_reminder(self):
+        self.jobs_page.run_remind_partially_approved_job_sequence()
         assert util.get_sent_email_count(EmailTemplateType.REMIND_PARTIALLY_APPROVED, section=None,
-                                         instructor=instructor_1_0)
+                                         instructor=instructor_1_0) == 0
 
     def test_instructor_0_opts_in(self):
-        self.login_page.dev_auth(instructor_1_0)
+        self.login_page.dev_auth(instructor_1_0.uid)
         # TODO - opt in
 
-    def test_schedule_recordings(self):
-        self.login_page.dev_auth()
-        self.jobs_page.run_settings_update_job_sequence()
-
     def test_recordings_scheduled(self):
+        self.login_page.dev_auth()
+        self.jobs_page.run_kaltura_job_sequence()
         assert util.get_kaltura_id(recording_schedule_1_0)
         assert util.get_kaltura_id(recording_schedule_1_1)
 
-    def test_instructor_0_course_scheduled_email(self):
+    def test_instructor_course_scheduled_email(self):
         assert util.get_sent_email_count(EmailTemplateType.CLASS_SCHEDULED, section=section_1,
                                          instructor=instructor_1_0) == 1
-
-    def test_instructor_1_no_course_scheduled_email(self):
         assert util.get_sent_email_count(EmailTemplateType.CLASS_SCHEDULED, section=section_1,
                                          instructor=instructor_1_1) == 0
 
 
 @pytest.mark.usefixtures('page_objects')
-class TestOptIn8:
+class TestOptIn9:
     """
     SCENARIO.
 
@@ -729,21 +678,124 @@ class TestOptIn8:
         util.add_sis_sections_rows(section_1, [instructor_1_0])
 
     def test_opt_in_for_one(self):
-        self.login_page.dev_auth(instructor_1_0)
+        self.login_page.dev_auth(instructor_1_0.uid)
         # TODO - opt in one course only
 
-    def test_schedule_recordings(self):
+    def test_one_course_scheduled_only(self):
         self.login_page.dev_auth()
         self.jobs_page.run_schedule_update_job_sequence()
-
-    def test_one_course_scheduled_only(self):
         assert util.get_kaltura_id(recording_schedule_1_0)
         assert util.get_kaltura_id(recording_schedule_1_1)
         assert not util.get_kaltura_id(recording_schedule_0)
 
-    def test_run_opt_out_reminders(self):
-        self.jobs_page.run_remind_opt_outs_job_sequence()
-
     def test_no_opted_out_reminder(self):
+        self.jobs_page.run_remind_opt_outs_job_sequence()
         assert not util.get_sent_email_count(EmailTemplateType.REMIND_OPTED_OUT, section=None,
                                              instructor=instructor_1_0)
+
+
+@pytest.mark.usefixtures('page_objects')
+class TestOptIn10:
+    """
+    SCENARIO.
+
+    - An eligible course has no instructor, and an admin opts the course in
+    - An instructor is added who opts out by default.  Recordings are unscheduled.
+    - The instructor receives new-class-eligible email, opts in, and receives the class-scheduled email.
+    - The instructor receives a remind-scheduled email
+    """
+
+    def test_setup(self):
+        self.kaltura_page.log_in_and_reset_test_data(self.calnet_page, [section_0])
+        util.reset_section_and_user_test_data([section_0], [instructor_0])
+        util.change_course_instructor(section_0, old_instructor=instructor_0, new_instructor=None)
+
+    def test_admin_opt_in(self):
+        self.login_page.dev_auth()
+        # TODO - admin opts the course in
+
+    def test_recordings_scheduled(self):
+        self.jobs_page.run_kaltura_job_sequence()
+        assert util.get_kaltura_id(recording_schedule_0)
+
+    def test_instructor_added(self):
+        util.change_course_instructor(section_0, old_instructor=None, new_instructor=instructor_0)
+
+    def test_recordings_unscheduled(self):
+        self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
+        assert not util.get_kaltura_id(recording_schedule_0)
+
+    def test_instructor_new_class_eligible_email(self):
+        assert util.get_sent_email_count(EmailTemplateType.NEW_CLASS_ELIGIBLE, section=None,
+                                         instructor=instructor_0) == 1
+
+    def test_instructor_opts_in(self):
+        self.login_page.dev_auth(instructor_0.uid)
+        # TODO - instructor opts in
+
+    def test_recordings_rescheduled(self):
+        self.login_page.dev_auth()
+        self.jobs_page.run_kaltura_job_sequence()
+        assert util.get_kaltura_id(recording_schedule_0)
+
+    def test_instructor_class_scheduled_email(self):
+        assert util.get_sent_email_count(EmailTemplateType.CLASS_SCHEDULED, section_0, instructor_0) == 1
+
+    def test_instructor_remind_scheduled_email(self):
+        self.jobs_page.run_remind_scheduled_job_sequence()
+        assert util.get_sent_email_count(EmailTemplateType.REMIND_SCHEDULED, section=None,
+                                         instructor=instructor_0) == 1
+
+
+@pytest.mark.usefixtures('page_objects')
+class TestOptIn11:
+    """
+    SCENARIO.
+
+    - A course instructor opts out by default but accepts reminder emails.  The instructor receives an opted-out reminder
+    - An admin opts the instructor in, recordings are scheduled, and the instructor receives a class-scheduled email.
+    - The instructor receives a remind-scheduled email.
+    - An admin opts the instructor out, recordings are unscheduled, and the instructor receives an opted-out email.
+    """
+
+    def test_setup(self):
+        self.kaltura_page.log_in_and_reset_test_data(self.calnet_page, [section_0])
+        util.reset_section_and_user_test_data([section_0], [instructor_0])
+
+    def test_instructor_new_class_eligible_email(self):
+        self.login_page.dev_auth()
+        self.jobs_page.run_schedule_update_job_sequence()
+        assert util.get_sent_email_count(EmailTemplateType.NEW_CLASS_ELIGIBLE, section=None,
+                                         instructor=instructor_0) == 1
+
+    def test_remind_opted_out(self):
+        self.jobs_page.run_remind_opt_outs_job_sequence()
+        assert util.get_sent_email_count(EmailTemplateType.REMIND_OPTED_OUT, section=None,
+                                         instructor=instructor_0) == 1
+
+    def test_admin_opt_instructor_in(self):
+        self.instructor_page.load_page(instructor_0)
+        # TODO - opt in instructor
+
+    def test_recordings_scheduled(self):
+        self.jobs_page.run_kaltura_job_sequence()
+        assert util.get_kaltura_id(recording_schedule_0)
+
+    def test_instructor_class_scheduled_email(self):
+        assert util.get_sent_email_count(EmailTemplateType.CLASS_SCHEDULED, section_0, instructor_0) == 1
+
+    def test_remind_scheduled_email(self):
+        self.jobs_page.run_remind_scheduled_job_sequence()
+        assert util.get_sent_email_count(EmailTemplateType.REMIND_SCHEDULED, section=None,
+                                         instructor=instructor_0) == 1
+
+    def test_admin_opt_instructor_out(self):
+        self.instructor_page.load_page(instructor_0)
+        # TODO - opt out instructor
+
+    def test_recordings_unscheduled(self):
+        self.jobs_page.run_kaltura_job_sequence()
+        assert not util.get_kaltura_id(recording_schedule_0)
+
+    def test_instructor_opted_out_email(self):
+        assert util.get_sent_email_count(EmailTemplateType.OPTED_OUT, section_0, instructor_0) == 1

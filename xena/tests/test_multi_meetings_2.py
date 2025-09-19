@@ -207,7 +207,7 @@ class TestWeirdTypeD:
 
     def test_run_kaltura_job(self):
         self.login_page.dev_auth()
-        self.jobs_page.run_settings_update_job_sequence()
+        self.jobs_page.run_kaltura_job_sequence()
 
     def test_series_recording_placement(self):
         self.course_page.load_page(self.section)

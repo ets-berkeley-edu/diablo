@@ -86,7 +86,7 @@ class TestCourseInstructorChanges:
 
     def test_old_instructor_recordings_scheduled(self):
         self.login_page.dev_auth()
-        self.jobs_page.run_settings_update_job_sequence()
+        self.jobs_page.run_kaltura_job_sequence()
         util.get_kaltura_id(self.recording_schedule)
         self.recording_schedule.recording_placement = RecordingPlacement.PLACE_IN_MY_MEDIA
         self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
@@ -107,7 +107,7 @@ class TestCourseInstructorChanges:
 
     def test_old_instructor_update_scheduled_recordings(self):
         self.login_page.dev_auth()
-        self.jobs_page.run_settings_update_job_sequence()
+        self.jobs_page.run_kaltura_job_sequence()
 
     def test_series_title_and_desc(self):
         self.kaltura_page.load_event_edit_page(self.recording_schedule.series_id)
@@ -152,7 +152,7 @@ class TestCourseInstructorChanges:
 
     def test_run_instr_change_jobs(self):
         self.login_page.dev_auth()
-        self.jobs_page.run_settings_update_job_sequence()
+        self.jobs_page.run_kaltura_job_sequence()
         assert util.get_kaltura_id(self.recording_schedule)
         self.recording_schedule.recording_placement = RecordingPlacement.PLACE_IN_MY_MEDIA
         self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR

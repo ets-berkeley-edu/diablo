@@ -143,7 +143,7 @@ class JobsPage(DiabloPages):
         self.run_kaltura_job()
         self.run_emails_job()
 
-    def run_settings_update_job_sequence(self):
+    def run_kaltura_job_sequence(self):
         self.load_page()
         self.run_kaltura_job()
         self.run_emails_job()

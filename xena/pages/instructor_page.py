@@ -35,6 +35,11 @@ class InstructorPage(CoursesPage):
     def hit_admin_url(self, instructor):
         self.driver.get(f'{app.config["BASE_URL"]}/user/{instructor.uid}')
 
+    def load_admin_page(self, instructor):
+        app.logger.info(f'Loading instructor page for UID {instructor.uid}')
+        self.hit_admin_url(instructor)
+        self.when_present(self.EDIT_NOTE_BUTTON, util.get_short_timeout())
+
     OPT_OUT_ALL_BUTTON = By.ID, 'toggle-opt-in-all-terms'
     OPT_OUT_CURRENT_BUTTON = By.ID, 'toggle-opt-in-current-term'
 
