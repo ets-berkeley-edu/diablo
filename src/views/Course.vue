@@ -26,7 +26,7 @@
             type="warning"
             variant="outlined"
           >
-            Recent updates to recording settings are currently queued for publication. They will be published in an hour or less.
+            Recent updates to recording settings are currently queued to go live. They will be activated within an hour.
           </v-alert>
           <div id="notice-scheduled" class="font-weight-bold text-success pa-6">
             {{ currentUser.isAdmin ? 'The' : 'Your' }} course is scheduled for Course Capture. The first recording is on
