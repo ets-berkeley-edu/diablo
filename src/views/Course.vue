@@ -15,7 +15,7 @@
         Section ID: <span id="section-id">{{ course.sectionId }}</span>
       </div>
     </div>
-    <div v-if="isCurrentTerm && !!capability && hasValidMeetingTimes" class="px-4">
+    <div v-if="isEligibleForCourseCapture" class="px-4">
       <div aria-live="polite">
         <div v-if="course.scheduled">
           <v-alert
@@ -46,7 +46,7 @@
           xl="9"
         >
           <v-card class="pa-4">
-            <v-container v-if="isCurrentTerm && !!capability && hasValidMeetingTimes" class="pt-2">
+            <v-container v-if="isEligibleForCourseCapture" class="pt-2">
               <v-row v-if="allowToggleOptIn" class="py-0">
                 <v-col>
                   <ToggleOptIn
@@ -88,6 +88,9 @@
                       class="mt-1"
                     >
                       {{ instructor.name }} ({{ instructor.uid }})
+                      <span v-if="currentUser.isAdmin && instructor.optedInAt" class="text-green">
+                        &mdash; Opted In on {{ DateTime.fromISO(instructor.optedInAt).toLocaleString(DateTime.DATE_MED) }}
+                      </span>
                     </div>
                   </div>
                 </v-col>
@@ -171,6 +174,7 @@
 
 <script setup>
 import {computed, onMounted, ref} from 'vue'
+import {DateTime} from 'luxon'
 import {isEmpty} from 'lodash'
 import {mdiAlert, mdiBookMultipleOutline} from '@mdi/js'
 import {storeToRefs} from 'pinia'
@@ -201,7 +205,7 @@ const {course} = storeToRefs(courseStore)
 const allowToggleOptIn = computed(() => {
   const nonAprxInstructors = course.value.instructors.filter(i => i.roleCode !== 'APRX')
   const instructorsNotOptedIn = course.value.instructors.filter(i => i.roleCode !== 'APRX' && !i.hasOptedIn)
-  return (nonAprxInstructors.length && !instructorsNotOptedIn.length) || (currentUser.isAdmin && !nonAprxInstructors.length)
+  return currentUser.isAdmin ? !nonAprxInstructors.length : nonAprxInstructors.length && !instructorsNotOptedIn.length
 })
 const config = contextStore.config
 const currentUser = contextStore.currentUser
@@ -212,6 +216,7 @@ const courseDisplayTitle = ref('')
 const hasValidMeetingTimes = ref(false)
 const instructors = ref([])
 const instructorProxies = ref([])
+const isEligibleForCourseCapture = ref(false)
 const isCurrentTerm = computed(() => course.value.termId === config.currentTermId)
 const location = ref('')
 const toggleOptInValue = computed(() => {
@@ -239,6 +244,7 @@ const refreshCourse = (termId, sectionId) => {
     capability.value = meeting.room?.capability
     location.value = meeting.room?.location
     hasValidMeetingTimes.value = eligible.some(m => m.startDate && m.startTime && m.endDate && m.endTime)
+    isEligibleForCourseCapture.value = isCurrentTerm.value && !!capability.value && hasValidMeetingTimes.value
     courseDisplayTitle.value = getCourseCodes(data)[0]
     getAuditoriums().then(data => {
       auditoriums.value = data

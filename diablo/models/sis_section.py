@@ -692,14 +692,19 @@ def _to_api_json(  # noqa: C901, PLR0912, PLR0915
 
         decorated_course_instructors = []
         for instructor in course['instructors']:
-            instructor_has_opted_in = False
+            instructor_opted_in_at_date = None
             if instructor['roleCode'] != 'APRX':
                 instructor_opt_in = next((o for o in opt_ins if o.instructor_uid == instructor['uid']), None)
                 if instructor_opt_in:
-                    course['optIns'].append(instructor_opt_in.to_api_json())
-                    instructor_has_opted_in = True
+                    api_json = instructor_opt_in.to_api_json()
+                    course['optIns'].append(api_json)
+                    instructor_opted_in_at_date = api_json['createdAt']
 
-            decorated_course_instructors.append({**instructor, 'hasOptedIn': instructor_has_opted_in})
+            decorated_course_instructors.append({
+                **instructor,
+                'hasOptedIn': bool(instructor_opted_in_at_date),
+                'optedInAt': instructor_opted_in_at_date,
+            })
 
         if include_administrative_proxies:
             course['instructors'] = decorated_course_instructors

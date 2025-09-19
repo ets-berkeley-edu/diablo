@@ -42,14 +42,23 @@
         This course is eligible for scheduling, but has not yet been scheduled. Instructors will be notified when
         scheduling has taken place.
       </span>
-      <span v-if="!course.instructors.length" id="notice-eligible-not-scheduled" class="text-success">
-        This course is eligible for scheduling, but has not been scheduled because it has no instructors.
+      <span v-if="!course.instructors.length" class="text-success">
+        <span
+          v-if="course.optIns.length === 1 && course.optIns[0].instructorUid === 'admin'"
+          id="notice-eligible-scheduled-by-admin"
+        >
+          This course was scheduled for Course Capture by an Admin on {{ DateTime.fromISO(course.optIns[0].createdAt).toLocaleString(DateTime.DATE_MED) }}.
+        </span>
+        <span v-if="!course.optIns.length" id="notice-eligible-not-scheduled">
+          This course is eligible for Course Capture but has not been scheduled because it has no instructors.
+        </span>
       </span>
     </v-col>
   </v-row>
 </template>
 
 <script setup lang="ts">
+import {DateTime} from 'luxon'
 import {storeToRefs} from 'pinia'
 import {useContextStore} from '@/stores/context'
 import {useCourseStore} from '@/stores/course'
