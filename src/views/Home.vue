@@ -12,6 +12,21 @@
     <v-card-text>
       <Spinner v-if="refreshingCourses" />
       <template v-if="!refreshingCourses">
+        <div class="optin-banner mx-4 my-4" role="note" aria-label="Course Capture opt-in change notice">
+          <p class="m-0">
+            <strong>Course Capture has changed for 2025.</strong>
+            You must opt in for your courses to be recorded.
+            For more information, visit our
+            <a
+              :href="gettingStartedUrl"
+              target="_blank"
+              rel="noopener"
+              class="optin-banner__link"
+            >
+              Instructor Getting Started Guide
+            </a>.
+          </p>
+        </div>
         <v-row
           v-for="(courses, index) in [eligibleCourses, ineligibleCourses]"
           :key="index"
@@ -95,7 +110,7 @@
                       </div>
                       <div v-else>
                         <v-tooltip
-                          v-if="['Pending', 'Waiting on co-instructor'].includes(course.statusLabel)"
+                          v-if="['Pending', 'Not Opted In'].includes(course.statusLabel)"
                           :text="getStatusTooltip(course.statusLabel)"
                           location="top"
                         >
@@ -332,6 +347,10 @@ const isEmailDisabled = computed(() => {
   return futureAll || anyCurrentOptIn
 })
 
+const gettingStartedUrl = computed(() =>
+  get(config.value, 'instructorGettingStartedUrl', 'https://rtl.berkeley.edu/services-programs/course-capture/instructor-getting-started')
+)
+
 watch(isEmailDisabled, (required) => {
   if (required) {
     emailReceive.value = true
@@ -373,25 +392,31 @@ const refreshCourses = () => {
   each(currentUser.value.courses, course => {
     course.courseCodes = getCourseCodes(course)
   })
+
   eligibleCourses.value = []
   ineligibleCourses.value = []
   partitionCoursesByEligibility(currentUser.value.courses, eligibleCourses.value, ineligibleCourses.value)
+
   each([...eligibleCourses.value, ...ineligibleCourses.value], course => {
     course.displayMeetings = getDisplayMeetings(course)
+
+    const eligibleLen = get(course, 'meetings.eligible.length', 0)
     course.statusLabel = course.deletedAt
       ? 'Canceled'
       : (course.scheduled
         ? 'Scheduled'
-        : (get(course, 'meetings.eligible.length', 0) > 0 ? 'Not Scheduled' : 'Not Eligible'))
+        : (eligibleLen > 0
+          ? (course.hasOptedIn ? 'Pending' : 'Not Opted In')
+          : 'Not Eligible'))
   })
 }
 
 const getStatusTooltip = (label) => {
   if (label === 'Pending') {
-    return 'Recordings will be scheduled within an hour'
+    return 'Recordings will be scheduled within an hour.'
   }
-  // label === 'Waiting on co-instructor'
-  return 'Recordings are not scheduled. A co-instructor has not opted in'
+  // label === 'Not Opted In'
+  return 'Recordings are not scheduled. One or more instructors have not opted in.'
 }
 
 const onFutureCoursesPreferenceChange = (value) => {
@@ -445,11 +470,25 @@ const onEmailReceiveChange = (value, {force = false} = {}) => {
   overflow: visible !important;
 }
 
-.instructor-courses .course-link {
-  text-decoration: underline;
+.course-link {
+  text-decoration: underline !important;
   text-underline-offset: 2px;
+  cursor: pointer;
 }
 .v-selection-control--disabled .v-label {
   opacity: 0.6;
+}
+.optin-banner {
+  background: #e9f4ff;           /* light blue */
+  border: 1px solid #b3dcff;     /* subtle blue border */
+  border-radius: 8px;            /* slightly rounded edges */
+  padding: 12px 16px;
+  line-height: 1.4;
+  width: 1200px;
+}
+
+.optin-banner__link {
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 </style>
