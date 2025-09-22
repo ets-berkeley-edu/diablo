@@ -90,7 +90,7 @@ class TestCourseCancellation:
     def test_restored_pre_sched(self):
         util.restore_section(self.section)
         self.courses_page.reload_page()
-        # TODO - opt in
+        self.courses_page.set_course_opt_in(self.section)
         self.login_page.dev_auth()
         self.jobs_page.run_kaltura_job_sequence()
 

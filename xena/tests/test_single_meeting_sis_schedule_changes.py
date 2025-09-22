@@ -67,8 +67,8 @@ class TestCourseScheduleChanges:
         util.reset_section_and_user_test_data([self.section], [self.instr])
 
     def test_schedule_recordings(self):
-        self.course_page.load_page(self.section)
-        # TODO - admin opts course in
+        self.ouija_page.search_for_course_code(self.section)
+        self.ouija_page.set_course_opt_in(self.section)
         self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
         util.get_kaltura_id(self.recording_schedule)
         self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR

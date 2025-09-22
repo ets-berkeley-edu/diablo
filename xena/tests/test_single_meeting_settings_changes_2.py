@@ -103,7 +103,7 @@ class TestScheduling2:
     def test_visible_section_sis_data(self):
         self.kaltura_page.close_window_and_switch()
         self.login_page.dev_auth(self.instructor_0.uid)
-        # TODO opt in on instructor landing page
+        self.courses_page.set_course_opt_in(self.section)
         self.instructor_page.click_course_page_link(self.section)
         self.course_page.wait_for_diablo_title(f'{self.section.code}, {self.section.number}')
         self.course_page.verify_section_sis_data(self.section)
@@ -200,7 +200,9 @@ class TestScheduling2:
 
     # TODO def test_partial_approval_messaging_instr_1
 
-    # TODO - def test_opt_in(self):
+    def test_opt_in(self):
+        self.courses_page.load_instructor_homepage()
+        self.courses_page.set_course_opt_in(self.section)
 
     def test_another_site_add_to_channels(self):
         self.course_page.click_edit_recording_placement()

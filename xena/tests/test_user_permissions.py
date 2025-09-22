@@ -50,6 +50,8 @@ class TestUserPerms:
 
     def test_schedule_section(self):
         self.login_page.dev_auth()
+        self.ouija_page.search_for_course_code(self.section)
+        self.ouija_page.set_course_opt_in(self.section)
         self.jobs_page.run_schedule_update_job_sequence()
 
     # NOTES

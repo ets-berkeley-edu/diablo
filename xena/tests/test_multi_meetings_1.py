@@ -89,7 +89,7 @@ class TestWeirdTypeC:
 
     def test_admin_opts_course_in(self):
         self.instructor_page.hit_admin_url(self.original_instructor)
-        # TODO - admin opts course in
+        self.instructor_page.set_course_opt_in(self.section)
 
     def test_schedule_recordings(self):
         self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
@@ -272,7 +272,7 @@ class TestWeirdTypeC:
 
     def test_new_instructor_opts_in(self):
         self.login_page.dev_auth(self.new_instructor.uid)
-        # TODO - new instructor opts in
+        self.courses_page.set_course_opt_in(self.section)
 
     def test_run_kaltura_job_instr_added(self):
         self.login_page.dev_auth()

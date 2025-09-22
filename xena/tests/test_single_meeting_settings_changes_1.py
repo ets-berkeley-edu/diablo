@@ -130,7 +130,7 @@ class TestScheduling1:
 
     def test_admin_opt_in(self):
         self.instructor_page.load_page(self.instructor)
-        # TODO click opt-in button
+        self.instructor_page.set_course_opt_in(self.section)
 
     # TODO def test_opted_in_messaging
 
