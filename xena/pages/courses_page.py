@@ -34,6 +34,10 @@ from xena.test_utils import util
 
 class CoursesPage(DiabloPages):
 
+    def load_instructor_homepage(self):
+        app.logger.info('Loading instructor homepage')
+        self.driver.get(f"{app.config['BASE_URL']}/home")
+
     COURSE_ROW = (By.XPATH, '//a[contains(@id, "link-course-")]')
 
     # COURSES
@@ -57,3 +61,41 @@ class CoursesPage(DiabloPages):
     def click_course_page_link(self, section):
         app.logger.info(f'Clicking the link to the course page for {section.code}')
         self.wait_for_page_and_click((By.ID, f'link-course-{section.ccn}'))
+
+    # OPT-IN SETTINGS
+
+    OPT_IN_BY_DEFAULT_RADIO = By.ID, 'all-future-courses-opt-in'
+    OPT_OUT_BY_DEFAULT_RADIO = By.ID, 'choose-courses-opt-in'
+    REMINDER_EMAIL_CBX = By.ID, 'email-checkbox'
+
+    def set_opt_in_by_default(self):
+        app.logger.info('Clicking the opt-in-by-default radio')
+        self.wait_for_element_and_click(self.OPT_IN_BY_DEFAULT_RADIO)
+
+    def set_opt_out_by_default(self):
+        app.logger.info('Clicking the opt-out-by-default radio')
+        self.wait_for_element_and_click(self.OPT_OUT_BY_DEFAULT_RADIO)
+
+    def is_instructor_opted_in_by_default(self):
+        self.when_present(self.OPT_IN_BY_DEFAULT_RADIO, util.get_short_timeout())
+        return self.element(self.OPT_IN_BY_DEFAULT_RADIO).is_selected()
+
+    def receive_email_reminders(self):
+        if self.is_email_reminders_checked():
+            app.logger.info('Receive email reminders is already checked')
+        else:
+            app.logger.info('Clicking the email reminders checkbox')
+            self.wait_for_element_and_click(self.REMINDER_EMAIL_CBX)
+
+    def decline_email_reminders(self):
+        if self.is_email_reminders_checked():
+            app.logger.info('Clicking the email reminders checkbox')
+            self.wait_for_element_and_click(self.REMINDER_EMAIL_CBX)
+        else:
+            app.logger.info('Receive email reminders is already unchecked')
+
+    def is_email_reminders_checked(self):
+        return self.element(self.REMINDER_EMAIL_CBX).is_selected()
+
+    def is_email_reminders_el_enabled(self):
+        return self.element(self.REMINDER_EMAIL_CBX).is_enabled()

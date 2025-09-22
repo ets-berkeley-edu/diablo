@@ -75,7 +75,7 @@ class TestCrossListings:
 
     def test_instructor_opts_in(self):
         self.login_page.dev_auth(self.instructor.uid)
-        # TODO instructor opts in
+        self.courses_page.set_course_opt_in(self.section)
 
     def test_semester_start(self):
         self.login_page.dev_auth()

@@ -118,7 +118,7 @@ class TestScheduling0:
 
     # INSTRUCTOR LOGS IN
 
-    def test_opt_in(self):
+    def test_instructor_login(self):
         self.login_page.dev_auth(self.instructor)
         self.courses_page.click_course_page_link(self.section)
         self.course_page.wait_for_diablo_title(f'{self.section.code}, {self.section.number}')
@@ -155,9 +155,12 @@ class TestScheduling0:
     def test_no_rec_placement_options(self):
         assert not self.course_page.is_present(self.course_page.PLACEMENT_EDIT_BUTTON)
 
-    # TODO - def test_opt_in(self):
+    def test_opt_in(self):
+        self.courses_page.load_instructor_homepage()
+        self.courses_page.set_course_opt_in(self.section)
 
     def test_rec_type_options(self):
+        self.courses_page.click_course_page_link(self.section)
         self.course_page.click_rec_type_edit_button()
         assert not self.course_page.is_present(self.course_page.RECORDING_TYPE_NO_OP_RADIO)
         assert self.course_page.is_present(self.course_page.RECORDING_TYPE_OP_RADIO)

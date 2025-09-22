@@ -82,7 +82,7 @@ class TestCourseInstructorChanges:
 
     def test_old_instructor_opt_in(self):
         self.login_page.dev_auth(self.old_instructor.uid)
-        # TODO - opt in
+        self.courses_page.set_course_opt_in(self.section)
 
     def test_old_instructor_recordings_scheduled(self):
         self.login_page.dev_auth()
@@ -145,8 +145,7 @@ class TestCourseInstructorChanges:
 
     def test_new_instructor_opts_in(self):
         self.login_page.dev_auth(self.new_instructor.uid)
-        self.course_page.load_page(self.section)
-        # TODO opt in
+        self.courses_page.set_course_opt_in(self.section)
 
     # UPDATE KALTURA SERIES
 

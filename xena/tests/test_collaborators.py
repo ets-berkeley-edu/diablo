@@ -64,7 +64,7 @@ class TestCollaborators0:
 
     def test_instructor_opt_in(self):
         self.login_page.dev_auth(self.instructor.uid)
-        # TODO - instructor opts in
+        self.courses_page.set_course_opt_in(self.section)
 
     def test_schedule_recordings(self):
         self.login_page.dev_auth()
@@ -173,7 +173,7 @@ class TestCollaborators0:
 
     def test_opt_back_in(self):
         self.login_page.dev_auth(self.instructor.uid)
-        # TODO - instructor opts in again
+        self.courses_page.set_course_opt_in(self.section)
 
     def test_run_kaltura_job_room_restored(self):
         self.login_page.dev_auth()
@@ -232,7 +232,7 @@ class TestCollaborators1:
 
     def test_instructor_opt_in(self):
         self.login_page.dev_auth(self.instructor.uid)
-        # TODO - instructor opts in
+        self.courses_page.set_course_opt_in(self.section)
 
     def test_update_jobs(self):
         self.login_page.dev_auth()
@@ -384,8 +384,8 @@ class TestCollaborators2:
 
     def test_admin_opts_course_in(self):
         self.login_page.dev_auth()
-        self.course_page.load_page(self.section)
-        # TODO - admin opts course in
+        self.ouija_page.search_for_course_code(self.section)
+        self.ouija_page.set_course_opt_in(self.section)
 
     def test_run_updates(self):
         self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
