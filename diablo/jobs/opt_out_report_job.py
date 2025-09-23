@@ -46,7 +46,7 @@ class OptOutReportJob(BaseJob):
                 output.writerow({
                     'term_id': term_id,
                     'course_number': course['sectionId'],
-                    'opted_out': 'y' if course['hasOptedOut'] else 'n',
+                    'opted_out': 'n' if course['hasOptedIn'] else 'y',
                 })
 
         output_path = 'opt_out_report.csv'
