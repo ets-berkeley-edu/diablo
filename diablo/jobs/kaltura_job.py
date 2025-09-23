@@ -432,7 +432,7 @@ def _handle_course_site_categories(kaltura, course, publish_to_course_sites, sch
     if schedule_deletion_required:
         try:
             app.logger.info(f"{course['label']}: will delete and recreate Kaltura schedule(s) to remove existing categories")
-            for scheduled in course['scheduled']:
+            for scheduled in course['scheduled'] or []:
                 kaltura.delete(scheduled['kalturaScheduleId'], force_delete_past_events=True)
                 Scheduled.delete(term_id=course['termId'], section_id=course['sectionId'], kaltura_schedule_id=scheduled['kalturaScheduleId'])
             rescheduled = schedule_recordings(course, updates=update_options)
@@ -476,12 +476,14 @@ def _handle_course_site_categories(kaltura, course, publish_to_course_sites, sch
 
 
 def _construct_schedule_update_options(course, updated_publish_type=None, updated_recording_type=None, updated_collaborator_uids=None):
+    existing_scheduled = course['scheduled'][0] if len(course['scheduled']) else {}
+
     updates = {
-        'publishType': updated_publish_type or course['scheduled'][0]['publishType'],
-        'recordingType': updated_recording_type or course['scheduled'][0]['recordingType'],
+        'publishType': updated_publish_type or existing_scheduled.get('publishType'),
+        'recordingType': updated_recording_type or existing_scheduled.get('recordingType'),
     }
     if updated_collaborator_uids is None:
-        updates['collaboratorUids'] = course['scheduled'][0]['collaboratorUids']
+        updates['collaboratorUids'] = existing_scheduled.get('collaboratorUids')
     else:
         updates['collaboratorUids'] = updated_collaborator_uids
     return updates
