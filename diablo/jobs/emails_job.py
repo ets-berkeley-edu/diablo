@@ -41,16 +41,12 @@ class EmailsJob(BaseJob):
             if not course:
                 app.logger.warning(f'Email will remain queued until course data is present: {queued_email}')
                 continue
-            if not course['hasOptedIn'] and queued_email.template_type not in (
-                'new_class_eligible',
-                'no_longer_eligible',
-                'no_longer_scheduled',
-                'opted_out',
-                'remind_opted_out',
-                'remind_partially_approved',
-                'remind_scheduled',
-                'room_change_no_longer_eligible',
-                'semester_start',
+            if not course['hasOptedIn'] and queued_email.template_type in (
+                'admin_operator_requested',
+                'changes_confirmed',
+                'class_scheduled',
+                'multiple_meeting_pattern_change',
+                'schedule_change',
             ):
                 QueuedEmail.delete(queued_email)
                 continue
