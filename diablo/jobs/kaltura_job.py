@@ -260,7 +260,7 @@ def _update_already_scheduled_events(term_id):  # noqa: C901, PLR0912, PLR0915
                 )
             if meetings_added or meetings_removed_by_schedule_id or meetings_updated_by_schedule_id:
                 QueuedEmail.notify_instructors_schedule_change(course)
-            if updated_instructor_uids:
+            if updated_instructor_uids is not None:
                 previously_scheduled_instructor_uids = scheduled.get('instructorUids') or []
                 added_instructor_uids = [i for i in updated_instructor_uids if i not in previously_scheduled_instructor_uids]
                 removed_instructor_uids = [i for i in previously_scheduled_instructor_uids if i not in updated_instructor_uids]
