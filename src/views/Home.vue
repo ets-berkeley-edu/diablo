@@ -479,7 +479,7 @@ const onEmailReceiveChange = (value, {force = false} = {}) => {
   opacity: 0.6;
 }
 .optin-banner {
-  background: #e9f4ff;           /* light blue */
+  background-color: rgb(var(--v-theme-surface));          /* light blue */
   border: 1px solid #b3dcff;     /* subtle blue border */
   border-radius: 8px;            /* slightly rounded edges */
   padding: 12px 16px;

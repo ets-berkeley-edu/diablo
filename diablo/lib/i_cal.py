@@ -23,6 +23,7 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 import re
+import unicodedata
 from datetime import datetime, timezone
 from tempfile import TemporaryFile
 from textwrap import TextWrapper
@@ -99,7 +100,8 @@ def get_ics_file_name(location, start_date, end_date):
 
 
 def get_kaltura_safe_name(location):
-    return NON_ALPHANUMERIC_PATTERN.sub('', location.replace('&', 'and'))
+    normalized = unicodedata.normalize('NFKC', location).replace('&', 'and')
+    return NON_ALPHANUMERIC_PATTERN.sub('', normalized)
 
 
 def get_zip_file_name(start_date, end_date):
