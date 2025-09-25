@@ -81,7 +81,7 @@ class QueuedEmail(db.Model):
         if not course:
             app.logger.error(f'Attempt to queue email for unknown course (term_id={term_id}, section_id={section_id})')
             return None
-        if not course['instructors']:
+        if not course['instructors'] and template_type != 'instructors_removed':
             app.logger.error(f'Attempt to queue email for course without instructors (term_id={term_id}, section_id={section_id})')
             return None
         queued_email = cls(
