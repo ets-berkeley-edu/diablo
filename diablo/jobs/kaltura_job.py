@@ -68,7 +68,8 @@ class KalturaJob(BaseJob):
 
 def _schedule_new_courses(term_id):
     unscheduled_courses = get_eligible_unscheduled_courses(term_id)
-    app.logger.info(f'Preparing to schedule recordings for {len(unscheduled_courses)} courses.')
+    courses_to_schedule = []
+    app.logger.info(f'Checking {len(unscheduled_courses)} eligible unscheduled courses for opt-in status.')
     for course in unscheduled_courses:
         if not course['hasOptedIn']:
             continue
@@ -76,8 +77,12 @@ def _schedule_new_courses(term_id):
         admin_opt_in = next((o for o in course['optIns'] if o['instructorUid'] == 'admin'), None)
         if not len(authorized_instructors) and not admin_opt_in:
             continue
-        schedule_recordings(course, remove_blackout_conflicts=True)
-        QueuedEmail.notify_instructors_class_scheduled(course)
+        courses_to_schedule.append(course)
+    if len(courses_to_schedule):
+        app.logger.info(f'Will schedule {len(courses_to_schedule)} newly opted-in courses.')
+        for course in courses_to_schedule:
+            schedule_recordings(course, remove_blackout_conflicts=True)
+            QueuedEmail.notify_instructors_class_scheduled(course)
 
 
 def _update_already_scheduled_events(term_id):  # noqa: C901, PLR0912, PLR0915
