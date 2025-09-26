@@ -2,8 +2,9 @@ import {snakeCase} from 'lodash'
 import axios from 'axios'
 import fileDownload from 'js-file-download'
 import {DateTime} from 'luxon'
-import {getApiBaseUrl} from '@/api/api-utils'
 import type {OuijaFilter} from '@/stores/ouija'
+import type {Course} from '@/lib/types'
+import {getApiBaseUrl} from '@/api/api-utils'
 
 export function deleteCourseNote(termId: number, sectionId: number) {
   return axios.post(`${getApiBaseUrl()}/api/course/note/delete`, {
@@ -21,7 +22,7 @@ export function downloadCSV(filter: string | OuijaFilter, termId: number) {
   }).then(response => fileDownload(response.data, filename), () => null)
 }
 
-export function getCourse(termId: number, sectionId: number) {
+export function getCourse(termId: number | string, sectionId: number | string) {
   return axios.get(`${getApiBaseUrl()}/api/course/${termId}/${sectionId}`)
     .then(response => response.data)
 }
@@ -43,17 +44,9 @@ export function getCoursesReport(termId: string) {
     .then(response => response.data)
 }
 
-export function updateCollaborators(
-    collaboratorUids: string[],
-    sectionId: number | string,
-    termId: number | string
-) {
-  return axios
-    .post(`${getApiBaseUrl()}/api/course/collaborator_uids/update`, {
-      collaboratorUids,
-      sectionId,
-      termId
-    }).then(response => response.data)
+export function updateCourse(course: Course) {
+  const url = `${getApiBaseUrl()}/api/course/update`
+  return axios.post(url, course).then(response => response.data)
 }
 
 export function updateCourseNote(
@@ -66,46 +59,4 @@ export function updateCourseNote(
     termId,
     body
   }).then(response => response.data)
-}
-
-export function updateOptIn(
-    instructorUid: string,
-    termId: string,
-    sectionId: number | string,
-    optIn: boolean
-  ) {
-  return axios.post(`${getApiBaseUrl()}/api/course/opt_in/update`, {
-    instructorUid,
-    optIn,
-    sectionId,
-    termId
-  }).then(response => response.data)
-}
-
-export function updatePublishType(
-    canvasSiteIds: string[],
-    publishType: string,
-    sectionId: number | string,
-    termId: number | string
-) {
-  return axios
-    .post(`${getApiBaseUrl()}/api/course/publish_type/update`, {
-      canvasSiteIds,
-      publishType,
-      sectionId,
-      termId
-    }).then(response => response.data)
-}
-
-export function updateRecordingType(
-    recordingType: string,
-    sectionId: number | string,
-    termId: number | string
-) {
-  return axios
-    .post(`${getApiBaseUrl()}/api/course/recording_type/update`, {
-      recordingType,
-      sectionId,
-      termId
-    }).then(response => response.data)
 }

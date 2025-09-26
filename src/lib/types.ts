@@ -127,7 +127,7 @@ export interface Course extends BaseCourse {
   displayMeetings: Meeting[],
   hasBlanketOptedOut: boolean,
   hasOptedIn: boolean,
-  instructors: Instructor[],
+  instructors: CourseInstructor[],
   meetingType: string,
   meetings: {
     eligible: Meeting[],
@@ -143,7 +143,12 @@ export interface Course extends BaseCourse {
   room: Room | undefined,
   scheduled: ScheduledCourse[] | null,
   statusLabel?: string,
-  updateHistory?: []
+  updateHistory?: ScheduleUpdate[]
+}
+
+export interface CourseInstructor extends Instructor {
+  hasOptedIn: boolean,
+  optedInAt: string | undefined
 }
 
 export interface CourseSortable extends Course {
@@ -170,6 +175,21 @@ export interface DiabloUser {
   uid: string | null,
   doNotEmail: boolean,
   optInNewCourses: boolean
+}
+
+export type ScheduleUpdate = {
+  id: string,
+  fieldName: string,
+  fieldValueNew: string,
+  fieldValueOld: string,
+  kalturaScheduleId: string,
+  publishedAt: string
+  requestedAt: string,
+  requestedByName: string,
+  requestedByUid: string,
+  sectionId: string,
+  status: string,
+  termId: string
 }
 
 export type ScreenReaderAlert = {

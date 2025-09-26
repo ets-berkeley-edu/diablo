@@ -15,28 +15,6 @@
         Section ID: <span id="section-id">{{ course.sectionId }}</span>
       </div>
     </div>
-    <div v-if="isEligibleForCourseCapture" class="px-4">
-      <div aria-live="polite">
-        <div v-if="course.scheduled">
-          <v-alert
-            v-if="updatesQueued"
-            id="notice-queued"
-            class="font-weight-bold"
-            :icon="mdiAlert"
-            type="warning"
-            variant="outlined"
-          >
-            Recent updates to recording settings are currently queued to go live. They will be activated within an hour.
-          </v-alert>
-          <div id="notice-scheduled" class="font-weight-bold text-success pa-6">
-            {{ currentUser.isAdmin ? 'The' : 'Your' }} course is scheduled for Course Capture. The first recording is on
-            <span class="text-no-wrap">
-              <Date :date="course.scheduled[0].meetingStartDate" />.
-            </span>
-          </div>
-        </div>
-      </div>
-    </div>
     <v-container fluid>
       <v-row>
         <v-col
@@ -46,69 +24,37 @@
           xl="9"
         >
           <v-card class="pa-4">
-            <v-container v-if="isEligibleForCourseCapture" class="pt-2">
-              <v-row v-if="allowToggleOptIn" class="py-0">
-                <v-col>
-                  <ToggleOptIn
-                    :before-toggle="() => courseStore.setDisableButtons(true)"
-                    :disabled="courseStore.disableButtons"
-                    :initial-value="toggleOptInValue"
-                    :instructor-uids="currentUser.isAdmin ? ['admin'] : [currentUser.uid]"
-                    :label="`Opt ${currentUser.isAdmin ? 'this course' : ''} ${toggleOptInValue ? 'out of' : 'in to'} Course Capture`"
-                    :on-toggle="onToggle"
-                    :section-id="`${course.sectionId}`"
-                    :term-id="`${course.termId}`"
+            <v-container v-if="isEligibleForCourseCapture" class="pt-0">
+              <DescribeCourseSchedulingStatus />
+              <CoursePageInstructors class="mt-3" />
+              <Collaborators v-model="course.collaborators" />
+              <RecordingType v-model="course.recordingType" />
+              <RecordingPlacement
+                v-model:canvas-site-ids="course.canvasSiteIds"
+                v-model:publish-type="course.publishType"
+              />
+              <v-row>
+                <v-col class="pb-5 pl-4 pt-1">
+                  <ProgressButton
+                    id="btn-publish-type-save"
+                    :action="save"
+                    aria-label="Save Recording Placement"
+                    :disabled="isSaving"
+                    :in-progress="isSaving"
+                    :text="isSaving ? 'Saving' : 'Save'"
+                  />
+                  <v-btn
+                    id="btn-publish-type-cancel"
+                    aria-label="Cancel Recording Placement Edit"
+                    class="ml-1"
+                    :disabled="isSaving"
+                    text="Cancel"
+                    variant="text"
+                    @click="reset"
                   />
                 </v-col>
               </v-row>
-              <DescribeCourseSchedulingStatus />
-              <v-row
-                align="center"
-                aria-label="Instructors"
-                justify="start"
-                role="region"
-              >
-                <v-col id="instructors-list" cols="12">
-                  <h3 id="instructors-header">
-                    <span v-if="course.scheduled">
-                      <span :aria-hidden="true">Instructor(s)</span><span class="sr-only">Instructors</span> listed will have editing and publishing access:
-                    </span>
-                    <span v-if="!course.deletedAt && !course.scheduled">
-                      <span :aria-hidden="true">Instructor(s):</span><span class="sr-only">Instructors</span>
-                    </span>
-                  </h3>
-                  <div class="pl-4">
-                    <div v-if="isEmpty(course.instructors)" class="mt-1 text-medium-emphasis">
-                      No instructors
-                    </div>
-                    <div
-                      v-for="instructor in course.instructors"
-                      :id="`instructor-${instructor.uid}`"
-                      :key="`instructor-${instructor.uid}`"
-                      class="mt-1"
-                    >
-                      {{ instructor.name }} ({{ instructor.uid }})
-                      <span v-if="currentUser.isAdmin && instructor.optedInAt" class="text-green">
-                        &mdash; Opted In on {{ DateTime.fromISO(instructor.optedInAt).toLocaleString(DateTime.DATE_MED) }}
-                      </span>
-                    </div>
-                  </div>
-                </v-col>
-              </v-row>
-              <Collaborators
-                v-if="!!capability"
-                :set-model="collaborators => course.collaborators = collaborators"
-              />
-              <RecordingType
-                v-if="!!capability"
-                :set-model="setRecordingType"
-              />
-              <RecordingPlacement
-                v-if="!!capability"
-                :course="course"
-                :set-model="setRecordingPlacement"
-              />
-              <v-row v-if="!currentUser.isAdmin && course.publishType">
+              <v-row v-if="!currentUser.isAdmin && course.publishType" class="mt-0">
                 <v-col>
                   <hr>
                   <KnowledgeBaseKalturaMyMedia v-if="course.publishType === 'kaltura_my_media'" class="mt-4" />
@@ -172,99 +118,71 @@
   </div>
 </template>
 
-<script setup>
-import {computed, onMounted, ref} from 'vue'
-import {DateTime} from 'luxon'
-import {isEmpty} from 'lodash'
+<script lang="ts" setup>
+import {onMounted, ref} from 'vue'
 import {mdiAlert, mdiBookMultipleOutline} from '@mdi/js'
-import {storeToRefs} from 'pinia'
 import {useRoute} from 'vue-router'
-import {getAuditoriums} from '@/api/room'
-import {getCourse} from '@/api/course'
-import {findInstructor, getCourseCodes, getTermName} from '@/lib/berkeley'
+import {storeToRefs} from 'pinia'
+import {getCourseCodes, getTermName} from '@/lib/berkeley'
+import {getCourse, updateCourse} from '@/api/course'
 import {useContextStore} from '@/stores/context'
-import {useCourseStore} from '@/stores/course.js'
-import Collaborators from '@/components/course/Collaborators'
-import CourseHistory from '@/components/course/CourseHistory'
-import CourseNotes from '@/components/course/CourseNotes'
-import CoursePageSidebar from '@/components/course/CoursePageSidebar'
-import Date from '@/components/util/Date'
-import PageTitle from '@/components/util/PageTitle'
-import RecordingPlacement from '@/components/course/RecordingPlacement'
-import RecordingType from '@/components/course/RecordingType'
-import ScheduledCourse from '@/components/course/ScheduledCourse'
-import ToggleOptIn from '@/components/course/ToggleOptIn.vue'
+import {useCourseStore} from '@/stores/course'
+import Collaborators from '@/components/course/Collaborators.vue'
+import CourseHistory from '@/components/course/CourseHistory.vue'
+import CourseNotes from '@/components/course/CourseNotes.vue'
+import CoursePageInstructors from '@/components/course/CoursePageInstructors.vue'
+import CoursePageSidebar from '@/components/course/CoursePageSidebar.vue'
+import DescribeCourseSchedulingStatus from '@/components/course/DescribeCourseSchedulingStatus.vue'
 import KnowledgeBaseKalturaMyMedia from '@/components/course/KnowledgeBaseKalturaMyMedia.vue'
 import KnowledgeBaseKalturaMediaGallery from '@/components/course/KnowledgeBaseKalturaMediaGallery.vue'
-import DescribeCourseSchedulingStatus from '@/components/course/DescribeCourseSchedulingStatus.vue'
+import PageTitle from '@/components/util/PageTitle.vue'
+import ProgressButton from '@/components/util/ProgressButton.vue'
+import RecordingPlacement from '@/components/course/RecordingPlacement.vue'
+import RecordingType from '@/components/course/RecordingType.vue'
+import ScheduledCourse from '@/components/course/ScheduledCourse.vue'
 
 const contextStore = useContextStore()
 const courseStore = useCourseStore()
 
-const {course} = storeToRefs(courseStore)
-const allowToggleOptIn = computed(() => {
-  const nonAprxInstructors = course.value.instructors.filter(i => i.roleCode !== 'APRX')
-  const instructorsNotOptedIn = course.value.instructors.filter(i => i.roleCode !== 'APRX' && !i.hasOptedIn)
-  return currentUser.isAdmin ? !nonAprxInstructors.length : nonAprxInstructors.length && !instructorsNotOptedIn.length
-})
+const {
+  capability,
+  course,
+  hasValidMeetingTimes,
+  isCurrentTerm,
+  isEligibleForCourseCapture,
+  location
+} = storeToRefs(courseStore)
 const config = contextStore.config
-const currentUser = contextStore.currentUser
 const agreedToTerms = ref(false)
-const auditoriums = ref([])
-const capability = ref()
+const currentUser = contextStore.currentUser
 const courseDisplayTitle = ref('')
-const hasValidMeetingTimes = ref(false)
-const instructors = ref([])
-const instructorProxies = ref([])
-const isEligibleForCourseCapture = ref(false)
-const isCurrentTerm = computed(() => course.value.termId === config.currentTermId)
-const location = ref('')
-const toggleOptInValue = computed(() => {
-  return currentUser.isAdmin ? course.value.hasOptedIn : findInstructor(course.value, currentUser.uid).hasOptedIn
-})
-const updatesQueued = computed(() => !!course.value.updateHistory.find(u => u.status === 'queued'))
+const isSaving = ref(false)
+const sectionId = ref()
+const termId = ref()
 
 contextStore.loadingStart('Course')
 
 onMounted(() => {
   const {params} = useRoute()
-  refreshCourse(params.termId, params.sectionId).then(() => {
-    contextStore.loadingComplete(courseDisplayTitle.value)
-  })
+  sectionId.value = params.sectionId
+  termId.value = params.termId
+  reset()
 })
 
-const refreshCourse = (termId, sectionId) => {
-  return getCourse(termId, sectionId).then(data => {
+const reset = () => {
+  getCourse(termId.value, sectionId.value).then(data => {
     courseStore.setCourse(data)
     agreedToTerms.value = currentUser.isAdmin
-    instructors.value = data.instructors.filter(i => i.roleCode !== 'APRX')
-    instructorProxies.value = data.instructors.filter(i => i.roleCode === 'APRX')
-    const eligible = data.meetings.eligible
-    const meeting = eligible[0] || data.meetings.ineligible[0]
-    capability.value = meeting.room?.capability
-    location.value = meeting.room?.location
-    hasValidMeetingTimes.value = eligible.some(m => m.startDate && m.startTime && m.endDate && m.endTime)
-    isEligibleForCourseCapture.value = isCurrentTerm.value && !!capability.value && hasValidMeetingTimes.value
     courseDisplayTitle.value = getCourseCodes(data)[0]
-    getAuditoriums().then(data => {
-      auditoriums.value = data
-    })
+    contextStore.loadingComplete(courseDisplayTitle.value)
   })
 }
 
-const onToggle = () => {
-  refreshCourse(course.value.termId, course.value.sectionId).then(() => courseStore.setDisableButtons(false))
-}
-
-const setRecordingPlacement = updatedCourse => {
-  course.value.canvasSiteIds = updatedCourse.canvasSiteIds
-  course.value.canvasSites = updatedCourse.canvasSites
-  course.value.publishType = updatedCourse.publishType
-  course.value.publishTypeName = updatedCourse.publishTypeName
-}
-
-const setRecordingType = updatedCourse => {
-  course.value.recordingType = updatedCourse.recordingType
-  course.value.recordingTypeName = updatedCourse.recordingTypeName
+const save = () => {
+  isSaving.value = true
+  updateCourse(course.value).then(data => {
+    course.value = data
+    isSaving.value = false
+  })
 }
 </script>
