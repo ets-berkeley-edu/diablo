@@ -165,6 +165,7 @@ class SisSection(db.Model):
             cls,
             term_id,
             section_id,
+            include_administrative_proxies=False,
             include_canvas_sites=False,
             include_deleted=False,
             include_notes=False,
@@ -191,10 +192,12 @@ class SisSection(db.Model):
                 {'' if include_deleted else ' AND s.deleted_at IS NULL '}
             ORDER BY s.course_name, s.section_id, s.instructor_uid, r.capability NULLS LAST
         """
+        instructor_role_codes = ALL_INSTRUCTOR_ROLE_CODES if include_administrative_proxies else AUTHORIZED_INSTRUCTOR_ROLE_CODES
+
         rows = db.session.execute(
             text(sql),
             {
-                'instructor_role_codes': AUTHORIZED_INSTRUCTOR_ROLE_CODES,
+                'instructor_role_codes': instructor_role_codes,
                 'section_id': section_id,
                 'term_id': term_id,
             },
@@ -202,6 +205,7 @@ class SisSection(db.Model):
         api_json = _to_api_json(
             term_id=term_id,
             rows=rows,
+            include_administrative_proxies=include_administrative_proxies,
             include_notes=include_notes,
             include_update_history=include_update_history,
         )
@@ -221,10 +225,12 @@ class SisSection(db.Model):
             include_full_schedules=True,
             include_ineligible_rooms=False,
             include_non_principal_sections=False,
+            include_user_preferences=False,
             instructor_uids=None,
             require_authorized_instructor=False,
             section_ids=None,
     ):
+
         params = {
             'instructor_role_codes': ALL_INSTRUCTOR_ROLE_CODES,
             'term_id': term_id,
@@ -255,6 +261,11 @@ class SisSection(db.Model):
         else:
             exclude_scheduled_join = ''
 
+        if include_user_preferences:
+            user_preferences_join = 'LEFT JOIN user_preferences up on i.uid = up.uid'
+        else:
+            user_preferences_join = ''
+
         sql = f"""
             SELECT
                 s.*,
@@ -262,12 +273,14 @@ class SisSection(db.Model):
                 i.email AS instructor_email,
                 {INSTRUCTOR_NAME_SUB_QUERY}
                 i.uid AS instructor_uid,
+                {'up.opt_in_new_courses AS instructor_opt_in_new_courses,' if include_user_preferences else ''}
                 {'sch.kaltura_schedule_id,' if exclude_scheduled else ''}
                 r.id AS room_id,
                 r.location AS room_location
             FROM sis_sections s
             {'LEFT ' if include_ineligible_rooms else ''}JOIN rooms r ON r.location = s.meeting_location
             LEFT JOIN instructors i ON i.uid = s.instructor_uid
+            {user_preferences_join}
             {exclude_scheduled_join}
             WHERE
                 {course_filter}
@@ -284,6 +297,7 @@ class SisSection(db.Model):
             rows=rows,
             include_administrative_proxies=include_administrative_proxies,
             include_full_schedules=include_full_schedules,
+            include_user_preferences=include_user_preferences,
         )
 
     @classmethod
@@ -447,16 +461,24 @@ class SisSection(db.Model):
         return _to_api_json(term_id=term_id, rows=rows, include_rooms=False)
 
     @classmethod
-    def get_courses_scheduled(cls, term_id, include_administrative_proxies=False, include_full_schedules=True, instructor_uids=None):
+    def get_courses_scheduled(
+        cls,
+        term_id,
+        include_administrative_proxies=False,
+        include_full_schedules=True,
+        include_user_preferences=False,
+        instructor_uids=None,
+    ):
         scheduled_section_ids = list(cls._section_ids_scheduled(term_id))
         return cls.get_courses(
             term_id=term_id,
             section_ids=scheduled_section_ids,
             instructor_uids=instructor_uids,
-            include_deleted=True,
-            include_ineligible_rooms=True,
             include_administrative_proxies=include_administrative_proxies,
+            include_deleted=True,
             include_full_schedules=include_full_schedules,
+            include_ineligible_rooms=True,
+            include_user_preferences=include_user_preferences,
         )
 
     @classmethod
@@ -563,7 +585,9 @@ def _to_api_json(  # noqa: C901, PLR0912, PLR0915
     include_notes=False,
     include_rooms=True,
     include_update_history=False,
+    include_user_preferences=False,
 ):
+
     rows = rows.fetchall()
     section_ids = list(set(int(row['section_id']) for row in rows))
     courses_per_id = {}
@@ -595,7 +619,11 @@ def _to_api_json(  # noqa: C901, PLR0912, PLR0915
         note_results = Note.get_notes_for_section_ids(section_ids=section_ids, term_id=term_id)
         notes_by_section_id = {note.section_id: note.body for note in note_results}
 
-    cross_listings_per_section_id, instructors_per_section_id = _get_cross_listed_courses(term_id=term_id, section_ids=section_ids)
+    cross_listings_per_section_id, instructors_per_section_id = _get_cross_listed_courses(
+        term_id=term_id,
+        section_ids=section_ids,
+        include_user_preferences=include_user_preferences,
+    )
 
     # Construct course objects.
     # If course has multiple instructors or multiple rooms then the section_id will be represented across multiple rows.
@@ -781,12 +809,17 @@ def _decorate_course_opt_in(course):
     course['hasOptedIn'] = bool(has_non_aprx and not len(instructors_not_opted_in)) or bool(admin_opt_in and not has_non_aprx)
 
 
-def _get_cross_listed_courses(section_ids, term_id):
+def _get_cross_listed_courses(section_ids, term_id, include_user_preferences=False):
     # Return course and instructor info for cross-listings as well as the
     # principal section. Although cross-listed sections were "deleted" during SIS data refresh job, we still rely
     # on metadata from those deleted records.
     cross_listings_by_section_id = CrossListing.get_cross_listings_for_section_ids(section_ids=section_ids, term_id=term_id)
     all_cross_listing_ids = list(set(section_id for k, v in cross_listings_by_section_id.items() for section_id in v))
+
+    if include_user_preferences:
+        user_preferences_join = 'LEFT JOIN user_preferences up on i.uid = up.uid'
+    else:
+        user_preferences_join = ''
 
     sql = f"""
         SELECT
@@ -794,9 +827,11 @@ def _get_cross_listed_courses(section_ids, term_id):
             i.dept_code AS instructor_dept_code,
             i.email AS instructor_email,
             {INSTRUCTOR_NAME_SUB_QUERY}
+            {'up.opt_in_new_courses AS instructor_opt_in_new_courses,' if include_user_preferences else ''}
             i.uid AS instructor_uid
         FROM sis_sections s
         LEFT JOIN instructors i ON i.uid = s.instructor_uid
+        {user_preferences_join}
         WHERE
             s.term_id = :term_id
             AND s.section_id = ANY(:all_cross_listing_ids)
@@ -869,6 +904,10 @@ def _to_instructor_json(row):
         'roleCode': row['instructor_role_code'],
         'uid': instructor_uid,
     }
+
+    if 'instructor_opt_in_new_courses' in row._mapping:
+        instructor_json['optInNewCourses'] = row['instructor_opt_in_new_courses'] or False
+
     return instructor_json
 
 
