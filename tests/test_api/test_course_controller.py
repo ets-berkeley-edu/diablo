@@ -759,7 +759,7 @@ class TestUpdatePublishType:
 
         canvas_site_updates = [u for u in course['updateHistory'] if u['fieldName'] == 'canvas_site_ids']
         assert len(canvas_site_updates) == 2
-        assert canvas_site_updates[1]['fieldValueOld'] is None
+        assert canvas_site_updates[1]['fieldValueOld'] == []
         assert canvas_site_updates[1]['fieldValueNew'] == ['1234567']
         assert canvas_site_updates[1]['status'] == 'queued'
         assert canvas_site_updates[1]['requestedByUid'] == instructor_uids[0]

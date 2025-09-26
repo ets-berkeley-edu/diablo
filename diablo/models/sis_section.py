@@ -661,7 +661,8 @@ def _to_api_json(  # noqa: C901, PLR0912, PLR0915
             course = {
                 'allowedUnits': row['allowed_units'],
                 'collaboratorUids': preferences.get('collaboratorUids'),
-                'canvasSiteIds': canvas_site_ids,
+                'canvasSiteIds': canvas_site_ids or [],
+                'collaborators': preferences.get('collaborators') or [],
                 'courseName': row['course_name'],
                 'courseTitle': row['course_title'],
                 'crossListings': cross_listed_courses,
@@ -692,9 +693,6 @@ def _to_api_json(  # noqa: C901, PLR0912, PLR0915
                 'scheduled': scheduled,
                 'termId': row['term_id'],
             }
-
-            if include_full_schedules:
-                course['collaborators'] = preferences.get('collaborators')
 
             if include_update_history:
                 schedule_updates = ScheduleUpdate.get_update_history_for_section_ids(term_id=row['term_id'], section_ids=cross_listed_section_ids)
