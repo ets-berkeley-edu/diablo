@@ -14,6 +14,7 @@ import {VChip} from 'vuetify/components/VChip'
 import {VCol, VContainer, VRow, VSpacer} from 'vuetify/components/VGrid'
 import {VDataTable} from 'vuetify/components/VDataTable'
 import {VDialog} from 'vuetify/components/VDialog'
+import {VExpandTransition} from 'vuetify/components/transitions'
 import {VFooter} from 'vuetify/components/VFooter'
 import {VForm} from 'vuetify/components/VForm'
 import {VIcon} from 'vuetify/components/VIcon'
@@ -59,6 +60,7 @@ export default createVuetify({
     VDataTable,
     VDialog,
     VDivider,
+    VExpandTransition,
     VFooter,
     VForm,
     VIcon,

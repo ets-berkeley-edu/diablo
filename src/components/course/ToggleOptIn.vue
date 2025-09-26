@@ -1,25 +1,26 @@
 <template>
   <v-switch
     :id="`toggle-opt-in-${switchId}`"
-    v-model="optIn"
+    v-model="hasOptedIn"
     :aria-describedby="undefined"
     :aria-label="ariaLabel"
     class="toggle-opt-in"
     color="primary"
+    density="compact"
     :disabled="disabled"
     flat
     hide-details
     inset
-    :label="label"
     @update:model-value="toggleOptIn"
-  />
+  >
+    <template #label>
+      <slot />{{ label }}
+    </template>
+  </v-switch>
 </template>
 
 <script lang="ts" setup>
-import type {PropType} from 'vue'
 import {onMounted, ref} from 'vue'
-import {putFocusNextTick} from '@/lib/utils'
-import {updateOptIn} from '@/api/course'
 
 const props = defineProps({
   ariaLabel: {
@@ -27,31 +28,14 @@ const props = defineProps({
     type: String,
     default: undefined
   },
-  beforeToggle: {
-    default: () => {},
-    required: false,
-    type: Function
-  },
   disabled: {
     required: false,
     type: Boolean
   },
-  initialValue: {
-    required: false,
-    type: Boolean
-  },
-  instructorUids: {
-    required: true,
-    type: Array as PropType<string[]>
-  },
   label: {
-    required: true,
-    type: String
-  },
-  onToggle: {
-    default: () => {},
+    default: undefined,
     required: false,
-    type: Function
+    type: String
   },
   sectionId: {
     required: true,
@@ -63,7 +47,7 @@ const props = defineProps({
   }
 })
 
-const optIn = ref(props.initialValue)
+const hasOptedIn = defineModel({required: true, type: Boolean})
 const switchId = ref<string | undefined>()
 
 onMounted(() => {
@@ -72,23 +56,24 @@ onMounted(() => {
   } else {
     switchId.value = props.sectionId
   }
-  props.onToggle('init', {sectionId: props.sectionId, optedIn: optIn.value, initial: true})
 })
 
 const toggleOptIn = () => {
-  props.beforeToggle()
-  const suffix = props.label ? ` ${props.label}` : ''
-  props.onToggle(`Opted ${optIn.value ? 'in' : 'out'} ${suffix}`, {
-    sectionId: props.sectionId,
-    optedIn: optIn.value,
-    initial: false
-  })
-  props.instructorUids.forEach((uid: string) => {
-    updateOptIn(uid, props.termId, props.sectionId, optIn.value).then(() => {
-      putFocusNextTick(`toggle-opt-in-${switchId.value}`)
-    })
-  })
-
+  // props.beforeToggle()
+  // const promises: Promise<void>[] = []
+  // props.instructorUids.forEach((uid: string) => {
+  //   const promise = new Promise<void>(resolve => {
+  //     updateOptIn(uid, props.termId, props.sectionId, optIn.value).then(() => resolve())
+  //   })
+  //   promises.push(promise)
+  // })
+  // Promise.all(promises).then(() => {
+  //   getCourse(props.termId, props.sectionId).then(data => {
+  //     props.onToggle(data)
+  //     putFocusNextTick(`toggle-opt-in-${switchId.value}`)
+  //     alertScreenReader(`Opted ${optIn.value ? 'in' : 'out'} ${props.label || ''}`)
+  //   })
+  // })
 }
 </script>
 
