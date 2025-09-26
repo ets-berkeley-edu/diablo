@@ -104,10 +104,11 @@ def get_eligible_courses_by_instructor_uid(term_id):
     return courses_by_instructor_uid
 
 
-def get_eligible_unscheduled_courses(term_id):
+def get_eligible_unscheduled_courses(term_id, include_user_preferences=False):
     return SisSection.get_courses(
         exclude_scheduled=True,
         include_administrative_proxies=True,
+        include_user_preferences=include_user_preferences,
         term_id=term_id,
     )
 

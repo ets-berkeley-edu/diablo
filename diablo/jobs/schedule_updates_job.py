@@ -31,6 +31,7 @@ from diablo.jobs.util import build_merged_collaborators_list, get_eligible_unsch
 from diablo.lib.berkeley import are_scheduled_dates_obsolete, are_scheduled_times_obsolete, get_recording_end_date, get_recording_start_date
 from diablo.lib.util import safe_strftime
 from diablo.models.course_preference import CoursePreference
+from diablo.models.opt_in import OptIn
 from diablo.models.schedule_update import ScheduleUpdate
 from diablo.models.sis_section import AUTHORIZED_INSTRUCTOR_ROLE_CODES, SisSection
 
@@ -51,21 +52,26 @@ class ScheduleUpdatesJob(BaseJob):
 
 
 def _queue_schedule_updates(term_id):
-    for course in get_eligible_unscheduled_courses(term_id):
+    for course in get_eligible_unscheduled_courses(term_id, include_user_preferences=True):
         try:
             instructors = list(filter(lambda i: i['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES and not i['deletedAt'], course['instructors']))
             eligible_meetings = course.get('meetings', {}).get('eligible', [])
             if len(instructors) and _valid_meeting_count(eligible_meetings):
+                course = _refresh_instructor_opt_ins(course, instructors)
                 _queue_instructor_updates(course, instructors)
         except Exception as e:
             app.logger.error(f"Failed to queue schedule updates for section {course.get('sectionId')}, aborting job")
             raise e
 
-    for course in SisSection.get_courses_scheduled(term_id=term_id, include_administrative_proxies=True):
+    for course in SisSection.get_courses_scheduled(term_id=term_id, include_administrative_proxies=True, include_user_preferences=True):
         try:
-            instructors = list(filter(lambda i: i['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES and not i['deletedAt'], course['instructors']))
             eligible_meetings = course.get('meetings', {}).get('eligible', [])
             ineligible_meetings = course.get('meetings', {}).get('ineligible', [])
+
+            instructors = list(filter(lambda i: i['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES and not i['deletedAt'], course['instructors']))
+            if len(instructors):
+                course = _refresh_instructor_opt_ins(course, instructors)
+
             if course['deletedAt'] or (_valid_meeting_count(eligible_meetings) + _valid_meeting_count(ineligible_meetings) == 0):
                 _queue_not_scheduled_update(course)
             if not course['hasOptedIn'] and len(instructors):
@@ -76,6 +82,7 @@ def _queue_schedule_updates(term_id):
                 _queue_meeting_updates(course)
                 _queue_instructor_updates(course, instructors)
                 _queue_collaborator_updates(course)
+
         except Exception as e:
             app.logger.error(f"Failed to queue schedule updates for section {course.get('sectionId')}, aborting job")
             raise e
@@ -233,12 +240,15 @@ def _queue_meeting_updates(course):
             )
 
 
-def _queue_instructor_updates(course, instructors):
+def _get_previous_instructor_uids(course):
     if course['scheduled']:
-        previous_instructor_uids = course['scheduled'][0].get('instructorUids') or []
+        return course['scheduled'][0].get('instructorUids') or []
     else:
-        previous_instructor_uids = ScheduleUpdate.find_last_updated_instructors(term_id=course['termId'], section_id=course['sectionId'])
+        return ScheduleUpdate.find_last_updated_instructors(term_id=course['termId'], section_id=course['sectionId'])
 
+
+def _queue_instructor_updates(course, instructors):
+    previous_instructor_uids = _get_previous_instructor_uids(course)
     if set(i['uid'] for i in instructors) != set(previous_instructor_uids):
         ScheduleUpdate.queue(
             term_id=course['termId'],
@@ -267,6 +277,20 @@ def _queue_collaborator_updates(course):
             section_id=course['sectionId'],
             collaborator_uids=new_collaborator_uids,
         )
+
+
+def _refresh_instructor_opt_ins(course, instructors):
+    previous_instructor_uids = _get_previous_instructor_uids(course)
+    for instructor in instructors:
+        if instructor['uid'] not in previous_instructor_uids and instructor['optInNewCourses']:
+            OptIn.update_opt_in(
+                instructor_uid=instructor['uid'],
+                term_id=course['termId'],
+                section_id=course['sectionId'],
+                opt_in=True,
+            )
+    # Regenerate course JSON feed to reflect any opt-in changes.
+    return SisSection.get_course(term_id=course['termId'], section_id=course['sectionId'], include_administrative_proxies=True)
 
 
 def _downgrade_recording_type(course):
