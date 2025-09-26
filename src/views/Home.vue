@@ -285,10 +285,10 @@
         <div class="px-md-4 w-100">
           <v-checkbox
             id="email-checkbox"
-            v-model="emailReceive"
+            v-model="emailNoReminders"
             :disabled="isEmailDisabled"
             :aria-labelledby="'email-settings-header'"
-            label="I want to receive emails from Course Capture (required if opted-in to current or future courses)"
+            label="You have chosen not to opt any current or future courses into Course Capture. Check here if you do not want to receive reminder emails."
             @update:model-value="onEmailReceiveChange"
           />
         </div>
@@ -334,7 +334,7 @@ const refreshingCourses = ref(false)
 
 const showIneligible = ref(false)
 const futureCoursesPref = ref(null)
-const emailReceive = ref(true)
+const emailNoReminders = ref(true)
 
 // Track current-course opt-ins *only* from ToggleOptIn callbacks
 const optedInCount = ref(0)
@@ -353,9 +353,9 @@ const gettingStartedUrl = computed(() =>
 
 watch(isEmailDisabled, (required) => {
   if (required) {
-    emailReceive.value = true
+    emailNoReminders.value = false
     if (currentUser.value.doNotEmail) {
-      onEmailReceiveChange(true, {force: true})
+      onEmailReceiveChange(false, {force: true})
     }
   }
 })
@@ -366,7 +366,7 @@ onMounted(() => {
   refreshCourses()
   pageTitle.value = `Your ${config.value.currentTermName} ${pluralize('Course', size(currentUser.value.courses), false)}`
   futureCoursesPref.value = currentUser.value.optInNewCourses ? 'all' : 'choose'
-  emailReceive.value = !currentUser.value.doNotEmail
+  emailNoReminders.value = currentUser.value.doNotEmail
   contextStore.loadingComplete(pageTitle.value)
 })
 
@@ -429,7 +429,7 @@ const onFutureCoursesPreferenceChange = (value) => {
       futureCoursesPref.value = optAll ? 'all' : 'choose'
       if (typeof doNotEmail === 'boolean') {
         currentUser.value.doNotEmail = doNotEmail
-        emailReceive.value = !doNotEmail
+        emailNoReminders.value = doNotEmail
       }
 
       currentUser.value.optInNewCourses = !!optAll
@@ -443,15 +443,15 @@ const onFutureCoursesPreferenceChange = (value) => {
 
 const onEmailReceiveChange = (value, {force = false} = {}) => {
   if (isEmailDisabled.value && !force) {
-    emailReceive.value = true
+    emailNoReminders.value = false
     return
   }
-  const body = {doNotEmail: !value}
+  const body = {doNotEmail: value}
   updateDoNotEmail(currentUser.value.uid, body)
     .then((prefs) => {
       if (typeof prefs?.doNotEmail === 'boolean') {
         currentUser.value.doNotEmail = prefs.doNotEmail
-        emailReceive.value = !prefs.doNotEmail
+        emailNoReminders.value = prefs.doNotEmail
       }
       if (typeof prefs?.optInNewCourses === 'boolean') {
         currentUser.value.optInNewCourses = prefs.optInNewCourses
