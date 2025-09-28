@@ -269,11 +269,10 @@ def update_course():
     section_id = course['sectionId']
     term_id = course['termId']
 
-    def _update_opt_in(instructor):
-        instructor_uid = instructor['uid']
+    def _update_opt_in(has_opted_in, instructor_uid):
         OptIn.update_opt_in(
             instructor_uid=instructor_uid,
-            opt_in=instructor['hasOptedIn'],
+            opt_in=has_opted_in,
             section_id=section_id,
             term_id=term_id,
         )
@@ -288,11 +287,14 @@ def update_course():
         )
 
     if current_user.is_admin:
-        for instructor in course['instructors']:
-            _update_opt_in(instructor)
+        if len(course['instructors']):
+            for instructor in course['instructors']:
+                _update_opt_in(instructor['hasOptedIn'], instructor['uid'])
+        else:
+            _update_opt_in(course['hasOptedIn'], 'admin')
     else:
         instructor = next((i for i in course['instructors'] if i['uid'] == current_user.uid), None)
-        _update_opt_in(instructor)
+        _update_opt_in(instructor['hasOptedIn'], instructor['uid'])
     for collaborator in course['collaborators']:
         CoursePreference.update_collaborator_uids(
             collaborator_uids=collaborator['uid'],

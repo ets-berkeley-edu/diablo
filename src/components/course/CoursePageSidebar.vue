@@ -127,12 +127,14 @@
         </div>
       </v-col>
     </v-row>
-    <v-row v-if="currentUser.isAdmin && course.hasOptedIn" id="opted-out" class="mt-3">
-      <v-col class="py-1" cols="auto">
-        <v-icon color="primary" :icon="mdiMinusCircle" />
-      </v-col>
-      <v-col class="py-1">Opted in</v-col>
-    </v-row>
+    <v-expand-transition>
+      <v-row v-if="currentUser.isAdmin && course.hasOptedIn" id="opted-out" class="mt-3">
+        <v-col class="py-1" cols="auto">
+          <v-icon color="primary" :icon="mdiMinusCircle" />
+        </v-col>
+        <v-col class="py-1">Opted in</v-col>
+      </v-row>
+    </v-expand-transition>
   </v-card>
 </template>
 
