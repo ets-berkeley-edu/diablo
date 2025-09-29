@@ -57,7 +57,7 @@
                   :disabled="courseStore.disableButtons"
                   hide-details
                   item-props
-                  :items="publishCanvasSiteOptions"
+                  :items="canvasSiteOptions"
                   label="Select course site"
                   :list-props="{ariaLabel: 'My bCourses sites', ariaLive: 'off', id: 'canvas-site-list'}"
                   :menu-props="{attach: menuContainer, eager: true, id: 'canvas-site-menu'}"
@@ -117,7 +117,7 @@
                   v-for="(site, index) in publishCanvasSites"
                   :id="`canvas-site-${site.canvasSiteId}`"
                   :key="site.canvasSiteId"
-                  :class="{'mt-4': index === 0, 'mt-2': index > 0}"
+                  :class="{'mt-3': index === 0, 'mt-2': index > 0}"
                   class="canvas-site pl-4 pr-2 text-wrap"
                 >
                   {{ site.name }} ({{ site.courseCode }})
@@ -151,7 +151,7 @@
 
 <script lang="ts" setup>
 import {each, filter, find, get, isEmpty, size} from 'lodash'
-import {computed, onMounted, ref} from 'vue'
+import {onMounted, ref} from 'vue'
 import {storeToRefs} from 'pinia'
 import type {CanvasSite} from '@/lib/types'
 import {alertScreenReader, putFocusNextTick} from '@/lib/utils'
@@ -173,39 +173,35 @@ type CanvasSiteOption = {
 const publishType = defineModel('publishType',{required: true, type: String})
 const canvasSiteIds = defineModel('canvasSiteIds',{required: true, type: Array<number>})
 
-const {config, currentUser} = useContextStore()
 const courseStore = useCourseStore()
+const {config, currentUser} = useContextStore()
 const {course} = storeToRefs(courseStore)
-const allCanvasSitesTeaching = ref<CanvasSite[]>([])
+const canvasSiteOptions = ref<CanvasSiteOption[]>([])
 const isFindingCanvasSite = ref(false)
 const menuContainer = ref()
 const pendingCanvasSite = ref()
 const pendingCanvasSiteId = ref<number | undefined>()
 const publishCanvasSites = ref<CanvasSite[]>(course.canvasSites || [])
-const publishCanvasSiteOptions = computed((): CanvasSiteOption[] => {
-  const options: CanvasSiteOption[] = []
-  each(allCanvasSitesTeaching.value, site => {
-    options.push({
-      id: `canvas-site-option-${site.canvasSiteId}`,
-      disabled: isCanvasSiteIdStaged(site.canvasSiteId),
-      role: 'option',
-      title: `${site.name} (${site.courseCode})`,
-      value: site
-    })
-  })
-  return options
-})
 const publishTypeOptions = Object.keys(config.publishTypeOptions).sort().reverse()
 
 onMounted(() => {
   if (!currentUser.isAdmin && currentUser.uid) {
     getCanvasSitesTeaching(currentUser.uid).then(data => {
-      allCanvasSitesTeaching.value = data
+      each(data, site => {
+        canvasSiteOptions.value.push({
+          id: `canvas-site-option-${site.canvasSiteId}`,
+          disabled: isCanvasSiteIdStaged(site.canvasSiteId),
+          role: 'option',
+          title: `${site.name} (${site.courseCode})`,
+          value: site
+        })
+      })
     })
   }
 })
 
 const addCanvasSiteById = () => {
+  courseStore.setDisableButtons(true)
   isFindingCanvasSite.value = true
   if (pendingCanvasSiteId.value && !isCanvasSiteIdStaged(pendingCanvasSiteId.value)) {
     getCourseSite(pendingCanvasSiteId.value).then(data => {
@@ -214,6 +210,7 @@ const addCanvasSiteById = () => {
         canvasSiteIds.value.push(data.canvasSiteId)
         isFindingCanvasSite.value = false
         pendingCanvasSiteId.value = undefined
+        courseStore.setDisableButtons(false)
         alertScreenReader(`${data.name} added.`)
         putFocusNextTick('input-canvas-site-id')
       }
@@ -238,7 +235,7 @@ const isCanvasSiteIdStaged = (siteId) => {
 
 const onToggleCanvasSitesMenu = isOpen => {
   if (isOpen) {
-    putFocusNextTick(get(publishCanvasSiteOptions.value, '0.id', 'canvas-site-list'))
+    putFocusNextTick(get(canvasSiteOptions.value, '0.id', 'canvas-site-list'))
   }
 }
 
@@ -256,36 +253,6 @@ const removeCanvasSite = (canvasSiteId, index) => {
   }
   putFocusNextTick(nextFocusId)
 }
-
-// const toggleIsEditing = () => {
-//   isEditing.value = true
-//   putFocusNextTick('select-publish-type')
-// }
-
-// const updatePublishTypeClicked = () => {
-//   // isSaving.value = true
-//   updatePublishType(
-//     publishCanvasSites.value.map(s => s.canvasSiteId),
-//     publishType.value,
-//     course.sectionId,
-//     course.termId
-//   ).then(course => {
-//     const message = `Recording placement updated to ${course.publishTypeName}.`
-//     alertScreenReader(message)
-//     putFocusNextTick('btn-publish-type-edit')
-//     // props.setModel(course)
-//     // isEditing.value = false
-//     // isSaving.value = false
-//   })
-// }
-
-// const updatePublishTypeCancel = () => {
-//   alertScreenReader('Recording placement edit cancelled.')
-//   putFocusNextTick('btn-publish-type-edit')
-//   // isEditing.value = false
-//   publishType.value = course.publishType
-//   publishCanvasSites.value = [...course.canvasSites]
-// }
 </script>
 
 <style scoped>
