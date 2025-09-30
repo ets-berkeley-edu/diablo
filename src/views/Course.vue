@@ -24,8 +24,8 @@
           xl="9"
         >
           <v-card class="pa-4">
+            <DescribeCourseSchedulingStatus />
             <v-container v-if="isEligibleForCourseCapture" class="pt-0">
-              <DescribeCourseSchedulingStatus />
               <CoursePageInstructors class="mt-3" />
               <Collaborators v-model="course.collaborators" />
               <RecordingType v-model="course.recordingType" />
@@ -64,18 +64,6 @@
               <div v-if="currentUser.isAdmin" class="my-3">
                 <ScheduledCourse />
               </div>
-            </v-container>
-            <v-container v-if="isCurrentTerm && !capability" class="pt-6">
-              <v-row>
-                <v-col class="d-flex justify-start pl-7">
-                  <v-icon class="mr-2" color="error" :icon="mdiAlert" />
-                  <div id="course-not-eligible">
-                    This course is not eligible for Course Capture because
-                    <span v-if="location">{{ location }} is not capture-enabled.</span>
-                    <span v-if="!location">it has no meeting location.</span>
-                  </div>
-                </v-col>
-              </v-row>
             </v-container>
             <v-container v-if="isCurrentTerm && !!capability && !hasValidMeetingTimes" class="pt-6">
               <v-row>
@@ -149,8 +137,7 @@ const {
   course,
   hasValidMeetingTimes,
   isCurrentTerm,
-  isEligibleForCourseCapture,
-  location
+  isEligibleForCourseCapture
 } = storeToRefs(courseStore)
 const config = contextStore.config
 const agreedToTerms = ref(false)
