@@ -134,7 +134,7 @@ export interface Course extends BaseCourse {
     ineligible: Meeting[],
   },
   nonstandardMeetingDates: boolean,
-  note: string,
+  note: string | undefined,
   optIns: OptIn[],
   publishType: string,
   publishTypeName: string,

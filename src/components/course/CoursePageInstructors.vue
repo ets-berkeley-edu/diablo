@@ -1,68 +1,56 @@
 <template>
-  <v-row
-    align="center"
-    aria-label="Instructors"
-    justify="start"
-    role="region"
-  >
-    <v-col id="instructors-list" class="pt-0" cols="12">
-      <h3 v-if="course.instructors.length" id="instructors-header">
-        <span v-if="course.scheduled">
-          {{ course.instructors.length === 1 ? 'Instructor' : 'Instructors listed' }} will have editing and publishing access:
-        </span>
-        <span v-if="!course.deletedAt && !course.scheduled">
-          Instructor{{ course.instructors.length === 1 ? '' : 's' }}
-        </span>
-      </h3>
-      <h3 v-if="!course.instructors.length">
-        No instructors are assigned to this course
-      </h3>
-      <div class="mt-1 pl-4">
-        <div v-if="!course.instructors.length" class="mt-1 text-medium-emphasis">
-          <div v-if="currentUser.isAdmin">
-            <ToggleOptIn
-              id="admin-opt-in-when-zero-instructors"
-              v-model="course.hasOptedIn"
-              :disabled="courseStore.disableButtons"
-              :section-id="`${course.sectionId}`"
-              :term-id="`${course.termId}`"
-            >
-              {{ course.hasOptedIn ? 'This course is opted in to Course Capture' : 'This course is NOT opted in to Course Capture' }}
-            </ToggleOptIn>
-          </div>
-          <div v-if="!currentUser.isAdmin">
-            <!-- Non-admins should never reach a zero-instructor course page and yet we accommodate. -->
-            No instructors
-          </div>
-        </div>
-        <div
-          v-for="instructor in instructorsSorted"
-          :key="`instructor-${instructor.uid}`"
-          class="d-flex flex-column"
-        >
-          <div v-if="!currentUser.isAdmin && currentUser.uid !== instructor.uid" class="font-size-18 mt-1">
-            <CoursePageInstructorLabel
-              :hide-opt-in-status="initialOptedInStatusByUID[instructor.uid] !== instructor.hasOptedIn"
-              :instructor="instructor"
-            />
-          </div>
+  <div id="instructors-list">
+    <h3 v-if="course.instructors.length" id="instructors-header" class="font-size-16">
+      <span v-if="course.scheduled">
+        {{ course.instructors.length === 1 ? 'Instructor' : 'Instructors listed' }} will have editing and publishing access:
+      </span>
+      <span v-if="!course.deletedAt && !course.scheduled">
+        Instructor{{ course.instructors.length === 1 ? '' : 's' }}
+      </span>
+    </h3>
+    <h3 v-if="!course.instructors.length" class="font-size-16">
+      No instructors are assigned to this course
+    </h3>
+    <div class="mt-3">
+      <div v-if="!course.instructors.length" class="mt-1 text-medium-emphasis">
+        <div v-if="currentUser.isAdmin">
           <ToggleOptIn
-            v-if="currentUser.isAdmin || currentUser.uid === instructor.uid"
-            :id="`instructor-${instructor.uid}`"
-            v-model="instructor.hasOptedIn"
-            :disabled="courseStore.disableButtons"
-            :section-id="`${course.sectionId}`"
-            :term-id="`${course.termId}`"
+            :id="`toggle-opt-in-${course.termId}-${course.sectionId}`"
+            v-model:has-opted-in="course.hasOptedIn"
           >
-            <CoursePageInstructorLabel
-              :hide-opt-in-status="initialOptedInStatusByUID[instructor.uid] !== instructor.hasOptedIn"
-              :instructor="instructor"
-            />
+            {{ course.hasOptedIn ? 'This course is opted in to Course Capture' : 'This course is NOT opted in to Course Capture' }}
           </ToggleOptIn>
         </div>
+        <div v-if="!currentUser.isAdmin">
+          <!-- Non-admins should never reach a zero-instructor course page and yet we accommodate. -->
+          No instructors
+        </div>
       </div>
-    </v-col>
-  </v-row>
+      <div
+        v-for="instructor in instructorsSorted"
+        :key="`instructor-${instructor.uid}`"
+        class="d-flex flex-column"
+      >
+        <div v-if="!currentUser.isAdmin && currentUser.uid !== instructor.uid" class="font-size-18 mt-1">
+          <CoursePageInstructorLabel
+            :hide-opt-in-status="initialOptedInStatusByUID[instructor.uid] !== instructor.hasOptedIn"
+            :instructor="instructor"
+          />
+        </div>
+        <ToggleOptIn
+          v-if="currentUser.isAdmin || currentUser.uid === instructor.uid"
+          :id="`toggle-opt-in-${course.termId}-${course.sectionId}-instructor-${instructor.uid}`"
+          v-model:has-opted-in="instructor.hasOptedIn"
+          v-model:instructor-uid="instructor.uid"
+        >
+          <CoursePageInstructorLabel
+            :hide-opt-in-status="initialOptedInStatusByUID[instructor.uid] !== instructor.hasOptedIn"
+            :instructor="instructor"
+          />
+        </ToggleOptIn>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
