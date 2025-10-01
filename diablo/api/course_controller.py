@@ -38,7 +38,6 @@ from diablo.lib.util import local_now
 from diablo.models.course_preference import CoursePreference, get_all_publish_types, get_all_recording_types
 from diablo.models.note import Note
 from diablo.models.opt_in import OptIn
-from diablo.models.opt_out import OptOut
 from diablo.models.queued_email import QueuedEmail
 from diablo.models.schedule_update import ScheduleUpdate
 from diablo.models.scheduled import Scheduled
@@ -201,9 +200,9 @@ def update_course_note():
     return tolerant_jsonify({'note': note.body})
 
 
-@app.route('/api/course/opt_in/update', methods=['POST'])
+@app.route('/api/course/instructor/opt_in', methods=['POST'])
 @login_required
-def update_opt_in():
+def instructor_opt_in():
     params = request.get_json()
     instructor_uid = params.get('instructorUid')
     opt_in = params.get('optIn')
@@ -227,39 +226,57 @@ def update_opt_in():
     if not current_user.is_admin and str(instructor_uid) not in [str(i['uid']) for i in course['instructors']]:
         raise ForbiddenRequestError(f'Sorry, you are unauthorized to view the course {course["label"]}.')
 
-    def _schedule_opt_in_update(scheduled_section_id, scheduled_term_id):
-        if opt_in:
-            ScheduleUpdate.queue(
-                term_id=scheduled_term_id,
-                section_id=scheduled_section_id,
-                field_name='opted_in',
-                field_value_old=None,
-                field_value_new=instructor_uid,
-                requested_by_uid=current_user.uid,
-                requested_by_name=current_user.name,
-            )
-        else:
-            ScheduleUpdate.queue(
-                term_id=scheduled_term_id,
-                section_id=scheduled_section_id,
-                field_name='opted_in',
-                field_value_old=instructor_uid,
-                field_value_new=None,
-                requested_by_uid=current_user.uid,
-                requested_by_name=current_user.name,
-            )
-
     if OptIn.update_opt_in(
         instructor_uid=instructor_uid,
         term_id=term_id,
         section_id=section_id,
         opt_in=opt_in,
     ):
-        _schedule_opt_in_update(section_id, term_id)
-
+        ScheduleUpdate.queue(
+            field_name='opted_in',
+            field_value_new=instructor_uid if opt_in else None,
+            field_value_old=None if opt_in else instructor_uid,
+            requested_by_name=current_user.name,
+            requested_by_uid=current_user.uid,
+            section_id=section_id,
+            term_id=term_id,
+        )
         return tolerant_jsonify({'optedIn': opt_in})
     else:
         raise InternalServerError('Failed to update opt-in.')
+
+
+@app.route('/api/course/admin/opt_in', methods=['POST'])
+@admin_required
+def course_opt_in():
+    params = request.get_json()
+    term_id = params.get('termId')
+    section_id = params.get('sectionId')
+    opt_in = params.get('optIn')
+
+    OptIn.update_opt_in(
+        instructor_uid='admin',
+        opt_in=opt_in,
+        section_id=section_id,
+        term_id=term_id,
+    )
+    ScheduleUpdate.queue(
+        field_name='opted_in',
+        field_value_new='admin',
+        field_value_old=None,
+        requested_by_name=current_user.name,
+        requested_by_uid=current_user.uid,
+        section_id=section_id,
+        term_id=term_id,
+    )
+    return tolerant_jsonify(SisSection.get_course(
+        term_id,
+        section_id,
+        include_canvas_sites=True,
+        include_deleted=True,
+        include_notes=current_user.is_admin,
+        include_update_history=True,
+    ))
 
 
 @app.route('/api/course/update', methods=['POST'])
@@ -322,102 +339,6 @@ def update_course():
         include_notes=current_user.is_admin,
         include_update_history=True,
     ))
-
-
-@app.route('/api/course/opt_out/update', methods=['POST'])
-@login_required
-def update_opt_out():  # noqa: C901, PLR0912
-    params = request.get_json()
-    instructor_uid = params.get('instructorUid')
-    term_id = params.get('termId')
-    section_id = params.get('sectionId')
-    opt_out = params.get('optOut')
-    if opt_out is None or not instructor_uid or not term_id or not section_id:
-        raise BadRequestError('Required params missing or invalid')
-
-    if str(instructor_uid) != str(current_user.uid) and not current_user.is_admin:
-        raise ForbiddenRequestError(f'Unable to update opt-out preferences for UID {instructor_uid}.')
-
-    if term_id == 'all':
-        # Global opt-out for user.
-        term_id = None
-        section_id = None
-
-    elif re.match(r'2\d{3}', str(term_id)) and section_id == 'all':
-        # Per-term opt-cut for user.
-        section_id = None
-
-    else:
-        # Per-course opt-out.
-        course = SisSection.get_course(term_id, section_id)
-        if not course:
-            raise BadRequestError('Required params missing or invalid')
-        if not current_user.is_admin and str(instructor_uid) not in [str(i['uid']) for i in course['instructors']]:
-            raise ForbiddenRequestError(f'Sorry, you are unauthorized to view the course {course["label"]}.')
-
-    blanket_opt_out = (section_id is None)
-
-    def _schedule_opt_out_update(scheduled_section_id, scheduled_term_id):
-        if opt_out:
-            ScheduleUpdate.queue(
-                term_id=scheduled_term_id,
-                section_id=scheduled_section_id,
-                field_name='opted_out',
-                field_value_old=None,
-                field_value_new=instructor_uid,
-                requested_by_uid=current_user.uid,
-                requested_by_name=current_user.name,
-            )
-        else:
-            ScheduleUpdate.queue(
-                term_id=scheduled_term_id,
-                section_id=scheduled_section_id,
-                field_name='opted_out',
-                field_value_old=instructor_uid,
-                field_value_new=None,
-                requested_by_uid=current_user.uid,
-                requested_by_name=current_user.name,
-            )
-
-    def _get_section_ids_opted_out():
-        return set(o.section_id for o in OptOut.get_opt_outs_for_instructor_uid(instructor_uid=instructor_uid, term_id=app.config['CURRENT_TERM_ID']))
-
-    if blanket_opt_out:
-        opt_outs_before_update = _get_section_ids_opted_out()
-
-    if OptOut.update_opt_out(
-        instructor_uid=instructor_uid,
-        term_id=term_id,
-        section_id=section_id,
-        opt_out=opt_out,
-    ):
-        if section_id:
-            _schedule_opt_out_update(section_id, term_id)
-        elif blanket_opt_out:
-            # If a blanket opt-out (no section ID specified) has been requested, queue opt-out updates only for sections that will
-            # actually change their opt-out status.
-            opt_outs_after_update = _get_section_ids_opted_out()
-
-            def _has_opt_out_difference(section_id, id_set_1, id_set_2):
-                return (section_id in id_set_1 or None in id_set_1) and not (section_id in id_set_2 or None in id_set_2)
-
-            eligible_section_ids = set(s['sectionId'] for s in SisSection.get_courses(
-                instructor_uids=[instructor_uid],
-                term_id=app.config['CURRENT_TERM_ID'],
-            ))
-            scheduled_section_ids = set(Scheduled.get_scheduled_per_instructor_uid(instructor_uid, app.config['CURRENT_TERM_ID']))
-
-            for instructor_section_id in eligible_section_ids.union(scheduled_section_ids):
-                if opt_out:
-                    is_section_changed = _has_opt_out_difference(instructor_section_id, opt_outs_after_update, opt_outs_before_update)
-                else:
-                    is_section_changed = _has_opt_out_difference(instructor_section_id, opt_outs_before_update, opt_outs_after_update)
-                if is_section_changed:
-                    _schedule_opt_out_update(instructor_section_id, app.config['CURRENT_TERM_ID'])
-
-        return tolerant_jsonify({'optedOut': opt_out})
-    else:
-        raise InternalServerError('Failed to update opt-out.')
 
 
 @app.route('/api/course/publish_type/update', methods=['POST'])
@@ -529,5 +450,7 @@ def _get_courses_per_filter(filter_, term_id):
         courses = SisSection.get_courses_scheduled(term_id, include_full_schedules=False)
     elif filter_ == 'No Instructors':
         courses = SisSection.get_courses_without_instructors(term_id, include_full_schedules=False)
+    else:
+        raise BadRequestError(f'Invalid courses filter: {filter_}')
 
     return courses

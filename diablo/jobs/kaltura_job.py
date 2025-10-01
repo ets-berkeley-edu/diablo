@@ -333,7 +333,10 @@ def _handle_meeting_added(
     updates = _construct_schedule_update_options(course, updated_publish_type, updated_recording_type, updated_collaborator_uids)
 
     newly_scheduled = schedule_recordings(
-        {**course, **{'meetings': {'eligible': [meeting]}}},
+        {
+            **course,
+            'meetings': {'eligible': [meeting]},
+        },
         remove_blackout_conflicts=True,
         updates=updates,
     )

@@ -23,19 +23,7 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-from diablo.lib.http_util import tolerant_jsonify
-
-
-class JsonableError(Exception):
-    def __init__(self, message):
-        Exception.__init__(self)
-        self.message = message
-
-    def to_json(self):
-        if self.message:
-            return tolerant_jsonify({'message': self.message})
-        else:
-            return ''
+from diablo.lib.http_util import JsonableError
 
 
 class BadRequestError(JsonableError):
