@@ -60,3 +60,33 @@ export function updateCourseNote(
     body
   }).then(response => response.data)
 }
+
+export function toggleCourseOptIn(
+  optIn: boolean,
+  sectionId: number,
+  termId: number
+) {
+  const url = `${getApiBaseUrl()}/api/course/admin/opt_in`
+  const params = {
+    optIn,
+    sectionId,
+    termId
+  }
+  return axios.post(url, params).then(response => response.data)
+}
+
+export function toggleInstructorOptIn(
+  instructorUid: string,
+  optIn: boolean,
+  sectionId: number,
+  termId: number
+) {
+  const url = `${getApiBaseUrl()}/api/course/instructor/opt_in`
+  const params = {
+    instructorUid,
+    optIn,
+    sectionId,
+    termId
+  }
+  return axios.post(url, params).then(response => response.data)
+}

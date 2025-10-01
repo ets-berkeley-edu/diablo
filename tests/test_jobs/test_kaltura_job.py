@@ -473,7 +473,7 @@ def _api_opt_in_update(
 ):
     fake_auth.login(instructor_uid)
     response = client.post(
-        '/api/course/opt_in/update',
+        '/api/course/instructor/opt_in',
         data=json.dumps({
             'instructorUid': instructor_uid,
             'termId': term_id,

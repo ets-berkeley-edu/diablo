@@ -56,7 +56,7 @@ def _get_calnet_users(app, uids):
             calnet_result = next((r for r in calnet_results if r['uid'] == uid), None)
             feed = {
                 **_calnet_user_api_feed(calnet_result),
-                **{'uid': uid},
+                'uid': uid,
             }
             users_by_uid[uid] = feed
     return users_by_uid

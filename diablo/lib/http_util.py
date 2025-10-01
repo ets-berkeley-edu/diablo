@@ -29,11 +29,44 @@ import simplejson as json
 from flask import Response
 
 
+class JsonableError(Exception):
+    def __init__(self, message):
+        Exception.__init__(self)
+        self.message = message
+
+    def to_json(self):
+        if self.message:
+            return tolerant_jsonify({'message': self.message})
+        else:
+            return ''
+
+
 def add_param_to_url(url, param):
     parsed_url = urllib.parse.urlparse(url)
     parsed_query = urllib.parse.parse_qsl(parsed_url.query)
     parsed_query.append(param)
     return urllib.parse.urlunparse(parsed_url._replace(query=urllib.parse.urlencode(parsed_query)))
+
+
+def get_request_param(params, param_name, expected_type=str, is_required=False):
+    class RequestParameterError(JsonableError):
+        pass
+
+    value = params.get(param_name)
+    if is_required and not value:
+        raise RequestParameterError('Required params missing or invalid')
+    if expected_type:
+        try:
+            if expected_type == int:
+                value = int(value)
+            elif expected_type == str:
+                value = str(value)
+            elif expected_type == list:
+                value = list(value)
+        except (TypeError, ValueError):
+            raise RequestParameterError('Required params missing or invalid')
+
+    return value
 
 
 def tolerant_jsonify(obj, status=200, **kwargs):
