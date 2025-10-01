@@ -9,26 +9,6 @@
           {{ user.email }}
         </a>
       </v-card-subtitle>
-      <v-row v-if="user.uid" class="mx-4">
-        <ToggleOptIn
-          :term-id="config.currentTermId.toString()"
-          section-id="all"
-          :instructor-uids="[user.uid]"
-          label="Opt in for current semester"
-          :before-toggle="() => (isRefreshingCourses = true)"
-          :on-toggle="refreshUser"
-        />
-      </v-row>
-      <v-row v-if="user.uid" class="mx-4 mt-0 mb-2">
-        <ToggleOptIn
-          term-id="all"
-          section-id="all"
-          :instructor-uids="[user.uid]"
-          label="Opt in for all semesters"
-          :before-toggle="() => (isRefreshingCourses = true)"
-          :on-toggle="refreshUser"
-        />
-      </v-row>
       <div v-if="eligibleCourses.length" id="user-courses-eligible">
         <CoursesDataTable
           class="pt-5"
@@ -51,6 +31,54 @@
           :show-opt-in="false"
         />
       </div>
+    </v-card>
+    <v-card v-if="currentUser.isAdmin" class="border-sm mt-4">
+      <v-card-title>Preferences</v-card-title>
+      <v-card-text>
+        <section aria-labelledby="future-courses-header" class="py-5">
+          <h2 id="future-courses-header" class="pa-4 text-medium-emphasis w-100">
+            Future courses
+          </h2>
+          <div class="px-md-4 w-100">
+            <v-radio-group
+              v-model="futureCoursesPref"
+              :aria-labelledby="'future-courses-header'"
+              @update:model-value="onFutureCoursesPreferenceChange"
+            >
+              <v-radio
+                id="all-future-courses-opt-in"
+                value="all"
+                color="primary"
+                label="I want all my future courses to be opted into Course Capture by default"
+              />
+              <v-radio
+                id="choose-courses-opt-in"
+                value="choose"
+                color="primary"
+                label="I want to choose whether or not to opt in future courses to Course Capture"
+              />
+            </v-radio-group>
+          </div>
+        </section>
+
+        <v-divider class="my-2" />
+
+        <section aria-labelledby="email-settings-header" class="py-5">
+          <h2 id="email-settings-header" class="pa-4 text-medium-emphasis w-100">
+            Email settings
+          </h2>
+          <div class="px-md-4 w-100">
+            <v-checkbox
+              id="email-checkbox"
+              v-model="emailReceive"
+              :disabled="isEmailDisabled"
+              :aria-labelledby="'email-settings-header'"
+              label="I want to receive emails from Course Capture (required if opted-in to current or future courses)"
+              @update:model-value="onEmailReceiveChange"
+            />
+          </div>
+        </section>
+      </v-card-text>
     </v-card>
     <v-card v-if="currentUser.isAdmin" class="border-sm mt-4">
       <v-card-title>Notes</v-card-title>
@@ -109,22 +137,21 @@
 </template>
 
 <script setup>
-import {onMounted, ref} from 'vue'
+import {computed, onMounted, ref, watch} from 'vue'
 import {useRoute} from 'vue-router'
 import {storeToRefs} from 'pinia'
 import {filter} from 'lodash'
 import {mdiSchoolOutline} from '@mdi/js'
 import {alertScreenReader, partitionCoursesByEligibility, putFocusNextTick} from '@/lib/utils'
 import {getCourseCodes} from '@/lib/berkeley'
-import {deleteUserNote, getUser, updateUserNote} from '@/api/user'
+import {deleteUserNote, getUser, updateDoNotEmail, updateOptInNewCourses, updateUserNote} from '@/api/user'
 import {useContextStore} from '@/stores/context'
 import CoursesDataTable from '@/components/course/CoursesDataTable.vue'
 import PageTitle from '@/components/util/PageTitle.vue'
 import ProgressButton from '@/components/util/ProgressButton'
-import ToggleOptIn from '@/components/course/ToggleOptIn.vue'
 
 const contextStore = useContextStore()
-const {config, currentUser, loading} = storeToRefs(contextStore)
+const {currentUser, loading} = storeToRefs(contextStore)
 
 const route = useRoute()
 const uid = route.params.uid
@@ -136,6 +163,23 @@ const isSavingNote = ref(false)
 const isRefreshingCourses = ref(false)
 const noteBody = ref('')
 const user = ref({})
+
+const futureCoursesPref = ref(null)
+const emailReceive = ref(true)
+
+const isEmailDisabled = computed(() => {
+  return futureCoursesPref.value === 'all'
+})
+
+// If email must be disabled, auto-uncheck and sync server if needed
+watch(isEmailDisabled, (disabled) => {
+  if (disabled) {
+    emailReceive.value = false
+    if (user.value?.doNotEmail) {
+      onEmailReceiveChange(false, {force: true})
+    }
+  }
+})
 
 contextStore.loadingStart()
 
@@ -181,6 +225,20 @@ const refreshUser = () => {
       eligibleCourses.value,
       ineligibleCourses.value
     )
+    const allCourses = [...eligibleCourses.value, ...ineligibleCourses.value]
+
+    allCourses.forEach(course => {
+      const eligibleLen = course.meetings?.eligible?.length || 0
+      course.statusLabel = course.deletedAt
+        ? 'Canceled'
+        : (course.scheduled
+          ? 'Scheduled'
+          : (eligibleLen > 0
+            ? (course.hasOptedIn ? 'Pending' : 'Not Opted In')
+            : 'Not Eligible'))
+    })
+    futureCoursesPref.value = user.value.optInNewCourses ? 'all' : 'choose'
+    emailReceive.value = !user.value.doNotEmail
     isRefreshingCourses.value = false
   })
 }
@@ -204,4 +262,46 @@ const summarize = courses => {
     return message
   }
 }
+
+const onFutureCoursesPreferenceChange = (value) => {
+  const optInNewCourses = value === 'all'
+  updateOptInNewCourses(uid, {optInNewCourses})
+    .then((prefs) => {
+      const {optInNewCourses: optAll, doNotEmail} = prefs || {}
+      futureCoursesPref.value = optAll ? 'all' : 'choose'
+      user.value.optInNewCourses = !!optAll
+
+      user.value.doNotEmail = doNotEmail
+      emailReceive.value = doNotEmail
+
+      alertScreenReader('Future courses preference updated.')
+    })
+    .catch(() => {
+      // revert to server-known state
+      futureCoursesPref.value = user.value.optInNewCourses ? 'all' : 'choose'
+      alertScreenReader('Failed to update future courses preference.')
+    })
+}
+
+const onEmailReceiveChange = (value, {force = false} = {}) => {
+  if (isEmailDisabled.value && !force) {
+    emailReceive.value = false
+    return
+  }
+  updateDoNotEmail(uid, {doNotEmail: !value})
+    .then((prefs) => {
+      user.value.doNotEmail = !prefs.doNotEmail
+      emailReceive.value = !prefs.doNotEmail
+
+      user.value.optInNewCourses = prefs.optInNewCourses
+      futureCoursesPref.value = prefs.optInNewCourses ? 'all' : 'choose'
+
+      alertScreenReader('Email preference updated.')
+    })
+    .catch(() => {
+      emailReceive.value = !user.value.doNotEmail
+      alertScreenReader('Failed to update email preference.')
+    })
+}
+
 </script>

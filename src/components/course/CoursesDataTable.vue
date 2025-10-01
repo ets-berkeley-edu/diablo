@@ -76,18 +76,10 @@
           <!-- eslint-disable-next-line vue/no-v-for-template-key -->
           <template v-for="course in items" :key="course.sectionId">
             <tr>
-              <td v-if="showOptIn" :class="tdc(course)">
-                <ToggleOptIn
-                  v-if="course.statusLabel !== 'Not Eligible' && (includeOptInColumnForUids || course.instructors?.length > 0)"
-                  :key="course.sectionId"
-                  :disabled="course.hasBlanketOptedOut"
-                  :initial-value="course.hasOptedIn"
-                  :instructor-uids="instructorUidsFor(course)"
-                  label=""
-                  :on-toggle="onToggleOptIn(course)"
-                  :section-id="`${course.sectionId}`"
-                  :term-id="`${course.termId}`"
-                />
+              <td v-if="showOptIn && course.statusLabel !== 'Not Eligible'" :class="tdc(course)">
+                <span>
+                  {{ course.hasOptedIn ? 'Opted In' : 'Not Opted In' }}
+                </span>
               </td>
               <td
                 :id="`course-name-${course.sectionId}`"
@@ -226,7 +218,7 @@
 import type {PropType} from 'vue'
 import {each, filter, find, get, map, size, tail} from 'lodash'
 import {mdiClose} from '@mdi/js'
-import {onMounted, ref, watch} from 'vue'
+import {onMounted, ref} from 'vue'
 import type {CourseSortable, SortBy} from '@/lib/types'
 import {alertScreenReader} from '@/lib/utils'
 import {getDisplayMeetings} from '@/lib/berkeley'
@@ -234,7 +226,6 @@ import {useContextStore} from '@/stores/context'
 import Date from '@/components/util/Date.vue'
 import Days from '@/components/util/Days.vue'
 import Instructor from '@/components/course/Instructor.vue'
-import ToggleOptIn from '@/components/course/ToggleOptIn.vue'
 
 const props = defineProps({
   courses: {
@@ -279,7 +270,7 @@ const props = defineProps({
 
 const contextStore = useContextStore()
 const headers = ref([
-  {key: 'optIn', title: 'Opt In', value: 'hasOptedIn', sortable: false},
+  {key: 'optIn', title: 'Opt In Status', value: 'hasOptedIn', sortable: false},
   {key: 'course', title: 'Course', sortable: true, value: 'label'},
   {key: 'section', title: 'Section', sortable: true, value: 'sectionId', class: 'w-10'},
   {key: 'room', title: 'Room', sortable: true, value: 'room.location'},
@@ -297,20 +288,8 @@ const sortBy = defineModel(
     type: Object as PropType<SortBy>
   },
 )
+
 const selectedRows = ref([])
-
-const instructorUidsFor = course =>
-  (props.includeOptInColumnForUids && props.includeOptInColumnForUids.length)
-    ? props.includeOptInColumnForUids
-    : map(course.instructors, 'uid')
-
-watch(() => props.refreshing, async(value) => {
-  if (!value) {
-    // False value means that the refresh just ended in the parent component and we can proceed.
-    page.value = 1
-    refresh()
-  }
-})
 
 onMounted(() => {
   if (!props.includeRoomColumn) {
