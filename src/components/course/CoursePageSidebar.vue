@@ -1,7 +1,7 @@
 <template>
   <v-card
     aria-labelledby="course-summary-header"
-    class="pb-8 pt-6 px-6 px-md-4 px-lg-6 mx-1"
+    class="pb-6 pt-6 px-6 px-md-4 px-lg-6 mx-1"
     role="region"
   >
     <h2 id="course-summary-header" class="sr-only">
@@ -135,11 +135,11 @@
         <v-col class="py-1">Opted in</v-col>
       </v-row>
     </v-expand-transition>
+    <CourseNotes />
   </v-card>
 </template>
 
 <script lang="ts" setup>
-import type {PropType} from 'vue'
 import {onMounted, ref} from 'vue'
 import {DateTime} from 'luxon'
 import {
@@ -150,26 +150,24 @@ import {
   mdiMinusCircle,
   mdiSchoolOutline
 } from '@mdi/js'
-import type {Course, Meeting} from '@/lib/types'
+import {storeToRefs} from 'pinia'
+import type {Meeting} from '@/lib/types'
 import {getDisplayMeetings} from '@/lib/berkeley'
 import {pluralize} from '@/lib/utils'
 import {useContextStore} from '@/stores/context'
+import {useCourseStore} from '@/stores/course'
+import CourseNotes from '@/components/course/CourseNotes.vue'
 import Date from '@/components/util/Date.vue'
 import Days from '@/components/util/Days.vue'
 import OxfordJoin from '@/components/util/OxfordJoin.vue'
 
-const props = defineProps({
-  course: {
-    type: Object as PropType<Course>,
-    required: true
-  }
-})
-
+const courseStore = useCourseStore()
 const {config, currentUser} = useContextStore()
+const {course} = storeToRefs(courseStore)
 const displayMeetings = ref<Meeting[]>([])
 const today = ref(DateTime.local().startOf('day'))
 
 onMounted(() => {
-  displayMeetings.value = getDisplayMeetings(props.course)
+  displayMeetings.value = getDisplayMeetings(course.value)
 })
 </script>

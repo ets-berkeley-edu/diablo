@@ -1,18 +1,20 @@
 <template>
-  <v-card v-if="currentUser.isAdmin" class="border-sm mt-4 mx-1">
-    <v-card-title>
-      <h3>Notes</h3>
-    </v-card-title>
-    <v-card-text v-if="!isEditing" id="note-body" class="font-size-16">
-      <span v-if="course.note">{{ course.note }}</span>
-      <span v-if="!course.note" class="text-medium-emphasis">No notes.</span>
-    </v-card-text>
-    <v-card-actions v-if="!isEditing" class="px-4 pb-4">
+  <div v-if="currentUser.isAdmin" class="mt-8 mx-1">
+    <h3>Notes</h3>
+    <div
+      v-if="!isEditing"
+      id="note-body"
+      :class="isEmpty(course.note) ? 'my-2' : 'mb-4 mt-2'"
+      class="font-size-16 my-2"
+    >
+      {{ course.note }}
+    </div>
+    <div v-if="!isEditing">
       <v-btn
         id="btn-edit-note"
         aria-label="Edit note"
         :disabled="isSaving"
-        text="Edit"
+        :text="isEmpty(course.note) ? 'Create' : 'Edit'"
         variant="outlined"
         @click="editNote"
       />
@@ -27,8 +29,8 @@
         variant="flat"
         @click="deleteNote"
       />
-    </v-card-actions>
-    <v-card-text v-if="isEditing">
+    </div>
+    <div v-if="isEditing" class="mt-3">
       <v-textarea
         id="note-body-edit"
         v-model="noteBody"
@@ -38,8 +40,8 @@
         placeholder="Enter note text"
         variant="outlined"
       />
-    </v-card-text>
-    <v-card-actions v-if="isEditing" class="px-4 pb-4">
+    </div>
+    <div v-if="isEditing" class="mt-3">
       <ProgressButton
         id="btn-save-note"
         :action="saveNote"
@@ -57,28 +59,23 @@
         variant="text"
         @click="cancelNote"
       />
-    </v-card-actions>
-  </v-card>
+    </div>
+  </div>
 </template>
 
 <script lang="ts" setup>
+import {isEmpty} from 'lodash'
 import {ref, watch} from 'vue'
+import {storeToRefs} from 'pinia'
 import {alertScreenReader, putFocusNextTick} from '@/lib/utils'
 import {deleteCourseNote, updateCourseNote} from '@/api/course'
 import {useContextStore} from '@/stores/context'
 import {useCourseStore} from '@/stores/course'
 import ProgressButton from '@/components/util/ProgressButton.vue'
 
-const props = defineProps({
-  setModel: {
-    required: true,
-    type: Function
-  }
-})
-
-const {currentUser} = useContextStore()
 const courseStore = useCourseStore()
-const course = courseStore.course
+const {course} = storeToRefs(courseStore)
+const {currentUser} = useContextStore()
 const isEditing = ref(false)
 const isSaving = ref(false)
 const noteBody = ref<string | undefined>()
@@ -87,7 +84,7 @@ watch(isEditing, courseStore.setDisableButtons)
 watch(isSaving, courseStore.setDisableButtons)
 
 const cancelNote = () => {
-  noteBody.value = course.note
+  noteBody.value = course.value.note
   isEditing.value = false
   isSaving.value = false
   alertScreenReader('Canceled edit.')
@@ -96,18 +93,17 @@ const cancelNote = () => {
 
 const deleteNote = () => {
   isSaving.value = true
-  deleteCourseNote(course.termId, course.sectionId)
-    .then(() => {
-      props.setModel(null)
-      noteBody.value = undefined
-      isSaving.value = false
-      alertScreenReader('Note deleted.')
-      putFocusNextTick('btn-edit-note')
-    })
+  deleteCourseNote(course.value.termId, course.value.sectionId).then(() => {
+    course.value.note = undefined
+    noteBody.value = undefined
+    isSaving.value = false
+    alertScreenReader('Note deleted.')
+    putFocusNextTick('btn-edit-note')
+  })
 }
 
 const editNote = () => {
-  noteBody.value = course.note
+  noteBody.value = course.value.note
   isEditing.value = true
   putFocusNextTick('note-body-edit')
 }
@@ -115,9 +111,9 @@ const editNote = () => {
 const saveNote = () => {
   if (noteBody.value) {
     isSaving.value = true
-    updateCourseNote(course.termId, course.sectionId, noteBody.value).then(data => {
+    updateCourseNote(course.value.termId, course.value.sectionId, noteBody.value).then((data) => {
+      course.value.note = data.note
       noteBody.value = data.note
-      props.setModel(data.note)
       isEditing.value = false
       isSaving.value = false
       alertScreenReader('Note updated.')

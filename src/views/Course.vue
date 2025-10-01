@@ -23,10 +23,12 @@
           order="2"
           xl="9"
         >
-          <v-card class="pa-4">
+          <v-card class="pb-6 pt-4 px-8">
             <DescribeCourseSchedulingStatus />
+            <CoursePageInstructors class="mt-3" />
+          </v-card>
+          <v-card class="mt-4 pa-4">
             <v-container v-if="isEligibleForCourseCapture" class="pt-0">
-              <CoursePageInstructors class="mt-3" />
               <Collaborators v-model="course.collaborators" />
               <RecordingType v-model="course.recordingType" />
               <RecordingPlacement
@@ -94,7 +96,6 @@
           xl="3"
         >
           <CoursePageSidebar :course="course" />
-          <CourseNotes :course="course" :set-model="note => course.note = note" />
         </v-col>
       </v-row>
       <v-row v-if="currentUser.isAdmin">
@@ -117,7 +118,6 @@ import {useContextStore} from '@/stores/context'
 import {useCourseStore} from '@/stores/course'
 import Collaborators from '@/components/course/Collaborators.vue'
 import CourseHistory from '@/components/course/CourseHistory.vue'
-import CourseNotes from '@/components/course/CourseNotes.vue'
 import CoursePageInstructors from '@/components/course/CoursePageInstructors.vue'
 import CoursePageSidebar from '@/components/course/CoursePageSidebar.vue'
 import DescribeCourseSchedulingStatus from '@/components/course/DescribeCourseSchedulingStatus.vue'
@@ -162,6 +162,7 @@ const reset = () => {
     agreedToTerms.value = currentUser.isAdmin
     courseDisplayTitle.value = getCourseCodes(data)[0]
     contextStore.loadingComplete(courseDisplayTitle.value)
+    courseStore.setDisableButtons(false)
   })
 }
 

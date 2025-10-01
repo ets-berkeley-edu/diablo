@@ -1,6 +1,6 @@
 <template>
   <div class="font-weight-bold">
-    <div v-if="isCurrentTerm && !capability" class="d-flex justify-start px-4 py-2">
+    <div v-if="isCurrentTerm && !capability" class="align-center d-flex py-2">
       <v-icon class="mr-4" color="error" :icon="mdiAlert" />
       <div id="course-not-eligible">
         This course is not eligible for Course Capture because
@@ -30,7 +30,7 @@
     </v-expand-transition>
     <div
       v-if="isEligibleForCourseCapture && !course.deletedAt && !course.scheduled"
-      class="d-flex justify-start px-4 py-2"
+      class="align-center d-flex py-2"
     >
       <v-icon class="mr-4" color="error" :icon="mdiAlert" />
       <div v-if="!course.hasOptedIn && instructors.length" id="notice-opt-out" class="text-error">
