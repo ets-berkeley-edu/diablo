@@ -214,8 +214,9 @@ class TestWeirdTypeB:
         self.kaltura_page.load_event_edit_page(self.recording_schedule.series_id)
         self.kaltura_page.wait_for_title('Access Denied - UC Berkeley - Test', util.get_short_timeout())
 
-    def test_no_instructor_removed_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTRUCTORS_REMOVED, self.section) == 0
+    def test_instructor_removed_email(self):
+        assert util.get_sent_email_count(EmailTemplateType.INSTRUCTORS_REMOVED, self.section,
+                                         self.original_instructor) == 1
 
     def test_ouija_no_instructor_filter(self):
         self.kaltura_page.close_window_and_switch()

@@ -40,9 +40,9 @@ class JobsPage(DiabloPages):
     RUN_BLACKOUTS_JOB_BUTTON = (By.ID, 'run-job-blackouts')
     RUN_KALTURA_JOB_BUTTON = (By.ID, 'run-job-kaltura')
     RUN_EMAILS_JOB_BUTTON = (By.ID, 'run-job-emails')
-    RUN_REMIND_OPT_OUTS_BUTTON = (By.ID, 'run-job-remind_opt_outs')
-    RUN_REMIND_PARTIALLY_APPROVED_BUTTON = (By.ID< 'run-job-remind_partially_approved')
-    RUN_REMIND_SCHEDULED_BUTTON = (By.ID, 'run-job-remind_scheduled')
+    RUN_REMIND_OPT_OUTS_BUTTON = (By.ID, 'run-job-remind_instructors_opted_out')
+    RUN_REMIND_PARTIALLY_APPROVED_BUTTON = (By.ID, 'run-job-remind_instructors_partially_approved')
+    RUN_REMIND_SCHEDULED_BUTTON = (By.ID, 'run-job-remind_instructors_scheduled')
     RUN_SCHEDULE_UPDATES_JOB_BUTTON = (By.ID, 'run-job-schedule_updates')
     RUN_SEMESTER_START_JOB_BUTTON = (By.ID, 'run-job-semester_start')
 
@@ -113,19 +113,9 @@ class JobsPage(DiabloPages):
         self.wait_for_page_and_click(JobsPage.RUN_SEMESTER_START_JOB_BUTTON)
         self.wait_for_most_recent_job_success(AsyncJob.SEMESTER_START)
 
-    def run_remind_opt_outs_job_sequence(self):
-        self.load_page()
-        self.run_remind_opt_outs_job()
-        self.run_emails_job()
-
     def run_remind_partially_approved_job_sequence(self):
         self.load_page()
         self.run_remind_partially_approved_job()
-        self.run_emails_job()
-
-    def run_remind_scheduled_job_sequence(self):
-        self.load_page()
-        self.run_remind_scheduled_job()
         self.run_emails_job()
 
     def run_semester_start_job_sequence(self):

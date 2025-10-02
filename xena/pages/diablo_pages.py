@@ -119,36 +119,6 @@ class DiabloPages(Page):
         )
         return [el.text for el in self.elements(DiabloPages.VISIBLE_MENU_OPTION)]
 
-    # COURSE ROWS
-
-    @staticmethod
-    def course_opt_in_button_locator(section):
-        return By.ID, f'toggle-opt-in-{section.ccn}'
-
-    @staticmethod
-    def course_opt_out_button_clickable_locator(section):
-        return By.XPATH, f'//input[@id="toggle-opt-out-{section.ccn}"]/following-sibling::div'
-
-    def toggle_course_opt_in(self, section):
-        app.logger.info(f'Clicking the opt-in button for {section.code}')
-        self.element(DiabloPages.course_opt_out_button_clickable_locator(section)).click()
-
-    def is_course_opted_in(self, section):
-        self.when_present(self.course_opt_in_button_locator(section), util.get_short_timeout())
-        return self.element(DiabloPages.course_opt_in_button_locator(section)).has_attribute('checked')
-
-    def set_course_opt_in(self, section):
-        if self.is_course_opted_in(section):
-            app.logger.info('Course is already opted in')
-        else:
-            self.toggle_course_opt_in(section)
-
-    def set_course_opt_out(self, section):
-        if self.is_course_opted_in(section):
-            self.toggle_course_opt_in(section)
-        else:
-            app.logger.info('Course is already opted out')
-
     # 404 PAGE
 
     def wait_for_404(self):

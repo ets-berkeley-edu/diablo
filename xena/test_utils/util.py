@@ -193,7 +193,7 @@ def get_all_eligible_section_ids():
 
 def get_test_section_instructor_data(test_section_data, uids_to_exclude=None):
     count = len(test_section_data['instructors'] + test_section_data['proxies'])
-    test_user_data = get_test_instructors(count, uids_to_exclude)
+    test_user_data = get_test_instructor_data(count, uids_to_exclude)
 
     test_instructor_data = test_user_data[:len(test_section_data['instructors'])] if test_section_data['instructors'] else []
     for i in test_instructor_data:
@@ -210,7 +210,7 @@ def get_test_section_instructor_data(test_section_data, uids_to_exclude=None):
     test_section_data['proxies'] = test_proxy_data
 
 
-def get_test_instructors(count, uids_to_exclude=None):
+def get_test_instructor_data(count, uids_to_exclude=None):
     uids = []
     if uids_to_exclude:
         for u in uids_to_exclude:
@@ -296,7 +296,7 @@ def get_test_section(test_data, test_section_instructor_data=False):
 
 def get_test_opt_out_sections():
     sections = []
-    test_instructor_data = get_test_instructors(2)
+    test_instructor_data = get_test_instructor_data(2)
     test_sections_data = [get_test_script_course('test_opt_out_0'), get_test_script_course('test_opt_out_1')]
     for sec_data in test_sections_data:
         for instr in sec_data['instructors']:
@@ -434,6 +434,40 @@ def reset_sent_email_test_data(section=None, instructor=None, templates=None):
     std_commit(allow_test_environment=True)
 
 
+# For jobs that queue a large number of emails, use this to clear that queue and avoid extremely long-running emails job
+def delete_queued_email(template):
+    sql = f"""DELETE FROM queued_emails
+               WHERE term_id = {app.config['CURRENT_TERM_ID']}
+                 AND template_type = '{template.value['type']}'"""
+    app.logger.info(sql)
+    db.session.execute(text(sql))
+    std_commit(allow_test_environment=True)
+
+
+# For jobs that queue a large number of emails, use this to verify that an email is queued rather than sent
+def get_queued_email_count(template, section=None, instructor=None):
+    term_id = app.config['CURRENT_TERM_ID']
+    clause = f' AND section_id = {section.ccn}' if section else ''
+    if instructor:
+        sql = f"""SELECT COUNT(*)
+                    FROM queued_emails
+                   WHERE term_id = {term_id}{clause}
+                     AND recipient::jsonb ->> 'uid' = '{instructor.uid}'
+                     AND template_type = '{template.value['type']}'
+        """
+    else:
+        sql = f"""SELECT COUNT(*)
+                    FROM queued_emails
+                   WHERE term_id = {term_id}{clause}
+                     AND template_type = '{template.value['type']}'
+        """
+    app.logger.info(sql)
+    result = db.session.execute(text(sql))
+    std_commit(allow_test_environment=True)
+    count = result.fetchone()[0]
+    return count
+
+
 def get_sent_email_count(template, section=None, instructor=None):
     term_id = app.config['CURRENT_TERM_ID']
     clause = f' AND section_id = {section.ccn}' if section else ''
@@ -549,13 +583,34 @@ def reset_section_test_data(section):
     app.logger.info(sql)
     db.session.execute(text(sql))
     std_commit(allow_test_environment=True)
+    sql = f'DELETE FROM opt_ins WHERE section_id = {section.ccn} AND term_id = {term_id}'
+    app.logger.info(sql)
+    db.session.execute(text(sql))
+    std_commit(allow_test_environment=True)
 
 
 def reset_user_preferences(instructor):
     sql = f"""UPDATE user_preferences
                  SET do_not_email = FALSE,
                      opt_in_new_courses = FALSE
-               WHERE uid = {instructor.uid}"""
+               WHERE uid = '{instructor.uid}'"""
+    app.logger.info(sql)
+    db.session.execute(text(sql))
+    std_commit(allow_test_environment=True)
+
+
+def set_user_opt_in_by_default(instructor):
+    sql = f"SELECT * FROM user_preferences WHERE uid = '{instructor.uid}'"
+    app.logger.info(sql)
+    result = db.session.execute(text(sql)).first()
+    std_commit(allow_test_environment=True)
+    if result:
+        sql = f"""UPDATE user_preferences
+                     SET opt_in_new_courses = TRUE
+                   WHERE uid = '{instructor.uid}'"""
+    else:
+        sql = f"""INSERT INTO user_preferences (uid, do_not_email, opt_in_new_courses, created_at)
+                  SELECT '{instructor.uid}', FALSE, TRUE, now()"""
     app.logger.info(sql)
     db.session.execute(text(sql))
     std_commit(allow_test_environment=True)

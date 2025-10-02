@@ -132,7 +132,7 @@ class MeetingSchedule(object):
         weekday_indices = self.__weekday_indices()
         holidays = self.__holidays()
         recording_dates = []
-        if (self.start_date and self.end_date):
+        if self.start_date and self.end_date:
             start = self.record_start.date()
             end = term.last_record_date.date() if self.end_date > term.last_record_date else self.end_date.date()
             delta = end - start
