@@ -87,7 +87,7 @@
         </div>
         <div v-if="!isEditing" class="mt-3">
           <v-btn
-            id="btn-edit-collaborators"
+            id="btn-collaborators-edit"
             aria-label="Edit collaborators"
             color="primary"
             density="comfortable"

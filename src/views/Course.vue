@@ -27,7 +27,7 @@
             <DescribeCourseSchedulingStatus />
             <CoursePageInstructors v-if="isEligibleForCourseCapture" class="mt-2" />
           </v-card>
-          <v-card class="mt-8 px-4">
+          <v-card class="mt-8 pb-4 px-4">
             <v-container v-if="isEligibleForCourseCapture">
               <Collaborators class="pt-3" />
               <RecordingType v-model="course.recordingType" />
