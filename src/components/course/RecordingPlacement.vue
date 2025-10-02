@@ -205,7 +205,7 @@ const {config, currentUser} = useContextStore()
 const {course, disableButtons} = storeToRefs(courseStore)
 const canUserEdit = computed(() => {
   if (currentUser.isAdmin) {
-    return course.value.hasOptedIn
+    return course.value.hasOptedIn || !!find(course.value.instructors, 'hasOptedIn')
   } else {
     const instructor = find(course.value.instructors, ['uid', currentUser.uid])
     return get(instructor, 'hasOptedIn', false)
