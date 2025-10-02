@@ -25,17 +25,14 @@
         >
           <v-card class="pb-6 pt-4 px-8">
             <DescribeCourseSchedulingStatus />
-            <CoursePageInstructors class="mt-2" />
+            <CoursePageInstructors v-if="isEligibleForCourseCapture" class="mt-2" />
           </v-card>
-          <v-card class="mt-8 px-4 py-3">
+          <v-card class="mt-8 px-4">
             <v-container v-if="isEligibleForCourseCapture">
-              <Collaborators />
+              <Collaborators class="pt-3" />
               <RecordingType v-model="course.recordingType" />
-              <RecordingPlacement
-                v-model:canvas-site-ids="course.canvasSiteIds"
-                v-model:publish-type="course.publishType"
-              />
-              <v-row v-if="!currentUser.isAdmin && course.publishType" class="mt-0">
+              <RecordingPlacement />
+              <v-row v-if="!currentUser.isAdmin && course.publishType">
                 <v-col>
                   <hr>
                   <KnowledgeBaseKalturaMyMedia v-if="course.publishType === 'kaltura_my_media'" class="mt-4" />

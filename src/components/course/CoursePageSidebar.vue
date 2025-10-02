@@ -1,7 +1,7 @@
 <template>
   <v-card
     aria-labelledby="course-summary-header"
-    class="pb-6 pt-6 px-6 px-md-4 px-lg-6 mx-1"
+    class="pb-8 pt-6 px-6 px-md-4 px-lg-6 mx-1"
     role="region"
   >
     <h2 id="course-summary-header" class="sr-only">
