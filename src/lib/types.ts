@@ -117,11 +117,11 @@ export type CanvasSite = {
 
 export interface Course extends BaseCourse {
   allowedUnits: number,
-  canvasSiteIds: number[] | null,
+  canvasSiteIds: number[],
   collaboratorUids: string[],
   collaborators: Collaborator[],
   courseCodes: string[],
-  canvasSites?: CanvasSite[],
+  canvasSites: CanvasSite[],
   crossListings: BaseCourse[],
   deletedAt: string | null,
   displayMeetings: Meeting[],

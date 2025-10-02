@@ -2,7 +2,6 @@
   <v-row
     align="center"
     aria-label="Collaborators"
-    justify="start"
     role="region"
   >
     <v-col>
@@ -67,17 +66,17 @@
       <div class="ml-2">
         <div v-if="isEditing" class="mt-3">
           <ProgressButton
-            id="btn-save-note"
+            id="btn-collaborators-save"
             :action="update"
-            aria-label="Save Note"
+            aria-label="Save collaborators"
             density="comfortable"
             :disabled="isSaving"
             :in-progress="isSaving"
             :text="isSaving ? 'Saving' : 'Save'"
           />
           <v-btn
-            id="btn-cancel-note"
-            aria-label="Cancel Note Edit"
+            id="btn-collaborators-cancel"
+            aria-label="Cancel edit"
             class="ml-2"
             density="comfortable"
             :disabled="isSaving"

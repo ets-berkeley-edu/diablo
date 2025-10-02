@@ -307,7 +307,7 @@ def update_publish_type():
     if not current_user.is_admin and current_user.uid not in [i['uid'] for i in course['instructors']]:
         raise ForbiddenRequestError(f'Sorry, you are unauthorized to view the course {course["label"]}.')
     if publish_type and publish_type.startswith('kaltura_media_gallery') and not canvas_site_ids:
-        raise BadRequestError('Publication to course site requires Canvas site id')
+        raise BadRequestError('Publication to course site requires Canvas Site ID')
 
     preferences = CoursePreference.update_publish_type(
         term_id=term_id,
@@ -337,7 +337,14 @@ def update_publish_type():
                 requested_by_name=current_user.name,
             )
 
-    return tolerant_jsonify(preferences.to_api_json(include_canvas_sites=True))
+    return tolerant_jsonify(SisSection.get_course(
+        term_id,
+        section_id,
+        include_canvas_sites=True,
+        include_deleted=True,
+        include_notes=current_user.is_admin,
+        include_update_history=True,
+    ))
 
 
 @app.route('/api/course/recording_type/update', methods=['POST'])

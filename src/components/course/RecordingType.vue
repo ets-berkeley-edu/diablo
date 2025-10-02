@@ -36,9 +36,9 @@
       </div>
       <div v-if="recordingTypeOptions.length === 1">
         <h3 id="recording-type-header">Recording Type</h3>
-        <div class="ml-3 my-3">
-          <span id="recording-type-name">{{ courseStore.displayLabels[course.recordingType] }}</span>
-          <span class="text-warning">&nbsp;(only one recording type available)</span>
+        <div class="ml-2 mt-2">
+          <span id="recording-type-name" class="font-weight-medium">{{ courseStore.displayLabels[course.recordingType] }}</span>
+          <span class="text-medium-emphasis">&nbsp;(the only recording type available)</span>
         </div>
       </div>
     </v-col>
