@@ -22,6 +22,7 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
+import time
 
 from flask import current_app as app
 from selenium.webdriver.common.by import By
@@ -70,11 +71,15 @@ class CoursesPage(DiabloPages):
 
     def set_opt_in_by_default(self):
         app.logger.info('Clicking the opt-in-by-default radio')
-        self.wait_for_element_and_click(self.OPT_IN_BY_DEFAULT_RADIO)
+        self.wait_for_element(self.OPT_IN_BY_DEFAULT_RADIO, util.get_short_timeout())
+        self.click_element_js(self.OPT_IN_BY_DEFAULT_RADIO)
+        time.sleep(1)
 
     def set_opt_out_by_default(self):
         app.logger.info('Clicking the opt-out-by-default radio')
-        self.wait_for_element_and_click(self.OPT_OUT_BY_DEFAULT_RADIO)
+        self.wait_for_element(self.OPT_OUT_BY_DEFAULT_RADIO, util.get_short_timeout())
+        self.click_element_js(self.OPT_OUT_BY_DEFAULT_RADIO)
+        time.sleep(1)
 
     def is_instructor_opted_in_by_default(self):
         self.when_present(self.OPT_IN_BY_DEFAULT_RADIO, util.get_short_timeout())
@@ -82,7 +87,7 @@ class CoursesPage(DiabloPages):
 
     def receive_email_reminders(self):
         if self.is_email_reminders_checked():
-            app.logger.info('Receive email reminders is already checked')
+            app.logger.info('Reminders checkbox is already checked')
         else:
             app.logger.info('Clicking the email reminders checkbox')
             self.wait_for_element_and_click(self.REMINDER_EMAIL_CBX)
@@ -91,11 +96,14 @@ class CoursesPage(DiabloPages):
         if self.is_email_reminders_checked():
             app.logger.info('Clicking the email reminders checkbox')
             self.wait_for_element_and_click(self.REMINDER_EMAIL_CBX)
+            time.sleep(1)
         else:
-            app.logger.info('Receive email reminders is already unchecked')
+            app.logger.info('Decline reminder emails is already unchecked')
 
     def is_email_reminders_checked(self):
+        self.when_present(self.REMINDER_EMAIL_CBX, util.get_short_timeout())
         return self.element(self.REMINDER_EMAIL_CBX).is_selected()
 
     def is_email_reminders_el_enabled(self):
+        self.when_present(self.REMINDER_EMAIL_CBX, util.get_short_timeout())
         return self.element(self.REMINDER_EMAIL_CBX).is_enabled()

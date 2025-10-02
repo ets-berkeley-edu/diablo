@@ -58,7 +58,7 @@ class CoursePage(DiabloPages):
         return By.XPATH, f'//span[contains(text(), "Sorry, you are unauthorized to view the course {section.code}, {section.number}")]'
 
     @staticmethod
-    def admin_opt_out_button_locator(section):
+    def admin_opt_in_toggle_locator(section):
         return By.ID, f'toggle-opt-in-{section.ccn}'
 
     @staticmethod
@@ -73,26 +73,6 @@ class CoursePage(DiabloPages):
         app.logger.info(f'Loading course page for term {section.term.id} section ID {section.ccn}')
         self.hit_url(section.term.id, section.ccn)
         self.wait_for_diablo_title(f'{section.code}, {section.number}')
-
-    # Admin opt-out
-
-    def admin_opt_out_section(self, section):
-        app.logger.info(f'Opting out of term {section.term.id} section ID {section.ccn}')
-        opt_out_button = self.admin_opt_out_button_locator(section)
-        self.when_present(opt_out_button, util.get_short_timeout())
-        if not self.element(opt_out_button).get_dom_attribute('checked'):
-            self.click_element_js(opt_out_button)
-        else:
-            app.logger.info('Already opted out')
-
-    def admin_opt_in_section(self, section):
-        app.logger.info(f'Removing opt-out from term {section.term.id} section ID {section.ccn}')
-        opt_out_button = self.admin_opt_out_button_locator(section)
-        self.when_present(opt_out_button, util.get_short_timeout())
-        if self.element(opt_out_button).get_dom_attribute('checked'):
-            self.click_element_js(opt_out_button)
-        else:
-            app.logger.info('Opt-out already removed')
 
     # SIS DATA - section
 
@@ -200,6 +180,83 @@ class CoursePage(DiabloPages):
         assert expected_times in visible_times
         self.assert_equivalence(visible_room, expected_room)
 
+    # OPT IN / OPT OUT
+
+    OPT_IN_ADMIN_NO_INSTR_TOGGLE = By.ID, 'admin-opt-in-when-zero-instructors'
+
+    @staticmethod
+    def opt_in_instr_toggle(section, instructor):
+        return By.ID, f'toggle-opt-in-{section.term.id}-{section.ccn}-instructor-{instructor.uid}'
+
+    @staticmethod
+    def opt_in_no_instr_toggle(section):
+        return By.ID, f'toggle-opt-in-{section.term.id}-{section.ccn}'
+
+    def is_instructor_opted_in(self, section, instructor):
+        self.when_present(self.opt_in_instr_toggle(section, instructor), util.get_short_timeout())
+        return self.element(self.opt_in_instr_toggle(section, instructor)).is_selected()
+
+    def admin_opt_out_section(self, section):
+        app.logger.info(f'Opting out term {section.term.id} section ID {section.ccn}')
+        if section.instructors:
+            for instructor in section.instructors:
+                app.logger.info(f'Opting out instructor {instructor.uid}')
+                toggle = self.opt_in_instr_toggle(section, instructor)
+                self.when_present(toggle, util.get_short_timeout())
+                if self.element(toggle).is_selected():
+                    self.click_element(toggle)
+                    time.sleep(1)
+                else:
+                    app.logger.info('Already opted out')
+        else:
+            self.when_present(self.opt_in_no_instr_toggle(section), util.get_short_timeout())
+            if self.element(self.opt_in_no_instr_toggle(section)).is_selected():
+                self.click_element(self.opt_in_no_instr_toggle(section))
+                time.sleep(1)
+            else:
+                app.logger.info('Already opted out')
+        time.sleep(1)
+
+    def admin_opt_in_section(self, section):
+        app.logger.info(f'Opting in term {section.term.id} section ID {section.ccn}')
+        if section.instructors:
+            for instructor in section.instructors:
+                app.logger.info(f'Opting in instructor {instructor.uid}')
+                toggle = self.opt_in_instr_toggle(section, instructor)
+                self.when_present(toggle, util.get_short_timeout())
+                if self.element(toggle).is_selected():
+                    app.logger.info('Already opted in')
+                else:
+                    self.click_element(toggle)
+                    time.sleep(1)
+        else:
+            self.when_present(self.opt_in_no_instr_toggle(section), util.get_short_timeout())
+            if self.element(self.opt_in_no_instr_toggle(section)).is_selected():
+                app.logger.info('Already opted in')
+            else:
+                self.click_element(self.opt_in_no_instr_toggle(section))
+                time.sleep(1)
+
+    def instructor_opt_out_section(self, section, instructor):
+        app.logger.info(f'Instructor {instructor.uid} is opting out')
+        toggle = self.opt_in_instr_toggle(section, instructor)
+        self.when_present(toggle, util.get_short_timeout())
+        if self.element(toggle).is_selected():
+            self.click_element(toggle)
+            time.sleep(1)
+        else:
+            app.logger.info('Already opted out')
+
+    def instructor_opt_in_section(self, section, instructor):
+        app.logger.info(f'Instructor {instructor.uid} is opting in')
+        toggle = self.opt_in_instr_toggle(section, instructor)
+        self.when_present(toggle, util.get_short_timeout())
+        if self.element(toggle).is_selected():
+            app.logger.info('Already opted in')
+        else:
+            self.click_element(toggle)
+            time.sleep(1)
+
     # CAPTURE SETTINGS - instructors
 
     INSTRUCTOR_ROW = By.XPATH, '//div[@id="instructors-list"]/div'
@@ -211,7 +268,7 @@ class CoursePage(DiabloPages):
 
     # CAPTURE SETTINGS - collaborators
 
-    COLLAB_ROW = By.XPATH, '//div[starts-with(@id, "collaborator-")]'
+    COLLAB_ROW = By.XPATH, '//span[starts-with(@id, "collaborator-")]'
     COLLAB_EDIT_BUTTON = By.ID, 'btn-collaborators-edit'
     COLLAB_NONE_MSG = By.ID, 'collaborators-none'
     COLLAB_INPUT = By.ID, 'collaborator-lookup-input'
@@ -264,11 +321,13 @@ class CoursePage(DiabloPages):
         self.wait_for_element_and_click(self.COLLAB_ADD_BUTTON)
 
     def add_collaborator_by_uid(self, user):
+        self.scroll_to_top()
         self.look_up_uid(user.uid)
         self.click_look_up_result(user)
         self.click_collaborator_add_button()
 
     def add_collaborator_by_email(self, user):
+        self.scroll_to_top()
         self.look_up_email(user.email)
         self.click_look_up_result(user)
         self.click_collaborator_add_button()

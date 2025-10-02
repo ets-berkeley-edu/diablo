@@ -41,6 +41,7 @@ class KalturaPage(Page):
     PASSWORD_INPUT = (By.ID, 'Login-password')
     LOG_IN_BUTTON = (By.ID, 'Login-login')
     LOG_OUT_LINK = (By.XPATH, '//a[contains(@href, "/user/logout")]')
+    ADD_MENU_BUTTON = (By.ID, 'addNewMenuToggleBtn')
 
     SERIES_TITLE = (By.ID, 'CreateEvent-eventTitle')
     SERIES_DESC = (By.ID, 'CreateEvent-eventDescription')
@@ -77,11 +78,11 @@ class KalturaPage(Page):
         self.driver.get(f'{app.config["KALTURA_MEDIA_SPACE_URL"]}/user/login')
         username = util.get_username()
         password = util.get_password()
-        if self.is_present(KalturaPage.LOG_OUT_LINK):
+        if self.is_present(KalturaPage.ADD_MENU_BUTTON):
             app.logger.info('User is already logged in to Kaltura')
         else:
             calnet_page.log_in(username, password)
-            Wait(self.driver, util.get_medium_timeout()).until(ec.presence_of_element_located(KalturaPage.LOG_OUT_LINK))
+            Wait(self.driver, util.get_medium_timeout()).until(ec.presence_of_element_located(KalturaPage.ADD_MENU_BUTTON))
 
     def log_in_and_reset_test_data(self, calnet_page, sections):
         self.log_in_via_calnet(calnet_page)

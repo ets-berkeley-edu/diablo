@@ -64,3 +64,7 @@ class User(object):
     @property
     def role(self):
         return self.data['role']
+
+    @role.setter
+    def role(self, value):
+        self.data['role'] = value
