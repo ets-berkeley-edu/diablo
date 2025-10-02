@@ -139,7 +139,7 @@
           </v-expand-transition>
         </div>
         <div class="ml-2">
-          <div v-if="isEditing" class="mt-6">
+          <div v-if="isEditing" class="mt-3">
             <ProgressButton
               id="btn-publish-type-save"
               :action="update"
@@ -162,13 +162,13 @@
           </div>
           <v-expand-transition v-if="!isEditing">
             <v-btn
-              v-if="course.hasOptedIn"
+              v-if="canUserEdit"
               id="btn-publish-type-edit"
               aria-label="Edit collaborators"
-              class="mt-3"
+              class="mt-2"
               color="primary"
               density="comfortable"
-              :disabled="disableButtons || !course.hasOptedIn"
+              :disabled="disableButtons"
               text="Edit"
               @click="edit"
             />
@@ -181,7 +181,7 @@
 
 <script lang="ts" setup>
 import {each, filter, find, get, isEmpty, map, size} from 'lodash'
-import {onMounted, ref} from 'vue'
+import {computed, onMounted, ref} from 'vue'
 import {storeToRefs} from 'pinia'
 import type {CanvasSite, Course} from '@/lib/types'
 import {alertScreenReader, putFocusNextTick} from '@/lib/utils'
@@ -203,6 +203,14 @@ type CanvasSiteOption = {
 const courseStore = useCourseStore()
 const {config, currentUser} = useContextStore()
 const {course, disableButtons} = storeToRefs(courseStore)
+const canUserEdit = computed(() => {
+  if (currentUser.isAdmin) {
+    return course.value.hasOptedIn
+  } else {
+    const instructor = find(course.value.instructors, ['uid', currentUser.uid])
+    return get(instructor, 'hasOptedIn', false)
+  }
+})
 const canvasSiteOptions = ref<CanvasSiteOption[]>([])
 const displayLabels = {
   kaltura_media_gallery: 'Publish to the Media Gallery (all members of the bCourses site will have access)',

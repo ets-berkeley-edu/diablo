@@ -64,7 +64,7 @@
         </div>
         <v-expand-transition v-if="recordingTypeOptions.length > 1 && !isEditing">
           <v-btn
-            v-if="course.hasOptedIn"
+            v-if="canUserEdit"
             id="btn-recording-type-edit"
             aria-label="Edit recording type"
             class="mt-3"
@@ -81,7 +81,8 @@
 </template>
 
 <script lang="ts" setup>
-import {onMounted, ref} from 'vue'
+import {computed, onMounted, ref} from 'vue'
+import {find, get} from 'lodash'
 import {storeToRefs} from 'pinia'
 import type {Course} from '@/lib/types'
 import {alertScreenReader} from '@/lib/utils'
@@ -92,6 +93,15 @@ import ProgressButton from '@/components/util/ProgressButton.vue'
 
 const courseStore = useCourseStore()
 const {course, disableButtons} = storeToRefs(courseStore)
+const canUserEdit = computed(() => {
+  if (currentUser.isAdmin) {
+    return course.value.hasOptedIn
+  } else {
+    const instructor = find(course.value.instructors, ['uid', currentUser.uid])
+    return get(instructor, 'hasOptedIn', false)
+  }
+})
+const currentUser = useContextStore().currentUser
 const displayLabels = {
   presenter_presentation_audio: 'Camera Without Operator',
   presenter_presentation_audio_with_operator: `Camera With Operator ($${useContextStore().config.courseCapturePremiumCost} fee)`

@@ -13,7 +13,7 @@
       <v-btn
         id="btn-edit-note"
         aria-label="Edit note"
-        :disabled="isSaving"
+        :disabled="isSaving || disableButtons"
         :text="isEmpty(course.note) ? 'Create' : 'Edit'"
         variant="outlined"
         @click="editNote"
@@ -24,7 +24,7 @@
         aria-label="Delete Note"
         class="ml-1"
         color="red-lighten-2"
-        :disabled="isSaving"
+        :disabled="isSaving || disableButtons"
         text="Delete"
         variant="flat"
         @click="deleteNote"
@@ -74,7 +74,7 @@ import {useCourseStore} from '@/stores/course'
 import ProgressButton from '@/components/util/ProgressButton.vue'
 
 const courseStore = useCourseStore()
-const {course} = storeToRefs(courseStore)
+const {course, disableButtons} = storeToRefs(courseStore)
 const {currentUser} = useContextStore()
 const isEditing = ref(false)
 const isSaving = ref(false)
@@ -120,7 +120,7 @@ const saveNote = () => {
   noteBody.value = trim(noteBody.value)
   if (noteBody.value) {
     isSaving.value = true
-    updateCourseNote(course.value.termId, course.value.sectionId, noteBody.value).then(afterNoteUpdate)
+    updateCourseNote(course.value.termId, course.value.sectionId, noteBody.value).then(data => afterNoteUpdate(data.note))
   } else {
     deleteCourseNote(course.value.termId, course.value.sectionId).then(() => afterNoteUpdate(undefined))
   }
