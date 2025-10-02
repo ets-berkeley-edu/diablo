@@ -31,6 +31,10 @@ const {course} = storeToRefs(courseStore)
 const currentUser = useContextStore().currentUser
 
 const toggleOptIn = (optIn: boolean | null) => {
+  const afterToggle = (data: Course) => {
+    courseStore.setCourse(data)
+    courseStore.setDisableButtons(false)
+  }
   if (instructorUID.value) {
     courseStore.setDisableButtons(true)
     toggleInstructorOptIn(
@@ -38,9 +42,7 @@ const toggleOptIn = (optIn: boolean | null) => {
       !!optIn,
       course.value.sectionId,
       course.value.termId
-    ).then(() => {
-      courseStore.setDisableButtons(false)
-    })
+    ).then(afterToggle)
   } else {
     if (currentUser.isAdmin) {
       courseStore.setDisableButtons(true)
@@ -48,10 +50,7 @@ const toggleOptIn = (optIn: boolean | null) => {
         !!optIn,
         course.value.sectionId,
         course.value.termId
-      ).then((data: Course) => {
-        courseStore.setCourse(data)
-        courseStore.setDisableButtons(false)
-      })
+      ).then(afterToggle)
     } else {
       throw Error('A non-admin user cannot opt-in a course with zero instructors')
     }

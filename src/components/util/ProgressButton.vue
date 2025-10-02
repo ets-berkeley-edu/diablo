@@ -3,6 +3,7 @@
     :id="id"
     :aria-label="ariaLabel"
     :color="color"
+    :density="density"
     :disabled="disabled"
     :size="size"
     :variant="variant"
@@ -33,6 +34,11 @@ defineProps({
   },
   color: {
     default: 'primary',
+    type: String,
+    required: false
+  },
+  density: {
+    default: 'default',
     type: String,
     required: false
   },

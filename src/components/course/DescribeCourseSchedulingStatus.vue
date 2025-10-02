@@ -1,7 +1,7 @@
 <template>
   <div class="font-weight-bold">
-    <div v-if="isCurrentTerm && !capability" class="align-center d-flex py-2">
-      <v-icon class="mr-4" color="error" :icon="mdiAlert" />
+    <div v-if="isCurrentTerm && !capability" class="align-start d-flex py-2">
+      <v-icon class="mr-3 mt-1" color="error" :icon="mdiAlert" />
       <div id="course-not-eligible">
         This course is not eligible for Course Capture because
         <span v-if="location">{{ location }} is not capture-enabled.</span>
@@ -30,9 +30,9 @@
     </v-expand-transition>
     <div
       v-if="isEligibleForCourseCapture && !course.deletedAt && !course.scheduled"
-      class="align-center d-flex py-2"
+      class="align-start d-flex py-2"
     >
-      <v-icon class="mr-4" color="error" :icon="mdiAlert" />
+      <v-icon class="mr-3 mt-1" color="error" :icon="mdiAlert" />
       <div v-if="!course.hasOptedIn && instructors.length" id="notice-opt-out" class="text-error">
         {{ currentUser.isAdmin ? 'The' : 'Your' }} course is not scheduled for Course Capture because
         {{ instructors.length === 1 && currentUser.uid === instructors[0].uid ? 'you have' : `${instructorsNotOptedInNames} ${instructorsNotOptedIn.length === 1 ? 'has ' : 'have'}` }}

@@ -602,11 +602,11 @@ class TestUpdateCollaboratorUids:
             expected_status_code=200,
     ):
         response = client.post(
-            '/api/course/collaborator_uids/update',
+            '/api/course/collaborators/update',
             data=json.dumps({
-                'collaboratorUids': collaborator_uids,
                 'sectionId': section_id,
                 'termId': term_id,
+                'uids': collaborator_uids,
             }),
             content_type='application/json',
         )

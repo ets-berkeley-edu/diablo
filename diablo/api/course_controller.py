@@ -136,16 +136,16 @@ def download_courses_csv():
     )
 
 
-@app.route('/api/course/collaborator_uids/update', methods=['POST'])
+@app.route('/api/course/collaborators/update', methods=['POST'])
 @login_required
 def update_collaborator_uids():
     params = request.get_json()
     section_id = params.get('sectionId')
     term_id = params.get('termId')
-    collaborator_uids = sorted(params.get('collaboratorUids')) or []
+    uids = sorted(params.get('uids')) or []
 
     course = SisSection.get_course(term_id, section_id) if (term_id and section_id) else None
-    if not course or type(collaborator_uids) != list:
+    if not course or type(uids) != list:
         raise BadRequestError('Required params missing or invalid')
     if not current_user.is_admin and current_user.uid not in [i['uid'] for i in course['instructors']]:
         raise ForbiddenRequestError(f'Sorry, you are unauthorized to view the course {course["label"]}.')
@@ -153,20 +153,26 @@ def update_collaborator_uids():
     preferences = CoursePreference.update_collaborator_uids(
         term_id=term_id,
         section_id=section_id,
-        collaborator_uids=collaborator_uids,
+        collaborator_uids=uids,
     )
-    if preferences and collaborator_uids != sorted(course.get('collaboratorUids') or []):
+    if preferences and uids != sorted(course.get('collaboratorUids') or []):
         ScheduleUpdate.queue(
             term_id=course['termId'],
             section_id=course['sectionId'],
             field_name='collaborator_uids',
             field_value_old=course.get('collaboratorUids'),
-            field_value_new=collaborator_uids,
+            field_value_new=uids,
             requested_by_uid=current_user.uid,
             requested_by_name=current_user.name,
         )
-
-    return tolerant_jsonify(preferences.to_api_json())
+    return tolerant_jsonify(SisSection.get_course(
+        term_id,
+        section_id,
+        include_canvas_sites=True,
+        include_deleted=True,
+        include_notes=current_user.is_admin,
+        include_update_history=True,
+    ))
 
 
 @app.route('/api/course/note/delete', methods=['POST'])
@@ -241,7 +247,14 @@ def instructor_opt_in():
             section_id=section_id,
             term_id=term_id,
         )
-        return tolerant_jsonify({'optedIn': opt_in})
+        return tolerant_jsonify(SisSection.get_course(
+            term_id,
+            section_id,
+            include_canvas_sites=True,
+            include_deleted=True,
+            include_notes=current_user.is_admin,
+            include_update_history=True,
+        ))
     else:
         raise InternalServerError('Failed to update opt-in.')
 
@@ -267,68 +280,6 @@ def course_opt_in():
         requested_by_name=current_user.name,
         requested_by_uid=current_user.uid,
         section_id=section_id,
-        term_id=term_id,
-    )
-    return tolerant_jsonify(SisSection.get_course(
-        term_id,
-        section_id,
-        include_canvas_sites=True,
-        include_deleted=True,
-        include_notes=current_user.is_admin,
-        include_update_history=True,
-    ))
-
-
-@app.route('/api/course/update', methods=['POST'])
-@login_required
-def update_course():
-    course = request.get_json()
-    section_id = course['sectionId']
-    term_id = course['termId']
-
-    def _update_opt_in(has_opted_in, instructor_uid):
-        OptIn.update_opt_in(
-            instructor_uid=instructor_uid,
-            opt_in=has_opted_in,
-            section_id=section_id,
-            term_id=term_id,
-        )
-        ScheduleUpdate.queue(
-            field_name='opted_in',
-            field_value_new=instructor_uid,
-            field_value_old=None,
-            requested_by_name=current_user.name,
-            requested_by_uid=current_user.uid,
-            section_id=section_id,
-            term_id=term_id,
-        )
-
-    if current_user.is_admin:
-        if len(course['instructors']):
-            for instructor in course['instructors']:
-                _update_opt_in(instructor['hasOptedIn'], instructor['uid'])
-        else:
-            _update_opt_in(course['hasOptedIn'], 'admin')
-    else:
-        instructor = next((i for i in course['instructors'] if i['uid'] == current_user.uid), None)
-        _update_opt_in(instructor['hasOptedIn'], instructor['uid'])
-    for collaborator in course['collaborators']:
-        CoursePreference.update_collaborator_uids(
-            collaborator_uids=collaborator['uid'],
-            section_id=section_id,
-            term_id=term_id,
-        )
-    CoursePreference.update_recording_type(
-        recording_type=course['recordingType'],
-        section_id=section_id,
-        term_id=term_id,
-    )
-    # Update publish_type
-    publish_type = course['publishType']
-    CoursePreference.update_publish_type(
-        canvas_site_ids=course['canvasSiteIds'],
-        section_id=section_id,
-        publish_type=publish_type,
         term_id=term_id,
     )
     return tolerant_jsonify(SisSection.get_course(

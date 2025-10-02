@@ -3,7 +3,6 @@ import axios from 'axios'
 import fileDownload from 'js-file-download'
 import {DateTime} from 'luxon'
 import type {OuijaFilter} from '@/stores/ouija'
-import type {Course} from '@/lib/types'
 import {getApiBaseUrl} from '@/api/api-utils'
 
 export function deleteCourseNote(termId: number, sectionId: number) {
@@ -44,9 +43,9 @@ export function getCoursesReport(termId: string) {
     .then(response => response.data)
 }
 
-export function updateCourse(course: Course) {
-  const url = `${getApiBaseUrl()}/api/course/update`
-  return axios.post(url, course).then(response => response.data)
+export function updateCollaborators(sectionId: number, termId: number, uids: string[]) {
+  const url = `${getApiBaseUrl()}/api/course/collaborators/update`
+  return axios.post(url, {sectionId, termId, uids}).then(response => response.data)
 }
 
 export function updateCourseNote(

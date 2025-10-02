@@ -1,8 +1,8 @@
 <template>
   <div id="instructors-list">
-    <h3 v-if="course.instructors.length" id="instructors-header" class="font-size-16">
-      <span v-if="course.scheduled">
-        {{ course.instructors.length === 1 ? 'Instructor' : 'Instructors listed' }} will have editing and publishing access:
+    <h3 v-if="course.instructors.length" id="instructors-header">
+      <span v-if="course.hasOptedIn && course.scheduled">
+        {{ course.instructors.length === 1 ? (course.instructors[0].uid === currentUser.uid ? 'You' : 'Instructor') : 'Instructors listed' }} will have editing and publishing access:
       </span>
       <span v-if="!course.deletedAt && !course.scheduled">
         Instructor{{ course.instructors.length === 1 ? '' : 's' }}
@@ -44,9 +44,14 @@
           v-model:instructor-uid="instructor.uid"
         >
           <CoursePageInstructorLabel
+            v-if="currentUser.isAdmin"
             :hide-opt-in-status="initialOptedInStatusByUID[instructor.uid] !== instructor.hasOptedIn"
             :instructor="instructor"
           />
+          <div v-if="currentUser.uid === instructor.uid">
+            <span v-if="instructor.optedInAt" class="text-green">You opted in {{ DateTime.fromISO(instructor.optedInAt).toRelativeCalendar({}) }}.</span>
+            <span v-if="!instructor.optedInAt" class="text-warning">Opt in to Course Capture</span>
+          </div>
         </ToggleOptIn>
       </div>
     </div>
@@ -54,7 +59,8 @@
 </template>
 
 <script setup lang="ts">
-import {onMounted, ref} from 'vue'
+import {computed, onMounted, ref} from 'vue'
+import {DateTime} from 'luxon'
 import {each, sortBy} from 'lodash'
 import {storeToRefs} from 'pinia'
 import type {CourseInstructor} from '@/lib/types'
@@ -66,14 +72,16 @@ import ToggleOptIn from '@/components/course/ToggleOptIn.vue'
 const courseStore = useCourseStore()
 const {course} = storeToRefs(courseStore)
 const currentUser = useContextStore().currentUser
-const instructorsSorted = ref<CourseInstructor[]>([])
+const instructorsSorted = computed(() => {
+  let instructors = sortBy(course.value.instructors, ['name'])
+  if (!currentUser.isAdmin) {
+    instructors = sortBy(course.value.instructors, (instructor: CourseInstructor) => (instructor.uid === currentUser.uid ? 0 : 1))
+  }
+  return instructors
+})
 const initialOptedInStatusByUID = ref({})
 
 onMounted(() => {
-  instructorsSorted.value = sortBy(course.value.instructors, ['name'])
-  if (!currentUser.isAdmin) {
-    instructorsSorted.value = sortBy(course.value.instructors, (instructor: CourseInstructor) => (instructor.uid === currentUser.uid ? 0 : 1))
-  }
   each(course.value.instructors, instructor => {
     initialOptedInStatusByUID.value[instructor.uid] = instructor.hasOptedIn
   })
