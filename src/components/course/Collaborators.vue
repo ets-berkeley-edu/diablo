@@ -8,6 +8,9 @@
       <h3>
         Collaborators
       </h3>
+      <div v-if="!isEditing && !collaborators.length" class="ml-2">
+        None
+      </div>
       <v-expand-transition>
         <PersonLookup
           v-if="isEditing"
@@ -119,7 +122,7 @@ const courseStore = useCourseStore()
 const {course, disableButtons} = storeToRefs(courseStore)
 const canUserEdit = computed(() => {
   if (currentUser.isAdmin) {
-    return course.value.hasOptedIn
+    return course.value.hasOptedIn || !!find(course.value.instructors, 'hasOptedIn')
   } else {
     const instructor = find(course.value.instructors, ['uid', currentUser.uid])
     return get(instructor, 'hasOptedIn', false)
