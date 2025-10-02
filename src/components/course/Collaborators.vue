@@ -87,13 +87,13 @@
         </div>
         <v-expand-transition v-if="!isEditing">
           <v-btn
-            v-if="course.hasOptedIn"
+            v-if="canUserEdit"
             id="btn-collaborators-edit"
             aria-label="Edit collaborators"
             class="mt-3"
             color="primary"
             density="comfortable"
-            :disabled="disableButtons || !course.hasOptedIn"
+            :disabled="disableButtons"
             text="Edit"
             @click="edit"
           />
@@ -104,19 +104,29 @@
 </template>
 
 <script lang="ts" setup>
-import {cloneDeep, find, map} from 'lodash'
-import {onMounted, ref} from 'vue'
+import {cloneDeep, find, get, map} from 'lodash'
+import {computed, onMounted, ref} from 'vue'
 import {storeToRefs} from 'pinia'
 import type {Collaborator} from '@/lib/types'
 import {alertScreenReader, putFocusNextTick} from '@/lib/utils'
+import {updateCollaborators} from '@/api/course'
 import {useCourseStore} from '@/stores/course'
 import PersonLookup from '@/components/util/PersonLookup.vue'
-import {updateCollaborators} from '@/api/course'
 import ProgressButton from '@/components/util/ProgressButton.vue'
+import {useContextStore} from '@/stores/context'
 
 const courseStore = useCourseStore()
 const {course, disableButtons} = storeToRefs(courseStore)
+const canUserEdit = computed(() => {
+  if (currentUser.isAdmin) {
+    return course.value.hasOptedIn
+  } else {
+    const instructor = find(course.value.instructors, ['uid', currentUser.uid])
+    return get(instructor, 'hasOptedIn', false)
+  }
+})
 const collaborators = ref<Collaborator[]>([])
+const currentUser = useContextStore().currentUser
 const error = ref<string | undefined>()
 const isEditing = ref(false)
 const isSaving = ref(false)
