@@ -30,7 +30,7 @@
           <v-card class="mt-8 pb-4 px-4">
             <v-container v-if="isEligibleForCourseCapture">
               <Collaborators class="pt-3" />
-              <RecordingType v-model="course.recordingType" />
+              <RecordingType />
               <RecordingPlacement />
               <v-row v-if="!currentUser.isAdmin && course.publishType">
                 <v-col>

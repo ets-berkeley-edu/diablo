@@ -43,28 +43,6 @@ export function getCoursesReport(termId: string) {
     .then(response => response.data)
 }
 
-export function updateCollaborators(sectionId: number, termId: number, uids: string[]) {
-  const url = `${getApiBaseUrl()}/api/course/collaborators/update`
-  return axios.post(url, {sectionId, termId, uids}).then(response => response.data)
-}
-
-export function updateCourseNote(
-  termId: number,
-  sectionId: number,
-  body: string
-) {
-  return axios.post(`${getApiBaseUrl()}/api/course/note/update`, {
-    sectionId,
-    termId,
-    body
-  }).then(response => response.data)
-}
-
-export function updatePublishType(canvasSiteIds: string[], publishType: string, sectionId: number, termId: number) {
-  const url = `${getApiBaseUrl()}/api/course/publish_type/update`
-  return axios.post(url, {canvasSiteIds, publishType, sectionId, termId}).then(response => response.data)
-}
-
 export function toggleCourseOptIn(
   optIn: boolean,
   sectionId: number,
@@ -93,4 +71,31 @@ export function toggleInstructorOptIn(
     termId
   }
   return axios.post(url, params).then(response => response.data)
+}
+
+export function updateCollaborators(sectionId: number, termId: number, uids: string[]) {
+  const url = `${getApiBaseUrl()}/api/course/collaborators/update`
+  return axios.post(url, {sectionId, termId, uids}).then(response => response.data)
+}
+
+export function updateCourseNote(
+  termId: number,
+  sectionId: number,
+  body: string
+) {
+  return axios.post(`${getApiBaseUrl()}/api/course/note/update`, {
+    sectionId,
+    termId,
+    body
+  }).then(response => response.data)
+}
+
+export function updatePublishType(canvasSiteIds: string[], publishType: string, sectionId: number, termId: number) {
+  const url = `${getApiBaseUrl()}/api/course/publish_type/update`
+  return axios.post(url, {canvasSiteIds, publishType, sectionId, termId}).then(response => response.data)
+}
+
+export function updateRecordingType(recordingType: string, sectionId: number, termId: number) {
+  const url = `${getApiBaseUrl()}/api/course/recording_type/update`
+  return axios.post(url, {recordingType, sectionId, termId}).then(response => response.data)
 }

@@ -160,17 +160,19 @@
               @click="cancel"
             />
           </div>
-          <div v-if="!isEditing" class="mt-3">
+          <v-expand-transition v-if="!isEditing">
             <v-btn
+              v-if="course.hasOptedIn"
               id="btn-publish-type-edit"
               aria-label="Edit collaborators"
+              class="mt-3"
               color="primary"
               density="comfortable"
               :disabled="disableButtons || !course.hasOptedIn"
               text="Edit"
               @click="edit"
             />
-          </div>
+          </v-expand-transition>
         </div>
       </div>
     </v-col>
