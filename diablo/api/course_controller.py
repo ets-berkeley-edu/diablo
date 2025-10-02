@@ -379,7 +379,14 @@ def update_recording_type():
         if recording_type == 'presenter_presentation_audio_with_operator':
             QueuedEmail.notify_admin_operator_requested(course)
 
-    return tolerant_jsonify(preferences.to_api_json())
+    return tolerant_jsonify(SisSection.get_course(
+        term_id,
+        section_id,
+        include_canvas_sites=True,
+        include_deleted=True,
+        include_notes=current_user.is_admin,
+        include_update_history=True,
+    ))
 
 
 @app.route('/api/courses/report/<term_id>')
