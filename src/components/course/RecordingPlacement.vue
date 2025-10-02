@@ -11,7 +11,7 @@
           <label for="select-publish-type">Recording Placement</label>
         </h3>
         <div v-if="!isEditing" class="ml-2 py-2">
-          {{ publishType ? courseStore.displayLabels[publishType] : 'None' }}
+          {{ publishType ? displayLabels[publishType] : 'None' }}
           <div v-if="course.canvasSites.length" class="border-sm mt-2 pa-4 pl-6">
             Linked bCourses site{{ course.canvasSites.length === 1 ? '' : 's' }}:
             <ul>
@@ -34,7 +34,7 @@
               v-for="publishTypeOption in publishTypeOptions"
               :id="`radio-publish-type-${publishTypeOption}`"
               :key="publishTypeOption"
-              :label="courseStore.displayLabels[publishTypeOption]"
+              :label="displayLabels[publishTypeOption]"
               :value="publishTypeOption"
             />
           </v-radio-group>
@@ -83,7 +83,7 @@
                   </v-select>
                   <div id="canvas-site-menu-container" ref="menuContainer" />
                 </div>
-                <div v-if="currentUser.isAdmin">
+                <div v-if="currentUser.isAdmin" class="my-3">
                   <v-text-field
                     id="input-canvas-site-id"
                     v-model="pendingCanvasSiteId"
@@ -139,9 +139,9 @@
           </v-expand-transition>
         </div>
         <div class="ml-2">
-          <div v-if="isEditing" class="mt-3">
+          <div v-if="isEditing" class="mt-6">
             <ProgressButton
-              id="btn-save-note"
+              id="btn-publish-type-save"
               :action="update"
               aria-label="Save Note"
               density="comfortable"
@@ -150,7 +150,7 @@
               :text="isSaving ? 'Saving' : 'Save'"
             />
             <v-btn
-              id="btn-cancel-note"
+              id="btn-publish-type-cancel"
               aria-label="Cancel Note Edit"
               class="ml-2"
               density="comfortable"
@@ -162,7 +162,7 @@
           </div>
           <div v-if="!isEditing" class="mt-3">
             <v-btn
-              id="btn-edit-collaborators"
+              id="btn-publish-type-edit"
               aria-label="Edit collaborators"
               color="primary"
               density="comfortable"
@@ -202,6 +202,10 @@ const courseStore = useCourseStore()
 const {config, currentUser} = useContextStore()
 const {course, disableButtons} = storeToRefs(courseStore)
 const canvasSiteOptions = ref<CanvasSiteOption[]>([])
+const displayLabels = {
+  kaltura_media_gallery: 'Publish to the Media Gallery (all members of the bCourses site will have access)',
+  kaltura_my_media: `Place in My Media (${currentUser.isAdmin ? 'instructor' : 'I'} will decide if and how ${currentUser.isAdmin ? 'they' : 'I'} want to share)`
+}
 const isEditing = ref(false)
 const isFindingCanvasSite = ref(false)
 const isSaving = ref(false)
