@@ -30,7 +30,7 @@
         :on-clear="clearErrors"
         :placeholder="placeholder"
         :set-value="v => selected = v"
-        :when-item-selected="onSelectResult"
+        :when-item-selected="data => onSelectResult(data.raw)"
       />
       <slot name="append" />
     </div>
@@ -107,7 +107,7 @@ const formattedItems = computed(() =>
       title += ` (${user.uid})`
     }
     return {
-      title: title,
+      title,
       raw: user
     }
   })

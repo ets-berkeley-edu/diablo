@@ -9,33 +9,36 @@
       <h3>
         Collaborators
       </h3>
-      <PersonLookup
-        ref="personLookup"
-        class="collaborator-lookup mt-1"
-        :clear-errors="() => addCollaboratorError = undefined"
-        :disabled="courseStore.disableButtons"
-        :error-message="addCollaboratorError"
-        id-prefix="collaborator-lookup"
-        label=""
-        list-label="collaborators"
-        :on-select-result="onSelectCollaborator"
-      >
-        <template #append>
-          <v-btn
-            id="btn-collaborator-add"
-            aria-label="Add Collaborator"
-            class="ml-2"
-            color="primary"
-            :disabled="!pendingCollaborator"
-            text="Add"
-            variant="flat"
-            @click="addCollaborator"
-          />
-        </template>
-      </PersonLookup>
+      <v-expand-transition>
+        <PersonLookup
+          v-if="isEditing"
+          ref="personLookup"
+          class="collaborator-lookup mt-1"
+          :clear-errors="() => error = undefined"
+          :disabled="isSaving"
+          :error-message="error"
+          id-prefix="collaborator-lookup"
+          label=""
+          list-label="collaborators"
+          :on-select-result="onSelect"
+        >
+          <template #append>
+            <v-btn
+              id="btn-collaborator-add"
+              aria-label="Add Collaborator"
+              class="ml-2"
+              color="primary"
+              :disabled="!stagedCollaborator"
+              text="Add"
+              variant="flat"
+              @click="addCollaborator"
+            />
+          </template>
+        </PersonLookup>
+      </v-expand-transition>
       <div v-if="collaborators.length" class="d-flex flex-column ml-2 mt-3">
         <span class="font-weight-medium">
-          The following collaborator{{ collaborators.length === 1 ? '' : 's' }} will have editing and publishing access.
+          Editing and publishing access granted to:
         </span>
         <v-chip
           v-for="(collaborator, index) in collaborators"
@@ -46,13 +49,12 @@
           size="large"
         >
           {{ collaborator.firstName }} {{ collaborator.lastName }}<span v-if="collaborator.email">&nbsp;({{ collaborator.email }})</span>
-          <template #append>
+          <template v-if="course.hasOptedIn && isEditing" #append>
             <v-btn
               :id="`btn-collaborator-remove-${collaborator.uid}`"
               :aria-label="`Remove ${collaborator.firstName || ''} ${collaborator.lastName || ''} as collaborator`"
               class="ml-4"
               color="warning"
-              :disabled="courseStore.disableButtons"
               rounded
               size="small"
               text="Remove"
@@ -62,54 +64,119 @@
           </template>
         </v-chip>
       </div>
+      <div class="ml-2">
+        <div v-if="isEditing" class="mt-3">
+          <ProgressButton
+            id="btn-save-note"
+            :action="update"
+            aria-label="Save Note"
+            density="comfortable"
+            :disabled="isSaving"
+            :in-progress="isSaving"
+            :text="isSaving ? 'Saving' : 'Save'"
+          />
+          <v-btn
+            id="btn-cancel-note"
+            aria-label="Cancel Note Edit"
+            class="ml-2"
+            density="comfortable"
+            :disabled="isSaving"
+            text="Cancel"
+            variant="outlined"
+            @click="cancel"
+          />
+        </div>
+        <div v-if="!isEditing" class="mt-3">
+          <v-btn
+            id="btn-edit-collaborators"
+            aria-label="Edit collaborators"
+            color="primary"
+            density="comfortable"
+            :disabled="disableButtons || !course.hasOptedIn"
+            text="Edit"
+            @click="edit"
+          />
+        </div>
+      </div>
     </v-col>
   </v-row>
 </template>
 
 <script lang="ts" setup>
-import {ref} from 'vue'
+import {cloneDeep, find, map} from 'lodash'
+import {onMounted, ref} from 'vue'
+import {storeToRefs} from 'pinia'
 import type {Collaborator} from '@/lib/types'
 import {alertScreenReader, putFocusNextTick} from '@/lib/utils'
 import {useCourseStore} from '@/stores/course'
 import PersonLookup from '@/components/util/PersonLookup.vue'
-
-const collaborators = defineModel({required: true, type: Array<Collaborator>})
+import {updateCollaborators} from '@/api/course'
+import ProgressButton from '@/components/util/ProgressButton.vue'
 
 const courseStore = useCourseStore()
-const addCollaboratorError = ref<string | undefined>()
-const pendingCollaborator = ref<Collaborator | undefined>()
+const {course, disableButtons} = storeToRefs(courseStore)
+const collaborators = ref<Collaborator[]>([])
+const error = ref<string | undefined>()
+const isEditing = ref(false)
+const isSaving = ref(false)
 const personLookup = ref()
+const stagedCollaborator = ref<Collaborator | undefined>()
+
+onMounted(() => {
+  collaborators.value = cloneDeep(course.value.collaborators)
+})
 
 const addCollaborator = () => {
-  if (pendingCollaborator.value) {
-    const collaborator = pendingCollaborator.value.raw
-    const exists = collaborators.value.some(c => c.uid === collaborator.uid)
-    if (exists) {
-      addCollaboratorError.value = `${collaborator.firstName} ${collaborator.lastName} is already a collaborator.`
+  if (stagedCollaborator.value) {
+    if (collaborators.value.some(c => c.uid === stagedCollaborator.value.uid)) {
+      error.value = `${stagedCollaborator.value.firstName} ${stagedCollaborator.value.lastName} is already a collaborator.`
     } else {
-      pendingCollaborator.value = undefined
-      addCollaboratorError.value = undefined
-      collaborators.value.push(collaborator)
+      collaborators.value.push(stagedCollaborator.value)
+      stagedCollaborator.value = undefined
+      error.value = undefined
       personLookup.value.selected = null
-      alertScreenReader(`${collaborator.firstName} ${collaborator.lastName} added as a collaborator.`)
     }
     putFocusNextTick('collaborator-lookup-input')
   }
 }
 
-const onSelectCollaborator = collaborator => {
-  pendingCollaborator.value = collaborator
-  addCollaboratorError.value = undefined
+const cancel = () => {
+  collaborators.value = cloneDeep(course.value.collaborators)
+  isEditing.value = false
+  courseStore.setDisableButtons(false)
+  alertScreenReader('Update canceled')
+}
+
+const edit = () => {
+  courseStore.setDisableButtons(true)
+  isEditing.value = true
+  alertScreenReader('Ready to edit collaborators')
+}
+
+const onSelect = (collaborator: Collaborator) => {
+  stagedCollaborator.value = collaborator
+  error.value = undefined
 }
 
 const removeCollaborator = (uid: string, index: number) => {
-  const collaborator = collaborators.value.find(c => c.uid === uid)
+  const collaborator = find(collaborators.value, ['uid', uid])
   if (collaborator) {
     collaborators.value = collaborators.value.filter(c => c.uid !== uid)
     alertScreenReader(`${collaborator.firstName} ${collaborator.lastName} removed.`)
-    const nextId = collaborators.value[index]?.uid || null
-    putFocusNextTick(nextId ? `btn-collaborator-remove-${nextId}` : 'collaborator-lookup-input')
+    const nextUID = collaborators[index]?.uid
+    putFocusNextTick(nextUID ? `btn-collaborator-remove-${nextUID}` : 'collaborator-lookup-input')
   }
+}
+
+const update = () => {
+  const uids = map(collaborators.value, 'uid')
+  updateCollaborators(course.value.sectionId, course.value.termId, uids).then(data => {
+    courseStore.setCourse(data)
+    collaborators.value = cloneDeep(course.value.collaborators)
+    isEditing.value = false
+    courseStore.setDisableButtons(false)
+    alertScreenReader('Collaborators updated.')
+  })
 }
 </script>
 

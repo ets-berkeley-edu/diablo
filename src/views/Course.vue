@@ -25,37 +25,16 @@
         >
           <v-card class="pb-6 pt-4 px-8">
             <DescribeCourseSchedulingStatus />
-            <CoursePageInstructors class="mt-3" />
+            <CoursePageInstructors class="mt-2" />
           </v-card>
-          <v-card class="mt-4 pa-4">
-            <v-container v-if="isEligibleForCourseCapture" class="pt-0">
-              <Collaborators v-model="course.collaborators" />
+          <v-card class="mt-8 px-4 py-3">
+            <v-container v-if="isEligibleForCourseCapture">
+              <Collaborators />
               <RecordingType v-model="course.recordingType" />
               <RecordingPlacement
                 v-model:canvas-site-ids="course.canvasSiteIds"
                 v-model:publish-type="course.publishType"
               />
-              <v-row>
-                <v-col class="pb-5 pl-4 pt-1">
-                  <ProgressButton
-                    id="btn-publish-type-save"
-                    :action="save"
-                    aria-label="Save Recording Placement"
-                    :disabled="isSaving"
-                    :in-progress="isSaving"
-                    :text="isSaving ? 'Saving' : 'Save'"
-                  />
-                  <v-btn
-                    id="btn-publish-type-cancel"
-                    aria-label="Cancel Recording Placement Edit"
-                    class="ml-1"
-                    :disabled="isSaving"
-                    text="Cancel"
-                    variant="text"
-                    @click="reset"
-                  />
-                </v-col>
-              </v-row>
               <v-row v-if="!currentUser.isAdmin && course.publishType" class="mt-0">
                 <v-col>
                   <hr>
@@ -63,30 +42,22 @@
                   <KnowledgeBaseKalturaMediaGallery v-if="course.publishType.startsWith('kaltura_media_gallery')" class="mt-4" />
                 </v-col>
               </v-row>
-              <div v-if="currentUser.isAdmin" class="my-3">
-                <ScheduledCourse />
+            </v-container>
+            <div v-if="isCurrentTerm && !!capability && !hasValidMeetingTimes" class="align-start d-flex mt-4">
+              <v-icon class="mr-3 mt-1" color="error" :icon="mdiAlert" />
+              <div id="invalid-meeting-times">
+                This course is in a capture-enabled room but the meeting times are missing or invalid.
               </div>
-            </v-container>
-            <v-container v-if="isCurrentTerm && !!capability && !hasValidMeetingTimes" class="pt-6">
-              <v-row>
-                <v-col class="d-flex justify-start">
-                  <v-icon class="mr-2" color="error" :icon="mdiAlert" />
-                  <div id="invalid-meeting-times">
-                    This course is in a capture-enabled room but the meeting times are missing or invalid.
-                  </div>
-                </v-col>
-              </v-row>
-            </v-container>
-            <v-container v-if="!isCurrentTerm" class="pt-6">
-              <v-row>
-                <v-col class="d-flex justify-start">
-                  <v-icon class="mr-2" color="error" :icon="mdiAlert" />
-                  <div id="course-not-current">
-                    This course is not currently eligible for Course Capture.
-                  </div>
-                </v-col>
-              </v-row>
-            </v-container>
+            </div>
+            <div v-if="!isCurrentTerm" class="align-start d-flex mt-4">
+              <v-icon class="mr-3 mt-1" color="error" :icon="mdiAlert" />
+              <div id="course-not-current">
+                This course is not currently eligible for Course Capture.
+              </div>
+            </div>
+          </v-card>
+          <v-card v-if="currentUser.isAdmin" class="mt-8 px-4 py-6">
+            <ScheduledCourse />
           </v-card>
         </v-col>
         <v-col
@@ -100,7 +71,7 @@
       </v-row>
       <v-row v-if="currentUser.isAdmin">
         <v-col cols="12">
-          <CourseHistory :history="course.updateHistory" />
+          <CourseHistory class="mt-4" :history="course.updateHistory" />
         </v-col>
       </v-row>
     </v-container>
@@ -110,10 +81,11 @@
 <script lang="ts" setup>
 import {onMounted, ref} from 'vue'
 import {mdiAlert, mdiBookMultipleOutline} from '@mdi/js'
-import {useRoute} from 'vue-router'
 import {storeToRefs} from 'pinia'
+import {toInteger} from 'lodash'
+import {useRoute} from 'vue-router'
 import {getCourseCodes, getTermName} from '@/lib/berkeley'
-import {getCourse, updateCourse} from '@/api/course'
+import {getCourse} from '@/api/course'
 import {useContextStore} from '@/stores/context'
 import {useCourseStore} from '@/stores/course'
 import Collaborators from '@/components/course/Collaborators.vue'
@@ -124,7 +96,6 @@ import DescribeCourseSchedulingStatus from '@/components/course/DescribeCourseSc
 import KnowledgeBaseKalturaMyMedia from '@/components/course/KnowledgeBaseKalturaMyMedia.vue'
 import KnowledgeBaseKalturaMediaGallery from '@/components/course/KnowledgeBaseKalturaMediaGallery.vue'
 import PageTitle from '@/components/util/PageTitle.vue'
-import ProgressButton from '@/components/util/ProgressButton.vue'
 import RecordingPlacement from '@/components/course/RecordingPlacement.vue'
 import RecordingType from '@/components/course/RecordingType.vue'
 import ScheduledCourse from '@/components/course/ScheduledCourse.vue'
@@ -143,34 +114,17 @@ const config = contextStore.config
 const agreedToTerms = ref(false)
 const currentUser = contextStore.currentUser
 const courseDisplayTitle = ref('')
-const isSaving = ref(false)
-const sectionId = ref()
-const termId = ref()
 
 contextStore.loadingStart('Course')
 
 onMounted(() => {
   const {params} = useRoute()
-  sectionId.value = params.sectionId
-  termId.value = params.termId
-  reset()
-})
-
-const reset = () => {
-  getCourse(termId.value, sectionId.value).then(data => {
+  getCourse(toInteger(params.termId), toInteger(params.sectionId)).then(data => {
     courseStore.setCourse(data)
     agreedToTerms.value = currentUser.isAdmin
     courseDisplayTitle.value = getCourseCodes(data)[0]
     contextStore.loadingComplete(courseDisplayTitle.value)
     courseStore.setDisableButtons(false)
   })
-}
-
-const save = () => {
-  isSaving.value = true
-  updateCourse(course.value).then(data => {
-    course.value = data
-    isSaving.value = false
-  })
-}
+})
 </script>

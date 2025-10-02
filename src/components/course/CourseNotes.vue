@@ -19,7 +19,7 @@
         @click="editNote"
       />
       <v-btn
-        v-if="course.note"
+        v-if="size(course.note)"
         id="btn-delete-note"
         aria-label="Delete Note"
         class="ml-1"
@@ -46,14 +46,14 @@
         id="btn-save-note"
         :action="saveNote"
         aria-label="Save Note"
-        :disabled="!noteBody || isSaving"
+        :disabled="isSaving"
         :in-progress="isSaving"
         :text="isSaving ? 'Saving' : 'Save'"
       />
       <v-btn
         id="btn-cancel-note"
         aria-label="Cancel Note Edit"
-        class="ml-1"
+        class="ml-2"
         :disabled="isSaving"
         text="Cancel"
         variant="text"
@@ -64,7 +64,7 @@
 </template>
 
 <script lang="ts" setup>
-import {isEmpty} from 'lodash'
+import {isEmpty, size, trim} from 'lodash'
 import {ref, watch} from 'vue'
 import {storeToRefs} from 'pinia'
 import {alertScreenReader, putFocusNextTick} from '@/lib/utils'
@@ -109,16 +109,20 @@ const editNote = () => {
 }
 
 const saveNote = () => {
+  const afterNoteUpdate = (note: string | undefined) => {
+    course.value.note = note
+    noteBody.value = note
+    isEditing.value = false
+    isSaving.value = false
+    alertScreenReader('Note updated.')
+    putFocusNextTick('btn-edit-note')
+  }
+  noteBody.value = trim(noteBody.value)
   if (noteBody.value) {
     isSaving.value = true
-    updateCourseNote(course.value.termId, course.value.sectionId, noteBody.value).then((data) => {
-      course.value.note = data.note
-      noteBody.value = data.note
-      isEditing.value = false
-      isSaving.value = false
-      alertScreenReader('Note updated.')
-      putFocusNextTick('btn-edit-note')
-    })
+    updateCourseNote(course.value.termId, course.value.sectionId, noteBody.value).then(afterNoteUpdate)
+  } else {
+    deleteCourseNote(course.value.termId, course.value.sectionId).then(() => afterNoteUpdate(undefined))
   }
 }
 </script>
