@@ -1,6 +1,6 @@
 <template>
   <div>
-    Based on the selected Recording Placement, please review the following KB articles.
+    <span class="font-size-18">Based on the selected Recording Placement, please review the following KB articles.</span>
     <ul>
       <li>
         <ExternalLink

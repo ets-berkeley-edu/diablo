@@ -358,8 +358,8 @@ class CoursePage(DiabloPages):
 
     RECORDING_TYPE_TEXT = (By.ID, 'recording-type-name')
     RECORDING_TYPE_EDIT_BUTTON = By.ID, 'btn-recording-type-edit'
-    RECORDING_TYPE_NO_OP_RADIO = By.ID, 'radio-recording-type-presenter_presentation_audio'
-    RECORDING_TYPE_OP_RADIO = By.ID, 'radio-recording-type-presenter_presentation_audio_with_operator'
+    RECORDING_TYPE_NO_OP_RADIO = By.ID, 'radio-recording-type-presenter-presentation-audio'
+    RECORDING_TYPE_OP_RADIO = By.ID, 'radio-recording-type-presenter-presentation-audio-with-operator'
     RECORDING_TYPE_SAVE_BUTTON = By.ID, 'btn-recording-type-save'
     RECORDING_TYPE_CXL_BUTTON = By.ID, 'btn-recording-type-cancel'
 
@@ -393,8 +393,8 @@ class CoursePage(DiabloPages):
 
     PLACEMENT_TEXT = By.ID, 'publish-type-name'
     PLACEMENT_EDIT_BUTTON = By.ID, 'btn-publish-type-edit'
-    PLACEMENT_MY_MEDIA_RADIO = By.ID, 'radio-publish-type-kaltura_my_media'
-    PLACEMENT_AUTOMATIC_RADIO = By.ID, 'radio-publish-type-kaltura_media_gallery'
+    PLACEMENT_MY_MEDIA_RADIO = By.ID, 'radio-publish-type-kaltura-my-media'
+    PLACEMENT_AUTOMATIC_RADIO = By.ID, 'radio-publish-type-kaltura-media-gallery'
     PLACEMENT_SAVE_BUTTON = By.ID, 'btn-publish-type-save'
     PLACEMENT_CXL_BUTTON = By.ID, 'btn-publish-type-cancel'
 

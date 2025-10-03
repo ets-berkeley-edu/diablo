@@ -26,7 +26,7 @@
           >
             <v-radio
               v-for="recordingTypeOption in recordingTypeOptions"
-              :id="`radio-recording-type-${recordingTypeOption}`"
+              :id="`radio-recording-type-${recordingTypeOptions[0].replaceAll('_', '-')}`"
               :key="recordingTypeOption"
               :label="displayLabels[recordingTypeOption]"
               :value="recordingTypeOption"
@@ -94,12 +94,8 @@ import ProgressButton from '@/components/util/ProgressButton.vue'
 const courseStore = useCourseStore()
 const {course, disableButtons} = storeToRefs(courseStore)
 const canUserEdit = computed(() => {
-  if (currentUser.isAdmin) {
-    return course.value.hasOptedIn || !!find(course.value.instructors, 'hasOptedIn')
-  } else {
-    const instructor = find(course.value.instructors, ['uid', currentUser.uid])
-    return get(instructor, 'hasOptedIn', false)
-  }
+  const instructor = find(course.value.instructors, ['uid', currentUser.uid])
+  return currentUser.isAdmin || get(instructor, 'hasOptedIn', false)
 })
 const currentUser = useContextStore().currentUser
 const displayLabels = {

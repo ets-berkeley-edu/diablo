@@ -11,7 +11,7 @@
     <h3 v-if="!course.instructors.length" class="font-size-16">
       No instructors are assigned to this course
     </h3>
-    <div class="mt-3">
+    <div class="mt-2">
       <div v-if="!course.instructors.length" class="mt-1 text-medium-emphasis">
         <div v-if="currentUser.isAdmin">
           <ToggleOptIn
@@ -27,11 +27,15 @@
         </div>
       </div>
       <div
-        v-for="instructor in instructorsSorted"
+        v-for="(instructor, index) in instructorsSorted"
         :key="`instructor-${instructor.uid}`"
         class="d-flex flex-column"
       >
-        <div v-if="!currentUser.isAdmin && currentUser.uid !== instructor.uid" class="font-size-18 mt-1">
+        <div
+          v-if="!currentUser.isAdmin && currentUser.uid !== instructor.uid"
+          :class="index === 0 ? 'mt-0' : 'mt-2'"
+          class="font-size-18"
+        >
           <CoursePageInstructorLabel
             :hide-opt-in-status="initialOptedInStatusByUID[instructor.uid] !== instructor.hasOptedIn"
             :instructor="instructor"

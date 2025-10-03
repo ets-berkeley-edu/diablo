@@ -25,14 +25,14 @@
           <v-radio-group
             id="select-publish-type"
             v-model="publishType"
-            :aria-activedescendant="`radio-publish-type-${publishType}`"
+            :aria-activedescendant="`radio-publish-type-${publishType.replaceAll('_', '-')}`"
             color="primary"
             density="comfortable"
             hide-details
           >
             <v-radio
               v-for="publishTypeOption in publishTypeOptions"
-              :id="`radio-publish-type-${publishTypeOption}`"
+              :id="`radio-publish-type-${publishTypeOption.replaceAll('_', '-')}`"
               :key="publishTypeOption"
               :label="displayLabels[publishTypeOption]"
               :value="publishTypeOption"
@@ -83,7 +83,7 @@
                   </v-select>
                   <div id="canvas-site-menu-container" ref="menuContainer" />
                 </div>
-                <div v-if="currentUser.isAdmin" class="my-3">
+                <div v-if="currentUser.isAdmin" class="mt-3">
                   <v-text-field
                     id="input-canvas-site-id"
                     v-model="pendingCanvasSiteId"
@@ -107,7 +107,7 @@
                     </template>
                   </v-text-field>
                 </div>
-                <div class="d-flex flex-column">
+                <div class="d-flex flex-column pb-2">
                   <v-chip
                     v-for="(site, index) in publishCanvasSites"
                     :id="`canvas-site-${site.canvasSiteId}`"
@@ -204,12 +204,8 @@ const courseStore = useCourseStore()
 const {config, currentUser} = useContextStore()
 const {course, disableButtons} = storeToRefs(courseStore)
 const canUserEdit = computed(() => {
-  if (currentUser.isAdmin) {
-    return course.value.hasOptedIn || !!find(course.value.instructors, 'hasOptedIn')
-  } else {
-    const instructor = find(course.value.instructors, ['uid', currentUser.uid])
-    return get(instructor, 'hasOptedIn', false)
-  }
+  const instructor = find(course.value.instructors, ['uid', currentUser.uid])
+  return currentUser.isAdmin || get(instructor, 'hasOptedIn', false)
 })
 const canvasSiteOptions = ref<CanvasSiteOption[]>([])
 const displayLabels = {
