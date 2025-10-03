@@ -1,7 +1,7 @@
 <template>
   <v-card
     v-if="!contextStore.loading"
-    class="border-sm"
+    class="border-sm px-6"
   >
     <v-card-title>
       <PageTitle
@@ -12,7 +12,7 @@
     <v-card-text>
       <Spinner v-if="refreshingCourses" />
       <template v-if="!refreshingCourses">
-        <div class="optin-banner mx-4 my-4" role="note" aria-label="Course Capture opt-in change notice">
+        <div class="opt-in-banner mb-4" role="note" aria-label="Course Capture opt-in change notice">
           <p class="m-0">
             <strong>Course Capture has changed for 2025.</strong>
             You must opt in for your courses to be recorded.
@@ -21,7 +21,7 @@
               :href="gettingStartedUrl"
               target="_blank"
               rel="noopener"
-              class="optin-banner__link"
+              class="opt-in-banner__link"
             >
               Instructor Getting Started Guide
             </a>.
@@ -31,20 +31,19 @@
           v-for="(courses, index) in [eligibleCourses, ineligibleCourses]"
           :key="index"
           :aria-labelledby="`${getTableId(index)}-header`"
-          class="py-5"
           role="region"
         >
-          <h2 :id="`${getTableId(index)}-header`" class="pa-4 text-medium-emphasis w-100">
+          <h2 :id="`${getTableId(index)}-header`" class="pt-4 px-4 text-medium-emphasis w-100">
             <template v-if="index === 0">
               Courses eligible for capture
             </template>
 
             <!-- Collapsible header for in-eligible courses -->
             <button
-              v-else
+              v-if="index !== 0 && courses.length"
               class="text-left"
               type="button"
-              :aria-expanded="showIneligible.toString()"
+              :aria-expanded="showIneligible"
               :aria-controls="getTableId(index)"
               :aria-label="showIneligible
                 ? 'Collapse courses not in a course capture classroom'
@@ -94,22 +93,25 @@
                     @keydown.enter.prevent="goToCourse(course.sectionId)"
                     @keydown.space.prevent="goToCourse(course.sectionId)"
                   >
-                    <td :id="`course-${course.sectionId}-status`" columnheader="courses-table-status-th">
+                    <td
+                      :id="`course-${course.sectionId}-status`"
+                      :class="{'border-b-0': size(course.displayMeetings) > 1}"
+                      columnheader="courses-table-status-th"
+                    >
                       <div v-if="course.statusLabel === 'Canceled'" class="canceled-indicator d-flex">
                         <v-icon color="error" :icon="mdiClose" />
-                        <span class="font-weight-bold text-error">{{ course.statusLabel }}</span>
+                        <span class="font-weight-bold text-no-wrap text-error">{{ course.statusLabel }}</span>
                       </div>
                       <div v-else>
                         <v-tooltip
-                          v-if="['Pending', 'Not Opted In'].includes(course.statusLabel)"
+                          v-if="course.statusLabel && ['Pending', 'Not Opted In'].includes(course.statusLabel)"
                           :text="getStatusTooltip(course.statusLabel)"
                           location="top"
                         >
                           <template #activator="{ props }">
-                            <span v-bind="props">{{ course.statusLabel }}</span>
+                            <span v-bind="props" class="text-no-wrap">{{ course.statusLabel }}</span>
                           </template>
                         </v-tooltip>
-                        <span v-else>{{ course.statusLabel }}</span>
                       </div>
                     </td>
                     <td
@@ -202,7 +204,7 @@
                     @keydown.enter.prevent="goToCourse(course.sectionId)"
                     @keydown.space.prevent="goToCourse(course.sectionId)"
                   >
-                    <td :aria-hidden="true" colspan="3" />
+                    <td :aria-hidden="true" colspan="4" />
                     <td
                       :id="`${getTableId(index)}-${course.sectionId}-room-${meetingIndex + 1}`"
                       class="pt-0 text-no-wrap"
@@ -250,17 +252,18 @@
           </div>
         </v-row>
       </template>
-      <v-divider class="my-2" />
+      <v-divider class="mr-10 mt-2" />
 
-      <section aria-labelledby="future-courses-header" class="py-5">
-        <h2 id="future-courses-header" class="pa-4 text-medium-emphasis w-100">
+      <section aria-labelledby="future-courses-header">
+        <h2 id="future-courses-header" class="mt-8 text-medium-emphasis w-100">
           Future courses
         </h2>
-
-        <div class="px-md-4 w-100">
+        <div class="mt-2 px-md-4 w-100">
           <v-radio-group
             v-model="futureCoursesPref"
             :aria-labelledby="'future-courses-header'"
+            density="comfortable"
+            hide-details
             @update:model-value="onFutureCoursesPreferenceChange"
           >
             <v-radio
@@ -278,19 +281,20 @@
           </v-radio-group>
         </div>
       </section>
-      <v-divider class="my-2" />
 
-      <section aria-labelledby="email-settings-header" class="py-5">
-        <h2 id="email-settings-header" class="pa-4 text-medium-emphasis w-100">
+      <v-divider class="mr-10 my-6" />
+
+      <section aria-labelledby="email-settings-header">
+        <h2 id="email-settings-header" class="mt-4 text-medium-emphasis w-100">
           Email settings
         </h2>
-
         <div class="px-md-4 w-100">
           <v-checkbox
             id="email-checkbox"
             v-model="emailReceive"
-            :disabled="isEmailDisabled"
             :aria-labelledby="'email-settings-header'"
+            color="primary"
+            :disabled="isEmailDisabled"
             label="I want to receive emails from Course Capture (required if opted-in to current or future courses)"
             @update:model-value="onEmailReceiveChange"
           />
@@ -309,17 +313,18 @@ import {storeToRefs} from 'pinia'
 import {useRouter} from 'vue-router'
 import {alertScreenReader, oxfordJoin, partitionCoursesByEligibility, pluralize} from '@/lib/utils'
 import {getCourseCodes, getDisplayMeetings} from '@/lib/berkeley'
-import Days from '@/components/util/Days'
-import PageTitle from '@/components/util/PageTitle'
-import Spinner from '@/components/util/Spinner'
+import type {Course} from '@/lib/types'
+import Days from '@/components/util/Days.vue'
+import PageTitle from '@/components/util/PageTitle.vue'
+import Spinner from '@/components/util/Spinner.vue'
 import {useContextStore} from '@/stores/context'
 import {updateDoNotEmail, updateOptInNewCourses} from '@/api/user'
 const router = useRouter()
 
 const contextStore = useContextStore()
 const {config, currentUser} = storeToRefs(contextStore)
-const eligibleCourses = ref([])
-const ineligibleCourses = ref([])
+const eligibleCourses = ref<Course[]>([])
+const ineligibleCourses = ref<Course[]>([])
 const ineligibleHeaders = [
   {title: 'Status', value: 'status'},
   {title: 'Course', value: 'label'},
@@ -336,7 +341,7 @@ const pageTitle = ref('')
 const refreshingCourses = ref(false)
 
 const showIneligible = ref(false)
-const futureCoursesPref = ref(null)
+const futureCoursesPref = ref<string>()
 const emailReceive = ref(true)
 
 // Track current-course opt-ins *only* from ToggleOptIn callbacks
@@ -470,7 +475,7 @@ const onEmailReceiveChange = (value, {force = false} = {}) => {
 .v-selection-control--disabled .v-label {
   opacity: 0.6;
 }
-.optin-banner {
+.opt-in-banner {
   background-color: rgb(var(--v-theme-surface));          /* light blue */
   border: 1px solid #b3dcff;     /* subtle blue border */
   border-radius: 8px;            /* slightly rounded edges */
@@ -479,7 +484,7 @@ const onEmailReceiveChange = (value, {force = false} = {}) => {
   width: 1200px;
 }
 
-.optin-banner__link {
+.opt-in-banner__link {
   text-decoration: underline;
   text-underline-offset: 2px;
 }
