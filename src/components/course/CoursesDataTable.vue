@@ -76,8 +76,8 @@
           <!-- eslint-disable-next-line vue/no-v-for-template-key -->
           <template v-for="course in items" :key="course.sectionId">
             <tr>
-              <td v-if="showOptIn && course.statusLabel !== 'Not Eligible'" :class="tdc(course)">
-                <span>
+              <td v-if="showOptIn" :class="tdc(course)">
+                <span v-if="course.statusLabel !== 'Not Eligible'">
                   {{ course.hasOptedIn ? 'Opted In' : 'Not Opted In' }}
                 </span>
               </td>
@@ -270,7 +270,6 @@ const props = defineProps({
 
 const contextStore = useContextStore()
 const headers = ref([
-  {key: 'optIn', title: 'Opt In Status', value: 'hasOptedIn', sortable: false},
   {key: 'course', title: 'Course', sortable: true, value: 'label'},
   {key: 'section', title: 'Section', sortable: true, value: 'sectionId', class: 'w-10'},
   {key: 'room', title: 'Room', sortable: true, value: 'room.location'},
@@ -292,6 +291,9 @@ const sortBy = defineModel(
 const selectedRows = ref([])
 
 onMounted(() => {
+  if (props.showOptIn) {
+    headers.value.unshift({key: 'optIn', title: 'Opt In Status', value: 'hasOptedIn', sortable: false})
+  }
   if (!props.includeRoomColumn) {
     headers.value = filter(headers.value, h => h.title !== 'Room')
   }
