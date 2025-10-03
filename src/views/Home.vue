@@ -84,25 +84,16 @@
               <template #body="{items}">
                 <!-- eslint-disable-next-line vue/no-v-for-template-key -->
                 <template v-for="course in items" :key="course.sectionId">
-                  <tr :id="`${getTableId(index)}-${course.sectionId}`">
-                    <td
-                      v-if="index === 0"
-                      :id="`${getTableId(index)}-${course.sectionId}-hasOptedIn`"
-                      :aria-rowspan="size(course.displayMeetings)"
-                      :class="{'border-b-0': size(course.displayMeetings) > 1}"
-                      class="text-no-wrap"
-                    >
-                      <ToggleOptIn
-                        :aria-label="`Opt out course ${get(course.courseCodes, '0', course.title)}.`"
-                        :disabled="course.hasBlanketOptedOut"
-                        :initial-value="course.hasOptedIn"
-                        :instructor-uids="[currentUser.uid]"
-                        label=""
-                        :section-id="`${course.sectionId}`"
-                        :term-id="`${course.termId}`"
-                        :on-toggle="onToggleOptIn"
-                      />
-                    </td>
+                  <tr
+                    :id="`${getTableId(index)}-${course.sectionId}`"
+                    class="clickable-row"
+                    tabindex="0"
+                    role="link"
+                    :aria-label="`View details for ${course.courseCodes?.[0] || 'course'}`"
+                    @click="goToCourse(course.sectionId)"
+                    @keydown.enter.prevent="goToCourse(course.sectionId)"
+                    @keydown.space.prevent="goToCourse(course.sectionId)"
+                  >
                     <td :id="`course-${course.sectionId}-status`" columnheader="courses-table-status-th">
                       <div v-if="course.statusLabel === 'Canceled'" class="canceled-indicator d-flex">
                         <v-icon color="error" :icon="mdiClose" />
@@ -134,6 +125,7 @@
                           :id="`link-course-${course.sectionId}`"
                           class="course-link"
                           :to="`/course/${config.currentTermId}/${course.sectionId}`"
+                          @click.stop
                         >
                           {{ courseCode }}
                         </router-link>
@@ -198,7 +190,18 @@
                       <span class="sr-only">{{ course.displayMeetings[0].startTimeFormatted }} to {{ course.displayMeetings[0].endTimeFormatted }}</span>
                     </td>
                   </tr>
-                  <tr v-for="(meeting, meetingIndex) in tail(course.displayMeetings)" :id="`${getTableId(index)}-${course.sectionId}-${meetingIndex}`" :key="`${course.sectionId}-${meetingIndex}`">
+                  <tr
+                    v-for="(meeting, meetingIndex) in tail(course.displayMeetings)"
+                    :id="`${getTableId(index)}-${course.sectionId}-${meetingIndex}`"
+                    :key="`${course.sectionId}-${meetingIndex}`"
+                    class="clickable-row"
+                    tabindex="0"
+                    role="link"
+                    :aria-label="`View details for ${course.courseCodes?.[0] || 'course'}`"
+                    @click="goToCourse(course.sectionId)"
+                    @keydown.enter.prevent="goToCourse(course.sectionId)"
+                    @keydown.space.prevent="goToCourse(course.sectionId)"
+                  >
                     <td :aria-hidden="true" colspan="3" />
                     <td
                       :id="`${getTableId(index)}-${course.sectionId}-room-${meetingIndex + 1}`"
@@ -303,14 +306,15 @@ import {each, get, isEmpty, map, size, tail} from 'lodash'
 import {mdiClose, mdiVideoPlus} from '@mdi/js'
 import {computed, onMounted, ref, watch} from 'vue'
 import {storeToRefs} from 'pinia'
+import {useRouter} from 'vue-router'
 import {alertScreenReader, oxfordJoin, partitionCoursesByEligibility, pluralize} from '@/lib/utils'
 import {getCourseCodes, getDisplayMeetings} from '@/lib/berkeley'
 import Days from '@/components/util/Days'
 import PageTitle from '@/components/util/PageTitle'
 import Spinner from '@/components/util/Spinner'
-import ToggleOptIn from '@/components/course/ToggleOptIn'
 import {useContextStore} from '@/stores/context'
 import {updateDoNotEmail, updateOptInNewCourses} from '@/api/user'
+const router = useRouter()
 
 const contextStore = useContextStore()
 const {config, currentUser} = storeToRefs(contextStore)
@@ -326,7 +330,6 @@ const ineligibleHeaders = [
   {title: 'Time', value: 'time'},
 ]
 const eligibleHeaders = [
-  {title: 'Opt In', value: 'hasOptedIn'},
   ...ineligibleHeaders
 ]
 const pageTitle = ref('')
@@ -338,7 +341,6 @@ const emailReceive = ref(true)
 
 // Track current-course opt-ins *only* from ToggleOptIn callbacks
 const optedInCount = ref(0)
-const _optedInSet = new Set<string>()
 
 // Email is disabled if: (a) user opted ALL future courses in OR (b) any current course is opted in
 const isEmailDisabled = computed(() => {
@@ -370,18 +372,8 @@ onMounted(() => {
   contextStore.loadingComplete(pageTitle.value)
 })
 
-const onToggleOptIn = (_msgOrEvent, payload) => {
-  const sectionId = payload?.sectionId
-  const optedIn = !!payload?.optedIn
-  if (!sectionId) return
-  const had = _optedInSet.has(sectionId)
-  if (optedIn && !had) {
-    _optedInSet.add(sectionId)
-    optedInCount.value++
-  } else if (!optedIn && had) {
-    _optedInSet.delete(sectionId)
-    optedInCount.value--
-  }
+const goToCourse = (sectionId: string | number) => {
+  router.push(`/course/${config.value.currentTermId}/${sectionId}`)
 }
 
 const getTableId = index => {
@@ -490,5 +482,11 @@ const onEmailReceiveChange = (value, {force = false} = {}) => {
 .optin-banner__link {
   text-decoration: underline;
   text-underline-offset: 2px;
+}
+.clickable-row { cursor: pointer; }
+.clickable-row:hover { background-color: rgba(0, 0, 0, 0.03); }
+.clickable-row:focus {
+  outline: 2px solid rgb(var(--v-theme-primary));
+  outline-offset: -2px;
 }
 </style>
