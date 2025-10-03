@@ -29,14 +29,19 @@
           </v-card>
           <v-card class="mt-8 pb-4 px-4">
             <v-container v-if="isEligibleForCourseCapture">
+              <v-expand-transition>
+                <div v-if="!currentUser.isAdmin && !find(course.instructors, ['uid', currentUser.uid])?.hasOptedIn" class="font-size-18 mb-1 mt-2 text-warning">
+                  Course preferences will be editable when you opt in.
+                </div>
+              </v-expand-transition>
               <Collaborators class="pt-3" />
               <RecordingType />
               <RecordingPlacement />
               <v-row v-if="!currentUser.isAdmin && course.publishType">
                 <v-col>
                   <hr>
-                  <KnowledgeBaseKalturaMyMedia v-if="course.publishType === 'kaltura_my_media'" class="mt-4" />
-                  <KnowledgeBaseKalturaMediaGallery v-if="course.publishType.startsWith('kaltura_media_gallery')" class="mt-4" />
+                  <KnowledgeBaseKalturaMyMedia v-if="course.publishType === 'kaltura_my_media'" class="mt-6" />
+                  <KnowledgeBaseKalturaMediaGallery v-if="course.publishType.startsWith('kaltura_media_gallery')" class="mt-6" />
                 </v-col>
               </v-row>
             </v-container>
@@ -79,7 +84,7 @@
 import {onMounted, ref} from 'vue'
 import {mdiAlert, mdiBookMultipleOutline} from '@mdi/js'
 import {storeToRefs} from 'pinia'
-import {toInteger} from 'lodash'
+import {find, toInteger} from 'lodash'
 import {useRoute} from 'vue-router'
 import {getCourseCodes, getTermName} from '@/lib/berkeley'
 import {getCourse} from '@/api/course'

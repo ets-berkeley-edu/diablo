@@ -1,44 +1,50 @@
 <template>
-  <div v-if="!loading">
-    <v-card class="border-sm">
-      <v-card-title>
+  <div v-if="!loading" class="px-4 py-6">
+    <v-card class="border-sm py-3 px-6 pr-12">
+      <v-card-title class="pb-0">
         <PageTitle :icon="mdiSchoolOutline" :text="`${user.name} (${user.uid})`" />
       </v-card-title>
-      <v-card-subtitle class="body-1 mb-4 ml-14 text-subtitle-1">
+      <v-card-subtitle class="font-size-24 pl-16">
         <a :href="`mailto:${user.email}`" target="_blank">
           {{ user.email }}
         </a>
       </v-card-subtitle>
-      <div v-if="eligibleCourses.length" id="user-courses-eligible">
-        <CoursesDataTable
-          class="pt-5"
-          :courses="eligibleCourses"
-          :include-opt-in-column-for-uid="[user.uid]"
-          :include-room-column="true"
-          :message-for-courses="summarize(eligibleCourses)"
-          :refreshing="isRefreshingCourses"
-          :show-opt-in="true"
-        />
-      </div>
-      <div v-if="!isRefreshingCourses && ineligibleCourses.length" id="user-courses-ineligible">
-        <h2 class="px-4">Courses not in a course capture classroom</h2>
-        <CoursesDataTable
-          class="pt-5"
-          :courses="ineligibleCourses"
-          :include-room-column="true"
-          :message-for-courses="summarize(ineligibleCourses)"
-          :refreshing="false"
-          :show-opt-in="false"
-        />
-      </div>
-    </v-card>
-    <v-card v-if="currentUser.isAdmin" class="border-sm mt-4">
-      <v-card-title>Preferences</v-card-title>
       <v-card-text>
-        <section aria-labelledby="future-courses-header" class="py-5">
-          <h2 id="future-courses-header" class="pa-4 text-medium-emphasis w-100">
+        <div v-if="eligibleCourses.length" id="user-courses-eligible">
+          <CoursesDataTable
+            :courses="eligibleCourses"
+            :include-opt-in-column-for-uid="[user.uid]"
+            :include-room-column="true"
+            :message-for-courses="summarize(eligibleCourses)"
+            :refreshing="isRefreshingCourses"
+            :show-opt-in="false"
+          />
+        </div>
+        <div
+          v-if="!isRefreshingCourses && ineligibleCourses.length"
+          id="user-courses-ineligible"
+          class="mb-2 mt-6"
+        >
+          <h2 class="font-size-24">Courses not in a course capture classroom</h2>
+          <CoursesDataTable
+            :courses="ineligibleCourses"
+            :include-room-column="true"
+            :message-for-courses="summarize(ineligibleCourses)"
+            :refreshing="false"
+            :show-opt-in="false"
+          />
+        </div>
+      </v-card-text>
+    </v-card>
+    <v-card v-if="currentUser.isAdmin" class="border-sm mt-8 pt-6 px-6">
+      <v-card-title>
+        <h2 class="font-size-24">Preferences</h2>
+      </v-card-title>
+      <v-card-text>
+        <section aria-labelledby="future-courses-header" class="mt-3">
+          <h3 id="future-courses-header" class="font-size-18 text-medium-emphasis">
             Future courses
-          </h2>
+          </h3>
           <div class="px-md-4 w-100">
             <v-radio-group
               v-model="futureCoursesPref"
@@ -60,17 +66,15 @@
             </v-radio-group>
           </div>
         </section>
-
-        <v-divider class="my-2" />
-
-        <section aria-labelledby="email-settings-header" class="py-5">
-          <h2 id="email-settings-header" class="pa-4 text-medium-emphasis w-100">
+        <section aria-labelledby="email-settings-header">
+          <h3 id="email-settings-header" class="font-size-18 text-medium-emphasis">
             Email settings
-          </h2>
+          </h3>
           <div class="px-md-4 w-100">
             <v-checkbox
               id="email-checkbox"
               v-model="emailReceive"
+              color="primary"
               :disabled="isEmailDisabled"
               :aria-labelledby="'email-settings-header'"
               label="I want to receive emails from Course Capture (required if opted-in to current or future courses)"
@@ -80,16 +84,19 @@
         </section>
       </v-card-text>
     </v-card>
-    <v-card v-if="currentUser.isAdmin" class="border-sm mt-4">
-      <v-card-title>Notes</v-card-title>
-      <v-card-text v-if="!isEditingNote" id="note-body">
-        {{ user.note || 'No notes.' }}
+    <v-card v-if="currentUser.isAdmin" class="border-sm mt-8 pa-6">
+      <v-card-title>
+        <h2 class="font-size-24">Notes</h2>
+      </v-card-title>
+      <v-card-text v-if="!isEditingNote && user.note" id="note-body">
+        {{ user.note }}
       </v-card-text>
-      <v-card-text v-if="isEditingNote">
+      <v-card-text v-if="isEditingNote" class="pr-16">
         <v-textarea
           id="note-body-edit"
           v-model="noteBody"
           aria-describedby="undefined"
+          color="primary"
           density="compact"
           hide-details
           placeholder="Enter note text"
@@ -99,22 +106,23 @@
       <v-card-actions v-if="!isEditingNote" class="px-4 pb-4">
         <v-btn
           id="btn-edit-note"
+          color="primary"
           :disabled="isSavingNote"
+          :text="isEmpty(trim(user.note)) ? 'Create' : 'Edit'"
+          variant="flat"
           @click="editNote"
-        >
-          Edit
-        </v-btn>
+        />
         <v-btn
           v-if="user.note"
           id="btn-delete-note"
-          class="mx-3"
+          color="red"
           :disabled="isSavingNote"
+          text="Delete"
+          variant="outlined"
           @click="deleteNote"
-        >
-          Delete
-        </v-btn>
+        />
       </v-card-actions>
-      <v-card-actions v-if="isEditingNote" class="px-4 pb-4">
+      <v-card-actions v-if="isEditingNote" class="pb-4 pt-0 px-4">
         <ProgressButton
           id="btn-save-note"
           :action="saveNote"
@@ -124,13 +132,12 @@
         />
         <v-btn
           id="btn-cancel-note"
-          class="ml-2"
+          class="ml-1"
           :disabled="isSavingNote"
+          text="Cancel"
           variant="text"
           @click="cancelNote"
-        >
-          Cancel
-        </v-btn>
+        />
       </v-card-actions>
     </v-card>
   </div>
@@ -140,7 +147,7 @@
 import {computed, onMounted, ref, watch} from 'vue'
 import {useRoute} from 'vue-router'
 import {storeToRefs} from 'pinia'
-import {filter} from 'lodash'
+import {filter, isEmpty, trim} from 'lodash'
 import {mdiSchoolOutline} from '@mdi/js'
 import {alertScreenReader, partitionCoursesByEligibility, putFocusNextTick} from '@/lib/utils'
 import {getCourseCodes} from '@/lib/berkeley'
@@ -254,13 +261,13 @@ const saveNote = () => {
 }
 
 const summarize = courses => {
-  const message = `${courses.length} course${courses.length === 1 ? '' : 's'}.`
+  let message
   const scheduled = filter(courses, 'scheduled')
   if (scheduled && scheduled.length) {
-    return `${message} ${scheduled.length} ${scheduled.length === 1 ? 'has' : 'have'} recordings scheduled.`
-  } else {
-    return message
+    message = `${courses.length} course${courses.length === 1 ? '' : 's'}.`
+    message = `${message} ${scheduled.length} ${scheduled.length === 1 ? 'has' : 'have'} recordings scheduled.`
   }
+  return message
 }
 
 const onFutureCoursesPreferenceChange = (value) => {
