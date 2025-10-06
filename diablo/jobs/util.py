@@ -94,9 +94,19 @@ def get_eligible_courses(term_id):
     )
 
 
-def get_eligible_courses_by_instructor_uid(term_id):
+def get_eligible_courses_by_instructor_uid(term_id, course_filter=None):
     courses_by_instructor_uid = {}
-    for course in get_eligible_courses(term_id):
+
+    if course_filter == 'scheduled':
+        course_set = SisSection.get_courses_scheduled(term_id)
+    elif course_filter == 'partially_approved':
+        course_set = SisSection.get_courses_partially_approved(term_id)
+    elif course_filter == 'opted_out':
+        course_set = SisSection.get_courses_eligible_and_unscheduled(term_id)
+    else:
+        course_set = get_eligible_courses(term_id)
+
+    for course in course_set:
         for instructor in list(filter(lambda i: i['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES, course['instructors'])):
             if instructor['uid'] not in courses_by_instructor_uid:
                 courses_by_instructor_uid[instructor['uid']] = {'instructor': instructor, 'courses': []}

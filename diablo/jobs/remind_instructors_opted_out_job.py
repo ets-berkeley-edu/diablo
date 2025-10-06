@@ -34,7 +34,7 @@ class RemindInstructorsOptedOutJob(BaseJob):
     def _run(self):
         term_id = app.config['CURRENT_TERM_ID']
 
-        for uid, instructor_courses in get_eligible_courses_by_instructor_uid(term_id).items():
+        for uid, instructor_courses in get_eligible_courses_by_instructor_uid(term_id, course_filter='opted_out').items():
             remind_instructors_opted_out(instructor_courses['instructor'], instructor_courses['courses'])
 
     @classmethod
