@@ -34,6 +34,7 @@ from diablo.merged.emailer import get_admin_alert_recipient, send_system_error_e
 from diablo.models.course_preference import NAMES_PER_PUBLISH_TYPE, NAMES_PER_RECORDING_TYPE
 from diablo.models.email_template import EmailTemplate, email_template_type
 from diablo.models.sis_section import AUTHORIZED_INSTRUCTOR_ROLE_CODES, SisSection
+from diablo.models.user_preference import UserPreference
 
 
 class QueuedEmail(db.Model):
@@ -84,6 +85,9 @@ class QueuedEmail(db.Model):
         if not course['instructors'] and template_type != 'instructors_removed':
             app.logger.error(f'Attempt to queue email for course without instructors (term_id={term_id}, section_id={section_id})')
             return None
+        if UserPreference.get_do_not_email(recipient['uid']):
+           app.logger.info(f"Recipient {recipient['uid']} has requested no email, will not queue {template_type} message")
+           return None
         queued_email = cls(
             section_id=section_id,
             template_type=template_type,

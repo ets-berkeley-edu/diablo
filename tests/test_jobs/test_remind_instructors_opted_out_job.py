@@ -22,6 +22,8 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
+import json
+
 from flask import current_app as app
 
 from diablo import std_commit
@@ -72,3 +74,45 @@ class TestRemindInstructorsOptedOutJob:
             email_sent = emails_sent[-1]
             assert email_sent.template_type == 'remind_opted_out'
             assert email_sent.term_id == term_id
+
+    def test_opted_out_instructor_do_not_email(self, client, fake_auth):
+        """No reminder emails go out if instructor has so requested."""
+        with test_scheduling_workflow(app):
+            term_id = app.config['CURRENT_TERM_ID']
+            instructor_uid = '10008'
+
+            # Set do-not-email preference.
+            fake_auth.login(instructor_uid)
+            _api_update_do_not_email(client, uid=instructor_uid, do_not_email=True)
+            std_commit(allow_test_environment=True)
+
+            def _queued_email_count(instructor_uid):
+                return len([e for e in QueuedEmail.get_all(term_id=term_id) if e.recipient['uid'] == instructor_uid])
+
+            def _sent_email_count(instructor_uid):
+                return len(SentEmail.get_emails_sent_to(instructor_uid))
+
+            previously_sent_email_count = _sent_email_count(instructor_uid)
+            SemesterStartJob(simply_yield).run()
+            std_commit(allow_test_environment=True)
+            RemindInstructorsOptedOutJob(simply_yield).run()
+            std_commit(allow_test_environment=True)
+
+            # Verify no additional email sent to do-not-email instructors.
+            assert _queued_email_count(instructor_uid) == 0
+            EmailsJob(simply_yield).run()
+            assert _sent_email_count(instructor_uid) == previously_sent_email_count
+
+            # Remove do-not-email preference.
+            _api_update_do_not_email(client, uid=instructor_uid, do_not_email=False)
+            std_commit(allow_test_environment=True)
+
+
+def _api_update_do_not_email(client, uid, do_not_email, expected_status_code=200):
+    response = client.post(
+        f'/api/user/{uid}/do_not_email/update',
+        data=json.dumps({'doNotEmail': do_not_email}),
+        content_type='application/json',
+    )
+    assert response.status_code == expected_status_code
+    return response.json
