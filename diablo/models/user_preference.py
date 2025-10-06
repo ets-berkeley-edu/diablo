@@ -53,6 +53,13 @@ class UserPreference(db.Model):
                 """
 
     @classmethod
+    def get_do_not_email(cls, uid):
+        preferences = cls.get_user_preferences(uid)
+        if preferences and preferences.do_not_email:
+            return True
+        return False
+
+    @classmethod
     def get_user_preferences(cls, uid):
         return cls.query.filter_by(uid=uid).first()
 
