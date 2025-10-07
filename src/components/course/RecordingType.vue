@@ -26,7 +26,7 @@
           >
             <v-radio
               v-for="recordingTypeOption in recordingTypeOptions"
-              :id="`radio-recording-type-${recordingTypeOptions[0].replaceAll('_', '-')}`"
+              :id="`radio-recording-type-${recordingTypeOption.replaceAll('_', '-')}`"
               :key="recordingTypeOption"
               :label="displayLabels[recordingTypeOption]"
               :value="recordingTypeOption"
