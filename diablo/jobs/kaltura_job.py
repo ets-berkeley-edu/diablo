@@ -120,6 +120,8 @@ def _update_already_scheduled_events(term_id):  # noqa: C901, PLR0912, PLR0915
         opted_in = True
         opt_in_changes_per_instructor_uid = {}
 
+        previous_instructor_uids = None
+
         publish_to_course_sites = False
 
         # Track individual meeting patterns.
@@ -132,6 +134,8 @@ def _update_already_scheduled_events(term_id):  # noqa: C901, PLR0912, PLR0915
                 updated_collaborator_uids = schedule_update.deserialize('field_value_new')
             elif schedule_update.field_name == 'instructor_uids':
                 updated_instructor_uids = schedule_update.deserialize('field_value_new')
+                if previous_instructor_uids is None:
+                    previous_instructor_uids = schedule_update.deserialize('field_value_old')
             elif schedule_update.field_name == 'publish_type':
                 updated_publish_type = schedule_update.field_value_new
             elif schedule_update.field_name == 'recording_type':
@@ -237,10 +241,14 @@ def _update_already_scheduled_events(term_id):  # noqa: C901, PLR0912, PLR0915
         if no_longer_scheduled:
             QueuedEmail.notify_instructors_no_longer_scheduled(course)
             OptIn.clear_opt_ins(term_id, section_id)
+            continue
+
         elif no_longer_eligible:
             QueuedEmail.notify_instructors_no_longer_eligible(course)
             OptIn.clear_opt_ins(term_id, section_id)
-        elif not opted_in and course['scheduled'] is not None:
+            continue
+
+        if not opted_in and course['scheduled'] is not None:
             QueuedEmail.notify_instructors_no_longer_opted_in(course)
         else:
             scheduled = (course['scheduled'] or [{}])[0]
@@ -265,16 +273,17 @@ def _update_already_scheduled_events(term_id):  # noqa: C901, PLR0912, PLR0915
                 )
             if meetings_added or meetings_removed_by_schedule_id or meetings_updated_by_schedule_id:
                 QueuedEmail.notify_instructors_schedule_change(course)
-            if updated_instructor_uids is not None:
-                previously_scheduled_instructor_uids = scheduled.get('instructorUids') or []
-                added_instructor_uids = [i for i in updated_instructor_uids if i not in previously_scheduled_instructor_uids]
-                removed_instructor_uids = [i for i in previously_scheduled_instructor_uids if i not in updated_instructor_uids]
-                if added_instructor_uids:
-                    for instructor in instructor_json_from_uids(added_instructor_uids):
-                        QueuedEmail.notify_new_course_eligible(instructor, course)
-                if removed_instructor_uids:
-                    for instructor in instructor_json_from_uids(removed_instructor_uids):
-                        QueuedEmail.notify_instructor_removed(instructor, course)
+
+        if updated_instructor_uids is not None:
+            previous_instructor_uids = previous_instructor_uids or []
+            added_instructor_uids = [i for i in updated_instructor_uids if i not in previous_instructor_uids]
+            removed_instructor_uids = [i for i in previous_instructor_uids if i not in updated_instructor_uids]
+            if added_instructor_uids:
+                for instructor in instructor_json_from_uids(added_instructor_uids):
+                    QueuedEmail.notify_new_course_eligible(instructor, term_id)
+            if removed_instructor_uids:
+                for instructor in instructor_json_from_uids(removed_instructor_uids):
+                    QueuedEmail.notify_instructor_removed(instructor, course)
 
 
 def _handle_instructor_updates(
