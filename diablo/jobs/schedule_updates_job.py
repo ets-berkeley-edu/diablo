@@ -67,20 +67,22 @@ def _queue_schedule_updates(term_id):
         try:
             eligible_meetings = course.get('meetings', {}).get('eligible', [])
             ineligible_meetings = course.get('meetings', {}).get('ineligible', [])
+            if course['deletedAt'] or (_valid_meeting_count(eligible_meetings) + _valid_meeting_count(ineligible_meetings) == 0):
+                _queue_not_scheduled_update(course)
+                continue
 
             instructors = list(filter(lambda i: i['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES and not i['deletedAt'], course['instructors']))
             if len(instructors):
                 course = _refresh_instructor_opt_ins(course, instructors)
 
-            if course['deletedAt'] or (_valid_meeting_count(eligible_meetings) + _valid_meeting_count(ineligible_meetings) == 0):
-                _queue_not_scheduled_update(course)
-            if not course['hasOptedIn'] and len(instructors):
+            _queue_instructor_updates(course, instructors)
+
+            if not course['hasOptedIn']:
                 _queue_not_opted_in_update(course)
             elif _valid_meeting_count(eligible_meetings) == 0 and _valid_meeting_count(ineligible_meetings) > 0:
                 _queue_room_not_eligible_update(course)
             else:
                 _queue_meeting_updates(course)
-                _queue_instructor_updates(course, instructors)
                 _queue_collaborator_updates(course)
 
         except Exception as e:
@@ -89,14 +91,15 @@ def _queue_schedule_updates(term_id):
 
 
 def _queue_not_opted_in_update(course):
-    for instructor in filter(lambda i: i['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES and not i['deletedAt'], course['instructors']):
-        ScheduleUpdate.queue(
-            term_id=course['termId'],
-            section_id=course['sectionId'],
-            field_name='opted_in',
-            field_value_old=instructor['uid'],
-            field_value_new=None,
-        )
+    for instructor in course['instructors']:
+        if instructor['roleCode'] in AUTHORIZED_INSTRUCTOR_ROLE_CODES and not instructor['deletedAt'] and not instructor['hasOptedIn']:
+            ScheduleUpdate.queue(
+                term_id=course['termId'],
+                section_id=course['sectionId'],
+                field_name='opted_in',
+                field_value_old=instructor['uid'],
+                field_value_new=None,
+            )
     _downgrade_recording_type(course)
 
 
