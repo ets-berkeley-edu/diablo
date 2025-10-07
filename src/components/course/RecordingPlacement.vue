@@ -64,7 +64,7 @@
                   >
                     <template #item="{props: itemProps, item}">
                       <v-list-item
-                        :id="`menu-option-canvas-site-${item.raw.canvasSiteId}`"
+                        :id="`menu-option-canvas-site-${item.raw.value.canvasSiteId}`"
                         :disabled="isCanvasSiteIdStaged(item.raw.value.canvasSiteId)"
                         v-bind="itemProps"
                       />
