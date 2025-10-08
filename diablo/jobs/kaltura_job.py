@@ -122,8 +122,6 @@ def _update_already_scheduled_events(term_id):  # noqa: C901, PLR0912, PLR0915
 
         previous_instructor_uids = None
 
-        publish_to_course_sites = False
-
         # Track individual meeting patterns.
         meetings_added = []
         meetings_removed_by_schedule_id = {}
@@ -173,65 +171,38 @@ def _update_already_scheduled_events(term_id):  # noqa: C901, PLR0912, PLR0915
                 updated_collaborator_uids,
             )
 
-        scheduled_model = None
-        for scheduled in _get_scheduled(course):
-            kaltura_schedule = kaltura.get_event(event_id=scheduled['kalturaScheduleId'])
-            scheduled_model = Scheduled.get_by_id(scheduled['id'])
-            if kaltura_schedule:
-                if no_longer_scheduled or no_longer_eligible or not opted_in or scheduled['kalturaScheduleId'] in meetings_removed_by_schedule_id:
-                    _handle_meeting_removed(kaltura, course, scheduled, schedule_updates)
-                    continue
-
-                if updated_collaborator_uids is not None or updated_instructor_uids is not None:
-                    _handle_instructor_updates(
-                        kaltura, course, scheduled, scheduled_model, schedule_updates, kaltura_schedule, updated_collaborator_uids,
-                    )
-
-                if updated_recording_type:
-                    scheduled_model.update(recording_type=updated_recording_type)
-
-                if scheduled['publishType'] and scheduled['publishType'].startswith('kaltura_media_gallery'):
-                    if scheduled['publishType'] == 'kaltura_media_gallery_moderated':
-                        publish_to_course_sites = 'moderated'
-                    else:
-                        publish_to_course_sites = 'unmoderated'
-                else:
-                    publish_to_course_sites = None
-
-                if scheduled['kalturaScheduleId'] in meetings_updated_by_schedule_id:
-                    _handle_meeting_updates(
-                        kaltura,
-                        meetings_updated_by_schedule_id,
-                        scheduled['kalturaScheduleId'],
-                        scheduled_model,
-                        schedule_updates,
-                    )
-            else:
-                app.logger.warning(
-                    f"The previously scheduled {course['label']} schedule id {scheduled['kalturaScheduleId']} was not found in Kaltura.",
-                )
-
-        if updated_publish_type and scheduled_model:
-            publish_to_course_sites = _handle_publish_type_update(updated_publish_type, scheduled_model)
-
-        if updated_publish_type or updated_canvas_site_ids:
-            update_options = _construct_schedule_update_options(course, updated_publish_type, updated_recording_type, updated_collaborator_uids)
-            updated_canvas_site_ids = _handle_course_site_categories(
+        if course['scheduled'] is not None:
+            _handle_scheduled_course_updates(
                 kaltura,
                 course,
-                publish_to_course_sites,
+                no_longer_scheduled,
+                no_longer_eligible,
+                opted_in,
+                meetings_added,
+                meetings_removed_by_schedule_id,
+                meetings_updated_by_schedule_id,
                 schedule_updates,
-                update_options,
+                updated_canvas_site_ids,
+                updated_collaborator_uids,
+                updated_instructor_uids,
+                updated_publish_type,
+                updated_recording_type,
+            )
+
+            _mark_success(
+                schedule_updates,
+                (
+                    'publish_type',
+                    'recording_type',
+                    'collaborator_uids',
+                    'canvas_site_ids',
+                ),
             )
 
         _mark_success(
             schedule_updates,
             (
-                'publish_type',
-                'recording_type',
                 'instructor_uids',
-                'collaborator_uids',
-                'canvas_site_ids',
                 'not_scheduled',
                 'opted_in',
                 'room_not_eligible',
@@ -248,32 +219,6 @@ def _update_already_scheduled_events(term_id):  # noqa: C901, PLR0912, PLR0915
             OptIn.clear_opt_ins(term_id, section_id)
             continue
 
-        if not opted_in and course['scheduled'] is not None:
-            QueuedEmail.notify_instructors_no_longer_opted_in(course)
-        else:
-            scheduled = (course['scheduled'] or [{}])[0]
-            if updated_publish_type or\
-                    updated_recording_type or\
-                    updated_collaborator_uids is not None or\
-                    updated_canvas_site_ids is not None:
-                collaborator_uids = updated_collaborator_uids
-                if collaborator_uids is None:
-                    collaborator_uids = scheduled.get('collaboratorUids', [])
-
-                canvas_site_ids = updated_canvas_site_ids
-                if canvas_site_ids is None:
-                    canvas_site_ids = course.get('canvasSiteIds', [])
-
-                QueuedEmail.notify_instructors_changes_confirmed(
-                    course,
-                    collaborator_uids=collaborator_uids,
-                    canvas_site_ids=canvas_site_ids,
-                    publish_type=updated_publish_type or scheduled.get('publishType'),
-                    recording_type=updated_recording_type or scheduled.get('recordingType'),
-                )
-            if meetings_added or meetings_removed_by_schedule_id or meetings_updated_by_schedule_id:
-                QueuedEmail.notify_instructors_schedule_change(course)
-
         if updated_instructor_uids is not None:
             previous_instructor_uids = previous_instructor_uids or []
             added_instructor_uids = [i for i in updated_instructor_uids if i not in previous_instructor_uids]
@@ -284,6 +229,101 @@ def _update_already_scheduled_events(term_id):  # noqa: C901, PLR0912, PLR0915
             if removed_instructor_uids:
                 for instructor in instructor_json_from_uids(removed_instructor_uids):
                     QueuedEmail.notify_instructor_removed(instructor, course)
+
+
+def _handle_scheduled_course_updates(  # noqa: C901, PLR0912
+    kaltura,
+    course,
+    no_longer_scheduled,
+    no_longer_eligible,
+    opted_in,
+    meetings_added,
+    meetings_removed_by_schedule_id,
+    meetings_updated_by_schedule_id,
+    schedule_updates,
+    updated_canvas_site_ids,
+    updated_collaborator_uids,
+    updated_instructor_uids,
+    updated_publish_type,
+    updated_recording_type,
+):
+
+    publish_to_course_sites = None
+
+    for scheduled in _get_scheduled(course):
+        kaltura_schedule = kaltura.get_event(event_id=scheduled['kalturaScheduleId'])
+        scheduled_model = Scheduled.get_by_id(scheduled['id'])
+        if kaltura_schedule:
+            if no_longer_scheduled or no_longer_eligible or not opted_in or scheduled['kalturaScheduleId'] in meetings_removed_by_schedule_id:
+                _handle_meeting_removed(kaltura, course, scheduled, schedule_updates)
+                continue
+
+            if updated_collaborator_uids is not None or updated_instructor_uids is not None:
+                _handle_instructor_updates(
+                    kaltura, course, scheduled, scheduled_model, schedule_updates, kaltura_schedule, updated_collaborator_uids,
+                )
+
+            if updated_recording_type:
+                scheduled_model.update(recording_type=updated_recording_type)
+
+            if updated_publish_type:
+                publish_to_course_sites = _handle_publish_type_update(updated_publish_type, scheduled_model)
+            elif scheduled['publishType'] and scheduled['publishType'].startswith('kaltura_media_gallery'):
+                if scheduled['publishType'] == 'kaltura_media_gallery_moderated':
+                    publish_to_course_sites = 'moderated'
+                else:
+                    publish_to_course_sites = 'unmoderated'
+            else:
+                publish_to_course_sites = None
+
+
+            if scheduled['kalturaScheduleId'] in meetings_updated_by_schedule_id:
+                _handle_meeting_updates(
+                    kaltura,
+                    meetings_updated_by_schedule_id,
+                    scheduled['kalturaScheduleId'],
+                    scheduled_model,
+                    schedule_updates,
+                )
+        else:
+            app.logger.warning(
+                f"The previously scheduled {course['label']} schedule id {scheduled['kalturaScheduleId']} was not found in Kaltura.",
+            )
+
+    if updated_publish_type or updated_canvas_site_ids:
+        update_options = _construct_schedule_update_options(course, updated_publish_type, updated_recording_type, updated_collaborator_uids)
+        updated_canvas_site_ids = _handle_course_site_categories(
+            kaltura,
+            course,
+            publish_to_course_sites,
+            schedule_updates,
+            update_options,
+        )
+
+    if not opted_in:
+        QueuedEmail.notify_instructors_no_longer_opted_in(course)
+    else:
+        if updated_publish_type or\
+                updated_recording_type or\
+                updated_collaborator_uids is not None or\
+                updated_canvas_site_ids is not None:
+            collaborator_uids = updated_collaborator_uids
+            if collaborator_uids is None:
+                collaborator_uids = scheduled.get('collaboratorUids', [])
+
+            canvas_site_ids = updated_canvas_site_ids
+            if canvas_site_ids is None:
+                canvas_site_ids = course.get('canvasSiteIds', [])
+
+            QueuedEmail.notify_instructors_changes_confirmed(
+                course,
+                collaborator_uids=collaborator_uids,
+                canvas_site_ids=canvas_site_ids,
+                publish_type=updated_publish_type or scheduled.get('publishType'),
+                recording_type=updated_recording_type or scheduled.get('recordingType'),
+            )
+        if meetings_added or meetings_removed_by_schedule_id or meetings_updated_by_schedule_id:
+            QueuedEmail.notify_instructors_schedule_change(course)
 
 
 def _handle_instructor_updates(
