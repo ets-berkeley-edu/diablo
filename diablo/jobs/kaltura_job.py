@@ -97,7 +97,7 @@ def _update_already_scheduled_events(term_id):  # noqa: C901, PLR0912, PLR0915
 
         # Schedule updates may require the Kaltura series to be deleted and recreated, and will not be processed if recording is currently underway.
         is_currently_recording = False
-        for scheduled in course['scheduled'] or []:
+        for scheduled in _get_scheduled(course):
             if is_meeting_in_session(scheduled):
                 is_currently_recording = True
                 break
@@ -174,7 +174,7 @@ def _update_already_scheduled_events(term_id):  # noqa: C901, PLR0912, PLR0915
             )
 
         scheduled_model = None
-        for scheduled in course['scheduled'] or []:
+        for scheduled in _get_scheduled(course):
             kaltura_schedule = kaltura.get_event(event_id=scheduled['kalturaScheduleId'])
             scheduled_model = Scheduled.get_by_id(scheduled['id'])
             if kaltura_schedule:
@@ -419,7 +419,7 @@ def _handle_course_site_categories(kaltura, course, publish_to_course_sites, sch
     schedule_ids_to_update = []
     schedule_deletion_required = False
 
-    for scheduled in course['scheduled'] or []:
+    for scheduled in _get_scheduled(course):
         try:
             kaltura_schedule = kaltura.get_event(event_id=scheduled['kalturaScheduleId'])
             template_entry_id = kaltura_schedule['templateEntryId']
@@ -449,7 +449,7 @@ def _handle_course_site_categories(kaltura, course, publish_to_course_sites, sch
     if schedule_deletion_required:
         try:
             app.logger.info(f"{course['label']}: will delete and recreate Kaltura schedule(s) to remove existing categories")
-            for scheduled in course['scheduled'] or []:
+            for scheduled in _get_scheduled(course):
                 kaltura.delete(scheduled['kalturaScheduleId'], force_delete_past_events=True)
                 Scheduled.delete(term_id=course['termId'], section_id=course['sectionId'], kaltura_schedule_id=scheduled['kalturaScheduleId'])
             rescheduled = schedule_recordings(course, updates=update_options)
@@ -493,7 +493,7 @@ def _handle_course_site_categories(kaltura, course, publish_to_course_sites, sch
 
 
 def _construct_schedule_update_options(course, updated_publish_type=None, updated_recording_type=None, updated_collaborator_uids=None):
-    existing_scheduled = course['scheduled'][0] if len(course['scheduled']) else {}
+    existing_scheduled = next((_get_scheduled(course)), {})
 
     updates = {
         'publishType': updated_publish_type or existing_scheduled.get('publishType'),
@@ -504,6 +504,13 @@ def _construct_schedule_update_options(course, updated_publish_type=None, update
     else:
         updates['collaboratorUids'] = updated_collaborator_uids
     return updates
+
+
+def _get_scheduled(course):
+    scheduled = course.get('scheduled')
+    if scheduled is not None:
+        for s in scheduled:
+            yield s
 
 
 def _mark_success(schedule_updates, field_names, kaltura_schedule_id=None):
