@@ -13,7 +13,7 @@
     </h3>
     <div class="mt-2">
       <div v-if="!course.instructors.length" class="mt-1 text-medium-emphasis">
-        <div v-if="currentUser.isAdmin">
+        <div v-if="currentUser.isAdmin && !course.deletedAt">
           <ToggleOptIn
             :id="`toggle-opt-in-${course.termId}-${course.sectionId}`"
             v-model:has-opted-in="course.hasOptedIn"

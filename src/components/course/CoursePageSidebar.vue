@@ -130,7 +130,7 @@
     <v-expand-transition>
       <v-row v-if="currentUser.isAdmin && course.hasOptedIn" id="opted-out" class="mt-3">
         <v-col class="py-1" cols="auto">
-          <v-icon color="primary" :icon="mdiMinusCircle" />
+          <v-icon color="primary" :icon="mdiCheckboxMarkedCircle" />
         </v-col>
         <v-col class="py-1">Opted in</v-col>
       </v-row>
@@ -144,11 +144,11 @@ import {onMounted, ref} from 'vue'
 import {DateTime} from 'luxon'
 import {
   mdiCalendar,
+  mdiCheckboxMarkedCircle,
   mdiClockOutline,
   mdiFormatLineSpacing,
   mdiMapMarker,
-  mdiMinusCircle,
-  mdiSchoolOutline
+  mdiSchoolOutline,
 } from '@mdi/js'
 import {storeToRefs} from 'pinia'
 import type {Meeting} from '@/lib/types'

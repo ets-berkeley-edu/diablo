@@ -205,7 +205,7 @@ const {config, currentUser} = useContextStore()
 const {course, disableButtons} = storeToRefs(courseStore)
 const canUserEdit = computed(() => {
   const instructor = find(course.value.instructors, ['uid', currentUser.uid])
-  return currentUser.isAdmin || get(instructor, 'hasOptedIn', false)
+  return (currentUser.isAdmin && !course.value.deletedAt) || get(instructor, 'hasOptedIn', false)
 })
 const canvasSiteOptions = ref<CanvasSiteOption[]>([])
 const displayLabels = {
