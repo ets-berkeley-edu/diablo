@@ -128,8 +128,8 @@ class QueuedEmail(db.Model):
 
     @classmethod
     def notify_instructors_changes_confirmed(cls, course, collaborator_uids, canvas_site_ids, publish_type, recording_type):
-        publish_type_name = NAMES_PER_PUBLISH_TYPE[publish_type]
-        recording_type_name = NAMES_PER_RECORDING_TYPE[recording_type]
+        publish_type_name = NAMES_PER_PUBLISH_TYPE.get(publish_type, 'Not specified')
+        recording_type_name = NAMES_PER_RECORDING_TYPE.get(recording_type, 'Not specified')
         collaborator_names = _get_collaborator_names(collaborator_uids)
 
         if canvas_site_ids:
