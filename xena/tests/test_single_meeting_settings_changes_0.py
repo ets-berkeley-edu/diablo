@@ -71,7 +71,7 @@ class TestScheduling0:
         util.reset_section_and_user_test_data([self.section], [self.instructor])
 
     def test_new_class_eligible_email(self):
-        self.jobs_page.run_schedule_update_job_sequence()
+        self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
         assert util.get_sent_email_count(EmailTemplateType.NEW_CLASS_ELIGIBLE, section=None,
                                          instructor=self.instructor) == 1
 
@@ -119,7 +119,7 @@ class TestScheduling0:
     # INSTRUCTOR LOGS IN
 
     def test_instructor_login(self):
-        self.login_page.dev_auth(self.instructor)
+        self.login_page.dev_auth(self.instructor.uid)
         self.courses_page.click_course_page_link(self.section)
         self.course_page.wait_for_diablo_title(f'{self.section.code}, {self.section.number}')
 
@@ -157,12 +157,12 @@ class TestScheduling0:
 
     def test_opt_in(self):
         self.courses_page.load_instructor_homepage()
-        self.courses_page.set_course_opt_in(self.section)
+        self.courses_page.click_course_page_link(self.section)
+        self.course_page.instructor_opt_in_section(self.section, self.instructor)
 
     def test_rec_type_options(self):
-        self.courses_page.click_course_page_link(self.section)
         self.course_page.click_rec_type_edit_button()
-        assert not self.course_page.is_present(self.course_page.RECORDING_TYPE_NO_OP_RADIO)
+        assert self.course_page.is_present(self.course_page.RECORDING_TYPE_NO_OP_RADIO)
         assert self.course_page.is_present(self.course_page.RECORDING_TYPE_OP_RADIO)
 
     def test_rec_placement_options(self):
@@ -173,17 +173,14 @@ class TestScheduling0:
 
     # VERIFY DEFAULT SETTINGS AND EXTERNAL LINKS
 
-    def test_default_instructors(self):
-        assert self.course_page.visible_instructor_uids() == [str(self.instructor.uid)]
-
     def test_no_collaborators(self):
         assert not self.course_page.visible_collaborator_uids()
 
     def test_default_recording_type(self):
-        assert self.course_page.visible_recording_type() == self.recording_schedule.recording_type.value['desc']
+        assert self.course_page.visible_recording_type() == RecordingType.VIDEO_SANS_OPERATOR.value['desc']
 
     def test_default_recording_placement(self):
-        assert self.recording_schedule.recording_placement.value['desc'] in self.course_page.visible_recording_placement()
+        assert RecordingPlacement.PLACE_IN_MY_MEDIA.value['desc'] in self.course_page.visible_recording_placement()
 
     def test_no_instructor_kaltura_link(self):
         assert not self.course_page.is_present(self.course_page.kaltura_series_link(self.recording_schedule))
@@ -365,7 +362,7 @@ class TestScheduling0:
 
     def test_course_history_canvas_site(self):
         self.course_page.verify_history_row(field='canvas_site_ids',
-                                            old_value='—',
+                                            old_value=[],
                                             new_value=CoursePage.expected_site_ids_converter([self.site]),
                                             requestor=self.instructor,
                                             status='queued')
@@ -504,7 +501,7 @@ class TestScheduling0:
 
     def test_course_history_canvas_site_updated(self):
         self.course_page.verify_history_row(field='canvas_site_ids',
-                                            old_value='—',
+                                            old_value=[],
                                             new_value=CoursePage.expected_site_ids_converter([self.site]),
                                             requestor=self.instructor,
                                             status='succeeded',

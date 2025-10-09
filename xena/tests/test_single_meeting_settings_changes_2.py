@@ -78,7 +78,7 @@ class TestScheduling2:
         util.reset_section_and_user_test_data([self.section], [self.instructor_0, self.instructor_1])
 
     def test_new_class_eligible_email_instructor_0(self):
-        self.jobs_page.run_schedule_update_job_sequence()
+        self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
         assert util.get_sent_email_count(EmailTemplateType.NEW_CLASS_ELIGIBLE, section=None,
                                          instructor=self.instructor_0) == 1
 
@@ -98,13 +98,12 @@ class TestScheduling2:
         self.canvas_page.add_user_to_site(self.site_1, self.instructor_0, 'Teacher')
         self.canvas_page.add_user_to_site(self.site_1, self.instructor_1, 'Lead TA')
 
-    # VERIFY STATIC COURSE SIS DATA
+    # VERIFY STATIC COURSE SIS DATA, OPT IN
 
     def test_visible_section_sis_data(self):
         self.kaltura_page.close_window_and_switch()
         self.login_page.dev_auth(self.instructor_0.uid)
-        self.courses_page.set_course_opt_in(self.section)
-        self.instructor_page.click_course_page_link(self.section)
+        self.courses_page.click_course_page_link(self.section)
         self.course_page.wait_for_diablo_title(f'{self.section.code}, {self.section.number}')
         self.course_page.verify_section_sis_data(self.section)
 
@@ -114,6 +113,9 @@ class TestScheduling2:
     def test_visible_listings(self):
         listing_codes = [li.code for li in self.section.listings]
         assert self.course_page.visible_cross_listing_codes() == listing_codes
+
+    def test_instructor_opt_in(self):
+        self.course_page.instructor_opt_in_section(self.section, self.instructor_0)
 
     # VERIFY AVAILABLE OPTIONS
 
@@ -201,8 +203,7 @@ class TestScheduling2:
     # TODO def test_partial_approval_messaging_instr_1
 
     def test_opt_in(self):
-        self.courses_page.load_instructor_homepage()
-        self.courses_page.set_course_opt_in(self.section)
+        self.course_page.instructor_opt_in_section(self.section, self.instructor_1)
 
     def test_another_site_add_to_channels(self):
         self.course_page.click_edit_recording_placement()
@@ -223,7 +224,7 @@ class TestScheduling2:
 
     def test_schedule_recordings(self):
         self.login_page.dev_auth()
-        self.jobs_page.run_schedule_update_job_sequence()
+        self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
         assert util.get_kaltura_id(self.recording_schedule)
         self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
         self.recording_schedule.recording_placement = RecordingPlacement.PLACE_IN_MY_MEDIA

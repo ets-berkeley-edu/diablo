@@ -73,6 +73,10 @@ class TestCourseInstructorChanges:
 
     def test_set_old_instructor_first(self):
         util.change_course_instructor(self.section, self.new_instructor, self.old_instructor)
+        self.section.instructors = [self.old_instructor]
+
+    def test_schedule_update(self):
+        self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
 
     def test_create_course_site(self):
         self.canvas_page.create_site(self.section, self.site)
@@ -82,11 +86,12 @@ class TestCourseInstructorChanges:
 
     def test_old_instructor_opt_in(self):
         self.login_page.dev_auth(self.old_instructor.uid)
-        self.courses_page.set_course_opt_in(self.section)
+        self.courses_page.click_course_page_link(self.section)
+        self.course_page.instructor_opt_in_section(self.section, self.old_instructor)
 
     def test_old_instructor_recordings_scheduled(self):
         self.login_page.dev_auth()
-        self.jobs_page.run_kaltura_job_sequence()
+        self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
         util.get_kaltura_id(self.recording_schedule)
         self.recording_schedule.recording_placement = RecordingPlacement.PLACE_IN_MY_MEDIA
         self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
@@ -130,6 +135,7 @@ class TestCourseInstructorChanges:
 
     def test_change_to_new_instructor(self):
         util.change_course_instructor(self.section, self.old_instructor, self.new_instructor)
+        self.section.instructors = [self.new_instructor]
 
     def test_recordings_unscheduled(self):
         self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
@@ -145,7 +151,8 @@ class TestCourseInstructorChanges:
 
     def test_new_instructor_opts_in(self):
         self.login_page.dev_auth(self.new_instructor.uid)
-        self.courses_page.set_course_opt_in(self.section)
+        self.courses_page.click_course_page_link(self.section)
+        self.course_page.instructor_opt_in_section(self.section, self.new_instructor)
 
     # UPDATE KALTURA SERIES
 
@@ -153,13 +160,11 @@ class TestCourseInstructorChanges:
         self.login_page.dev_auth()
         self.jobs_page.run_kaltura_job_sequence()
         assert util.get_kaltura_id(self.recording_schedule)
-        self.recording_schedule.recording_placement = RecordingPlacement.PLACE_IN_MY_MEDIA
-        self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
 
     def test_new_instructor_class_scheduled_email(self):
         assert util.get_sent_email_count(EmailTemplateType.CLASS_SCHEDULED, self.section, self.new_instructor) == 1
 
-    # VERIFY SERIES INSTRUCTOR UPDATED AND SETTINGS REVERTED TO DEFAULT
+    # VERIFY SERIES INSTRUCTOR UPDATED AND SETTINGS PRESERVED
 
     def test_room_series(self):
         self.rooms_page.navigate_to_room_page(self.meeting.room)
@@ -187,7 +192,7 @@ class TestCourseInstructorChanges:
 
     def test_rescheduled_series_publish_type(self):
         self.kaltura_page.verify_publish_status(self.recording_schedule)
-        self.kaltura_page.verify_site_categories([])
+        self.kaltura_page.verify_site_categories([self.site])
 
     # HISTORY
 
@@ -210,7 +215,7 @@ class TestCourseInstructorChanges:
 
     def test_history_canvas_site(self):
         self.course_page.verify_history_row(field='canvas_site_ids',
-                                            old_value='—',
+                                            old_value=[],
                                             new_value=CoursePage.expected_site_ids_converter([self.site]),
                                             requestor=self.old_instructor,
                                             status='succeeded',
@@ -223,28 +228,3 @@ class TestCourseInstructorChanges:
                                             requestor=None,
                                             status='succeeded',
                                             published=True)
-
-    def test_history_rec_placement_revert(self):
-        self.course_page.verify_history_row(field='publish_type',
-                                            old_value=RecordingPlacement.PUBLISH_AUTOMATICALLY.value['db'],
-                                            new_value=RecordingPlacement.PLACE_IN_MY_MEDIA.value['db'],
-                                            requestor=self.new_instructor,
-                                            status='succeeded',
-                                            published=True)
-
-    def test_history_rec_type_revert(self):
-        self.course_page.verify_history_row(field='recording_type',
-                                            old_value=RecordingType.VIDEO_WITH_OPERATOR.value['db'],
-                                            new_value=RecordingType.VIDEO_SANS_OPERATOR.value['db'],
-                                            requestor=self.new_instructor,
-                                            status='succeeded',
-                                            published=True)
-
-    def test_history_canvas_site_revert(self):
-        self.course_page.verify_history_row(field='canvas_site_ids',
-                                            old_value=CoursePage.expected_site_ids_converter([self.site]),
-                                            new_value='—',
-                                            requestor=self.new_instructor,
-                                            status='succeeded',
-                                            published=True)
-

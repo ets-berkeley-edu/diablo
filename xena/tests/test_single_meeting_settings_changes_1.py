@@ -69,7 +69,7 @@ class TestScheduling1:
         util.reset_section_and_user_test_data([self.section], [self.instructor])
 
     def test_new_class_eligible_email(self):
-        self.jobs_page.run_schedule_update_job_sequence()
+        self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
         assert util.get_sent_email_count(EmailTemplateType.NEW_CLASS_ELIGIBLE, section=None,
                                          instructor=self.instructor) == 1
 
@@ -129,8 +129,9 @@ class TestScheduling1:
     # VERIFY AVAILABLE OPTIONS
 
     def test_admin_opt_in(self):
-        self.instructor_page.load_page(self.instructor)
-        self.instructor_page.set_course_opt_in(self.section)
+        self.instructor_page.load_admin_page(self.instructor)
+        self.instructor_page.click_course_page_link(self.section)
+        self.course_page.admin_opt_in_section(self.section)
 
     # TODO def test_opted_in_messaging
 
@@ -150,7 +151,6 @@ class TestScheduling1:
         assert not self.course_page.element(self.course_page.PLACEMENT_SAVE_BUTTON).is_enabled()
 
     def test_add_new_site(self):
-        self.course_page.click_edit_recording_placement()
         self.course_page.enter_recording_placement(RecordingPlacement.PUBLISH_AUTOMATICALLY, sites=[self.site])
         self.course_page.save_recording_placement_edits()
         self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_AUTOMATICALLY
@@ -232,7 +232,7 @@ class TestScheduling1:
         self.kaltura_page.verify_publish_status(self.recording_schedule)
 
     def test_kaltura_course_site(self):
-        self.kaltura_page.verify_site_categories([])
+        self.kaltura_page.verify_site_categories([self.site])
 
     # VERIFY EMAILS
 
@@ -248,7 +248,7 @@ class TestScheduling1:
         self.kaltura_page.close_window_and_switch()
         self.course_page.load_page(self.section)
         self.course_page.verify_history_row(field='publish_type',
-                                            old_value=RecordingPlacement.PLACE_IN_MY_MEDIA.value['db'],
+                                            old_value='—',
                                             new_value=RecordingPlacement.PUBLISH_AUTOMATICALLY.value['db'],
                                             requestor=self.admin,
                                             status='succeeded',
@@ -256,7 +256,7 @@ class TestScheduling1:
 
     def test_course_history_canvas_site_updated(self):
         self.course_page.verify_history_row(field='canvas_site_ids',
-                                            old_value='—',
+                                            old_value=[],
                                             new_value=CoursePage.expected_site_ids_converter([self.site]),
                                             requestor=self.admin,
                                             status='succeeded',

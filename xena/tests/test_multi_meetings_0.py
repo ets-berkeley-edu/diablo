@@ -84,7 +84,8 @@ class TestWeirdTypeB:
 
     def test_instructor_opts_in(self):
         self.login_page.dev_auth(self.original_instructor.uid)
-        self.courses_page.set_course_opt_in(self.section)
+        self.courses_page.click_course_page_link(self.section)
+        self.course_page.instructor_opt_in_section(self.section, self.original_instructor)
 
     def test_schedule_recordings(self):
         self.login_page.dev_auth()
@@ -232,7 +233,8 @@ class TestWeirdTypeB:
 
     def test_new_instructor_opts_in(self):
         self.login_page.dev_auth(self.new_instructor.uid)
-        self.courses_page.set_course_opt_in(self.section)
+        self.courses_page.click_course_page_link(self.section)
+        self.course_page.instructor_opt_in_section(self.section, self.new_instructor)
 
     def test_run_kaltura_job_instr_added(self):
         self.login_page.dev_auth()
@@ -331,7 +333,8 @@ class TestWeirdTypeB:
 
     def test_admin_opts_course_in(self):
         self.ouija_page.search_for_course_code(self.section)
-        self.ouija_page.set_course_opt_in(self.section)
+        self.ouija_page.click_course_page_link(self.section)
+        self.course_page.admin_opt_in_section(self.section)
 
     def test_run_kaltura_job_room_added(self):
         self.jobs_page.run_schedule_update_and_kaltura_job_sequence()

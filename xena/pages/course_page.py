@@ -78,7 +78,7 @@ class CoursePage(DiabloPages):
 
     SECTION_ID = (By.ID, 'section-id')
     COURSE_TITLE = (By.ID, 'course-title')
-    INSTRUCTOR = (By.XPATH, '//div[@id="instructors-list"]//*[contains(@id, "instructor-")]')
+    INSTRUCTOR = (By.XPATH, '//*[starts-with(@id, "instructor-sidebar-")]')
     PROXY = (By.XPATH, '//div[@id="collaborators-list"]//*[contains(@id, "collaborator-")]')
     CROSS_LISTING = (By.XPATH, '//div[contains(@id, "cross-listing-")]')
 
@@ -86,7 +86,7 @@ class CoursePage(DiabloPages):
         return self.is_present((By.XPATH, '//span[text()="UC Berkeley has canceled this section."]'))
 
     def visible_ccn(self):
-        return self.wait_for_element(self.SECTION_ID, util.get_long_timeout()).text
+        return self.element(self.SECTION_ID).text
 
     def visible_course_title(self):
         return self.element(CoursePage.COURSE_TITLE).text
@@ -99,7 +99,7 @@ class CoursePage(DiabloPages):
         return [el.text for el in els]
 
     def verify_instructors(self, section):
-        expected_instructors = [f'{i.first_name} {i.last_name} ({i.uid})'.strip() for i in section.instructors]
+        expected_instructors = [f'{i.first_name} {i.last_name}'.strip() for i in section.instructors]
         visible_instructors = self.visible_instructors()
         if visible_instructors != expected_instructors:
             app.logger.info(f"Expected '{expected_instructors}', got '{visible_instructors}'")
@@ -257,15 +257,6 @@ class CoursePage(DiabloPages):
             self.click_element(toggle)
             time.sleep(1)
 
-    # CAPTURE SETTINGS - instructors
-
-    INSTRUCTOR_ROW = By.XPATH, '//div[@id="instructors-list"]/div'
-
-    def visible_instructor_uids(self):
-        uids = list(map(lambda el: el.get_dom_attribute('id').split('-')[-1], self.elements(self.INSTRUCTOR_ROW)))
-        uids.sort()
-        return uids
-
     # CAPTURE SETTINGS - collaborators
 
     COLLAB_ROW = By.XPATH, '//span[starts-with(@id, "collaborator-")]'
@@ -391,13 +382,14 @@ class CoursePage(DiabloPages):
 
     # CAPTURE SETTINGS - recording placement
 
-    PLACEMENT_TEXT = By.ID, 'publish-type-name'
+    PLACEMENT_TEXT = By.XPATH, '//h3[@id="publish-type-header"]/following-sibling::div'
     PLACEMENT_EDIT_BUTTON = By.ID, 'btn-publish-type-edit'
     PLACEMENT_MY_MEDIA_RADIO = By.ID, 'radio-publish-type-kaltura-my-media'
     PLACEMENT_AUTOMATIC_RADIO = By.ID, 'radio-publish-type-kaltura-media-gallery'
     PLACEMENT_SAVE_BUTTON = By.ID, 'btn-publish-type-save'
     PLACEMENT_CXL_BUTTON = By.ID, 'btn-publish-type-cancel'
 
+    PLACEMENT_SITE_SELECT_DIV = By.XPATH, '//input[@id="select-canvas-site"]/..'
     PLACEMENT_SITE_SELECT = By.ID, 'select-canvas-site'
     PLACEMENT_SITE_LINK = By.XPATH, '//a[contains(@id, "canvas-course-site-")]'
     PLACEMENT_SITE_ADD_BUTTON = By.ID, 'btn-canvas-site-add'
@@ -405,7 +397,7 @@ class CoursePage(DiabloPages):
 
     @staticmethod
     def placement_site_option_loc(site):
-        return By.ID, f'canvas-site-option-{site.site_id}'
+        return By.ID, f'menu-option-canvas-site-{site.site_id}'
 
     @staticmethod
     def placement_site_remove_button_loc(site):
@@ -423,8 +415,7 @@ class CoursePage(DiabloPages):
         return ids
 
     def visible_recording_placement(self):
-        # wait up to your short timeout for the element to exist in the DOM
-        return self.wait_for_element(self.PLACEMENT_TEXT, util.get_long_timeout()).text.strip()
+        return self.element(self.PLACEMENT_TEXT).text.strip()
 
     def click_edit_recording_placement(self):
         app.logger.info('Clicking the edit recording placement button')

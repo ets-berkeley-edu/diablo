@@ -68,7 +68,8 @@ class TestCourseScheduleChanges:
 
     def test_schedule_recordings(self):
         self.ouija_page.search_for_course_code(self.section)
-        self.ouija_page.set_course_opt_in(self.section)
+        self.ouija_page.click_course_page_link(self.section)
+        self.course_page.admin_opt_in_section(self.section)
         self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
         util.get_kaltura_id(self.recording_schedule)
         self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR

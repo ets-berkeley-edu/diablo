@@ -22,6 +22,8 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
+from xena.models.recording_placement import RecordingPlacement
+from xena.models.recording_type import RecordingType
 
 
 class RecordingSchedule(object):
@@ -37,7 +39,7 @@ class RecordingSchedule(object):
     ):
         self.section = section
         self.meeting = meeting
-        self.recording_type = recording_type
-        self.recording_placement = recording_placement
+        self.recording_type = recording_type or RecordingType.VIDEO_SANS_OPERATOR
+        self.recording_placement = recording_placement or RecordingPlacement.PLACE_IN_MY_MEDIA
         self.scheduling_status = scheduling_status
         self.series_id = series_id
