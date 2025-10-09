@@ -75,7 +75,8 @@ class TestCrossListings:
 
     def test_instructor_opts_in(self):
         self.login_page.dev_auth(self.instructor.uid)
-        self.courses_page.set_course_opt_in(self.section)
+        self.courses_page.click_course_page_link(self.section)
+        self.course_page.instructor_opt_in_section(self.section, self.instructor)
 
     def test_semester_start(self):
         self.login_page.dev_auth()
@@ -256,7 +257,7 @@ class TestCrossListings:
 
     def test_history_canvas_site(self):
         self.course_page.verify_history_row(field='canvas_site_ids',
-                                            old_value='—',
+                                            old_value=[],
                                             new_value=CoursePage.expected_site_ids_converter([self.site]),
                                             requestor=self.admin,
                                             status='succeeded',

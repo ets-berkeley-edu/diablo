@@ -89,7 +89,8 @@ class TestWeirdTypeC:
 
     def test_admin_opts_course_in(self):
         self.instructor_page.hit_admin_url(self.original_instructor)
-        self.instructor_page.set_course_opt_in(self.section)
+        self.instructor_page.click_course_page_link(self.section)
+        self.course_page.admin_opt_in_section(self.section)
 
     def test_schedule_recordings(self):
         self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
@@ -262,7 +263,7 @@ class TestWeirdTypeC:
 
     def test_no_instructor_removed_email(self):
         assert util.get_sent_email_count(EmailTemplateType.INSTRUCTORS_REMOVED, self.section,
-                                         self.original_instructor) == 0
+                                         self.original_instructor) == 1
 
     # INSTRUCTOR ADDED
 
@@ -272,7 +273,8 @@ class TestWeirdTypeC:
 
     def test_new_instructor_opts_in(self):
         self.login_page.dev_auth(self.new_instructor.uid)
-        self.courses_page.set_course_opt_in(self.section)
+        self.courses_page.click_course_page_link(self.section)
+        self.course_page.instructor_opt_in_section(self.section, self.new_instructor)
 
     def test_run_kaltura_job_instr_added(self):
         self.login_page.dev_auth()

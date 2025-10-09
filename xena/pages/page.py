@@ -113,12 +113,15 @@ class Page(object):
         else:
             return True
 
+    def is_enabled(self, locator):
+        return self.element(locator).is_enabled()
+
     def wait_for_element(self, locator, timeout):
         if self.driver.name == 'chrome':
             for entry in self.driver.get_log('browser'):
                 if app.config['BASE_URL'] in entry:
                     app.logger.warning(f'Console error: {entry}')
-        return Wait(self.driver, timeout).until(
+        Wait(self.driver, timeout).until(
             method=ec.presence_of_element_located(locator),
             message=f'Failed wait for presence_of_element_located: {str(locator)}',
         )

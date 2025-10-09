@@ -90,7 +90,10 @@ class TestCourseCancellation:
     def test_restored_pre_sched(self):
         util.restore_section(self.section)
         self.courses_page.reload_page()
-        self.courses_page.set_course_opt_in(self.section)
+        self.courses_page.click_course_page_link(self.section)
+        self.course_page.instructor_opt_in_section(self.section, self.instructor)
+
+    def test_schedule_recordings(self):
         self.login_page.dev_auth()
         self.jobs_page.run_kaltura_job_sequence()
 
@@ -111,7 +114,7 @@ class TestCourseCancellation:
     # UNSCHEDULE CANCELED COURSE
 
     def test_unsched_canceled(self):
-        self.jobs_page.run_schedule_update_job_sequence()
+        self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
 
     def test_no_kaltura_series_canceled_unsched(self):
         self.kaltura_page.load_event_edit_page(self.recording_schedule.series_id)

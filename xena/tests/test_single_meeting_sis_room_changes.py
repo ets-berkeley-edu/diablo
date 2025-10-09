@@ -69,7 +69,8 @@ class TestCourseRoomChanges:
 
     def test_instructor_opts_in(self):
         self.login_page.dev_auth(self.instr.uid)
-        self.courses_page.set_course_opt_in(self.section)
+        self.courses_page.click_course_page_link(self.section)
+        self.course_page.instructor_opt_in_section(self.section, self.instr)
 
     def test_schedule_recordings(self):
         self.login_page.dev_auth()
@@ -212,7 +213,8 @@ class TestCourseRoomChanges:
     def test_eligible_room_again_opt_in_again(self):
         self.course_page.load_page(self.section)
         self.instructor_page.load_admin_page(self.instr)
-        self.instructor_page.set_course_opt_in(self.section)
+        self.instructor_page.click_course_page_link(self.section)
+        self.course_page.admin_opt_in_section(self.section)
 
     def test_eligible_room_again_reschedule_series(self):
         self.jobs_page.run_kaltura_job_sequence()
