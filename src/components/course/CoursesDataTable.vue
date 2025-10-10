@@ -218,7 +218,7 @@
 import type {PropType} from 'vue'
 import {each, filter, find, get, map, size, tail} from 'lodash'
 import {mdiClose} from '@mdi/js'
-import {onMounted, ref} from 'vue'
+import {onMounted, ref, watch} from 'vue'
 import type {CourseSortable, SortBy} from '@/lib/types'
 import {alertScreenReader} from '@/lib/utils'
 import {getDisplayMeetings} from '@/lib/berkeley'
@@ -327,6 +327,8 @@ const refresh = () => {
         : (get(course, 'meetings.eligible.length', 0) > 0 ? 'Not Scheduled' : 'Not Eligible'))
   })
 }
+
+watch(() => props.courses, refresh)
 
 const tdc = course => {
   return {
