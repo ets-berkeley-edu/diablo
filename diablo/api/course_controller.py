@@ -42,6 +42,7 @@ from diablo.models.queued_email import QueuedEmail
 from diablo.models.schedule_update import ScheduleUpdate
 from diablo.models.scheduled import Scheduled
 from diablo.models.sis_section import SisSection
+from diablo.models.user_preference import UserPreference
 
 
 @app.route('/api/course/<term_id>/<section_id>')
@@ -247,6 +248,11 @@ def instructor_opt_in():
             section_id=section_id,
             term_id=term_id,
         )
+
+        # A user cannot have "do not email" enabled if opted into a course.
+        if opt_in is True:
+            UserPreference.update_do_not_email(instructor_uid, False)
+
         return tolerant_jsonify(SisSection.get_course(
             term_id,
             section_id,
