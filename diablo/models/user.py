@@ -28,6 +28,7 @@ from flask_login import UserMixin
 from diablo.merged.calnet import get_calnet_user_for_uid
 from diablo.models.admin_user import AdminUser
 from diablo.models.sis_section import SisSection
+from diablo.models.user_preference import UserPreference
 
 
 class User(UserMixin):
@@ -103,6 +104,7 @@ class User(UserMixin):
         is_admin = not expired and AdminUser.is_admin(uid)
         is_teaching = not expired and SisSection.is_teaching(term_id=app.config['CURRENT_TERM_ID'], uid=uid)
         is_active = is_teaching or is_admin
+        preferences = UserPreference.get_user_preferences(uid)
 
         return {
             'id': uid,
@@ -115,5 +117,7 @@ class User(UserMixin):
             'isTeaching': is_teaching,
             'name': calnet_profile.get('name') or f'UID {uid}',
             'uid': uid,
+            'optInNewCourses': preferences.opt_in_new_courses if preferences else False,
+            'doNotEmail': preferences.do_not_email if preferences else False,
             **calnet_profile,
         }
