@@ -24,15 +24,36 @@
           v-if="!isRefreshingCourses && ineligibleCourses.length"
           id="user-courses-ineligible"
           class="mb-2 mt-6"
+          role="region"
+          aria-labelledby="user-ineligible-header"
         >
-          <h2 class="font-size-24">Courses not in a course capture classroom</h2>
-          <CoursesDataTable
-            :courses="ineligibleCourses"
-            :include-room-column="true"
-            :message-for-courses="summarize(ineligibleCourses)"
-            :refreshing="false"
-            :show-opt-in="false"
-          />
+          <h2 id="user-ineligible-header" class="font-size-24">
+            <button
+              type="button"
+              class="text-left"
+              style="all: unset; cursor: pointer;"
+              :aria-expanded="showIneligible"
+              aria-controls="user-ineligible-table"
+              :aria-label="showIneligible
+                ? 'Collapse courses not in a course capture classroom'
+                : 'Expand courses not in a course capture classroom'"
+              @click="showIneligible = !showIneligible"
+            >
+              Courses not in a course capture classroom
+              <span aria-hidden="true"> {{ showIneligible ? '[-]' : '[+]' }} </span>
+            </button>
+          </h2>
+
+          <div v-if="showIneligible">
+            <CoursesDataTable
+              id="user-ineligible-table"
+              :courses="ineligibleCourses"
+              :include-room-column="true"
+              :message-for-courses="summarize(ineligibleCourses)"
+              :refreshing="false"
+              :show-opt-in="false"
+            />
+          </div>
         </div>
       </v-card-text>
     </v-card>
@@ -137,6 +158,7 @@ const isSavingNote = ref(false)
 const isRefreshingCourses = ref(false)
 const noteBody = ref('')
 const user = ref({})
+const showIneligible = ref(false)
 
 contextStore.loadingStart()
 
