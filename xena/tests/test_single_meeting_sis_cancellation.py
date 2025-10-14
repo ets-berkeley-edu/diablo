@@ -80,16 +80,22 @@ class TestCourseCancellation:
         assert not self.course_page.is_present(CoursePage.RECORDING_TYPE_EDIT_BUTTON)
         assert not self.course_page.is_present(CoursePage.PLACEMENT_EDIT_BUTTON)
 
+    # TODO def test_admin_view_cancelled_msg(self):
+
     def test_cancel_pre_sched_no_teacher_result(self):
         self.login_page.dev_auth(self.instructor.uid)
         self.courses_page.wait_for_title_contains(f"Your {app.config['CURRENT_TERM_NAME']} Course")
         assert not self.courses_page.is_present(OuijaBoardPage.course_row_link_locator(self.section))
 
+    def test_instructor_view_cancelled_msg(self):
+        self.course_page.load_page(self.section)
+        # TODO verify message
+
     # COURSE IS RESTORED AND SCHEDULED
 
     def test_restored_pre_sched(self):
         util.restore_section(self.section)
-        self.courses_page.reload_page()
+        self.courses_page.load_instructor_homepage()
         self.courses_page.click_course_page_link(self.section)
         self.course_page.instructor_opt_in_section(self.section, self.instructor)
 
@@ -111,9 +117,17 @@ class TestCourseCancellation:
         self.course_page.load_page(self.section)
         assert self.course_page.is_canceled()
 
+    # TODO def test_admin_view_cancelled_again_msg(self):
+
+    def test_instructor_view_cancelled_again_msg(self):
+        self.login_page.dev_auth(self.instructor.uid)
+        self.course_page.load_page(self.section)
+        # TODO verify message
+
     # UNSCHEDULE CANCELED COURSE
 
     def test_unsched_canceled(self):
+        self.login_page.dev_auth()
         self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
 
     def test_no_kaltura_series_canceled_unsched(self):
@@ -137,3 +151,10 @@ class TestCourseCancellation:
                                             requestor=None,
                                             status='succeeded',
                                             published=True)
+
+    # TODO def test_admin_view_cancelled_final_msg(self):
+
+    def test_instructor_view_cancelled_final_msg(self):
+        self.login_page.dev_auth(self.instructor.uid)
+        self.course_page.load_page(self.section)
+        # TODO verify message

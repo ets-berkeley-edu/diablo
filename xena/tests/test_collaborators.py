@@ -62,10 +62,19 @@ class TestCollaborators0:
         self.kaltura_page.log_in_and_reset_test_data(self.calnet_page, [self.section])
         util.reset_section_and_user_test_data([self.section], [self.instructor, self.proxy])
 
-    def test_instructor_opt_in(self):
+    def test_instructor_view_read_only_collaborators(self):
         self.login_page.dev_auth(self.instructor.uid)
         self.courses_page.click_course_page_link(self.section)
+        self.course_page.wait_for_diablo_title(f'{self.section.code}, {self.section.number}')
+        # TODO assert visibility of proxy collaborator
+
+    def test_instructor_opt_in(self):
         self.course_page.instructor_opt_in_section(self.section, self.instructor)
+        # TODO assert visibility of proxy collaborator
+
+    def test_instructor_view_editable_collaborators(self):
+        self.course_page.click_edit_collaborators()
+        # TODO assert visibility of proxy collaborator
 
     def test_schedule_recordings(self):
         self.login_page.dev_auth()

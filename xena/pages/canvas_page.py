@@ -26,7 +26,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 import time
 
 from flask import current_app as app
-from selenium.common.exceptions import NoSuchElementException, TimeoutException
+from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.select import Select
@@ -61,25 +61,24 @@ class CanvasPage(Page):
     PUBLISH_STATUS = By.XPATH, '//button[@data-position-target="course_publish_menu"]'
     ADD_COURSE_SUCCESS = By.XPATH, '//p[contains(.,"successfully added!")]'
 
-    def create_site(self, section, site):
+    def log_in_via_calnet(self, calnet_page):
+        app.logger.info('Logging in to Canvas')
+        self.driver.get(f'{app.config["CANVAS_BASE_URL"]}/accounts/{app.config["CANVAS_QA_ACCOUNT"]}')
+        username = util.get_username()
+        password = util.get_password()
+        if self.is_present(self.ADD_NEW_COURSE_BUTTON):
+            app.logger.info('User is already logged in to Canvas')
+        else:
+            calnet_page.enter_login_creds(username, password)
+            Wait(self.driver, util.get_medium_timeout()).until(ec.presence_of_element_located(self.ADD_NEW_COURSE_BUTTON))
+
+    def create_site(self, section, site, calnet_page):
         epoch = int(time.time())
         site.name = f'{site.name} {epoch}'
         site.code = f'{site.code} {epoch}'
         app.logger.info(f'Creating a site named {site.code}')
-        # The add-course button is flaky, so try a few times to get it to load
-        tries = 0
-        retries = 3
-        while tries < retries:
-            try:
-                tries += 1
-                self.driver.get(f'{app.config["CANVAS_BASE_URL"]}/accounts/{app.config["CANVAS_QA_ACCOUNT"]}')
-                self.wait_for_page_and_click(self.ADD_NEW_COURSE_BUTTON)
-                break
-            except TimeoutException:
-                if tries == retries:
-                    raise
-                else:
-                    app.logger.info('Add new course button has not appearing, trying again')
+        self.log_in_via_calnet(calnet_page)
+        self.wait_for_page_and_click(self.ADD_NEW_COURSE_BUTTON)
         self.wait_for_element_and_type(self.COURSE_NAME_INPUT, site.name)
         self.wait_for_element_and_type(self.REF_CODE_INPUT, site.code)
         self.wait_for_element_and_click(self.CREATE_COURSE_BUTTON)

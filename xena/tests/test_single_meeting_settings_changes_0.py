@@ -78,7 +78,7 @@ class TestScheduling0:
     # CREATE COURSE SITE
 
     def test_create_course_site(self):
-        self.canvas_page.create_site(self.section, self.site)
+        self.canvas_page.create_site(self.section, self.site, self.calnet_page)
         self.canvas_page.add_user_to_site(self.site, self.instructor, 'Teacher')
 
     # CHECK FILTERS - NOT SCHEDULED
@@ -111,10 +111,9 @@ class TestScheduling0:
         self.ouija_page.filter_for_scheduled()
         assert not self.ouija_page.is_course_in_results(self.section)
 
-    # VERIFY COURSE HISTORY
-
-    def test_no_history(self):
-        assert not self.course_page.update_history_table_rows()
+    def test_admin_view_pre_opt_in(self):
+        self.course_page.load_page(self.section)
+        # TODO - verify course page messaging
 
     # INSTRUCTOR LOGS IN
 
@@ -138,7 +137,7 @@ class TestScheduling0:
         listing_codes = [li.code for li in self.section.listings]
         assert self.course_page.visible_cross_listing_codes() == listing_codes
 
-    def test_course_scheduled_msg(self):
+    def test_instructor_view_pre_opt_in(self):
         # TODO - update expected messaging below:
         assert self.course_page.is_present(CoursePage.SCHEDULED_MSG)
         assert not self.course_page.is_present(CoursePage.SCHEDULING_TO_COME_MSG)
@@ -148,6 +147,11 @@ class TestScheduling0:
         assert not self.course_page.is_present(CoursePage.NOT_ELIGIBLE_MSG)
 
     # VERIFY NO SETTINGS OPTIONS UNTIL OPT-IN
+
+    # TODO def test_no_settings_edit_msg(self):
+
+    def test_no_collaborator_edits(self):
+        assert not self.course_page.is_present(self.course_page.COLLAB_EDIT_BUTTON)
 
     def test_no_rec_type_options(self):
         assert not self.course_page.is_present(self.course_page.RECORDING_TYPE_EDIT_BUTTON)
@@ -159,6 +163,8 @@ class TestScheduling0:
         self.courses_page.load_instructor_homepage()
         self.courses_page.click_course_page_link(self.section)
         self.course_page.instructor_opt_in_section(self.section, self.instructor)
+
+    # TODO def test_instructor_view_post_opt_in(self):
 
     def test_rec_type_options(self):
         self.course_page.click_rec_type_edit_button()
@@ -204,7 +210,7 @@ class TestScheduling0:
         title = 'Course Capture FAQ | Research, Teaching, & Learning'
         assert self.course_page.external_link_valid(self.course_page.COURSE_CAPTURE_FAQ_LINK, title)
 
-    # RUN SETTINGS UPDATE JOB
+    # RUN KALTURA JOB
 
     def test_schedule_update(self):
         self.login_page.dev_auth()
@@ -294,6 +300,8 @@ class TestScheduling0:
         self.login_page.dev_auth(self.instructor.uid)
         self.courses_page.click_course_page_link(self.section)
         self.course_page.wait_for_diablo_title(f'{self.section.code}, {self.section.number}')
+
+    # TODO - def test_instructor_view_post_scheduling(self):
 
     def test_choose_placement(self):
         self.course_page.click_edit_recording_placement()
