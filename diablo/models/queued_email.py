@@ -28,6 +28,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 from diablo import db, std_commit
 from diablo.externals.canvas import get_course_sites_by_id
 from diablo.externals.loch import get_loch_basic_attributes
+from diablo.jobs.util import get_eligible_courses_per_instructor_uids
 from diablo.lib.interpolator import interpolate_content
 from diablo.lib.util import to_isoformat, utc_now
 from diablo.merged.emailer import get_admin_alert_recipient, send_system_error_email
@@ -178,8 +179,9 @@ class QueuedEmail(db.Model):
 
     @classmethod
     def notify_new_course_eligible(cls, instructor, term_id):
-        courses = SisSection.get_courses_per_instructor_uid(term_id, instructor['uid'])
-        _send_course_list_email(instructor, courses, 'new_class_eligible')
+        courses = get_eligible_courses_per_instructor_uids(term_id, [instructor['uid']])
+        if len(courses):
+            _send_course_list_email(instructor, courses, 'new_class_eligible')
 
     @classmethod
     def notify_instructor_removed(cls, instructor, course):
