@@ -320,7 +320,7 @@ class TestOptIn4:
         section_1.instructors = []
 
     def test_create_site(self):
-        self.canvas_page.create_site(section_1, self.site)
+        self.canvas_page.create_site(section_1, self.site, self.calnet_page)
 
     def test_instructor_opt_in_all(self):
         self.login_page.dev_auth(instructor_1_0.uid)
@@ -600,7 +600,7 @@ class TestOptIn6:
     def test_instructor_opt_out_reminder_email_again(self):
         self.jobs_page.run_remind_opt_outs_job()
         assert util.get_queued_email_count(EmailTemplateType.REMIND_OPTED_OUT, section=section_1,
-                                           instructor=instructor_1_0) == 2
+                                           instructor=instructor_1_0) == 1
         assert util.get_queued_email_count(EmailTemplateType.REMIND_OPTED_OUT, section=section_1,
                                            instructor=instructor_1_1) == 0
 

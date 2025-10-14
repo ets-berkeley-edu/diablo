@@ -123,7 +123,7 @@ class TestScheduling1:
     # CREATE COURSE SITE
 
     def test_create_course_site(self):
-        self.canvas_page.create_site(self.section, self.site)
+        self.canvas_page.create_site(self.section, self.site, self.calnet_page)
         self.canvas_page.add_user_to_site(self.site, self.instructor, 'TA')
 
     # VERIFY AVAILABLE OPTIONS
@@ -157,6 +157,8 @@ class TestScheduling1:
 
     def test_visible_site_ids_updated(self):
         assert self.course_page.visible_course_site_ids() == [self.site.site_id]
+
+    # TODO def test_admin_settings_update_msg(self):
 
     # SCHEDULE RECORDINGS
 

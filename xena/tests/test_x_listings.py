@@ -68,7 +68,7 @@ class TestCrossListings:
     # CREATE A COURSE SITE
 
     def test_create_course_site(self):
-        self.canvas_page.create_site(self.section, self.site)
+        self.canvas_page.create_site(self.section, self.site, self.calnet_page)
         self.canvas_page.add_user_to_site(self.site, self.instructor, 'Teacher')
 
     # SCHEDULE RECORDINGS

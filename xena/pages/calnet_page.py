@@ -44,6 +44,10 @@ class CalNetPage(Page):
     BAD_CREDS = (By.XPATH, '//p[contains(text(), "Please check your username and passphrase")]')
 
     def log_in(self, username=None, password=None):
+        self.enter_login_creds(username, password)
+        self.two_step_authenticate()
+
+    def enter_login_creds(self, username=None, password=None):
         Wait(self.driver, util.get_medium_timeout()).until(ec.title_contains('Authentication Service'))
         if username and password:
             app.logger.info(f'{username} is logging in')
@@ -56,6 +60,8 @@ class CalNetPage(Page):
             else:
                 app.logger.info('Waiting for manual login')
                 self.wait_for_element_and_type(self.USERNAME_INPUT, 'PLEASE LOG IN MANUALLY')
+
+    def two_step_authenticate(self):
         tries = 0
         max_tries = util.get_long_timeout()
         while tries <= max_tries:

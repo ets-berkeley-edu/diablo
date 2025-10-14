@@ -89,12 +89,12 @@ class TestScheduling2:
     # CREATE COURSE SITE
 
     def test_create_course_site(self):
-        self.canvas_page.create_site(self.section, self.site_0)
+        self.canvas_page.create_site(self.section, self.site_0, self.calnet_page)
         self.canvas_page.add_user_to_site(self.site_0, self.instructor_0, 'Lead TA')
         self.canvas_page.add_user_to_site(self.site_0, self.instructor_1, 'Teacher')
 
     def test_create_another_course_site(self):
-        self.canvas_page.create_site(self.section, self.site_1)
+        self.canvas_page.create_site(self.section, self.site_1, self.calnet_page)
         self.canvas_page.add_user_to_site(self.site_1, self.instructor_0, 'Teacher')
         self.canvas_page.add_user_to_site(self.site_1, self.instructor_1, 'Lead TA')
 
@@ -114,8 +114,12 @@ class TestScheduling2:
         listing_codes = [li.code for li in self.section.listings]
         assert self.course_page.visible_cross_listing_codes() == listing_codes
 
+    # TODO def test_first_instructor_pre_opt_in_msg(self):
+
     def test_instructor_opt_in(self):
         self.course_page.instructor_opt_in_section(self.section, self.instructor_0)
+
+    # TODO def test_first_instructor_post_opt_in_msg(self):
 
     # VERIFY AVAILABLE OPTIONS
 
@@ -140,7 +144,7 @@ class TestScheduling2:
     def test_site_link(self):
         assert self.course_page.external_link_valid(CoursePage.selected_placement_site_loc(self.site_0), self.site_0.name)
 
-    # TODO def test_partial_approval_messaging_instr_0
+    # TODO def test_first_instructor_post_settings_update_msg(self):
 
     # RUN KALTURA AND EMAIL JOBS, VERIFY NO RECORDINGS SCHEDULED AND NO SETTINGS UPDATE EMAIL SENT YET
 
@@ -193,6 +197,7 @@ class TestScheduling2:
         self.course_page.close_window_and_switch()
         self.login_page.dev_auth(self.instructor_1.uid)
         self.instructor_page.click_course_page_link(self.section)
+        self.course_page.wait_for_diablo_title(f'{self.section.code}, {self.section.number}')
 
     def test_no_rec_type_options(self):
         assert not self.course_page.is_present(self.course_page.RECORDING_TYPE_EDIT_BUTTON)
@@ -200,10 +205,12 @@ class TestScheduling2:
     def test_no_rec_placement_options(self):
         assert not self.course_page.is_present(self.course_page.PLACEMENT_EDIT_BUTTON)
 
-    # TODO def test_partial_approval_messaging_instr_1
+    # TODO def test_second_instructor_pre_opt_in_msg(self):
 
     def test_opt_in(self):
         self.course_page.instructor_opt_in_section(self.section, self.instructor_1)
+
+    # TODO def test_second_instructor_post_opt_in_msg(self):
 
     def test_another_site_add_to_channels(self):
         self.course_page.click_edit_recording_placement()
@@ -218,7 +225,7 @@ class TestScheduling2:
         assert self.course_page.external_link_valid(CoursePage.selected_placement_site_loc(self.site_1),
                                                     self.site_1.name)
 
-    # TODO def test_full_approval_messaging
+    # TODO def test_second_instructor_post_settings_update_msg(self):
 
     # SCHEDULE RECORDINGS
 
@@ -227,7 +234,7 @@ class TestScheduling2:
         self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
         assert util.get_kaltura_id(self.recording_schedule)
         self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
-        self.recording_schedule.recording_placement = RecordingPlacement.PLACE_IN_MY_MEDIA
+        self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_AUTOMATICALLY
 
     # VERIFY SERIES IN DIABLO
 
@@ -265,7 +272,7 @@ class TestScheduling2:
         self.kaltura_page.verify_publish_status(self.recording_schedule)
 
     def test_kaltura_course_site(self):
-        self.kaltura_page.verify_site_categories([])
+        self.kaltura_page.verify_site_categories([self.site_0, self.site_1])
 
     # VERIFY CLASS SCHEDULED, CHANGES CONFIRMED EMAILS
 
@@ -314,9 +321,13 @@ class TestScheduling2:
 
     # DELETE ONE COURSE SITE
 
-    def test_delete_course_site(self):
+    def test_instructor_view_scheduled_msg(self):
         self.login_page.dev_auth(self.instructor_1.uid)
         self.instructor_page.click_course_page_link(self.section)
+        self.course_page.wait_for_diablo_title(f'{self.section.code}, {self.section.number}')
+        # TODO - assert messaging
+
+    def test_delete_course_site(self):
         self.course_page.click_edit_recording_placement()
         self.course_page.remove_recording_placement_site(self.site_1)
         self.course_page.save_recording_placement_edits()
@@ -387,16 +398,16 @@ class TestScheduling2:
 
     def test_updated_receive_schedule_conf_email_instr_1(self):
         self.kaltura_page.close_window_and_switch()
-        assert util.get_sent_email_count(EmailTemplateType.CHANGES_CONFIRMED, self.section, self.instructor_0) == 2
+        assert util.get_sent_email_count(EmailTemplateType.CHANGES_CONFIRMED, self.section, self.instructor_0) == 3
 
     def test_updated_receive_schedule_conf_email_instr_2(self):
-        assert util.get_sent_email_count(EmailTemplateType.CHANGES_CONFIRMED, self.section, self.instructor_1) == 2
+        assert util.get_sent_email_count(EmailTemplateType.CHANGES_CONFIRMED, self.section, self.instructor_1) == 3
 
     # VERIFY COURSE HISTORY
 
     def test_history_pub_type_automatic(self):
         self.course_page.verify_history_row(field='publish_type',
-                                            old_value=RecordingPlacement.PLACE_IN_MY_MEDIA.value['db'],
+                                            old_value='—',
                                             new_value=RecordingPlacement.PUBLISH_AUTOMATICALLY.value['db'],
                                             requestor=self.instructor_0,
                                             status='succeeded',
@@ -404,7 +415,7 @@ class TestScheduling2:
 
     def test_history_add_site_0(self):
         self.course_page.verify_history_row(field='canvas_site_ids',
-                                            old_value='—',
+                                            old_value=[],
                                             new_value=CoursePage.expected_site_ids_converter([self.site_0]),
                                             requestor=self.instructor_0,
                                             status='succeeded',
