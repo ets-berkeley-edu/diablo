@@ -14,7 +14,7 @@
       <template v-if="!refreshingCourses">
         <div class="opt-in-banner mb-4" role="note" aria-label="Course Capture opt-in change notice">
           <p class="m-0">
-            <strong>Course Capture has changed for 2025.</strong>
+            <strong>Course Capture has changed for 2026.</strong>
             You must opt in for your courses to be recorded.
             For more information, visit our
             <a
