@@ -145,7 +145,7 @@
               :action="update"
               aria-label="Save Note"
               density="comfortable"
-              :disabled="isSaving"
+              :disabled="isSaving || publishCanvasSites.length === 0"
               :in-progress="isSaving"
               :text="isSaving ? 'Saving' : 'Save'"
             />

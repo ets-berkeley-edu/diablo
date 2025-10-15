@@ -23,11 +23,11 @@
           order="2"
           xl="9"
         >
-          <v-card class="pb-6 pt-4 px-8">
+          <v-card v-if="!course.deletedAt" class="pb-6 pt-4 px-8">
             <DescribeCourseSchedulingStatus />
             <CoursePageInstructors v-if="isEligibleForCourseCapture" class="mt-2" />
           </v-card>
-          <v-card class="mt-8 pb-4 px-4">
+          <v-card v-if="!course.deletedAt" class="mt-8 pb-4 px-4">
             <v-container v-if="isEligibleForCourseCapture">
               <v-expand-transition>
                 <div v-if="!currentUser.isAdmin && !find(course.instructors, ['uid', currentUser.uid])?.hasOptedIn" class="font-size-18 mb-1 mt-2 text-warning">
@@ -58,7 +58,7 @@
               </div>
             </div>
           </v-card>
-          <v-card v-if="currentUser.isAdmin" class="mt-8 px-4 py-6">
+          <v-card v-if="currentUser.isAdmin && !course.deletedAt" class="mt-8 px-4 py-6">
             <ScheduledCourse />
           </v-card>
         </v-col>
