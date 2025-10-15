@@ -95,7 +95,8 @@ const courseStore = useCourseStore()
 const {course, disableButtons} = storeToRefs(courseStore)
 const canUserEdit = computed(() => {
   const instructor = find(course.value.instructors, ['uid', currentUser.uid])
-  return (currentUser.isAdmin && !course.value.deletedAt) || get(instructor, 'hasOptedIn', false)
+  const recordingTypeOption = course.value.recordingType
+  return !course.value.deletedAt && ((currentUser.isAdmin) || (get(instructor, 'hasOptedIn', false) && recordingTypeOption !== 'presenter_presentation_audio_with_operator'))
 })
 const currentUser = useContextStore().currentUser
 const displayLabels = {

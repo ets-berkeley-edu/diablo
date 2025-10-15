@@ -32,7 +32,7 @@
         class="d-flex flex-column"
       >
         <div
-          v-if="!currentUser.isAdmin && currentUser.uid !== instructor.uid"
+          v-if="!currentUser.isAdmin && currentUser.uid !== instructor.uid && !course.deletedAt"
           :class="index === 0 ? 'mt-0' : 'mt-2'"
           class="font-size-18"
         >
@@ -42,7 +42,7 @@
           />
         </div>
         <ToggleOptIn
-          v-if="currentUser.isAdmin || currentUser.uid === instructor.uid"
+          v-if="(currentUser.isAdmin || currentUser.uid === instructor.uid) && !course.deletedAt"
           :id="`toggle-opt-in-${course.termId}-${course.sectionId}-instructor-${instructor.uid}`"
           v-model:has-opted-in="instructor.hasOptedIn"
           v-model:instructor-uid="instructor.uid"
