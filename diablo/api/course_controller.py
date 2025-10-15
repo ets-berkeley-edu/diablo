@@ -281,8 +281,8 @@ def course_opt_in():
     )
     ScheduleUpdate.queue(
         field_name='opted_in',
-        field_value_new='admin',
-        field_value_old=None,
+        field_value_new='admin' if opt_in else '',
+        field_value_old=None if opt_in else 'admin',
         requested_by_name=current_user.name,
         requested_by_uid=current_user.uid,
         section_id=section_id,

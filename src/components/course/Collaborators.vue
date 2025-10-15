@@ -51,7 +51,7 @@
           size="large"
         >
           {{ collaborator.firstName }} {{ collaborator.lastName }}<span v-if="collaborator.email">&nbsp;({{ collaborator.email }})</span>
-          <template v-if="course.hasOptedIn && isEditing" #append>
+          <template v-if="isEditing" #append>
             <v-btn
               :id="`btn-collaborator-remove-${collaborator.uid}`"
               :aria-label="`Remove ${collaborator.firstName || ''} ${collaborator.lastName || ''} as collaborator`"
