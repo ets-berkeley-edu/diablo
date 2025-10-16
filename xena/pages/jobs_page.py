@@ -212,5 +212,7 @@ class JobsPage(DiabloPages):
                 elif tries == retries:
                     app.logger.info('Timed out')
                     raise
+                elif self.is_present((By.XPATH, '//*[contains(text(), "502")]')):
+                    self.load_page()
                 else:
                     app.logger.info('Retrying')

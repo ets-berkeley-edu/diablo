@@ -30,6 +30,8 @@ from xena.models.recording_placement import RecordingPlacement
 from xena.models.recording_schedule import RecordingSchedule
 from xena.models.recording_type import RecordingType
 from xena.models.section import Section
+from xena.models.user import User
+from xena.pages.course_page import CoursePage
 from xena.test_utils import util
 
 
@@ -45,6 +47,7 @@ class TestCourseScheduleChanges:
     """
 
     section = util.get_test_section(util.get_test_script_course('test_single_meeting_sis_changes'))
+    admin = User({'uid': util.get_admin_uid()})
     instr = section.instructors[0]
     meeting = section.meetings[0]
     room = section.meetings[0].room
@@ -134,17 +137,6 @@ class TestCourseScheduleChanges:
         self.kaltura_page.close_window_and_switch()
         assert util.get_sent_email_count(EmailTemplateType.SCHEDULE_CHANGE, self.section, self.instr) == 1
 
-    # VERIFY COURSE HISTORY
-
-    def test_history_new_eligible_times(self):
-        self.course_page.load_page(self.section)
-        self.course_page.verify_history_row(field='meeting_updated',
-                                            old_value=None,
-                                            new_value=None,
-                                            requestor=None,
-                                            status='succeeded',
-                                            published=True)
-
     # SCHEDULED COURSE MEETING START/END AND MEETING DAYS/TIMES CHANGE TO NULL
 
     def test_set_null_schedule(self):
@@ -171,8 +163,40 @@ class TestCourseScheduleChanges:
     def test_no_new_schedule_update_email(self):
         assert util.get_sent_email_count(EmailTemplateType.SCHEDULE_CHANGE, self.section, self.instr) == 1
 
-    def test_history_no_room(self):
+    # COURSE HISTORY
+
+    def test_course_sent_email_total(self):
+        assert util.get_sent_email_count(template=None, section=self.section, instructor=None) == 4
+
+    def test_course_history_row_count(self):
         self.course_page.load_page(self.section)
+        assert self.course_page.update_history_row_count() == 4
+
+    def test_course_history_instructor_added(self):
+        self.course_page.verify_history_row(field='instructor_uids',
+                                            old_value=[],
+                                            new_value=CoursePage.expected_uids_converter([self.instr]),
+                                            requestor=None,
+                                            status='succeeded',
+                                            published=True)
+
+    def test_course_history_instructor_opt_in(self):
+        self.course_page.verify_history_row(field='opted_in',
+                                            old_value='—',
+                                            new_value=f'{self.instr.uid}',
+                                            requestor=self.admin,
+                                            status='succeeded',
+                                            published=True)
+
+    def test_history_new_eligible_times(self):
+        self.course_page.verify_history_row(field='meeting_updated',
+                                            old_value=None,
+                                            new_value=None,
+                                            requestor=None,
+                                            status='succeeded',
+                                            published=True)
+
+    def test_history_no_room(self):
         self.course_page.verify_history_row(field='not_scheduled',
                                             old_value=None,
                                             new_value='—',

@@ -30,6 +30,8 @@ from xena.models.recording_placement import RecordingPlacement
 from xena.models.recording_schedule import RecordingSchedule
 from xena.models.recording_type import RecordingType
 from xena.models.section import Section
+from xena.models.user import User
+from xena.pages.course_page import CoursePage
 from xena.test_utils import util
 
 
@@ -49,6 +51,7 @@ class TestCourseRoomChanges:
     """
 
     section = util.get_test_section(util.get_test_script_course('test_single_meeting_sis_changes'))
+    admin = User({'uid': util.get_admin_uid()})
     instr = section.instructors[0]
     meeting = section.meetings[0]
     recording_schedule = RecordingSchedule(section, meeting)
@@ -308,6 +311,26 @@ class TestCourseRoomChanges:
 
     # HISTORY
 
+    def test_course_history_row_count(self):
+        self.course_page.load_page(self.section)
+        assert self.course_page.update_history_row_count() == 9
+
+    def test_course_history_instructor_added(self):
+        self.course_page.verify_history_row(field='instructor_uids',
+                                            old_value=[],
+                                            new_value=CoursePage.expected_uids_converter([self.instr]),
+                                            requestor=None,
+                                            status='succeeded',
+                                            published=True)
+
+    def test_course_history_instructor_opt_in(self):
+        self.course_page.verify_history_row(field='opted_in',
+                                            old_value='—',
+                                            new_value=f'{self.instr.uid}',
+                                            requestor=self.instr,
+                                            status='succeeded',
+                                            published=True)
+
     def test_history_rec_type_upgrade(self):
         self.course_page.load_page(self.section)
         self.course_page.verify_history_row(field='recording_type',
@@ -333,7 +356,31 @@ class TestCourseRoomChanges:
                                             status='succeeded',
                                             published=True)
 
-    def test_history_no_room(self):
+    def test_history_new_ineligible_room(self):
+        self.course_page.verify_history_row(field='room_not_eligible',
+                                            old_value=None,
+                                            new_value=None,
+                                            requestor=None,
+                                            status='succeeded',
+                                            published=True)
+
+    def test_history_newer_eligible_room(self):
+        self.course_page.verify_history_row(field='meeting_updated',
+                                            old_value=None,
+                                            new_value=None,
+                                            requestor=None,
+                                            status='succeeded',
+                                            published=True)
+
+    def test_course_history_instructor_opt_in_again(self):
+        self.course_page.verify_history_row(field='opted_in',
+                                            old_value='—',
+                                            new_value=f'{self.instr.uid}',
+                                            requestor=self.admin,
+                                            status='succeeded',
+                                            published=True)
+
+    def test_history_newer_ineligible_room(self):
         self.course_page.verify_history_row(field='room_not_eligible',
                                             old_value=None,
                                             new_value=None,

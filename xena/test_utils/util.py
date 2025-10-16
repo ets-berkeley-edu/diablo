@@ -468,22 +468,18 @@ def get_queued_email_count(template, section=None, instructor=None):
     return count
 
 
-def get_sent_email_count(template, section=None, instructor=None):
+def get_sent_email_count(template=None, section=None, instructor=None):
     term_id = app.config['CURRENT_TERM_ID']
-    clause = f' AND section_id = {section.ccn}' if section else ''
-    if instructor:
-        sql = f"""SELECT COUNT(*)
-                    FROM sent_emails
-                   WHERE term_id = {term_id}{clause}
-                     AND recipient_uid = '{instructor.uid}'
-                     AND template_type = '{template.value['type']}'
-        """
-    else:
-        sql = f"""SELECT COUNT(*)
-                    FROM sent_emails
-                   WHERE term_id = {term_id}{clause}
-                     AND template_type = '{template.value['type']}'
-        """
+    sec_clause = f' AND section_id = {section.ccn}' if section else ''
+    inst_clause = f" AND recipient_uid = '{instructor.uid}'" if instructor else ''
+    templ_clause = f" AND template_type = '{template.value['type']}'" if template else ''
+    sql = f"""SELECT COUNT(*)
+                FROM sent_emails
+               WHERE term_id = {term_id}
+                {sec_clause}
+                {inst_clause}
+                {templ_clause}
+    """
     app.logger.info(sql)
     result = db.session.execute(text(sql))
     std_commit(allow_test_environment=True)

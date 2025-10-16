@@ -32,6 +32,7 @@ from xena.models.recording_placement import RecordingPlacement
 from xena.models.recording_schedule import RecordingSchedule
 from xena.models.recording_type import RecordingType
 from xena.models.section import Section
+from xena.models.user import User
 from xena.pages.course_page import CoursePage
 from xena.test_utils import util
 
@@ -51,6 +52,7 @@ class TestWeirdTypeC:
 
     # Initial course data
     test_data = util.get_test_script_course('test_multi_meetings_1')
+    admin = User({'uid': util.get_admin_uid()})
     section = util.get_test_section(test_data)
     original_instructor = section.instructors[0]
 
@@ -404,8 +406,30 @@ class TestWeirdTypeC:
 
     # COURSE HISTORY
 
-    def test_history_ineligible_becomes_eligible(self):
+    def test_course_total_sent_email(self):
+        assert util.get_sent_email_count(template=None, section=self.section, instructor=None) == 9
+
+    def test_course_history_row_count(self):
         self.course_page.load_page(self.section)
+        assert self.course_page.update_history_row_count() == 9
+
+    def test_course_history_orig_instructor_added(self):
+        self.course_page.verify_history_row(field='instructor_uids',
+                                            old_value=[],
+                                            new_value=CoursePage.expected_uids_converter([self.original_instructor]),
+                                            requestor=None,
+                                            status='succeeded',
+                                            published=True)
+
+    def test_course_history_orig_instructor_opt_in(self):
+        self.course_page.verify_history_row(field='opted_in',
+                                            old_value='—',
+                                            new_value=f'{self.original_instructor.uid}',
+                                            requestor=self.admin,
+                                            status='succeeded',
+                                            published=True)
+
+    def test_history_ineligible_becomes_eligible(self):
         self.course_page.verify_history_row(field='meeting_added',
                                             old_value='—',
                                             new_value=None,
@@ -413,7 +437,7 @@ class TestWeirdTypeC:
                                             status='succeeded',
                                             published=True)
 
-    def test_history_instructor_removed(self):
+    def test_course_history_orig_instructor_removed(self):
         self.course_page.verify_history_row(field='instructor_uids',
                                             old_value=CoursePage.expected_uids_converter([self.original_instructor]),
                                             new_value=[],
@@ -421,7 +445,7 @@ class TestWeirdTypeC:
                                             status='succeeded',
                                             published=True)
 
-    def test_history_instructor_added(self):
+    def test_course_history_instructor_added(self):
         self.course_page.verify_history_row(field='instructor_uids',
                                             old_value=[],
                                             new_value=CoursePage.expected_uids_converter([self.new_instructor]),
@@ -429,7 +453,16 @@ class TestWeirdTypeC:
                                             status='succeeded',
                                             published=True)
 
-    def test_history_date_change(self):
+    def test_course_history_new_instructor_opt_in(self):
+        self.course_page.verify_history_row(field='opted_in',
+                                            old_value='—',
+                                            new_value=f'{self.new_instructor.uid}',
+                                            requestor=self.new_instructor,
+                                            status='succeeded',
+                                            published=True)
+
+    # Should be two of these rows
+    def test_course_history_dates_changed(self):
         self.course_page.verify_history_row(field='meeting_updated',
                                             old_value=None,
                                             new_value=None,
@@ -437,7 +470,7 @@ class TestWeirdTypeC:
                                             status='succeeded',
                                             published=True)
 
-    def test_history_room_removed(self):
+    def test_course_history_room_removed(self):
         self.course_page.verify_history_row(field='meeting_removed',
                                             old_value=None,
                                             new_value='—',

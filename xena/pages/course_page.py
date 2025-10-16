@@ -499,9 +499,16 @@ class CoursePage(DiabloPages):
 
     # COURSE UPDATE HISTORY
 
+    @staticmethod
+    def history_table_row_xpath():
+        return '//div[@id="update-history-table"]//tbody/tr[not(@id="course-history-no-data")]'
+
+    def update_history_row_count(self):
+        return len(self.elements((By.XPATH, self.history_table_row_xpath())))
+
     def update_history_table_rows(self):
         rows = []
-        xpath = '//div[@id="update-history-table"]//tbody/tr[not(@id="course-history-no-data")]'
+        xpath = self.history_table_row_xpath()
         row_els = self.elements((By.XPATH, xpath))
         for r in row_els:
             node = str(row_els.index(r) + 1)

@@ -143,14 +143,32 @@ class TestCourseCancellation:
         assert util.get_sent_email_count(EmailTemplateType.NO_LONGER_SCHEDULED, self.section,
                                          self.instructor) == 1
 
-    def test_history(self):
+    # COURSE HISTORY
+
+    def test_course_total_sent_email(self):
+        assert util.get_sent_email_count(template=None, section=self.section, instructor=None) == 2
+
+    def test_history_row_count(self):
         self.course_page.load_page(self.section)
+        assert self.course_page.update_history_row_count() == 2
+
+    def test_history_unscheduled(self):
         self.course_page.verify_history_row(field='not_scheduled',
                                             old_value=None,
                                             new_value='—',
                                             requestor=None,
                                             status='succeeded',
                                             published=True)
+
+    def test_history_opted_in(self):
+        self.course_page.verify_history_row(field='opted_in',
+                                            old_value='—',
+                                            new_value=f'{self.instructor.uid}',
+                                            requestor=self.instructor,
+                                            status='succeeded',
+                                            published=True)
+
+    # CANCELLED MESSAGING
 
     # TODO def test_admin_view_cancelled_final_msg(self):
 

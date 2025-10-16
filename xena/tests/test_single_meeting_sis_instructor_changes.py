@@ -194,7 +194,31 @@ class TestCourseInstructorChanges:
         self.kaltura_page.verify_publish_status(self.recording_schedule)
         self.kaltura_page.verify_site_categories([self.site])
 
-    # HISTORY
+    # COURSE HISTORY
+
+    def test_course_total_sent_email(self):
+        assert util.get_sent_email_count(template=None, section=self.section, instructor=None) == 8
+
+    def test_course_history_row_count(self):
+        self.kaltura_page.close_window_and_switch()
+        self.course_page.load_page(self.section)
+        assert self.course_page.update_history_row_count() == 8
+
+    def test_course_history_instructor_added(self):
+        self.course_page.verify_history_row(field='instructor_uids',
+                                            old_value=[],
+                                            new_value=CoursePage.expected_uids_converter([self.old_instructor]),
+                                            requestor=None,
+                                            status='succeeded',
+                                            published=True)
+
+    def test_course_history_instructor_opt_in(self):
+        self.course_page.verify_history_row(field='opted_in',
+                                            old_value='—',
+                                            new_value=f'{self.old_instructor.uid}',
+                                            requestor=self.old_instructor,
+                                            status='succeeded',
+                                            published=True)
 
     def test_history_rec_placement(self):
         self.kaltura_page.close_window_and_switch()
@@ -226,5 +250,21 @@ class TestCourseInstructorChanges:
                                             old_value=CoursePage.expected_uids_converter([self.old_instructor]),
                                             new_value=CoursePage.expected_uids_converter([self.new_instructor]),
                                             requestor=None,
+                                            status='succeeded',
+                                            published=True)
+
+    def test_course_history_new_instructor_opted_out(self):
+        self.course_page.verify_history_row(field='opted_in',
+                                            old_value=f'{self.new_instructor.uid}',
+                                            new_value='—',
+                                            requestor=None,
+                                            status='succeeded',
+                                            published=True)
+
+    def test_course_history_new_instructor_opt_in(self):
+        self.course_page.verify_history_row(field='opted_in',
+                                            old_value='—',
+                                            new_value=f'{self.new_instructor.uid}',
+                                            requestor=self.new_instructor,
                                             status='succeeded',
                                             published=True)

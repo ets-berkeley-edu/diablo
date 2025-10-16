@@ -31,6 +31,7 @@ from xena.models.recording_placement import RecordingPlacement
 from xena.models.recording_schedule import RecordingSchedule
 from xena.models.recording_type import RecordingType
 from xena.models.section import Section
+from xena.models.user import User
 from xena.pages.course_page import CoursePage
 from xena.test_utils import util
 
@@ -49,6 +50,7 @@ class TestWeirdTypeB:
 
     # Initial course data
     test_data = util.get_test_script_course('test_multi_meetings_0')
+    admin = User({'uid': util.get_admin_uid()})
     section = util.get_test_section(test_data)
     meeting_physical = section.meetings[0]
     meeting_online = section.meetings[1]
@@ -296,11 +298,7 @@ class TestWeirdTypeB:
 
     def test_no_room_no_longer_eligible_email(self):
         assert util.get_sent_email_count(EmailTemplateType.ROOM_CHANGE_NO_LONGER_ELIGIBLE, self.section,
-                                         self.new_instructor) == 0
-
-    def test_multi_meet_room_change_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.MULTIPLE_MEETING_PATTERN_CHANGE, self.section,
-                                         self.new_instructor) == 2
+                                         self.new_instructor) == 1
 
     # ROOM ADDED
 
@@ -328,8 +326,29 @@ class TestWeirdTypeB:
 
     # COURSE HISTORY
 
-    def test_course_history_instructor_removed(self):
-        self.course_page.load_page(self.section)
+    def test_course_total_sent_email(self):
+        assert util.get_sent_email_count(template=None, section=self.section, instructor=None) == 8
+
+    def test_course_history_row_count(self):
+        assert self.course_page.update_history_row_count() == 8
+
+    def test_course_history_orig_instructor_added(self):
+        self.course_page.verify_history_row(field='instructor_uids',
+                                            old_value=[],
+                                            new_value=CoursePage.expected_uids_converter([self.original_instructor]),
+                                            requestor=None,
+                                            status='succeeded',
+                                            published=True)
+
+    def test_course_history_orig_instructor_opt_in(self):
+        self.course_page.verify_history_row(field='opted_in',
+                                            old_value='—',
+                                            new_value=f'{self.original_instructor.uid}',
+                                            requestor=self.original_instructor,
+                                            status='succeeded',
+                                            published=True)
+
+    def test_course_history_orig_instructor_removed(self):
         self.course_page.verify_history_row(field='instructor_uids',
                                             old_value=CoursePage.expected_uids_converter([self.original_instructor]),
                                             new_value=[],
@@ -342,6 +361,14 @@ class TestWeirdTypeB:
                                             old_value=[],
                                             new_value=CoursePage.expected_uids_converter([self.new_instructor]),
                                             requestor=None,
+                                            status='succeeded',
+                                            published=True)
+
+    def test_course_history_new_instructor_opt_in(self):
+        self.course_page.verify_history_row(field='opted_in',
+                                            old_value='—',
+                                            new_value=f'{self.new_instructor.uid}',
+                                            requestor=self.new_instructor,
                                             status='succeeded',
                                             published=True)
 
@@ -358,5 +385,13 @@ class TestWeirdTypeB:
                                             old_value=None,
                                             new_value=None,
                                             requestor=None,
+                                            status='succeeded',
+                                            published=True)
+
+    def test_course_history_new_instructor_opt_in_again(self):
+        self.course_page.verify_history_row(field='opted_in',
+                                            old_value='—',
+                                            new_value=f'{self.new_instructor.uid}',
+                                            requestor=self.admin,
                                             status='succeeded',
                                             published=True)
