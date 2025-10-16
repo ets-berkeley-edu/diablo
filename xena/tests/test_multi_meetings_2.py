@@ -32,6 +32,7 @@ from xena.models.email_template_type import EmailTemplateType
 from xena.models.recording_placement import RecordingPlacement
 from xena.models.recording_schedule import RecordingSchedule
 from xena.models.recording_type import RecordingType
+from xena.models.user import User
 from xena.pages.course_page import CoursePage
 from xena.test_utils import util
 
@@ -49,6 +50,7 @@ class TestWeirdTypeD:
     """
 
     test_data = util.get_test_script_course('test_multi_meetings_2')
+    admin = User({'uid': util.get_admin_uid()})
     section = util.get_test_section(test_data)
     instructor = section.instructors[0]
     meeting_0 = section.meetings[0]
@@ -74,7 +76,7 @@ class TestWeirdTypeD:
     # CREATE COURSE SITE
 
     def test_create_course_site(self):
-        self.canvas_page.create_site(self.section, self.site)
+        self.canvas_page.create_site(self.section, self.site, self.calnet_page)
         self.canvas_page.add_user_to_site(self.site, self.instructor, 'Designer')
 
     # SCHEDULE RECORDINGS
@@ -234,8 +236,31 @@ class TestWeirdTypeD:
 
     # VERIFY COURSE HISTORY
 
-    def test_history_publish_type(self):
+    def test_course_total_sent_email(self):
+        assert util.get_sent_email_count(template=None, section=self.section, instructor=None) == 3
+
+    def test_course_history_row_count(self):
         self.course_page.load_page(self.section)
+        assert self.course_page.update_history_row_count() == 4
+
+    def test_course_history_instructor_added(self):
+        self.course_page.verify_history_row(field='instructor_uids',
+                                            old_value=[],
+                                            new_value=CoursePage.expected_uids_converter([self.instructor]),
+                                            requestor=None,
+                                            status='succeeded',
+                                            published=True)
+
+    def test_course_history_instructor_opt_in(self):
+        self.course_page.verify_history_row(field='opted_in',
+                                            old_value='—',
+                                            new_value=f'{self.instructor.uid}',
+                                            requestor=self.instructor,
+                                            status='succeeded',
+                                            published=True)
+
+
+    def test_history_publish_type(self):
         self.course_page.verify_history_row(field='publish_type',
                                             old_value=RecordingPlacement.PLACE_IN_MY_MEDIA.value['db'],
                                             new_value=RecordingPlacement.PUBLISH_AUTOMATICALLY.value['db'],

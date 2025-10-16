@@ -405,6 +405,30 @@ class TestScheduling2:
 
     # VERIFY COURSE HISTORY
 
+    def test_course_total_sent_email(self):
+        assert util.get_sent_email_count(template=None, section=self.section, instructor=None) == 10
+
+    def test_course_history_row_count(self):
+        self.kaltura_page.close_window_and_switch()
+        self.course_page.load_page(self.section)
+        assert self.course_page.update_history_row_count() == 9
+
+    def test_course_history_instructor_0_added(self):
+        self.course_page.verify_history_row(field='instructor_uids',
+                                            old_value=[],
+                                            new_value=CoursePage.expected_uids_converter([self.instructor_0, self.instructor_1]),
+                                            requestor=None,
+                                            status='succeeded',
+                                            published=True)
+
+    def test_course_history_instructor_0_opt_in(self):
+        self.course_page.verify_history_row(field='opted_in',
+                                            old_value='—',
+                                            new_value=f'{self.instructor_0.uid}',
+                                            requestor=self.instructor_0,
+                                            status='succeeded',
+                                            published=True)
+
     def test_history_pub_type_automatic(self):
         self.course_page.verify_history_row(field='publish_type',
                                             old_value='—',
@@ -421,6 +445,14 @@ class TestScheduling2:
                                             status='succeeded',
                                             published=True)
 
+    def test_course_history_instructor_1_opt_in(self):
+        self.course_page.verify_history_row(field='opted_in',
+                                            old_value='—',
+                                            new_value=f'{self.instructor_1.uid}',
+                                            requestor=self.instructor_1,
+                                            status='succeeded',
+                                            published=True)
+
     def test_history_add_site_1(self):
         self.course_page.verify_history_row(field='canvas_site_ids',
                                             old_value=CoursePage.expected_site_ids_converter([self.site_0]),
@@ -433,6 +465,22 @@ class TestScheduling2:
         self.course_page.verify_history_row(field='canvas_site_ids',
                                             old_value=CoursePage.expected_site_ids_converter([self.site_0, self.site_1]),
                                             new_value=CoursePage.expected_site_ids_converter([self.site_0]),
+                                            requestor=self.instructor_1,
+                                            status='succeeded',
+                                            published=True)
+
+    def test_history_pub_type_private(self):
+        self.course_page.verify_history_row(field='publish_type',
+                                            old_value=RecordingPlacement.PUBLISH_AUTOMATICALLY.value['db'],
+                                            new_value=RecordingPlacement.PLACE_IN_MY_MEDIA.value['db'],
+                                            requestor=self.instructor_1,
+                                            status='succeeded',
+                                            published=True)
+
+    def test_history_remove_site_0(self):
+        self.course_page.verify_history_row(field='canvas_site_ids',
+                                            old_value=CoursePage.expected_site_ids_converter([self.site_0]),
+                                            new_value='—',
                                             requestor=self.instructor_1,
                                             status='succeeded',
                                             published=True)

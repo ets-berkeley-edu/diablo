@@ -490,6 +490,29 @@ class TestScheduling0:
 
     # VERIFY COURSE HISTORY
 
+    def test_course_total_sent_email(self):
+        assert util.get_sent_email_count(template=None, section=self.section, instructor=None) == 5
+
+    def test_course_history_row_count(self):
+        self.course_page.load_page(self.section)
+        assert self.course_page.update_history_row_count() == 8
+
+    def test_course_history_instructor_added(self):
+        self.course_page.verify_history_row(field='instructor_uids',
+                                            old_value=[],
+                                            new_value=CoursePage.expected_uids_converter([self.instructor]),
+                                            requestor=None,
+                                            status='succeeded',
+                                            published=True)
+
+    def test_course_history_instructor_opt_in(self):
+        self.course_page.verify_history_row(field='opted_in',
+                                            old_value='—',
+                                            new_value=f'{self.instructor.uid}',
+                                            requestor=self.instructor,
+                                            status='succeeded',
+                                            published=True)
+
     def test_course_history_rec_type_updated(self):
         self.course_page.load_page(self.section)
         self.course_page.verify_history_row(field='recording_type',
@@ -527,6 +550,14 @@ class TestScheduling0:
         self.course_page.verify_history_row(field='recording_type',
                                             old_value=RecordingType.VIDEO_WITH_OPERATOR.value['db'],
                                             new_value=RecordingType.VIDEO_SANS_OPERATOR.value['db'],
+                                            requestor=self.admin,
+                                            status='succeeded',
+                                            published=True)
+
+    def test_course_history_canvas_site_reverted(self):
+        self.course_page.verify_history_row(field='canvas_site_ids',
+                                            old_value=CoursePage.expected_site_ids_converter([self.site]),
+                                            new_value='—',
                                             requestor=self.admin,
                                             status='succeeded',
                                             published=True)

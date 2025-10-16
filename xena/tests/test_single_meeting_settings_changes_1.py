@@ -246,9 +246,31 @@ class TestScheduling1:
 
     # VERIFY COURSE HISTORY
 
-    def test_course_history_rec_type_updated(self):
+    def test_course_history_row_count(self):
         self.kaltura_page.close_window_and_switch()
         self.course_page.load_page(self.section)
+        assert self.course_page.update_history_row_count() == 4
+
+    def test_course_total_sent_email(self):
+        assert util.get_sent_email_count(template=None, section=self.section, instructor=None) == 3
+
+    def test_course_history_instructor_added(self):
+        self.course_page.verify_history_row(field='instructor_uids',
+                                            old_value=[],
+                                            new_value=CoursePage.expected_uids_converter([self.instructor]),
+                                            requestor=None,
+                                            status='succeeded',
+                                            published=True)
+
+    def test_course_history_instructor_opt_in(self):
+        self.course_page.verify_history_row(field='opted_in',
+                                            old_value='—',
+                                            new_value=f'{self.instructor.uid}',
+                                            requestor=self.admin,
+                                            status='succeeded',
+                                            published=True)
+
+    def test_course_history_rec_type_updated(self):
         self.course_page.verify_history_row(field='publish_type',
                                             old_value='—',
                                             new_value=RecordingPlacement.PUBLISH_AUTOMATICALLY.value['db'],

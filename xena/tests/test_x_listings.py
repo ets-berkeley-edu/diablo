@@ -78,7 +78,7 @@ class TestCrossListings:
         self.courses_page.click_course_page_link(self.section)
         self.course_page.instructor_opt_in_section(self.section, self.instructor)
 
-    def test_semester_start(self):
+    def test_schedule_recordings(self):
         self.login_page.dev_auth()
         self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
         assert util.get_kaltura_id(self.recording_schedule)
@@ -246,8 +246,30 @@ class TestCrossListings:
 
     # COURSE HISTORY
 
-    def test_history_publish_type(self):
+    def test_course_sent_email_total(self):
+        assert util.get_sent_email_count(template=None, section=self.section, instructor=None) == 6
+
+    def test_course_history_row_count(self):
         self.course_page.load_page(self.section)
+        assert self.course_page.update_history_row_count() == 6
+
+    def test_course_history_instructor_added(self):
+        self.course_page.verify_history_row(field='instructor_uids',
+                                            old_value=[],
+                                            new_value=CoursePage.expected_uids_converter([self.instructor]),
+                                            requestor=None,
+                                            status='succeeded',
+                                            published=True)
+
+    def test_course_history_instructor_opt_in(self):
+        self.course_page.verify_history_row(field='opted_in',
+                                            old_value='—',
+                                            new_value=f'{self.instructor.uid}',
+                                            requestor=self.instructor,
+                                            status='succeeded',
+                                            published=True)
+
+    def test_history_publish_type(self):
         self.course_page.verify_history_row(field='publish_type',
                                             old_value=RecordingPlacement.PLACE_IN_MY_MEDIA.value['db'],
                                             new_value=RecordingPlacement.PUBLISH_AUTOMATICALLY.value['db'],
@@ -264,14 +286,6 @@ class TestCrossListings:
                                             published=True)
 
     def test_history_secondary_section_deleted(self):
-        self.course_page.verify_history_row(field='not_scheduled',
-                                            old_value=None,
-                                            new_value='—',
-                                            requestor=None,
-                                            status='succeeded',
-                                            published=True)
-
-    def test_history_primary_section_deleted(self):
         self.course_page.verify_history_row(field='not_scheduled',
                                             old_value=None,
                                             new_value='—',
