@@ -133,7 +133,8 @@ class TestScheduling1:
         self.instructor_page.click_course_page_link(self.section)
         self.course_page.admin_opt_in_section(self.section)
 
-    # TODO def test_opted_in_messaging
+    def test_opted_in_messaging(self):
+        assert self.course_page.is_present(self.course_page.OPTED_IN_PENDING_MSG)
 
     def test_rec_type_options(self):
         self.course_page.click_rec_type_edit_button()
@@ -158,7 +159,8 @@ class TestScheduling1:
     def test_visible_site_ids_updated(self):
         assert self.course_page.visible_course_site_ids() == [self.site.site_id]
 
-    # TODO def test_admin_settings_update_msg(self):
+    def test_admin_settings_update_msg(self):
+        assert self.course_page.is_present(self.course_page.UPDATES_QUEUED_MSG)
 
     # SCHEDULE RECORDINGS
 

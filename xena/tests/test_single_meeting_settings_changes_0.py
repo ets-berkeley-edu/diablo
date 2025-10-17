@@ -113,7 +113,7 @@ class TestScheduling0:
 
     def test_admin_view_pre_opt_in(self):
         self.course_page.load_page(self.section)
-        # TODO - verify course page messaging
+        assert self.course_page.is_present(self.course_page.NOT_OPTED_IN_MSG)
 
     # INSTRUCTOR LOGS IN
 
@@ -138,17 +138,12 @@ class TestScheduling0:
         assert self.course_page.visible_cross_listing_codes() == listing_codes
 
     def test_instructor_view_pre_opt_in(self):
-        # TODO - update expected messaging below:
-        assert self.course_page.is_present(CoursePage.SCHEDULED_MSG)
-        assert not self.course_page.is_present(CoursePage.SCHEDULING_TO_COME_MSG)
-        assert not self.course_page.is_present(CoursePage.UPDATES_QUEUED_MSG)
-        assert not self.course_page.is_present(CoursePage.OPT_OUT_QUEUED_MSG)
-        assert not self.course_page.is_present(CoursePage.OPT_OUT_DONE_MSG)
-        assert not self.course_page.is_present(CoursePage.NOT_ELIGIBLE_MSG)
+        assert self.course_page.is_present(CoursePage.NOT_OPTED_IN_MSG)
 
     # VERIFY NO SETTINGS OPTIONS UNTIL OPT-IN
 
-    # TODO def test_no_settings_edit_msg(self):
+    def test_no_settings_edit_msg(self):
+        assert self.course_page.is_present(self.course_page.NO_SETTINGS_EDITS_MSG)
 
     def test_no_collaborator_edits(self):
         assert not self.course_page.is_present(self.course_page.COLLAB_EDIT_BUTTON)
@@ -164,7 +159,8 @@ class TestScheduling0:
         self.courses_page.click_course_page_link(self.section)
         self.course_page.instructor_opt_in_section(self.section, self.instructor)
 
-    # TODO def test_instructor_view_post_opt_in(self):
+    def test_instructor_view_post_opt_in(self):
+        assert self.course_page.is_present(self.course_page.OPTED_IN_PENDING_MSG)
 
     def test_rec_type_options(self):
         self.course_page.click_rec_type_edit_button()
@@ -191,18 +187,14 @@ class TestScheduling0:
     def test_no_instructor_kaltura_link(self):
         assert not self.course_page.is_present(self.course_page.kaltura_series_link(self.recording_schedule))
 
-    def test_how_to_publish_from_my_media_link(self):
-        title = 'IT - How do I publish media from My Media to a Media Gallery in bCourses?'
-        assert self.course_page.external_link_valid(self.course_page.HOW_TO_PUBLISH_LINK, title)
+    def test_how_to_prevent_issues_link(self):
+        assert not self.course_page.is_present(self.course_page.HOW_TO_PREVENT_ISSUES_LINK)
 
-    def test_how_to_embed_in_bcourses_link(self):
-        title = 'IT - How do I embed Kaltura media in bCourses using the Rich Content Editor?'
-        assert self.course_page.external_link_valid(self.course_page.HOW_TO_EMBED_LINK, title)
+    def test_how_to_share_recordings_link(self):
+        title = 'IT - How do I remove media from My Media or a bCourses Media Gallery?'
+        assert self.course_page.external_link_valid(self.course_page.HOW_TO_SHARE_LINK, title)
 
-    def test_no_how_to_remove_a_recording_link(self):
-        assert not self.course_page.is_present(self.course_page.HOW_TO_REMOVE_LINK)
-
-    def test_how_to_download_second_stream_link(self):
+    def test_how_to_download_media_link(self):
         title = 'IT - How do I download the second stream of a dual-stream video?'
         assert self.course_page.external_link_valid(self.course_page.HOW_TO_DOWNLOAD_LINK, title)
 
@@ -301,7 +293,8 @@ class TestScheduling0:
         self.courses_page.click_course_page_link(self.section)
         self.course_page.wait_for_diablo_title(f'{self.section.code}, {self.section.number}')
 
-    # TODO - def test_instructor_view_post_scheduling(self):
+    def test_instructor_view_post_scheduling(self):
+        assert self.course_page.is_present(self.course_page.SCHEDULED_MSG)
 
     def test_choose_placement(self):
         self.course_page.click_edit_recording_placement()
@@ -324,17 +317,14 @@ class TestScheduling0:
     def test_site_link(self):
         assert self.course_page.external_link_valid(CoursePage.selected_placement_site_loc(self.site), self.site.name)
 
-    def test_no_publish_from_my_media_link(self):
-        assert not self.course_page.is_present(self.course_page.HOW_TO_PUBLISH_LINK)
+    def test_how_to_prevent_issues_link_again(self):
+        assert not self.course_page.is_present(self.course_page.HOW_TO_PREVENT_ISSUES_LINK)
 
-    def test_no_how_to_embed_in_bcourses_link(self):
-        assert not self.course_page.is_present(self.course_page.HOW_TO_EMBED_LINK)
-
-    def test_how_to_remove_a_recording_link(self):
+    def test_how_to_share_recordings_link_again(self):
         title = 'IT - How do I remove media from My Media or a bCourses Media Gallery?'
-        assert self.course_page.external_link_valid(self.course_page.HOW_TO_REMOVE_LINK, title)
+        assert self.course_page.external_link_valid(self.course_page.HOW_TO_SHARE_LINK, title)
 
-    def test_how_to_download_second_stream_link_again(self):
+    def test_how_to_download_media_link_again(self):
         title = 'IT - How do I download the second stream of a dual-stream video?'
         assert self.course_page.external_link_valid(self.course_page.HOW_TO_DOWNLOAD_LINK, title)
 
@@ -442,14 +432,14 @@ class TestScheduling0:
         title = 'IT - How do I publish media from My Media to a Media Gallery in bCourses?'
         assert self.course_page.external_link_valid(self.course_page.HOW_TO_PUBLISH_LINK, title)
 
-    def test_revert_how_to_embed_in_bcourses_link(self):
-        title = 'IT - How do I embed Kaltura media in bCourses using the Rich Content Editor?'
-        assert self.course_page.external_link_valid(self.course_page.HOW_TO_EMBED_LINK, title)
+    def test_revert_how_to_prevent_issues_link(self):
+        assert not self.course_page.is_present(self.course_page.HOW_TO_PREVENT_ISSUES_LINK)
 
-    def test_revert_no_how_to_remove_a_recording_link(self):
-        assert not self.course_page.is_present(self.course_page.HOW_TO_REMOVE_LINK)
+    def test_revert_how_to_share_recordings_link(self):
+        title = 'IT - How do I remove media from My Media or a bCourses Media Gallery?'
+        assert self.course_page.external_link_valid(self.course_page.HOW_TO_SHARE_LINK, title)
 
-    def test_revert_how_to_download_second_stream_link(self):
+    def test_revert_how_to_download_media_link(self):
         title = 'IT - How do I download the second stream of a dual-stream video?'
         assert self.course_page.external_link_valid(self.course_page.HOW_TO_DOWNLOAD_LINK, title)
 

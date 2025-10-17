@@ -66,15 +66,15 @@ class TestCollaborators0:
         self.login_page.dev_auth(self.instructor.uid)
         self.courses_page.click_course_page_link(self.section)
         self.course_page.wait_for_diablo_title(f'{self.section.code}, {self.section.number}')
-        # TODO assert visibility of proxy collaborator
+        assert self.course_page.is_collaborator_present(self.proxy)
 
     def test_instructor_opt_in(self):
         self.course_page.instructor_opt_in_section(self.section, self.instructor)
-        # TODO assert visibility of proxy collaborator
+        assert self.course_page.is_present(self.course_page.OPTED_IN_PENDING_MSG)
 
     def test_instructor_view_editable_collaborators(self):
         self.course_page.click_edit_collaborators()
-        # TODO assert visibility of proxy collaborator
+        assert self.course_page.is_collaborator_present(self.proxy)
 
     def test_schedule_recordings(self):
         self.login_page.dev_auth()

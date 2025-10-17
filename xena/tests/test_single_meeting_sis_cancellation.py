@@ -80,7 +80,8 @@ class TestCourseCancellation:
         assert not self.course_page.is_present(CoursePage.RECORDING_TYPE_EDIT_BUTTON)
         assert not self.course_page.is_present(CoursePage.PLACEMENT_EDIT_BUTTON)
 
-    # TODO def test_admin_view_cancelled_msg(self):
+    def test_admin_view_cancelled_msg(self):
+        assert self.course_page.is_present(self.course_page.CXL_COURSE_MSG)
 
     def test_cancel_pre_sched_no_teacher_result(self):
         self.login_page.dev_auth(self.instructor.uid)
@@ -89,7 +90,7 @@ class TestCourseCancellation:
 
     def test_instructor_view_cancelled_msg(self):
         self.course_page.load_page(self.section)
-        # TODO verify message
+        assert self.course_page.is_present(self.course_page.CXL_COURSE_MSG)
 
     # COURSE IS RESTORED AND SCHEDULED
 
@@ -117,12 +118,13 @@ class TestCourseCancellation:
         self.course_page.load_page(self.section)
         assert self.course_page.is_canceled()
 
-    # TODO def test_admin_view_cancelled_again_msg(self):
+    def test_admin_view_cancelled_again_msg(self):
+        assert self.course_page.is_present(self.course_page.CXL_COURSE_MSG)
 
     def test_instructor_view_cancelled_again_msg(self):
         self.login_page.dev_auth(self.instructor.uid)
         self.course_page.load_page(self.section)
-        # TODO verify message
+        assert self.course_page.is_present(self.course_page.CXL_COURSE_MSG)
 
     # UNSCHEDULE CANCELED COURSE
 
@@ -170,9 +172,10 @@ class TestCourseCancellation:
 
     # CANCELLED MESSAGING
 
-    # TODO def test_admin_view_cancelled_final_msg(self):
+    def test_admin_view_cancelled_final_msg(self):
+        assert self.course_page.is_present(self.course_page.CXL_COURSE_MSG)
 
     def test_instructor_view_cancelled_final_msg(self):
         self.login_page.dev_auth(self.instructor.uid)
         self.course_page.load_page(self.section)
-        # TODO verify message
+        assert self.course_page.is_present(self.course_page.CXL_COURSE_MSG)
