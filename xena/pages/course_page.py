@@ -37,16 +37,12 @@ from xena.test_utils import util
 
 class CoursePage(DiabloPages):
 
-    SCHEDULING_TO_COME_MSG = By.ID, 'notice-eligible-not-scheduled'
-    SCHEDULED_MSG = By.ID, 'notice-scheduled'
-    UPDATES_QUEUED_MSG = By.ID, 'notice-queued'
-    # TODO - PRE_OPT_IN_MSG
-    # TODO - PARTIAL_OPT_IN_MSG
-    # TODO _ FULL_OPT_IN_MSG
-    OPT_OUT_QUEUED_MSG = By.ID, 'notice-opt-out-pending-instructors'
-    OPT_OUT_QUEUED_NO_INSTRUCTORS_MSG = By.ID, 'notice-opt-out-pending-no-instructors'
-    OPT_OUT_DONE_MSG = By.ID, 'notice-opt-out'
-    NOT_ELIGIBLE_MSG = By.ID, 'course-not-eligible'
+    NOT_OPTED_IN_MSG = By.XPATH, '//*[contains(., "at least one instructor is not opted in")]'
+    OPTED_IN_PENDING_MSG = By.XPATH, '//*[contains(., "Scheduling for this course is pending")]'
+    UPDATES_QUEUED_MSG = By.XPATH, '//*[contains(., "Recent updates to recording settings are queued")]'
+    SCHEDULED_MSG = By.XPATH, '//*[contains(., "This course is scheduled for Course Capture")]'
+    CXL_COURSE_MSG = By.XPATH, '//*[contains(., "UC Berkeley has canceled this section")]'
+    NOT_ELIGIBLE_MSG = By.XPATH, '//*[contains(., "This course is not eligible for Course Capture")]'
 
     @staticmethod
     def instructor_link_locator(instructor):
@@ -259,6 +255,10 @@ class CoursePage(DiabloPages):
         else:
             self.click_element(toggle)
             time.sleep(1)
+
+    # CAPTURE SETTINGS
+
+    NO_SETTINGS_EDITS_MSG = By.XPATH, '//div[contains(., "Course preferences will be editable when you opt in")]'
 
     # CAPTURE SETTINGS - collaborators
 
@@ -473,11 +473,10 @@ class CoursePage(DiabloPages):
 
     # KB LINKS
 
-    HOW_TO_PUBLISH_LINK = By.ID, 'link-publish-my-media'
-    HOW_TO_REMOVE_LINK = By.ID, 'link-remove-recording'
-    HOW_TO_EMBED_LINK = By.ID, 'link-embed-rich-content'
-    HOW_TO_DOWNLOAD_LINK = By.ID, 'link-download-second-stream'
-    COURSE_CAPTURE_FAQ_LINK = By.ID, 'link-faq'
+    HOW_TO_PREVENT_ISSUES_LINK = By.LINK_TEXT, 'How to prevent recording issues in the classroom'
+    HOW_TO_SHARE_LINK = By.LINK_TEXT, 'How to share Course Capture recordings'
+    HOW_TO_DOWNLOAD_LINK = By.LINK_TEXT, 'How do I download Kaltura media'
+    COURSE_CAPTURE_FAQ_LINK = By.LINK_TEXT, 'Course Capture FAQ'
 
     # KALTURA SERIES INFO
 
@@ -494,7 +493,7 @@ class CoursePage(DiabloPages):
         self.switch_to_last_window(self.window_handles())
 
     def verify_no_scheduled_recordings(self):
-        assert self.is_present(self.SCHEDULING_TO_COME_MSG)
+        assert self.is_present(self.NOT_OPTED_IN_MSG)
         assert self.is_present(self.NO_SCHEDULED_RECORDINGS_TEXT)
 
     # COURSE UPDATE HISTORY

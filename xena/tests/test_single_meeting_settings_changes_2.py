@@ -114,12 +114,14 @@ class TestScheduling2:
         listing_codes = [li.code for li in self.section.listings]
         assert self.course_page.visible_cross_listing_codes() == listing_codes
 
-    # TODO def test_first_instructor_pre_opt_in_msg(self):
+    def test_first_instructor_pre_opt_in_msg(self):
+        assert self.course_page.is_present(self.course_page.NOT_OPTED_IN_MSG)
 
     def test_instructor_opt_in(self):
         self.course_page.instructor_opt_in_section(self.section, self.instructor_0)
 
-    # TODO def test_first_instructor_post_opt_in_msg(self):
+    def test_first_instructor_post_opt_in_msg(self):
+        assert self.course_page.is_present(self.course_page.NOT_OPTED_IN_MSG)
 
     # VERIFY AVAILABLE OPTIONS
 
@@ -144,7 +146,8 @@ class TestScheduling2:
     def test_site_link(self):
         assert self.course_page.external_link_valid(CoursePage.selected_placement_site_loc(self.site_0), self.site_0.name)
 
-    # TODO def test_first_instructor_post_settings_update_msg(self):
+    def test_first_instructor_post_settings_update_msg(self):
+        assert not self.course_page.is_present(self.course_page.UPDATES_QUEUED_MSG)
 
     # RUN KALTURA AND EMAIL JOBS, VERIFY NO RECORDINGS SCHEDULED AND NO SETTINGS UPDATE EMAIL SENT YET
 
@@ -168,8 +171,7 @@ class TestScheduling2:
         assert self.ouija_page.is_course_in_results(self.section)
 
     def test_partially_approved_sched_status(self):
-        assert self.ouija_page.visible_course_row_sched_status(self.section) == 'Not Scheduled'
-        # TODO - verify partially approved status
+        assert self.ouija_page.visible_course_row_sched_status(self.section) == 'Partial Opt-in'
 
     def test_partially_approved_filter_eligible(self):
         self.ouija_page.filter_for_eligible()
@@ -205,12 +207,14 @@ class TestScheduling2:
     def test_no_rec_placement_options(self):
         assert not self.course_page.is_present(self.course_page.PLACEMENT_EDIT_BUTTON)
 
-    # TODO def test_second_instructor_pre_opt_in_msg(self):
+    def test_second_instructor_pre_opt_in_msg(self):
+        assert self.course_page.is_present(self.course_page.NOT_OPTED_IN_MSG)
 
     def test_opt_in(self):
         self.course_page.instructor_opt_in_section(self.section, self.instructor_1)
 
-    # TODO def test_second_instructor_post_opt_in_msg(self):
+    def test_second_instructor_post_opt_in_msg(self):
+        assert self.course_page.is_present(self.course_page.OPTED_IN_PENDING_MSG)
 
     def test_another_site_add_to_channels(self):
         self.course_page.click_edit_recording_placement()
@@ -225,7 +229,8 @@ class TestScheduling2:
         assert self.course_page.external_link_valid(CoursePage.selected_placement_site_loc(self.site_1),
                                                     self.site_1.name)
 
-    # TODO def test_second_instructor_post_settings_update_msg(self):
+    def test_second_instructor_post_settings_update_msg(self):
+        assert self.course_page.is_present(self.course_page.UPDATES_QUEUED_MSG)
 
     # SCHEDULE RECORDINGS
 
@@ -325,7 +330,7 @@ class TestScheduling2:
         self.login_page.dev_auth(self.instructor_1.uid)
         self.instructor_page.click_course_page_link(self.section)
         self.course_page.wait_for_diablo_title(f'{self.section.code}, {self.section.number}')
-        # TODO - assert messaging
+        assert self.course_page.is_present(self.course_page.SCHEDULED_MSG)
 
     def test_delete_course_site(self):
         self.course_page.click_edit_recording_placement()
