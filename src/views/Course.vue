@@ -27,7 +27,7 @@
             <DescribeCourseSchedulingStatus />
             <CoursePageInstructors v-if="isEligibleForCourseCapture" class="mt-2" />
           </v-card>
-          <v-card v-if="!course.deletedAt" class="mt-8 pb-4 px-4">
+          <v-card v-if="!course.deletedAt && isEligibleForCourseCapture" class="mt-8 pb-4 px-4">
             <v-container v-if="isEligibleForCourseCapture">
               <v-expand-transition>
                 <div v-if="!currentUser.isAdmin && !find(course.instructors, ['uid', currentUser.uid])?.hasOptedIn" class="font-size-18 mb-1 mt-2 text-warning">
@@ -40,8 +40,7 @@
               <v-row v-if="!currentUser.isAdmin && course.publishType">
                 <v-col>
                   <hr>
-                  <KnowledgeBaseKalturaMyMedia v-if="course.publishType === 'kaltura_my_media'" class="mt-6" />
-                  <KnowledgeBaseKalturaMediaGallery v-if="course.publishType.startsWith('kaltura_media_gallery')" class="mt-6" />
+                  <KnowledgeBaseKalturaMyMedia class="mt-6" />
                 </v-col>
               </v-row>
             </v-container>
@@ -96,7 +95,6 @@ import CoursePageInstructors from '@/components/course/CoursePageInstructors.vue
 import CoursePageSidebar from '@/components/course/CoursePageSidebar.vue'
 import DescribeCourseSchedulingStatus from '@/components/course/DescribeCourseSchedulingStatus.vue'
 import KnowledgeBaseKalturaMyMedia from '@/components/course/KnowledgeBaseKalturaMyMedia.vue'
-import KnowledgeBaseKalturaMediaGallery from '@/components/course/KnowledgeBaseKalturaMediaGallery.vue'
 import PageTitle from '@/components/util/PageTitle.vue'
 import RecordingPlacement from '@/components/course/RecordingPlacement.vue'
 import RecordingType from '@/components/course/RecordingType.vue'

@@ -16,12 +16,12 @@
           class="font-weight-bold"
           density="compact"
           :icon="mdiAlert"
-          text="Recent updates to recording settings are currently queued to go live. They will be activated within an hour."
+          text="Recent updates to recording settings are queued to go live. They will be in effect within an hour."
           type="warning"
           variant="outlined"
         />
         <div id="notice-scheduled" class="font-weight-bold text-success mt-3">
-          {{ currentUser.isAdmin ? 'The' : 'Your' }} course is scheduled for Course Capture. The first recording is on
+          This course is scheduled for Course Capture. The first recording is on
           <span class="text-no-wrap">
             <Date :date="course.scheduled[0].meetingStartDate" />.
           </span>
@@ -34,9 +34,7 @@
     >
       <v-icon class="mr-3 mt-1" color="error" :icon="mdiAlert" />
       <div v-if="!course.hasOptedIn && instructors.length" id="notice-opt-out" class="text-error">
-        {{ currentUser.isAdmin ? 'The' : 'Your' }} course is not scheduled for Course Capture because
-        {{ instructors.length === 1 && currentUser.uid === instructors[0].uid ? 'you have' : `${instructorsNotOptedInNames} ${instructorsNotOptedIn.length === 1 ? 'has ' : 'have'}` }}
-        not opted in. To schedule recordings, please have all instructors opt-in.
+        This course is not scheduled for Course Capture because at least one instructor is not opted in.
       </div>
       <!--
       -------------------------------------------
@@ -76,8 +74,7 @@
         if you have any questions.
       </span>
       <span v-if="course.hasOptedIn && instructors.length" id="notice-eligible-not-scheduled" class="text-success">
-        This course is eligible for scheduling, but has not yet been scheduled. Instructors will be notified when
-        scheduling has taken place.
+        Scheduling for this course is pending. This process will complete within an hour. Instructors will be notified when scheduling takes place.
       </span>
       <span v-if="!instructors.length" class="text-success">
         <span
