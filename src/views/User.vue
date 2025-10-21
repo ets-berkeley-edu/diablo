@@ -112,7 +112,7 @@
         <ProgressButton
           id="btn-save-note"
           :action="saveNote"
-          :disabled="!noteBody || isSavingNote"
+          :disabled="isSavingNote || (!user.note && !trim(noteBody))"
           :in-progress="isSavingNote"
           :text="isSavingNote ? 'Saving' : 'Save'"
         />
@@ -131,32 +131,31 @@
 
 <script setup>
 import {computed, onMounted, ref} from 'vue'
-import {useRoute} from 'vue-router'
-import {storeToRefs} from 'pinia'
-import {filter, isEmpty, trim} from 'lodash'
+import {filter, isEmpty, toString, trim} from 'lodash'
 import {mdiSchoolOutline} from '@mdi/js'
+import {storeToRefs} from 'pinia'
+import {useRoute} from 'vue-router'
 import {alertScreenReader, partitionCoursesByEligibility, putFocusNextTick} from '@/lib/utils'
-import {getCourseCodes} from '@/lib/berkeley'
 import {deleteUserNote, getUser, updateUserNote} from '@/api/user'
+import {getCourseCodes} from '@/lib/berkeley'
 import {useContextStore} from '@/stores/context'
+import CourseCapturePreferences from '@/components/course/CourseCapturePreferences.vue'
 import CoursesDataTable from '@/components/course/CoursesDataTable.vue'
 import PageTitle from '@/components/util/PageTitle.vue'
 import ProgressButton from '@/components/util/ProgressButton'
-import CourseCapturePreferences from '@/components/course/CourseCapturePreferences.vue'
 
 
 const contextStore = useContextStore()
 const {currentUser, loading} = storeToRefs(contextStore)
 
 const route = useRoute()
-const uid = route.params.uid
-
 const eligibleCourses = ref([])
 const ineligibleCourses = ref([])
 const isEditingNote = ref(false)
-const isSavingNote = ref(false)
 const isRefreshingCourses = ref(false)
+const isSavingNote = ref(false)
 const noteBody = ref('')
+const uid = toString(route.params.uid)
 const user = ref({})
 const showIneligible = ref(false)
 
@@ -169,7 +168,32 @@ const anyCourseOptedInOrScheduled = computed(() => {
 })
 
 onMounted(() => {
-  refreshUser().then(() => {
+  getUser(uid).then(data => {
+    user.value = data
+    data.courses.forEach(course => {
+      course.courseCodes = getCourseCodes(course)
+    })
+    noteBody.value = data.note
+    eligibleCourses.value = []
+    ineligibleCourses.value = []
+    partitionCoursesByEligibility(
+      data.courses,
+      eligibleCourses.value,
+      ineligibleCourses.value
+    )
+    const allCourses = [...eligibleCourses.value, ...ineligibleCourses.value]
+    allCourses.forEach(course => {
+      const eligibleLen = course.meetings?.eligible?.length || 0
+      course.statusLabel = course.deletedAt
+        ? 'Canceled'
+        : (course.scheduled
+          ? 'Scheduled'
+          : (eligibleLen > 0
+            ? (course.hasOptedIn ? 'Pending' : 'Not Opted In')
+            : 'Not Eligible'))
+    })
+    isRefreshingCourses.value = false
+  }).then(() => {
     contextStore.loadingComplete(`${user.value.name} Profile`)
   })
 })
@@ -196,44 +220,19 @@ const editNote = () => {
   putFocusNextTick('note-body-edit')
 }
 
-const refreshUser = () => {
-  return getUser(uid).then(data => {
-    user.value = data
-    data.courses.forEach(course => {
-      course.courseCodes = getCourseCodes(course)
-    })
-    noteBody.value = data.note
-    eligibleCourses.value = []
-    ineligibleCourses.value = []
-    partitionCoursesByEligibility(
-      data.courses,
-      eligibleCourses.value,
-      ineligibleCourses.value
-    )
-    const allCourses = [...eligibleCourses.value, ...ineligibleCourses.value]
-
-    allCourses.forEach(course => {
-      const eligibleLen = course.meetings?.eligible?.length || 0
-      course.statusLabel = course.deletedAt
-        ? 'Canceled'
-        : (course.scheduled
-          ? 'Scheduled'
-          : (eligibleLen > 0
-            ? (course.hasOptedIn ? 'Pending' : 'Not Opted In')
-            : 'Not Eligible'))
-    })
-    isRefreshingCourses.value = false
-  })
-}
-
 const saveNote = () => {
   isSavingNote.value = true
-  updateUserNote(uid, noteBody.value).then(data => {
-    user.value.note = noteBody.value = data.note
-    isEditingNote.value = false
-    isSavingNote.value = false
-    alertScreenReader('Note updated.')
-  })
+  noteBody.value = trim(noteBody.value)
+  if (noteBody.value) {
+    updateUserNote(uid, noteBody.value).then(data => {
+      user.value.note = noteBody.value = data.note
+      isEditingNote.value = false
+      isSavingNote.value = false
+      alertScreenReader('Note updated.')
+    })
+  } else {
+    deleteNote()
+  }
 }
 
 const summarize = courses => {
