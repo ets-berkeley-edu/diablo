@@ -41,22 +41,31 @@
             :instructor="instructor"
           />
         </div>
-        <ToggleOptIn
-          v-if="(currentUser.isAdmin || currentUser.uid === instructor.uid) && !course.deletedAt"
-          :id="`toggle-opt-in-${course.termId}-${course.sectionId}-instructor-${instructor.uid}`"
-          v-model:has-opted-in="instructor.hasOptedIn"
-          v-model:instructor-uid="instructor.uid"
-        >
-          <CoursePageInstructorLabel
-            v-if="currentUser.isAdmin"
-            :hide-opt-in-status="initialOptedInStatusByUID[instructor.uid] !== instructor.hasOptedIn"
-            :instructor="instructor"
-          />
-          <div v-if="currentUser.uid === instructor.uid">
-            <span v-if="instructor.optedInAt" class="text-green">You opted in {{ DateTime.fromISO(instructor.optedInAt).toRelativeCalendar({}) }}.</span>
-            <span v-if="!instructor.optedInAt" class="text-warning">Opt in to Course Capture</span>
-          </div>
-        </ToggleOptIn>
+        <div v-if="(currentUser.isAdmin || currentUser.uid === instructor.uid) && !course.deletedAt" class="d-flex align-center flex-wrap gap-2">
+          <label
+            v-if="!currentUser.isAdmin"
+            class="mr-2 d-inline-flex align-center font-size-18 cursor-pointer"
+            :for="`toggle-opt-in-${course.termId}-${course.sectionId}-instructor-${instructor.uid}`"
+          >
+            {{ instructor.name }}
+          </label>
+          <ToggleOptIn
+            :id="`toggle-opt-in-${course.termId}-${course.sectionId}-instructor-${instructor.uid}`"
+            v-model:has-opted-in="instructor.hasOptedIn"
+            v-model:instructor-uid="instructor.uid"
+            class="d-inline-flex align-center"
+          >
+            <CoursePageInstructorLabel
+              v-if="currentUser.isAdmin"
+              :hide-opt-in-status="initialOptedInStatusByUID[instructor.uid] !== instructor.hasOptedIn"
+              :instructor="instructor"
+            />
+            <div v-if="currentUser.uid === instructor.uid">
+              <span v-if="instructor.optedInAt" class="text-green">You opted in {{ DateTime.fromISO(instructor.optedInAt).toRelativeCalendar({}) }}.</span>
+              <span v-if="!instructor.optedInAt" class="text-warning">Opt in to Course Capture</span>
+            </div>
+          </ToggleOptIn>
+        </div>
       </div>
     </div>
   </div>
