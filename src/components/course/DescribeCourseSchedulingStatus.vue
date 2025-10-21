@@ -32,7 +32,7 @@
       v-if="isEligibleForCourseCapture && !course.deletedAt && !course.scheduled"
       class="align-start d-flex py-2"
     >
-      <v-icon class="mr-3 mt-1" color="error" :icon="mdiAlert" />
+      <v-icon class="mr-3" color="error" :icon="mdiAlert" />
       <div v-if="!course.hasOptedIn && instructors.length" id="notice-opt-out" class="text-error">
         This course is not scheduled for Course Capture because at least one instructor is not opted in.
       </div>
@@ -52,7 +52,7 @@
         </a>.
       </span>
       -->
-      <span
+      <div
         v-if="course.scheduled && !course.hasOptedIn && instructors.length"
         id="notice-opt-out-pending-instructors"
         class="text-error"
@@ -60,8 +60,12 @@
         {{ currentUser.isAdmin ? 'The' : 'Your' }} course is scheduled for Course Capture, but will be unscheduled shortly because
         {{ instructors.length === 1 && currentUser.uid === instructors[0].uid ? 'you have' : `${instructorsNotOptedInNames} ${instructorsNotOptedIn.length === 1 ? 'has ' : 'have'}` }}
         not opted in. To keep recordings scheduled, please have all instructors remove their opt-out status.
-      </span>
-      <span v-if="course.scheduled && !course.hasOptedIn && !instructors.length" id="notice-opt-out-pending-no-instructors" class="text-error">
+      </div>
+      <div
+        v-if="course.scheduled && !course.hasOptedIn && !instructors.length"
+        id="notice-opt-out-pending-no-instructors"
+        class="text-error"
+      >
         {{ currentUser.isAdmin ? 'The' : 'Your' }} course is scheduled for Course Capture, but will be unscheduled
         shortly due to an admin override. Please contact
         <a
@@ -72,11 +76,15 @@
           {{ config.emailCourseCaptureSupport }}
         </a>
         if you have any questions.
-      </span>
-      <span v-if="course.hasOptedIn && instructors.length" id="notice-eligible-not-scheduled" class="text-success">
+      </div>
+      <div
+        v-if="course.hasOptedIn && instructors.length"
+        id="notice-eligible-not-scheduled"
+        class="text-success"
+      >
         Scheduling for this course is pending. This process will complete within an hour. Instructors will be notified when scheduling takes place.
-      </span>
-      <span v-if="!instructors.length" class="text-success">
+      </div>
+      <div v-if="!instructors.length" class="text-success">
         <span
           v-if="course.optIns.length === 1 && course.optIns[0].instructorUid === 'admin'"
           id="notice-eligible-scheduled-by-admin"
@@ -86,7 +94,7 @@
         <span v-if="!course.optIns.length" id="notice-eligible-not-scheduled">
           This course is eligible for Course Capture but has not been scheduled because it has no instructors.
         </span>
-      </span>
+      </div>
     </div>
   </div>
 </template>

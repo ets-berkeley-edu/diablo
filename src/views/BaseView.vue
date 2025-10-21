@@ -23,7 +23,7 @@
             variant="elevated"
             v-bind="props"
           >
-            {{ currentUser.firstName }}
+            {{ currentUser.firstName || currentUser.lastName || `UID: ${currentUser.uid}` }}
           </v-btn>
         </template>
         <v-list rounded class="pa-2 profile-menu" color="on-surface">
