@@ -18,7 +18,6 @@ export type DiabloConfig = {
 }
 
 export interface Collaborator {
-  csid: string,
   email: string,
   firstName: string,
   lastName: string,
@@ -116,6 +115,7 @@ export type CanvasSite = {
 }
 
 export interface Course extends BaseCourse {
+  administrativeProxies: CourseInstructor[],
   allowedUnits: number,
   canvasSiteIds: number[],
   collaboratorUids: string[],
@@ -136,6 +136,7 @@ export interface Course extends BaseCourse {
   nonstandardMeetingDates: boolean,
   note: string | undefined,
   optIns: OptIn[],
+  preferences: CoursePreferences | undefined,
   publishType: string,
   publishTypeName: string,
   recordingType: string,
@@ -149,6 +150,10 @@ export interface Course extends BaseCourse {
 export interface CourseInstructor extends Instructor {
   hasOptedIn: boolean,
   optedInAt: string | undefined
+}
+
+export interface CoursePreferences {
+  createdAt: string
 }
 
 export interface CourseSortable extends Course {

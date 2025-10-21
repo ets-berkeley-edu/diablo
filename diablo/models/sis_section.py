@@ -645,9 +645,9 @@ def _to_api_json(  # noqa: C901, PLR0912, PLR0915
             scheduled = scheduled_by_section_id.get(section_id)
             opt_ins = opt_ins_by_section_id.get(section_id) or []
 
-            preferences = course_preferences_by_section_id.get(section_id)
-            if preferences:
-                preferences = preferences.to_api_json(include_collaborator_attributes=include_full_schedules)
+            preferences_object = course_preferences_by_section_id.get(section_id)
+            if preferences_object:
+                preferences = preferences_object.to_api_json(include_collaborator_attributes=include_full_schedules)
             elif scheduled:
                 preferences = scheduled[0]
             else:
@@ -684,6 +684,8 @@ def _to_api_json(  # noqa: C901, PLR0912, PLR0915
                 },
                 'nonstandardMeetingDates': False,
                 'optIns': [],
+                # The front-end needs to know if the course_preferences table has an entry for this course.
+                'preferences': preferences if preferences_object else None,
                 'publishType': preferences.get('publishType'),
                 'publishTypeName': preferences.get('publishTypeName'),
                 'recordingType': preferences.get('recordingType'),

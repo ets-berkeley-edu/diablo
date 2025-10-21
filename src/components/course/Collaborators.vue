@@ -107,7 +107,7 @@
 </template>
 
 <script lang="ts" setup>
-import {cloneDeep, find, get, map} from 'lodash'
+import {cloneDeep, each, find, get, map} from 'lodash'
 import {computed, onMounted, ref} from 'vue'
 import {storeToRefs} from 'pinia'
 import type {Collaborator} from '@/lib/types'
@@ -133,7 +133,19 @@ const personLookup = ref()
 const stagedCollaborator = ref<Collaborator | undefined>()
 
 onMounted(() => {
-  collaborators.value = cloneDeep(course.value.collaborators)
+  if (course.value.preferences || course.value.collaborators.length) {
+    collaborators.value = cloneDeep(course.value.collaborators)
+  } else {
+    // APRX instructors are default collaborators.
+    each(course.value.administrativeProxies, aprx => {
+      collaborators.value.push({
+        email: aprx.email,
+        firstName: '',
+        lastName: aprx.name,
+        uid: aprx.uid
+      })
+    })
+  }
 })
 
 const addCollaborator = () => {

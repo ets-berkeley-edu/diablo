@@ -29,7 +29,7 @@
       <div
         v-for="(instructor, index) in instructorsSorted"
         :key="`instructor-${instructor.uid}`"
-        class="d-flex flex-column"
+        class="d-flex flex-column ml-2"
       >
         <div
           v-if="!currentUser.isAdmin && currentUser.uid !== instructor.uid && !course.deletedAt"

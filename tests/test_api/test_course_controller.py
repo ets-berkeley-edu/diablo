@@ -139,16 +139,19 @@ class TestGetCourse:
         assert api_json['meetings']['eligible'][0]['room']['location'] == 'Li Ka Shing 145'
         assert len(api_json['meetings']['eligible'][0]['room']['recordingTypeOptions']) == 2
 
-    def test_no_administrative_proxy_for_course_page(self, client, fake_auth):
-        """Course page screens out instructors with APRX role, but still returns a site."""
+    def test_course_with_administrative_proxy(self, client, fake_auth):
+        """Course has access to instructors with APRX role."""
         fake_auth.login(uid=admin_uid)
+        section_id = 50006
         api_json = api_get_course(
             client,
             term_id=self.term_id,
-            section_id=50006,
+            section_id=section_id,
         )
-        assert api_json['sectionId'] == 50006
-        assert api_json['instructors'] == []
+        assert api_json['sectionId'] == section_id
+        instructors = api_json['instructors']
+        assert len(instructors) == 1
+        assert instructors[0]['roleCode'] == 'APRX'
 
     def test_cross_listing(self, client, fake_auth):
         """Course has cross-listings."""
