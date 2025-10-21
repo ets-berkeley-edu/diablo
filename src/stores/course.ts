@@ -1,3 +1,4 @@
+import {cloneDeep, filter} from 'lodash'
 import {defineStore} from 'pinia'
 import type {Course} from '@/lib/types'
 import {useContextStore} from '@/stores/context'
@@ -30,6 +31,10 @@ export const useCourseStore = defineStore('course', {
   },
   actions: {
     setCourse(course: Course) {
+      // We partition the list of instructors because APRX roles are not authorized to schedule.
+      const instructors = cloneDeep(course.instructors)
+      course.administrativeProxies = filter(instructors, ['roleCode', 'APRX'])
+      course.instructors = filter(instructors, instructor => instructor.roleCode !== 'APRX')
       this.course = course
       const eligible = this.course.meetings.eligible
       const meeting = eligible[0] || this.course.meetings.ineligible[0]

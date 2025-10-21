@@ -51,6 +51,7 @@ def get_course(term_id, section_id):
     course = SisSection.get_course(
         term_id,
         section_id,
+        include_administrative_proxies=True,
         include_canvas_sites=True,
         include_deleted=True,
         include_notes=current_user.is_admin,
