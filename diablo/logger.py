@@ -64,7 +64,7 @@ def initialize_logger(app):
             logger.addHandler(handler)
             logger.setLevel(level)
 
-    for name in ['boto3', 'botocore', 's3transfer', 'werkzeug']:
+    for name in ['boto3', 'botocore', 'canvasapi', 'cas', 's3transfer', 'werkzeug']:
         logging.getLogger(name).setLevel(log_propagation_level)
 
     def address_string(self):
