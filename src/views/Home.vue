@@ -340,12 +340,21 @@ const refreshCourses = () => {
     course.displayMeetings = getDisplayMeetings(course)
 
     const eligibleLen = get(course, 'meetings.eligible.length', 0)
+    const instructors = get(course, 'instructors', []) || []
+    const totalInstructors = instructors.length
+    const optedInCount = instructors.filter(i => i?.hasOptedIn).length
+    const anyOpted = optedInCount > 0
+    const allOpted = totalInstructors > 0 && optedInCount === totalInstructors
+    const partialOptIn = totalInstructors > 1 && anyOpted && !allOpted
+
     course.statusLabel = course.deletedAt
       ? 'Canceled'
-      : (course.scheduled
+      : (isScheduled(course)
         ? 'Scheduled'
         : (eligibleLen > 0
-          ? (course.hasOptedIn ? 'Pending' : 'Not Opted In')
+          ? (partialOptIn
+            ? 'Partial Opt-in'
+            : (allOpted ? 'Pending' : 'Not Scheduled'))
           : 'Not Eligible'))
   })
 }
@@ -353,7 +362,7 @@ const refreshCourses = () => {
 const getStatusTooltip = (label) => {
   if (label === 'Pending') {
     return 'Recordings will be scheduled within an hour.'
-  } else if (label === 'Not Opted In') {
+  } else if (label === 'Not Scheduled') {
     return 'Recordings are not scheduled. One or more instructors have not opted in.'
   } else {
     return label
