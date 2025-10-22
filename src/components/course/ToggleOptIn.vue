@@ -1,6 +1,9 @@
 <template>
   <v-switch
+    :id="id"
     v-model="hasOptedIn"
+    :base-color="isToggling && hasOptedIn ? 'primary' : undefined"
+    :class="{'toggle-focused': isFocused || isToggling, 'toggle-not-focused': !isFocused && !isToggling}"
     class="toggle-opt-in"
     color="primary"
     density="compact"
@@ -8,6 +11,7 @@
     flat
     hide-details
     inset
+    @update:focused="(focused: boolean) => isFocused = focused"
     @update:model-value="toggleOptIn"
   >
     <template #label>
@@ -18,10 +22,19 @@
 
 <script lang="ts" setup>
 import {storeToRefs} from 'pinia'
+import {ref} from 'vue'
 import type {Course} from '@/lib/types'
-import {useCourseStore} from '@/stores/course'
+import {putFocusNextTick} from '@/lib/utils'
 import {toggleCourseOptIn, toggleInstructorOptIn} from '@/api/course'
 import {useContextStore} from '@/stores/context'
+import {useCourseStore} from '@/stores/course'
+
+const props = defineProps({
+  id: {
+    required: true,
+    type: String
+  }
+})
 
 const hasOptedIn = defineModel('hasOptedIn',{required: true, type: Boolean})
 const instructorUID = defineModel('instructorUid',{required: false, type: String})
@@ -29,12 +42,19 @@ const instructorUID = defineModel('instructorUid',{required: false, type: String
 const courseStore = useCourseStore()
 const {course} = storeToRefs(courseStore)
 const currentUser = useContextStore().currentUser
+const isFocused = ref(false)
+const isToggling = ref(false)
 
 const toggleOptIn = (optIn: boolean | null) => {
   const afterToggle = (data: Course) => {
     courseStore.setCourse(data)
     courseStore.setDisableButtons(false)
+    putFocusNextTick(props.id)
+    setTimeout(() => {
+      isToggling.value = false
+    }, 800)
   }
+  isToggling.value = true
   if (instructorUID.value) {
     courseStore.setDisableButtons(true)
     toggleInstructorOptIn(
@@ -59,6 +79,15 @@ const toggleOptIn = (optIn: boolean | null) => {
 </script>
 
 <style>
+.toggle-focused {
+  border: 1px solid #b3dcff;
+  border-radius: 50px;
+  padding: 0 3px 0 3px;
+}
+.toggle-not-focused {
+  border: 1px solid transparent;
+  padding: 0 3px 0 3px;
+}
 .toggle-opt-in label {
   font-size: 1.2rem;
   font-weight: 500;
