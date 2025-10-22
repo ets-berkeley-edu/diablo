@@ -114,7 +114,7 @@
                     :key="site.canvasSiteId"
                     class="canvas-site mt-2 pl-4 pr-2 text-wrap"
                   >
-                    {{ site.name }} ({{ site.courseCode }})
+                    {{ site.name }}<span v-if="site.name !== site.courseCode">&nbsp;({{ site.courseCode }})</span>
                     <template #append>
                       <v-btn
                         :id="`btn-canvas-site-remove-${site.canvasSiteId}`"
@@ -227,11 +227,13 @@ onMounted(() => {
   if (!currentUser.isAdmin && currentUser.uid) {
     getCanvasSitesTeaching(currentUser.uid).then(data => {
       each(data, canvasSite => {
+        const courseCode = canvasSite.courseCode
+        const name = canvasSite.name
         canvasSiteOptions.value.push({
           id: `canvas-site-option-${canvasSite.canvasSiteId}`,
           disabled: false,
           role: 'option',
-          title: `${canvasSite.name} (${canvasSite.courseCode})`,
+          title: name === courseCode ? name : `${name} (${courseCode})`,
           value: canvasSite
         })
       })
