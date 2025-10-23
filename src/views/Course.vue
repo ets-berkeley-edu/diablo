@@ -23,7 +23,12 @@
           order="2"
           xl="9"
         >
-          <v-card v-if="!course.deletedAt" class="pb-6 pt-4 px-8">
+          <v-card
+            v-if="!course.deletedAt"
+            aria-labelledby="instructors-header"
+            class="pb-6 pt-4 px-8"
+            role="region"
+          >
             <DescribeCourseSchedulingStatus />
             <CoursePageInstructors v-if="isEligibleForCourseCapture" class="mt-2" />
           </v-card>
