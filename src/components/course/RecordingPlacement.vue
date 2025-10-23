@@ -8,7 +8,7 @@
     <v-col cols="12">
       <div class="w-100">
         <h3 id="publish-type-header">
-          <label for="select-publish-type">Recording Placement</label>
+          Recording Placement
         </h3>
         <div v-if="!isEditing" class="ml-2 py-2">
           {{ publishType ? displayLabels[publishType] : 'None' }}
@@ -22,6 +22,9 @@
           </div>
         </div>
         <div v-if="isEditing">
+          <label for="select-publish-type" class="sr-only">
+            Publish options
+          </label>
           <v-radio-group
             id="select-publish-type"
             v-model="publishType"

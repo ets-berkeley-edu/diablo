@@ -72,7 +72,8 @@ const props = defineProps({
     type: String
   },
   label: {
-    required: true,
+    default: undefined,
+    required: false,
     type: String
   },
   listLabel: {

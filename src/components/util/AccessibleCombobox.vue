@@ -118,7 +118,8 @@ const props = defineProps({
     type: Array
   },
   label: {
-    required: true,
+    default: undefined,
+    required: false,
     type: String
   },
   listLabel: {
@@ -181,7 +182,9 @@ onMounted(() => {
       input.setAttribute('aria-autocomplete', 'list')
       input.setAttribute('aria-controls', `${props.idPrefix}-menu`)
       input.setAttribute('aria-expanded', false)
-      input.setAttribute('aria-label', props.label)
+      if (props.label) {
+        input.setAttribute('aria-label', props.label)
+      }
     }
     menuProps.value = {
       id: `${props.idPrefix}-menu`,
