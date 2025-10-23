@@ -100,7 +100,6 @@ def _queue_not_opted_in_update(course):
                 field_value_old=instructor['uid'],
                 field_value_new=None,
             )
-    _downgrade_recording_type(course)
 
 
 def _queue_not_scheduled_update(course):
