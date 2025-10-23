@@ -22,9 +22,6 @@
           </div>
         </div>
         <div v-if="isEditing">
-          <label for="select-publish-type" class="sr-only">
-            Publish options
-          </label>
           <v-radio-group
             id="select-publish-type"
             v-model="publishType"
