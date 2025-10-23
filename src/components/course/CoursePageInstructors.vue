@@ -4,7 +4,7 @@
       <span v-if="course.hasOptedIn && course.scheduled">
         {{ course.instructors.length === 1 ? (course.instructors[0].uid === currentUser.uid ? 'You' : 'Instructor') : 'Instructors listed' }} will have editing and publishing access:
       </span>
-      <span v-if="!course.deletedAt && !course.scheduled">
+      <span v-if="!course.deletedAt || !course.scheduled">
         Instructor{{ course.instructors.length === 1 ? '' : 's' }}
       </span>
     </h3>
