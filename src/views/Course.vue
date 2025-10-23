@@ -67,7 +67,7 @@
           order="1"
           xl="3"
         >
-          <CoursePageSidebar :course="course" />
+          <CoursePageSidebar />
         </v-col>
       </v-row>
       <v-row v-if="currentUser.isAdmin">
