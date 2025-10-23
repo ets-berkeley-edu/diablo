@@ -8,7 +8,7 @@
         Instructor{{ course.instructors.length === 1 ? '' : 's' }}
       </span>
     </h3>
-    <h3 v-if="!course.instructors.length" class="font-size-16">
+    <h3 v-if="!course.instructors.length" id="instructors-header" class="font-size-16">
       No instructors are assigned to this course
     </h3>
     <div class="mt-2">
