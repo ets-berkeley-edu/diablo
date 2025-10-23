@@ -20,7 +20,6 @@
           :disabled="isSaving"
           :error-message="error"
           id-prefix="collaborator-lookup"
-          label=""
           list-label="collaborators"
           :on-select-result="onSelect"
         >
