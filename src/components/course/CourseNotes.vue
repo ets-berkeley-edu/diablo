@@ -1,5 +1,5 @@
 <template>
-  <div v-if="currentUser.isAdmin" class="mt-8 mx-1">
+  <div v-if="currentUser.isAdmin">
     <h3>Notes</h3>
     <div
       v-if="!isEditing"

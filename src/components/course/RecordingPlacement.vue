@@ -164,7 +164,7 @@
             <v-btn
               v-if="canUserEdit"
               id="btn-publish-type-edit"
-              aria-label="Edit collaborators"
+              aria-label="Edit recording placement"
               class="mt-2"
               color="primary"
               density="comfortable"
