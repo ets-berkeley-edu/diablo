@@ -4,7 +4,7 @@ import {getApiBaseUrl} from '@/api/api-utils'
 import type {Room} from '@/lib/types'
 
 const _sanitize_filename = (filename: string) => {
-  return filename.replace(/[/\\?%*:|"<>.,;=]/g, '').replaceAll(' ', '_')
+  return filename.replace(/['’/\\?%*:|"<>.,;=]/g, '').replaceAll(' ', '_')
 }
 
 export function downloadKalturaEvents(room: Room, startDate: string, endDate: string) {
