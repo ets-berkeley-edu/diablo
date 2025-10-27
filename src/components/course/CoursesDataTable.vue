@@ -25,7 +25,7 @@
             v-for="(column, index) in columns"
             :id="`courses-table-${column.key}-th`"
             :key="index"
-            :aria-label="column.title"
+            :aria-label="column.screenreaderTitle || column.title"
             :aria-sort="isSorted(column) ? `${sortBy.order}ending` : null"
             class="text-start text-no-wrap"
             :class="{'sortable': column.sortable === false}"
@@ -47,7 +47,19 @@
               </v-btn>
             </template>
             <template v-else>
-              <span class="font-size-13 font-weight-bold py-1 text-align-center text-medium-emphasis text-transform-unset v-btn" :class="{'opacity-30': refreshing}">
+              <span
+                v-if="column.screenreaderTitle"
+                aria-hidden="true"
+                class="font-size-13 font-weight-bold py-1 text-align-center text-medium-emphasis text-transform-unset v-btn"
+                :class="{'opacity-30': refreshing}"
+              >
+                {{ column.title }}
+              </span>
+              <span
+                v-if="!column.screenreaderTitle"
+                class="font-size-13 font-weight-bold py-1 text-align-center text-medium-emphasis text-transform-unset v-btn"
+                :class="{'opacity-30': refreshing}"
+              >
                 {{ column.title }}
               </span>
             </template>
@@ -276,7 +288,7 @@ const headers = ref([
   {key: 'days', title: 'Days', sortable: false},
   {key: 'time', title: 'Time', sortable: false},
   {key: 'status', title: 'Status', class: 'w-10', sortable: false},
-  {key: 'instructors', title: 'Instructor(s)', value: 'instructorNames', sortable: false},
+  {key: 'instructors', title: 'Instructor(s)', screenreaderTitle: 'Instructors', value: 'instructorNames', sortable: false},
   {key: 'publish', title: 'Publish', sortable: true, value: 'publishTypeName', class: 'w-10'}
 ])
 const page = defineModel('page', {type: Number})
