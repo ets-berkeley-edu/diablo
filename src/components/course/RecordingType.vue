@@ -29,6 +29,7 @@
               :id="`radio-recording-type-${recordingTypeOption.replaceAll('_', '-')}`"
               :key="recordingTypeOption"
               :label="displayLabels[recordingTypeOption]"
+              :aria-label="null"
               :value="recordingTypeOption"
             />
           </v-radio-group>

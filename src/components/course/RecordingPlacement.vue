@@ -35,6 +35,7 @@
               :id="`radio-publish-type-${publishTypeOption.replaceAll('_', '-')}`"
               :key="publishTypeOption"
               :label="displayLabels[publishTypeOption]"
+              :aria-label="null"
               :value="publishTypeOption"
             />
           </v-radio-group>
