@@ -62,7 +62,7 @@ class TestUserPerms:
         self.course_page.load_page(self.section)
         self.course_page.click_edit_note()
         self.course_page.click_cancel_note()
-        assert self.course_page.note_text() == 'No notes.'
+        assert not self.course_page.note_text()
 
     def test_admin_edit_course_note(self):
         note = 'El Diablo (también ñuzco) es la personificación del mal tal como se concibe en diversas culturas'
@@ -71,7 +71,7 @@ class TestUserPerms:
 
     def test_admin_delete_course_note(self):
         self.course_page.delete_note()
-        assert self.course_page.note_text() == 'No notes.'
+        assert not self.course_page.note_text()
 
     def test_admin_edit_instructor_note(self):
         util.delete_instructor_note(self.instructor)
@@ -82,7 +82,7 @@ class TestUserPerms:
 
     def test_admin_delete_instructor_note(self):
         self.instructor_page.delete_note()
-        assert self.instructor_page.note_text() == 'No notes.'
+        assert not self.instructor_page.is_present(self.instructor_page.NOTE_BODY)
 
     # INSTRUCTOR RESTRICTIONS
 

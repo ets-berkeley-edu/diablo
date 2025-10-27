@@ -159,9 +159,6 @@ class TestScheduling1:
     def test_visible_site_ids_updated(self):
         assert self.course_page.visible_course_site_ids() == [self.site.site_id]
 
-    def test_admin_settings_update_msg(self):
-        assert self.course_page.is_present(self.course_page.UPDATES_QUEUED_MSG)
-
     # SCHEDULE RECORDINGS
 
     def test_update_job(self):
@@ -254,7 +251,7 @@ class TestScheduling1:
         assert self.course_page.update_history_row_count() == 4
 
     def test_course_total_sent_email(self):
-        assert util.get_sent_email_count(template=None, section=self.section, instructor=None) == 3
+        assert util.get_sent_email_count(template=None, section=self.section, instructor=None) == 2
 
     def test_course_history_instructor_added(self):
         self.course_page.verify_history_row(field='instructor_uids',

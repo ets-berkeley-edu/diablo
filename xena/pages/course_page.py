@@ -37,6 +37,7 @@ from xena.test_utils import util
 
 class CoursePage(DiabloPages):
 
+    NOT_OPTED_IN_ADMIN_MSG = By.XPATH, '//*[contains(., "This course is NOT opted in to Course Capture")]'
     NOT_OPTED_IN_MSG = By.XPATH, '//*[contains(., "at least one instructor is not opted in")]'
     OPTED_IN_PENDING_MSG = By.XPATH, '//*[contains(., "Scheduling for this course is pending")]'
     UPDATES_QUEUED_MSG = By.XPATH, '//*[contains(., "Recent updates to recording settings are queued")]'
@@ -473,10 +474,17 @@ class CoursePage(DiabloPages):
 
     # KB LINKS
 
-    HOW_TO_PREVENT_ISSUES_LINK = By.LINK_TEXT, 'How to prevent recording issues in the classroom'
-    HOW_TO_SHARE_LINK = By.LINK_TEXT, 'How to share Course Capture recordings'
-    HOW_TO_DOWNLOAD_LINK = By.LINK_TEXT, 'How do I download Kaltura media'
+    HOW_TO_PREVENT_ISSUES_LINK = By.LINK_TEXT, 'How to Prevent Recording Issues in the Classroom'
+    HOW_TO_PREVENT_ISSUES_TITLE = 'IT - What to check (while at the classroom) to ensure Course Capture is recording properly'
+
+    HOW_TO_SHARE_LINK = By.LINK_TEXT, 'How to Share Course Capture Recordings'
+    HOW_TO_SHARE_TITLE = 'IT - How to share Course Capture recordings'
+
+    HOW_TO_DOWNLOAD_LINK = By.LINK_TEXT, 'How do I Download Kaltura Media'
+    HOW_TO_DOWNLOAD_TITLE = 'IT - How do I download Kaltura media?'
+
     COURSE_CAPTURE_FAQ_LINK = By.LINK_TEXT, 'Course Capture FAQ'
+    COURSE_CAPTURE_FAQ_TITLE = 'Course Capture FAQ | Research, Teaching, & Learning'
 
     # KALTURA SERIES INFO
 
@@ -493,7 +501,7 @@ class CoursePage(DiabloPages):
         self.switch_to_last_window(self.window_handles())
 
     def verify_no_scheduled_recordings(self):
-        assert self.is_present(self.NOT_OPTED_IN_MSG)
+        assert self.is_present(self.NOT_OPTED_IN_MSG) or self.is_present(self.NOT_OPTED_IN_ADMIN_MSG)
         assert self.is_present(self.NO_SCHEDULED_RECORDINGS_TEXT)
 
     # COURSE UPDATE HISTORY

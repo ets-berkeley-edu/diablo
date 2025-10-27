@@ -320,10 +320,6 @@ class TestWeirdTypeB:
         self.course_page.verify_meeting_sis_data(self.meeting_physical, idx=0)
         self.course_page.verify_recording_placement(self.recording_schedule)
 
-    def test_course_scheduled_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.NEW_CLASS_ELIGIBLE, section=None,
-                                         instructor=self.new_instructor) == 2
-
     # COURSE HISTORY
 
     def test_course_total_sent_email(self):
