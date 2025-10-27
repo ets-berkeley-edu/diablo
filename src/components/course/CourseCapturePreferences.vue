@@ -17,12 +17,14 @@
             value="all"
             color="primary"
             label="I want all my future courses to be opted into Course Capture by default"
+            :aria-label="null"
           />
           <v-radio
             id="choose-courses-opt-in"
             value="choose"
             color="primary"
             label="I want to choose whether or not to opt in future courses to Course Capture"
+            :aria-label="null"
           />
         </v-radio-group>
       </div>
