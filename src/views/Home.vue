@@ -85,13 +85,7 @@
                 <template v-for="course in items" :key="course.sectionId">
                   <tr
                     :id="`${getTableId(index)}-${course.sectionId}`"
-                    class="clickable-row"
                     tabindex="0"
-                    role="link"
-                    :aria-label="`View details for ${course.courseCodes?.[0] || 'course'}`"
-                    @click="goToCourse(course.sectionId)"
-                    @keydown.enter.prevent="goToCourse(course.sectionId)"
-                    @keydown.space.prevent="goToCourse(course.sectionId)"
                   >
                     <td
                       :id="`course-${course.sectionId}-status`"
@@ -126,7 +120,6 @@
                           :id="`link-course-${course.sectionId}`"
                           class="course-link"
                           :to="`/course/${config.currentTermId}/${course.sectionId}`"
-                          @click.stop
                         >
                           {{ courseCode }}
                         </router-link>
@@ -195,13 +188,7 @@
                     v-for="(meeting, meetingIndex) in tail(course.displayMeetings)"
                     :id="`${getTableId(index)}-${course.sectionId}-${meetingIndex}`"
                     :key="`${course.sectionId}-${meetingIndex}`"
-                    class="clickable-row"
                     tabindex="0"
-                    role="link"
-                    :aria-label="`View details for ${course.courseCodes?.[0] || 'course'}`"
-                    @click="goToCourse(course.sectionId)"
-                    @keydown.enter.prevent="goToCourse(course.sectionId)"
-                    @keydown.space.prevent="goToCourse(course.sectionId)"
                   >
                     <td :aria-hidden="true" colspan="4" />
                     <td
@@ -268,7 +255,6 @@ import {each, get, isEmpty, map, size, tail} from 'lodash'
 import {mdiClose, mdiVideoPlus} from '@mdi/js'
 import {computed, onMounted, ref} from 'vue'
 import {storeToRefs} from 'pinia'
-import {useRouter} from 'vue-router'
 import {oxfordJoin, partitionCoursesByEligibility, pluralize} from '@/lib/utils'
 import {getCourseCodes, getDisplayMeetings} from '@/lib/berkeley'
 import type {Course} from '@/lib/types'
@@ -277,8 +263,6 @@ import PageTitle from '@/components/util/PageTitle.vue'
 import Spinner from '@/components/util/Spinner.vue'
 import {useContextStore} from '@/stores/context'
 import CourseCapturePreferences from '@/components/course/CourseCapturePreferences.vue'
-
-const router = useRouter()
 
 const contextStore = useContextStore()
 const {config, currentUser} = storeToRefs(contextStore)
@@ -318,10 +302,6 @@ onMounted(() => {
   pageTitle.value = `Your ${config.value.currentTermName} ${pluralize('Course', size(currentUser.value.courses), false)}`
   contextStore.loadingComplete(pageTitle.value)
 })
-
-const goToCourse = (sectionId: string | number) => {
-  router.push(`/course/${config.value.currentTermId}/${sectionId}`)
-}
 
 const getTableId = index => {
   return index === 0 ? 'courses-table-eligible' : 'courses-table-ineligible'
@@ -396,11 +376,5 @@ const getStatusTooltip = (label) => {
 .opt-in-banner__link {
   text-decoration: underline;
   text-underline-offset: 2px;
-}
-.clickable-row { cursor: pointer; }
-.clickable-row:hover { background-color: rgba(0, 0, 0, 0.03); }
-.clickable-row:focus {
-  outline: 2px solid rgb(var(--v-theme-primary));
-  outline-offset: -2px;
 }
 </style>
