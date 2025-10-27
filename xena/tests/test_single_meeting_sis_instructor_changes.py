@@ -181,7 +181,7 @@ class TestCourseInstructorChanges:
         self.course_page.load_page(self.section)
         self.course_page.verify_recording_type(self.recording_schedule)
         self.course_page.verify_recording_placement(self.recording_schedule)
-        assert self.course_page.visible_course_site_ids() == []
+        assert self.course_page.visible_course_site_ids() == [self.site.site_id]
 
     def test_rescheduled_series_title_and_desc(self):
         self.course_page.click_kaltura_series_link(self.recording_schedule)

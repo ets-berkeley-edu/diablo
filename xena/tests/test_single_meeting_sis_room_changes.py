@@ -209,10 +209,6 @@ class TestCourseRoomChanges:
         self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
         assert not util.get_kaltura_id(self.recording_schedule)
 
-    def test_eligible_room_again_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.NEW_CLASS_ELIGIBLE, section=None,
-                                         instructor=self.instr) == 2
-
     def test_eligible_room_again_opt_in_again(self):
         self.course_page.load_page(self.section)
         self.instructor_page.load_admin_page(self.instr)
@@ -292,7 +288,7 @@ class TestCourseRoomChanges:
 
     def test_welcome_email_ttl(self):
         assert util.get_sent_email_count(EmailTemplateType.NEW_CLASS_ELIGIBLE, section=None,
-                                         instructor=self.instr) == 2
+                                         instructor=self.instr) == 1
 
     def test_class_scheduled_email_ttl(self):
         assert util.get_sent_email_count(EmailTemplateType.CLASS_SCHEDULED, self.section, self.instr) == 2
@@ -313,7 +309,7 @@ class TestCourseRoomChanges:
 
     def test_course_history_row_count(self):
         self.course_page.load_page(self.section)
-        assert self.course_page.update_history_row_count() == 9
+        assert self.course_page.update_history_row_count() == 8
 
     def test_course_history_instructor_added(self):
         self.course_page.verify_history_row(field='instructor_uids',
@@ -358,14 +354,6 @@ class TestCourseRoomChanges:
 
     def test_history_new_ineligible_room(self):
         self.course_page.verify_history_row(field='room_not_eligible',
-                                            old_value=None,
-                                            new_value=None,
-                                            requestor=None,
-                                            status='succeeded',
-                                            published=True)
-
-    def test_history_newer_eligible_room(self):
-        self.course_page.verify_history_row(field='meeting_updated',
                                             old_value=None,
                                             new_value=None,
                                             requestor=None,

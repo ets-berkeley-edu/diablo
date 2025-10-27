@@ -198,10 +198,6 @@ class TestCollaborators0:
         assert self.kaltura_page.collaborator_perm(self.proxy) == 'Co-Editor, Co-Publisher'
         assert self.kaltura_page.collaborator_perm(self.manual_collaborator) == 'Co-Editor, Co-Publisher'
 
-    def test_email_room_restored(self):
-        assert util.get_sent_email_count(EmailTemplateType.NEW_CLASS_ELIGIBLE, section=None,
-                                         instructor=self.instructor) == 2
-
     def test_email_class_scheduled_room_restored(self):
         assert util.get_sent_email_count(EmailTemplateType.CLASS_SCHEDULED, self.section, self.instructor) == 2
 

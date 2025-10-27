@@ -176,6 +176,7 @@ class TestScheduling0:
     # VERIFY DEFAULT SETTINGS AND EXTERNAL LINKS
 
     def test_no_collaborators(self):
+        self.course_page.cancel_recording_placement_edits()
         assert not self.course_page.visible_collaborator_uids()
 
     def test_default_recording_type(self):
@@ -188,18 +189,19 @@ class TestScheduling0:
         assert not self.course_page.is_present(self.course_page.kaltura_series_link(self.recording_schedule))
 
     def test_how_to_prevent_issues_link(self):
-        assert not self.course_page.is_present(self.course_page.HOW_TO_PREVENT_ISSUES_LINK)
+        title = self.course_page.HOW_TO_PREVENT_ISSUES_TITLE
+        assert self.course_page.external_link_valid(self.course_page.HOW_TO_PREVENT_ISSUES_LINK, title)
 
     def test_how_to_share_recordings_link(self):
-        title = 'IT - How do I remove media from My Media or a bCourses Media Gallery?'
+        title = self.course_page.HOW_TO_SHARE_TITLE
         assert self.course_page.external_link_valid(self.course_page.HOW_TO_SHARE_LINK, title)
 
     def test_how_to_download_media_link(self):
-        title = 'IT - How do I download the second stream of a dual-stream video?'
+        title = self.course_page.HOW_TO_DOWNLOAD_TITLE
         assert self.course_page.external_link_valid(self.course_page.HOW_TO_DOWNLOAD_LINK, title)
 
     def test_course_capture_faq_link(self):
-        title = 'Course Capture FAQ | Research, Teaching, & Learning'
+        title = self.course_page.COURSE_CAPTURE_FAQ_TITLE
         assert self.course_page.external_link_valid(self.course_page.COURSE_CAPTURE_FAQ_LINK, title)
 
     # RUN KALTURA JOB
@@ -318,18 +320,19 @@ class TestScheduling0:
         assert self.course_page.external_link_valid(CoursePage.selected_placement_site_loc(self.site), self.site.name)
 
     def test_how_to_prevent_issues_link_again(self):
-        assert not self.course_page.is_present(self.course_page.HOW_TO_PREVENT_ISSUES_LINK)
+        title = self.course_page.HOW_TO_PREVENT_ISSUES_TITLE
+        assert self.course_page.external_link_valid(self.course_page.HOW_TO_PREVENT_ISSUES_LINK, title)
 
     def test_how_to_share_recordings_link_again(self):
-        title = 'IT - How do I remove media from My Media or a bCourses Media Gallery?'
+        title = self.course_page.HOW_TO_SHARE_TITLE
         assert self.course_page.external_link_valid(self.course_page.HOW_TO_SHARE_LINK, title)
 
     def test_how_to_download_media_link_again(self):
-        title = 'IT - How do I download the second stream of a dual-stream video?'
+        title = self.course_page.HOW_TO_DOWNLOAD_TITLE
         assert self.course_page.external_link_valid(self.course_page.HOW_TO_DOWNLOAD_LINK, title)
 
     def test_course_capture_faq_link_again(self):
-        title = 'Course Capture FAQ | Research, Teaching, & Learning'
+        title = self.course_page.COURSE_CAPTURE_FAQ_TITLE
         assert self.course_page.external_link_valid(self.course_page.COURSE_CAPTURE_FAQ_LINK, title)
 
     def test_no_history_for_instructors(self):
@@ -425,26 +428,25 @@ class TestScheduling0:
         self.course_page.save_recording_type_edits()
         self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
 
-    def test_revert_how_to_publish_from_my_media_link(self):
+    def test_revert_course_page(self):
         self.login_page.dev_auth(self.instructor.uid)
         self.courses_page.click_course_page_link(self.section)
         self.course_page.wait_for_diablo_title(f'{self.section.code}, {self.section.number}')
-        title = 'IT - How do I publish media from My Media to a Media Gallery in bCourses?'
-        assert self.course_page.external_link_valid(self.course_page.HOW_TO_PUBLISH_LINK, title)
 
     def test_revert_how_to_prevent_issues_link(self):
-        assert not self.course_page.is_present(self.course_page.HOW_TO_PREVENT_ISSUES_LINK)
+        title = self.course_page.HOW_TO_PREVENT_ISSUES_TITLE
+        assert self.course_page.external_link_valid(self.course_page.HOW_TO_PREVENT_ISSUES_LINK, title)
 
     def test_revert_how_to_share_recordings_link(self):
-        title = 'IT - How do I remove media from My Media or a bCourses Media Gallery?'
+        title = self.course_page.HOW_TO_SHARE_TITLE
         assert self.course_page.external_link_valid(self.course_page.HOW_TO_SHARE_LINK, title)
 
     def test_revert_how_to_download_media_link(self):
-        title = 'IT - How do I download the second stream of a dual-stream video?'
+        title = self.course_page.HOW_TO_DOWNLOAD_TITLE
         assert self.course_page.external_link_valid(self.course_page.HOW_TO_DOWNLOAD_LINK, title)
 
     def test_revert_course_capture_faq_link(self):
-        title = 'Course Capture FAQ | Research, Teaching, & Learning'
+        title = self.course_page.COURSE_CAPTURE_FAQ_TITLE
         assert self.course_page.external_link_valid(self.course_page.COURSE_CAPTURE_FAQ_LINK, title)
 
     def test_update_jobs_revert_placement(self):
