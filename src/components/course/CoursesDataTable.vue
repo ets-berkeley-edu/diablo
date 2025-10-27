@@ -218,7 +218,7 @@
 import type {PropType} from 'vue'
 import {each, filter, find, get, map, size, tail} from 'lodash'
 import {mdiClose} from '@mdi/js'
-import {onMounted, ref, watch} from 'vue'
+import {nextTick, onMounted, ref, watch} from 'vue'
 import type {CourseSortable, SortBy} from '@/lib/types'
 import {alertScreenReader} from '@/lib/utils'
 import {getDisplayMeetings} from '@/lib/berkeley'
@@ -309,7 +309,7 @@ const onUpdateSortBy = (primarySortBy:SortBy) => {
   sortBy.value = primarySortBy[0]
   page.value = 1
   if (header) {
-    alertScreenReader(`Sorted by ${header.title}, ${sortBy.value.order}ending`)
+    nextTick(() => alertScreenReader(`Sorted by ${header.title}, ${sortBy.value.order}ending`))
   }
 }
 
