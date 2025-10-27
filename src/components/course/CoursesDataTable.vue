@@ -168,7 +168,7 @@
               </td>
             </tr>
             <tr v-for="(meeting, meetingIndex) in tail(course.displayMeetings)" :key="`${course.sectionId}-${meetingIndex}`">
-              <td :aria-hidden="true" colspan="2" :class="tdcLower(course)" />
+              <td :aria-hidden="true" colspan="3" :class="tdcLower(course)" />
               <td v-if="includeRoomColumn" :class="tdcLower(course)">
                 <router-link
                   v-if="meeting.room"
