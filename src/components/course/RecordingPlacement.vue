@@ -46,7 +46,7 @@
               class="ml-8"
             >
               <div>
-                <div v-if="!currentUser.isAdmin" class="mr-3 my-3">
+                <div v-if="!currentUser.isAdmin" class="mr-3 mt-2">
                   <v-select
                     id="select-canvas-site"
                     v-model="pendingCanvasSite"
@@ -57,7 +57,7 @@
                     :items="canvasSiteOptions"
                     label="Select course site"
                     :list-props="{ariaLabel: 'My bCourses sites', ariaLive: 'off', id: 'canvas-site-list'}"
-                    :menu-props="{attach: menuContainer, eager: true, id: 'canvas-site-menu'}"
+                    :menu-props="{eager: true, id: 'canvas-site-menu'}"
                     :title="undefined"
                     :value="get(pendingCanvasSite, 'title')"
                     variant="outlined"
@@ -82,7 +82,6 @@
                       />
                     </template>
                   </v-select>
-                  <div id="canvas-site-menu-container" ref="menuContainer" />
                 </div>
                 <div v-if="currentUser.isAdmin" class="mt-3">
                   <v-text-field
@@ -131,7 +130,7 @@
                     </template>
                   </v-chip>
                 </div>
-                <div v-if="!currentUser.isAdmin" class="font-italic mt-2 py-2 text-body-2">
+                <div v-if="!currentUser.isAdmin" class="font-italic text-body-2">
                   <span class="font-weight-bold">Note:</span> To link a bCourses site from a past term,
                   please <a :href="`mailto:${config.emailCourseCaptureSupport}`" target="_blank">contact Course Capture support.</a>
                 </div>
@@ -140,7 +139,7 @@
           </v-expand-transition>
         </div>
         <div class="ml-2">
-          <div v-if="isEditing" class="mt-3">
+          <div v-if="isEditing" class="mt-4">
             <ProgressButton
               id="btn-publish-type-save"
               :action="update"
@@ -216,7 +215,6 @@ const displayLabels = {
 const isEditing = ref(false)
 const isFindingCanvasSite = ref(false)
 const isSaving = ref(false)
-const menuContainer = ref()
 const pendingCanvasSite = ref()
 const pendingCanvasSiteId = ref<number | undefined>()
 const publishCanvasSites = ref<CanvasSite[]>(course.value.canvasSites)
