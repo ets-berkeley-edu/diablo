@@ -90,7 +90,7 @@
             <tr>
               <td v-if="showOptIn" :class="tdc(course)">
                 <span v-if="course.statusLabel !== 'Not Eligible'">
-                  {{ course.hasOptedIn ? 'Opted In' : 'Not Opted In' }}
+                  {{ getOptInStatus(course) }}
                 </span>
               </td>
               <td
@@ -323,6 +323,21 @@ const onUpdateSortBy = (primarySortBy:SortBy) => {
   if (header) {
     nextTick(() => alertScreenReader(`Sorted by ${header.title}, ${sortBy.value.order}ending`))
   }
+}
+
+const getOptInStatus = (course) => {
+  let status = 'Not Opted In'
+  if (course.hasOptedIn) {
+    status = 'Opted In'
+  } else {
+    each(course.instructors, instructor => {
+      if (!instructor.deletedAt && instructor.hasOptedIn) {
+        status = 'Partial Opt-in'
+        return false
+      }
+    })
+  }
+  return status
 }
 
 const refresh = () => {
