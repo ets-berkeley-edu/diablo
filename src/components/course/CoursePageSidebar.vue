@@ -93,7 +93,7 @@
               </dd>
             </div>
             <div
-              v-if="meeting.room"
+              v-if="get(meeting.room, 'location')"
               :id="`rooms-${index}`"
               :class="{'line-through': course.deletedAt}"
               class="align-center d-flex mt-4"
@@ -151,6 +151,7 @@
 <script lang="ts" setup>
 import {onMounted, ref} from 'vue'
 import {DateTime} from 'luxon'
+import {get} from 'lodash'
 import {
   mdiCalendar,
   mdiCheckboxMarkedCircle,

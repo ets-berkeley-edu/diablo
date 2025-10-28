@@ -105,7 +105,7 @@
                     :id="`link-course-${course.sectionId}`"
                     :to="`/course/${contextStore.config.currentTermId}/${course.sectionId}`"
                   >
-                    <span :class="{'line-through': course.deletedAt}">{{ courseCode }}</span>
+                    <span :class="{'line-through': course.deletedAt}">{{ courseCode }}<span v-if="course.deletedAt" class="sr-only">&nbsp;(canceled)</span></span>
                   </router-link>
                   <span v-if="courseCodeIndex > 0">{{ courseCode }}</span>
                 </div>
@@ -117,7 +117,7 @@
                     :id="`course-${course.sectionId}-room-${course.room.id}`"
                     :to="`/room/${course.room.id}`"
                   >
-                    {{ course.room.location }}
+                    {{ course.room.location }}<span v-if="course.deletedAt" class="sr-only">&nbsp;(canceled)</span>
                   </router-link>
                 </div>
                 <span v-if="course.room && course.room.location && !course.room.id" :class="{'line-through': course.deletedAt}">

@@ -23,7 +23,7 @@
               rel="noopener"
               class="opt-in-banner__link"
             >
-              Instructor Getting Started Guide
+              Instructor Getting Started Guide<span class="sr-only">&nbsp;(opens in new tab)</span>
             </a>.
           </p>
         </div>
