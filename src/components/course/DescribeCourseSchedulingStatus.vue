@@ -40,17 +40,16 @@
         id="notice-opt-out-pending-instructors"
         class="py-2"
       >
-        {{ currentUser.isAdmin ? 'This' : 'Your' }} course is scheduled for Course Capture, but will be unscheduled shortly because
-        {{ instructors.length === 1 && currentUser.uid === instructors[0].uid ? 'you have' : `${instructorsNotOptedInNames} ${instructorsNotOptedIn.length === 1 ? 'has ' : 'have'}` }}
-        not opted in. To keep recordings scheduled, please have all instructors remove their opt-out status.
+        This course is scheduled for Course Capture, but will be unscheduled shortly because at least one instructor has
+        not opted in. To keep recordings scheduled, please have all instructors opt in.
       </Alert>
       <Alert
         v-if="course.scheduled && !course.hasOptedIn && !instructors.length"
         id="notice-opt-out-pending-no-instructors"
         class="py-2"
       >
-        {{ currentUser.isAdmin ? 'This' : 'Your' }} course is scheduled for Course Capture, but will be unscheduled
-        shortly due to an admin override. Please contact
+        This course is scheduled for Course Capture, but will be unscheduled shortly due to an admin override.
+        Please contact
         <a
           id="course-page-diablo-support-mailto"
           :href="`mailto:${config.emailCourseCaptureSupport}`"
@@ -88,11 +87,8 @@
 
 <script setup lang="ts">
 import {DateTime} from 'luxon'
-import {filter, map} from 'lodash'
 import {mdiAlert} from '@mdi/js'
-import {ref} from 'vue'
 import {storeToRefs} from 'pinia'
-import {oxfordJoin} from '@/lib/utils'
 import {useContextStore} from '@/stores/context'
 import {useCourseStore} from '@/stores/course'
 import Alert from '@/components/util/Alert.vue'
@@ -106,8 +102,6 @@ const {
   isEligibleForCourseCapture,
   location
 } = storeToRefs(courseStore)
-const {config, currentUser} = storeToRefs(useContextStore())
+const config = useContextStore().config
 const instructors = course.value.instructors
-const instructorsNotOptedIn = ref(filter(instructors, ['hasOptedIn', false]))
-const instructorsNotOptedInNames = oxfordJoin(map(instructorsNotOptedIn.value, 'name'))
 </script>
