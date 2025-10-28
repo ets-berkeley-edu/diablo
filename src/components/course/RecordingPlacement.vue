@@ -146,7 +146,7 @@
               :action="update"
               aria-label="Save Note"
               density="comfortable"
-              :disabled="isSaving || publishCanvasSites.length === 0"
+              :disabled="isSaving || (publishType === 'kaltura_media_gallery' && !publishCanvasSites.length)"
               :in-progress="isSaving"
               :text="isSaving ? 'Saving' : 'Save'"
             />
