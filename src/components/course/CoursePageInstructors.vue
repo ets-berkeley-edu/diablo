@@ -4,7 +4,7 @@
       <span v-if="course.hasOptedIn && course.scheduled">
         {{ course.instructors.length === 1 ? (course.instructors[0].uid === currentUser.uid ? 'You' : 'Instructor') : 'Instructors listed' }} will have editing and publishing access:
       </span>
-      <span v-if="!course.deletedAt || !course.scheduled">
+      <span v-if="!course.hasOptedIn || !course.scheduled">
         Instructor{{ course.instructors.length === 1 ? '' : 's' }}
       </span>
     </h3>
@@ -43,20 +43,22 @@
         <div v-if="(currentUser.isAdmin || currentUser.uid === instructor.uid) && !course.deletedAt" class="d-flex align-center flex-wrap gap-2">
           <label
             v-if="!currentUser.isAdmin"
-            class="cursor-pointer current-instructor"
+            class="align-center d-flex current-instructor"
             :for="`toggle-opt-in-${course.termId}-${course.sectionId}-instructor-${instructor.uid}`"
           >
-            {{ instructor.name }}
             <ToggleOptIn
               :id="`toggle-opt-in-${course.termId}-${course.sectionId}-instructor-${instructor.uid}`"
               v-model:has-opted-in="instructor.hasOptedIn"
               v-model:instructor-uid="instructor.uid"
-              class="d-inline-flex align-center toggle-position"
+              class="align-center mr-2 toggle-position"
             />
-            <span v-if="currentUser.uid === instructor.uid">
-              <span v-if="instructor.optedInAt" class="text-green">You opted in {{ DateTime.fromISO(instructor.optedInAt).toRelativeCalendar({}) }}.</span>
+            <div class="mr-2">
+              {{ instructor.name }}
+            </div>
+            <div v-if="currentUser.uid === instructor.uid">
+              <span v-if="instructor.optedInAt" class="text-green">(opted in {{ DateTime.fromISO(instructor.optedInAt).toRelativeCalendar({}) }})</span>
               <span v-if="!instructor.optedInAt" class="text-warning">(not yet opted in)</span>
-            </span>
+            </div>
           </label>
           <div v-if="currentUser.isAdmin" class="align-center d-flex">
             <ToggleOptIn
