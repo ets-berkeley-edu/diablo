@@ -11,13 +11,10 @@
     flat
     hide-details
     inset
+    :label="label"
     @update:focused="(focused: boolean) => isFocused = focused"
     @update:model-value="toggleOptIn"
-  >
-    <template #label>
-      <slot />
-    </template>
-  </v-switch>
+  />
 </template>
 
 <script lang="ts" setup>
@@ -32,6 +29,11 @@ import {useCourseStore} from '@/stores/course'
 const props = defineProps({
   id: {
     required: true,
+    type: String
+  },
+  label: {
+    default: undefined,
+    required: false,
     type: String
   }
 })
@@ -82,12 +84,14 @@ const toggleOptIn = (optIn: boolean | null) => {
 .toggle-focused {
   border: 1px solid #b3dcff;
   border-radius: 50px;
+  margin-right: 2px;
 }
 .toggle-not-focused {
   border: 1px solid transparent;
+  margin-right: 2px;
 }
 .toggle-opt-in {
-  padding: 0 12px 0 3px;
+  padding: 0 0 0 3px;
 }
 .toggle-opt-in label {
   font-size: 1.2rem;

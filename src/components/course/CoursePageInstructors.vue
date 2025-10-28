@@ -17,9 +17,8 @@
           <ToggleOptIn
             :id="`toggle-opt-in-${course.termId}-${course.sectionId}`"
             v-model:has-opted-in="course.hasOptedIn"
-          >
-            {{ course.hasOptedIn ? 'This course is opted in to Course Capture' : 'This course is NOT opted in to Course Capture' }}
-          </ToggleOptIn>
+            :label="course.hasOptedIn ? 'This course is opted in to Course Capture' : 'This course is NOT opted in to Course Capture'"
+          />
         </div>
         <div v-if="!currentUser.isAdmin">
           <!-- Non-admins should never reach a zero-instructor course page and yet we accommodate. -->
@@ -59,12 +58,12 @@
               <span v-if="!instructor.optedInAt" class="text-warning">(not yet opted in)</span>
             </span>
           </label>
-          <div v-if="currentUser.isAdmin" class="d-flex">
+          <div v-if="currentUser.isAdmin" class="align-center d-flex">
             <ToggleOptIn
               :id="`toggle-opt-in-${course.termId}-${course.sectionId}-instructor-${instructor.uid}`"
               v-model:has-opted-in="instructor.hasOptedIn"
               v-model:instructor-uid="instructor.uid"
-              class="d-inline-flex align-center"
+              class="align-center d-inline-flex mr-2"
             />
             <div class="instructor-label">
               <CoursePageInstructorLabel
@@ -110,17 +109,10 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.toggle-position {
-    position: relative;
-    top: 10px;
-}
 .current-instructor {
   font-size: 18px;
 }
 .instructor-label {
   font-size: 19px;
-  position: relative;
-  top: 7px;
-  right: 8px;
 }
 </style>
