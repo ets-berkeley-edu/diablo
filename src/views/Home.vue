@@ -364,6 +364,8 @@ const getStatusTooltip = (label) => {
     return 'Recordings will be scheduled within an hour.'
   } else if (label === 'Not Scheduled') {
     return 'Recordings are not scheduled. One or more instructors have not opted in.'
+  } else if (label === 'Partial Opt-in') {
+    return 'Recordings are not scheduled. At least one instructor has not opted in.'
   } else {
     return label
   }
