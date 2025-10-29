@@ -6,6 +6,7 @@
       :icon="mdiBookMultipleOutline"
       :text="config.currentTermId === course.termId ? courseDisplayTitle : `${courseDisplayTitle} (${getTermName(course.termId)})`"
     />
+    <span v-if="course.deletedAt" class="sr-only">&nbsp;(canceled)</span>
     <div class="pl-16">
       <span v-if="course.deletedAt" class="text-subtitle-1">
         <span class="font-weight-bold text-error">UC Berkeley has canceled this section.</span>
