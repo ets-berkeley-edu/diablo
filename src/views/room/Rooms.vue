@@ -1,5 +1,5 @@
 <template>
-  <v-card v-if="!contextStore.loading" class="border-sm">
+  <v-card v-if="!contextStore.loading" elevation="0">
     <v-card-title>
       <div class="d-flex align-center flex-wrap">
         <PageTitle :icon="mdiDomain" :text="`${size(rooms)} Rooms`" />

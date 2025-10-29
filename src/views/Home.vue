@@ -1,5 +1,5 @@
 <template>
-  <div v-if="!contextStore.loading" class="px-4 py-5">
+  <div v-if="!contextStore.loading">
     <v-card class="border-sm pr-12 px-6 py-3">
       <v-card-title class="py-0">
         <PageTitle :icon="mdiVideoPlus" :text="pageTitle" />

@@ -1,5 +1,5 @@
 <template>
-  <div class="pt-4">
+  <div>
     <h1 id="page-title" tabindex="-1">
       <div class="d-flex align-center" :class="classForH1">
         <v-icon

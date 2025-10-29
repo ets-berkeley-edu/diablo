@@ -6,7 +6,7 @@
     scrim
   >
     <template #activator="{props: menuProps}">
-      <v-btn id="kaltura-events-export-menu-btn" v-bind="menuProps">
+      <v-btn id="kaltura-events-export-menu-btn" color="primary" v-bind="menuProps">
         Export Events to iCal
       </v-btn>
     </template>

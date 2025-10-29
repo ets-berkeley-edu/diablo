@@ -1,5 +1,5 @@
 <template>
-  <v-card v-if="!contextStore.loading" class="border-sm">
+  <v-card v-if="!contextStore.loading" elevation="0">
     <v-card-title>
       <PageTitle :icon="mdiCandle" text="The Attic" />
     </v-card-title>
