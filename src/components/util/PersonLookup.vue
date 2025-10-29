@@ -13,7 +13,7 @@
     </label>
     <div class="d-flex align-center">
       <AccessibleCombobox
-        aria-description="Collaborator U I D or email lookup. Expect auto suggest."
+        :aria-label="label || placeholder"
         autocomplete="off"
         color="primary"
         density="compact"
@@ -25,7 +25,6 @@
         :is-busy="isSearching"
         :is-invalid="!!props.errorMessage"
         :items="formattedItems"
-        :label="label"
         :list-label="listLabel"
         :on-clear="clearErrors"
         :placeholder="placeholder"
