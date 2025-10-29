@@ -5,7 +5,7 @@
       :icon-size="16"
       :link-id="`canvas-course-site-${siteId}`"
     >
-      <span v-if="courseSite">{{ courseSite.name }} ({{ courseSite.courseCode }})</span>
+      <span v-if="courseSite">{{ courseSite.name }}<span v-if="courseSite.name !== courseSite.courseCode">&nbsp;({{ courseSite.courseCode }})</span></span>
       <span v-else>bCourses site {{ siteId }}</span>
     </ExternalLink>
     <span
