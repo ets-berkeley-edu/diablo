@@ -124,7 +124,7 @@ export default createVuetify({
           banner: '#224f6e',
           error: red.accent4,
           'icon-nav': '#fff',
-          primary: '#307aab',
+          primary: '#424689',
           secondary: '#347cad',
           success: '#3a833c',
           'surface-light': '#f6f6f6',
