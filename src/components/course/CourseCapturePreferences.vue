@@ -1,9 +1,9 @@
 <template>
   <div>
     <section aria-labelledby="future-courses-header">
-      <h2 id="future-courses-header" class="mt-3 text-medium-emphasis w-100">
+      <h3 id="future-courses-header" class="font-size-18 mt-3 text-medium-emphasis w-100">
         Future courses
-      </h2>
+      </h3>
       <div class="mt-2 px-md-4 w-100">
         <v-radio-group
           v-model="futureCoursesPref"
@@ -30,12 +30,10 @@
       </div>
     </section>
 
-    <v-divider class="mr-10 my-6" />
-
     <section aria-labelledby="email-settings-header">
-      <h2 id="email-settings-header" class="mt-4 text-medium-emphasis w-100">
+      <h3 id="email-settings-header" class="font-size-18 mt-6 text-medium-emphasis w-100">
         Email settings
-      </h2>
+      </h3>
       <div class="px-md-4 w-100">
         <v-checkbox
           id="email-checkbox"
