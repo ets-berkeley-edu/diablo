@@ -7,6 +7,7 @@
       v-model="model"
       :aria-describedby="undefined"
       :aria-description="ariaDescription"
+      :aria-label="`${get(model, 'title', '')} ${ariaLabel}`"
       :autocomplete="autocomplete"
       :base-color="color"
       bg-color="surface"
@@ -34,13 +35,10 @@
       @update:search="onUpdateSearch"
     >
       <template #loader="{isActive}">
-        <v-progress-circular
-          v-if="isActive"
-          class="mr-5"
-          color="primary"
+        <v-progress-linear
+          :active="isActive"
+          :color="color"
           indeterminate
-          size="x-small"
-          width="2"
         />
       </template>
       <template #item="{index, item}">
@@ -64,11 +62,15 @@
 </template>
 
 <script setup>
-import {filter, includes, size} from 'lodash'
+import {filter, get, includes, size} from 'lodash'
 import {nextTick, onMounted, onUpdated, ref} from 'vue'
 import {alertScreenReader, escapeForRegExp, pluralize} from '@/lib/utils'
 
 const props = defineProps({
+  ariaLabel: {
+    required: true,
+    type: String
+  },
   ariaDescription: {
     default: 'Expect auto-suggest.',
     required: false,
@@ -182,9 +184,6 @@ onMounted(() => {
       input.setAttribute('aria-autocomplete', 'list')
       input.setAttribute('aria-controls', `${props.idPrefix}-menu`)
       input.setAttribute('aria-expanded', false)
-      if (props.label) {
-        input.setAttribute('aria-label', props.label)
-      }
     }
     menuProps.value = {
       id: `${props.idPrefix}-menu`,
@@ -305,5 +304,9 @@ const summarizeResults = () => {
 <style>
 .v-autocomplete .v-field .v-field__input {
   flex-wrap: nowrap !important;
+}
+.v-field__loader {
+  top: calc(50% - 13px);
+  left: 1rem;
 }
 </style>

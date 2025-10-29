@@ -26,6 +26,7 @@ import {VMenu} from 'vuetify/components/VMenu'
 import {VNavigationDrawer} from 'vuetify/components/VNavigationDrawer'
 import {VPagination} from 'vuetify/components/VPagination'
 import {VProgressCircular} from 'vuetify/components/VProgressCircular'
+import {VProgressLinear} from 'vuetify/components/VProgressLinear'
 import {VSelect} from 'vuetify/components/VSelect'
 import {VSheet} from 'vuetify/components/VSheet'
 import {VAlert, VAutocomplete, VListItemSubtitle, VSnackbar, VSwitch} from 'vuetify/components'
@@ -79,6 +80,7 @@ export default createVuetify({
     VNavigationDrawer,
     VPagination,
     VProgressCircular,
+    VProgressLinear,
     VRadio,
     VRadioGroup,
     VRow,
