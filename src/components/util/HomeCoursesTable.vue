@@ -1,6 +1,5 @@
 <template>
   <v-data-table
-    id="courses-table-ineligible"
     class="instructor-courses overflow-y-visible"
     disable-sort
     :headers="[
@@ -19,9 +18,9 @@
     <template #headers="{columns}">
       <tr>
         <th
-          v-for="(column, colIndex) in columns"
-          :id="`courses-table-ineligible-${column.value}-th`"
-          :key="colIndex"
+          v-for="(column, index) in columns"
+          :id="`${idPrefix}-${column.value}-th`"
+          :key="index"
           class="text-start text-no-wrap"
           scope="col"
         >
@@ -33,13 +32,12 @@
       <!-- eslint-disable-next-line vue/no-v-for-template-key -->
       <template v-for="course in items" :key="course.sectionId">
         <tr
-          :id="`courses-table-ineligible-${course.sectionId}`"
+          :id="`${idPrefix}-${course.sectionId}`"
           tabindex="0"
         >
           <td
             :id="`course-${course.sectionId}-status`"
             :class="{'border-b-0': size(course.displayMeetings) > 1}"
-            columnheader="courses-table-status-th"
           >
             <div v-if="course.statusLabel === 'Canceled'" class="canceled-indicator d-flex">
               <v-icon color="error" :icon="mdiClose" />
@@ -57,61 +55,55 @@
             </div>
           </td>
           <td
-            :id="`courses-table-ineligible-${course.sectionId}-label`"
+            :id="`${idPrefix}-${course.sectionId}-label`"
             :aria-rowspan="size(course.displayMeetings)"
             class="text-no-wrap"
             :class="{'pt-3 pb-3': course.courseCodes.length > 1, 'border-b-0': size(course.displayMeetings) > 1}"
-            :columnheader="`courses-table-ineligible-label-th`"
           >
-            <div v-for="(courseCode, courseCodeIndex) in course.courseCodes" :key="courseCode">
+            <div v-for="(courseCode, index) in course.courseCodes" :key="courseCode">
               <router-link
-                v-if="courseCodeIndex === 0"
+                v-if="index === 0"
                 :id="`link-course-${course.sectionId}`"
                 class="course-link"
                 :to="`/course/${config.currentTermId}/${course.sectionId}`"
               >
                 {{ courseCode }}
               </router-link>
-              <span v-if="courseCodeIndex > 0">{{ courseCode }}</span>
+              <span v-if="index > 0">{{ courseCode }}</span>
             </div>
           </td>
           <td
-            :id="`courses-table-ineligible-${course.sectionId}-title`"
+            :id="`${idPrefix}-${course.sectionId}-title`"
             :aria-rowspan="size(course.displayMeetings)"
             :class="{'border-b-0': size(course.displayMeetings) > 1}"
-            :columnheader="`courses-table-ineligible-title-th`"
           >
             <span aria-hidden="true">{{ course.courseTitle || '&mdash;' }}</span>
             <span class="sr-only">{{ course.courseTitle || 'blank' }}</span>
           </td>
           <td
-            :id="`courses-table-ineligible-${course.sectionId}-instructors`"
+            :id="`${idPrefix}-${course.sectionId}-instructors`"
             :aria-rowspan="size(course.displayMeetings)"
             :class="{'border-b-0': size(course.displayMeetings) > 1}"
-            :columnheader="`courses-table-ineligible-instructors-th`"
           >
             {{ oxfordJoin(map(course.instructors, 'name')) }}
           </td>
           <td
-            :id="`courses-table-ineligible-${course.sectionId}-room-0`"
+            :id="`${idPrefix}-${course.sectionId}-room-0`"
             :class="{'border-b-0': size(course.displayMeetings) > 1}"
-            :columnheader="`courses-table-ineligible-room-th`"
           >
             {{ course.displayMeetings[0].room.location }}
           </td>
           <td
-            :id="`courses-table-ineligible-${course.sectionId}-days-0`"
+            :id="`${idPrefix}-${course.sectionId}-days-0`"
             :class="{'border-b-0': size(course.displayMeetings) > 1}"
             class="text-no-wrap"
-            :columnheader="`courses-table-ineligible-days-th`"
           >
             <Days v-if="size(course.displayMeetings[0].daysNames)" :names-of-days="course.displayMeetings[0].daysNames" />
             <span v-if="isEmpty(course.displayMeetings[0].daysNames)">&mdash;</span>
           </td>
           <td
-            :id="`courses-table-ineligible-${course.sectionId}-time-0`"
+            :id="`${idPrefix}-${course.sectionId}-time-0`"
             :class="{'border-b-0': size(course.displayMeetings) > 1}"
-            :columnheader="`courses-table-ineligible-time-th`"
           >
             <div v-if="course.nonstandardMeetingDates" class="pt-2">
               <span class="text-no-wrap">
@@ -126,30 +118,27 @@
           </td>
         </tr>
         <tr
-          v-for="(meeting, meetingIndex) in tail(course.displayMeetings)"
-          :id="`courses-table-ineligible-${course.sectionId}-${meetingIndex}`"
-          :key="`${course.sectionId}-${meetingIndex}`"
+          v-for="(meeting, index) in tail<Meeting[]>(course.displayMeetings)"
+          :id="`${idPrefix}-${course.sectionId}-${index}`"
+          :key="`${course.sectionId}-${index}`"
           tabindex="0"
         >
           <td :aria-hidden="true" colspan="4" />
           <td
-            :id="`courses-table-ineligible-${course.sectionId}-room-${meetingIndex + 1}`"
+            :id="`${idPrefix}-${course.sectionId}-room-${index + 1}`"
             class="pt-0 text-no-wrap"
-            :columnheader="`courses-table-ineligible-room-th`"
           >
             {{ meeting.room.location }}
           </td>
           <td
-            :id="`courses-table-ineligible-${course.sectionId}-days-${meetingIndex + 1}`"
+            :id="`${idPrefix}-${course.sectionId}-days-${index + 1}`"
             class="text-no-wrap"
-            :columnheader="`courses-table-ineligible-days-th`"
           >
             <Days :names-of-days="meeting.daysNames" />
           </td>
           <td
-            :id="`courses-table-ineligible-${course.sectionId}-time-${meetingIndex + 1}`"
+            :id="`${idPrefix}-${course.sectionId}-time-${index + 1}`"
             class="text-no-wrap"
-            :columnheader="`courses-table-ineligible-time-th`"
           >
             <div v-if="course.nonstandardMeetingDates" class="pt-2">
               <span class="text-no-wrap">
@@ -159,7 +148,7 @@
                 {{ DateTime.fromISO(meeting.endDate).toFormat('MMM d, yyyy') }}
               </span>
             </div>
-            <div :class="{'pb-2': course.nonstandardMeetingDates && meetingIndex === (size(course.displayMeetings) - 1)}">
+            <div :class="{'pb-2': course.nonstandardMeetingDates && index === (size(course.displayMeetings) - 1)}">
               {{ meeting.startTimeFormatted }} - {{ meeting.endTimeFormatted }}
             </div>
           </td>
@@ -174,20 +163,26 @@ import type {PropType} from 'vue'
 import {isEmpty, map, size, tail} from 'lodash'
 import {DateTime} from 'luxon'
 import {mdiClose} from '@mdi/js'
-import type {Course} from '@/lib/types'
+import type {Course, Meeting} from '@/lib/types'
 import {oxfordJoin} from '@/lib/utils'
 import Days from '@/components/util/Days.vue'
 import {describeRecordingsStatus} from '@/lib/berkeley'
 import {useContextStore} from '@/stores/context'
 
-defineProps({
+const props = defineProps({
   courses: {
     required: true,
     type: Array as PropType<Course[]>
+  },
+  coursesType: {
+    required: true,
+    type: String,
+    validator: (value: string) => ['eligible', 'ineligible'].includes(value)
   }
 })
 
 const config = useContextStore().config
+const idPrefix = `courses-table-${props.coursesType}`
 </script>
 
 <style scoped>
