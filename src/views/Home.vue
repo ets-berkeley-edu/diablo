@@ -1,117 +1,122 @@
 <template>
-  <v-card
-    v-if="!contextStore.loading"
-    class="border-sm px-6"
-  >
-    <v-card-title>
-      <PageTitle
-        :icon="mdiVideoPlus"
-        :text="pageTitle"
-      />
-    </v-card-title>
-    <v-card-text>
-      <Spinner v-if="refreshingCourses" />
-      <template v-if="!refreshingCourses">
+  <div v-if="!contextStore.loading" class="px-4 py-5">
+    <v-card class="border-sm pr-12 px-6 py-3">
+      <v-card-title class="py-0">
+        <PageTitle :icon="mdiVideoPlus" :text="pageTitle" />
+      </v-card-title>
+      <v-card-subtitle class="pt-0 text-wrap">
         <div class="opt-in-banner mb-4" role="note" aria-label="Course Capture opt-in change notice">
-          <p class="m-0">
-            <strong>Course Capture has changed for 2026.</strong>
-            You must opt in for your courses to be recorded.
-            For more information, visit our
-            <a
-              :href="gettingStartedUrl"
-              target="_blank"
-              rel="noopener"
-              class="opt-in-banner__link"
-            >
-              Instructor Getting Started Guide<span class="sr-only">&nbsp;(opens in new tab)</span>
-            </a>.
-          </p>
+          <span class="font-weight-bold">Course Capture has changed for 2026.</span>
+          You must opt in for your courses to be recorded. For more information, visit our
+          <a
+            :href="get(config, 'instructorGettingStartedUrl', 'https://rtl.berkeley.edu/services-programs/course-capture/instructor-getting-started')"
+            target="_blank"
+            rel="noopener"
+            class="opt-in-banner-link"
+          >
+            Instructor Getting Started Guide<span class="sr-only">&nbsp;(opens in new tab)</span>
+          </a>.
         </div>
-        <HomeCoursesEligible :courses="eligibleCourses" />
-        <HomeCoursesNotEligible :courses="eligibleCourses" />
-      </template>
-      <v-divider class="my-12" />
-      <CourseCapturePreferences
-        :disable-email-because-courses="anyCourseOptedInOrScheduled"
-        :initial-do-not-email="currentUser.doNotEmail"
-        :initial-opt-in-new-courses="currentUser.optInNewCourses"
-        :uid="currentUser.uid"
-      />
-    </v-card-text>
-  </v-card>
+      </v-card-subtitle>
+      <v-card-text class="pt-0">
+        <div aria-labelledby="courses-table-eligible-header" class="border-sm pt-6 px-6 rounded" role="region">
+          <h2 id="courses-table-eligible-header" class="text-medium-emphasis w-100">
+            Courses eligible for capture
+          </h2>
+          <div v-if="!eligibleCourses.length" class="px-4 pt-2">No courses.</div>
+          <HomeCoursesEligible v-if="eligibleCourses.length" :courses="eligibleCourses" />
+        </div>
+        <div v-if="ineligibleCourses.length" class="mb-2 mt-6" role="region">
+          <v-expansion-panels class="border-sm rounded" flat rounded>
+            <v-expansion-panel>
+              <v-expansion-panel-title
+                id="ineligible-courses-show-hide-btn"
+                class="bg-primary"
+                focusable
+                hide-actions
+              >
+                <template #default="{expanded}">
+                  <div class="align-center d-flex">
+                    <div class="mr-2">
+                      <v-icon
+                        color="white"
+                        :icon="expanded ? mdiMenuDown : mdiMenuRight"
+                        size="x-large"
+                      />
+                    </div>
+                    <div class="font-size-18">Courses not in a course capture classroom</div>
+                  </div>
+                </template>
+              </v-expansion-panel-title>
+              <v-expansion-panel-text>
+                <template #default>
+                  <HomeCoursesNotEligible :courses="ineligibleCourses" />
+                </template>
+              </v-expansion-panel-text>
+            </v-expansion-panel>
+          </v-expansion-panels>
+        </div>
+      </v-card-text>
+    </v-card>
+    <v-card class="border-sm mt-8 pt-5 px-6">
+      <v-card-title class="pb-0">
+        <h2 class="font-size-24">Preferences</h2>
+      </v-card-title>
+      <v-card-text>
+        <CourseCapturePreferences
+          :disable-email-because-courses="eligibleCourses.some(c => c.hasOptedIn || isCourseScheduled(c))"
+          :initial-do-not-email="currentUser.doNotEmail"
+          :initial-opt-in-new-courses="currentUser.optInNewCourses"
+          :uid="currentUser.uid"
+        />
+      </v-card-text>
+    </v-card>
+  </div>
 </template>
 
 <script lang="ts" setup>
-import {computed, onMounted, ref} from 'vue'
 import {each, get, size} from 'lodash'
-import {mdiVideoPlus} from '@mdi/js'
-import {storeToRefs} from 'pinia'
+import {mdiMenuDown, mdiMenuRight, mdiVideoPlus} from '@mdi/js'
+import {onMounted, ref} from 'vue'
 import CourseCapturePreferences from '@/components/course/CourseCapturePreferences.vue'
 import HomeCoursesEligible from '@/components/util/HomeCoursesEligible.vue'
 import HomeCoursesNotEligible from '@/components/util/HomeCoursesNotEligible.vue'
 import PageTitle from '@/components/util/PageTitle.vue'
-import Spinner from '@/components/util/Spinner.vue'
 import type {Course} from '@/lib/types'
 import {getCourseCodes, getCourseStatusLabel, getDisplayMeetings, isCourseScheduled} from '@/lib/berkeley'
 import {partitionCoursesByEligibility, pluralize} from '@/lib/utils'
 import {useContextStore} from '@/stores/context'
 
 const contextStore = useContextStore()
-const {config, currentUser} = storeToRefs(contextStore)
+const config = contextStore.config
+const currentUser = contextStore.currentUser
 const eligibleCourses = ref<Course[]>([])
 const ineligibleCourses = ref<Course[]>([])
 const pageTitle = ref('')
-const refreshingCourses = ref(false)
-
-const anyCourseOptedInOrScheduled = computed(() => {
-  return [...eligibleCourses.value] .some(c => c.hasOptedIn || isCourseScheduled(c))
-})
-
-const gettingStartedUrl = computed(() =>
-  get(config.value, 'instructorGettingStartedUrl', 'https://rtl.berkeley.edu/services-programs/course-capture/instructor-getting-started')
-)
 
 contextStore.loadingStart()
 
 onMounted(() => {
-  refreshCourses()
-  pageTitle.value = `Your ${config.value.currentTermName} ${pluralize('Course', size(currentUser.value.courses), false)}`
-  contextStore.loadingComplete(pageTitle.value)
-})
-
-const refreshCourses = () => {
-  each(currentUser.value.courses, course => {
-    course.courseCodes = getCourseCodes(course)
-  })
-
-  eligibleCourses.value = []
-  ineligibleCourses.value = []
-  partitionCoursesByEligibility(currentUser.value.courses, eligibleCourses.value, ineligibleCourses.value)
-
+  each(currentUser.courses, course => course.courseCodes = getCourseCodes(course))
+  partitionCoursesByEligibility(currentUser.courses, eligibleCourses.value, ineligibleCourses.value)
   each([...eligibleCourses.value, ...ineligibleCourses.value], course => {
     course.displayMeetings = getDisplayMeetings(course)
     course.statusLabel = getCourseStatusLabel(course)
   })
-}
+  pageTitle.value = `Your ${config.currentTermName} ${pluralize('Course', size(currentUser.courses), false)}`
+  contextStore.loadingComplete(pageTitle.value)
+})
 </script>
 
 <style>
-.instructor-courses .v-table__wrapper {
-  overflow: visible !important;
-}
-.v-selection-control--disabled .v-label {
-  opacity: 0.6;
-}
 .opt-in-banner {
-  background-color: rgb(var(--v-theme-surface));          /* light blue */
-  border: 1px solid #b3dcff;     /* subtle blue border */
-  border-radius: 8px;            /* slightly rounded edges */
+  background-color: rgb(var(--v-theme-surface));
+  border: 1px solid #b3dcff;
+  border-radius: 8px;
   padding: 12px 16px;
   line-height: 1.4;
-  width: 1200px;
 }
-
-.opt-in-banner__link {
+.opt-in-banner-link {
   text-decoration: underline;
   text-underline-offset: 2px;
 }
