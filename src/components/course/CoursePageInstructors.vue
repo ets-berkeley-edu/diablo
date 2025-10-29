@@ -56,7 +56,7 @@
               {{ instructor.name }}
             </div>
             <div v-if="currentUser.uid === instructor.uid">
-              <span v-if="instructor.optedInAt" class="text-green">(opted in {{ DateTime.fromISO(instructor.optedInAt).toRelativeCalendar({}) }})</span>
+              <span v-if="instructor.optedInAt" class="text-success">(opted in {{ DateTime.fromISO(instructor.optedInAt).toRelativeCalendar({}) }})</span>
               <span v-if="!instructor.optedInAt" class="text-warning">(not yet opted in)</span>
             </div>
           </label>
