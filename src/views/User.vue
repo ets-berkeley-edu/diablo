@@ -63,10 +63,10 @@
       </v-card-title>
       <v-card-text>
         <CourseCapturePreferences
-          :uid="uid"
-          :initial-opt-in-new-courses="user.optInNewCourses"
-          :initial-do-not-email="user.doNotEmail"
           :disable-email-because-courses="anyCourseOptedInOrScheduled"
+          :initial-do-not-email="user.doNotEmail"
+          :initial-opt-in-new-courses="user.optInNewCourses"
+          :uid="uid"
         />
       </v-card-text>
     </v-card>

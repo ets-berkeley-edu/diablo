@@ -56,13 +56,25 @@ import {computed, ref, watch} from 'vue'
 import {alertScreenReader} from '@/lib/utils'
 import {updateDoNotEmail, updateOptInNewCourses} from '@/api/user'
 
-const props = defineProps<{
-  uid: string | number
-  initialOptInNewCourses: boolean
-  initialDoNotEmail: boolean
+const props = defineProps({
   /** If ANY course is opted-in or scheduled, parent passes true to enforce email on */
-  disableEmailBecauseCourses: boolean
-}>()
+  disableEmailBecauseCourses: {
+    required: true,
+    type: Boolean
+  },
+  initialDoNotEmail: {
+    required: true,
+    type: Boolean
+  },
+  initialOptInNewCourses: {
+    required: true,
+    type: Boolean
+  },
+  uid: {
+    required: true,
+    type: String
+  }
+})
 
 const futureCoursesPref = ref(props.initialOptInNewCourses ? 'all' : 'choose')
 const emailReceive = ref(!props.initialDoNotEmail)

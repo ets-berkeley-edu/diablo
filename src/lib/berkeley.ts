@@ -1,16 +1,39 @@
-import {find, startsWith} from 'lodash'
+import {get, startsWith} from 'lodash'
 import type {Course, Meeting} from '@/lib/types'
 
-export function findInstructor(course: Course, uid: string) {
-  const instructor = find(course.instructors, ['uid', uid])
-  if (!instructor) {
-    throw Error(`Course ${course.sectionId} (${getTermName(course.termId)}) has no instructor where UID = ${uid}`)
+export function describeRecordingsStatus(status: string | undefined) {
+  if (status === 'Pending') {
+    return 'Recordings will be scheduled within an hour.'
+  } else if (status === 'Not Scheduled') {
+    return 'Recordings are not scheduled. One or more instructors have not opted in.'
+  } else if (status === 'Partial Opt-in') {
+    return 'Recordings are not scheduled. At least one instructor has not opted in.'
+  } else {
+    return status
   }
-  return instructor
 }
 
 export function getCourseCodes(course: Course) {
   return course.label.split('|').map((l: string) => l.trim())
+}
+
+export function getCourseStatusLabel(course: Course) {
+  const eligibleLen = get(course, 'meetings.eligible.length', 0)
+  const instructors = get(course, 'instructors', []) || []
+  const totalInstructors = instructors.length
+  const optedInCount = instructors.filter(i => i?.hasOptedIn).length
+  const anyOpted = optedInCount > 0
+  const allOpted = totalInstructors > 0 && optedInCount === totalInstructors
+  const partialOptIn = totalInstructors > 1 && anyOpted && !allOpted
+  return course.deletedAt
+      ? 'Canceled'
+      : (isCourseScheduled(course)
+        ? 'Scheduled'
+        : (eligibleLen > 0
+          ? (partialOptIn
+            ? 'Partial Opt-in'
+            : (allOpted ? 'Pending' : 'Not Scheduled'))
+          : 'Not Eligible'))
 }
 
 export function getDisplayMeetings(course: Course): Meeting[] {
@@ -35,3 +58,8 @@ export function getTermName(termId: number) {
   }
   return termName
 }
+
+export function isCourseScheduled(course: Course) {
+  return Array.isArray(course.scheduled) ? course.scheduled.length > 0 : !!course.scheduled
+}
+
