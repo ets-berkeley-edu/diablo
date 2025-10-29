@@ -1,16 +1,14 @@
 <template>
-  <div v-if="!loading" class="px-4 py-6">
-    <v-card class="border-sm py-3 px-6 pr-12">
-      <v-card-title class="pb-0">
+  <div v-if="!loading" class="px-4 py-5">
+    <v-card class="border-sm pr-12 px-6 py-3">
+      <v-card-title class="py-0">
         <PageTitle :icon="mdiSchoolOutline" :text="`${user.name} (${user.uid})`" />
       </v-card-title>
-      <v-card-subtitle class="font-size-24 pl-16">
-        <a :href="`mailto:${user.email}`" target="_blank">
-          {{ user.email }}
-        </a>
+      <v-card-subtitle class="font-size-24 pt-0">
+        <a class="ms-lg-13" :href="`mailto:${user.email}`" target="_blank">{{ user.email }}</a>
       </v-card-subtitle>
       <v-card-text>
-        <div v-if="eligibleCourses.length" id="user-courses-eligible">
+        <div v-if="eligibleCourses.length" id="user-courses-eligible" class="border-sm pt-6 px-6 rounded">
           <CoursesDataTable
             :courses="eligibleCourses"
             :include-opt-in-column-for-uid="[user.uid]"
@@ -27,33 +25,41 @@
           role="region"
           aria-labelledby="user-ineligible-header"
         >
-          <h2 id="user-ineligible-header" class="font-size-24">
-            <button
-              type="button"
-              class="text-left"
-              style="all: unset; cursor: pointer;"
-              :aria-expanded="showIneligible"
-              aria-controls="user-ineligible-table"
-              :aria-label="showIneligible
-                ? 'Collapse courses not in a course capture classroom'
-                : 'Expand courses not in a course capture classroom'"
-              @click="showIneligible = !showIneligible"
-            >
-              Courses not in a course capture classroom
-              <span aria-hidden="true"> {{ showIneligible ? '[-]' : '[+]' }} </span>
-            </button>
-          </h2>
-
-          <div v-if="showIneligible">
-            <CoursesDataTable
-              id="user-ineligible-table"
-              :courses="ineligibleCourses"
-              :include-room-column="true"
-              :message-for-courses="summarize(ineligibleCourses)"
-              :refreshing="false"
-              :show-opt-in="false"
-            />
-          </div>
+          <v-expansion-panels class="border-sm rounded" flat rounded>
+            <v-expansion-panel>
+              <v-expansion-panel-title
+                id="ineligible-courses-show-hide-btn"
+                class="bg-primary"
+                focusable
+                hide-actions
+              >
+                <template #default="{expanded}">
+                  <div class="align-center d-flex">
+                    <div class="mr-2">
+                      <v-icon
+                        color="white"
+                        :icon="expanded ? mdiMenuDown : mdiMenuRight"
+                        size="x-large"
+                      />
+                    </div>
+                    <div class="font-size-18">Courses not in a course capture classroom</div>
+                  </div>
+                </template>
+              </v-expansion-panel-title>
+              <v-expansion-panel-text>
+                <template #default>
+                  <CoursesDataTable
+                    id="user-ineligible-table"
+                    :courses="ineligibleCourses"
+                    :include-room-column="true"
+                    :message-for-courses="summarize(ineligibleCourses)"
+                    :refreshing="false"
+                    :show-opt-in="false"
+                  />
+                </template>
+              </v-expansion-panel-text>
+            </v-expansion-panel>
+          </v-expansion-panels>
         </div>
       </v-card-text>
     </v-card>
@@ -132,7 +138,7 @@
 <script setup>
 import {computed, onMounted, ref} from 'vue'
 import {filter, isEmpty, toString, trim} from 'lodash'
-import {mdiSchoolOutline} from '@mdi/js'
+import {mdiMenuDown, mdiMenuRight, mdiSchoolOutline} from '@mdi/js'
 import {storeToRefs} from 'pinia'
 import {useRoute} from 'vue-router'
 import {alertScreenReader, partitionCoursesByEligibility, putFocusNextTick} from '@/lib/utils'
@@ -143,7 +149,6 @@ import CourseCapturePreferences from '@/components/course/CourseCapturePreferenc
 import CoursesDataTable from '@/components/course/CoursesDataTable.vue'
 import PageTitle from '@/components/util/PageTitle.vue'
 import ProgressButton from '@/components/util/ProgressButton'
-
 
 const contextStore = useContextStore()
 const {currentUser, loading} = storeToRefs(contextStore)
@@ -157,7 +162,6 @@ const isSavingNote = ref(false)
 const noteBody = ref('')
 const uid = toString(route.params.uid)
 const user = ref({})
-const showIneligible = ref(false)
 
 contextStore.loadingStart()
 
@@ -244,5 +248,4 @@ const summarize = courses => {
   }
   return message
 }
-
 </script>
