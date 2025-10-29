@@ -1,12 +1,12 @@
 <template>
-  <v-card v-if="!contextStore.loading" class="border-sm">
+  <v-card v-if="!contextStore.loading" elevation="0">
     <v-card-title>
       <PageTitle :icon="mdiVideoOffOutline" text="Blackouts" />
     </v-card-title>
+    <v-card-subtitle class="font-size-18">
+      The "Blackouts" job will delete Course Capture (Kaltura) events according to dates below.
+    </v-card-subtitle>
     <v-card-text>
-      <div class="pa-3 text-body-1">
-        The "Blackouts" job will delete Course Capture (Kaltura) events according to dates below.
-      </div>
       <div class="d-flex justify-end pa-3">
         <CreateBlackoutDialog :blackouts="blackouts" :on-close="onCloseDialog" />
       </div>

@@ -13,9 +13,10 @@
       <v-btn
         id="btn-edit-note"
         aria-label="Edit note"
+        color="primary"
         :disabled="isSaving || disableButtons || course.deletedAt !== null"
         :text="isEmpty(course.note) ? 'Create' : 'Edit'"
-        variant="outlined"
+        variant="flat"
         @click="editNote"
       />
       <v-btn

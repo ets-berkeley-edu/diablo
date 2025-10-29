@@ -261,11 +261,6 @@ const props = defineProps({
     required: true,
     type: Boolean
   },
-  onToggleOptIn: {
-    required: false,
-    type: Function,
-    default: () => {}
-  },
   refreshing: {
     required: true,
     type: Boolean

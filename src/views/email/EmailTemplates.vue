@@ -1,10 +1,10 @@
 <template>
   <v-container v-if="!contextStore.loading" class="pa-0" fluid>
-    <v-card class="border-sm">
+    <v-card elevation="0">
       <v-card-title>
         <PageTitle :icon="mdiEmailOpenMultipleOutline" text="Email Templates" />
       </v-card-title>
-      <v-card-text class="text-body-2">
+      <v-card-text class="font-size-16">
         <div>
           When email is ready to send it is put in a queue. Background jobs add emails to the queue &mdash;
           for example, the Kaltura job queues up 'Recordings scheduled' emails.
@@ -12,7 +12,7 @@
           'Notify instructor of changes' emails are added to the queue when an instructor approves his/her course
           for Course Capture.
         </div>
-        <div class="py-2">
+        <div class="mt-3">
           The Queued Emails job is what actually sends email.
         </div>
         <v-row>

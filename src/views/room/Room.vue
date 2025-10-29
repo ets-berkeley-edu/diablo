@@ -1,23 +1,25 @@
 <template>
   <div v-if="!contextStore.loading">
-    <v-card class="border-sm">
-      <v-card-title class="pb-0">
+    <v-card elevation="0">
+      <v-card-title class="py-0">
         <PageTitle :icon="mdiHomeCityOutline" :text="room.location" />
       </v-card-title>
       <v-card-text>
-        <v-container class="d-block font-size-16 mx-0 mb-6" fluid>
+        <v-container class="d-block font-size-16 mx-0 mb-6 pa-0" fluid>
           <v-row v-if="room.kalturaResourceId">
-            <v-col class="text-subtitle-1 d-flex flex-wrap">
-              <span class="mr-8 text-no-wrap">Kaltura resource ID: {{ room.kalturaResourceId }}</span>
+            <v-col class="text-subtitle-1">
               <a
                 v-if="kalturaEventList"
                 id="skip-to-kaltura-event-list"
-                class="text-no-wrap"
+                class="font-size-18 text-no-wrap"
                 href="#kaltura-events-header"
                 @click.stop="scrollToKalturaEvents"
               >
                 Scroll to Kaltura events
               </a>
+            </v-col>
+            <v-col class="text-no-wrap text-right">
+              <span class="font-weight-bold">Kaltura resource ID:</span> {{ room.kalturaResourceId }}
             </v-col>
           </v-row>
           <v-row>

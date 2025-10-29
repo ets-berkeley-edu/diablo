@@ -1,6 +1,10 @@
 <template>
-  <div class="d-flex align-end">
-    <label id="select-room-capability-label" for="select-room-capability" class="capability-label text-subtitle-1 mr-4">
+  <div class="align-center d-flex">
+    <label
+      id="select-room-capability-label"
+      for="select-room-capability"
+      class="font-size-18 mr-2"
+    >
       <span class="sr-only">Room </span>Capability:
     </label>
     <v-select
@@ -18,6 +22,7 @@
       return-object
       :title="undefined"
       :value="get(capability, 'title', undefined)"
+      variant="outlined"
       @update:menu="onToggleMenu"
       @update:model-value="updateCapability"
     />
@@ -27,7 +32,7 @@
 
 <script setup>
 import {onMounted, ref} from 'vue'
-import {each, get} from 'lodash'
+import {each, find, get} from 'lodash'
 import {putFocusNextTick} from '@/lib/utils'
 import {updateRoomCapability} from '@/api/room'
 
@@ -57,7 +62,6 @@ const capabilityOptions = ref([{
 const menuContainer = ref()
 
 onMounted(() => {
-  capability.value = props.room.capability
   each(props.options, (text, value) => {
     capabilityOptions.value.push(
       {
@@ -69,6 +73,7 @@ onMounted(() => {
       }
     )
   })
+  capability.value = find(capabilityOptions.value, ['value', props.room.capability])
 })
 
 const onToggleMenu = isOpen => {

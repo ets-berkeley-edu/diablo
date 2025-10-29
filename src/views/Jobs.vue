@@ -1,6 +1,6 @@
 <template>
-  <div v-if="!contextStore.loading" class="pt-2">
-    <v-card class="border-sm mb-4">
+  <div v-if="!contextStore.loading">
+    <v-card class="mb-4" elevation="0">
       <v-card-title>
         <PageTitle
           :icon="mdiHandsPray"

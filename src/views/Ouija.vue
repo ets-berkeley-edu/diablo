@@ -1,7 +1,8 @@
 <template>
   <v-card
     v-if="!contextStore.loading"
-    class="border-sm ouija-card"
+    class="ouija-card"
+    elevation="0"
   >
     <v-card-title class="align-start">
       <v-row>
@@ -79,7 +80,6 @@
       :courses="courses"
       :description="coursesTableDescription"
       :include-room-column="true"
-      :on-toggle-opt-in="onToggleOptIn"
       :refreshing="isRefreshing"
       :search-text="searchText"
       :show-opt-in="true"
@@ -91,7 +91,7 @@
 import {computed, onMounted, onUnmounted, ref} from 'vue'
 import {each, kebabCase, map} from 'lodash'
 import {mdiAutoFix, mdiMagnify} from '@mdi/js'
-import type {Course, CourseSortable} from '@/lib/types'
+import type {CourseSortable} from '@/lib/types'
 import {OuijaFilter, useOuijaStore} from '@/stores/ouija'
 import {getCourseCodes} from '@/lib/berkeley'
 import {alertScreenReader, pluralize, putFocusNextTick} from '@/lib/utils'
@@ -166,16 +166,6 @@ const onClickDownload = () => {
 const onToggleFilterOptionsMenu = isOpen => {
   if (isOpen) {
     putFocusNextTick('filter-option-scheduled')
-  }
-}
-const onToggleOptIn = (course: Course) => {
-  if (!course.hasOptedIn) {
-    // TODO: Do we need to alter or extend this logic?
-    // const indexOf = courses.value.findIndex(c => c.sectionId === course.sectionId)
-    // if (indexOf >= 0) {
-    //   courses.value.splice(indexOf, 1)
-    // }
-    // contextStore.snackbarOpen(`${course.label} removed from list.`)
   }
 }
 
