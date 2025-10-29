@@ -13,7 +13,7 @@
         Page not found.
       </div>
       <div>
-        <ContactUsPrompt />
+        <ContactUsPrompt email-id-suffix="not-found" />
       </div>
     </v-card-text>
   </v-card>

@@ -1,6 +1,6 @@
 <template>
   <div class="pa-4">
-    <v-banner class="pa-12">
+    <v-banner class="pa-12" role="none">
       <template #prepend>
         <v-icon
           class="my-2"
@@ -23,7 +23,7 @@
           </span>
         </div>
         <div>
-          <ContactUsPrompt class="font-size-18" />
+          <ContactUsPrompt class="font-size-18" email-id-suffix="error" />
         </div>
       </div>
     </v-banner>

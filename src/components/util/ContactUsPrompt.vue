@@ -2,7 +2,7 @@
   <span>
     Problem? Question? Email us at
     <a
-      id="diablo-support-mailto"
+      :id="`diablo-support-mailto-${emailIdSuffix}`"
       :class="hrefMailtoClass"
       :href="`mailto:${config.emailCourseCaptureSupport}`"
       target="_blank"
@@ -22,6 +22,10 @@ defineProps({
   hrefMailtoClass: {
     default: 'text-anchor',
     required: false,
+    type: String
+  },
+  emailIdSuffix: {
+    required: true,
     type: String
   }
 })
