@@ -24,7 +24,11 @@
             Courses eligible for capture
           </h2>
           <div v-if="!eligibleCourses.length" class="px-4 pt-2">No courses.</div>
-          <HomeCoursesEligible v-if="eligibleCourses.length" :courses="eligibleCourses" />
+          <HomeCoursesTable
+            v-if="eligibleCourses.length"
+            :courses="eligibleCourses"
+            courses-type="eligible"
+          />
         </div>
         <div v-if="ineligibleCourses.length" class="mb-2 mt-6" role="region">
           <v-expansion-panels class="border-sm rounded" flat rounded>
@@ -50,7 +54,7 @@
               </v-expansion-panel-title>
               <v-expansion-panel-text>
                 <template #default>
-                  <HomeCoursesNotEligible :courses="ineligibleCourses" />
+                  <HomeCoursesTable :courses="ineligibleCourses" courses-type="ineligible" />
                 </template>
               </v-expansion-panel-text>
             </v-expansion-panel>
@@ -79,8 +83,7 @@ import {each, get, size} from 'lodash'
 import {mdiMenuDown, mdiMenuRight, mdiVideoPlus} from '@mdi/js'
 import {onMounted, ref} from 'vue'
 import CourseCapturePreferences from '@/components/course/CourseCapturePreferences.vue'
-import HomeCoursesEligible from '@/components/util/HomeCoursesEligible.vue'
-import HomeCoursesNotEligible from '@/components/util/HomeCoursesNotEligible.vue'
+import HomeCoursesTable from '@/components/util/HomeCoursesTable.vue'
 import PageTitle from '@/components/util/PageTitle.vue'
 import type {Course} from '@/lib/types'
 import {getCourseCodes, getCourseStatusLabel, getDisplayMeetings, isCourseScheduled} from '@/lib/berkeley'
