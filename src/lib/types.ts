@@ -143,7 +143,7 @@ export interface Course extends BaseCourse {
   recordingTypeName: string,
   room: Room | undefined,
   scheduled: ScheduledCourse[] | null,
-  statusLabel?: string,
+  statusLabel: string | undefined,
   updateHistory?: ScheduleUpdate[]
 }
 
@@ -162,7 +162,7 @@ export interface CourseSortable extends Course {
 }
 
 export interface DiabloUser {
-  id: string | null,
+  id: string | undefined,
   courses: Course[],
   deptCode?: string,
   email?: string,
@@ -177,7 +177,7 @@ export interface DiabloUser {
   isTeaching: boolean,
   lastName?: string,
   name: string,
-  uid: string | null,
+  uid: string | undefined,
   doNotEmail: boolean,
   optInNewCourses: boolean
 }
