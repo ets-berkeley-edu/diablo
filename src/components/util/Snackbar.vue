@@ -25,6 +25,7 @@
             v-if="includeContactUsPrompt"
             class="mb-4"
             href-mailto-class="text-decoration-underline text-white"
+            email-id-suffix="snackbar"
           />
         </div>
         <v-btn
