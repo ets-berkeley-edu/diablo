@@ -9,6 +9,7 @@ import {
   join,
   last,
   split,
+  toLower,
   trim,
 } from 'lodash'
 import {nextTick} from 'vue'
@@ -16,9 +17,10 @@ import type {Course, DiabloUser} from '@/lib/types'
 import {useContextStore} from '@/stores/context'
 
 export const ANONYMOUS_USER: DiabloUser = {
+  id: undefined,
   courses: [],
+  doNotEmail: true,
   emailAddress: null,
-  id: null,
   isActive: false,
   isAdmin: false,
   isAnonymous: true,
@@ -26,7 +28,8 @@ export const ANONYMOUS_USER: DiabloUser = {
   isExpired: true,
   isTeaching: false,
   name: 'UID None',
-  uid: null
+  optInNewCourses: false,
+  uid: undefined
 }
 
 export function alertScreenReader(message: string) {
@@ -45,6 +48,10 @@ export function decamelize(str: string, separator = ' ') {
 
 export function escapeForRegExp(s: string) {
   return s && s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+export function normalizeId(id: string) {
+  return toLower(id).replace(/\W/g, ' ').trim().replace(/[ _]+/g, '-')
 }
 
 export function oxfordJoin(arr: string[]) {
