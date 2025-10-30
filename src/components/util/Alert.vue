@@ -1,9 +1,9 @@
 <template>
   <div class="align-start d-flex">
     <div>
-      <v-icon class="mr-3" color="error" :icon="mdiAlert" />
+      <v-icon class="mr-3" :color="color" :icon="icon" />
     </div>
-    <div :class="textClass">
+    <div :class="`text-${color}`">
       <slot />{{ text }}
     </div>
   </div>
@@ -13,8 +13,13 @@
 import {mdiAlert} from '@mdi/js'
 
 defineProps({
-  textClass: {
-    default: 'text-error',
+  color: {
+    default: 'error',
+    required: false,
+    type: String
+  },
+  icon: {
+    default: mdiAlert,
     required: false,
     type: String
   },

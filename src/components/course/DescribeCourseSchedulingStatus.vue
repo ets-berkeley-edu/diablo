@@ -1,5 +1,5 @@
 <template>
-  <div class="font-weight-bold">
+  <div class="font-weight-bold" aria-live="polite">
     <div v-if="isCurrentTerm && !capability" class="align-start d-flex py-2">
       <v-icon class="mr-3 mt-1" color="error" :icon="mdiAlert" />
       <div id="course-not-eligible">
@@ -63,14 +63,16 @@
         v-if="!course.scheduled && course.hasOptedIn && instructors.length"
         id="notice-eligible-not-scheduled"
         class="py-2"
+        color="success"
+        :icon="mdiUpdate"
         text="Scheduling for this course is pending. This process will complete within an hour. Instructors will be notified when scheduling takes place."
-        text-class="text-success"
       />
       <Alert
         v-if="!course.scheduled && !instructors.length && course.optIns.length === 1 && course.optIns[0].instructorUid === 'admin'"
         id="notice-eligible-scheduled-by-admin"
         class="py-2"
-        text-class="text-success"
+        color="success"
+        :icon="mdiCheckBold"
       >
         This course was scheduled for Course Capture by an Admin on {{ DateTime.fromISO(course.optIns[0].createdAt).toLocaleString(DateTime.DATE_MED) }}.
       </Alert>
@@ -87,7 +89,7 @@
 
 <script setup lang="ts">
 import {DateTime} from 'luxon'
-import {mdiAlert} from '@mdi/js'
+import {mdiAlert, mdiCheckBold, mdiUpdate} from '@mdi/js'
 import {storeToRefs} from 'pinia'
 import {useContextStore} from '@/stores/context'
 import {useCourseStore} from '@/stores/course'
