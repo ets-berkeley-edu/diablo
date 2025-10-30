@@ -165,12 +165,14 @@ const cancel = () => {
   collaborators.value = cloneDeep(course.value.collaborators)
   isEditing.value = false
   courseStore.setDisableButtons(false)
+  putFocusNextTick('btn-collaborators-edit')
   alertScreenReader('Update canceled')
 }
 
 const edit = () => {
   courseStore.setDisableButtons(true)
   isEditing.value = true
+  putFocusNextTick('collaborator-lookup-input')
   alertScreenReader('Ready to edit collaborators')
 }
 
@@ -184,7 +186,7 @@ const removeCollaborator = (uid: string, index: number) => {
   if (collaborator) {
     collaborators.value = collaborators.value.filter(c => c.uid !== uid)
     alertScreenReader(`${collaborator.firstName} ${collaborator.lastName} removed.`)
-    const nextUID = collaborators[index]?.uid
+    const nextUID = collaborators.value[index]?.uid
     putFocusNextTick(nextUID ? `btn-collaborator-remove-${nextUID}` : 'collaborator-lookup-input')
   }
 }
@@ -196,6 +198,7 @@ const update = () => {
     collaborators.value = cloneDeep(course.value.collaborators)
     isEditing.value = false
     courseStore.setDisableButtons(false)
+    putFocusNextTick('btn-collaborators-edit')
     alertScreenReader('Collaborators updated.')
   })
 }
