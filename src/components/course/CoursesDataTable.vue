@@ -23,7 +23,7 @@
         <tr>
           <th
             v-for="(column, index) in columns"
-            :id="`courses-table-${column.key}-th`"
+            :id="`courses-table-${normalizeId(column.key)}-th`"
             :key="index"
             :aria-label="column.screenreaderTitle || column.title"
             :aria-sort="isSorted(column) ? `${sortBy.order}ending` : null"
@@ -67,7 +67,7 @@
         </tr>
       </template>
       <template #body="{items}">
-        <tr v-if="refreshing">
+        <tr v-if="refreshing" id="course-table-is-refreshing">
           <td class="pa-12 text-center" :colspan="headers.length">
             <v-progress-circular
               class="spinner"
@@ -87,17 +87,16 @@
         <template v-if="!refreshing && items.length">
           <!-- eslint-disable-next-line vue/no-v-for-template-key -->
           <template v-for="course in items" :key="course.sectionId">
-            <tr>
-              <td v-if="showOptIn" :class="tdc(course)">
+            <tr :id="`tr-course-${course.sectionId}`">
+              <td v-if="showOptIn" :id="`td-course-${course.sectionId}-opt-in-status`" :class="tdc(course)">
                 <span v-if="course.statusLabel !== 'Not Eligible'">
                   {{ getOptInStatus(course) }}
                 </span>
               </td>
               <td
-                :id="`course-name-${course.sectionId}`"
+                :id="`td-course-${course.sectionId}-name`"
                 :aria-rowspan="size(course.displayMeetings)"
                 :class="tdc(course)"
-                columnheader="courses-table-course-th"
               >
                 <div v-for="(courseCode, courseCodeIndex) in course.courseCodes" :key="courseCode">
                   <router-link
@@ -110,8 +109,14 @@
                   <span v-if="courseCodeIndex > 0">{{ courseCode }}</span>
                 </div>
               </td>
-              <td :id="`section-id-${course.sectionId}`" :class="tdc(course)" columnheader="courses-table-section-th">{{ course.sectionId }}</td>
-              <td v-if="includeRoomColumn" :class="tdc(course)" columnheader="courses-table-room-th">
+              <td :id="`td-course-${course.sectionId}-section-id`" :class="tdc(course)">
+                {{ course.sectionId }}
+              </td>
+              <td
+                v-if="includeRoomColumn"
+                :id="`td-course-${course.sectionId}-meeting-room-${get(course.room, 'id', 'none')}`"
+                :class="tdc(course)"
+              >
                 <div v-if="course.room && course.room.id" :class="{'line-through': course.deletedAt}">
                   <router-link
                     :id="`course-${course.sectionId}-room-${course.room.id}`"
@@ -125,13 +130,19 @@
                 </span>
                 <span v-if="!course.room">&mdash;</span>
               </td>
-              <td :id="`meeting-days-${course.sectionId}-0`" :class="tdc(course)" columnheader="courses-table-days-th">
+              <td
+                :id="`td-course-${course.sectionId}-meeting-room-${get(course.room, 'id', 'none')}-days-of-week`"
+                :class="tdc(course)"
+              >
                 <div :class="{'line-through': course.deletedAt}">
                   <Days v-if="get(course, 'displayMeetings.0.daysNames.length')" :names-of-days="course.displayMeetings[0].daysNames" />
                   <span v-else>&mdash;</span>
                 </div>
               </td>
-              <td :id="`meeting-times-${course.sectionId}-0`" :class="tdc(course)" columnheader="courses-table-time-th">
+              <td
+                :id="`td-course-${course.sectionId}-meeting-room-${get(course.room, 'id', 'none')}-dates`"
+                :class="tdc(course)"
+              >
                 <div :class="{'line-through': course.deletedAt}">
                   <div v-if="course.nonstandardMeetingDates && get(course, 'displayMeetings.0.startDate') && get(course, 'displayMeetings.0.endDate')">
                     <Date class="text-no-wrap" :date="course.displayMeetings[0].startDate" />
@@ -143,7 +154,7 @@
                   <span class="sr-only">{{ get(course, 'displayMeetings.0.startTimeFormatted') }} to {{ get(course, 'displayMeetings.0.endTimeFormatted') }}</span>
                 </div>
               </td>
-              <td :id="`course-${course.sectionId}-status`" :class="tdc(course)" columnheader="courses-table-status-th">
+              <td :id="`td-course-${course.sectionId}-status`" :class="tdc(course)">
                 <div v-if="course.statusLabel === 'Canceled'" class="canceled-indicator d-flex">
                   <v-icon color="error" :icon="mdiClose" />
                   <span class="font-weight-bold text-error">{{ course.statusLabel }}</span>
@@ -152,7 +163,7 @@
                   {{ course.statusLabel }}
                 </div>
               </td>
-              <td :class="tdc(course)" columnheader="courses-table-instructors-th">
+              <td :id="`td-course-${course.sectionId}-instructors`" :class="tdc(course)">
                 <div v-if="course.instructors.length">
                   <div v-for="instructor in course.instructors" :key="instructor.uid" class="mb-1 mt-1">
                     <Instructor :course="course" :instructor="instructor" />
@@ -162,14 +173,22 @@
                   &mdash;
                 </div>
               </td>
-              <td :id="`course-${course.sectionId}-publish-types`" :class="tdc(course)" columnheader="courses-table-publish-th">
+              <td :id="`td-course-${course.sectionId}-publish-types`" :class="tdc(course)">
                 <span aria-hidden="true">{{ (course.scheduled && course.publishTypeName) || '&mdash;' }}</span>
                 <span class="sr-only">{{ (course.scheduled && course.publishTypeName) || 'blank' }}</span>
               </td>
             </tr>
-            <tr v-for="(meeting, meetingIndex) in tail(course.displayMeetings)" :key="`${course.sectionId}-${meetingIndex}`">
+            <tr
+              v-for="(meeting, meetingIndex) in tail(course.displayMeetings)"
+              :id="`tr-course-${course.sectionId}-meeting-${meetingIndex + 1}`"
+              :key="meetingIndex"
+            >
               <td :aria-hidden="true" :colspan="showOptIn ? 3 : 2" :class="tdcLower(course)" />
-              <td v-if="includeRoomColumn" :class="tdcLower(course)">
+              <td
+                v-if="includeRoomColumn"
+                :id="`td-course-${course.sectionId}-meeting-room-${get(meeting.room, 'id', 'none')}`"
+                :class="tdcLower(course)"
+              >
                 <router-link
                   v-if="meeting.room"
                   :id="`course-${course.sectionId}-room-${meeting.room.id}`"
@@ -179,11 +198,19 @@
                 </router-link>
                 <span v-if="!meeting.room">&mdash;</span>
               </td>
-              <td class="text-no-wrap" :class="tdcLower(course)">
+              <td
+                :id="`td-course-${course.sectionId}-meeting-room-${get(meeting.room, 'id', 'none')}-days-of-week`"
+                class="text-no-wrap"
+                :class="tdcLower(course)"
+              >
                 <Days v-if="meeting.daysNames.length" :names-of-days="meeting.daysNames" />
                 <span v-if="!meeting.daysNames.length">&mdash;</span>
               </td>
-              <td class="text-no-wrap" :class="tdcLower(course)">
+              <td
+                :id="`td-course-${course.sectionId}-meeting-room-${get(meeting.room, 'id', 'none')}-dates`"
+                class="text-no-wrap"
+                :class="tdcLower(course)"
+              >
                 <div v-if="course.nonstandardMeetingDates">
                   <Date class="text-no-wrap" :date="meeting.startDate" />
                   <span :aria-hidden="true"> - </span>
@@ -197,16 +224,20 @@
               </td>
               <td :aria-hidden="true" colspan="3" :class="tdcLower(course)" />
             </tr>
-            <tr v-if="course.scheduled && size(course.scheduled)" :key="`approvals-${course.sectionId}`">
-              <td :colspan="headers.length" class="pb-2">
+            <tr
+              v-if="course.scheduled && size(course.scheduled)"
+              :id="`tr-course-${course.sectionId}-scheduled`"
+              :key="`approvals-${course.sectionId}`"
+            >
+              <td
+                :id="`td-course-${course.sectionId}-scheduled-date`"
+                :colspan="headers.length"
+                class="pb-2"
+              >
                 <div class="pb-3">
                   <span>Recordings scheduled on </span>
                   <Date class="text-no-wrap" :date="course.scheduled[0].createdAt" />.
-                  They will be published to {{
-                    course.scheduled[0]
-                      .publishTypeName
-                      .replace('Publish to ', '')
-                  }}.
+                  They will be published to {{ course.scheduled[0].publishTypeName.replace('Publish to ', '') }}.
                 </div>
               </td>
             </tr>
@@ -232,7 +263,7 @@ import {each, filter, find, get, map, size, tail} from 'lodash'
 import {mdiClose} from '@mdi/js'
 import {nextTick, onMounted, ref, watch} from 'vue'
 import type {CourseSortable, SortBy} from '@/lib/types'
-import {alertScreenReader} from '@/lib/utils'
+import {alertScreenReader, normalizeId} from '@/lib/utils'
 import {getDisplayMeetings} from '@/lib/berkeley'
 import {useContextStore} from '@/stores/context'
 import Date from '@/components/util/Date.vue'
