@@ -271,12 +271,14 @@ const cancel = () => {
   publishType.value = course.value.publishType
   isEditing.value = false
   courseStore.setDisableButtons(false)
+  putFocusNextTick('btn-publish-type-edit')
   alertScreenReader('Update canceled')
 }
 
 const edit = () => {
   courseStore.setDisableButtons(true)
   isEditing.value = true
+  putFocusNextTick('radio-publish-type-kaltura-my-media')
   alertScreenReader('Ready to edit recording placement')
 }
 
@@ -319,6 +321,7 @@ const update = () => {
       isEditing.value = false
       isSaving.value = false
       courseStore.setDisableButtons(false)
+      putFocusNextTick('btn-publish-type-edit')
       alertScreenReader(`Publish type is now set to ${publishType.value}`)
     })
   }
