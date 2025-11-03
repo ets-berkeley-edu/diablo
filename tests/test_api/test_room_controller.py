@@ -55,8 +55,8 @@ class TestDownloadRoomEvents:
             '/api/room/download_events',
             data=json.dumps({
                 'roomId': room_id,
-                'startDate': '2025-05-01',
-                'endDate': '2025-05-15',
+                'startDate': '2021-09-01',
+                'endDate': '2021-09-15',
             }),
             content_type='application/json',
         )
@@ -77,11 +77,17 @@ class TestDownloadRoomEvents:
             response = self._api_download_room_events(client, expected_status_code=400)
             assert response.json['message'] == 'No Kaltura events found for Barker 101 between the specified dates.'
 
-    def test_authorized(self, client, admin_session):
+    def test_authorized_room_events(self, client, admin_session):
         """Admin user can download events for a single room."""
         room = Room.find_room("O'Brien 212")
         with test_scheduling_workflow(app):
-            mock_scheduled(section_id=50000, term_id=2218, override_room_id=room.id)
+            mock_scheduled(
+                section_id=50000,
+                term_id=2218,
+                override_room_id=room.id,
+                override_start_date='2021-08-20',
+                override_end_date='2021-12-10',
+            )
             ics_file = self._api_download_room_events(client, room_id=room.id).data
             assert len(ics_file)
 
@@ -93,8 +99,8 @@ class TestDownloadEvents:
         response = client.post(
             '/api/rooms/download_events',
             data=json.dumps({
-                'startDate': '2025-05-01',
-                'endDate': '2025-05-15',
+                'startDate': '2021-09-01',
+                'endDate': '2021-09-15',
             }),
             content_type='application/json',
         )
@@ -115,20 +121,25 @@ class TestDownloadEvents:
             response = self._api_download_events(client, expected_status_code=400)
             assert response.json['message'] == 'No Kaltura events found for any eligible room between the specified dates.'
 
-    def test_authorized(self, client, admin_session):
+    def test_authorized_events(self, client, admin_session):
         """Admin user can download events for all rooms."""
         section_ids = [50000, 50001, 50002, 50003, 50004, 50005, 50006, 50007]
         with test_scheduling_workflow(app):
             for section_id in section_ids:
-                mock_scheduled(section_id=section_id, term_id=2218)
+                mock_scheduled(
+                    section_id=section_id,
+                    term_id=2218,
+                    override_start_date='2021-08-20',
+                    override_end_date='2021-12-10',
+                )
             bytes_representation = self._api_download_events(client).data
             assert len(bytes_representation)
             zip_file = zipfile.ZipFile(io.BytesIO(bytes_representation))
             assert not zip_file.testzip()
             assert zip_file.namelist() == [
-                'Barker_101_20250501-20250515.ics',
-                'Li_Ka_Shing_145_20250501-20250515.ics',
-                'OBrien_212_20250501-20250515.ics',
+                'Barker_101_20210901-20210915.ics',
+                'Li_Ka_Shing_145_20210901-20210915.ics',
+                'OBrien_212_20210901-20210915.ics',
                 '_manifest.txt',
             ]
 
