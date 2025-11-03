@@ -86,7 +86,7 @@ import {computed, onMounted, ref} from 'vue'
 import {find, get} from 'lodash'
 import {storeToRefs} from 'pinia'
 import type {Course} from '@/lib/types'
-import {alertScreenReader} from '@/lib/utils'
+import {alertScreenReader, putFocusNextTick} from '@/lib/utils'
 import {updateRecordingType} from '@/api/course'
 import {useContextStore} from '@/stores/context'
 import {useCourseStore} from '@/stores/course'
@@ -124,7 +124,7 @@ const cancel = () => {
 const edit = () => {
   courseStore.setDisableButtons(true)
   isEditing.value = true
-  alertScreenReader('Ready to edit recording type')
+  putFocusNextTick('radio-recording-type-presenter-presentation-audio')
 }
 
 const update = () => {

@@ -173,7 +173,6 @@ const edit = () => {
   courseStore.setDisableButtons(true)
   isEditing.value = true
   putFocusNextTick('collaborator-lookup-input')
-  alertScreenReader('Ready to edit collaborators')
 }
 
 const onSelect = (collaborator: Collaborator) => {
