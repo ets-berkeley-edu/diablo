@@ -1,6 +1,6 @@
 <template>
   <div v-if="!contextStore.loading">
-    <v-card class="border-sm pr-12 px-6 py-3">
+    <v-card class="border-sm pr-md-12 pl-md-6 py-3">
       <v-card-title class="py-0">
         <PageTitle :icon="mdiVideoPlus" :text="pageTitle" />
       </v-card-title>
@@ -23,7 +23,7 @@
           <h2 id="courses-table-eligible-header" class="text-medium-emphasis w-100">
             Courses eligible for capture
           </h2>
-          <div v-if="!eligibleCourses.length" class="px-4 pt-2">No courses.</div>
+          <div v-if="!eligibleCourses.length" class="pa-4">No courses.</div>
           <HomeCoursesTable
             v-if="eligibleCourses.length"
             :courses="eligibleCourses"
@@ -62,7 +62,7 @@
         </div>
       </v-card-text>
     </v-card>
-    <v-card class="border-sm mt-8 pt-5 px-6">
+    <v-card class="border-sm mt-8 pt-5 px-md-6">
       <v-card-title class="pb-0">
         <h2 class="font-size-24">Preferences</h2>
       </v-card-title>

@@ -1,15 +1,19 @@
 <template>
   <div id="instructors-list">
-    <h3 v-if="course.instructors.length" id="instructors-header">
-      <span v-if="course.hasOptedIn && course.scheduled">
-        {{ course.instructors.length === 1 ? (course.instructors[0].uid === currentUser.uid ? 'You' : 'Instructor') : 'Instructors listed' }} will have editing and publishing access:
-      </span>
-      <span v-if="!course.hasOptedIn || !course.scheduled">
-        Instructor{{ course.instructors.length === 1 ? '' : 's' }}
-      </span>
-    </h3>
-    <h3 v-if="!course.instructors.length" id="instructors-header" class="font-size-16">
-      No instructors are assigned to this course
+    <h3 id="instructors-header">
+      <template v-if="course.instructors.length">
+        <span aria-live="polite">
+          <span v-if="course.hasOptedIn && course.scheduled">
+            {{ course.instructors.length === 1 ? (course.instructors[0].uid === currentUser.uid ? 'You' : 'Instructor') : 'Instructors listed' }} will have editing and publishing access:
+          </span>
+        </span>
+        <span v-if="!course.hasOptedIn || !course.scheduled">
+          {{ pluralize('Instructor', course.instructors.length, false) }}
+        </span>
+      </template>
+      <template v-if="!course.instructors.length">
+        <span class="font-size-16">No instructors are assigned to this course</span>
+      </template>
     </h3>
     <div class="mt-2">
       <div v-if="!course.instructors.length" class="mt-1 text-medium-emphasis">
@@ -90,6 +94,7 @@ import {useCourseStore} from '@/stores/course'
 import {useContextStore} from '@/stores/context'
 import CoursePageInstructorLabel from '@/components/course/CoursePageInstructorLabel.vue'
 import ToggleOptIn from '@/components/course/ToggleOptIn.vue'
+import {pluralize} from '@/lib/utils'
 
 const courseStore = useCourseStore()
 const {course} = storeToRefs(courseStore)
