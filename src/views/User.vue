@@ -1,6 +1,6 @@
 <template>
   <div v-if="!loading">
-    <v-card class="border-sm pr-12 px-4 py-2">
+    <v-card class="border-sm pr-md-12 pl-md-6 py-2">
       <v-card-title class="py-0">
         <PageTitle :icon="mdiSchoolOutline" :text="`${user.name} (${user.uid})`" />
       </v-card-title>

@@ -26,7 +26,7 @@
         >
           <v-card
             v-if="!course.deletedAt"
-            aria-labelledby="instructors-header"
+            :aria-label="pluralize('Instructor', course.instructors.length, false)"
             class="pb-6 pt-4 px-8"
             role="region"
           >
@@ -105,6 +105,7 @@ import PageTitle from '@/components/util/PageTitle.vue'
 import RecordingPlacement from '@/components/course/RecordingPlacement.vue'
 import RecordingType from '@/components/course/RecordingType.vue'
 import ScheduledCourse from '@/components/course/ScheduledCourse.vue'
+import {pluralize} from '@/lib/utils'
 
 const contextStore = useContextStore()
 const courseStore = useCourseStore()

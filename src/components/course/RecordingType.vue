@@ -119,6 +119,7 @@ const cancel = () => {
   recordingType.value = course.value.recordingType
   courseStore.setDisableButtons(false)
   alertScreenReader('Update canceled')
+  putFocusNextTick('btn-recording-type-edit')
 }
 
 const edit = () => {
@@ -137,6 +138,7 @@ const update = () => {
       isSaving.value = false
       courseStore.setDisableButtons(false)
       alertScreenReader('Recording type updated.')
+      putFocusNextTick('btn-recording-type-edit')
     })
   }
 }

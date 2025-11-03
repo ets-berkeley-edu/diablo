@@ -95,7 +95,7 @@
     </v-navigation-drawer>
 
     <v-main id="content" class="ma-3" width="calc(100vw - 38px)">
-      <div class="pa-4 py-5">
+      <div class="px-md-4 py-md-5">
         <Snackbar />
         <Spinner v-if="loading" />
         <router-view :key="stripAnchorRef(route.fullPath)" />

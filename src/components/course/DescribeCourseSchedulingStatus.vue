@@ -9,13 +9,14 @@
       </div>
     </div>
     <v-expand-transition>
-      <div v-if="isEligibleForCourseCapture && course.hasOptedIn && course.scheduled" aria-live="polite">
+      <div v-if="isEligibleForCourseCapture && course.hasOptedIn && course.scheduled">
         <v-alert
           v-if="courseStore.updatesQueued"
           id="notice-queued"
           class="font-weight-bold"
           density="compact"
           :icon="mdiAlert"
+          role="none"
           text="Recent updates to recording settings are queued to go live. They will be in effect within an hour."
           type="warning"
           variant="outlined"
