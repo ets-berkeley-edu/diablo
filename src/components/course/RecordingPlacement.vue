@@ -279,7 +279,6 @@ const edit = () => {
   courseStore.setDisableButtons(true)
   isEditing.value = true
   putFocusNextTick('radio-publish-type-kaltura-my-media')
-  alertScreenReader('Ready to edit recording placement')
 }
 
 const isCanvasSiteIdStaged = (canvasSiteId: string) => {
