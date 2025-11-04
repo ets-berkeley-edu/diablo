@@ -1,9 +1,9 @@
 <template>
-  <div>
-    {{ instructor.name }}<span v-if="currentUser.isAdmin">&nbsp;({{ instructor.uid }})</span>
-    <span v-if="!hideOptInStatus">
-      <span v-if="instructor.optedInAt" class="text-success">&nbsp;opted in {{ DateTime.fromISO(instructor.optedInAt).toRelativeCalendar({}) }}</span>
-      <span v-if="!instructor.optedInAt" class="text-warning">&nbsp;(not yet opted in)</span>
+  <div class="d-flex align-center flex-wrap gap-2 instructor-label">
+    <span>
+      {{ instructor.name }}<span v-if="currentUser.isAdmin">&nbsp;({{ instructor.uid }})</span>
+      <span v-if="instructor.optedInAt">&nbsp;opted in {{ DateTime.fromISO(instructor.optedInAt).toRelativeCalendar({}) }}.</span>
+      <span v-if="!instructor.optedInAt">&nbsp;has NOT yet opted in.</span>
     </span>
   </div>
 </template>
@@ -15,10 +15,6 @@ import type {CourseInstructor} from '@/lib/types'
 import {useContextStore} from '@/stores/context'
 
 defineProps({
-  hideOptInStatus: {
-    required: false,
-    type: Boolean
-  },
   instructor: {
     required: true,
     type: Object as PropType<CourseInstructor>
@@ -27,3 +23,9 @@ defineProps({
 
 const currentUser = useContextStore().currentUser
 </script>
+
+<style scoped>
+.instructor-label {
+  font-size: 18px;
+}
+</style>

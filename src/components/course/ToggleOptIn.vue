@@ -82,16 +82,16 @@ const toggleOptIn = (optIn: boolean | null) => {
 
 <style>
 .toggle-focused {
-  border: 1px solid #b3dcff;
+  border: 2px solid #424689;
   border-radius: 50px;
   margin-right: 2px;
 }
 .toggle-not-focused {
-  border: 1px solid transparent;
+  border: 2px solid transparent;
   margin-right: 2px;
 }
 .toggle-opt-in {
-  padding: 0 0 0 3px;
+  padding: 0 3px;
 }
 .toggle-opt-in label {
   font-size: 1.2rem;
