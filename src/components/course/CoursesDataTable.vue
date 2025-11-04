@@ -1,6 +1,6 @@
 <template>
   <div aria-describedby="courses-data-table-message" aria-label="Courses table" role="region">
-    <v-row id="courses-data-table-message" class="text-medium-emphasis pb-1 px-4">
+    <v-row id="courses-data-table-message" class="text-medium-emphasis pb-1 px-4 mb-1">
       <span class="ml-4">{{ messageForCourses }}</span>
       <v-spacer />
       <v-col class="text-right" cols="12" md="6"><span v-if="!refreshing && !searchText">{{ description }}</span></v-col>
@@ -27,7 +27,7 @@
             :key="index"
             :aria-label="column.screenreaderTitle || column.title"
             :aria-sort="isSorted(column) ? `${sortBy.order}ending` : null"
-            class="text-start text-no-wrap"
+            class="text-start"
             :class="{'sortable': column.sortable === false}"
             scope="col"
           >
@@ -88,7 +88,12 @@
           <!-- eslint-disable-next-line vue/no-v-for-template-key -->
           <template v-for="course in items" :key="course.sectionId">
             <tr :id="`tr-course-${course.sectionId}`">
-              <td v-if="showOptIn" :id="`td-course-${course.sectionId}-opt-in-status`" :class="tdc(course)">
+              <td
+                v-if="showOptIn"
+                :id="`td-course-${course.sectionId}-opt-in-status`"
+                :class="tdc(course)"
+                data-label="Status"
+              >
                 <span v-if="course.statusLabel !== 'Not Eligible'">
                   {{ getOptInStatus(course) }}
                 </span>
@@ -97,6 +102,7 @@
                 :id="`td-course-${course.sectionId}-name`"
                 :aria-rowspan="size(course.displayMeetings)"
                 :class="tdc(course)"
+                data-label="Course"
               >
                 <div v-for="(courseCode, courseCodeIndex) in course.courseCodes" :key="courseCode">
                   <router-link
@@ -109,13 +115,18 @@
                   <span v-if="courseCodeIndex > 0">{{ courseCode }}</span>
                 </div>
               </td>
-              <td :id="`td-course-${course.sectionId}-section-id`" :class="tdc(course)">
+              <td
+                :id="`td-course-${course.sectionId}-section-id`"
+                :class="tdc(course)"
+                data-label="Section"
+              >
                 {{ course.sectionId }}
               </td>
               <td
                 v-if="includeRoomColumn"
                 :id="`td-course-${course.sectionId}-meeting-room-${get(course.room, 'id', 'none')}`"
                 :class="tdc(course)"
+                data-label="Room"
               >
                 <div v-if="course.room && course.room.id" :class="{'line-through': course.deletedAt}">
                   <router-link
@@ -133,6 +144,7 @@
               <td
                 :id="`td-course-${course.sectionId}-meeting-room-${get(course.room, 'id', 'none')}-days-of-week`"
                 :class="tdc(course)"
+                data-label="Days"
               >
                 <div :class="{'line-through': course.deletedAt}">
                   <Days v-if="get(course, 'displayMeetings.0.daysNames.length')" :names-of-days="course.displayMeetings[0].daysNames" />
@@ -142,19 +154,24 @@
               <td
                 :id="`td-course-${course.sectionId}-meeting-room-${get(course.room, 'id', 'none')}-dates`"
                 :class="tdc(course)"
+                data-label="Time"
               >
                 <div :class="{'line-through': course.deletedAt}">
                   <div v-if="course.nonstandardMeetingDates && get(course, 'displayMeetings.0.startDate') && get(course, 'displayMeetings.0.endDate')">
-                    <Date class="text-no-wrap" :date="course.displayMeetings[0].startDate" />
+                    <Date :date="course.displayMeetings[0].startDate" />
                     <span :aria-hidden="true"> - </span>
                     <span class="sr-only"> to </span>
-                    <Date class="text-no-wrap" :date="course.displayMeetings[0].endDate" />
+                    <Date :date="course.displayMeetings[0].endDate" />
                   </div>
-                  <span aria-hidden="true" class="text-no-wrap">{{ get(course, 'displayMeetings.0.startTimeFormatted') }} - {{ get(course, 'displayMeetings.0.endTimeFormatted') }}</span>
+                  <span aria-hidden="true">{{ get(course, 'displayMeetings.0.startTimeFormatted') }} - {{ get(course, 'displayMeetings.0.endTimeFormatted') }}</span>
                   <span class="sr-only">{{ get(course, 'displayMeetings.0.startTimeFormatted') }} to {{ get(course, 'displayMeetings.0.endTimeFormatted') }}</span>
                 </div>
               </td>
-              <td :id="`td-course-${course.sectionId}-status`" :class="tdc(course)">
+              <td
+                :id="`td-course-${course.sectionId}-status`"
+                :class="tdc(course)"
+                data-label="Status"
+              >
                 <div v-if="course.statusLabel === 'Canceled'" class="canceled-indicator d-flex">
                   <v-icon color="error" :icon="mdiClose" />
                   <span class="font-weight-bold text-error">{{ course.statusLabel }}</span>
@@ -163,7 +180,11 @@
                   {{ course.statusLabel }}
                 </div>
               </td>
-              <td :id="`td-course-${course.sectionId}-instructors`" :class="tdc(course)">
+              <td
+                :id="`td-course-${course.sectionId}-instructors`"
+                :class="tdc(course)"
+                data-label="Instructor(s)"
+              >
                 <div v-if="course.instructors.length">
                   <div v-for="instructor in course.instructors" :key="instructor.uid" class="mb-1 mt-1">
                     <Instructor :course="course" :instructor="instructor" />
@@ -173,9 +194,26 @@
                   &mdash;
                 </div>
               </td>
-              <td :id="`td-course-${course.sectionId}-publish-types`" :class="tdc(course)">
+              <td
+                :id="`td-course-${course.sectionId}-publish-types`"
+                :class="tdc(course)"
+                data-label="Publish"
+              >
                 <span aria-hidden="true">{{ (course.scheduled && course.publishTypeName) || '&mdash;' }}</span>
                 <span class="sr-only">{{ (course.scheduled && course.publishTypeName) || 'blank' }}</span>
+              </td>
+              <!-- This td is only visible in smaller viewports. See CSS below. -->
+              <td
+                v-if="course.scheduled && size(course.scheduled)"
+                :id="`td-course-${course.sectionId}-scheduled-mobile`"
+                class="scheduled-mobile"
+                data-label="Scheduled"
+              >
+                <div>
+                  <span>Recordings scheduled on </span>
+                  <Date :date="course.scheduled[0].createdAt" />.
+                  They will be published to {{ course.scheduled[0].publishTypeName.replace('Publish to ', '') }}.
+                </div>
               </td>
             </tr>
             <tr
@@ -188,6 +226,7 @@
                 v-if="includeRoomColumn"
                 :id="`td-course-${course.sectionId}-meeting-room-${get(meeting.room, 'id', 'none')}`"
                 :class="tdcLower(course)"
+                data-label="Room"
               >
                 <router-link
                   v-if="meeting.room"
@@ -200,22 +239,22 @@
               </td>
               <td
                 :id="`td-course-${course.sectionId}-meeting-room-${get(meeting.room, 'id', 'none')}-days-of-week`"
-                class="text-no-wrap"
                 :class="tdcLower(course)"
+                data-label="Days"
               >
                 <Days v-if="meeting.daysNames.length" :names-of-days="meeting.daysNames" />
                 <span v-if="!meeting.daysNames.length">&mdash;</span>
               </td>
               <td
                 :id="`td-course-${course.sectionId}-meeting-room-${get(meeting.room, 'id', 'none')}-dates`"
-                class="text-no-wrap"
                 :class="tdcLower(course)"
+                data-label="Time"
               >
                 <div v-if="course.nonstandardMeetingDates">
-                  <Date class="text-no-wrap" :date="meeting.startDate" />
+                  <Date :date="meeting.startDate" />
                   <span :aria-hidden="true"> - </span>
                   <span class="sr-only"> to </span>
-                  <Date class="text-no-wrap" :date="meeting.endDate" />
+                  <Date :date="meeting.endDate" />
                 </div>
                 <div :class="{'pb-2': course.nonstandardMeetingDates && meetingIndex === course.displayMeetings.length - 1}">
                   <span aria-hidden="true">{{ meeting.startTimeFormatted }} - {{ meeting.endTimeFormatted }}</span>
@@ -232,11 +271,10 @@
               <td
                 :id="`td-course-${course.sectionId}-scheduled-date`"
                 :colspan="headers.length"
-                class="pb-2"
               >
-                <div class="pb-3">
+                <div>
                   <span>Recordings scheduled on </span>
-                  <Date class="text-no-wrap" :date="course.scheduled[0].createdAt" />.
+                  <Date :date="course.scheduled[0].createdAt" />.
                   They will be published to {{ course.scheduled[0].publishTypeName.replace('Publish to ', '') }}.
                 </div>
               </td>
@@ -400,5 +438,104 @@ const tdcLower = course => {
 <style scoped>
 .canceled-indicator {
   margin-left: -18px;
+}
+
+#courses-data-table td.scheduled-mobile {
+  display: none;
+}
+
+@media (max-width: 1062px) {
+  #courses-data-table :deep(thead),
+  #courses-data-table :deep(colgroup) {
+    display: none !important;
+  }
+
+  #courses-data-table,
+  #courses-data-table :deep(table),
+  #courses-data-table :deep(tbody),
+  #courses-data-table tr,
+  #courses-data-table td,
+  #courses-data-table th {
+    display: block;
+    width: 100%;
+  }
+
+  #courses-data-table :deep(tbody > tr) {
+    margin: 0 0 12px 0;
+    padding: 12px;
+    border: 1px solid rgba(0,0,0,0.16);
+    border-radius: 12px;
+    background: var(--v-theme-surface, #fff);
+  }
+
+  #courses-data-table :deep(.v-data-table__td),
+  #courses-data-table :deep(.v-data-table__th),
+  #courses-data-table :deep(table tr:not(:last-child) > td:not(.border-b-0)),
+  #courses-data-table :deep(table tr > th) {
+    border-bottom: 0 !important;
+    border-top: 0 !important;
+  }
+
+  #courses-data-table :deep(tbody tr > td[aria-hidden="true"]) {
+    display: none;
+  }
+
+  #courses-data-table td {
+    position: relative;
+    border: 0 !important;
+    padding: 3px 12px;
+    white-space: normal;
+  }
+
+  #courses-data-table :deep(td)::before {
+    content: attr(data-label);
+    display: block;
+    font-weight: 600;
+    opacity: 0.8;
+    margin-bottom: 4px;
+  }
+
+  #courses-data-table :deep(tbody tr > td + td) { padding-top: 5px; }
+  #courses-data-table :deep(tbody tr > td + td)::after {
+    content: "";
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    top: 0;
+    height: 1px;
+    background: rgba(0, 0, 0, 0.16);
+    pointer-events: none;
+  }
+
+  #courses-data-table :deep(tbody tr > td[aria-hidden="true"] + td)::after {
+    display: none;
+  }
+
+  #courses-data-table :deep(td[id^="td-course-"][id$="-instructors"] > div:first-child) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 10px;
+  }
+
+
+  #courses-data-table :deep(td[id^="td-course-"][id$="-instructors"] > div:first-child > div) {
+    display: inline-flex;
+    margin: 0 !important;
+    width: auto;
+  }
+
+  #courses-data-table :deep(td.scheduled-mobile) {
+    display: block;
+    position: relative;
+    padding: 10px 12px;
+    text-align: left;
+  }
+
+  /* For smaller viewports (under 1062px), we want to hide the separate scheduled row so it doesn't make its own section
+     We display it in the selector above. This is why we have 2 td sections for the scheduled section. One is for larger viewports and one is for narrow viewports.*/
+  #courses-data-table :deep(tr[id^="tr-course-"][id$="-scheduled"]) {
+    display: none !important;
+  }
 }
 </style>

@@ -249,6 +249,7 @@ const idPrefix = `courses-table-${props.coursesType}`
 
   .instructor-courses tbody tr > td:not([aria-hidden]) {
     border-top: thin solid rgb(var(--v-theme-table-border)) !important;
+    padding-top: 3px;
   }
 
   .instructor-courses tbody tr > td:first-child {
@@ -261,6 +262,7 @@ const idPrefix = `courses-table-${props.coursesType}`
   .instructor-courses :deep(table tr:not(:last-child) > td:not(.border-b-0)),
   .instructor-courses :deep(table tr > th) {
     border-bottom: 0 !important;
+    padding-top: 3px;
   }
 
   .instructor-courses :deep(.v-data-table__td),
