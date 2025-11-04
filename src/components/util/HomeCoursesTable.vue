@@ -21,7 +21,7 @@
           v-for="(column, index) in columns"
           :id="`${idPrefix}-${column.value}-th`"
           :key="index"
-          class="text-start text-no-wrap"
+          class="text-start"
           scope="col"
         >
           <span class="font-size-13 font-weight-bold">{{ column.title }}</span>
@@ -38,10 +38,11 @@
           <td
             :id="`course-${course.sectionId}-status`"
             :class="{'border-b-0': size(course.displayMeetings) > 1}"
+            data-label="Status"
           >
             <div v-if="course.statusLabel === 'Canceled'" class="canceled-indicator d-flex">
               <v-icon color="error" :icon="mdiClose" />
-              <span class="font-weight-bold text-no-wrap text-error">{{ course.statusLabel }}</span>
+              <span class="font-weight-bold text-error">{{ course.statusLabel }}</span>
             </div>
             <div v-else>
               <v-tooltip
@@ -49,7 +50,7 @@
                 location="top"
               >
                 <template #activator="{ props }">
-                  <span v-bind="props" class="text-no-wrap">{{ course.statusLabel }}</span>
+                  <span v-bind="props">{{ course.statusLabel }}</span>
                 </template>
               </v-tooltip>
             </div>
@@ -57,8 +58,8 @@
           <td
             :id="`${idPrefix}-${course.sectionId}-label`"
             :aria-rowspan="size(course.displayMeetings)"
-            class="text-no-wrap"
             :class="{'pt-3 pb-3': course.courseCodes.length > 1, 'border-b-0': size(course.displayMeetings) > 1}"
+            data-label="Course"
           >
             <div v-for="(courseCode, index) in course.courseCodes" :key="courseCode">
               <router-link
@@ -76,6 +77,7 @@
             :id="`${idPrefix}-${course.sectionId}-title`"
             :aria-rowspan="size(course.displayMeetings)"
             :class="{'border-b-0': size(course.displayMeetings) > 1}"
+            data-label="Title"
           >
             <span aria-hidden="true">{{ course.courseTitle || '&mdash;' }}</span>
             <span class="sr-only">{{ course.courseTitle || 'blank' }}</span>
@@ -84,19 +86,21 @@
             :id="`${idPrefix}-${course.sectionId}-instructors`"
             :aria-rowspan="size(course.displayMeetings)"
             :class="{'border-b-0': size(course.displayMeetings) > 1}"
+            data-label="Instructors"
           >
             {{ oxfordJoin(map(course.instructors, 'name')) }}
           </td>
           <td
             :id="`${idPrefix}-${course.sectionId}-room-0`"
             :class="{'border-b-0': size(course.displayMeetings) > 1}"
+            data-label="Room"
           >
             {{ course.displayMeetings[0].room.location }}
           </td>
           <td
             :id="`${idPrefix}-${course.sectionId}-days-0`"
             :class="{'border-b-0': size(course.displayMeetings) > 1}"
-            class="text-no-wrap"
+            data-label="Days"
           >
             <Days v-if="size(course.displayMeetings[0].daysNames)" :names-of-days="course.displayMeetings[0].daysNames" />
             <span v-if="isEmpty(course.displayMeetings[0].daysNames)">&mdash;</span>
@@ -104,16 +108,17 @@
           <td
             :id="`${idPrefix}-${course.sectionId}-time-0`"
             :class="{'border-b-0': size(course.displayMeetings) > 1}"
+            data-label="Time"
           >
             <div v-if="course.nonstandardMeetingDates" class="pt-2">
-              <span class="text-no-wrap">
+              <span>
                 {{ DateTime.fromISO(course.displayMeetings[0].startDate).toFormat('MMM d, yyyy') }} -
               </span>
-              <span class="text-no-wrap">
+              <span>
                 {{ DateTime.fromISO(course.displayMeetings[0].endDate).toFormat('MMM d, yyyy') }}
               </span>
             </div>
-            <span aria-hidden="true" class="text-no-wrap">{{ course.displayMeetings[0].startTimeFormatted }} - {{ course.displayMeetings[0].endTimeFormatted }}</span>
+            <span aria-hidden="true">{{ course.displayMeetings[0].startTimeFormatted }} - {{ course.displayMeetings[0].endTimeFormatted }}</span>
             <span class="sr-only">{{ course.displayMeetings[0].startTimeFormatted }} to {{ course.displayMeetings[0].endTimeFormatted }}</span>
           </td>
         </tr>
@@ -126,25 +131,26 @@
           <td :aria-hidden="true" colspan="4" />
           <td
             :id="`${idPrefix}-${course.sectionId}-room-${index + 1}`"
-            class="pt-0 text-no-wrap"
+            class="pt-0"
+            data-label="Room"
           >
             {{ meeting.room.location }}
           </td>
           <td
             :id="`${idPrefix}-${course.sectionId}-days-${index + 1}`"
-            class="text-no-wrap"
+            data-label="Days"
           >
             <Days :names-of-days="meeting.daysNames" />
           </td>
           <td
             :id="`${idPrefix}-${course.sectionId}-time-${index + 1}`"
-            class="text-no-wrap"
+            data-label="Dates"
           >
             <div v-if="course.nonstandardMeetingDates" class="pt-2">
-              <span class="text-no-wrap">
+              <span>
                 {{ DateTime.fromISO(meeting.startDate).toFormat('MMM d, yyyy') }} -
               </span>
-              <span class="text-no-wrap">
+              <span>
                 {{ DateTime.fromISO(meeting.endDate).toFormat('MMM d, yyyy') }}
               </span>
             </div>
@@ -191,4 +197,77 @@ const idPrefix = `courses-table-${props.coursesType}`
   text-underline-offset: 2px;
   cursor: pointer;
 }
+
+/* For smaller viewports. 941px is the magic number here because that is when the horizontal scrollbar appears.
+ * We stack all the rows on top of each other as individual cards.
+ * Somewhat similar to BOA and a student's course progress.
+*/
+@media (max-width: 941px) {
+  .instructor-courses :deep(thead) {
+    display: none !important;
+  }
+
+  .instructor-courses :deep(colgroup) {
+    display: none;
+  }
+
+  .instructor-courses table,
+  .instructor-courses tbody,
+  .instructor-courses tr,
+  .instructor-courses td,
+  .instructor-courses th {
+    display: block;
+    width: 100%;
+  }
+
+  .instructor-courses tbody tr {
+    margin: 0 0 12px 0;
+    padding: 12px;
+    border: 1px solid var(--v-theme-outline-variant, rgba(0,0,0,0.12));
+    border-radius: 12px;
+    box-shadow: var(--v-shadow-1);
+    background: var(--v-theme-surface, #fff);
+  }
+
+  .instructor-courses td {
+    border: none !important;
+    padding: 10px 12px;
+    white-space: normal;
+  }
+
+  .instructor-courses td::before {
+    content: attr(data-label);
+    display: block;
+    font-weight: 600;
+    opacity: 0.8;
+    margin-bottom: 4px;
+  }
+
+  .instructor-courses tbody tr > td[aria-hidden="true"] {
+    display: none;
+  }
+
+  .instructor-courses tbody tr > td:not([aria-hidden]) {
+    border-top: thin solid rgb(var(--v-theme-table-border)) !important;
+  }
+
+  .instructor-courses tbody tr > td:first-child {
+    border-top: none !important;
+  }
+  .instructor-courses tbody tr > td[aria-hidden="true"] + td {
+    border-top: none !important;
+  }
+
+  .instructor-courses :deep(table tr:not(:last-child) > td:not(.border-b-0)),
+  .instructor-courses :deep(table tr > th) {
+    border-bottom: 0 !important;
+  }
+
+  .instructor-courses :deep(.v-data-table__td),
+  .instructor-courses :deep(.v-data-table__th) {
+    border-bottom: 0 !important;
+  }
+}
+
+
 </style>
