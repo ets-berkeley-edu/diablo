@@ -25,13 +25,24 @@
           xl="9"
         >
           <v-card
-            v-if="!course.deletedAt"
             :aria-label="pluralize('Instructor', course.instructors.length, false)"
             class="pb-6 pt-4 px-8"
             role="region"
           >
             <DescribeCourseSchedulingStatus />
-            <CoursePageInstructors v-if="isEligibleForCourseCapture" class="mt-2" />
+            <div v-if="isEligibleForCourseCapture && !course.deletedAt" class="mt-2">
+              <div v-if="currentUser.isAdmin">
+                <OptInByAdmin />
+              </div>
+              <div v-if="!currentUser.isAdmin">
+                <OptInByInstructor class="mr-2" />
+                <!-- Current-user is an instructor thus we show ALL instructors if and only if the course has multiple instructors. -->
+                <Instructors v-if="course.instructors.length > 1" class="mt-4" />
+              </div>
+            </div>
+            <div v-if="!isEligibleForCourseCapture || course.deletedAt">
+              <Instructors />
+            </div>
           </v-card>
           <v-card v-if="!course.deletedAt && isEligibleForCourseCapture" class="mt-8 pb-4 px-4">
             <v-container v-if="isEligibleForCourseCapture">
@@ -93,19 +104,21 @@ import {find, toInteger} from 'lodash'
 import {useRoute} from 'vue-router'
 import {getCourseCodes, getTermName} from '@/lib/berkeley'
 import {getCourse} from '@/api/course'
+import {pluralize} from '@/lib/utils'
 import {useContextStore} from '@/stores/context'
 import {useCourseStore} from '@/stores/course'
 import Collaborators from '@/components/course/Collaborators.vue'
 import CourseHistory from '@/components/course/CourseHistory.vue'
-import CoursePageInstructors from '@/components/course/CoursePageInstructors.vue'
 import CoursePageSidebar from '@/components/course/CoursePageSidebar.vue'
 import DescribeCourseSchedulingStatus from '@/components/course/DescribeCourseSchedulingStatus.vue'
+import Instructors from '@/components/course/Instructors.vue'
 import KnowledgeBaseKalturaMyMedia from '@/components/course/KnowledgeBaseKalturaMyMedia.vue'
+import OptInByAdmin from '@/components/course/OptInByAdmin.vue'
+import OptInByInstructor from '@/components/course/OptInByInstructor.vue'
 import PageTitle from '@/components/util/PageTitle.vue'
 import RecordingPlacement from '@/components/course/RecordingPlacement.vue'
 import RecordingType from '@/components/course/RecordingType.vue'
 import ScheduledCourse from '@/components/course/ScheduledCourse.vue'
-import {pluralize} from '@/lib/utils'
 
 const contextStore = useContextStore()
 const courseStore = useCourseStore()
