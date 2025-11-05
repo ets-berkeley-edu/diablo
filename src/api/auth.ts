@@ -1,8 +1,6 @@
-// src/api/auth.ts
 import axios from 'axios'
 import {getApiBaseUrl} from '@/api/api-utils'
 import {useContextStore} from '@/stores/context'
-
 
 export async function devAuthLogIn(uid: string, password: string) {
   const store = useContextStore()
