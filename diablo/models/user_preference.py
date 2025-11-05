@@ -33,6 +33,7 @@ class UserPreference(db.Model):
     uid = db.Column(db.String(255), primary_key=True)
     opt_in_new_courses = db.Column(db.Boolean, nullable=False)
     do_not_email = db.Column(db.Boolean, nullable=False)
+    prefers_dark_mode = db.Column(db.Boolean, nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=utc_now)
 
     def __init__(
@@ -40,16 +41,19 @@ class UserPreference(db.Model):
             uid,
             opt_in_new_courses=False,
             do_not_email=False,
+            prefers_dark_mode=False,
     ):
         self.uid = uid
         self.opt_in_new_courses = opt_in_new_courses
         self.do_not_email = do_not_email
+        self.prefers_dark_mode = prefers_dark_mode
 
     def __repr__(self):
         return f"""<UserPreferences
                     uid={self.uid},
                     opt_in_new_courses={self.opt_in_new_courses},
                     do_not_email={self.do_not_email},
+                    prefers_dark_mode={self.prefers_dark_mode},
                 """
 
     @classmethod
@@ -104,11 +108,26 @@ class UserPreference(db.Model):
         std_commit()
         return preferences
 
+    @classmethod
+    def update_prefers_dark_mode(
+            cls,
+            uid,
+            prefers_dark_mode,
+    ):
+        preferences = cls.get_user_preferences(uid)
+        if preferences:
+            preferences.prefers_dark_mode = prefers_dark_mode
+        else:
+            preferences = cls(prefers_dark_mode=prefers_dark_mode, uid=uid)
+        db.session.add(preferences)
+        std_commit()
+        return preferences
+
     def to_api_json(self):
-        feed = {
+        return {
             'uid': self.uid,
             'doNotEmail': self.do_not_email,
             'optInNewCourses': self.opt_in_new_courses,
+            'prefersDarkMode': self.prefers_dark_mode,
             'createdAt': to_isoformat(self.created_at),
         }
-        return feed

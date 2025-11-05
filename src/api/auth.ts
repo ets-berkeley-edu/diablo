@@ -11,7 +11,6 @@ export async function devAuthLogIn(uid: string, password: string) {
     {uid, password}
   )
   const user = response.data
-  // Update Pinia stores'stores currentUser
   store.setCurrentUser(user)
   return user
 }
@@ -23,10 +22,5 @@ export function getCasLoginURL() {
 
 export function getCasLogoutUrl() {
   return axios.get(`${getApiBaseUrl()}/api/auth/logout`)
-    .then(response => response.data)
-}
-
-export function getCurrentUser() {
-  return axios.get(`${getApiBaseUrl()}/api/user/my_profile`)
     .then(response => response.data)
 }

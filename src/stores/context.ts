@@ -1,6 +1,7 @@
 import mitt from 'mitt'
 import {defineStore} from 'pinia'
 import {get, toString} from 'lodash'
+import {useTheme} from 'vuetify/framework'
 import type {Handler} from 'mitt'
 import type {DiabloConfig, DiabloUser, ScreenReaderAlert} from '@/lib/types'
 import {ANONYMOUS_USER, putFocusNextTick} from '@/lib/utils'
@@ -83,6 +84,7 @@ export const useContextStore = defineStore('context', {
     },
     setCurrentUser(user: DiabloUser) {
       this.currentUser = user
+      useTheme().change(this.currentUser.prefersDarkMode ? 'dark' : 'light')
     }
   }
 })

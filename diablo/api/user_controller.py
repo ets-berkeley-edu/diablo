@@ -46,6 +46,7 @@ def my_profile():
     preferences = UserPreference.get_user_preferences(current_user.uid)
     profile['doNotEmail'] = preferences.do_not_email if preferences else False
     profile['optInNewCourses'] = preferences.opt_in_new_courses if preferences else False
+    profile['prefersDarkMode'] = preferences.prefers_dark_mode if preferences else False
 
     return tolerant_jsonify(profile)
 
@@ -108,6 +109,19 @@ def update_opt_in_new_courses(uid):
         raise ForbiddenRequestError(f'Unauthorized to update user {uid}.')
 
     preferences = UserPreference.update_opt_in_new_courses(uid, opt_in_new_courses)
+    return tolerant_jsonify(preferences.to_api_json())
+
+
+@app.route('/api/user/prefers_dark_mode/update', methods=['POST'])
+@login_required
+def update_prefers_dark_mode():
+    params = request.get_json()
+    prefers_dark_mode = params.get('prefersDarkMode')
+
+    if prefers_dark_mode is None:
+        raise BadRequestError('Required param missing or invalid')
+
+    preferences = UserPreference.update_prefers_dark_mode(current_user.uid, prefers_dark_mode)
     return tolerant_jsonify(preferences.to_api_json())
 
 
