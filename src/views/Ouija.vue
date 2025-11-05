@@ -165,7 +165,7 @@ const onClickDownload = () => {
 
 const onToggleFilterOptionsMenu = isOpen => {
   if (isOpen) {
-    putFocusNextTick('filter-option-scheduled')
+    putFocusNextTick('filter-option-all')
   }
 }
 
