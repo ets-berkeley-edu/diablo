@@ -3,7 +3,7 @@
     <h3 v-if="course.instructors.length" id="instructors-header">
       <span aria-live="polite">
         <span v-if="course.hasOptedIn && course.scheduled">
-          {{ course.instructors.length === 1 ? (course.instructors[0].uid === currentUser.uid ? 'You' : 'Instructor') : 'Instructors listed' }} will have editing and publishing access:
+          {{ course.instructors.length === 1 ? (course.instructors[0].uid === currentUser.uid ? 'You' : 'Instructor below') : 'Instructors below' }} will have editing and publishing access.
         </span>
       </span>
       <span v-if="!course.hasOptedIn || !course.scheduled">
@@ -16,7 +16,7 @@
     <CoursePageInstructorLabel
       v-for="instructor in instructorsSorted"
       :key="`instructor-${instructor.uid}`"
-      :class="{'text-success': instructor.optedInAt, 'text-warning': !instructor.optedInAt}"
+      :class="{'text-success': isEligibleForCourseCapture && instructor.optedInAt, 'text-warning': isEligibleForCourseCapture && !instructor.optedInAt}"
       class="ml-2"
       :instructor="instructor"
     />
@@ -33,7 +33,7 @@ import {useContextStore} from '@/stores/context'
 import {useCourseStore} from '@/stores/course'
 import CoursePageInstructorLabel from '@/components/course/CoursePageInstructorLabel.vue'
 
-const {course} = storeToRefs(useCourseStore())
+const {course, isEligibleForCourseCapture} = storeToRefs(useCourseStore())
 const currentUser = useContextStore().currentUser
 const instructorsSorted = computed(() => {
   let instructors = sortBy(course.value.instructors, ['name'])
