@@ -1,5 +1,6 @@
 import axios from 'axios'
 import {getApiBaseUrl} from '@/api/api-utils'
+import {useContextStore} from '@/stores/context'
 
 export function deleteUserNote(uid: string) {
   return axios.post(`${getApiBaseUrl()}/api/user/${uid}/note/delete`)
@@ -8,6 +9,11 @@ export function deleteUserNote(uid: string) {
 
 export function getAdminUsers() {
   return axios.get(`${getApiBaseUrl()}/api/users/admins`)
+    .then(response => response.data)
+}
+
+export function getCurrentUser() {
+  return axios.get(`${getApiBaseUrl()}/api/user/my_profile`)
     .then(response => response.data)
 }
 
@@ -34,6 +40,14 @@ export function updateUserNote(uid: string, body: string) {
 export function updateDoNotEmail(uid: string, body: { doNotEmail: boolean }) {
   return axios.post(`${getApiBaseUrl()}/api/user/${uid}/do_not_email/update`, body)
     .then(response => response.data)
+}
+
+export function updatePrefersDarkMode(prefersDarkMode: boolean) {
+  return axios.post(`${getApiBaseUrl()}/api/user/prefers_dark_mode/update`, {prefersDarkMode})
+    .then(response => {
+      getCurrentUser().then(useContextStore().setCurrentUser)
+      return response.data
+    })
 }
 
 export function updateOptInNewCourses(

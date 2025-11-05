@@ -511,6 +511,7 @@ CREATE TABLE user_preferences (
     uid VARCHAR(255) NOT NULL NOT NULL,
     do_not_email BOOLEAN DEFAULT FALSE NOT NULL,
     opt_in_new_courses BOOLEAN DEFAULT FALSE NOT NULL,
+    prefers_dark_mode BOOLEAN DEFAULT FALSE NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL
 );
 ALTER TABLE user_preferences OWNER TO diablo;

@@ -179,7 +179,8 @@ export interface DiabloUser {
   name: string,
   uid: string | undefined,
   doNotEmail: boolean,
-  optInNewCourses: boolean
+  optInNewCourses: boolean,
+  prefersDarkMode: boolean
 }
 
 export type ScheduleUpdate = {

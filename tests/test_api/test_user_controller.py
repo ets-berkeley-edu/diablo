@@ -355,6 +355,41 @@ class TestGetCalnetUser:
         assert api_json['uid'] == uid
 
 
+class TestPrefersDarkMode:
+
+    @staticmethod
+    def _api_update_prefers_dark_mode(client, prefers_dark_mode, expected_status_code=200):
+        response = client.post(
+            '/api/user/prefers_dark_mode/update',
+            data=json.dumps({'prefersDarkMode': prefers_dark_mode}),
+            content_type='application/json',
+        )
+        assert response.status_code == expected_status_code
+        return response.json
+
+    def test_anonymous(self, client):
+        """Denies anonymous access."""
+        self._api_update_prefers_dark_mode(client, prefers_dark_mode=False, expected_status_code=401)
+
+    def test_no_value(self, client, fake_auth):
+        """Updates require do-not-email value."""
+        fake_auth.login(admin_uid)
+        self._api_update_prefers_dark_mode(client, prefers_dark_mode=None, expected_status_code=400)
+
+    def test_authorized(self, client, fake_auth):
+        """User can update their own preference."""
+        fake_auth.login(instructor_uid)
+        assert client.get('/api/user/my_profile').json['prefersDarkMode'] is False
+
+        response = self._api_update_prefers_dark_mode(client, prefers_dark_mode=True)
+        assert response['prefersDarkMode'] is True
+        assert client.get('/api/user/my_profile').json['prefersDarkMode'] is True
+
+        response = self._api_update_prefers_dark_mode(client, prefers_dark_mode=False)
+        assert response['prefersDarkMode'] is False
+        assert client.get('/api/user/my_profile').json['prefersDarkMode'] is False
+
+
 class TestSearchUsers:
 
     @staticmethod

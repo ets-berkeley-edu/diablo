@@ -46,7 +46,7 @@
           </v-list-item>
           <v-list-item id="menu-item-dark-mode" role="button" @click="toggleTheme">
             <v-list-item-title>
-              {{ theme.global.current.value.dark ? 'Light' : 'Dark' }} mode
+              {{ currentUser.prefersDarkMode ? 'Light' : 'Dark' }} mode
             </v-list-item-title>
           </v-list-item>
           <v-list-item id="menu-item-log-out" @click="logOut">
@@ -107,7 +107,7 @@
 
 <script setup>
 import {computed, onMounted, ref} from 'vue'
-import {kebabCase} from 'lodash'
+import {kebabCase, noop} from 'lodash'
 import {useRoute} from 'vue-router'
 import {storeToRefs} from 'pinia'
 import {useTheme} from 'vuetify'
@@ -127,6 +127,7 @@ import Spinner from '@/components/util/Spinner'
 import {getCasLogoutUrl} from '@/api/auth'
 import {getCourseCodes} from '@/lib/berkeley'
 import {putFocusNextTick, stripAnchorRef} from '@/lib/utils'
+import {updatePrefersDarkMode} from '@/api/user'
 import {useContextStore} from '@/stores/context'
 
 const contextStore = useContextStore()
@@ -170,7 +171,7 @@ const waveOptions = computed(() => {
 })
 
 onMounted(() => {
-  prefersColorScheme()
+  theme.change(currentUser.value.prefersDarkMode ? 'dark' : 'light')
   navItems.value = currentUser.value.courses.length
     ? [{title: 'Home', icon: mdiHome, path: '/home'}]
     : []
@@ -199,23 +200,15 @@ onMounted(() => {
   }
 })
 
-
 const logOut = () => {
   contextStore.alertScreenReader('Logging out')
   getCasLogoutUrl().then((data) => (window.location.href = data.casLogoutUrl))
 }
 
-const prefersColorScheme = () => {
-  const mq = window.matchMedia('(prefers-color-scheme: dark)')
-  const setColorScheme = (dark) => {
-    theme.change(dark ? 'dark' : 'light')
-  }
-  setColorScheme(mq.matches)
-  mq.addEventListener?.('change', (e) => setColorScheme(e.matches))
-}
-
 const toggleTheme = () => {
-  theme.change(theme.global.current.value.dark ? 'light' : 'dark')
+  const prefersDarkMode = !currentUser.value.prefersDarkMode
+  theme.change(prefersDarkMode ? 'dark' : 'light')
+  updatePrefersDarkMode(prefersDarkMode).then(noop)
   putFocusNextTick('btn-main-menu')
 }
 </script>
@@ -226,7 +219,6 @@ const toggleTheme = () => {
   position: fixed !important;
   width: 100% !important;
 }
-
 .sidebar-with-banner .v-navigation-drawer__content {
   padding-top: 64px; /* or however tall your banner is */
 }
