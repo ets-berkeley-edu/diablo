@@ -108,6 +108,7 @@ class User(UserMixin):
 
         return {
             'id': uid,
+            'doNotEmail': preferences.do_not_email if preferences else False,
             'emailAddress': calnet_profile.get('email'),
             'isActive': is_active,
             'isAdmin': is_admin,
@@ -116,8 +117,8 @@ class User(UserMixin):
             'isExpired': expired,
             'isTeaching': is_teaching,
             'name': calnet_profile.get('name') or f'UID {uid}',
-            'uid': uid,
             'optInNewCourses': preferences.opt_in_new_courses if preferences else False,
-            'doNotEmail': preferences.do_not_email if preferences else False,
+            'prefersDarkMode': preferences.prefers_dark_mode if preferences else False,
+            'uid': uid,
             **calnet_profile,
         }

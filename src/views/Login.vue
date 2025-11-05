@@ -85,6 +85,7 @@ import {onMounted, ref} from 'vue'
 import {get, trim} from 'lodash'
 import {mdiArrowRightCircleOutline, mdiEmoticonDevilOutline} from '@mdi/js'
 import {useRoute, useRouter} from 'vue-router'
+import {useTheme} from 'vuetify/framework'
 import Snackbar from '@/components/util/Snackbar'
 import {devAuthLogIn, getCasLoginURL} from '@/api/auth'
 import {useContextStore} from '@/stores/context'
@@ -96,6 +97,7 @@ const devAuthUid = ref(undefined)
 const devAuthPassword = ref(undefined)
 const route = useRoute()
 const router = useRouter()
+const theme = useTheme()
 
 onMounted(() => {
   contextStore.loadingComplete()
@@ -115,6 +117,7 @@ const devAuth = () => {
     devAuthLogIn(uid, password).then(
       data => {
         if (data.isAuthenticated) {
+          theme.change(data.prefersDarkMode ? 'dark' : 'light')
           const redirect = get(route.query, 'redirect')
           router.push({path: redirect || '/home'})
           alertScreenReader('Welcome to Course Capture')
