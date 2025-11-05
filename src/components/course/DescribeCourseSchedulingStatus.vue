@@ -1,8 +1,8 @@
 <template>
   <div class="font-weight-bold" aria-live="polite">
     <div v-if="isCurrentTerm && !capability" class="align-start d-flex py-2">
-      <v-icon class="mr-3 mt-1" color="error" :icon="mdiAlert" />
-      <div id="course-not-eligible">
+      <v-icon class="mr-3" color="error" :icon="mdiAlert" />
+      <div id="course-not-eligible" class="text-error">
         This course is not eligible for Course Capture because
         <span v-if="location">{{ location }} is not capture-enabled.</span>
         <span v-if="!location">it has no meeting location.</span>

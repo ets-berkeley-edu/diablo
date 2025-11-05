@@ -2,8 +2,10 @@
   <div class="d-flex align-center flex-wrap gap-2 instructor-label">
     <span>
       {{ instructor.name }}<span v-if="currentUser.isAdmin">&nbsp;({{ instructor.uid }})</span>
-      <span v-if="instructor.optedInAt">&nbsp;opted in {{ DateTime.fromISO(instructor.optedInAt).toRelativeCalendar({}) }}.</span>
-      <span v-if="!instructor.optedInAt">&nbsp;has NOT yet opted in.</span>
+      <span v-if="isEligibleForCourseCapture">
+        <span v-if="instructor.optedInAt">&nbsp;opted in {{ DateTime.fromISO(instructor.optedInAt).toRelativeCalendar({}) }}.</span>
+        <span v-if="!instructor.optedInAt">&nbsp;has NOT yet opted in.</span>
+      </span>
     </span>
   </div>
 </template>
@@ -11,8 +13,10 @@
 <script setup lang="ts">
 import type {PropType} from 'vue'
 import {DateTime} from 'luxon'
+import {storeToRefs} from 'pinia'
 import type {CourseInstructor} from '@/lib/types'
 import {useContextStore} from '@/stores/context'
+import {useCourseStore} from '@/stores/course'
 
 defineProps({
   instructor: {
@@ -21,6 +25,7 @@ defineProps({
   }
 })
 
+const {isEligibleForCourseCapture} = storeToRefs(useCourseStore())
 const currentUser = useContextStore().currentUser
 </script>
 
