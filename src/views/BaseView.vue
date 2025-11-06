@@ -3,7 +3,7 @@
     <v-app-bar
       v-if="!route.meta.printable"
       v-wave="waveOptions"
-      color="banner"
+      color="primary"
     >
       <a
         id="skip-to-content-link"
@@ -220,6 +220,34 @@ const toggleTheme = () => {
   width: 100% !important;
 }
 .sidebar-with-banner .v-navigation-drawer__content {
-  padding-top: 64px; /* or however tall your banner is */
+  padding-top: 64px;
 }
+
+/* Remove the white state-layer on hover & active */
+:deep(.sidebar-nav .v-list-item) {
+  --v-hover-opacity: 0;
+  --v-activated-opacity: 0;
+}
+
+:deep(.sidebar-nav .v-list-item .v-list-item__overlay) {
+  opacity: 0 !important;
+  background: transparent !important;
+}
+
+/* On hover color */
+:deep(.sidebar-nav .v-list-item:hover:not(.v-list-item--active)),
+:deep(.sidebar-nav .v-list-item:focus-visible:not(.v-list-item--active)) {
+  background-color: #494DA2 !important;
+  --v-hover-opacity: 0;
+}
+
+/* On selected color */
+:deep(.sidebar-nav .v-list-item.v-list-item--active) {
+  background-color: #424689 !important;
+}
+
+:deep(.sidebar-nav .v-divider) {
+  opacity: .4;
+}
+
 </style>
