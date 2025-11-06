@@ -127,11 +127,11 @@ export default createVuetify({
           error: red.accent4,
           'icon-nav': '#fff',
           primary: '#424689',
-          secondary: '#347cad',
+          secondary: '#6C70A7',
           success: '#3a833c',
           'surface-light': '#f6f6f6',
           'table-border': '#c9c9c9',
-          tertiary: '#27658e',
+          tertiary: '#6E4FB4',
           warning: '#b36200'
         }
       },
