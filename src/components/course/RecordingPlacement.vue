@@ -143,7 +143,7 @@
             <ProgressButton
               id="btn-publish-type-save"
               :action="update"
-              aria-label="Save Note"
+              aria-label="Save recording placement"
               density="comfortable"
               :disabled="isSaving || (publishType === 'kaltura_media_gallery' && !publishCanvasSites.length)"
               :in-progress="isSaving"
@@ -151,7 +151,7 @@
             />
             <v-btn
               id="btn-publish-type-cancel"
-              aria-label="Cancel Note Edit"
+              aria-label="Cancel edit recording placement"
               class="ml-2"
               density="comfortable"
               :disabled="isSaving"
