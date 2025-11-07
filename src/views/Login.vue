@@ -14,12 +14,12 @@
             </div>
           </v-banner>
           <v-container class="pa-6" fluid>
-            <v-row class="px-4 py-2">
+            <v-row class="px-4 pt-2" no-gutters>
               <v-btn
                 id="log-in"
                 aria-label="Log in to Course Capture. (You will be sent to CalNet login page.)"
                 block
-                color="accent"
+                color="primary"
                 size="x-large"
                 @click="logIn"
               >
@@ -27,11 +27,11 @@
                 <v-icon class="pl-2" :icon="mdiArrowRightCircleOutline" size="x-large" />
               </v-btn>
             </v-row>
-            <v-row v-if="contextStore.config.devAuthEnabled">
-              <hr class="mx-6 my-8 w-100" role="presentation">
+            <v-row v-if="contextStore.config.devAuthEnabled" no-gutters>
+              <hr class="mx-6 my-6 w-100" role="presentation">
             </v-row>
-            <v-row v-if="contextStore.config.devAuthEnabled">
-              <v-card class="opaque-card pa-4 w-100" color="transparent" flat>
+            <v-row v-if="contextStore.config.devAuthEnabled" no-gutters>
+              <v-card class="opaque-card pb-4 px-4 w-100" color="transparent" flat>
                 <v-form @submit.prevent="devAuth">
                   <v-text-field
                     id="dev-auth-uid"
@@ -61,7 +61,7 @@
                   <v-btn
                     id="btn-dev-auth-login"
                     block
-                    color="accent"
+                    color="primary"
                     :disabled="!devAuthUid || !devAuthPassword"
                     size="large"
                     @click="devAuth"

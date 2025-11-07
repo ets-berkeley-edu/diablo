@@ -103,22 +103,26 @@
                 <v-btn
                   :id="`send-test-email-${template.id}`"
                   :aria-label="`Send test email using template ${template.typeName}`"
-                  variant="plain"
+                  color="primary"
                   icon
+                  title="Send test email"
+                  variant="plain"
                   @click="onClickSend(template.id)"
                 >
-                  <v-icon :icon="mdiEmailOutline" />
+                  <v-icon :icon="mdiEmail" />
                 </v-btn>
               </td>
               <td class="text-center">
                 <v-btn
                   :id="`delete-email-template-${template.id}`"
                   :aria-label="`Delete ${template.typeName} email template`"
-                  variant="plain"
+                  color="red"
                   icon
+                  title="Delete"
+                  variant="plain"
                   @click="deleteEmailTemplate(template.id)"
                 >
-                  <v-icon :icon="mdiTrashCanOutline" />
+                  <v-icon :icon="mdiTrashCan" />
                 </v-btn>
               </td>
             </tr>
@@ -132,7 +136,7 @@
 <script setup>
 import {DateTime} from 'luxon'
 import {get, includes, map} from 'lodash'
-import {mdiEmailOpenMultipleOutline, mdiEmailOutline, mdiFileDocumentOutline, mdiTrashCanOutline} from '@mdi/js'
+import {mdiEmail, mdiEmailOpenMultipleOutline, mdiFileDocumentOutline, mdiTrashCan} from '@mdi/js'
 import {onMounted, ref, useTemplateRef} from 'vue'
 import {useRouter} from 'vue-router'
 import {alertScreenReader, putFocusNextTick} from '@/lib/utils'

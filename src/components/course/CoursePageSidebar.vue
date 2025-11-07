@@ -142,7 +142,7 @@
         </v-expand-transition>
       </dl>
     </v-card-text>
-    <v-card-actions>
+    <v-card-actions v-if="currentUser.isAdmin">
       <CourseNotes class="mt-4 w-100" />
     </v-card-actions>
   </v-card>

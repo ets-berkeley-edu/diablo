@@ -73,7 +73,7 @@
               </td>
               <td
                 :id="`job-schedule-${job.key}-name`"
-                class="bg-tertiary text-no-wrap"
+                class="bg-secondary text-no-wrap"
                 columnheader="job-schedule-name-th"
               >
                 <span class="font-weight-bold font-size-16">{{ job.name }}</span>

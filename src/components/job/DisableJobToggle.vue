@@ -4,7 +4,7 @@
     v-model="enabled"
     :aria-describedby="undefined"
     :aria-label="`${enabled ? 'Enable' : 'Disable'} ${job.name} job`"
-    color="success"
+    color="primary"
     hide-details
     @update:model-value="onChange(job, !enabled)"
   />
