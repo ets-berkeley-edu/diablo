@@ -14,7 +14,7 @@ import {VChip} from 'vuetify/components/VChip'
 import {VCol, VContainer, VRow, VSpacer} from 'vuetify/components/VGrid'
 import {VDataTable} from 'vuetify/components/VDataTable'
 import {VDialog} from 'vuetify/components/VDialog'
-import {VExpandTransition} from 'vuetify/components/transitions'
+import {VExpandTransition, VExpandXTransition} from 'vuetify/components/transitions'
 import {VExpansionPanel, VExpansionPanelText, VExpansionPanelTitle, VExpansionPanels} from 'vuetify/components/VExpansionPanel'
 import {VFooter} from 'vuetify/components/VFooter'
 import {VForm} from 'vuetify/components/VForm'
@@ -63,6 +63,7 @@ export default createVuetify({
     VDialog,
     VDivider,
     VExpandTransition,
+    VExpandXTransition,
     VExpansionPanel,
     VExpansionPanels,
     VExpansionPanelText,
@@ -141,7 +142,7 @@ export default createVuetify({
           anchor: '#ff702e',
           banner: '#122b3c',
           error: '#ff6262',
-          'icon-nav': '#378dc5',
+          'icon-nav': '#fff',
           primary: '#307aab',
           secondary: '#2a5f83',
           'surface-light': '#303030',

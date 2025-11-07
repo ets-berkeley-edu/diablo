@@ -86,7 +86,7 @@
           </v-list-item>
           <v-divider
             v-if="item.title === 'Rooms'"
-            class="border-opacity-80 ml-1 mr-1"
+            class="border-opacity-80 ml-1 mr-1 my-2"
             color="icon-nav"
             :thickness="1"
           />
@@ -222,32 +222,26 @@ const toggleTheme = () => {
 .sidebar-with-banner .v-navigation-drawer__content {
   padding-top: 64px;
 }
-
 /* Remove the white state-layer on hover & active */
 :deep(.sidebar-nav .v-list-item) {
   --v-hover-opacity: 0;
   --v-activated-opacity: 0;
 }
-
 :deep(.sidebar-nav .v-list-item .v-list-item__overlay) {
   opacity: 0 !important;
   background: transparent !important;
 }
-
 /* On hover color */
 :deep(.sidebar-nav .v-list-item:hover:not(.v-list-item--active)),
 :deep(.sidebar-nav .v-list-item:focus-visible:not(.v-list-item--active)) {
-  background-color: #494DA2 !important;
+  background-color: rgb(var(--v-theme-secondary)) !important;
   --v-hover-opacity: 0;
 }
-
 /* On selected color */
 :deep(.sidebar-nav .v-list-item.v-list-item--active) {
-  background-color: #424689 !important;
+  background-color: rgb(var(--v-theme-primary)) !important;
 }
-
 :deep(.sidebar-nav .v-divider) {
   opacity: .4;
 }
-
 </style>

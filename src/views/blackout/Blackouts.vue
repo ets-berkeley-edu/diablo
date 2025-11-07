@@ -53,7 +53,9 @@
               <v-btn
                 :id="`delete-blackout-${blackout.id}`"
                 :aria-label="`Delete ${blackout.name} Blackout`"
-                :icon="mdiTrashCanOutline"
+                color="red"
+                :icon="mdiTrashCan"
+                title="Delete"
                 variant="text"
                 @click="onClickDelete(blackout)"
               />
@@ -66,7 +68,7 @@
 </template>
 
 <script setup>
-import {mdiTrashCanOutline, mdiVideoOffOutline} from '@mdi/js'
+import {mdiTrashCan, mdiVideoOffOutline} from '@mdi/js'
 import {onMounted, ref} from 'vue'
 import CreateBlackoutDialog from '@/components/util/CreateBlackoutDialog'
 import PageTitle from '@/components/util/PageTitle'

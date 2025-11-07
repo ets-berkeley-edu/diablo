@@ -1,6 +1,6 @@
 <template>
   <div class="banner not-selectable ml-4" :class="{'mood-ring': theme.global.current.value.dark}">
-    <transition><div v-if="showPrefix" class="d-none d-sm-block text-medium-emphasis">This is</div></transition>
+    <v-expand-x-transition><div v-if="showPrefix" class="text-white">This is</div></v-expand-x-transition>
     <b>
       <div class="banner-inner">
         <div class="w-100">Course Capture</div>
