@@ -3,13 +3,15 @@
     <v-card-title>
       <PageTitle :icon="mdiVideoOffOutline" text="Blackouts" />
     </v-card-title>
-    <v-card-subtitle class="font-size-18">
-      The "Blackouts" job will delete Course Capture (Kaltura) events according to dates below.
-    </v-card-subtitle>
-    <v-card-text>
-      <div class="d-flex justify-end pa-3">
+    <v-card-subtitle class="px-0">
+      <div class="align-center d-flex justify-space-between pa-3">
+        <div class="font-size-18">
+          The "Blackouts" job will delete Course Capture (Kaltura) events according to dates below.
+        </div>
         <CreateBlackoutDialog :blackouts="blackouts" :on-close="onCloseDialog" />
       </div>
+    </v-card-subtitle>
+    <v-card-text class="px-0">
       <v-data-table
         :class="{'v-table-padding-override': blackouts.length}"
         disable-sort
