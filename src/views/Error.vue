@@ -1,6 +1,6 @@
 <template>
-  <div class="pa-4">
-    <v-banner class="pa-12" role="none">
+  <div>
+    <v-banner role="none" border="0">
       <template #prepend>
         <v-icon
           class="my-2"
