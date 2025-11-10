@@ -38,10 +38,10 @@
         <v-checkbox
           id="email-checkbox"
           v-model="emailReceive"
-          aria-labelledby="email-settings-header"
           color="primary"
           :disabled="isEmailDisabled"
           label="I want to receive emails from Course Capture (required if opted-in to current or future courses)"
+          :aria-label="null"
           @update:model-value="onEmailReceiveChange"
         />
       </div>
