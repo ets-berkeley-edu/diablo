@@ -81,7 +81,7 @@ class TestScheduling1:
         assert self.ouija_page.is_course_in_results(self.section)
 
     def test_not_scheduled_sched_status(self):
-        assert self.ouija_page.visible_course_row_sched_status(self.section) == 'Not Scheduled'
+        assert self.ouija_page.visible_ouija_course_row_sched_status(self.section) == 'Not Scheduled'
 
     def test_not_scheduled_filter_eligible(self):
         self.ouija_page.filter_for_eligible()
@@ -175,7 +175,7 @@ class TestScheduling1:
         assert self.ouija_page.is_course_in_results(self.section)
 
     def test_scheduled_sched_status(self):
-        assert self.ouija_page.visible_course_row_sched_status(self.section) == 'Scheduled'
+        assert self.ouija_page.visible_ouija_course_row_sched_status(self.section) == 'Scheduled'
 
     def test_scheduled_filter_eligible(self):
         self.ouija_page.filter_for_eligible()
@@ -237,6 +237,10 @@ class TestScheduling1:
 
     # VERIFY EMAILS
 
+    def test_class_eligible_email(self):
+        assert util.get_sent_email_count(EmailTemplateType.NEW_CLASS_ELIGIBLE, section=None,
+                                         instructor=self.instructor) == 1
+
     def test_class_scheduled_email(self):
         assert util.get_sent_email_count(EmailTemplateType.CLASS_SCHEDULED, self.section, self.instructor) == 1
 
@@ -251,7 +255,7 @@ class TestScheduling1:
         assert self.course_page.update_history_row_count() == 4
 
     def test_course_total_sent_email(self):
-        assert util.get_sent_email_count(template=None, section=self.section, instructor=None) == 2
+        assert util.get_sent_email_count(template=None, section=self.section, instructor=None) == 3
 
     def test_course_history_instructor_added(self):
         self.course_page.verify_history_row(field='instructor_uids',

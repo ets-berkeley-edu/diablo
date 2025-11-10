@@ -400,7 +400,7 @@ class TestOptIn4:
         assert util.get_sent_email_count(EmailTemplateType.OPTED_OUT, section=section_1,
                                          instructor=instructor_1_1) == 1
 
-    def test_instructor_1_no_new_class_eligible_email(self):
+    def test_instructor_1_new_class_eligible_email(self):
         assert util.get_sent_email_count(EmailTemplateType.NEW_CLASS_ELIGIBLE, section=None,
                                          instructor=instructor_1_1) == 1
 

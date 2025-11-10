@@ -102,7 +102,7 @@ class TestWeirdTypeB:
         assert self.ouija_page.is_course_in_results(self.section)
 
     def test_scheduled_sched_status(self):
-        visible_status = self.ouija_page.visible_course_row_sched_status(self.section)
+        visible_status = self.ouija_page.visible_ouija_course_row_sched_status(self.section)
         assert visible_status == 'Scheduled'
 
     def test_scheduled_filter_eligible(self):
