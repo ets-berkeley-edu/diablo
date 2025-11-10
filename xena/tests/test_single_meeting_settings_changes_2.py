@@ -171,7 +171,10 @@ class TestScheduling2:
         assert self.ouija_page.is_course_in_results(self.section)
 
     def test_partially_approved_sched_status(self):
-        assert self.ouija_page.visible_course_row_sched_status(self.section) == 'Partial Opt-in'
+        assert self.ouija_page.visible_ouija_course_row_sched_status(self.section) == 'Not Scheduled'
+
+    def test_partially_approved_opt_in_status(self):
+        assert self.ouija_page.visible_ouija_course_row_opt_in_status(self.section) == 'Partial Opt-in'
 
     def test_partially_approved_filter_eligible(self):
         self.ouija_page.filter_for_eligible()
@@ -229,8 +232,9 @@ class TestScheduling2:
         assert self.course_page.external_link_valid(CoursePage.selected_placement_site_loc(self.site_1),
                                                     self.site_1.name)
 
-    def test_second_instructor_post_settings_update_msg(self):
-        assert self.course_page.is_present(self.course_page.UPDATES_QUEUED_MSG)
+    def test_second_instructor_post_opt_in_scheduling_msg(self):
+        assert self.course_page.is_present(self.course_page.OPTED_IN_PENDING_MSG)
+        assert not self.course_page.is_present(self.course_page.UPDATES_QUEUED_MSG)
 
     # SCHEDULE RECORDINGS
 
@@ -302,7 +306,7 @@ class TestScheduling2:
         assert self.ouija_page.is_course_in_results(self.section)
 
     def test_fully_approved_sched_status(self):
-        assert self.ouija_page.visible_course_row_sched_status(self.section) == 'Scheduled'
+        assert self.ouija_page.visible_ouija_course_row_sched_status(self.section) == 'Scheduled'
 
     def test_fully_approved_filter_eligible(self):
         self.ouija_page.filter_for_eligible()

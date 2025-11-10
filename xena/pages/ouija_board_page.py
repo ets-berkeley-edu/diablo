@@ -183,26 +183,8 @@ class OuijaBoardPage(CoursesPage):
             ec.visibility_of_element_located(self.course_row_locator(section)),
         )
 
-    def course_row_code_el(self, section):
-        return self.element((By.XPATH, f'//tr[contains(., "{section.code}")]/td[1]'))
+    def visible_ouija_course_row_sched_status(self, section):
+        return self.element((By.ID, f'td-course-{section.ccn}-status')).text.strip()
 
-    def course_row_title_el(self, section):
-        return self.element((By.XPATH, f'//tr[contains(., "{section.code}")]/td[2]'))
-
-    def course_row_instructors_el(self, section):
-        return self.element((By.XPATH, f'//tr[contains(., "{section.code}")]/td[3]'))
-
-    def course_row_room_el(self, section):
-        return self.element((By.XPATH, f'//tr[contains(., "{section.code}")]/td[4]'))
-
-    def course_row_days_el(self, section):
-        return self.element((By.XPATH, f'//tr[contains(., "{section.code}")]/td[5]'))
-
-    def course_row_time_el(self, section):
-        return self.element((By.XPATH, f'//tr[contains(., "{section.code}")]/td[6]'))
-
-    def course_row_status_el(self, section):
-        return self.element((By.ID, f'course-{section.ccn}-status'))
-
-    def visible_course_row_sched_status(self, section):
-        return self.course_row_status_el(section).text.strip()
+    def visible_ouija_course_row_opt_in_status(self, section):
+        return self.element((By.ID, f'td-course-{section.ccn}-opt-in-status')).text.strip()
