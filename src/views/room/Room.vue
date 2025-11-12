@@ -63,7 +63,7 @@
         />
       </v-card-text>
     </v-card>
-    <v-card v-if="kalturaEventList" class="mt-8 border-sm">
+    <v-card v-if="kalturaEventList" class="mt-8 pa-4 border-sm">
       <v-card-title class="d-flex flex-wrap">
         <div class="pb-3">
           <h2 id="kaltura-events-header" tabindex="-1">The Kaltura Events of {{ room.location }}</h2>

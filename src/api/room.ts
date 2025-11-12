@@ -7,7 +7,7 @@ const _sanitize_filename = (filename: string) => {
   return filename.replace(/['’/\\?%*:|"<>.,;=]/g, '').replaceAll(' ', '_')
 }
 
-export function downloadKalturaEvents(room: Room, startDate: string, endDate: string) {
+export function downloadKalturaEvents(room: Room | undefined, startDate: string, endDate: string) {
   let filename: string, uri: string
   const postData = {startDate, endDate}
   if (room) {
