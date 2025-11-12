@@ -4,6 +4,7 @@
     :close-on-content-click="false"
     eager
     scrim
+    @update:model-value="onUpdateMenuModel"
   >
     <template #activator="{props: menuProps}">
       <v-btn id="kaltura-events-export-menu-btn" color="primary" v-bind="menuProps">
@@ -12,15 +13,15 @@
     </template>
     <v-card
       aria-labelledby="kaltura-events-export-header"
-      class="overflow-visible pa-1"
+      class="overflow-visible pa-4"
       role="region"
       width="470"
     >
       <v-card-title>
-        <h3 id="kaltura-events-export-header">Export Kalura Events to iCal</h3>
-        <div class="text-subtitle-1">Download events within the date range as an iCalendar file.</div>
+        <h3 id="kaltura-events-export-header">Export Kaltura Events to iCal</h3>
+        <div class="text-subtitle-1 text-wrap">Download events as an iCalendar file per date range.</div>
       </v-card-title>
-      <v-card-text class="py-2">
+      <v-card-text class="py-0">
         <div class="d-flex">
           <div id="kaltura-events-export-start-container" class="pr-2">
             <label for="kaltura-events-export-start-input">
@@ -58,15 +59,14 @@
             />
           </div>
         </div>
-        <div
+        <v-expand-transition
           id="kaltura-events-export-error"
           aria-live="assertive"
-          class="error-container"
           role="alert"
         >
           <v-alert
             v-if="size(error)"
-            class="my-2"
+            class="mt-3"
             density="compact"
             :icon="false"
             role="none"
@@ -75,9 +75,9 @@
           >
             {{ error }}
           </v-alert>
-        </div>
+        </v-expand-transition>
       </v-card-text>
-      <v-card-actions class="px-4 pb-4">
+      <v-card-actions class="mt-3 px-4 pb-4 pt-0">
         <ProgressButton
           id="kaltura-events-export-submit-btn"
           :action="onSubmit"
@@ -91,21 +91,23 @@
   </v-menu>
 </template>
 
-<script setup>
+<script lang="ts" setup>
+import type {PropType} from 'vue'
 import {DateTime} from 'luxon'
 import {onMounted, ref} from 'vue'
 import {size} from 'lodash'
-import AccessibleDateInput from '@/components/util/AccessibleDateInput'
-import ProgressButton from '@/components/util/ProgressButton'
+import AccessibleDateInput from '@/components/util/AccessibleDateInput.vue'
+import ProgressButton from '@/components/util/ProgressButton.vue'
+import type {Room} from '@/lib/types'
 import {downloadKalturaEvents} from '@/api/room'
 import {putFocusNextTick} from '@/lib/utils'
 import {useContextStore} from '@/stores/context'
 
 const props = defineProps({
   room: {
-    default: () => null,
+    default: () => undefined,
     required: false,
-    type: Object
+    type: Object as PropType<Room>
   }
 })
 
@@ -147,8 +149,8 @@ const onSubmit = () => {
   )
     .then(() => {
       isExporting.value = false
-      endDate.value = null
-      startDate.value = null
+      endDate.value = undefined
+      startDate.value = undefined
       if (menu.value) {
         menu.value = false
         putFocusNextTick('kaltura-events-export-menu-btn')
@@ -156,7 +158,7 @@ const onSubmit = () => {
     })
     .catch(message => {
       isExporting.value = false
-      error.value = `iCalendar export failed: ${message}`
+      error.value = message
       if (menu.value) {
         putFocusNextTick('kaltura-events-export-menu-btn')
       } else {
@@ -164,10 +166,12 @@ const onSubmit = () => {
       }
     })
 }
-</script>
 
-<style scoped>
-.error-container {
-  min-height: 30px;
+const onUpdateMenuModel = (value: boolean) => {
+  if (!value) {
+    endDate.value = undefined
+    startDate.value = undefined
+    error.value = ''
+  }
 }
-</style>
+</script>
