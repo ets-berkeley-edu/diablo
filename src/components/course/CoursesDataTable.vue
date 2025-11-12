@@ -444,6 +444,8 @@ const tdcLower = course => {
   display: none;
 }
 
+
+
 @media (max-width: 1062px) {
   #courses-data-table :deep(thead),
   #courses-data-table :deep(colgroup) {
@@ -536,6 +538,91 @@ const tdcLower = course => {
      We display it in the selector above. This is why we have 2 td sections for the scheduled section. One is for larger viewports and one is for narrow viewports.*/
   #courses-data-table :deep(tr[id^="tr-course-"][id$="-scheduled"]) {
     display: none !important;
+  }
+
+  #courses-data-table {
+    --v-table-row-height: auto !important;
+    --v-table-header-height: auto !important;
+  }
+
+  #courses-data-table :deep(.v-table),
+  #courses-data-table :deep(.v-data-table),
+  #courses-data-table :deep(table) {
+    --v-table-row-height: auto !important;
+    --v-table-header-height: auto !important;
+  }
+
+  #courses-data-table :deep(.v-data-table__tr),
+  #courses-data-table :deep(tbody > tr) {
+    height: auto !important;
+  }
+
+  #courses-data-table :deep(.v-data-table__td),
+  #courses-data-table :deep(.v-data-table__th) {
+    min-height: 0 !important;
+    height: auto !important;
+    white-space: normal !important;
+    word-break: break-word;
+    line-height: 1.4;
+    vertical-align: top;
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+
+  #courses-data-table :deep(.v-btn),
+  #courses-data-table :deep(.v-chip) {
+    white-space: normal !important;
+    min-height: 0 !important;
+    height: auto !important;
+    line-height: 1.2;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  #courses-data-table :deep(tbody > tr[id^="tr-course-"]:not([id*="-meeting-"])) {
+    margin: 0 0 12px 0;
+    padding: 12px;
+    border: 1px solid rgba(0,0,0,0.16);
+    border-radius: 12px;
+    background: var(--v-theme-surface, #fff);
+  }
+
+  #courses-data-table :deep(
+    tbody > tr[id^="tr-course-"]:not([id*="-meeting-"]):has(+ tr[id*="-meeting-"])
+  ) {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    margin-bottom: 0;
+    padding-bottom: 0;
+  }
+
+  #courses-data-table :deep(tbody > tr[id^="tr-course-"][id*="-meeting-"]) {
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+    background: var(--v-theme-surface, #fff);
+
+    padding: 10px 12px 12px;
+    border-top: 1px solid rgba(0,0,0,0.16);
+  }
+
+  #courses-data-table :deep(
+    tbody > tr[id^="tr-course-"][id*="-meeting-"]:not(:has(+ tr[id*="-meeting-"]))
+  ) {
+    border-left: 1px solid rgba(0,0,0,0.16);
+    border-right: 1px solid rgba(0,0,0,0.16);
+    border-bottom: 1px solid rgba(0,0,0,0.16);
+    border-bottom-left-radius: 12px;
+    border-bottom-right-radius: 12px;
+    margin-bottom: 12px;
+  }
+
+  #courses-data-table :deep(tbody > tr[id^="tr-course-"][id*="-meeting-"] td) {
+    white-space: normal !important;
+    word-break: break-word;
+    line-height: 1.4;
+    padding-top: 8px;
+    padding-bottom: 8px;
   }
 }
 </style>
