@@ -124,7 +124,24 @@ def _get_scheduled_events(kaltura, room, period_end_date, period_start_date, cou
     formatted_events = []
     for scheduled_course in schedule:
         dates = _generate_recurrent_dates(scheduled_course, period_start_date, period_end_date)
-        formatted_events.extend(_events_to_ics_format(location_alphanumeric, scheduled_course, dates))
+        course_feed = SisSection.get_course(
+            include_update_history=False,
+            term_id=scheduled_course.term_id,
+            section_id=scheduled_course.section_id,
+        )
+        if course_feed:
+            series_description = get_series_description(
+                course_label=course_feed['label'],
+                instructors=course_feed['instructors'],
+                term_name=term_name_for_sis_id(course_feed['termId']),
+            )
+            ics_events = _events_to_ics_format(
+                dates=dates,
+                location=location_alphanumeric,
+                scheduled_course=scheduled_course,
+                series_description=series_description,
+            )
+            formatted_events.extend(ics_events)
     if len(formatted_events):
         app.logger.info(
             f'Generating .ics file for {room.location} with {len(formatted_events)} events between {period_start_date} and {period_end_date}',
@@ -152,18 +169,11 @@ def _generate_recurrent_dates(scheduled_course, period_start_date, period_end_da
     return rrule(freq=WEEKLY, dtstart=dtstart, until=until, byweekday=[DAYS.index(d) for d in days])
 
 
-def _events_to_ics_format(location, scheduled_course, dates):
+def _events_to_ics_format(location, scheduled_course, series_description, dates):
     host = app.config.get('EB_ENVIRONMENT', 'diablo-local')
     now = utc_now()
     ics_events = []
     blackouts = Blackout.all_blackouts()
-
-    course_feed = SisSection.get_course(scheduled_course.term_id, scheduled_course.section_id, include_update_history=False)
-    series_description = get_series_description(
-        course_label=course_feed['label'],
-        instructors=course_feed['instructors'],
-        term_name=term_name_for_sis_id(course_feed['termId']),
-    )
 
     def _adjust_timestamp(date, military_time, offset_minutes):
         hour_and_minutes = military_time.split(':')
