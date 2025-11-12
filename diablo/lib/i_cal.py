@@ -33,7 +33,6 @@ import zipstream
 from dateutil.rrule import WEEKLY, rrule
 from flask import current_app as app
 
-from diablo.externals.kaltura import Kaltura
 from diablo.lib.berkeley import DAYS, get_first_matching_datetime_of_term, term_name_for_sis_id
 from diablo.lib.kaltura_util import get_series_description
 from diablo.lib.util import default_timezone, format_days, utc_now
@@ -68,12 +67,11 @@ def get_zip_stream(period_end_date, period_start_date):
         app.logger.warning('No eligible rooms found; will not generate .ics files')
 
     app.logger.info(f'Exporting events to iCalendar for {len(rooms)} eligible rooms')
-    kaltura = Kaltura()
     zip_stream = zipstream.ZipFile(mode='w', compression=zipstream.ZIP_DEFLATED)
     manifest = []
     total_events = 0
     for room in rooms:
-        events = _get_scheduled_events(kaltura, room, period_end_date, period_start_date)
+        events = _get_scheduled_events(room, period_end_date, period_start_date)
         if len(events):
             zip_stream.write_iter(
                 get_ics_file_name(room.location, period_start_date, period_end_date),
@@ -89,8 +87,7 @@ def get_zip_stream(period_end_date, period_start_date):
 
 
 def generate_ics_file(room, period_end_date, period_start_date):
-    kaltura = Kaltura()
-    events = _get_scheduled_events(kaltura, room, period_end_date, period_start_date)
+    events = _get_scheduled_events(room, period_end_date, period_start_date)
     if len(events):
         ics_file = TemporaryFile()
         ics_file.writelines(_ics_generator(events))
@@ -112,7 +109,7 @@ def get_zip_file_name(start_date, end_date):
     return f'iCal_export_{_format_date_for_filename(start_date)}-{_format_date_for_filename(end_date)}.zip'
 
 
-def _get_scheduled_events(kaltura, room, period_end_date, period_start_date, count=None):
+def _get_scheduled_events(room, period_end_date, period_start_date, count=None):
     schedule = Scheduled.get_scheduled_per_room(
         room_id=room.id,
         term_id=app.config['CURRENT_TERM_ID'],
