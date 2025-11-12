@@ -69,10 +69,9 @@
       </v-card-title>
       <v-card-text>
         <CourseCapturePreferences
+          v-model="user"
           :disable-email-because-courses="anyCourseOptedInOrScheduled"
-          :initial-do-not-email="user.doNotEmail"
-          :initial-opt-in-new-courses="user.optInNewCourses"
-          :uid="uid"
+          :on-update-user="refreshUser"
         />
       </v-card-text>
     </v-card>
@@ -172,32 +171,7 @@ const anyCourseOptedInOrScheduled = computed(() => {
 })
 
 onMounted(() => {
-  getUser(uid).then(data => {
-    user.value = data
-    data.courses.forEach(course => {
-      course.courseCodes = getCourseCodes(course)
-    })
-    noteBody.value = data.note
-    eligibleCourses.value = []
-    ineligibleCourses.value = []
-    partitionCoursesByEligibility(
-      data.courses,
-      eligibleCourses.value,
-      ineligibleCourses.value
-    )
-    const allCourses = [...eligibleCourses.value, ...ineligibleCourses.value]
-    allCourses.forEach(course => {
-      const eligibleLen = course.meetings?.eligible?.length || 0
-      course.statusLabel = course.deletedAt
-        ? 'Canceled'
-        : (course.scheduled
-          ? 'Scheduled'
-          : (eligibleLen > 0
-            ? (course.hasOptedIn ? 'Pending' : 'Not Opted In')
-            : 'Not Eligible'))
-    })
-    isRefreshingCourses.value = false
-  }).then(() => {
+  refreshUser().then(() => {
     contextStore.loadingComplete(`${user.value.name} Profile`)
   })
 })
@@ -222,6 +196,35 @@ const deleteNote = () => {
 const editNote = () => {
   isEditingNote.value = true
   putFocusNextTick('note-body-edit')
+}
+
+const refreshUser = () => {
+  return getUser(uid).then(data => {
+    user.value = data
+    data.courses.forEach(course => {
+      course.courseCodes = getCourseCodes(course)
+    })
+    noteBody.value = data.note
+    eligibleCourses.value = []
+    ineligibleCourses.value = []
+    partitionCoursesByEligibility(
+      data.courses,
+      eligibleCourses.value,
+      ineligibleCourses.value
+    )
+    const allCourses = [...eligibleCourses.value, ...ineligibleCourses.value]
+    allCourses.forEach(course => {
+      const eligibleLen = course.meetings?.eligible?.length || 0
+      course.statusLabel = course.deletedAt
+        ? 'Canceled'
+        : (course.scheduled
+          ? 'Scheduled'
+          : (eligibleLen > 0
+            ? (course.hasOptedIn ? 'Pending' : 'Not Opted In')
+            : 'Not Eligible'))
+    })
+    isRefreshingCourses.value = false
+  })
 }
 
 const saveNote = () => {

@@ -179,7 +179,7 @@ export interface DiabloUser {
   isTeaching: boolean,
   lastName?: string,
   name: string,
-  uid: string | undefined,
+  uid: string,
   doNotEmail: boolean,
   optInNewCourses: boolean,
   prefersDarkMode: boolean
