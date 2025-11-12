@@ -37,8 +37,8 @@ export function updateUserNote(uid: string, body: string) {
     .then(response => response.data)
 }
 
-export function updateDoNotEmail(uid: string, body: { doNotEmail: boolean }) {
-  return axios.post(`${getApiBaseUrl()}/api/user/${uid}/do_not_email/update`, body)
+export function updateDoNotEmail(uid: string, doNotEmail: boolean) {
+  return axios.post(`${getApiBaseUrl()}/api/user/${uid}/do_not_email/update`, {doNotEmail})
     .then(response => response.data)
 }
 
@@ -50,10 +50,8 @@ export function updatePrefersDarkMode(prefersDarkMode: boolean) {
     })
 }
 
-export function updateOptInNewCourses(
-  uid: string, payload: { optInNewCourses: boolean }
-) {
+export function updateOptInNewCourses(uid: string, optInNewCourses: boolean) {
   return axios
-    .post(`${getApiBaseUrl()}/api/user/${uid}/opt_in_new_courses/update`, payload)
+    .post(`${getApiBaseUrl()}/api/user/${uid}/opt_in_new_courses/update`, {optInNewCourses})
     .then(response => response.data)
 }

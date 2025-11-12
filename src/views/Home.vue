@@ -68,10 +68,9 @@
       </v-card-title>
       <v-card-text>
         <CourseCapturePreferences
+          v-model="currentUser"
           :disable-email-because-courses="eligibleCourses.some(c => c.hasOptedIn || isCourseScheduled(c))"
-          :initial-do-not-email="currentUser.doNotEmail"
-          :initial-opt-in-new-courses="currentUser.optInNewCourses"
-          :uid="currentUser.uid"
+          :on-update-user="onUpdateUser"
         />
       </v-card-text>
     </v-card>
@@ -87,6 +86,7 @@ import HomeCoursesTable from '@/components/util/HomeCoursesTable.vue'
 import PageTitle from '@/components/util/PageTitle.vue'
 import type {Course} from '@/lib/types'
 import {getCourseCodes, getCourseStatusLabel, getDisplayMeetings, isCourseScheduled} from '@/lib/berkeley'
+import {getCurrentUser} from '@/api/user'
 import {partitionCoursesByEligibility, pluralize} from '@/lib/utils'
 import {useContextStore} from '@/stores/context'
 
@@ -109,6 +109,10 @@ onMounted(() => {
   pageTitle.value = `Your ${config.currentTermName} ${pluralize('Course', size(currentUser.courses), false)}`
   contextStore.loadingComplete(pageTitle.value)
 })
+
+const onUpdateUser = () => {
+  getCurrentUser().then(contextStore.setCurrentUser)
+}
 </script>
 
 <style>
