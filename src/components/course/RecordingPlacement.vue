@@ -25,7 +25,7 @@
           <v-radio-group
             id="select-publish-type"
             v-model="publishType"
-            :aria-activedescendant="`radio-publish-type-${publishType.replaceAll('_', '-')}`"
+            :tabindex="-1"
             color="primary"
             density="comfortable"
             hide-details
