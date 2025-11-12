@@ -33,6 +33,7 @@
       <template v-for="course in items" :key="course.sectionId">
         <tr
           :id="`${idPrefix}-${course.sectionId}`"
+          class="course-row"
           tabindex="0"
         >
           <td
@@ -126,6 +127,7 @@
           v-for="(meeting, index) in tail<Meeting[]>(course.displayMeetings)"
           :id="`${idPrefix}-${course.sectionId}-${index}`"
           :key="`${course.sectionId}-${index}`"
+          class="meeting-row"
           tabindex="0"
         >
           <td :aria-hidden="true" colspan="4" />
@@ -268,6 +270,97 @@ const idPrefix = `courses-table-${props.coursesType}`
   .instructor-courses :deep(.v-data-table__td),
   .instructor-courses :deep(.v-data-table__th) {
     border-bottom: 0 !important;
+  }
+
+  .instructor-courses {
+  --v-table-row-height: auto !important;
+  --v-table-header-height: auto !important;
+  }
+  .instructor-courses :deep(.v-table),
+  .instructor-courses :deep(.v-data-table),
+  .instructor-courses :deep(table) {
+    --v-table-row-height: auto !important;
+    --v-table-header-height: auto !important;
+  }
+  .instructor-courses :deep(.v-data-table__tr),
+  .instructor-courses :deep(tbody > tr) {
+    height: auto !important;
+  }
+  .instructor-courses :deep(.v-data-table__td),
+  .instructor-courses :deep(.v-data-table__th) {
+    min-height: 0 !important;
+    height: auto !important;
+    white-space: normal !important;
+    word-break: break-word;
+    line-height: 1.4;
+  }
+
+  .instructor-courses tbody tr.course-row {
+    margin: 0 0 12px 0;
+    padding: 12px;
+    border: 1px solid var(--v-theme-outline-variant, rgba(0,0,0,0.12));
+    border-radius: 12px;
+    box-shadow: var(--v-shadow-1);
+    background: var(--v-theme-surface, #fff);
+  }
+
+  .instructor-courses tbody tr.course-row + tr.meeting-row {
+    margin-top: 0;
+  }
+  .instructor-courses tbody tr.course-row:has(+ tr.meeting-row) {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    margin-bottom: 0;
+    padding-bottom: 0;
+  }
+
+  .instructor-courses tbody tr.meeting-row {
+    display: block;
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+    background: var(--v-theme-surface, #fff);
+    padding: 10px 12px 12px;
+    border-top: 1px solid var(--v-theme-outline-variant, rgba(0,0,0,0.12));
+  }
+
+  .instructor-courses tbody tr.meeting-row:not(:has(+ tr.meeting-row)) {
+    border-left: 1px solid var(--v-theme-outline-variant, rgba(0,0,0,0.12));
+    border-right: 1px solid var(--v-theme-outline-variant, rgba(0,0,0,0.12));
+    border-bottom: 1px solid var(--v-theme-outline-variant, rgba(0,0,0,0.12));
+    border-bottom-left-radius: 12px;
+    border-bottom-right-radius: 12px;
+    margin-bottom: 12px;
+  }
+
+  .instructor-courses tbody tr.meeting-row > td {
+    padding-top: 8px;
+    padding-bottom: 8px;
+    border-top: none !important;
+  }
+
+    .instructor-courses tbody tr > td {
+      border-top: none !important;
+    }
+
+  .instructor-courses tbody tr.meeting-row > td {
+    position: relative;
+  }
+
+  .instructor-courses tbody tr.meeting-row > td + td::after {
+    content: "";
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    top: 0;
+    height: 1px;
+    background: rgba(0, 0, 0, 0.16);
+    pointer-events: none;
+  }
+
+  .instructor-courses tbody tr.meeting-row > td:first-of-type::after,
+  .instructor-courses tbody tr.meeting-row > td[aria-hidden="true"] + td::after {
+    display: none;
   }
 }
 
