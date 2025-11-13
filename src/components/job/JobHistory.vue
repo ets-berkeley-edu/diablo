@@ -92,8 +92,10 @@
           <v-pagination
             id="rooms-pagination"
             v-model="pageCurrent"
+            active-color="primary"
             :length="pageCount"
             total-visible="10"
+            variant="flat"
           />
         </div>
       </template>

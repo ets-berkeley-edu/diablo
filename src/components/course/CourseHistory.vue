@@ -132,7 +132,9 @@
             <v-pagination
               id="update-history-pagination"
               v-model="pageCurrent"
+              active-color="primary"
               :length="pageCount"
+              variant="flat"
             />
           </div>
         </template>
