@@ -101,6 +101,7 @@
             v-model="pageCurrent"
             active-color="primary"
             :length="pageCount"
+            variant="flat"
           />
         </div>
       </template>

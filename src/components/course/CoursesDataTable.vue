@@ -97,6 +97,7 @@
                 <span v-if="course.statusLabel !== 'Not Eligible'">
                   {{ getOptInStatus(course) }}
                 </span>
+                <div v-if="course.statusLabel === 'Not Eligible'" class="pl-8">&mdash;</div>
               </td>
               <td
                 :id="`td-course-${course.sectionId}-name`"
@@ -139,16 +140,16 @@
                 <span v-if="course.room && course.room.location && !course.room.id" :class="{'line-through': course.deletedAt}">
                   {{ course.room.location }}
                 </span>
-                <span v-if="!course.room">&mdash;</span>
+                <div v-if="!course.room || !course.room.location" class="pl-3">&mdash;</div>
               </td>
               <td
                 :id="`td-course-${course.sectionId}-meeting-room-${get(course.room, 'id', 'none')}-days-of-week`"
                 :class="tdc(course)"
                 data-label="Days"
               >
-                <div :class="{'line-through': course.deletedAt}">
+                <div :class="{'line-through': course.deletedAt}" class="pl-1">
                   <Days v-if="get(course, 'displayMeetings.0.daysNames.length')" :names-of-days="course.displayMeetings[0].daysNames" />
-                  <span v-else>&mdash;</span>
+                  <span v-else class="pl-1">&mdash;</span>
                 </div>
               </td>
               <td
@@ -163,8 +164,14 @@
                     <span class="sr-only"> to </span>
                     <Date :date="course.displayMeetings[0].endDate" />
                   </div>
-                  <span aria-hidden="true">{{ get(course, 'displayMeetings.0.startTimeFormatted') }} - {{ get(course, 'displayMeetings.0.endTimeFormatted') }}</span>
-                  <span class="sr-only">{{ get(course, 'displayMeetings.0.startTimeFormatted') }} to {{ get(course, 'displayMeetings.0.endTimeFormatted') }}</span>
+                  <span v-if="get(course, 'displayMeetings.0.startTimeFormatted')">
+                    <span aria-hidden="true">{{ get(course, 'displayMeetings.0.startTimeFormatted') }} - {{ get(course, 'displayMeetings.0.endTimeFormatted') }}</span>
+                    <span class="sr-only">{{ get(course, 'displayMeetings.0.startTimeFormatted') }} to {{ get(course, 'displayMeetings.0.endTimeFormatted') }}</span>
+                  </span>
+                  <span v-if="!get(course, 'displayMeetings.0.startTimeFormatted')" class="pl-2">
+                    <span aria-hidden="true">&mdash;</span>
+                    <span class="sr-only">blank</span>
+                  </span>
                 </div>
               </td>
               <td
@@ -190,7 +197,7 @@
                     <Instructor :course="course" :instructor="instructor" />
                   </div>
                 </div>
-                <div v-if="!course.instructors.length">
+                <div v-if="!course.instructors.length" class="pl-2">
                   &mdash;
                 </div>
               </td>
@@ -199,7 +206,9 @@
                 :class="tdc(course)"
                 data-label="Publish"
               >
-                <span aria-hidden="true">{{ (course.scheduled && course.publishTypeName) || '&mdash;' }}</span>
+                <span aria-hidden="true" :class="{'pl-4': !course.scheduled || !course.publishTypeName}">
+                  {{ (course.scheduled && course.publishTypeName) || '&mdash;' }}
+                </span>
                 <span class="sr-only">{{ (course.scheduled && course.publishTypeName) || 'blank' }}</span>
               </td>
               <!-- This td is only visible in smaller viewports. See CSS below. -->
@@ -270,6 +279,7 @@
             >
               <td
                 :id="`td-course-${course.sectionId}-scheduled-date`"
+                class="pl-8"
                 :colspan="headers.length"
               >
                 <div>
@@ -283,11 +293,13 @@
         </template>
       </template>
       <template #bottom="{pageCount}">
-        <div v-if="!refreshing && pageCount > 1" class="text-center pb-4 pt-2">
+        <div v-if="!refreshing && pageCount > 1" class="text-center my-6">
           <v-pagination
             id="ouija-pagination"
             v-model="page"
+            active-color="primary"
             :length="pageCount"
+            variant="flat"
           />
         </div>
       </template>

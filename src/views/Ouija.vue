@@ -10,9 +10,9 @@
           <PageTitle :icon="mdiAutoFix" text="The Ouija Board" />
           <v-btn
             v-if="courses.length"
-            class="ml-12 mt-2"
+            class="ml-13 mt-1"
             :disabled="isDownloading || isRefreshing"
-            variant="text"
+            variant="outlined"
             @click="onClickDownload"
           >
             <v-progress-circular
