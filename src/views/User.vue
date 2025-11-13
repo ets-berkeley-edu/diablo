@@ -2,9 +2,12 @@
   <div v-if="!loading">
     <v-card class="border-sm pr-md-12 pl-md-6 py-2">
       <v-card-title class="py-0">
-        <PageTitle :icon="mdiSchoolOutline" :text="`${user.name} (${user.uid})`" />
+        <PageTitle
+          :icon="mdiSchoolOutline"
+          :text="user.name ? `${user.name} (${user.uid})` : `UID: ${user.uid}`"
+        />
       </v-card-title>
-      <v-card-subtitle class="font-size-24 pt-0">
+      <v-card-subtitle v-if="user.email" class="font-size-24 pt-0">
         <a class="ms-lg-13" :href="`mailto:${user.email}`" target="_blank">{{ user.email }}</a>
       </v-card-subtitle>
       <v-card-text>

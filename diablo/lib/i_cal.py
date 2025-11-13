@@ -26,7 +26,6 @@ ENHANCEMENTS, OR MODIFICATIONS.
 import re
 import unicodedata
 from datetime import datetime, time, timedelta, timezone
-from tempfile import TemporaryFile
 from textwrap import TextWrapper
 
 import zipstream
@@ -84,15 +83,6 @@ def get_zip_stream(period_end_date, period_start_date):
         return zip_stream
     else:
         return None
-
-
-def generate_ics_file(room, period_end_date, period_start_date):
-    events = _get_scheduled_events(room, period_end_date, period_start_date)
-    if len(events):
-        ics_file = TemporaryFile()
-        ics_file.writelines(_ics_generator(events))
-        ics_file.seek(0)
-        return ics_file
 
 
 def get_ics_file_name(location, start_date, end_date):
