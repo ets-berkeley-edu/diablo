@@ -92,24 +92,14 @@
 </template>
 
 <script lang="ts" setup>
-import type {PropType} from 'vue'
 import {DateTime} from 'luxon'
 import {onMounted, ref} from 'vue'
 import {size} from 'lodash'
 import AccessibleDateInput from '@/components/util/AccessibleDateInput.vue'
 import ProgressButton from '@/components/util/ProgressButton.vue'
-import type {Room} from '@/lib/types'
 import {downloadKalturaEvents} from '@/api/room'
 import {putFocusNextTick} from '@/lib/utils'
 import {useContextStore} from '@/stores/context'
-
-const props = defineProps({
-  room: {
-    default: () => undefined,
-    required: false,
-    type: Object as PropType<Room>
-  }
-})
 
 const contextStore = useContextStore()
 const currentTermBegin = ref()
@@ -143,7 +133,6 @@ const onSubmit = () => {
   isExporting.value = true
   error.value = ''
   downloadKalturaEvents(
-    props.room,
     formatDate(startDate.value),
     formatDate(endDate.value)
   )

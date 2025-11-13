@@ -24,16 +24,15 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 from datetime import datetime, timedelta
 
-from flask import Response, request, send_file, stream_with_context
+from flask import Response, request, stream_with_context
 from flask import current_app as app
 from flask_login import login_required
-from werkzeug.utils import secure_filename
 
 from diablo.api.errors import BadRequestError, ResourceNotFoundError
 from diablo.api.util import admin_required
 from diablo.externals.kaltura import CREATED_BY_DIABLO_TAG, Kaltura
 from diablo.lib.http_util import tolerant_jsonify
-from diablo.lib.i_cal import generate_ics_file, get_ics_file_name, get_zip_file_name, get_zip_stream
+from diablo.lib.i_cal import get_zip_file_name, get_zip_stream
 from diablo.lib.util import localize_datetime
 from diablo.models.room import Room
 from diablo.models.sis_section import SisSection
@@ -58,29 +57,6 @@ def download_events():
     response = Response(stream_with_context(generator()), mimetype='application/zip')
     response.headers['Content-Disposition'] = f'attachment; filename={get_zip_file_name(start_date, end_date)}'
     return response
-
-
-@app.route('/api/room/download_events', methods=['POST'])
-@admin_required
-def download_room_events():
-    params = request.get_json()
-    room_id = params.get('roomId')
-    room = Room.get_room(room_id)
-    if not room:
-        raise ResourceNotFoundError('No such room')
-    end_date = datetime.fromisoformat(params.get('endDate')).replace(hour=23, minute=59, second=59)
-    start_date = datetime.fromisoformat(params.get('startDate'))
-    ics_file = generate_ics_file(room, end_date, start_date)
-    if ics_file:
-        filename = get_ics_file_name(room.location, start_date, end_date)
-        return send_file(
-            ics_file,
-            mimetype='text',
-            as_attachment=False,
-            download_name=secure_filename(filename),
-        )
-    else:
-        raise BadRequestError(f'No Kaltura events found for {room.location} between the specified dates.')
 
 
 @app.route('/api/rooms/all')

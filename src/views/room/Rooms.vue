@@ -99,6 +99,7 @@
           <v-pagination
             id="rooms-pagination"
             v-model="pageCurrent"
+            active-color="primary"
             :length="pageCount"
           />
         </div>
