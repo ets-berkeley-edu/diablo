@@ -44,54 +44,6 @@ def instructor_session(fake_auth):
     fake_auth.login('10001')
 
 
-class TestDownloadRoomEvents:
-
-    @staticmethod
-    def _api_download_room_events(client, room_id=None, expected_status_code=200):
-        if not room_id:
-            rooms = Room.get_eligible_rooms()
-            room_id = rooms[0].id
-        response = client.post(
-            '/api/room/download_events',
-            data=json.dumps({
-                'roomId': room_id,
-                'startDate': '2021-09-01',
-                'endDate': '2021-09-15',
-            }),
-            content_type='application/json',
-        )
-        assert response.status_code == expected_status_code
-        return response
-
-    def test_anonymous(self, client):
-        """Denies anonymous access."""
-        self._api_download_room_events(client, expected_status_code=401)
-
-    def test_unauthorized(self, client, instructor_session):
-        """Denies access if user is not an admin."""
-        self._api_download_room_events(client, expected_status_code=401)
-
-    def test_authorized_no_events(self, client, admin_session):
-        """Admin user gets a message instead of a file when there is no data."""
-        with test_scheduling_workflow(app):
-            response = self._api_download_room_events(client, expected_status_code=400)
-            assert response.json['message'] == 'No Kaltura events found for Barker 101 between the specified dates.'
-
-    def test_authorized_room_events(self, client, admin_session):
-        """Admin user can download events for a single room."""
-        room = Room.find_room("O'Brien 212")
-        with test_scheduling_workflow(app):
-            mock_scheduled(
-                section_id=50000,
-                term_id=2218,
-                override_room_id=room.id,
-                override_start_date='2021-08-20',
-                override_end_date='2021-12-10',
-            )
-            ics_file = self._api_download_room_events(client, room_id=room.id).data
-            assert len(ics_file)
-
-
 class TestDownloadEvents:
 
     @staticmethod

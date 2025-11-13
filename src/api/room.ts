@@ -1,24 +1,11 @@
 import axios from 'axios'
 import fileDownload from 'js-file-download'
 import {getApiBaseUrl} from '@/api/api-utils'
-import type {Room} from '@/lib/types'
 
-const _sanitize_filename = (filename: string) => {
-  return filename.replace(/['’/\\?%*:|"<>.,;=]/g, '').replaceAll(' ', '_')
-}
-
-export function downloadKalturaEvents(room: Room | undefined, startDate: string, endDate: string) {
-  let filename: string, uri: string
-  const postData = {startDate, endDate}
-  if (room) {
-    filename = `${_sanitize_filename(room.location)}_${startDate.replaceAll('-', '')}-${endDate.replaceAll('-', '')}.ics`
-    uri = 'api/room/download_events'
-    postData['roomId'] = room.id
-  } else {
-    filename = `iCal_export_${startDate.replaceAll('-', '')}-${endDate.replaceAll('-', '')}.zip`
-    uri = 'api/rooms/download_events'
-  }
-  return axios.post(`${getApiBaseUrl()}/${uri}`, postData, {responseType: 'blob'})
+export function downloadKalturaEvents(startDate: string, endDate: string) {
+  const filename = `iCal_export_${startDate.replaceAll('-', '')}-${endDate.replaceAll('-', '')}.zip`
+  const url = `${getApiBaseUrl()}/api/rooms/download_events`
+  return axios.post(url, {startDate, endDate}, {responseType: 'blob'})
   .then(response => fileDownload(response.data, filename))
   .catch(error => {
     return new Promise((resolve, reject) => {
