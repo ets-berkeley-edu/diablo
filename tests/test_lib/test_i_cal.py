@@ -29,7 +29,7 @@ from zipfile import ZipFile
 
 from flask import current_app as app
 
-from diablo.lib.i_cal import generate_ics_file, get_zip_stream
+from diablo.lib.i_cal import get_zip_stream
 from diablo.models.room import Room
 from diablo.models.scheduled import Scheduled
 from tests.test_api.api_test_utils import mock_scheduled
@@ -151,34 +151,3 @@ class TestGetIcsFiles:
                 ics_file.close()
                 assert ics_file.closed
             zip_stream.close()
-
-
-class TestGenerateIcsFile:
-
-    def test_no_scheduled_events(self):
-        room = Room.find_room("O'Brien 212")
-        with test_scheduling_workflow(app):
-            assert not generate_ics_file(room, datetime(2021, 9, 15), datetime(2021, 9, 1))
-
-    def test_generate_scheduled_events(self):
-        term_id = 2218
-        section_id = 50000
-        room = Room.find_room("O'Brien 212")
-        with test_scheduling_workflow(app):
-            mock_scheduled(
-                section_id=section_id,
-                term_id=term_id,
-                override_room_id=room.id,
-                override_start_date='2021-08-20',
-                override_end_date='2021-12-10',
-            )
-            ics_file = generate_ics_file(room, datetime(2021, 9, 3), datetime(2021, 9, 1))
-            assert ics_file
-
-            validate_header(ics_file)
-            location_alphanumeric = room.location.replace("'", '')
-            for i in range(1):
-                validate_event(ics_file, section_id, location_alphanumeric)
-            validate_footer(ics_file)
-            ics_file.close()
-            assert ics_file.closed

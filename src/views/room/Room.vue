@@ -64,16 +64,11 @@
       </v-card-text>
     </v-card>
     <v-card v-if="kalturaEventList" class="mt-8 pa-4 border-sm">
-      <v-card-title class="d-flex flex-wrap">
-        <div class="pb-3">
-          <h2 id="kaltura-events-header" tabindex="-1">The Kaltura Events of {{ room.location }}</h2>
-          <div class="text-subtitle-2 text-wrap">
-            Kaltura events tagged with '{{ contextStore.config.createdByDiabloTag }}' and
-            a start-date between {{ contextStore.config.currentTermRecordingsBegin }} and  {{ contextStore.config.currentTermRecordingsEnd }}.
-          </div>
-        </div>
-        <div class="d-flex ml-auto py-1">
-          <ExportKalturaEvents :room="room" />
+      <v-card-title>
+        <h2 id="kaltura-events-header" tabindex="-1">The Kaltura Events of {{ room.location }}</h2>
+        <div class="text-subtitle-2 text-wrap">
+          Kaltura events tagged with '{{ contextStore.config.createdByDiabloTag }}' and
+          a start-date between {{ contextStore.config.currentTermRecordingsBegin }} and  {{ contextStore.config.currentTermRecordingsEnd }}.
         </div>
       </v-card-title>
       <v-card-text>
@@ -94,7 +89,6 @@ import {onMounted, ref, watch} from 'vue'
 import {useGoTo} from 'vuetify'
 import {useRoute} from 'vue-router'
 import CoursesDataTable from '@/components/course/CoursesDataTable'
-import ExportKalturaEvents from '@/components/kaltura/ExportKalturaEvents'
 import KalturaEventList from '@/components/kaltura/KalturaEventList'
 import PageTitle from '@/components/util/PageTitle'
 import SelectRoomCapability from '@/components/room/SelectRoomCapability'
