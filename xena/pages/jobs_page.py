@@ -204,6 +204,9 @@ class JobsPage(DiabloPages):
                 app.logger.info('Waiting for success')
                 self.when_present(success, util.get_short_timeout())
                 app.logger.info('Job succeeded')
+                # For some reason, this job occasionally reports success before it's actually done, so wait a bit longer
+                if async_job == AsyncJob.SCHEDULE_UPDATES:
+                    time.sleep(10)
                 break
             except TimeoutException:
                 if self.is_present(failure):
