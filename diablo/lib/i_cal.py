@@ -141,8 +141,16 @@ def _get_scheduled_events(room, period_end_date, period_start_date, count=None):
 
 
 def _generate_recurrent_dates(scheduled_course, period_start_date, period_end_date):
-    start_date = max(scheduled_course.meeting_start_date, period_start_date)
-    end_date = min(scheduled_course.meeting_end_date, period_end_date)
+    tz = default_timezone()
+
+    def _localize_timezone(dt):
+        return tz.localize(datetime(dt.year, dt.month, dt.day))
+
+    start_bound = _localize_timezone(period_start_date)
+    end_bound = _localize_timezone(period_end_date)
+
+    start_date = max(_localize_timezone(scheduled_course.meeting_start_date), start_bound)
+    end_date = min(_localize_timezone(scheduled_course.meeting_end_date), end_bound)
     days = format_days(scheduled_course.meeting_days)
 
     dtstart = get_first_matching_datetime_of_term(
@@ -151,9 +159,9 @@ def _generate_recurrent_dates(scheduled_course, period_start_date, period_end_da
         time_hours=0,
         time_minutes=0,
     )
-    until = datetime.combine(end_date, time(23, 59), tzinfo=default_timezone())
+    until_local_tz = tz.localize(datetime(end_date.year, end_date.month, end_date.day, 23, 59, 59, 999999))
 
-    return rrule(freq=WEEKLY, dtstart=dtstart, until=until, byweekday=[DAYS.index(d) for d in days])
+    return rrule(freq=WEEKLY, dtstart=dtstart, until=until_local_tz, byweekday=[DAYS.index(d) for d in days])
 
 
 def _events_to_ics_format(location, scheduled_course, series_description, dates):
