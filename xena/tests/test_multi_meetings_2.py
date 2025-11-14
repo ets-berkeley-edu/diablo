@@ -54,6 +54,8 @@ class TestWeirdTypeD:
     section = util.get_test_section(test_data)
     instructor = section.instructors[0]
     meeting_0 = section.meetings[0]
+    # Set changed meeting start/end dates relative to end of the term
+    # Note this will fail if the test is run too close to the end of the configured term
     meeting_0.meeting_schedule.end_date = meeting_0.meeting_schedule.end_date - timedelta(days=8)
     meeting_1 = section.meetings[1]
     meeting_1.meeting_schedule.start_date = meeting_0.meeting_schedule.end_date + timedelta(days=1)

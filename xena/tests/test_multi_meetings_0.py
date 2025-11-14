@@ -22,7 +22,9 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
+import glob
 from datetime import timedelta
+from zipfile import ZipFile
 
 import pytest
 
@@ -68,7 +70,8 @@ class TestWeirdTypeB:
 
     new_instructor = changed_section.instructors[0]
     new_room = changed_meeting.room
-    # Set changed physical meeting start/end dates relative to original dates
+    # Set changed meeting start/end dates relative to end of the term
+    # Note this will fail if the test is run too close to the end of the configured term
     changed_schedule = changed_meeting.meeting_schedule
     changed_schedule.start_date = meeting_schedule.end_date - timedelta(days=14)
     changed_schedule.end_date = meeting_schedule.end_date - timedelta(days=7)
@@ -391,3 +394,31 @@ class TestWeirdTypeB:
                                             requestor=self.admin,
                                             status='succeeded',
                                             published=True)
+
+    # EXPORT ALL ROOMS SCHEDULED EVENTS TO ICAL
+
+    def test_ical_export_no_events(self):
+        self.rooms_page.load_page()
+        date_with_no_recordings = self.recording_schedule.meeting.meeting_schedule.date_with_no_recordings(
+            self.recording_schedule.section.term,
+        )
+        self.rooms_page.export_schedule_events_to_ical(events_start_date=date_with_no_recordings, events_end_date=date_with_no_recordings)
+        self.rooms_page.verify_ical_export_error()
+
+    def test_ical_export_events(self):
+        events_start_date, events_end_date = self.recording_schedule.meeting.meeting_schedule.date_range_for_ical_export(
+            self.recording_schedule.section.term,
+        )
+        self.rooms_page.export_schedule_events_to_ical(events_start_date, events_end_date)
+        self.rooms_page.verify_ical_export_download()
+        zip_file_path = glob.glob(f'{util.default_download_dir()}/*.zip')[0]
+        with ZipFile(zip_file_path) as zip_file:
+            self.rooms_page.verify_ical_export_manifest(zip_file)
+            for name in zip_file.namelist():
+                if name.endswith('.ics'):
+                    file_path = zip_file.extract(name, util.default_download_dir())
+                    events = self.rooms_page.verify_ical_export_events(file_path, events_start_date, events_end_date)
+                    if name.replace('_', ' ').startswith(self.new_room.name):
+                        self.rooms_page.compare_ical_export_to_recording_schedule(events, events_start_date, events_end_date, self.recording_schedule)
+                    self.i_calendar_page.load_validator_page()
+                    self.i_calendar_page.validate_file(file_path)

@@ -77,6 +77,8 @@ class TestWeirdTypeC:
     changed_meeting_sched_0 = changed_meeting_0.meeting_schedule
     changed_meeting_1 = changed_section.meetings[1]
     changed_meeting_sched_1 = changed_meeting_1.meeting_schedule
+    # Set changed meeting start/end dates relative to end of the term
+    # Note this will fail if the test is run too close to the end of the configured term
     changed_meeting_sched_0.end_date = meeting_0.meeting_schedule.end_date + timedelta(days=7)
     changed_meeting_sched_1.start_date = meeting_1.meeting_schedule.start_date + timedelta(days=7)
 
