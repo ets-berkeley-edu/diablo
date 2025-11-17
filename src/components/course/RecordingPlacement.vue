@@ -269,6 +269,7 @@ const addCanvasSiteConfirm = () => {
 
 const cancel = () => {
   publishType.value = course.value.publishType
+  publishCanvasSites.value = course.value.canvasSites
   isEditing.value = false
   courseStore.setDisableButtons(false)
   putFocusNextTick('btn-publish-type-edit')

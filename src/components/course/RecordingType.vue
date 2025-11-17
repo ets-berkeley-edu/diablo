@@ -20,6 +20,7 @@
           <v-radio-group
             v-model="recordingType"
             aria-labelledby="recording-type-header"
+            tabindex="-1"
             color="primary"
             density="compact"
             hide-details
