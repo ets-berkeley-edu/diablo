@@ -175,7 +175,8 @@ const anyCourseOptedInOrScheduled = computed(() => {
 
 onMounted(() => {
   refreshUser().then(() => {
-    contextStore.loadingComplete(`${user.value.name} Profile`)
+    const name = user.value.name ? `${user.value.name} (${user.value.uid})` : `UID: ${user.value.uid}`
+    contextStore.loadingComplete(`${name} Profile`)
   })
 })
 
