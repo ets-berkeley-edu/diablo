@@ -132,7 +132,7 @@ export default createVuetify({
           success: '#3a833c',
           'surface-light': '#f6f6f6',
           'table-border': '#c9c9c9',
-          tertiary: '#6E4FB4',
+          tertiary: '#6e4fb4',
           warning: '#b36200'
         }
       },
