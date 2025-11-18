@@ -10,6 +10,18 @@
         <h3 id="publish-type-header">
           Recording Placement
         </h3>
+        <v-expand-transition>
+          <v-alert
+            v-if="error"
+            class="my-1"
+            density="compact"
+            :icon="false"
+            role="none"
+            :text="error"
+            type="error"
+            variant="tonal"
+          />
+        </v-expand-transition>
         <div v-if="!isEditing" class="ml-2 py-2">
           {{ publishType ? displayLabels[publishType] : 'None' }}
           <div v-if="course.canvasSites.length" class="border-sm mt-2 pa-4 pl-6">
@@ -181,7 +193,7 @@
 
 <script lang="ts" setup>
 import {each, filter, find, get, isEmpty, map, size} from 'lodash'
-import {computed, onMounted, ref} from 'vue'
+import {computed, onMounted, ref, watch} from 'vue'
 import {storeToRefs} from 'pinia'
 import type {CanvasSite, Course} from '@/lib/types'
 import {alertScreenReader, putFocusNextTick} from '@/lib/utils'
@@ -212,6 +224,7 @@ const displayLabels = {
   kaltura_media_gallery: 'Publish to the Media Gallery (all members of the bCourses site will have access)',
   kaltura_my_media: `Place in My Media (${currentUser.isAdmin ? 'instructor' : 'I'} will decide if and how ${currentUser.isAdmin ? 'they' : 'I'} want to share)`
 }
+const error = ref<string | undefined>()
 const isEditing = ref(false)
 const isFindingCanvasSite = ref(false)
 const isSaving = ref(false)
@@ -220,6 +233,10 @@ const pendingCanvasSiteId = ref<number | undefined>()
 const publishCanvasSites = ref<CanvasSite[]>(course.value.canvasSites)
 const publishType = ref<string>()
 const publishTypeOptions = Object.keys(config.publishTypeOptions).sort().reverse()
+
+watch(publishType, () => {
+  error.value = undefined
+})
 
 onMounted(() => {
   publishType.value = course.value.publishType
@@ -241,18 +258,26 @@ onMounted(() => {
 })
 
 const addCanvasSiteById = () => {
+  error.value = undefined
   courseStore.setDisableButtons(true)
   isFindingCanvasSite.value = true
   if (pendingCanvasSiteId.value && !isCanvasSiteIdStaged(pendingCanvasSiteId.value)) {
     getCourseSite(pendingCanvasSiteId.value).then(data => {
       if (data) {
         publishCanvasSites.value.push(data)
-        isFindingCanvasSite.value = false
-        pendingCanvasSiteId.value = undefined
-        courseStore.setDisableButtons(false)
         alertScreenReader(`${data.name} added.`)
-        putFocusNextTick('input-canvas-site-id')
+      } else {
+        error.value = `No Canvas Site found with ID ${pendingCanvasSiteId.value}.`
+        alertScreenReader(error.value)
       }
+    }).catch(message => {
+      error.value = message || 'Internal Server Error'
+      alertScreenReader(error.value)
+    }).finally(() => {
+      isFindingCanvasSite.value = false
+      pendingCanvasSiteId.value = undefined
+      courseStore.setDisableButtons(false)
+      putFocusNextTick('input-canvas-site-id')
     })
   }
 }
@@ -268,6 +293,7 @@ const addCanvasSiteConfirm = () => {
 }
 
 const cancel = () => {
+  error.value = undefined
   publishType.value = course.value.publishType
   publishCanvasSites.value = course.value.canvasSites
   isEditing.value = false
@@ -293,6 +319,7 @@ const onToggleCanvasSitesMenu = isOpen => {
 }
 
 const removeCanvasSite = (canvasSiteId: number, index: number) => {
+  error.value = undefined
   const nextFocusIndex = (index + 1 === size(publishCanvasSites.value)) ? index - 1 : index + 1
   const nextFocusSiteId = get(publishCanvasSites.value, `${nextFocusIndex}.canvasSiteId`)
   const canvasSite = find(publishCanvasSites.value, c => c.canvasSiteId === canvasSiteId)
@@ -307,6 +334,7 @@ const removeCanvasSite = (canvasSiteId: number, index: number) => {
 }
 
 const update = () => {
+  error.value = undefined
   if (publishType.value) {
     isSaving.value = true
     let canvasSiteIds: string[] = []
