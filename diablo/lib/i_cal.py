@@ -25,7 +25,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 
 import re
 import unicodedata
-from datetime import datetime, time, timedelta, timezone
+from datetime import datetime, timedelta, timezone
 from textwrap import TextWrapper
 
 import zipstream
@@ -171,15 +171,18 @@ def _events_to_ics_format(location, scheduled_course, series_description, dates)
     blackouts = Blackout.all_blackouts()
 
     def _adjust_timestamp(date, military_time, offset_minutes):
+        tz = default_timezone()
         hour_and_minutes = military_time.split(':')
         hour = int(hour_and_minutes[0])
         minutes = int(hour_and_minutes[1])
-        timestamp = datetime.combine(
-            date,
-            time(hour, minutes),
-            tzinfo=default_timezone(),
-        ) + timedelta(minutes=offset_minutes)
-        return timestamp.astimezone(timezone.utc)
+        local_dt = tz.localize(datetime(
+            date.year,
+            date.month,
+            date.day,
+            hour,
+            minutes,
+        )) + timedelta(minutes=offset_minutes)
+        return local_dt.astimezone(timezone.utc)
 
     for index, date in enumerate(dates):
         event_start_date = _adjust_timestamp(date, scheduled_course.meeting_start_time, app.config['KALTURA_RECORDING_OFFSET_START'])
