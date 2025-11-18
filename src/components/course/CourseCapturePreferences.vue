@@ -8,6 +8,7 @@
         <v-radio-group
           v-model="user.optInNewCourses"
           aria-labelledby="future-courses-header"
+          tabindex="-1"
           density="comfortable"
           hide-details
           @update:model-value="onUpdateOptInNewCourses"

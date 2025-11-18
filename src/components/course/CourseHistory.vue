@@ -66,7 +66,7 @@
               :id="`update-fieldName-${item.id}`"
               class="px-4 py-2"
               columnheader="update-history-fieldName-th"
-              :data-label="labelFor('fieldName')"
+              data-label="fieldName"
             >
               <span aria-hidden="true">{{ item.fieldName || '&mdash;' }}</span>
               <span class="sr-only">{{ item.fieldName || 'blank' }}</span>
@@ -75,7 +75,7 @@
               :id="`update-fieldValueOld-${item.id}`"
               class="px-4 py-2"
               columnheader="update-history-fieldValueOld-th"
-              :data-label="labelFor('fieldValueOld')"
+              data-label="fieldValueOld"
             >
               <span aria-hidden="true">{{ item.fieldValueOld || '&mdash;' }}</span>
               <span class="sr-only">{{ item.fieldValueOld || 'blank' }}</span>
@@ -84,7 +84,7 @@
               :id="`update-fieldValueNew-${item.id}`"
               class="px-4 py-2"
               columnheader="update-history-fieldValueNew-th"
-              :data-label="labelFor('fieldValueNew')"
+              data-label="fieldValueNew"
             >
               <span aria-hidden="true">{{ item.fieldValueNew || '&mdash;' }}</span>
               <span class="sr-only">{{ item.fieldValueNew || 'blank' }}</span>
@@ -93,7 +93,7 @@
               :id="`update-requestedByName-${item.id}`"
               class="px-4 py-2"
               columnheader="update-history-requestedByName-th"
-              :data-label="labelFor('requestedByName')"
+              data-label="requestedByName"
             >
               <span aria-hidden="true">{{ item.requestedByName ? `${item.requestedByName} (${item.requestedByUid})` : '&mdash;' }}</span>
               <span class="sr-only">{{ item.requestedByName ? `${item.requestedByName} (${item.requestedByUid})` : 'blank' }}</span>
@@ -102,7 +102,7 @@
               :id="`update-requestedAt-${item.id}`"
               class="px-4 py-2"
               columnheader="update-history-requestedAt-th"
-              :data-label="labelFor('requestedAt')"
+              data-label="requestedAt"
             >
               <span aria-hidden="true">{{ new Date(item.requestedAt).toLocaleString() || '&mdash;' }}</span>
               <span class="sr-only">{{ new Date(item.requestedAt).toLocaleString() || 'blank' }}</span>
@@ -111,7 +111,7 @@
               :id="`update-publishedAt-${item.id}`"
               class="px-4 py-2"
               columnheader="update-history-publishedAt-th"
-              :data-label="labelFor('publishedAt')"
+              data-label="publishedAt"
             >
               <span aria-hidden="true">{{ item.publishedAt ? new Date(item.publishedAt).toLocaleString() : '&mdash;' }}</span>
               <span class="sr-only">{{ item.publishedAt ? new Date(item.publishedAt).toLocaleString() : 'blank' }}</span>
@@ -120,7 +120,7 @@
               :id="`update-status-${item.id}`"
               class="px-4 py-2"
               columnheader="update-history-status-th"
-              :data-label="labelFor('status')"
+              data-label="status"
             >
               <span aria-hidden="true">{{ item.status || '&mdash;' }}</span>
               <span class="sr-only">{{ item.status || 'blank' }}</span>
@@ -145,7 +145,7 @@
 
 <script setup>
 import {find, get} from 'lodash'
-import {computed, ref} from 'vue'
+import {ref} from 'vue'
 import {alertScreenReader} from '@/lib/utils'
 
 defineProps({
@@ -166,11 +166,6 @@ const headers = ref([
   {title: 'Published at', value: 'publishedAt'},
   {title: 'Status', value: 'status'}
 ])
-
-const headerTitleByValue = computed(() =>
-  headers.value.reduce((m, h) => ((m[h.value] = h.title), m), {})
-)
-const labelFor = key => headerTitleByValue.value[key] || ''
 
 const onUpdateSortBy = primarySortBy => {
   const key = get(primarySortBy, '0.key')
