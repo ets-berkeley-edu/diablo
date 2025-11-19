@@ -86,22 +86,28 @@ class TestRemindInstructorsOptedOutJob:
             _api_update_do_not_email(client, uid=instructor_uid, do_not_email=True)
             std_commit(allow_test_environment=True)
 
-            def _queued_email_count(instructor_uid):
-                return len([e for e in QueuedEmail.get_all(term_id=term_id) if e.recipient['uid'] == instructor_uid])
+            def _queued_emails(instructor_uid):
+                return [e for e in QueuedEmail.get_all(term_id=term_id) if e.recipient['uid'] == instructor_uid]
 
-            def _sent_email_count(instructor_uid):
-                return len(SentEmail.get_emails_sent_to(instructor_uid))
-
-            previously_sent_email_count = _sent_email_count(instructor_uid)
             SemesterStartJob(simply_yield).run()
             std_commit(allow_test_environment=True)
+
+            # A semester start email is queued for do-not-email instructors.
+            queued_emails = _queued_emails(instructor_uid)
+            assert len(queued_emails) == 1
+            assert queued_emails[0].template_type == 'semester_start'
+
             RemindInstructorsOptedOutJob(simply_yield).run()
             std_commit(allow_test_environment=True)
 
-            # Verify no additional email sent to do-not-email instructors.
-            assert _queued_email_count(instructor_uid) == 0
+            # No additional reminder email is queued for do-not-email instructors.
+            queued_emails = _queued_emails(instructor_uid)
+            assert len(queued_emails) == 1
+            assert queued_emails[0].template_type == 'semester_start'
+
             EmailsJob(simply_yield).run()
-            assert _sent_email_count(instructor_uid) == previously_sent_email_count
+            for email in SentEmail.get_emails_sent_to(instructor_uid):
+                assert email.template_type == 'semester_start'
 
             # Remove do-not-email preference.
             _api_update_do_not_email(client, uid=instructor_uid, do_not_email=False)
