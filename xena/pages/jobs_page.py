@@ -40,6 +40,7 @@ class JobsPage(DiabloPages):
     RUN_BLACKOUTS_JOB_BUTTON = (By.ID, 'run-job-blackouts')
     RUN_KALTURA_JOB_BUTTON = (By.ID, 'run-job-kaltura')
     RUN_EMAILS_JOB_BUTTON = (By.ID, 'run-job-emails')
+    RUN_HOUSE_KEEPING_BUTTON = (By.ID, 'run-job-house_keeping')
     RUN_REMIND_OPT_OUTS_BUTTON = (By.ID, 'run-job-remind_instructors_opted_out')
     RUN_REMIND_PARTIALLY_APPROVED_BUTTON = (By.ID, 'run-job-remind_instructors_partially_approved')
     RUN_REMIND_SCHEDULED_BUTTON = (By.ID, 'run-job-remind_instructors_scheduled')
@@ -63,6 +64,13 @@ class JobsPage(DiabloPages):
         time.sleep(1)
         self.wait_for_page_and_click(JobsPage.RUN_BLACKOUTS_JOB_BUTTON)
         self.wait_for_most_recent_job_success(AsyncJob.BLACKOUTS)
+
+    def run_house_keeping_job(self):
+        app.logger.info('Running the House Keeping job')
+        self.scroll_to_top()
+        time.sleep(1)
+        self.wait_for_page_and_click(JobsPage.RUN_HOUSE_KEEPING_BUTTON)
+        self.wait_for_most_recent_job_success(AsyncJob.HOUSEKEEPING)
 
     def run_kaltura_job(self):
         app.logger.info('Running Kaltura job')
@@ -149,13 +157,13 @@ class JobsPage(DiabloPages):
     @staticmethod
     def enabled_job_locator(async_job):
         el_id = JobsPage.job_toggle_id(async_job)
-        xpath = f'//input[@id="{el_id}"][contains(@aria-label, "is enabled")]/following-sibling::div'
+        xpath = f'//input[@id="{el_id}"][contains(@aria-label, "Enable")]'
         return By.XPATH, xpath
 
     @staticmethod
     def disabled_job_locator(async_job):
         el_id = JobsPage.job_toggle_id(async_job)
-        xpath = f'//input[@id="{el_id}"][contains(@aria-label, "is disabled")]/following-sibling::div'
+        xpath = f'//input[@id="{el_id}"][contains(@aria-label, "Disable")]'
         return By.XPATH, xpath
 
     def disable_job(self, async_job):
@@ -180,8 +188,9 @@ class JobsPage(DiabloPages):
 
     def disable_all_jobs(self):
         self.click_jobs_link()
+        self.run_house_keeping_job()
         for job in AsyncJob:
-            app.logger.info(f'Not disabling {job}')
+            self.disable_job(job)
 
     def search_job_history(self, async_job):
         app.logger.info(f'Searching for {async_job.value}')
@@ -204,9 +213,6 @@ class JobsPage(DiabloPages):
                 app.logger.info('Waiting for success')
                 self.when_present(success, util.get_short_timeout())
                 app.logger.info('Job succeeded')
-                # For some reason, this job occasionally reports success before it's actually done, so wait a bit longer
-                if async_job == AsyncJob.SCHEDULE_UPDATES:
-                    time.sleep(10)
                 break
             except TimeoutException:
                 if self.is_present(failure):

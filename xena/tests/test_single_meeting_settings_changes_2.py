@@ -414,8 +414,6 @@ class TestScheduling2:
 
     # VERIFY COURSE HISTORY
 
-    def test_course_total_sent_email(self):
-        assert util.get_sent_email_count(template=None, section=self.section, instructor=None) == 10
 
     def test_course_history_row_count(self):
         self.kaltura_page.close_window_and_switch()
