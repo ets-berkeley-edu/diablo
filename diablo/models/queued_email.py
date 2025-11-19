@@ -86,7 +86,7 @@ class QueuedEmail(db.Model):
         if not course['instructors'] and template_type != 'instructors_removed':
             app.logger.error(f'Attempt to queue email for course without instructors (term_id={term_id}, section_id={section_id})')
             return None
-        if UserPreference.get_do_not_email(recipient['uid']):
+        if UserPreference.get_do_not_email(recipient['uid']) and template_type not in ('semester_start', 'new_class_eligible'):
            app.logger.info(f"Recipient {recipient['uid']} has requested no email, will not queue {template_type} message")
            return None
         queued_email = cls(
