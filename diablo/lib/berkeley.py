@@ -76,11 +76,13 @@ def get_recording_end_date(meeting):
 
 
 def get_recording_start_date(meeting, return_today_if_past_start=False):
-    term_begin = datetime.strptime(app.config['CURRENT_TERM_RECORDINGS_BEGIN'], '%Y-%m-%d')
-    actual_start_date = meeting['startDate']
-    actual_start = datetime.strptime(actual_start_date.split()[0], '%Y-%m-%d') if actual_start_date else None
+    term_begin = datetime.strptime(app.config['CURRENT_TERM_RECORDINGS_BEGIN'], '%Y-%m-%d').astimezone(default_timezone())
+    if meeting['startDate']:
+        actual_start = datetime.strptime(meeting['startDate'].split()[0], '%Y-%m-%d').astimezone(default_timezone())
+    else:
+        actual_start = None
     start_date = (actual_start if actual_start > term_begin else term_begin) if actual_start else None
-    today = datetime.today()
+    today = datetime.now(default_timezone())
     start_date = today if (start_date and start_date < today and return_today_if_past_start) else start_date
     # Determine first course meeting AFTER start_date.
     first_recording = None
