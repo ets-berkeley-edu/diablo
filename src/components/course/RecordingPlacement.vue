@@ -230,9 +230,11 @@ const isFindingCanvasSite = ref(false)
 const isSaving = ref(false)
 const pendingCanvasSite = ref()
 const pendingCanvasSiteId = ref<number | undefined>()
-const publishCanvasSites = ref<CanvasSite[]>(course.value.canvasSites)
 const publishType = ref<string>()
 const publishTypeOptions = Object.keys(config.publishTypeOptions).sort().reverse()
+
+const cloneCourseCanvasSites = () => course.value.canvasSites ? [...course.value.canvasSites] : []
+const publishCanvasSites = ref<CanvasSite[]>(cloneCourseCanvasSites())
 
 watch(publishType, () => {
   error.value = undefined
@@ -240,6 +242,9 @@ watch(publishType, () => {
 
 onMounted(() => {
   publishType.value = course.value.publishType
+  publishCanvasSites.value = cloneCourseCanvasSites()
+    ? [...course.value.canvasSites]
+    : []
   if (!currentUser.isAdmin && currentUser.uid) {
     getCanvasSitesTeaching(currentUser.uid).then(data => {
       each(data, canvasSite => {
@@ -295,7 +300,7 @@ const addCanvasSiteConfirm = () => {
 const cancel = () => {
   error.value = undefined
   publishType.value = course.value.publishType
-  publishCanvasSites.value = course.value.canvasSites
+  publishCanvasSites.value = cloneCourseCanvasSites()
   isEditing.value = false
   courseStore.setDisableButtons(false)
   putFocusNextTick('btn-publish-type-edit')
@@ -345,7 +350,8 @@ const update = () => {
     }
     updatePublishType(canvasSiteIds, publishType.value, course.value.sectionId, course.value.termId).then((data: Course) => {
       courseStore.setCourse(data)
-      publishType.value = course.value.publishType
+      publishType.value = data.publishType
+      publishCanvasSites.value = data.canvasSites ? [...data.canvasSites] : []
       isEditing.value = false
       isSaving.value = false
       courseStore.setDisableButtons(false)
