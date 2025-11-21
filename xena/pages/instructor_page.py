@@ -24,7 +24,6 @@ ENHANCEMENTS, OR MODIFICATIONS.
 """
 
 from flask import current_app as app
-from selenium.webdriver.common.by import By
 
 from xena.pages.courses_page import CoursesPage
 from xena.test_utils import util
@@ -39,58 +38,3 @@ class InstructorPage(CoursesPage):
         app.logger.info(f'Loading instructor page for UID {instructor.uid}')
         self.hit_admin_url(instructor)
         self.when_present(self.EDIT_NOTE_BUTTON, util.get_short_timeout())
-
-    OPT_OUT_ALL_BUTTON = By.ID, 'toggle-opt-in-all-terms'
-    OPT_OUT_CURRENT_BUTTON = By.ID, 'toggle-opt-in-current-term'
-
-    @staticmethod
-    def opt_out_section_button_loc(section):
-        return By.ID, f'toggle-opt-in-{section.ccn}'
-
-    def enable_opt_out_all_terms(self):
-        app.logger.info('Opting out of all terms')
-        self.when_present(self.OPT_OUT_ALL_BUTTON, util.get_short_timeout())
-        if not self.element(self.OPT_OUT_ALL_BUTTON).get_dom_attribute('checked'):
-            self.click_element_js(self.OPT_OUT_ALL_BUTTON)
-        else:
-            app.logger.info('Already opted out of all terms')
-
-    def disable_opt_out_all_terms(self):
-        app.logger.info('Unchecking opt-out-all-terms')
-        self.when_present(self.OPT_OUT_ALL_BUTTON, util.get_short_timeout())
-        if self.element(self.OPT_OUT_ALL_BUTTON).get_dom_attribute('checked'):
-            self.click_element_js(self.OPT_OUT_ALL_BUTTON)
-        else:
-            app.logger.info('Already disabled')
-
-    def enable_opt_out_current_term(self):
-        app.logger.info('Opting out of current term')
-        self.when_present(self.OPT_OUT_CURRENT_BUTTON, util.get_short_timeout())
-        if not self.element(self.OPT_OUT_CURRENT_BUTTON).get_dom_attribute('checked'):
-            self.click_element_js(self.OPT_OUT_CURRENT_BUTTON)
-        else:
-            app.logger.info('Already opted out of current term')
-
-    def disable_opt_out_current_term(self):
-        app.logger.info('Unchecking opt-out-current-term')
-        self.when_present(self.OPT_OUT_CURRENT_BUTTON, util.get_short_timeout())
-        if self.element(self.OPT_OUT_CURRENT_BUTTON).get_dom_attribute('checked'):
-            self.click_element_js(self.OPT_OUT_CURRENT_BUTTON)
-        else:
-            app.logger.info('Already disabled')
-
-    def enable_opt_out_section(self, section):
-        app.logger.info(f'Opting out of section ID {section.ccn}')
-        self.when_present(self.opt_out_section_button_loc(section), util.get_short_timeout())
-        if not self.element(self.opt_out_section_button_loc(section)).get_dom_attribute('checked'):
-            self.click_element_js(self.opt_out_section_button_loc(section))
-        else:
-            app.logger.info(f'Already opted out of section {section.ccn}')
-
-    def disable_opt_out_section(self, section):
-        app.logger.info(f'Unchecking opt-out-{section.ccn}')
-        self.when_present(self.opt_out_section_button_loc(section), util.get_short_timeout())
-        if self.element(self.opt_out_section_button_loc(section)).get_dom_attribute('checked'):
-            self.click_element_js(self.opt_out_section_button_loc(section))
-        else:
-            app.logger.info('Already disabled')
