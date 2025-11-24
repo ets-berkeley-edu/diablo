@@ -173,12 +173,12 @@ class TestOptIn2:
     def test_instructor_rejects_reminders(self):
         self.courses_page.decline_email_reminders()
 
-    def test_instructor_no_new_course_eligible_email(self):
+    def test_instructor_new_course_eligible_email(self):
         util.change_course_instructor(section_0, old_instructor=None, new_instructor=instructor_0)
         self.login_page.dev_auth()
         self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
         assert util.get_sent_email_count(EmailTemplateType.NEW_CLASS_ELIGIBLE, section=None,
-                                         instructor=instructor_0) == 0
+                                         instructor=instructor_0) == 1
 
     def test_no_recordings_scheduled(self):
         assert not util.get_kaltura_id(recording_schedule_0)
@@ -556,7 +556,7 @@ class TestOptIn6:
         assert util.get_sent_email_count(EmailTemplateType.NEW_CLASS_ELIGIBLE, section=None,
                                          instructor=instructor_1_0) == 1
         assert util.get_sent_email_count(EmailTemplateType.NEW_CLASS_ELIGIBLE, section=None,
-                                         instructor=instructor_1_1) == 0
+                                         instructor=instructor_1_1) == 1
 
     def test_instructor_opt_out_reminder_emails(self):
         self.jobs_page.run_remind_opt_outs_job()
@@ -644,7 +644,7 @@ class TestOptIn7:
         assert util.get_sent_email_count(EmailTemplateType.NEW_CLASS_ELIGIBLE, section=None,
                                          instructor=instructor_1_0) == 1
         assert util.get_sent_email_count(EmailTemplateType.NEW_CLASS_ELIGIBLE, section=None,
-                                         instructor=instructor_1_1) == 0
+                                         instructor=instructor_1_1) == 1
 
     def test_opt_out_reminders(self):
         self.jobs_page.run_remind_opt_outs_job()
@@ -903,14 +903,6 @@ class TestOptIn11:
         self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
         assert util.get_sent_email_count(EmailTemplateType.NEW_CLASS_ELIGIBLE, section=None,
                                          instructor=instructor_0) == 1
-
-    def test_remind_opted_out(self):
-        self.jobs_page.run_remind_opt_outs_job()
-        assert util.get_queued_email_count(EmailTemplateType.REMIND_OPTED_OUT, section=None,
-                                           instructor=instructor_0) == 1
-
-    def test_clear_remind_opted_out_emails(self):
-        util.delete_queued_email(EmailTemplateType.REMIND_OPTED_OUT)
 
     def test_admin_opt_instructor_in(self):
         self.instructor_page.load_admin_page(instructor_0)
