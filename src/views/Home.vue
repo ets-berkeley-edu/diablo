@@ -59,7 +59,7 @@
                   />
                 </template>
                 <template #default>
-                  <h2 class="expand-ineligible-courses-label font-size-18 text-medium-emphasis">
+                  <h2 id="expand-ineligible-courses-label" class="expand-ineligible-courses-label font-size-18 text-medium-emphasis">
                     Courses not in a course capture classroom
                   </h2>
                 </template>

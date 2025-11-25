@@ -1,6 +1,10 @@
 <template>
   <div aria-describedby="courses-data-table-message" aria-label="Courses table" role="region">
-    <v-row id="courses-data-table-message" class="text-medium-emphasis pb-1 px-4 mb-1">
+    <v-row
+      v-if="messageForCourses || description"
+      id="courses-data-table-message"
+      class="text-medium-emphasis pb-1 px-4 mb-1"
+    >
       <span class="ml-4">{{ messageForCourses }}</span>
       <v-spacer />
       <v-col class="text-right" cols="12" md="6"><span v-if="!refreshing && !searchText">{{ description }}</span></v-col>

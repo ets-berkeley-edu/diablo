@@ -1,6 +1,6 @@
 <template>
   <div v-if="!loading">
-    <v-card class="border-sm pr-md-12 pl-md-6 py-2">
+    <v-card class="border-sm pl-md-6 pr-md-12 py-4">
       <v-card-title class="py-0">
         <PageTitle
           :icon="mdiSchoolOutline"
@@ -11,7 +11,7 @@
         <a class="ms-lg-13" :href="`mailto:${user.email}`" target="_blank">{{ user.email }}</a>
       </v-card-subtitle>
       <v-card-text>
-        <div v-if="eligibleCourses.length" id="user-courses-eligible" class="border-sm pt-6 px-6 rounded">
+        <div v-if="eligibleCourses.length" id="user-courses-eligible" class="border-sm pb-5 pt-4 px-6 rounded">
           <CoursesDataTable
             :courses="eligibleCourses"
             :include-opt-in-column-for-uid="[user.uid]"
@@ -24,45 +24,45 @@
         <div
           v-if="!isRefreshingCourses && ineligibleCourses.length"
           id="user-courses-ineligible"
-          class="mb-2 mt-6"
+          class="border-sm mb-2 mt-8 py-3 rounded"
           role="region"
           aria-labelledby="user-ineligible-header"
         >
-          <v-expansion-panels class="border-sm rounded" flat rounded>
-            <v-expansion-panel>
-              <v-expansion-panel-title
-                id="ineligible-courses-show-hide-btn"
-                class="bg-primary"
-                focusable
-                hide-actions
+          <div class="align-center d-flex ml-3">
+            <div class="mr-4">
+              <v-btn
+                id="expand-ineligible-courses"
+                aria-labelledby="expand-ineligible-courses-label"
+                size="large"
+                variant="text"
+                @click="onClickShowIneligibleCourses"
               >
-                <template #default="{expanded}">
-                  <div class="align-center d-flex">
-                    <div class="mr-2">
-                      <v-icon
-                        color="white"
-                        :icon="expanded ? mdiMenuDown : mdiMenuRight"
-                        size="x-large"
-                      />
-                    </div>
-                    <div class="font-size-18">Courses not in a course capture classroom</div>
-                  </div>
-                </template>
-              </v-expansion-panel-title>
-              <v-expansion-panel-text>
-                <template #default>
-                  <CoursesDataTable
-                    id="user-ineligible-table"
-                    :courses="ineligibleCourses"
-                    :include-room-column="true"
-                    :message-for-courses="summarize(ineligibleCourses)"
-                    :refreshing="false"
-                    :show-opt-in="false"
+                <template #prepend>
+                  <v-icon
+                    color="primary"
+                    :icon="isShowingIneligibleCourses ? mdiMenuDown : mdiMenuRight"
+                    size="x-large"
                   />
                 </template>
-              </v-expansion-panel-text>
-            </v-expansion-panel>
-          </v-expansion-panels>
+                <template #default>
+                  <h2 id="expand-ineligible-courses-label" class="expand-ineligible-courses-label font-size-18 text-medium-emphasis">
+                    Courses not in a course capture classroom
+                  </h2>
+                </template>
+              </v-btn>
+            </div>
+          </div>
+          <v-expand-transition class="px-7">
+            <CoursesDataTable
+              v-if="isShowingIneligibleCourses"
+              id="user-ineligible-table"
+              :courses="ineligibleCourses"
+              :include-room-column="true"
+              :message-for-courses="summarize(ineligibleCourses)"
+              :refreshing="false"
+              :show-opt-in="false"
+            />
+          </v-expand-transition>
         </div>
       </v-card-text>
     </v-card>
@@ -161,6 +161,7 @@ const ineligibleCourses = ref([])
 const isEditingNote = ref(false)
 const isRefreshingCourses = ref(false)
 const isSavingNote = ref(false)
+const isShowingIneligibleCourses = ref(false)
 const noteBody = ref('')
 const uid = toString(route.params.uid)
 const user = ref({})
@@ -200,6 +201,11 @@ const deleteNote = () => {
 const editNote = () => {
   isEditingNote.value = true
   putFocusNextTick('note-body-edit')
+}
+
+const onClickShowIneligibleCourses = () => {
+  isShowingIneligibleCourses.value = !isShowingIneligibleCourses.value
+  alertScreenReader(`Ineligible courses are now ${isShowingIneligibleCourses.value ? 'showing' : 'hidden'}.`)
 }
 
 const refreshUser = () => {
@@ -256,3 +262,10 @@ const summarize = courses => {
   return message
 }
 </script>
+
+<style scoped>
+.expand-ineligible-courses-label {
+  letter-spacing: 0.25px;
+  text-transform: none;
+}
+</style>
