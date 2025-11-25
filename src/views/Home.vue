@@ -7,16 +7,16 @@
       <v-card-subtitle class="pt-0 text-wrap">
         <div
           aria-label="Course Capture opt-in change notice"
-          class="font-weight-bold mb-4 opt-in-banner text-black"
+          class="font-weight-bold mb-4 opt-in-banner"
           role="note"
         >
           <span>Course Capture has changed for 2026.</span>
           You must opt in for your courses to be recorded. For more information, visit our
           <a
-            :href="get(config, 'instructorGettingStartedUrl', 'https://rtl.berkeley.edu/services-programs/course-capture/instructor-getting-started')"
-            target="_blank"
-            rel="noopener"
             class="opt-in-banner-link"
+            :href="get(config, 'instructorGettingStartedUrl', 'https://rtl.berkeley.edu/services-programs/course-capture/instructor-getting-started')"
+            rel="noopener"
+            target="_blank"
           >
             Instructor Getting Started Guide<span class="sr-only">&nbsp;(opens in new tab)</span>
           </a>.
@@ -142,7 +142,8 @@ const onUpdateUser = () => {
   line-height: 1.4;
 }
 .opt-in-banner-link {
-  text-decoration: underline;
+  color: revert !important;
+  text-decoration: underline !important;
   text-underline-offset: 2px;
 }
 </style>
