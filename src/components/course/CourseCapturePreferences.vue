@@ -35,16 +35,19 @@
       <h3 id="email-settings-header" class="font-size-18 mt-6 text-medium-emphasis w-100">
         Email settings
       </h3>
-      <div class="px-md-4 w-100">
+      <div class="align-center d-flex px-md-4 w-100">
         <v-checkbox
           id="email-checkbox"
           v-model="emailReceive"
-          aria-labelledby="email-settings-header"
+          :aria-label="null"
           color="primary"
           :disabled="isEmailDisabled"
-          label="I want to receive emails from Course Capture (required if opted-in to current or future courses)"
+          hide-details
           @update:model-value="onEmailReceiveChange"
         />
+        <label class="font-size-16" for="email-checkbox">
+          I want to receive emails from Course Capture (required if opted-in to current or future courses)
+        </label>
       </div>
     </section>
   </div>
