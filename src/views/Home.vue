@@ -5,8 +5,12 @@
         <PageTitle :icon="mdiVideoPlus" :text="pageTitle" />
       </v-card-title>
       <v-card-subtitle class="pt-0 text-wrap">
-        <div class="opt-in-banner mb-4" role="note" aria-label="Course Capture opt-in change notice">
-          <span class="font-weight-bold">Course Capture has changed for 2026.</span>
+        <div
+          aria-label="Course Capture opt-in change notice"
+          class="font-weight-bold mb-4 opt-in-banner text-black"
+          role="note"
+        >
+          <span>Course Capture has changed for 2026.</span>
           You must opt in for your courses to be recorded. For more information, visit our
           <a
             :href="get(config, 'instructorGettingStartedUrl', 'https://rtl.berkeley.edu/services-programs/course-capture/instructor-getting-started')"
@@ -19,10 +23,17 @@
         </div>
       </v-card-subtitle>
       <v-card-text class="pt-0">
-        <div aria-labelledby="courses-table-eligible-header" class="border-sm pt-6 px-6 rounded" role="region">
+        <div
+          aria-labelledby="courses-table-eligible-header"
+          class="border-md mt-3 px-6 py-5 rounded"
+          role="region"
+        >
           <h2 id="courses-table-eligible-header" class="text-medium-emphasis w-100">
             Courses eligible for capture
           </h2>
+          <div class="my-1">
+            Click {{ eligibleCourses.length > 1 ? 'on each' : 'the' }} course link below to opt in and change course settings.
+          </div>
           <div v-if="!eligibleCourses.length" class="pa-4">No courses.</div>
           <HomeCoursesTable
             v-if="eligibleCourses.length"
@@ -30,35 +41,36 @@
             courses-type="eligible"
           />
         </div>
-        <div v-if="ineligibleCourses.length" class="mb-2 mt-6" role="region">
-          <v-expansion-panels class="border-sm rounded" flat rounded>
-            <v-expansion-panel>
-              <v-expansion-panel-title
-                id="ineligible-courses-show-hide-btn"
-                class="bg-primary"
-                focusable
-                hide-actions
+        <div v-if="ineligibleCourses.length" class="border-md mb-2 mt-8 py-3 rounded" role="region">
+          <div class="align-center d-flex ml-3">
+            <div class="mr-4">
+              <v-btn
+                id="expand-ineligible-courses"
+                aria-labelledby="expand-ineligible-courses-label"
+                size="large"
+                variant="text"
+                @click="onClickShowIneligibleCourses"
               >
-                <template #default="{expanded}">
-                  <div class="align-center d-flex">
-                    <div class="mr-2">
-                      <v-icon
-                        color="white"
-                        :icon="expanded ? mdiMenuDown : mdiMenuRight"
-                        size="x-large"
-                      />
-                    </div>
-                    <div class="font-size-18">Courses not in a course capture classroom</div>
-                  </div>
+                <template #prepend>
+                  <v-icon
+                    color="primary"
+                    :icon="isShowingIneligibleCourses ? mdiMenuDown : mdiMenuRight"
+                    size="x-large"
+                  />
                 </template>
-              </v-expansion-panel-title>
-              <v-expansion-panel-text>
                 <template #default>
-                  <HomeCoursesTable :courses="ineligibleCourses" courses-type="ineligible" />
+                  <h2 class="expand-ineligible-courses-label font-size-18 text-medium-emphasis">
+                    Courses not in a course capture classroom
+                  </h2>
                 </template>
-              </v-expansion-panel-text>
-            </v-expansion-panel>
-          </v-expansion-panels>
+              </v-btn>
+            </div>
+          </div>
+          <v-expand-transition class="px-7">
+            <div v-if="isShowingIneligibleCourses">
+              <HomeCoursesTable :courses="ineligibleCourses" courses-type="ineligible" />
+            </div>
+          </v-expand-transition>
         </div>
       </v-card-text>
     </v-card>
@@ -85,9 +97,9 @@ import CourseCapturePreferences from '@/components/course/CourseCapturePreferenc
 import HomeCoursesTable from '@/components/util/HomeCoursesTable.vue'
 import PageTitle from '@/components/util/PageTitle.vue'
 import type {Course} from '@/lib/types'
+import {alertScreenReader, partitionCoursesByEligibility, pluralize} from '@/lib/utils'
 import {getCourseCodes, getCourseStatusLabel, getDisplayMeetings, isCourseScheduled} from '@/lib/berkeley'
 import {getCurrentUser} from '@/api/user'
-import {partitionCoursesByEligibility, pluralize} from '@/lib/utils'
 import {useContextStore} from '@/stores/context'
 
 const contextStore = useContextStore()
@@ -95,6 +107,7 @@ const config = contextStore.config
 const currentUser = contextStore.currentUser
 const eligibleCourses = ref<Course[]>([])
 const ineligibleCourses = ref<Course[]>([])
+const isShowingIneligibleCourses = ref(false)
 const pageTitle = ref('')
 
 contextStore.loadingStart()
@@ -110,17 +123,22 @@ onMounted(() => {
   contextStore.loadingComplete(pageTitle.value)
 })
 
+const onClickShowIneligibleCourses = () => {
+  isShowingIneligibleCourses.value = !isShowingIneligibleCourses.value
+  alertScreenReader(`Ineligible courses are now ${isShowingIneligibleCourses.value ? 'showing' : 'hidden'}.`)
+}
+
 const onUpdateUser = () => {
   getCurrentUser().then(contextStore.setCurrentUser)
 }
 </script>
 
 <style>
+.expand-ineligible-courses-label {
+  letter-spacing: 0.25px;
+  text-transform: none;
+}
 .opt-in-banner {
-  background-color: rgb(var(--v-theme-surface));
-  border: 1px solid #b3dcff;
-  border-radius: 8px;
-  padding: 12px 16px;
   line-height: 1.4;
 }
 .opt-in-banner-link {
