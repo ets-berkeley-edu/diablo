@@ -37,7 +37,7 @@ from diablo.lib.berkeley import (
     get_recording_start_date,
     term_name_for_sis_id,
 )
-from diablo.lib.util import format_days, local_now
+from diablo.lib.util import default_timezone, format_days, local_now
 from diablo.models.sis_section import SisSection
 from tests.test_api.api_test_utils import mock_scheduled
 from tests.util import override_config, test_scheduling_workflow
@@ -104,7 +104,7 @@ class TestRecordingDates:
 
     def test_start_date_is_in_the_past(self):
         df = '%Y-%m-%d'
-        today = datetime.today()
+        today = datetime.now(default_timezone())
         recordings_begin_date = today - timedelta(days=7)
         first_meeting = today - timedelta(days=3)
         with override_config(app, 'CURRENT_TERM_RECORDINGS_BEGIN', datetime.strftime(recordings_begin_date, df)):
