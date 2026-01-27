@@ -157,12 +157,15 @@ def update_collaborator_uids():
         section_id=section_id,
         collaborator_uids=uids,
     )
-    if preferences and uids != sorted(course.get('collaboratorUids') or []):
+
+    current_collaborator_uids = sorted(course.get('collaboratorUids') or [])
+
+    if preferences and uids != current_collaborator_uids:
         ScheduleUpdate.queue(
             term_id=course['termId'],
             section_id=course['sectionId'],
             field_name='collaborator_uids',
-            field_value_old=course.get('collaboratorUids'),
+            field_value_old=current_collaborator_uids,
             field_value_new=uids,
             requested_by_uid=current_user.uid,
             requested_by_name=current_user.name,
