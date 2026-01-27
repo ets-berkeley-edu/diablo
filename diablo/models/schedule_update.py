@@ -103,6 +103,9 @@ class ScheduleUpdate(db.Model):
         requested_by_uid=None,
         requested_by_name=None,
     ):
+        if field_name == 'collaborator_uids' and not (type(field_value_old) is list and type(field_value_new) is list):
+            raise TypeError('Collaborator UID updates require list values.')
+
         schedule_update = cls(
             term_id=term_id,
             section_id=section_id,
