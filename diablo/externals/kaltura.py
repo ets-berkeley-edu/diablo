@@ -29,7 +29,7 @@ from datetime import date, datetime, time, timedelta
 import dateutil.parser
 from flask import current_app as app
 from KalturaClient import KalturaClient, KalturaConfiguration
-from KalturaClient.exceptions import KalturaClientException
+from KalturaClient.exceptions import KalturaClientException, KalturaException
 from KalturaClient.Plugins.Core import (
     KalturaBaseEntry,
     KalturaBaseEntryFilter,
@@ -43,9 +43,14 @@ from KalturaClient.Plugins.Core import (
     KalturaEntryStatus,
     KalturaEntryType,
     KalturaFilterPager,
+    KalturaGroupUser,
+    KalturaGroupUserCreationMode,
+    KalturaGroupUserFilter,
+    KalturaGroupUserRole,
     KalturaMediaEntryFilter,
     KalturaNullableBoolean,
 )
+from KalturaClient.Plugins.Group import KalturaGroup
 from KalturaClient.Plugins.Schedule import (
     KalturaRecordScheduleEvent,
     KalturaRecordScheduleEventFilter,
@@ -241,6 +246,7 @@ class Kaltura:
             room,
             tag,
             term_id,
+            kaltura_group_id=None,
     ):
         category_ids = []
         common_category = self.get_category_object(name=app.config['KALTURA_COMMON_CATEGORY'])
@@ -258,6 +264,7 @@ class Kaltura:
             category_ids=category_ids,
             course_label=course_label,
             instructors=instructors,
+            kaltura_group_id=kaltura_group_id,
             meeting=meeting,
             publish_type=publish_type,
             recording_type=recording_type,
@@ -296,6 +303,60 @@ class Kaltura:
             else:
                 # This is not a series event. Delete it, whatever it is.
                 self.client.schedule.scheduleEvent.delete(event_id)
+
+    @skip_when_pytest()
+    def add_group(self, group_id, name):
+        group = KalturaGroup(id=group_id, screenName=name)
+        result = self.client.group.group.add(group)
+        return _group_to_json(result)
+
+    @skip_when_pytest()
+    def get_group(self, group_id):
+        try:
+            result = self.client.group.group.get(group_id)
+            return _group_to_json(result) if result else None
+        except KalturaException as e:
+            if e.code == 'INVALID_GROUP_ID':
+                return None
+            raise
+
+    @skip_when_pytest()
+    def add_group_members(self, group_id, user_ids):
+        for user_id in user_ids:
+            group_user = KalturaGroupUser(
+                groupId=group_id,
+                userId=user_id,
+                creationMode=KalturaGroupUserCreationMode(KalturaGroupUserCreationMode.MANUAL),
+                userRole=KalturaGroupUserRole(KalturaGroupUserRole.MEMBER),
+            )
+            self.client.groupUser.add(group_user)
+
+    @skip_when_pytest()
+    def get_or_create_group(self, group_id, name, member_ids=None):
+        existing = self.get_group(group_id)
+        if not existing:
+            self.add_group(group_id=group_id, name=name)
+        if member_ids:
+            self.sync_group_members(group_id=group_id, new_member_ids=member_ids)
+
+    @skip_when_pytest()
+    def sync_group_members(self, group_id, new_member_ids):
+        filter_ = KalturaGroupUserFilter()
+        filter_.groupIdEqual = group_id
+        pager = KalturaFilterPager()
+        pager.pageSize = 500
+        result = self.client.groupUser.list(filter_, pager)
+        current_ids = {gu.userId for gu in (result.objects or [])}
+        new_ids = set(new_member_ids)
+        for uid in current_ids - new_ids:
+            self.client.groupUser.delete(uid, group_id)
+        for uid in new_ids - current_ids:
+            self.client.groupUser.add(KalturaGroupUser(
+                groupId=group_id,
+                userId=uid,
+                creationMode=KalturaGroupUserCreationMode(KalturaGroupUserCreationMode.MANUAL),
+                userRole=KalturaGroupUserRole(KalturaGroupUserRole.MEMBER),
+            ))
 
     def ping(self):
         filter_ = KalturaMediaEntryFilter()
@@ -402,6 +463,7 @@ class Kaltura:
             room,
             tag,
             term_id,
+            kaltura_group_id=None,
     ):
 
         term_name = term_name_for_sis_id(term_id)
@@ -428,7 +490,7 @@ class Kaltura:
             comment=f'{summary} in {room.location}',
             contact=','.join(instructor['uid'] for instructor in instructors),
             description=description,
-            organizer=app.config['KALTURA_EVENT_ORGANIZER'],
+            organizer=kaltura_group_id or app.config['KALTURA_EVENT_ORGANIZER'],
             ownerId=app.config['KALTURA_KMS_OWNER_ID'],
             partnerId=app.config['KALTURA_PARTNER_ID'],
             recurrenceType=KalturaScheduleEventRecurrenceType.RECURRING,
@@ -555,6 +617,14 @@ def _adjust_time(military_time, offset_minutes):
         time(hour, minutes),
         tzinfo=default_timezone(),
     ) + timedelta(minutes=offset_minutes)
+
+
+def _group_to_json(group):
+    return {
+        'id': group.id,
+        'membersCount': group.membersCount,
+        'name': group.screenName,
+    }
 
 
 def _category_entry_object_to_json(obj):

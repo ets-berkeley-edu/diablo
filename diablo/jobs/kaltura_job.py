@@ -263,6 +263,15 @@ def _handle_scheduled_course_updates(  # noqa: C901, PLR0912
                     kaltura, course, scheduled, scheduled_model, schedule_updates, kaltura_schedule, updated_collaborator_uids,
                 )
 
+            if updated_instructor_uids is not None:
+                kaltura_group_id = f"{scheduled['termId']}_{scheduled['sectionId']}"
+                try:
+                    kaltura.sync_group_members(group_id=kaltura_group_id, new_member_ids=updated_instructor_uids)
+                except Exception as e:
+                    app.logger.warning(
+                        f"Failed to sync Kaltura group members for {course['label']} (group {kaltura_group_id}): {e}",
+                    )
+
             if updated_recording_type:
                 scheduled_model.update(recording_type=updated_recording_type)
 
