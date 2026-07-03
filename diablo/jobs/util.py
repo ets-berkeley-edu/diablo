@@ -166,7 +166,7 @@ def refresh_rooms():
     kaltura_resource_ids_per_room = {}
     all_rooms = Room.all_rooms()
     for resource in Kaltura().get_schedule_resources():
-        location = _normalize(resource['name'])
+        location = _normalize(resource['systemName'])
         if location:
             for room in all_rooms:
                 if _normalize(room.location) == location:

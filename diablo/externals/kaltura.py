@@ -200,7 +200,7 @@ class Kaltura:
                 filter=KalturaScheduleResourceFilter(),
                 pager=KalturaFilterPager(pageIndex=page_index, pageSize=DEFAULT_KALTURA_PAGE_SIZE),
             )
-        return [{'id': o.id, 'name': o.name} for o in _get_kaltura_objects(_fetch)]
+        return [{'id': o.id, 'name': o.name, 'systemName': o.systemName} for o in _get_kaltura_objects(_fetch)]
 
     @skip_when_pytest()
     def get_or_create_canvas_category_object(self, canvas_course_site_id, moderation=False):
