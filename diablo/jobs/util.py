@@ -372,6 +372,16 @@ def remove_blackout_events(kaltura_schedule_id=None):
 
 
 
+def _get_or_create_kaltura_group(course, kaltura, instructor_uids, section_id, term_id):
+    group_id = f'{term_id}_{section_id}'
+    try:
+        kaltura.get_or_create_group(group_id=group_id, name=course['label'], member_ids=instructor_uids)
+        return group_id
+    except Exception as e:
+        app.logger.warning(f"Failed to get or create Kaltura group {group_id}: {e}")
+        return None
+
+
 def schedule_recordings(course, remove_blackout_conflicts=False, updates=None):
     def _report_error(subject):
         message = f'{subject}\n\n<pre>{course}</pre>'
@@ -419,11 +429,24 @@ def schedule_recordings(course, remove_blackout_conflicts=False, updates=None):
 
         term_id = course['termId']
         section_id = int(course['sectionId'])
+
         try:
-            kaltura_schedule_id = Kaltura().schedule_recording(
+            kaltura = Kaltura()
+
+            instructor_uids = [i['uid'] for i in instructors]
+            kaltura_group_id = _get_or_create_kaltura_group(
+                course=course,
+                kaltura=kaltura,
+                instructor_uids=instructor_uids,
+                section_id=section_id,
+                term_id=term_id,
+            )
+
+            kaltura_schedule_id = kaltura.schedule_recording(
                 canvas_course_site_ids=course['canvasSiteIds'],
                 course_label=course['label'],
                 instructors=(instructors + collaborators),
+                kaltura_group_id=kaltura_group_id,
                 meeting=meeting,
                 publish_type=publish_type,
                 recording_type=recording_type,
