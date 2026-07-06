@@ -81,8 +81,8 @@ def _schedule_new_courses(term_id):
     if len(courses_to_schedule):
         app.logger.info(f'Will schedule {len(courses_to_schedule)} newly opted-in courses.')
         for course in courses_to_schedule:
-            schedule_recordings(course, remove_blackout_conflicts=True)
-            QueuedEmail.notify_instructors_class_scheduled(course)
+            if schedule_recordings(course, remove_blackout_conflicts=True):
+                QueuedEmail.notify_instructors_class_scheduled(course)
 
 
 def _update_already_scheduled_events(term_id):  # noqa: C901, PLR0912, PLR0915
