@@ -29,7 +29,6 @@ from diablo.lib.util import to_isoformat
 from diablo.models.base import Base
 
 email_template_type = ENUM(
-    'admin_operator_requested',
     'changes_confirmed',
     'class_scheduled',
     'instructors_removed',
@@ -116,7 +115,6 @@ class EmailTemplate(Base):
     @classmethod
     def get_template_type_options(cls):
         return {
-            'admin_operator_requested': 'Admin alert: operator requested',
             'changes_confirmed': 'Changes confirmed',
             'class_scheduled': 'Class scheduled',
             'instructors_removed': 'Instructor(s) removed from class',

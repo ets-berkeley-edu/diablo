@@ -94,8 +94,3 @@ export function updatePublishType(canvasSiteIds: string[], publishType: string, 
   const url = `${getApiBaseUrl()}/api/course/publish_type/update`
   return axios.post(url, {canvasSiteIds, publishType, sectionId, termId}).then(response => response.data)
 }
-
-export function updateRecordingType(recordingType: string, sectionId: number, termId: number) {
-  const url = `${getApiBaseUrl()}/api/course/recording_type/update`
-  return axios.post(url, {recordingType, sectionId, termId}).then(response => response.data)
-}

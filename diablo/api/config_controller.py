@@ -40,7 +40,6 @@ from diablo.models.room import Room
 
 PUBLIC_CONFIGS = [
     'CANVAS_BASE_URL',
-    'COURSE_CAPTURE_PREMIUM_COST',
     'CURRENT_TERM_BEGIN',
     'CURRENT_TERM_END',
     'CURRENT_TERM_ID',

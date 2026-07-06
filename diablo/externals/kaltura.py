@@ -242,7 +242,6 @@ class Kaltura:
             instructors,
             meeting,
             publish_type,
-            recording_type,
             room,
             tag,
             term_id,
@@ -267,7 +266,6 @@ class Kaltura:
             kaltura_group_id=kaltura_group_id,
             meeting=meeting,
             publish_type=publish_type,
-            recording_type=recording_type,
             room=room,
             term_id=term_id,
             tag=tag,
@@ -459,7 +457,6 @@ class Kaltura:
             instructors,
             meeting,
             publish_type,
-            recording_type,
             room,
             tag,
             term_id,
@@ -504,7 +501,7 @@ class Kaltura:
             Prepare to schedule recordings for {course_label}:
                 Room: {room.location}
                 Instructor UIDs: {[instructor['uid'] for instructor in instructors]}
-                Recording: {recording_type}; {publish_type}
+                Recording: {publish_type}
         """)
 
         self._set_event_meeting_attributes(recurring_event, meeting, room.to_api_json())

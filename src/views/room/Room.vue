@@ -30,15 +30,6 @@
                 :room="room"
               />
             </v-col>
-            <v-col class="d-flex justify-end pr-4" cols="12" sm="5">
-              <v-switch
-                v-model="isAuditorium"
-                :aria-describedby="undefined"
-                color="primary"
-                hide-details
-                label="Auditorium"
-              />
-            </v-col>
           </v-row>
           <v-row v-if="offerPrintable">
             <v-col>
@@ -85,7 +76,7 @@
 <script setup>
 import {each, find, get} from 'lodash'
 import {mdiHomeCityOutline, mdiPrinter} from '@mdi/js'
-import {onMounted, ref, watch} from 'vue'
+import {onMounted, ref} from 'vue'
 import {useGoTo} from 'vuetify'
 import {useRoute} from 'vue-router'
 import CoursesDataTable from '@/components/course/CoursesDataTable'
@@ -94,11 +85,10 @@ import PageTitle from '@/components/util/PageTitle'
 import SelectRoomCapability from '@/components/room/SelectRoomCapability'
 import {getCourseCodes} from '@/lib/berkeley'
 import {putFocusNextTick, summarize} from '@/lib/utils'
-import {getKalturaEventList, getRoom, setAuditorium} from '@/api/room'
+import {getKalturaEventList, getRoom} from '@/api/room'
 import {useContextStore} from '@/stores/context'
 
 const contextStore = useContextStore()
-const isAuditorium = ref(undefined)
 const isLoadingEventList = ref(true)
 const kalturaEventList = ref([])
 const offerPrintable = ref(undefined)
@@ -112,7 +102,6 @@ onMounted(() => {
   const roomId = get(route, 'params.id')
   getRoom(roomId).then(data => {
     room.value = data
-    isAuditorium.value = data.isAuditorium
     each(room.value.courses, course => {
       course.courseCodes = getCourseCodes(course)
     })
@@ -127,14 +116,6 @@ onMounted(() => {
       })
     }
   })
-})
-
-watch(isAuditorium, value => {
-  if (!contextStore.loading) {
-    setAuditorium(room.value.id, value).then(() => {
-      room.value.isAuditorium = value
-    })
-  }
 })
 
 const onUpdateRoomCapability = capability => {

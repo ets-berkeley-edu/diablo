@@ -27,14 +27,6 @@ from flask import current_app as app
 from diablo.externals.b_connected import BConnected
 
 
-def get_admin_alert_recipient():
-    return {
-        'email': app.config['EMAIL_DIABLO_ADMIN'],
-        'name': 'Course Capture Admin',
-        'uid': app.config['EMAIL_DIABLO_ADMIN_UID'],
-    }
-
-
 def send_system_error_email(message, subject=None):
     def _scrub(content):
         # Omit Kaltura session key

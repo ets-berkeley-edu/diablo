@@ -29,7 +29,6 @@ from xena.models.canvas_site import CanvasSite
 from xena.models.email_template_type import EmailTemplateType
 from xena.models.recording_placement import RecordingPlacement
 from xena.models.recording_schedule import RecordingSchedule
-from xena.models.recording_type import RecordingType
 from xena.pages.course_page import CoursePage
 from xena.test_utils import util
 
@@ -125,9 +124,6 @@ class TestScheduling2:
 
     # VERIFY AVAILABLE OPTIONS
 
-    def test_rec_type_options(self):
-        assert not self.course_page.is_present(self.course_page.RECORDING_TYPE_EDIT_BUTTON)
-
     def test_rec_placement_options(self):
         self.course_page.click_edit_recording_placement()
         assert self.course_page.is_present(self.course_page.PLACEMENT_MY_MEDIA_RADIO)
@@ -204,9 +200,6 @@ class TestScheduling2:
         self.instructor_page.click_course_page_link(self.section)
         self.course_page.wait_for_diablo_title(f'{self.section.code}, {self.section.number}')
 
-    def test_no_rec_type_options(self):
-        assert not self.course_page.is_present(self.course_page.RECORDING_TYPE_EDIT_BUTTON)
-
     def test_no_rec_placement_options(self):
         assert not self.course_page.is_present(self.course_page.PLACEMENT_EDIT_BUTTON)
 
@@ -242,7 +235,6 @@ class TestScheduling2:
         self.login_page.dev_auth()
         self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
         assert util.get_kaltura_id(self.recording_schedule)
-        self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
         self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_AUTOMATICALLY
 
     # VERIFY SERIES IN DIABLO

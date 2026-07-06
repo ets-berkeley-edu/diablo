@@ -26,7 +26,6 @@ from datetime import datetime, timedelta
 
 from flask import Response, request, stream_with_context
 from flask import current_app as app
-from flask_login import login_required
 
 from diablo.api.errors import BadRequestError, ResourceNotFoundError
 from diablo.api.util import admin_required
@@ -65,12 +64,6 @@ def get_all_rooms():
     return tolerant_jsonify([room.to_api_json() for room in Room.all_rooms()])
 
 
-@app.route('/api/rooms/auditoriums')
-@login_required
-def get_auditoriums():
-    return tolerant_jsonify([room.to_api_json() for room in Room.auditoriums()])
-
-
 @app.route('/api/room/<kaltura_resource_id>/kaltura_events')
 @admin_required
 def get_kaltura_events(kaltura_resource_id):
@@ -99,22 +92,6 @@ def get_room(room_id):
             location=room.location,
         )
         return tolerant_jsonify(api_json)
-    else:
-        raise ResourceNotFoundError('No such room')
-
-
-@app.route('/api/room/auditorium', methods=['POST'])
-@admin_required
-def auditorium():
-    params = request.get_json()
-    room_id = params.get('roomId')
-    room = Room.get_room(room_id) if room_id else None
-    if room:
-        is_auditorium = params.get('isAuditorium')
-        if not room_id or is_auditorium is None:
-            raise BadRequestError("'roomId' and 'isAuditorium' are required.")
-        room = Room.set_auditorium(room_id, is_auditorium)
-        return tolerant_jsonify(room.to_api_json())
     else:
         raise ResourceNotFoundError('No such room')
 

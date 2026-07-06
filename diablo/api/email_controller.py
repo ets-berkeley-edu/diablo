@@ -31,7 +31,7 @@ from diablo.api.util import admin_required
 from diablo.externals.b_connected import BConnected
 from diablo.lib.http_util import tolerant_jsonify
 from diablo.lib.interpolator import get_template_substitutions, interpolate_content
-from diablo.models.course_preference import NAMES_PER_PUBLISH_TYPE, NAMES_PER_RECORDING_TYPE, get_all_publish_types, get_all_recording_types
+from diablo.models.course_preference import NAMES_PER_PUBLISH_TYPE, get_all_publish_types
 from diablo.models.email_template import EmailTemplate
 from diablo.models.queued_email import QueuedEmail
 from diablo.models.sis_section import SisSection
@@ -97,13 +97,11 @@ def test_email_template(template_id):
         course = SisSection.get_random_co_taught_course(app.config['CURRENT_TERM_ID'])
         template = EmailTemplate.get_template(template_id)
         publish_types = get_all_publish_types()
-        recording_types = get_all_recording_types()
 
         def _get_interpolated_content(templated_string):
             return interpolate_content(
                 course=course,
                 publish_type_name=NAMES_PER_PUBLISH_TYPE[publish_types[1]],
-                recording_type_name=NAMES_PER_RECORDING_TYPE[recording_types[1]],
                 recipient_name=current_user.name,
                 templated_string=templated_string,
             )

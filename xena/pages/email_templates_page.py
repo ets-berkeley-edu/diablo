@@ -68,7 +68,6 @@ class EmailTemplatesPage(DiabloPages):
             'instructors.all',
             'publish.type',
             'recipient.name',
-            'recording.type',
             'signup.url',
             'term.name',
         ]

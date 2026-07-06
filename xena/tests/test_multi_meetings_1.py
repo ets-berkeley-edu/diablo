@@ -30,7 +30,6 @@ import pytest
 from xena.models.email_template_type import EmailTemplateType
 from xena.models.recording_placement import RecordingPlacement
 from xena.models.recording_schedule import RecordingSchedule
-from xena.models.recording_type import RecordingType
 from xena.models.section import Section
 from xena.models.user import User
 from xena.pages.course_page import CoursePage
@@ -99,7 +98,6 @@ class TestWeirdTypeC:
     def test_schedule_recordings(self):
         self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
         assert util.get_kaltura_id(self.recording_sched_0)
-        self.recording_sched_0.recording_type = RecordingType.VIDEO_SANS_OPERATOR
         self.recording_sched_0.recording_placement = RecordingPlacement.PLACE_IN_MY_MEDIA
 
     # CHECK FILTERS - SCHEDULED
@@ -190,7 +188,6 @@ class TestWeirdTypeC:
         self.login_page.dev_auth()
         self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
         assert util.get_kaltura_id(self.recording_sched_1)
-        self.recording_sched_1.recording_type = RecordingType.VIDEO_SANS_OPERATOR
         self.recording_sched_1.recording_placement = RecordingPlacement.PLACE_IN_MY_MEDIA
 
     def test_meeting_0_room_page_ineligible_becomes_eligible(self):

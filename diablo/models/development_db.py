@@ -108,11 +108,6 @@ def _create_blackouts():
 
 def _create_email_templates():
     EmailTemplate.create(
-        template_type='admin_operator_requested',
-        subject_line='Admin alert: operator requested',
-        message='Operator requested for class for class <code>course.name</code>',
-    )
-    EmailTemplate.create(
         template_type='changes_confirmed',
         subject_line='Changes confirmed',
         message='Changes confirmed for class <code>course.name</code>',
@@ -217,8 +212,6 @@ def _set_up_and_run_jobs():
 
 def _set_room_capability():
     for room in Room.all_rooms():
-        if room.location in ["O'Brien 212", 'Li Ka Shing 145']:
-            Room.set_auditorium(room.id, True)
         if room.location in ['Li Ka Shing 145', 'Barker 101', "O'Brien 212"]:
             Room.update_capability(room.id, 'screencast_and_video')
     std_commit(allow_test_environment=True)

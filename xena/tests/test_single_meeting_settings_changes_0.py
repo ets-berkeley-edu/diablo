@@ -29,7 +29,6 @@ from xena.models.canvas_site import CanvasSite
 from xena.models.email_template_type import EmailTemplateType
 from xena.models.recording_placement import RecordingPlacement
 from xena.models.recording_schedule import RecordingSchedule
-from xena.models.recording_type import RecordingType
 from xena.models.user import User
 from xena.pages.course_page import CoursePage
 from xena.test_utils import util
@@ -148,9 +147,6 @@ class TestScheduling0:
     def test_no_collaborator_edits(self):
         assert not self.course_page.is_present(self.course_page.COLLAB_EDIT_BUTTON)
 
-    def test_no_rec_type_options(self):
-        assert not self.course_page.is_present(self.course_page.RECORDING_TYPE_EDIT_BUTTON)
-
     def test_no_rec_placement_options(self):
         assert not self.course_page.is_present(self.course_page.PLACEMENT_EDIT_BUTTON)
 
@@ -162,13 +158,7 @@ class TestScheduling0:
     def test_instructor_view_post_opt_in(self):
         assert self.course_page.is_present(self.course_page.OPTED_IN_PENDING_MSG)
 
-    def test_rec_type_options(self):
-        self.course_page.click_rec_type_edit_button()
-        assert self.course_page.is_present(self.course_page.RECORDING_TYPE_NO_OP_RADIO)
-        assert self.course_page.is_present(self.course_page.RECORDING_TYPE_OP_RADIO)
-
     def test_rec_placement_options(self):
-        self.course_page.cancel_recording_type_edits()
         self.course_page.click_edit_recording_placement()
         assert self.course_page.is_present(self.course_page.PLACEMENT_MY_MEDIA_RADIO)
         assert self.course_page.is_present(self.course_page.PLACEMENT_AUTOMATIC_RADIO)
@@ -178,9 +168,6 @@ class TestScheduling0:
     def test_no_collaborators(self):
         self.course_page.cancel_recording_placement_edits()
         assert not self.course_page.visible_collaborator_uids()
-
-    def test_default_recording_type(self):
-        assert self.course_page.visible_recording_type() == RecordingType.VIDEO_SANS_OPERATOR.value['desc']
 
     def test_default_recording_placement(self):
         assert RecordingPlacement.PLACE_IN_MY_MEDIA.value['desc'] in self.course_page.visible_recording_placement()
@@ -210,7 +197,6 @@ class TestScheduling0:
         self.login_page.dev_auth()
         self.jobs_page.run_kaltura_job_sequence()
         assert util.get_kaltura_id(self.recording_schedule)
-        self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
         self.recording_schedule.recording_placement = RecordingPlacement.PLACE_IN_MY_MEDIA
 
     # CHECK FILTERS - SCHEDULED
@@ -304,15 +290,6 @@ class TestScheduling0:
         self.course_page.save_recording_placement_edits()
         self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_AUTOMATICALLY
 
-    def test_choose_rec_type(self):
-        self.course_page.click_rec_type_edit_button()
-        self.course_page.select_rec_type(RecordingType.VIDEO_WITH_OPERATOR)
-        self.course_page.save_recording_type_edits()
-        self.recording_schedule.recording_type = RecordingType.VIDEO_WITH_OPERATOR
-
-    def test_rec_type_operator_no_going_back(self):
-        assert not self.course_page.is_present(self.course_page.RECORDING_TYPE_EDIT_BUTTON)
-
     def test_visible_site_ids_updated(self):
         assert self.course_page.visible_course_site_ids() == [self.site.site_id]
 
@@ -345,16 +322,9 @@ class TestScheduling0:
 
     # VERIFY COURSE HISTORY
 
-    def test_course_history_rec_type(self):
+    def test_course_history_rec_placement(self):
         self.login_page.dev_auth()
         self.course_page.load_page(self.section)
-        self.course_page.verify_history_row(field='recording_type',
-                                            old_value=RecordingType.VIDEO_SANS_OPERATOR.value['db'],
-                                            new_value=RecordingType.VIDEO_WITH_OPERATOR.value['db'],
-                                            requestor=self.instructor,
-                                            status='queued')
-
-    def test_course_history_rec_placement(self):
         self.course_page.verify_history_row(field='publish_type',
                                             old_value=RecordingPlacement.PLACE_IN_MY_MEDIA.value['db'],
                                             new_value=RecordingPlacement.PUBLISH_AUTOMATICALLY.value['db'],
@@ -409,10 +379,7 @@ class TestScheduling0:
     def test_update_receive_schedule_conf_email(self):
         assert util.get_sent_email_count(EmailTemplateType.CHANGES_CONFIRMED, self.section, self.instructor) == 1
 
-    def test_update_admin_email_operator_requested(self):
-        assert util.get_sent_email_count(EmailTemplateType.ADMIN_OPERATOR_REQUESTED, self.section) == 1
-
-    # REVERT TO MY MEDIA PLACEMENT TYPE AND NO CAMERA OPERATOR
+    # REVERT TO MY MEDIA PLACEMENT TYPE
 
     def test_course_page_revert_placement(self):
         self.kaltura_page.close_window_and_switch()
@@ -421,12 +388,6 @@ class TestScheduling0:
         self.course_page.select_recording_placement(RecordingPlacement.PLACE_IN_MY_MEDIA)
         self.course_page.save_recording_placement_edits()
         self.recording_schedule.recording_placement = RecordingPlacement.PLACE_IN_MY_MEDIA
-
-    def test_course_page_revert_operator(self):
-        self.course_page.click_rec_type_edit_button()
-        self.course_page.select_rec_type(RecordingType.VIDEO_SANS_OPERATOR)
-        self.course_page.save_recording_type_edits()
-        self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
 
     def test_revert_course_page(self):
         self.login_page.dev_auth(self.instructor.uid)
@@ -505,16 +466,8 @@ class TestScheduling0:
                                             status='succeeded',
                                             published=True)
 
-    def test_course_history_rec_type_updated(self):
-        self.course_page.load_page(self.section)
-        self.course_page.verify_history_row(field='recording_type',
-                                            old_value=RecordingType.VIDEO_SANS_OPERATOR.value['db'],
-                                            new_value=RecordingType.VIDEO_WITH_OPERATOR.value['db'],
-                                            requestor=self.instructor,
-                                            status='succeeded',
-                                            published=True)
-
     def test_course_history_rec_placement_updated(self):
+        self.course_page.load_page(self.section)
         self.course_page.verify_history_row(field='publish_type',
                                             old_value=RecordingPlacement.PLACE_IN_MY_MEDIA.value['db'],
                                             new_value=RecordingPlacement.PUBLISH_AUTOMATICALLY.value['db'],
@@ -534,14 +487,6 @@ class TestScheduling0:
         self.course_page.verify_history_row(field='publish_type',
                                             old_value=RecordingPlacement.PUBLISH_AUTOMATICALLY.value['db'],
                                             new_value=RecordingPlacement.PLACE_IN_MY_MEDIA.value['db'],
-                                            requestor=self.admin,
-                                            status='succeeded',
-                                            published=True)
-
-    def test_course_history_rec_type_reverted(self):
-        self.course_page.verify_history_row(field='recording_type',
-                                            old_value=RecordingType.VIDEO_WITH_OPERATOR.value['db'],
-                                            new_value=RecordingType.VIDEO_SANS_OPERATOR.value['db'],
                                             requestor=self.admin,
                                             status='succeeded',
                                             published=True)

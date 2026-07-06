@@ -29,7 +29,6 @@ from flask import current_app as app
 from xena.models.email_template_type import EmailTemplateType
 from xena.models.recording_placement import RecordingPlacement
 from xena.models.recording_schedule import RecordingSchedule
-from xena.models.recording_type import RecordingType
 from xena.pages.course_page import CoursePage
 from xena.pages.ouija_board_page import OuijaBoardPage
 from xena.test_utils import util
@@ -77,7 +76,6 @@ class TestCourseCancellation:
         self.course_page.load_page(self.section)
         assert self.course_page.is_canceled()
         assert not self.course_page.is_present(CoursePage.COLLAB_EDIT_BUTTON)
-        assert not self.course_page.is_present(CoursePage.RECORDING_TYPE_EDIT_BUTTON)
         assert not self.course_page.is_present(CoursePage.PLACEMENT_EDIT_BUTTON)
 
     def test_admin_view_cancelled_msg(self):
@@ -106,7 +104,6 @@ class TestCourseCancellation:
 
     def test_kaltura_schedule_id(self):
         assert util.get_kaltura_id(self.recording_schedule)
-        self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
         self.recording_schedule.recording_placement = RecordingPlacement.PLACE_IN_MY_MEDIA
 
     # COURSE CANCELED AGAIN

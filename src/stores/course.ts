@@ -47,9 +47,6 @@ export const useCourseStore = defineStore('course', {
         if (!this.course.publishType) {
           this.course.publishType = 'kaltura_my_media'
         }
-        if (!this.course.recordingType) {
-          this.course.recordingType = 'presenter_presentation_audio'
-        }
       }
     },
     setDisableButtons(value: boolean) {

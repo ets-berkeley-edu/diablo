@@ -31,8 +31,8 @@ from diablo.externals.loch import get_loch_basic_attributes
 from diablo.jobs.util import get_eligible_courses_per_instructor_uids
 from diablo.lib.interpolator import interpolate_content
 from diablo.lib.util import to_isoformat, utc_now
-from diablo.merged.emailer import get_admin_alert_recipient, send_system_error_email
-from diablo.models.course_preference import NAMES_PER_PUBLISH_TYPE, NAMES_PER_RECORDING_TYPE
+from diablo.merged.emailer import send_system_error_email
+from diablo.models.course_preference import NAMES_PER_PUBLISH_TYPE
 from diablo.models.email_template import EmailTemplate, email_template_type
 from diablo.models.sis_section import AUTHORIZED_INSTRUCTOR_ROLE_CODES, SisSection
 from diablo.models.user_preference import UserPreference
@@ -124,13 +124,8 @@ class QueuedEmail(db.Model):
         return [row.section_id for row in cls.query.filter_by(template_type=template_type, term_id=term_id).all()]
 
     @classmethod
-    def notify_admin_operator_requested(cls, course):
-        cls._queue_admin_email('admin_operator_requested', course)
-
-    @classmethod
-    def notify_instructors_changes_confirmed(cls, course, collaborator_uids, canvas_site_ids, publish_type, recording_type):
+    def notify_instructors_changes_confirmed(cls, course, collaborator_uids, canvas_site_ids, publish_type):
         publish_type_name = NAMES_PER_PUBLISH_TYPE.get(publish_type, 'Not specified')
-        recording_type_name = NAMES_PER_RECORDING_TYPE.get(recording_type, 'Not specified')
         collaborator_names = _get_collaborator_names(collaborator_uids)
 
         if canvas_site_ids:
@@ -144,7 +139,6 @@ class QueuedEmail(db.Model):
                 instructor,
                 course,
                 publish_type_name=publish_type_name,
-                recording_type_name=recording_type_name,
                 collaborator_names=collaborator_names,
                 canvas_site_ids=canvas_site_ids,
                 canvas_sites=canvas_sites,
@@ -186,30 +180,6 @@ class QueuedEmail(db.Model):
     @classmethod
     def notify_instructor_removed(cls, instructor, course):
         cls._queue_instructor_email('instructors_removed', instructor, course)
-
-    @classmethod
-    def _queue_admin_email(cls, template_type, course, **kwargs):  # noqa: ARG003
-        template = _get_email_template(course=course, template_type=template_type)
-        if template:
-            recipient = get_admin_alert_recipient()
-            message = interpolate_content(
-                templated_string=template.message,
-                course=course,
-                recipient_name=recipient['name'],
-            )
-            subject_line = interpolate_content(
-                templated_string=template.subject_line,
-                course=course,
-                recipient_name=recipient['name'],
-            )
-            cls.create(
-                message=message,
-                subject_line=subject_line,
-                recipient=recipient,
-                section_id=course['sectionId'],
-                template_type=template_type,
-                term_id=course['termId'],
-            )
 
     @classmethod
     def _queue_instructor_email(cls, template_type, instructor, course, **kwargs):

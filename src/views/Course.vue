@@ -52,7 +52,6 @@
                 </div>
               </v-expand-transition>
               <Collaborators class="pt-3" />
-              <RecordingType />
               <RecordingPlacement />
               <v-row v-if="!currentUser.isAdmin && course.publishType">
                 <v-col>
@@ -117,7 +116,6 @@ import OptInByAdmin from '@/components/course/OptInByAdmin.vue'
 import OptInByInstructor from '@/components/course/OptInByInstructor.vue'
 import PageTitle from '@/components/util/PageTitle.vue'
 import RecordingPlacement from '@/components/course/RecordingPlacement.vue'
-import RecordingType from '@/components/course/RecordingType.vue'
 import ScheduledCourse from '@/components/course/ScheduledCourse.vue'
 
 const contextStore = useContextStore()

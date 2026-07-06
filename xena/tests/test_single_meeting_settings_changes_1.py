@@ -29,7 +29,6 @@ from xena.models.canvas_site import CanvasSite
 from xena.models.email_template_type import EmailTemplateType
 from xena.models.recording_placement import RecordingPlacement
 from xena.models.recording_schedule import RecordingSchedule
-from xena.models.recording_type import RecordingType
 from xena.models.user import User
 from xena.pages.course_page import CoursePage
 from xena.test_utils import util
@@ -136,13 +135,7 @@ class TestScheduling1:
     def test_opted_in_messaging(self):
         assert self.course_page.is_present(self.course_page.OPTED_IN_PENDING_MSG)
 
-    def test_rec_type_options(self):
-        self.course_page.click_rec_type_edit_button()
-        assert self.course_page.is_present(self.course_page.RECORDING_TYPE_NO_OP_RADIO)
-        assert self.course_page.is_present(self.course_page.RECORDING_TYPE_OP_RADIO)
-
     def test_rec_placement_options(self):
-        self.course_page.cancel_recording_type_edits()
         self.course_page.click_edit_recording_placement()
         assert self.course_page.is_present(self.course_page.PLACEMENT_MY_MEDIA_RADIO)
         assert self.course_page.is_present(self.course_page.PLACEMENT_AUTOMATIC_RADIO)
@@ -164,7 +157,6 @@ class TestScheduling1:
     def test_update_job(self):
         self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
         assert util.get_kaltura_id(self.recording_schedule)
-        self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
         self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_AUTOMATICALLY
 
     # CHECK FILTERS - SCHEDULED
@@ -273,7 +265,7 @@ class TestScheduling1:
                                             status='succeeded',
                                             published=True)
 
-    def test_course_history_rec_type_updated(self):
+    def test_course_history_publish_type_updated(self):
         self.course_page.verify_history_row(field='publish_type',
                                             old_value='—',
                                             new_value=RecordingPlacement.PUBLISH_AUTOMATICALLY.value['db'],

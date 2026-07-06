@@ -38,7 +38,6 @@ SET default_with_oids = false;
 --
 
 CREATE TYPE email_template_types AS ENUM (
-    'admin_operator_requested',
     'changes_confirmed',
     'class_scheduled',
     'instructors_removed',
@@ -68,13 +67,6 @@ CREATE TYPE publish_types AS ENUM (
     'kaltura_media_gallery',
     'kaltura_media_gallery_moderated',
     'kaltura_my_media'
-);
-
---
-
-CREATE TYPE recording_types AS ENUM (
-    'presenter_presentation_audio',
-    'presenter_presentation_audio_with_operator'
 );
 
 --
@@ -147,7 +139,6 @@ CREATE TABLE course_preferences (
     section_id INTEGER NOT NULL,
     collaborator_uids VARCHAR(80)[],
     publish_type publish_types NOT NULL,
-    recording_type recording_types NOT NULL,
     canvas_site_ids INTEGER[],
     created_at TIMESTAMP WITH TIME ZONE NOT NULL
 );
@@ -361,7 +352,6 @@ ALTER TABLE ONLY queued_emails
 CREATE TABLE rooms (
     id INTEGER NOT NULL,
     capability room_capability_types,
-    is_auditorium BOOLEAN NOT NULL,
     kaltura_resource_id INTEGER,
     location VARCHAR(255) NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL
@@ -430,7 +420,6 @@ CREATE TABLE scheduled (
     meeting_start_date TIMESTAMP NOT NULL,
     meeting_start_time VARCHAR(80) NOT NULL,
     publish_type publish_types NOT NULL,
-    recording_type recording_types NOT NULL,
     alerts email_template_types[],
     created_at TIMESTAMP WITH TIME ZONE NOT NULL,
     deleted_at TIMESTAMP WITH TIME ZONE

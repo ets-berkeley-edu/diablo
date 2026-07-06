@@ -324,7 +324,6 @@ def update_new_cross_listings(term_id, section_ids, tablename):
                 term_id=term_id,
                 section_id=new_section_id,
                 publish_type=rows[0]['publish_type'],
-                recording_type=rows[0]['recording_type'],
                 canvas_site_ids=rows[0]['canvas_site_ids'],
                 collaborator_uids=rows[0]['collaborator_uids'],
             ))
@@ -399,11 +398,9 @@ def schedule_recordings(course, remove_blackout_conflicts=False, updates=None):
     # course preferences that persist in Diablo's database from an earlier instance of scheduling; 3) default values.
     if updates:
         publish_type = updates['publishType']
-        recording_type = updates['recordingType']
         collaborator_uids = updates['collaboratorUids']
     else:
         publish_type = course.get('publishType') or 'kaltura_my_media'
-        recording_type = course.get('recordingType') or 'presenter_presentation_audio'
         collaborator_uids = build_merged_collaborators_list(course, course.get('collaboratorUids'))
 
     # Add a dummy 'roleCode' type for all collaborators, whether or not they teach in SIS. This will tell downstream
@@ -449,7 +446,6 @@ def schedule_recordings(course, remove_blackout_conflicts=False, updates=None):
                 kaltura_group_id=kaltura_group_id,
                 meeting=meeting,
                 publish_type=publish_type,
-                recording_type=recording_type,
                 room=room,
                 tag=f'{CREATED_BY_DIABLO_TAG}_{term_id}_{section_id}',
                 term_id=term_id,
@@ -471,7 +467,6 @@ def schedule_recordings(course, remove_blackout_conflicts=False, updates=None):
                 meeting_start_date=get_recording_start_date(meeting, return_today_if_past_start=True),
                 meeting_start_time=meeting['startTime'],
                 publish_type_=publish_type,
-                recording_type_=recording_type,
                 room_id=room.id,
                 section_id=section_id,
                 term_id=term_id,

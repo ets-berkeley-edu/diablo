@@ -40,26 +40,12 @@ publish_type = ENUM(
 )
 
 
-# In addition to these active options, legacy data includes the deprecated 'presentation_audio' and 'presenter_audio' options.
-recording_type = ENUM(
-    'presenter_presentation_audio',
-    'presenter_presentation_audio_with_operator',
-    name='recording_types',
-    create_type=False,
-)
-
 # The "kaltura_media_gallery_moderated" publish type exists in the database and is referenced in back-end code, but is not currently
 # offered through the UI owing to Kaltura API limitations.
 
 NAMES_PER_PUBLISH_TYPE = {
     'kaltura_media_gallery': 'Publish to Media Gallery',
     'kaltura_my_media': 'Place in My Media',
-}
-
-
-NAMES_PER_RECORDING_TYPE = {
-    'presenter_presentation_audio': 'Camera without Operator',
-    'presenter_presentation_audio_with_operator': 'Camera with Operator',
 }
 
 
@@ -70,7 +56,6 @@ class CoursePreference(db.Model):
     section_id = db.Column(db.Integer, nullable=False, primary_key=True)
     collaborator_uids = db.Column(ARRAY(db.String(80)))
     publish_type = db.Column(publish_type, nullable=False)
-    recording_type = db.Column(recording_type, nullable=False)
     canvas_site_ids = db.Column(ARRAY(db.Integer))
     created_at = db.Column(db.DateTime, nullable=False, default=utc_now)
 
@@ -79,14 +64,12 @@ class CoursePreference(db.Model):
             term_id,
             section_id,
             publish_type='kaltura_my_media',
-            recording_type='presenter_presentation_audio',
             canvas_site_ids=None,
             collaborator_uids=None,
     ):
         self.term_id = term_id
         self.section_id = section_id
         self.publish_type = publish_type
-        self.recording_type = recording_type
         self.canvas_site_ids = canvas_site_ids
         self.collaborator_uids = collaborator_uids
 
@@ -95,7 +78,6 @@ class CoursePreference(db.Model):
                     term_id={self.term_id},
                     section_id={self.section_id},
                     publish_type={self.publish_type}
-                    recording_type={self.recording_type}
                     collaborator_uids={self.collaborator_uids}
                     canvas_site_ids={self.canvas_site_ids}
                     created_at={self.created_at}
@@ -157,28 +139,6 @@ class CoursePreference(db.Model):
         std_commit()
         return cls.query.filter_by(term_id=term_id, section_id=section_id).first()
 
-    @classmethod
-    def update_recording_type(
-            cls,
-            term_id,
-            section_id,
-            recording_type,
-    ):
-        section_ids = _get_section_ids_with_xlistings(section_id, term_id)
-        criteria = and_(cls.section_id.in_(section_ids), cls.term_id == term_id)
-        for existing_row in cls.query.filter(criteria).all():
-            existing_row.recording_type = recording_type
-            section_ids.remove(existing_row.section_id)
-        for section_id in section_ids:  # noqa: PLR1704
-            preferences = cls(
-                term_id=term_id,
-                section_id=section_id,
-                recording_type=recording_type,
-            )
-            db.session.add(preferences)
-        std_commit()
-        return cls.query.filter_by(term_id=term_id, section_id=section_id).first()
-
     def get_collaborator_attributes(self):
         if self.collaborator_uids:
             return [basic_attributes_to_api_json(a) for a in get_loch_basic_attributes(self.collaborator_uids)]
@@ -192,8 +152,6 @@ class CoursePreference(db.Model):
             'collaboratorUids': self.collaborator_uids,
             'publishType': self.publish_type,
             'publishTypeName': NAMES_PER_PUBLISH_TYPE[self.publish_type],
-            'recordingType': self.recording_type,
-            'recordingTypeName': NAMES_PER_RECORDING_TYPE[self.recording_type],
             'canvasSiteIds': self.canvas_site_ids,
             'createdAt': to_isoformat(self.created_at),
         }
@@ -206,10 +164,6 @@ class CoursePreference(db.Model):
 
 def get_all_publish_types():
     return [e for e in publish_type.enums if e != 'kaltura_media_gallery_moderated']
-
-
-def get_all_recording_types():
-    return recording_type.enums
 
 
 def _get_section_ids_with_xlistings(section_id, term_id):
