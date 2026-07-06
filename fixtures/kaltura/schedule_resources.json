@@ -1,14 +1,17 @@
 [
   {
     "id": 678,
-    "name": "Li Ka Shing 145"
+    "name": "Li Ka Shing 145",
+    "systemName": "Li-Ka-Shing-145"
   },
   {
     "id": 789,
-    "name": "Barker 101"
+    "name": "Barker 101",
+    "systemName": "Barker-101"
   },
   {
     "id": 890,
-    "name": "OBrien 212"
+    "name": "O'Brien 212",
+    "systemName": "O'Brien-212"
   }
 ]
