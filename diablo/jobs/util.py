@@ -103,6 +103,9 @@ def get_eligible_courses_by_instructor_uid(term_id, course_filter=None):
         course_set = SisSection.get_courses_partially_approved(term_id)
     elif course_filter == 'opted_out':
         course_set = SisSection.get_courses_eligible_and_unscheduled(term_id)
+        # Screen out partially approved courses.
+        partially_approved_section_ids = set(course['sectionId'] for course in SisSection.get_courses_partially_approved(term_id))
+        course_set = [course for course in course_set if course['sectionId'] not in partially_approved_section_ids]
     else:
         course_set = get_eligible_courses(term_id)
 
