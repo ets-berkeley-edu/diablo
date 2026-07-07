@@ -89,9 +89,6 @@
             <span aria-hidden="true">{{ item.capability ? item.capabilityName : '&mdash;' }}</span>
             <span class="sr-only">{{ item.capability ? item.capabilityName : 'blank' }}</span>
           </td>
-          <td :id="`room-${item.id}-isAuditorium`" columnheader="rooms-table-isAuditorium-th">
-            {{ item.isAuditorium ? 'Yes' : 'No' }}
-          </td>
         </tr>
       </template>
       <template #bottom="{pageCount}">
@@ -123,8 +120,7 @@ const contextStore = useContextStore()
 const headers = [
   {title: 'Room', value: 'location', class: 'w-50', sortable: true},
   {title: 'Kaltura Resource', value: 'kalturaResourceId', class: 'w-20', sortable: true},
-  {title: 'Capability', value: 'capabilityName', class: 'w-20', sortable: true},
-  {title: 'Auditorium', value: 'isAuditorium', class: 'w-10', sortable: true}
+  {title: 'Capability', value: 'capabilityName', class: 'w-20', sortable: true}
 ]
 const itemsPerPage = 50
 const pageCurrent = ref(1)

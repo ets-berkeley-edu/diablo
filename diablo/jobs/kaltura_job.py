@@ -112,7 +112,6 @@ def _update_already_scheduled_events(term_id):  # noqa: C901, PLR0912, PLR0915
         updated_instructor_uids = None
         updated_collaborator_uids = None
         updated_publish_type = None
-        updated_recording_type = None
         updated_canvas_site_ids = None
 
         no_longer_eligible = False
@@ -136,8 +135,6 @@ def _update_already_scheduled_events(term_id):  # noqa: C901, PLR0912, PLR0915
                     previous_instructor_uids = schedule_update.deserialize('field_value_old')
             elif schedule_update.field_name == 'publish_type':
                 updated_publish_type = schedule_update.field_value_new
-            elif schedule_update.field_name == 'recording_type':
-                updated_recording_type = schedule_update.field_value_new
             elif schedule_update.field_name == 'canvas_site_ids':
                 updated_canvas_site_ids = schedule_update.field_value_new
             elif schedule_update.field_name == 'meeting_added':
@@ -167,7 +164,6 @@ def _update_already_scheduled_events(term_id):  # noqa: C901, PLR0912, PLR0915
                 course,
                 meeting_added,
                 updated_publish_type,
-                updated_recording_type,
                 updated_collaborator_uids,
             )
 
@@ -186,14 +182,12 @@ def _update_already_scheduled_events(term_id):  # noqa: C901, PLR0912, PLR0915
                 updated_collaborator_uids,
                 updated_instructor_uids,
                 updated_publish_type,
-                updated_recording_type,
             )
 
             _mark_success(
                 schedule_updates,
                 (
                     'publish_type',
-                    'recording_type',
                     'collaborator_uids',
                     'canvas_site_ids',
                 ),
@@ -245,7 +239,6 @@ def _handle_scheduled_course_updates(  # noqa: C901, PLR0912
     updated_collaborator_uids,
     updated_instructor_uids,
     updated_publish_type,
-    updated_recording_type,
 ):
 
     publish_to_course_sites = None
@@ -272,9 +265,6 @@ def _handle_scheduled_course_updates(  # noqa: C901, PLR0912
                         f"Failed to sync Kaltura group members for {course['label']} (group {kaltura_group_id}): {e}",
                     )
 
-            if updated_recording_type:
-                scheduled_model.update(recording_type=updated_recording_type)
-
             if updated_publish_type:
                 publish_to_course_sites = _handle_publish_type_update(updated_publish_type, scheduled_model)
             elif scheduled['publishType'] and scheduled['publishType'].startswith('kaltura_media_gallery'):
@@ -300,7 +290,7 @@ def _handle_scheduled_course_updates(  # noqa: C901, PLR0912
             )
 
     if updated_publish_type or updated_canvas_site_ids:
-        update_options = _construct_schedule_update_options(course, updated_publish_type, updated_recording_type, updated_collaborator_uids)
+        update_options = _construct_schedule_update_options(course, updated_publish_type, updated_collaborator_uids)
         updated_canvas_site_ids = _handle_course_site_categories(
             kaltura,
             course,
@@ -313,7 +303,6 @@ def _handle_scheduled_course_updates(  # noqa: C901, PLR0912
         QueuedEmail.notify_instructors_no_longer_opted_in(course)
     else:
         if updated_publish_type or\
-                updated_recording_type or\
                 updated_collaborator_uids is not None or\
                 updated_canvas_site_ids is not None:
             collaborator_uids = updated_collaborator_uids
@@ -329,7 +318,6 @@ def _handle_scheduled_course_updates(  # noqa: C901, PLR0912
                 collaborator_uids=collaborator_uids,
                 canvas_site_ids=canvas_site_ids,
                 publish_type=updated_publish_type or scheduled.get('publishType'),
-                recording_type=updated_recording_type or scheduled.get('recordingType'),
             )
         if meetings_added or meetings_removed_by_schedule_id or meetings_updated_by_schedule_id:
             QueuedEmail.notify_instructors_schedule_change(course)
@@ -384,11 +372,11 @@ def _handle_instructor_updates(
 
 
 def _handle_meeting_added(
-    course, meeting_added, updated_publish_type, updated_recording_type,
+    course, meeting_added, updated_publish_type,
     updated_collaborator_uids,
 ):
     meeting = meeting_added.deserialize('field_value_new')
-    updates = _construct_schedule_update_options(course, updated_publish_type, updated_recording_type, updated_collaborator_uids)
+    updates = _construct_schedule_update_options(course, updated_publish_type, updated_collaborator_uids)
 
     newly_scheduled = schedule_recordings(
         {
@@ -541,12 +529,11 @@ def _handle_course_site_categories(kaltura, course, publish_to_course_sites, sch
     return updated_canvas_site_ids
 
 
-def _construct_schedule_update_options(course, updated_publish_type=None, updated_recording_type=None, updated_collaborator_uids=None):
+def _construct_schedule_update_options(course, updated_publish_type=None, updated_collaborator_uids=None):
     existing_scheduled = next((_get_scheduled(course)), {})
 
     updates = {
         'publishType': updated_publish_type or existing_scheduled.get('publishType'),
-        'recordingType': updated_recording_type or existing_scheduled.get('recordingType'),
     }
     if updated_collaborator_uids is None:
         updates['collaboratorUids'] = existing_scheduled.get('collaboratorUids')

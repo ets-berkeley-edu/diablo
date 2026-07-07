@@ -17,7 +17,6 @@
               <th class="font-size-14 pa-4 text-start text-no-wrap text-medium-emphasis">Instructors</th>
               <th class="font-size-14 pa-4 text-start text-no-wrap text-medium-emphasis">Days</th>
               <th class="font-size-14 pa-4 text-start text-no-wrap text-medium-emphasis">Dates / Time</th>
-              <th class="font-size-14 pa-4 text-start text-no-wrap text-medium-emphasis">Recording</th>
             </tr>
           </thead>
           <tbody v-if="courses.length">
@@ -76,17 +75,11 @@
                   </div>
                 </div>
               </td>
-              <td
-                :id="`course-${course.sectionId}-recording-type`"
-                class="text-no-wrap px-4 py-2"
-              >
-                {{ get(course, 'scheduled[0].recordingTypeName') }}
-              </td>
             </tr>
           </tbody>
           <tbody v-else>
             <tr>
-              <td class="pa-4 text-center text-medium-emphasis" colspan="5">No courses</td>
+              <td class="pa-4 text-center text-medium-emphasis" colspan="4">No courses</td>
             </tr>
           </tbody>
         </table>

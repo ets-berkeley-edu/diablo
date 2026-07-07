@@ -2,7 +2,6 @@
 export type DiabloConfig = {
   apiBaseUrl: string,
   canvasBaseUrl: string,
-  courseCapturePremiumCost: number,
   currentTermBegin: string,
   currentTermEnd: string,
   currentTermId: number,
@@ -47,12 +46,8 @@ export interface Room {
   capabilityName: string,
   createdAt: string,
   id: number,
-  isAuditorium: boolean,
   kalturaResourceId: number,
-  location: string,
-  recordingTypeOptions: {
-    presenter_presentation_audio: string
-  }
+  location: string
 }
 
 export interface Meeting {
@@ -100,8 +95,6 @@ export interface ScheduledCourse {
   meetingStartTimeFormatted: string,
   publishType: string,
   publishTypeName: string,
-  recordingType: string,
-  recordingTypeName: string,
   room: Room,
   sectionId: number,
   termId: number
@@ -141,8 +134,6 @@ export interface Course extends BaseCourse {
   preferences: CoursePreferences | undefined,
   publishType: string,
   publishTypeName: string,
-  recordingType: string,
-  recordingTypeName: string,
   room: Room | undefined,
   scheduled: ScheduledCourse[] | null,
   statusLabel: string | undefined,

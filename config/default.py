@@ -59,8 +59,6 @@ CANVAS_LTI_SECRET = 'a_secret'
 
 CAS_SERVER = 'https://auth-test.berkeley.edu/cas/'
 
-COURSE_CAPTURE_PREMIUM_COST = -1
-
 # YYYY-MM-DD is expected date format. For example, '2020-01-21'
 CURRENT_TERM_BEGIN = None
 CURRENT_TERM_END = None

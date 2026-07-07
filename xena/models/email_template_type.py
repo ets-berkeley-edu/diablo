@@ -28,10 +28,6 @@ from enum import Enum
 
 class EmailTemplateType(Enum):
 
-    ADMIN_OPERATOR_REQUESTED = {
-        'desc': 'Admin alert: operator requested',
-        'type': 'admin_operator_requested',
-    }
     CHANGES_CONFIRMED = {
         'desc': 'Changes confirmed',
         'type': 'changes_confirmed',

@@ -30,7 +30,6 @@ from flask import current_app as app
 from selenium.webdriver.common.by import By
 
 from xena.models.recording_placement import RecordingPlacement
-from xena.models.recording_type import RecordingType
 from xena.pages.diablo_pages import DiabloPages
 from xena.test_utils import util
 
@@ -348,41 +347,6 @@ class CoursePage(DiabloPages):
     @staticmethod
     def collaborator_remove_button_loc(user):
         return By.ID, f'btn-collaborator-remove-{user.uid}'
-
-    # CAPTURE SETTINGS - recording type
-
-    RECORDING_TYPE_TEXT = (By.ID, 'recording-type-name')
-    RECORDING_TYPE_EDIT_BUTTON = By.ID, 'btn-recording-type-edit'
-    RECORDING_TYPE_NO_OP_RADIO = By.ID, 'radio-recording-type-presenter-presentation-audio'
-    RECORDING_TYPE_OP_RADIO = By.ID, 'radio-recording-type-presenter-presentation-audio-with-operator'
-    RECORDING_TYPE_SAVE_BUTTON = By.ID, 'btn-recording-type-save'
-    RECORDING_TYPE_CXL_BUTTON = By.ID, 'btn-recording-type-cancel'
-
-    def visible_recording_type(self):
-        return self.element(self.RECORDING_TYPE_TEXT).text.strip()
-
-    def click_rec_type_edit_button(self):
-        app.logger.info('Clicking the recording type edit button')
-        self.wait_for_element_and_click(CoursePage.RECORDING_TYPE_EDIT_BUTTON)
-
-    def select_rec_type(self, recording_type):
-        app.logger.info(f"Selecting recording type {recording_type.value['desc']}")
-        if recording_type == RecordingType.VIDEO_WITH_OPERATOR:
-            self.wait_for_page_and_click_js(self.RECORDING_TYPE_OP_RADIO)
-        else:
-            self.wait_for_page_and_click_js(self.RECORDING_TYPE_NO_OP_RADIO)
-
-    def save_recording_type_edits(self):
-        self.wait_for_element_and_click(self.RECORDING_TYPE_SAVE_BUTTON)
-        time.sleep(3)
-
-    def cancel_recording_type_edits(self):
-        self.wait_for_page_and_click_js(self.RECORDING_TYPE_CXL_BUTTON)
-
-    def verify_recording_type(self, recording_schedule):
-        expected = recording_schedule.recording_type.value['desc']
-        visible = self.visible_recording_type()
-        self.assert_equivalence(visible, expected)
 
     # CAPTURE SETTINGS - recording placement
 

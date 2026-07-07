@@ -67,9 +67,6 @@ class RoomPrintablePage(DiabloPages):
         els = self.elements((By.XPATH, f'//td[@id="course-{section.ccn}-times"]/div'))
         return [el.text.strip() for el in els]
 
-    def visible_recording_type(self, section):
-        return self.element((By.ID, f'course-{section.ccn}-recording-type')).text.strip()
-
     # ACTUAL VS EXPECTED
 
     def verify_printable(self, recording_schedule):
@@ -96,8 +93,3 @@ class RoomPrintablePage(DiabloPages):
         expected_date_times = [f'{dates}\n{times}']
         visible_times = self.visible_times(section)
         self.assert_equivalence(visible_times, expected_date_times)
-
-        expected_type = recording_schedule.recording_type.value['printable']
-        visible_type = self.visible_recording_type(section)
-        visible_type = visible_type and visible_type.title()
-        self.assert_equivalence(visible_type, expected_type)

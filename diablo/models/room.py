@@ -22,13 +22,11 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
-from flask import current_app as app
 from sqlalchemy import func, text
 from sqlalchemy.dialects.postgresql import ENUM
 
 from diablo import db, std_commit
 from diablo.lib.util import to_isoformat, utc_now
-from diablo.models.course_preference import NAMES_PER_RECORDING_TYPE
 
 room_capability_type = ENUM(
     'screencast_and_video',
@@ -42,7 +40,6 @@ class Room(db.Model):
 
     id = db.Column(db.Integer, nullable=False, primary_key=True)
     capability = db.Column(room_capability_type)
-    is_auditorium = db.Column(db.Boolean, nullable=False)
     kaltura_resource_id = db.Column(db.Integer)
     location = db.Column(db.String(255), nullable=False, unique=True)
     created_at = db.Column(db.DateTime, nullable=False, default=utc_now)
@@ -50,12 +47,10 @@ class Room(db.Model):
     def __init__(
             self,
             capability,
-            is_auditorium,
             kaltura_resource_id,
             location,
     ):
         self.capability = capability
-        self.is_auditorium = is_auditorium
         self.kaltura_resource_id = kaltura_resource_id
         self.location = location
 
@@ -64,16 +59,14 @@ class Room(db.Model):
                     id={self.id},
                     capability={self.capability},
                     location={self.location},
-                    is_auditorium={self.is_auditorium},
                     kaltura_resource_id={self.kaltura_resource_id},
                     created_at={self.created_at}>
                 """
 
     @classmethod
-    def create(cls, location, is_auditorium=False, kaltura_resource_id=None, capability=None):
+    def create(cls, location, kaltura_resource_id=None, capability=None):
         room = cls(
             capability=capability,
-            is_auditorium=is_auditorium,
             kaltura_resource_id=kaltura_resource_id,
             location=location,
         )
@@ -104,10 +97,6 @@ class Room(db.Model):
     @classmethod
     def all_rooms(cls):
         return cls.query.order_by(cls.capability, cls.location).all()
-
-    @classmethod
-    def auditoriums(cls):
-        return cls.query.filter_by(is_auditorium=True).order_by(cls.capability, cls.location).all()
 
     @classmethod
     def total_room_count(cls):
@@ -157,39 +146,17 @@ class Room(db.Model):
         std_commit()
 
     @classmethod
-    def set_auditorium(cls, room_id, is_auditorium):
-        room = cls.query.filter_by(id=room_id).first()
-        room.is_auditorium = is_auditorium
-        db.session.add(room)
-        std_commit()
-        return room
-
-    @classmethod
     def get_room_capability_options(cls):
         return {
             'screencast_and_video': 'Screencast + Video',
         }
 
     def to_api_json(self):
-        recording_type_options = {}
-
-        def _add_recording_type(key):
-            recording_type_options[key] = NAMES_PER_RECORDING_TYPE[key]
-
-        _add_recording_type('presenter_presentation_audio')
-
-        if self.is_auditorium:
-            _add_recording_type('presenter_presentation_audio_with_operator')
-            if app.config['COURSE_CAPTURE_PREMIUM_COST']:
-                recording_type_options['presenter_presentation_audio_with_operator'] += f" (${app.config['COURSE_CAPTURE_PREMIUM_COST']})"
-
         return {
             'id': self.id,
             'location': self.location,
             'capability': self.capability,
             'capabilityName': self.get_room_capability_options()[self.capability] if self.capability else None,
             'createdAt': to_isoformat(self.created_at),
-            'isAuditorium': self.is_auditorium,
             'kalturaResourceId': self.kaltura_resource_id,
-            'recordingTypeOptions': recording_type_options,
         }

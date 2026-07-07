@@ -29,7 +29,6 @@ from xena.models.canvas_site import CanvasSite
 from xena.models.email_template_type import EmailTemplateType
 from xena.models.recording_placement import RecordingPlacement
 from xena.models.recording_schedule import RecordingSchedule
-from xena.models.recording_type import RecordingType
 from xena.models.section import Section
 from xena.pages.course_page import CoursePage
 from xena.test_utils import util
@@ -94,7 +93,6 @@ class TestCourseInstructorChanges:
         self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
         util.get_kaltura_id(self.recording_schedule)
         self.recording_schedule.recording_placement = RecordingPlacement.PLACE_IN_MY_MEDIA
-        self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
 
     def test_old_instructor_modify_recording_settings(self):
         self.login_page.dev_auth(self.old_instructor.uid)
@@ -104,11 +102,6 @@ class TestCourseInstructorChanges:
         self.course_page.select_recording_placement(RecordingPlacement.PUBLISH_AUTOMATICALLY, sites=[self.site])
         self.course_page.save_recording_placement_edits()
         self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_AUTOMATICALLY
-
-        self.course_page.click_rec_type_edit_button()
-        self.course_page.select_rec_type(RecordingType.VIDEO_WITH_OPERATOR)
-        self.course_page.save_recording_type_edits()
-        self.recording_schedule.recording_type = RecordingType.VIDEO_WITH_OPERATOR
 
     def test_old_instructor_update_scheduled_recordings(self):
         self.login_page.dev_auth()
@@ -179,7 +172,6 @@ class TestCourseInstructorChanges:
     def test_verify_diablo_selected_settings(self):
         self.room_printable_page.close_printable_schedule()
         self.course_page.load_page(self.section)
-        self.course_page.verify_recording_type(self.recording_schedule)
         self.course_page.verify_recording_placement(self.recording_schedule)
         assert self.course_page.visible_course_site_ids() == [self.site.site_id]
 
@@ -225,14 +217,6 @@ class TestCourseInstructorChanges:
         self.course_page.verify_history_row(field='publish_type',
                                             old_value=RecordingPlacement.PLACE_IN_MY_MEDIA.value['db'],
                                             new_value=RecordingPlacement.PUBLISH_AUTOMATICALLY.value['db'],
-                                            requestor=self.old_instructor,
-                                            status='succeeded',
-                                            published=True)
-
-    def test_history_rec_type(self):
-        self.course_page.verify_history_row(field='recording_type',
-                                            old_value=RecordingType.VIDEO_SANS_OPERATOR.value['db'],
-                                            new_value=RecordingType.VIDEO_WITH_OPERATOR.value['db'],
                                             requestor=self.old_instructor,
                                             status='succeeded',
                                             published=True)

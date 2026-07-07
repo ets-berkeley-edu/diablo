@@ -73,7 +73,6 @@ def mock_scheduled(
         override_start_date=None,
         override_start_time=None,
         publish_type='kaltura_media_gallery',
-        recording_type='presenter_presentation_audio',
 ):
     meeting = meeting or get_eligible_meeting(section_id=section_id, term_id=term_id)
     Scheduled.create(
@@ -87,7 +86,6 @@ def mock_scheduled(
         meeting_start_date=override_start_date or get_recording_start_date(meeting, return_today_if_past_start=True),
         meeting_start_time=override_start_time or meeting['startTime'],
         publish_type_=publish_type,
-        recording_type_=recording_type,
         room_id=override_room_id or Room.get_room_id(section_id=section_id, term_id=term_id),
         section_id=section_id,
         term_id=term_id,

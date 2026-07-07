@@ -30,7 +30,7 @@ from sqlalchemy.dialects.postgresql import ARRAY
 from diablo import db, std_commit
 from diablo.externals.loch import get_loch_basic_attributes
 from diablo.lib.util import basic_attributes_to_api_json, format_days, format_time, get_names_of_days, local_now, to_isoformat, utc_now
-from diablo.models.course_preference import NAMES_PER_PUBLISH_TYPE, NAMES_PER_RECORDING_TYPE, publish_type, recording_type
+from diablo.models.course_preference import NAMES_PER_PUBLISH_TYPE, publish_type
 from diablo.models.email_template import email_template_type
 from diablo.models.room import Room
 
@@ -52,7 +52,6 @@ class Scheduled(db.Model):
     meeting_start_date = db.Column(db.DateTime, nullable=False)
     meeting_start_time = db.Column(db.String, nullable=False)
     publish_type = db.Column(publish_type, nullable=False)
-    recording_type = db.Column(recording_type, nullable=False)
     room_id = db.Column(db.Integer, db.ForeignKey('rooms.id'), nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=utc_now)
     deleted_at = db.Column(db.DateTime, nullable=True)
@@ -69,7 +68,6 @@ class Scheduled(db.Model):
             meeting_start_date,
             meeting_start_time,
             publish_type_,
-            recording_type_,
             room_id,
             section_id,
             term_id,
@@ -84,7 +82,6 @@ class Scheduled(db.Model):
         self.meeting_start_date = meeting_start_date
         self.meeting_start_time = meeting_start_time
         self.publish_type = publish_type_
-        self.recording_type = recording_type_
         self.room_id = room_id
         self.section_id = section_id
         self.term_id = term_id
@@ -104,7 +101,6 @@ class Scheduled(db.Model):
                     meeting_start_date={self.meeting_start_date},
                     meeting_start_time={self.meeting_start_time},
                     publish_type={self.publish_type},
-                    recording_type={self.recording_type},
                     room_id={self.room_id},
                     section_id={self.section_id},
                     term_id={self.term_id}>
@@ -123,7 +119,6 @@ class Scheduled(db.Model):
             meeting_start_date,
             meeting_start_time,
             publish_type_,
-            recording_type_,
             room_id,
             section_id,
             term_id,
@@ -139,7 +134,6 @@ class Scheduled(db.Model):
             meeting_start_date=meeting_start_date,
             meeting_start_time=meeting_start_time,
             publish_type_=publish_type_,
-            recording_type_=recording_type_,
             room_id=room_id,
             section_id=section_id,
             term_id=term_id,
@@ -230,8 +224,6 @@ class Scheduled(db.Model):
                 'meetingStartTimeFormatted': format_time(self.meeting_start_time),
                 'publishType': self.publish_type,
                 'publishTypeName': NAMES_PER_PUBLISH_TYPE[self.publish_type],
-                'recordingType': self.recording_type,
-                'recordingTypeName': NAMES_PER_RECORDING_TYPE[self.recording_type],
                 'room': room_feed,
                 'sectionId': self.section_id,
                 'termId': self.term_id,
@@ -240,7 +232,6 @@ class Scheduled(db.Model):
             return {
                 'id': self.id,
                 'publishTypeName': NAMES_PER_PUBLISH_TYPE[self.publish_type],
-                'recordingTypeName': NAMES_PER_RECORDING_TYPE[self.recording_type],
                 'createdAt': to_isoformat(self.created_at),
             }
 

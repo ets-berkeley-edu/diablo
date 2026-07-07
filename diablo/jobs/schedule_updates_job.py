@@ -111,17 +111,11 @@ def _queue_not_scheduled_update(course):
         field_value_old=json.dumps(scheduled),
         field_value_new=None,
     )
-    _downgrade_recording_type(course)
 
 
 def _queue_room_not_eligible_update(course):
     meeting = course.get('meetings', {}).get('ineligible', [])[0]
     scheduled = course['scheduled'][0]
-    CoursePreference.update_recording_type(
-        term_id=course['termId'],
-        section_id=course['sectionId'],
-        recording_type='presenter_presentation_audio',
-    )
     ScheduleUpdate.queue(
         term_id=course['termId'],
         section_id=course['sectionId'],
@@ -129,7 +123,6 @@ def _queue_room_not_eligible_update(course):
         field_value_old=json.dumps(_get_room_summary(scheduled)),
         field_value_new=json.dumps(_get_room_summary(meeting)),
     )
-    _downgrade_recording_type(course)
 
 
 def _valid_meeting_count(meetings):
@@ -221,17 +214,6 @@ def _queue_meeting_updates(course):
                 meeting_old.update({'room': _get_room_summary(scheduled)})
                 meeting_new.update({'room': _get_room_summary(meeting)})
 
-                # Downgrade recording type if moving out of an auditorium.
-                if scheduled['recordingType'] == 'presenter_presentation_audio_with_operator' and not _is_in_auditorium(meeting):
-                    ScheduleUpdate.queue(
-                        term_id=course['termId'],
-                        section_id=course['sectionId'],
-                        field_name='recording_type',
-                        field_value_old='presenter_presentation_audio_with_operator',
-                        field_value_new='presenter_presentation_audio',
-                    )
-                    _downgrade_recording_type(course)
-
             ScheduleUpdate.queue(
                 term_id=course['termId'],
                 section_id=course['sectionId'],
@@ -293,25 +275,6 @@ def _refresh_instructor_opt_ins(course, instructors):
             )
     # Regenerate course JSON feed to reflect any opt-in changes.
     return SisSection.get_course(term_id=course['termId'], section_id=course['sectionId'], include_administrative_proxies=True)
-
-
-def _downgrade_recording_type(course):
-    # When a course moves out of an auditorium, or loses its room entirely, ensure recording_type is set to the default
-    # (without operator), since the with-operator setting requires the course to be located in an auditorium.
-    # Other user-set preferences (publish type and collaborator UIDs) should persist through unscheduling, since they may
-    # later be rescheduled.
-    CoursePreference.update_recording_type(
-        term_id=course['termId'],
-        section_id=course['sectionId'],
-        recording_type='presenter_presentation_audio',
-    )
-
-
-def _is_in_auditorium(meeting):
-    room = meeting.get('room')
-    if room and 'presenter_presentation_audio_with_operator' in room.get('recordingTypeOptions', {}):
-        return True
-    return False
 
 
 def _get_room_summary(meeting):

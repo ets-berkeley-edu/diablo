@@ -120,7 +120,6 @@ DROP TYPE IF EXISTS public.approver_types;
 DROP TYPE IF EXISTS public.email_template_types;
 DROP TYPE IF EXISTS public.job_schedule_types;
 DROP TYPE IF EXISTS public.publish_types;
-DROP TYPE IF EXISTS public.recording_types;
 DROP TYPE IF EXISTS public.room_capability_types;
 DROP TYPE IF EXISTS public.schedule_update_status_types;
 DROP TYPE IF EXISTS public.user_types;

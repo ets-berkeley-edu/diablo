@@ -29,13 +29,11 @@ from io import StringIO
 from flask import current_app as app
 
 from diablo import std_commit
-from diablo.jobs.emails_job import EmailsJob
 from diablo.models.opt_in import OptIn
 from diablo.models.scheduled import Scheduled
-from diablo.models.sent_email import SentEmail
 from diablo.models.sis_section import SisSection
 from tests.test_api.api_test_utils import api_get_course, get_instructor_uids, mock_scheduled
-from tests.util import override_config, simply_yield, test_scheduling_workflow
+from tests.util import override_config, test_scheduling_workflow
 
 admin_uid = '90001'
 collaborator_uid = '242881'
@@ -127,17 +125,6 @@ class TestGetCourse:
         assert api_json['meetings']['ineligible'][0]['location'] == 'Wheeler 150'
         assert api_json['nonstandardMeetingDates'] is False
         assert api_json['meetingType'] == 'A'
-
-    def test_li_ka_shing_recording_options(self, client, fake_auth):
-        """Rooms designated as 'auditorium' offer ALL types of recording."""
-        fake_auth.login(admin_uid)
-        api_json = api_get_course(
-            client,
-            term_id=self.term_id,
-            section_id=section_3_id,
-        )
-        assert api_json['meetings']['eligible'][0]['room']['location'] == 'Li Ka Shing 145'
-        assert len(api_json['meetings']['eligible'][0]['room']['recordingTypeOptions']) == 2
 
     def test_course_with_administrative_proxy(self, client, fake_auth):
         """Course has access to instructors with APRX role."""
@@ -508,11 +495,10 @@ class TestDownloadCoursesCsv:
         for index, row in enumerate(reader):
             section_id = row[1]
             meeting_type = row[6]
-            sign_up_url = row[9]
+            sign_up_url = row[8]
             instructors = row[-3]
             instructor_uids = row[-2]
             publish_type = row[7]
-            recording_type = row[8]
             if index == 0:
                 assert section_id == 'Section Id'
                 assert meeting_type == 'Meeting Type'
@@ -524,8 +510,6 @@ class TestDownloadCoursesCsv:
                 assert int(section_id) == course['sectionId']
                 if len(publish_type):
                     assert publish_type == course['publishTypeName']
-                if len(recording_type):
-                    assert recording_type == course['recordingTypeName']
                 for snippet in [app.config['DIABLO_BASE_URL'], section_id, str(term_id)]:
                     assert snippet in sign_up_url
 
@@ -772,97 +756,6 @@ class TestUpdatePublishType:
         assert canvas_site_updates[0]['status'] == 'queued'
         assert canvas_site_updates[0]['requestedByUid'] == instructor_uids[0]
         assert canvas_site_updates[0]['requestedByName'] == 'William Peter Blatty'
-
-
-class TestUpdateRecordingType:
-
-    @property
-    def term_id(self):
-        return app.config['CURRENT_TERM_ID']
-
-    @staticmethod
-    def _api_recording_type_update(
-            client,
-            term_id,
-            section_id,
-            recording_type,
-            expected_status_code=200,
-    ):
-        response = client.post(
-            '/api/course/recording_type/update',
-            data=json.dumps({
-                'termId': term_id,
-                'sectionId': section_id,
-                'recordingType': recording_type,
-            }),
-            content_type='application/json',
-        )
-        assert response.status_code == expected_status_code
-        return response.json
-
-    def test_not_authenticated(self, client):
-        """Deny anonymous access."""
-        self._api_recording_type_update(
-            client,
-            term_id=self.term_id,
-            section_id=section_1_id,
-            recording_type='presenter_presentation_audio_with_operator',
-            expected_status_code=401,
-        )
-
-    def test_unauthorized(self, client, fake_auth):
-        """Deny non-instructors."""
-        fake_auth.login(collaborator_uid)
-        self._api_recording_type_update(
-            client,
-            term_id=self.term_id,
-            section_id=section_1_id,
-            recording_type='presenter_presentation_audio_with_operator',
-            expected_status_code=401,
-        )
-
-    def test_authorized(self, client, fake_auth):
-        """Update the 'recording_type' course preference."""
-        instructor_uids = get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
-        fake_auth.login(instructor_uids[0])
-
-        course = SisSection.get_course(section_id=section_1_id, term_id=self.term_id)
-        assert course['recordingType'] == 'presenter_presentation_audio'
-        self._api_recording_type_update(
-            client,
-            term_id=self.term_id,
-            section_id=section_1_id,
-            recording_type='presenter_presentation_audio_with_operator',
-        )
-        for uid in instructor_uids:
-            OptIn.update_opt_in(instructor_uid=uid, term_id=self.term_id, section_id=section_1_id, opt_in=True)
-        std_commit(allow_test_environment=True)
-
-        course = SisSection.get_course(section_id=section_1_id, term_id=self.term_id)
-        assert course['recordingType'] == 'presenter_presentation_audio_with_operator'
-
-        recording_type_updates = [u for u in course['updateHistory'] if u['fieldName'] == 'recording_type']
-        assert len(recording_type_updates) == 1
-        assert recording_type_updates[0]['fieldValueOld'] == 'presenter_presentation_audio'
-        assert recording_type_updates[0]['fieldValueNew'] == 'presenter_presentation_audio_with_operator'
-        assert recording_type_updates[0]['status'] == 'queued'
-        assert recording_type_updates[0]['requestedByUid'] == instructor_uids[0]
-        assert recording_type_updates[0]['requestedByName'] == 'William Peter Blatty'
-
-        def _get_operator_emails():
-            return SentEmail.get_emails_of_type(
-                section_ids=[section_1_id],
-                template_type='admin_operator_requested',
-                term_id=self.term_id,
-            )
-        assert len(_get_operator_emails()) == 0
-        EmailsJob(simply_yield).run()
-        assert len(_get_operator_emails()) == 1
-
-        #Cleanup.
-        for uid in instructor_uids:
-            OptIn.update_opt_in(instructor_uid=uid, term_id=self.term_id, section_id=section_1_id, opt_in=False)
-        std_commit(allow_test_environment=True)
 
 
 class TestUpdateOptIn:

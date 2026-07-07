@@ -27,11 +27,9 @@ from flask import current_app as app
 from diablo import std_commit
 from diablo.jobs.emails_job import EmailsJob
 from diablo.lib.util import utc_now
-from diablo.models.opt_in import OptIn
 from diablo.models.queued_email import QueuedEmail
 from diablo.models.sent_email import SentEmail
 from diablo.models.sis_section import SisSection
-from tests.test_api.api_test_utils import get_instructor_uids
 from tests.util import simply_yield
 
 
@@ -95,53 +93,6 @@ class TestEmailsJob:
                 assert email_json['templateType'] == email_template_type
                 assert email_json['termId'] == term_id
                 assert email_json['sentAt']
-
-    def test_queued_email_for_admin(self):
-        """Certain email template types are for admin recipients only."""
-        def _emails_sent():
-            return _get_emails_sent(email_template_type=email_template_type, section_id=section_id, term_id=term_id)
-
-        term_id = app.config['CURRENT_TERM_ID']
-        section_id = 50005
-        email_template_type = 'admin_operator_requested'
-        recipient_uid = app.config['EMAIL_DIABLO_ADMIN_UID']
-        QueuedEmail.create(
-            section_id,
-            email_template_type,
-            term_id,
-            recipient={
-                'name': 'Course Capture Admin',
-                'uid': recipient_uid,
-            },
-        )
-        instructor_uids = get_instructor_uids(section_id=section_id, term_id=term_id)
-        for uid in instructor_uids:
-            OptIn.update_opt_in(instructor_uid=uid, term_id=term_id, section_id=section_id, opt_in=True)
-        std_commit(allow_test_environment=True)
-
-        before = utc_now()
-        emails_sent_before = _emails_sent()
-        # Run the job
-        EmailsJob(simply_yield).run()
-        std_commit(allow_test_environment=True)
-
-        # Expect email to admin email address
-        emails_sent_after = _emails_sent()
-        assert len(emails_sent_after) == len(emails_sent_before) + 1
-
-        sent_email = next((e for e in emails_sent_after if e.section_id == section_id and e.sent_at > before), None)
-        assert sent_email
-        email_json = sent_email.to_api_json()
-        assert email_json['recipientUid'] == recipient_uid
-        assert email_json['sectionId'] == section_id
-        assert email_json['templateType'] == email_template_type
-        assert email_json['termId'] == term_id
-        assert email_json['sentAt']
-
-        #Cleanup.
-        for uid in instructor_uids:
-            OptIn.update_opt_in(instructor_uid=uid, term_id=term_id, section_id=section_id, opt_in=False)
-        std_commit(allow_test_environment=True)
 
 
 def _get_emails_sent(email_template_type, section_id, term_id):

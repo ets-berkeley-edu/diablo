@@ -688,8 +688,6 @@ def _to_api_json(  # noqa: C901, PLR0912, PLR0915
                 'preferences': preferences if preferences_object else None,
                 'publishType': preferences.get('publishType'),
                 'publishTypeName': preferences.get('publishTypeName'),
-                'recordingType': preferences.get('recordingType'),
-                'recordingTypeName': preferences.get('recordingTypeName'),
                 'sectionId': section_id,
                 'sectionNum': row['section_num'],
                 'scheduled': scheduled,

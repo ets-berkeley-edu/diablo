@@ -35,10 +35,9 @@ from diablo.externals.kaltura import Kaltura
 from diablo.lib.http_util import tolerant_jsonify
 from diablo.lib.interpolator import get_sign_up_url
 from diablo.lib.util import local_now
-from diablo.models.course_preference import CoursePreference, get_all_publish_types, get_all_recording_types
+from diablo.models.course_preference import CoursePreference, get_all_publish_types
 from diablo.models.note import Note
 from diablo.models.opt_in import OptIn
-from diablo.models.queued_email import QueuedEmail
 from diablo.models.schedule_update import ScheduleUpdate
 from diablo.models.scheduled import Scheduled
 from diablo.models.sis_section import SisSection
@@ -115,7 +114,6 @@ def download_courses_csv():
             'End Time': ' / '.join((m.get('endTimeFormatted') or '') for m in eligible_meetings),
             'Meeting Type': c.get('meetingType'),
             'Publish Type': scheduled.get('publishTypeName'),
-            'Recording Type': scheduled.get('recordingTypeName'),
             'Sign-up URL': get_sign_up_url(section_id=section_id, term_id=c.get('termId')),
             'Canvas URL': canvas_site_urls,
             'Instructors': ', '.join([_get_email_with_label(instructor) for instructor in c.get('instructors') or []]),
@@ -357,46 +355,6 @@ def update_publish_type():
     ))
 
 
-@app.route('/api/course/recording_type/update', methods=['POST'])
-@login_required
-def update_recording_type():
-    params = request.get_json()
-    section_id = params.get('sectionId')
-    term_id = params.get('termId')
-    recording_type = params.get('recordingType') or None
-
-    course = SisSection.get_course(term_id, section_id) if (term_id and section_id) else None
-    if not course or (recording_type not in get_all_recording_types()):
-        raise BadRequestError('Required params missing or invalid')
-    if not current_user.is_admin and current_user.uid not in [i['uid'] for i in course['instructors']]:
-        raise ForbiddenRequestError(f'Sorry, you are unauthorized to view the course {course["label"]}.')
-
-    preferences = CoursePreference.update_recording_type(
-        term_id=term_id,
-        section_id=section_id,
-        recording_type=recording_type,
-    )
-    if preferences and course.get('recordingType') != recording_type:
-        ScheduleUpdate.queue(
-            term_id=course['termId'],
-            section_id=course['sectionId'],
-            field_name='recording_type',
-            field_value_old=course.get('recordingType'),
-            field_value_new=recording_type,
-            requested_by_uid=current_user.uid,
-            requested_by_name=current_user.name,
-        )
-        if recording_type == 'presenter_presentation_audio_with_operator':
-            QueuedEmail.notify_admin_operator_requested(course)
-
-    return tolerant_jsonify(SisSection.get_course(
-        term_id,
-        section_id,
-        include_canvas_sites=True,
-        include_deleted=True,
-        include_notes=current_user.is_admin,
-        include_update_history=True,
-    ))
 
 
 @app.route('/api/courses/report/<term_id>')

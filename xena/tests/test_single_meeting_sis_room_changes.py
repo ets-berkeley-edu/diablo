@@ -28,7 +28,6 @@ import pytest
 from xena.models.email_template_type import EmailTemplateType
 from xena.models.recording_placement import RecordingPlacement
 from xena.models.recording_schedule import RecordingSchedule
-from xena.models.recording_type import RecordingType
 from xena.models.section import Section
 from xena.models.user import User
 from xena.pages.course_page import CoursePage
@@ -42,11 +41,10 @@ class TestCourseRoomChanges:
 
     - Section has instructor and single meeting
     - Recordings scheduled
-    - Instructor adds operator
-    - Course moved to eligible, non-auditorium room
-    - Series updated, operator removed automatically
+    - Course moved to another eligible room
+    - Series updated
     - Course moved to ineligible room, recordings unscheduled
-    - Course moved back to eligible, non-auditorium room, recordings rescheduled
+    - Course moved back to eligible room, recordings rescheduled
     - Room removed altogether, recordings unscheduled
     """
 
@@ -68,7 +66,7 @@ class TestCourseRoomChanges:
         self.kaltura_page.log_in_and_reset_test_data(self.calnet_page, [self.section])
         util.reset_section_and_user_test_data([self.section], [self.instr])
 
-    # COURSE SCHEDULED, INSTRUCTOR SELECTS VIDEO OPERATOR
+    # COURSE SCHEDULED
 
     def test_instructor_opts_in(self):
         self.login_page.dev_auth(self.instr.uid)
@@ -80,32 +78,13 @@ class TestCourseRoomChanges:
         self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
         assert util.get_kaltura_id(self.recording_schedule)
         self.recording_schedule.recording_placement = RecordingPlacement.PLACE_IN_MY_MEDIA
-        self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
 
     def test_scheduling_email(self):
         assert util.get_sent_email_count(EmailTemplateType.NEW_CLASS_ELIGIBLE, section=None,
                                          instructor=self.instr) == 1
         assert util.get_sent_email_count(EmailTemplateType.CLASS_SCHEDULED, self.section, self.instr) == 1
 
-    def test_modify_recording_settings(self):
-        self.login_page.dev_auth(self.instr.uid)
-        self.courses_page.click_course_page_link(self.section)
-        self.course_page.click_rec_type_edit_button()
-        self.course_page.select_rec_type(RecordingType.VIDEO_WITH_OPERATOR)
-        self.course_page.save_recording_type_edits()
-        self.recording_schedule.recording_type = RecordingType.VIDEO_WITH_OPERATOR
-
-    def test_update_series(self):
-        self.login_page.dev_auth()
-        self.jobs_page.run_kaltura_job_sequence()
-
-    def test_settings_update_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.CHANGES_CONFIRMED, self.section, self.instr) == 1
-
-    def test_paging_operator_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.ADMIN_OPERATOR_REQUESTED, self.section) == 1
-
-    # SCHEDULED COURSE MOVES TO ANOTHER ELIGIBLE ROOM, THOUGH NOT AN AUDITORIUM
+    # SCHEDULED COURSE MOVES TO ANOTHER ELIGIBLE ROOM
 
     def test_move_to_new_eligible_room(self):
         self.meeting.room = self.new_eligible_room
@@ -113,13 +92,9 @@ class TestCourseRoomChanges:
 
     def test_new_eligible_room_run_updates(self):
         self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
-        self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
 
     def test_new_eligible_room_email(self):
         assert util.get_sent_email_count(EmailTemplateType.SCHEDULE_CHANGE, self.section, self.instr) == 1
-
-    def test_settings_downgrade_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.CHANGES_CONFIRMED, self.section, self.instr) == 2
 
     def test_no_multi_meeting_new_room_email(self):
         assert util.get_sent_email_count(EmailTemplateType.MULTIPLE_MEETING_PATTERN_CHANGE, self.section,
@@ -135,10 +110,9 @@ class TestCourseRoomChanges:
     def test_new_eligible_room_printable(self):
         self.room_printable_page.verify_printable(self.recording_schedule)
 
-    def test_new_eligible_room_recording_type_downgrade(self):
+    def test_new_eligible_room_settings(self):
         self.room_printable_page.close_printable_schedule()
         self.course_page.load_page(self.section)
-        self.course_page.verify_recording_type(self.recording_schedule)
         self.course_page.verify_recording_placement(self.recording_schedule)
 
     def test_new_eligible_room_series_title_and_desc(self):
@@ -218,7 +192,6 @@ class TestCourseRoomChanges:
     def test_eligible_room_again_reschedule_series(self):
         self.jobs_page.run_kaltura_job_sequence()
         assert util.get_kaltura_id(self.recording_schedule)
-        self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
         self.recording_schedule.recording_placement = RecordingPlacement.PLACE_IN_MY_MEDIA
 
     def test_eligible_room_again_class_scheduled_email(self):
@@ -237,7 +210,6 @@ class TestCourseRoomChanges:
     def test_eligible_room_again_settings(self):
         self.room_printable_page.close_printable_schedule()
         self.course_page.load_page(self.section)
-        self.course_page.verify_recording_type(self.recording_schedule)
         self.course_page.verify_recording_placement(self.recording_schedule)
 
     def test_eligible_room_again_series_title_and_desc(self):
@@ -293,12 +265,6 @@ class TestCourseRoomChanges:
     def test_class_scheduled_email_ttl(self):
         assert util.get_sent_email_count(EmailTemplateType.CLASS_SCHEDULED, self.section, self.instr) == 2
 
-    def test_settings_update_email_ttl(self):
-        assert util.get_sent_email_count(EmailTemplateType.CHANGES_CONFIRMED, self.section, self.instr) == 2
-
-    def test_paging_operator_email_ttl(self):
-        assert util.get_sent_email_count(EmailTemplateType.ADMIN_OPERATOR_REQUESTED, self.section) == 1
-
     def test_schedule_change_email(self):
         assert util.get_sent_email_count(EmailTemplateType.SCHEDULE_CHANGE, self.section, self.instr) == 1
 
@@ -309,7 +275,7 @@ class TestCourseRoomChanges:
 
     def test_course_history_row_count(self):
         self.course_page.load_page(self.section)
-        assert self.course_page.update_history_row_count() == 8
+        assert self.course_page.update_history_row_count() == 6
 
     def test_course_history_instructor_added(self):
         self.course_page.verify_history_row(field='instructor_uids',
@@ -324,23 +290,6 @@ class TestCourseRoomChanges:
                                             old_value='—',
                                             new_value=f'{self.instr.uid}',
                                             requestor=self.instr,
-                                            status='succeeded',
-                                            published=True)
-
-    def test_history_rec_type_upgrade(self):
-        self.course_page.load_page(self.section)
-        self.course_page.verify_history_row(field='recording_type',
-                                            old_value=RecordingType.VIDEO_SANS_OPERATOR.value['db'],
-                                            new_value=RecordingType.VIDEO_WITH_OPERATOR.value['db'],
-                                            requestor=self.instr,
-                                            status='succeeded',
-                                            published=True)
-
-    def test_history_rec_type_downgrade(self):
-        self.course_page.verify_history_row(field='recording_type',
-                                            old_value=RecordingType.VIDEO_WITH_OPERATOR.value['db'],
-                                            new_value=RecordingType.VIDEO_SANS_OPERATOR.value['db'],
-                                            requestor=None,
                                             status='succeeded',
                                             published=True)
 

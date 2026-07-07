@@ -31,7 +31,6 @@ from xena.models.canvas_site import CanvasSite
 from xena.models.email_template_type import EmailTemplateType
 from xena.models.recording_placement import RecordingPlacement
 from xena.models.recording_schedule import RecordingSchedule
-from xena.models.recording_type import RecordingType
 from xena.models.user import User
 from xena.pages.course_page import CoursePage
 from xena.test_utils import util
@@ -93,11 +92,9 @@ class TestWeirdTypeD:
         self.jobs_page.run_schedule_update_and_kaltura_job_sequence()
 
         assert util.get_kaltura_id(self.recording_schedule_0)
-        self.recording_schedule_0.recording_type = RecordingType.VIDEO_SANS_OPERATOR
         self.recording_schedule_0.recording_placement = RecordingPlacement.PLACE_IN_MY_MEDIA
 
         assert util.get_kaltura_id(self.recording_schedule_1)
-        self.recording_schedule_1.recording_type = RecordingType.VIDEO_SANS_OPERATOR
         self.recording_schedule_1.recording_placement = RecordingPlacement.PLACE_IN_MY_MEDIA
 
     # CHECK FILTERS - SCHEDULED

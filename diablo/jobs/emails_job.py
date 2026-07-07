@@ -42,7 +42,6 @@ class EmailsJob(BaseJob):
                 app.logger.warning(f'Email will remain queued until course data is present: {queued_email}')
                 continue
             if not course['hasOptedIn'] and queued_email.template_type in (
-                'admin_operator_requested',
                 'changes_confirmed',
                 'class_scheduled',
                 'multiple_meeting_pattern_change',

@@ -25,10 +25,6 @@
             <div class="text-subtitle-1">Scheduled on</div>
             <Date class="text-body-2 text-medium-emphasis" :date="scheduled.createdAt" tag="div" />
           </v-col>
-          <v-col cols="6">
-            <div class="text-subtitle-1">Recording Type</div>
-            <div class="text-body-2 text-medium-emphasis">{{ scheduled.recordingTypeName }}</div>
-          </v-col>
         </v-row>
         <v-row>
           <v-col cols="6">
