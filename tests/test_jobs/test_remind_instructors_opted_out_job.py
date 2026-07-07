@@ -30,6 +30,7 @@ from diablo import std_commit
 from diablo.jobs.emails_job import EmailsJob
 from diablo.jobs.remind_instructors_opted_out_job import RemindInstructorsOptedOutJob
 from diablo.jobs.semester_start_job import SemesterStartJob
+from diablo.models.opt_in import OptIn
 from diablo.models.queued_email import QueuedEmail
 from diablo.models.scheduled import Scheduled
 from diablo.models.sent_email import SentEmail
@@ -74,6 +75,33 @@ class TestRemindInstructorsOptedOutJob:
             email_sent = emails_sent[-1]
             assert email_sent.template_type == 'remind_opted_out'
             assert email_sent.term_id == term_id
+
+    def test_no_email_on_partial_approval(self):
+        """If an instructor's opted-out courses are partially approved, they should get no opted-out email."""
+        with test_scheduling_workflow(app):
+            term_id = app.config['CURRENT_TERM_ID']
+            instructor_uid = '10002'
+            co_instructor_uid = '10001'
+            co_taught_section_id = '50000'
+
+            OptIn.update_opt_in(instructor_uid=co_instructor_uid, term_id=term_id, section_id=co_taught_section_id, opt_in=True)
+            std_commit(allow_test_environment=True)
+
+            SemesterStartJob(simply_yield).run()
+            std_commit(allow_test_environment=True)
+            RemindInstructorsOptedOutJob(simply_yield).run()
+            std_commit(allow_test_environment=True)
+
+            # Partially approved course is not scheduled.
+            assert not Scheduled.get_scheduled(section_id=co_taught_section_id, term_id=term_id)
+
+            # But no reminder is sent.
+            reminders_queued_for_instructor = []
+            for e in QueuedEmail.get_all(term_id=term_id):
+                if e.recipient['uid'] == instructor_uid and e.template_type == 'remind_opted_out':
+                    reminders_queued_for_instructor.append(e)
+
+            assert len(reminders_queued_for_instructor) == 0
 
     def test_opted_out_instructor_do_not_email(self, client, fake_auth):
         """No reminder emails go out if instructor has so requested."""
