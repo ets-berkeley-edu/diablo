@@ -68,18 +68,20 @@ class CoursesPage(DiabloPages):
     OPT_IN_BY_DEFAULT_RADIO = By.ID, 'all-future-courses-opt-in'
     OPT_OUT_BY_DEFAULT_RADIO = By.ID, 'choose-courses-opt-in'
     REMINDER_EMAIL_CBX = By.ID, 'email-checkbox'
+    PREFS_SAVE_BUTTON = By.ID, 'btn-course-capture-preferences-save'
+    PREFS_CXL_BUTTON = By.ID, 'btn-course-capture-preferences-cancel'
 
     def set_opt_in_by_default(self):
         app.logger.info('Clicking the opt-in-by-default radio')
         self.wait_for_element(self.OPT_IN_BY_DEFAULT_RADIO, util.get_short_timeout())
         self.click_element_js(self.OPT_IN_BY_DEFAULT_RADIO)
-        time.sleep(1)
+        self.save_preferences()
 
     def set_opt_out_by_default(self):
         app.logger.info('Clicking the opt-out-by-default radio')
         self.wait_for_element(self.OPT_OUT_BY_DEFAULT_RADIO, util.get_short_timeout())
         self.click_element_js(self.OPT_OUT_BY_DEFAULT_RADIO)
-        time.sleep(1)
+        self.save_preferences()
 
     def is_instructor_opted_in_by_default(self):
         self.when_present(self.OPT_IN_BY_DEFAULT_RADIO, util.get_short_timeout())
@@ -91,12 +93,13 @@ class CoursesPage(DiabloPages):
         else:
             app.logger.info('Clicking the email reminders checkbox')
             self.wait_for_element_and_click(self.REMINDER_EMAIL_CBX)
+            self.save_preferences()
 
     def decline_email_reminders(self):
         if self.is_email_reminders_checked():
             app.logger.info('Clicking the email reminders checkbox')
             self.wait_for_element_and_click(self.REMINDER_EMAIL_CBX)
-            time.sleep(1)
+            self.save_preferences()
         else:
             app.logger.info('Decline reminder emails is already unchecked')
 
@@ -107,3 +110,13 @@ class CoursesPage(DiabloPages):
     def is_email_reminders_el_enabled(self):
         self.when_present(self.REMINDER_EMAIL_CBX, util.get_short_timeout())
         return self.element(self.REMINDER_EMAIL_CBX).is_enabled()
+
+    def save_preferences(self):
+        app.logger.info('Clicking the Course Capture preferences save button')
+        self.wait_for_element_and_click(self.PREFS_SAVE_BUTTON)
+        time.sleep(3)
+
+    def cancel_preferences(self):
+        app.logger.info('Clicking the Course Capture preferences cancel button')
+        self.wait_for_element_and_click(self.PREFS_CXL_BUTTON)
+        time.sleep(1)
