@@ -93,6 +93,7 @@
 import {each, get, size} from 'lodash'
 import {mdiMenuDown, mdiMenuRight, mdiVideoPlus} from '@mdi/js'
 import {onMounted, ref} from 'vue'
+import {storeToRefs} from 'pinia'
 import CourseCapturePreferences from '@/components/course/CourseCapturePreferences.vue'
 import HomeCoursesTable from '@/components/util/HomeCoursesTable.vue'
 import PageTitle from '@/components/util/PageTitle.vue'
@@ -104,7 +105,7 @@ import {useContextStore} from '@/stores/context'
 
 const contextStore = useContextStore()
 const config = contextStore.config
-const currentUser = contextStore.currentUser
+const {currentUser} = storeToRefs(contextStore)
 const eligibleCourses = ref<Course[]>([])
 const ineligibleCourses = ref<Course[]>([])
 const isShowingIneligibleCourses = ref(false)
@@ -113,13 +114,13 @@ const pageTitle = ref('')
 contextStore.loadingStart()
 
 onMounted(() => {
-  each(currentUser.courses, course => course.courseCodes = getCourseCodes(course))
-  partitionCoursesByEligibility(currentUser.courses, eligibleCourses.value, ineligibleCourses.value)
+  each(currentUser.value.courses, course => course.courseCodes = getCourseCodes(course))
+  partitionCoursesByEligibility(currentUser.value.courses, eligibleCourses.value, ineligibleCourses.value)
   each([...eligibleCourses.value, ...ineligibleCourses.value], course => {
     course.displayMeetings = getDisplayMeetings(course)
     course.statusLabel = getCourseStatusLabel(course)
   })
-  pageTitle.value = `Your ${config.currentTermName} ${pluralize('Course', size(currentUser.courses), false)}`
+  pageTitle.value = `Your ${config.currentTermName} ${pluralize('Course', size(currentUser.value.courses), false)}`
   contextStore.loadingComplete(pageTitle.value)
 })
 
@@ -129,7 +130,7 @@ const onClickShowIneligibleCourses = () => {
 }
 
 const onUpdateUser = () => {
-  getCurrentUser().then(contextStore.setCurrentUser)
+  return getCurrentUser().then(contextStore.setCurrentUser)
 }
 </script>
 
