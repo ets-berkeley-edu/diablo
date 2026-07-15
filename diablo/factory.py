@@ -55,7 +55,6 @@ def create_app(standalone=False):
 def _register_jobs(app):
     from diablo.jobs.blackouts_job import BlackoutsJob  # noqa: F401
     from diablo.jobs.clear_schedules_job import ClearSchedulesJob  # noqa: F401
-    from diablo.jobs.delete_zoom_recordings_job import DeleteZoomRecordingsJob  # noqa: F401
     from diablo.jobs.emails_job import EmailsJob  # noqa: F401
     from diablo.jobs.house_keeping_job import HouseKeepingJob  # noqa: F401
     from diablo.jobs.kaltura_job import KalturaJob  # noqa: F401
