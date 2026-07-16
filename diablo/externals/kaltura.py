@@ -671,7 +671,7 @@ def _events_to_api_json(events):
         def _belongs_in_the_series(e):
             return e.get('recurrenceType', '').lower() == 'recurrence' and e.get('parentId') == recurring_event['id']
         # Find events of the series.
-        recurrences = list(filter(lambda e: _belongs_in_the_series(e), miscellanea))
+        recurrences = list(filter(_belongs_in_the_series, miscellanea))
         recurring_event['recurrences'] = recurrences
         for recurrence in recurrences:
             # The 'recurrence' is removed from the generic list.

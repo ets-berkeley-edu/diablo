@@ -100,4 +100,4 @@ def _save_courses(sis_sections):
             'term_id': int(row['term_id']),
         } for row in sis_sections
     ]
-    db.session.execute(query, {'json_dumps': json.dumps(data)})
+    db.session.execute(text(query), {'json_dumps': json.dumps(data)})
