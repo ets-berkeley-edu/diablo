@@ -66,6 +66,7 @@
       class="sidebar-nav"
     >
       <v-list role="none" tabindex="-1">
+        <!-- eslint-disable-next-line vue/no-v-for-template-key -->
         <template v-for="(item, i) in navItems" :key="i">
           <v-list-item
             :id="`sidebar-link-${kebabCase(item.title)}`"

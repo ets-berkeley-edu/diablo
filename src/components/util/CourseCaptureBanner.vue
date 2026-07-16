@@ -71,14 +71,6 @@ onMounted(() => {
   -webkit-animation: moods 300s infinite alternate;
   animation: moods 300s infinite alternate;
 }
-.v-enter-active,
-.v-leave-active {
-  transition: opacity 1.0s ease;
-}
-.v-enter-from,
-.v-leave-to {
-  opacity: 0;
-}
 @keyframes moods {
   0% {
     color: white;
@@ -113,22 +105,6 @@ onMounted(() => {
   100% {
     color: pink;
   }
-}
-@keyframes move {
-  0%  { top: 0px; }
-  50% { top: -50px; }
-}
-@-webkit-keyframes move {
-  0%  { top: 0px; }
-  50% { top: -50px; }
-}
-@-moz-keyframes move {
-  0%  { top: 0px; }
-  50% { top: -50px; }
-}
-@-o-keyframes move {
-  0%  { top: 0px; }
-  50% { top: -50px; }
 }
 @keyframes move {
   0%  { top: 0px; }
