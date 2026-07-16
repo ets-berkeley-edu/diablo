@@ -96,7 +96,7 @@ class Instructor(Base):
                     'updated_at': now,
                 } for row in rows_subset
             ]
-            db.session.execute(query, {'json_dumps': json.dumps(data)})
+            db.session.execute(text(query), {'json_dumps': json.dumps(data)})
 
 
 def instructor_json_from_uids(uids):
@@ -107,4 +107,4 @@ def instructor_json_from_uids(uids):
             'email': row['email'],
         }
     instructor_query = 'SELECT uid, first_name, last_name, email from instructors where uid = any(:uids)'
-    return [_row_to_json(row) for row in db.session.execute(text(instructor_query), {'uids': list(uids)})]
+    return [_row_to_json(row) for row in db.session.execute(text(instructor_query), {'uids': list(uids)}).mappings()]

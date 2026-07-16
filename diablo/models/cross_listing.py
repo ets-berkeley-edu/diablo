@@ -84,7 +84,7 @@ class CrossListing(db.Model):
             'term_id': term_id,
         }
         instruction_uids_by_section_id = {}
-        for row in db.session.execute(text(sql), parameters):
+        for row in db.session.execute(text(sql), parameters).mappings():
             cross_listed_section_id = row['section_id']
             if cross_listed_section_id not in instruction_uids_by_section_id:
                 instruction_uids_by_section_id[cross_listed_section_id] = []

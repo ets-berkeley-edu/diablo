@@ -153,12 +153,12 @@ class SisSection(db.Model):
                 AND meeting_location != ''
             ORDER BY meeting_location
         """
-        return [row['meeting_location'] for row in db.session.execute(text(sql))]
+        return [row['meeting_location'] for row in db.session.execute(text(sql)).mappings()]
 
     @classmethod
     def get_distinct_instructor_uids(cls):
         sql = 'SELECT DISTINCT instructor_uid FROM sis_sections WHERE instructor_uid IS NOT NULL'
-        return [row['instructor_uid'] for row in db.session.execute(text(sql))]
+        return [row['instructor_uid'] for row in db.session.execute(text(sql)).mappings()]
 
     @classmethod
     def get_course(
@@ -398,7 +398,7 @@ class SisSection(db.Model):
             'instructor_uid': instructor_uid,
             'term_id': term_id,
         }
-        for row in db.session.execute(text(sql), args):
+        for row in db.session.execute(text(sql), args).mappings():
             if row['is_principal_listing'] is False:
                 non_principal_section_ids.append(row['section_id'])
             else:
@@ -413,7 +413,7 @@ class SisSection(db.Model):
                     term_id = :term_id
                     AND cross_listed_section_ids && ARRAY[{','.join(str(id_) for id_ in non_principal_section_ids)}]
             """
-            for row in db.session.execute(text(sql), {'section_ids': instructor_uid, 'term_id': term_id}):
+            for row in db.session.execute(text(sql), {'section_ids': instructor_uid, 'term_id': term_id}).mappings():
                 section_ids.append(row['section_id'])
 
         return cls.get_courses(term_id=term_id, section_ids=section_ids)
@@ -573,7 +573,7 @@ class SisSection(db.Model):
                 'instructor_role_codes': ALL_INSTRUCTOR_ROLE_CODES,
                 'term_id': term_id,
             },
-        )
+        ).mappings()
         return set([row['section_id'] for row in rows])
 
 
@@ -588,7 +588,7 @@ def _to_api_json(  # noqa: C901, PLR0912, PLR0915
     include_user_preferences=False,
 ):
 
-    rows = rows.fetchall()
+    rows = rows.mappings().fetchall()
     section_ids = list(set(int(row['section_id']) for row in rows))
     courses_per_id = {}
 
@@ -844,7 +844,7 @@ def _get_cross_listed_courses(section_ids, term_id, include_user_preferences=Fal
             'instructor_role_codes': ALL_INSTRUCTOR_ROLE_CODES,
             'term_id': term_id,
         },
-    )
+    ).mappings()
     rows_by_cross_listing_id = {section_id: [] for section_id in all_cross_listing_ids}
     for row in rows:
         rows_by_cross_listing_id[row['section_id']].append(row)
@@ -903,7 +903,7 @@ def _to_instructor_json(row):
         'uid': instructor_uid,
     }
 
-    if 'instructor_opt_in_new_courses' in row._mapping:
+    if 'instructor_opt_in_new_courses' in row:
         instructor_json['optInNewCourses'] = row['instructor_opt_in_new_courses'] or False
 
     return instructor_json

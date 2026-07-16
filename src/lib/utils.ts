@@ -99,7 +99,7 @@ export function putFocusNextTick(
     cssSelector = undefined,
   }: {
     scroll?: boolean
-    scrollBlock?: ScrollLogicalPosition
+    scrollBlock?: 'start' | 'center' | 'end' | 'nearest'
     cssSelector?: string
   } = {}
 ) {

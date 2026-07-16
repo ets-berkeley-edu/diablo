@@ -104,7 +104,7 @@ class Room(db.Model):
 
     @classmethod
     def get_all_locations(cls):
-        result = db.session.execute(text('SELECT location FROM rooms'))
+        result = db.session.execute(text('SELECT location FROM rooms')).mappings()
         return [row['location'] for row in result]
 
     @classmethod
@@ -121,7 +121,7 @@ class Room(db.Model):
                 'section_id': section_id,
                 'term_id': term_id,
             },
-        )
+        ).mappings()
         ids_ = [row['room_id'] for row in rows]
         return ids_[0] if ids_ else None
 

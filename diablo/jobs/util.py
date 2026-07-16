@@ -212,7 +212,7 @@ def refresh_cross_listings(term_id):
                 ORDER BY schedule, section_id
             """
     rows = []
-    for row in db.session.execute(text(sql), {'term_id': term_id}):
+    for row in db.session.execute(text(sql), {'term_id': term_id}).mappings():
         rows.append({'schedule': row['schedule'], 'section_id': row['section_id']})
     register_cross_listings(rows, term_id)
 
@@ -269,7 +269,7 @@ def register_cross_listings(rows, term_id):  # noqa: C901
             if index < cross_listing_count - 1:
                 query += ','
             non_principal_section_ids.extend(cross_listed_section_ids)
-        db.session.execute(query, {'term_id': term_id})
+        db.session.execute(text(query), {'term_id': term_id})
 
     # Mark cross-listed section_ids as non-principal listings to keep duplicate results out of SisSection queries.
     SisSection.set_non_principal_listings(section_ids=non_principal_section_ids, term_id=term_id)

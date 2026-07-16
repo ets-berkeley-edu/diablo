@@ -27,6 +27,7 @@ import traceback
 import psycopg2
 from canvasapi.exceptions import CanvasException
 from flask import current_app as app
+from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 
 from diablo import db
@@ -76,7 +77,7 @@ def ping():
 def _db_status():
     sql = 'SELECT 1'
     try:
-        db.session.execute(sql)
+        db.session.execute(text(sql))
         return True
     except psycopg2.Error as e:
         log_db_error(e, sql)

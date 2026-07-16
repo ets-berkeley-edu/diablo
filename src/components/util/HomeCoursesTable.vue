@@ -50,8 +50,8 @@
                 :text="describeRecordingsStatus(course.statusLabel)"
                 location="top"
               >
-                <template #activator="{ props }">
-                  <span v-bind="props">{{ course.statusLabel }}</span>
+                <template #activator="{ props: activatorProps }">
+                  <span v-bind="activatorProps">{{ course.statusLabel }}</span>
                 </template>
               </v-tooltip>
             </div>
@@ -213,8 +213,8 @@ const idPrefix = `courses-table-${props.coursesType}`
     display: none;
   }
 
-  .instructor-courses table,
-  .instructor-courses tbody,
+  .instructor-courses :deep(table),
+  .instructor-courses :deep(tbody),
   .instructor-courses tr,
   .instructor-courses td,
   .instructor-courses th {
