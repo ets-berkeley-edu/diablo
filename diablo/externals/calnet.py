@@ -54,7 +54,7 @@ class Client:
         self.server = server
 
     def connect(self):
-        conn = ldap3.Connection(self.server, user=self.bind, password=self.password, auto_bind=ldap3.AUTO_BIND_TLS_BEFORE_BIND)
+        conn = ldap3.Connection(self.server, user=self.bind, password=self.password, auto_bind=ldap3.AUTO_BIND_NO_TLS)
         return conn
 
     def search_uids(self, uids, search_expired=False):
