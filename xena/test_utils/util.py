@@ -127,7 +127,7 @@ def get_kaltura_ids(section):
     ids = []
     app.logger.info(f'Checking for all Kaltura IDs for term {section.term.id} section {section.ccn}')
     app.logger.info(sql)
-    result = db.session.execute(text(sql))
+    result = db.session.execute(text(sql)).mappings()
     std_commit(allow_test_environment=True)
     for row in result:
         ids.append(dict(row).get('kaltura_schedule_id'))
@@ -158,7 +158,7 @@ def get_kaltura_id(recording_schedule):
     ids = []
     app.logger.info(f'Checking for Kaltura ID for term {section.term.id} section {section.ccn}')
     app.logger.info(sql)
-    result = db.session.execute(text(sql))
+    result = db.session.execute(text(sql)).mappings()
     std_commit(allow_test_environment=True)
     for row in result:
         ids.append(dict(row).get('kaltura_schedule_id'))
@@ -184,7 +184,7 @@ def get_all_eligible_section_ids():
     """
     app.logger.info(sql)
     ids = []
-    result = db.session.execute(text(sql))
+    result = db.session.execute(text(sql)).mappings()
     std_commit(allow_test_environment=True)
     for row in result:
         ids.append(f'{dict(row).get("section_id")}')
@@ -233,7 +233,7 @@ def get_test_instructor_data(count, uids_to_exclude=None):
                LIMIT {count};
     """
     app.logger.info(sql)
-    result = db.session.execute(text(sql))
+    result = db.session.execute(text(sql)).mappings()
     std_commit(allow_test_environment=True)
     uids = []
     for row in result:
@@ -246,7 +246,7 @@ def get_test_instructor_data(count, uids_to_exclude=None):
                WHERE uid IN ({', '.join(uids)})
     """
     app.logger.info(sql)
-    results = db.session.execute(text(sql))
+    results = db.session.execute(text(sql)).mappings()
     std_commit(allow_test_environment=True)
     test_instructor_data = []
     for row in results:
@@ -277,7 +277,7 @@ def get_test_section(test_data, test_section_instructor_data=False):
                LIMIT 1;
     """
     app.logger.info(sql)
-    result = db.session.execute(text(sql)).first()
+    result = db.session.execute(text(sql)).mappings().first()
     std_commit(allow_test_environment=True)
     app.logger.info(f'{result}')
     sis_data = {
@@ -325,7 +325,7 @@ def get_test_x_listed_sections(test_data):
                LIMIT 1;
     """
     app.logger.info(sql)
-    result = db.session.execute(text(sql)).first()
+    result = db.session.execute(text(sql)).mappings().first()
     std_commit(allow_test_environment=True)
     app.logger.info(f'{result}')
 
@@ -335,7 +335,7 @@ def get_test_x_listed_sections(test_data):
                  AND term_id = {app.config['CURRENT_TERM_ID']};
     """
     app.logger.info(sql)
-    listing_result = db.session.execute(text(sql)).first()
+    listing_result = db.session.execute(text(sql)).mappings().first()
     std_commit(allow_test_environment=True)
     app.logger.info(f'{listing_result}')
 
@@ -493,7 +493,7 @@ def get_email_template_content(template):
                 FROM email_templates
                WHERE template_type = '{template.template_type.value['type']}'"""
     app.logger.info(sql)
-    result = db.session.execute(text(sql)).first()
+    result = db.session.execute(text(sql)).mappings().first()
     std_commit(allow_test_environment=True)
     if result:
         template.subject = result['subject_line']
@@ -544,7 +544,7 @@ def get_room_id(room):
     sql = f"SELECT id FROM rooms WHERE location = '{room}'"
     app.logger.info(sql)
     ids = []
-    result = db.session.execute(text(sql))
+    result = db.session.execute(text(sql)).mappings()
     std_commit(allow_test_environment=True)
     for row in result:
         ids.append(dict(row).get('id'))

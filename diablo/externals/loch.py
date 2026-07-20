@@ -58,7 +58,7 @@ def get_loch_basic_attributes(uids):
             {'uids': uids},
         ).all()
         app.logger.info(f'Loch Ness basic attributes query returned {len(results)} results for {len(uids)} uids.')
-        return results
+        return [dict(row._mapping) for row in results]
     except Exception as e:
         app.logger.exception(e)
 
@@ -89,7 +89,7 @@ def get_loch_basic_attributes_by_uid_or_email(snippet, limit=20):
     try:
         results = db.session().execute(text(query), params).all()
         app.logger.info(f'Loch Ness basic attributes query returned {len(results)} results (snippet={snippet}).')
-        return results
+        return [dict(row._mapping) for row in results]
     except Exception as e:
         app.logger.exception(e)
 
