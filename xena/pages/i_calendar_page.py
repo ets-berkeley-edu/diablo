@@ -33,8 +33,8 @@ from xena.test_utils import util
 
 class ICalendarPage(Page):
 
-    VALIDATOR_FORM = (By.ID, 'validate-form')
     VALIDATOR_TEXTAREA = (By.ID, 'jform_ical_text')
+    VALIDATOR_SUBMIT_BUTTON = (By.XPATH, '//form[@id="validate-form"]//input[@type="submit"]')
     VALIDATOR_SUCCESS_MESSAGE = (By.XPATH, '//div[@id="results"]/div[contains(@class, "alert-success")]')
 
     def load_validator_page(self):
@@ -47,7 +47,7 @@ class ICalendarPage(Page):
         with open(file_path) as ics_file:
             self.wait_for_element_and_type(ICalendarPage.VALIDATOR_TEXTAREA, ics_file.read())
             time.sleep(1)
-        self.element(ICalendarPage.VALIDATOR_FORM).submit()
+        self.wait_for_element_and_click(ICalendarPage.VALIDATOR_SUBMIT_BUTTON)
         app.logger.info('Waiting for validator success message')
         self.wait_for_element(ICalendarPage.VALIDATOR_SUCCESS_MESSAGE, util.get_short_timeout())
         self.wait_for_text_in_element(
