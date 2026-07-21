@@ -69,7 +69,7 @@ class WebDriverManager(object):
 
     @classmethod
     def allow_canvas_iframe_in_chrome(cls, driver):
-        driver.get('chrome://settings/trackingProtection')
+        driver.get('chrome://settings/cookies')
         time.sleep(util.get_click_sleep())
         site_list_root = (driver.find_element(By.CSS_SELECTOR, 'settings-ui').shadow_root
                           .find_element(By.CSS_SELECTOR, 'settings-main').shadow_root
