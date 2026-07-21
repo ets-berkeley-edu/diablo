@@ -40,7 +40,7 @@ class CalNetPage(Page):
     USERNAME_INPUT = (By.ID, 'username')
     PASSWORD_INPUT = (By.ID, 'password')
     SUBMIT_BUTTON = (By.ID, 'submitBtn')
-    TRUST_BROWSER_BUTTON = (By.ID, 'trust-browser-button')
+    TRUST_BROWSER_BUTTON = (By.XPATH, '//button[contains(text(), "Yes, this is my device")]')
     BAD_CREDS = (By.XPATH, '//p[contains(text(), "Please check your username and passphrase")]')
 
     def log_in(self, username=None, password=None):
