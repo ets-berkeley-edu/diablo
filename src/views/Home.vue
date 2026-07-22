@@ -14,7 +14,7 @@
           You must opt in for your courses to be recorded. For more information, visit our
           <a
             class="opt-in-banner-link"
-            :href="get(config, 'instructorGettingStartedUrl', 'https://rtl.berkeley.edu/services-programs/course-capture/instructor-getting-started')"
+            :href="get(config, 'instructorGettingStartedUrl', 'https://rtl.berkeley.edu/services-programs/course-capture/instructors-getting-started')"
             rel="noopener"
             target="_blank"
           >
