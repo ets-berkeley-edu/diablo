@@ -76,9 +76,9 @@ def get_recording_end_date(meeting):
 
 
 def get_recording_start_date(meeting, return_today_if_past_start=False):
-    term_begin = datetime.strptime(app.config['CURRENT_TERM_RECORDINGS_BEGIN'], '%Y-%m-%d').astimezone(default_timezone())
+    term_begin = default_timezone().localize(datetime.strptime(app.config['CURRENT_TERM_RECORDINGS_BEGIN'], '%Y-%m-%d'))
     if meeting['startDate']:
-        actual_start = datetime.strptime(meeting['startDate'].split()[0], '%Y-%m-%d').astimezone(default_timezone())
+        actual_start = default_timezone().localize(datetime.strptime(meeting['startDate'].split()[0], '%Y-%m-%d'))
     else:
         actual_start = None
     start_date = (actual_start if actual_start > term_begin else term_begin) if actual_start else None
