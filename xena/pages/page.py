@@ -243,7 +243,7 @@ class Page(object):
 
     def scroll_to_element(self, locator):
         self.when_present(locator, util.get_medium_timeout())
-        scroll_height = self.element(locator).get_dom_attribute('offsetTop')
+        scroll_height = self.element(locator).get_property('offsetTop')
         self.driver.execute_script(f'window.scrollTo(0, {scroll_height});')
 
     def mouseover(self, element):
