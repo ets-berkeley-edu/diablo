@@ -28,7 +28,7 @@
       </li>
       <li>
         <ExternalLink
-          href="https://rtl.berkeley.edu/services-programs/course-capture/instructor-getting-started-spring-25/course-capture-faq"
+          href="https://rtl.berkeley.edu/services-programs/course-capture/course-capture-faqs"
           :icon-size="16"
           link-id="link-faq"
           text="Course Capture FAQ"
