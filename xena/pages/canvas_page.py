@@ -133,7 +133,7 @@ class CanvasPage(Page):
 
     @staticmethod
     def user_cbx_loc(user):
-        return By.XPATH, f'//td[contains(.,"{user.uid}")]/ancestor::tr//input[@name="selectedUser"]'
+        return By.XPATH, f'//td[contains(.,"{user.uid}")]/ancestor::tr//input[contains(@id, "user-search-result-input")]'
 
     def wait_for_ripley_frame_and_switch(self):
         Wait(self.driver, util.get_medium_timeout()).until(ec.presence_of_element_located(CanvasPage.ripley_form_loc()))

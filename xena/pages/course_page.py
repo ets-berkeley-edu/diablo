@@ -439,16 +439,16 @@ class CoursePage(DiabloPages):
     # KB LINKS
 
     HOW_TO_PREVENT_ISSUES_LINK = By.LINK_TEXT, 'How to Prevent Recording Issues in the Classroom'
-    HOW_TO_PREVENT_ISSUES_TITLE = 'IT - What to check (while at the classroom) to ensure Course Capture is recording properly'
+    HOW_TO_PREVENT_ISSUES_TITLE = 'IT Public KB - What to check (while at the classroom) to ensure Course Capture is recording properly'
 
     HOW_TO_SHARE_LINK = By.LINK_TEXT, 'How to Share Course Capture Recordings'
-    HOW_TO_SHARE_TITLE = 'IT - How to share Course Capture recordings'
+    HOW_TO_SHARE_TITLE = 'IT Public KB - How to share Course Capture recordings'
 
     HOW_TO_DOWNLOAD_LINK = By.LINK_TEXT, 'How do I Download Kaltura Media'
-    HOW_TO_DOWNLOAD_TITLE = 'IT - How do I download Kaltura media?'
+    HOW_TO_DOWNLOAD_TITLE = 'IT Public KB - How do I download Kaltura media?'
 
     COURSE_CAPTURE_FAQ_LINK = By.LINK_TEXT, 'Course Capture FAQ'
-    COURSE_CAPTURE_FAQ_TITLE = 'Course Capture FAQ | Research, Teaching, & Learning'
+    COURSE_CAPTURE_FAQ_TITLE = 'Course Capture FAQs | Research, Teaching, & Learning Commons'
 
     # KALTURA SERIES INFO
 
