@@ -435,10 +435,11 @@ def reset_sent_email_test_data(section=None, instructor=None, templates=None):
 
 
 # For jobs that queue a large number of emails, use this to clear that queue and avoid extremely long-running emails job
-def delete_queued_email(template):
+def delete_queued_email(template=None):
     sql = f"""DELETE FROM queued_emails
-               WHERE term_id = {app.config['CURRENT_TERM_ID']}
-                 AND template_type = '{template.value['type']}'"""
+               WHERE term_id = {app.config['CURRENT_TERM_ID']}"""
+    if template:
+        sql = f"""{sql} AND template_type = '{template.value['type']}'"""
     app.logger.info(sql)
     db.session.execute(text(sql))
     std_commit(allow_test_environment=True)

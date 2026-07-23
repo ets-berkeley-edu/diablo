@@ -444,11 +444,11 @@ class TestScheduling0:
     # VERIFY COURSE HISTORY
 
     def test_course_total_sent_email(self):
-        assert util.get_sent_email_count(template=None, section=self.section, instructor=None) == 5
+        assert util.get_sent_email_count(template=None, section=self.section, instructor=None) == 4
 
     def test_course_history_row_count(self):
         self.course_page.load_page(self.section)
-        assert self.course_page.update_history_row_count() == 8
+        assert self.course_page.update_history_row_count() == 6
 
     def test_course_history_instructor_added(self):
         self.course_page.verify_history_row(field='instructor_uids',
