@@ -317,7 +317,7 @@ def update_no_longer_principal_listing_references(term_id, tablename):
 def update_new_cross_listings(term_id, section_ids, tablename):
     # Copy preferences and opt-out settings to any newly added cross-listings.
     sql = f'SELECT * FROM {tablename} WHERE term_id = :term_id AND section_id = ANY(:section_ids)'
-    rows = list(db.session.execute(text(sql), {'term_id': term_id, 'section_ids': section_ids}))
+    rows = list(db.session.execute(text(sql), {'term_id': term_id, 'section_ids': section_ids}).mappings())
     if not rows:
         return
     new_section_ids = set(section_ids) - set(r['section_id'] for r in rows)
